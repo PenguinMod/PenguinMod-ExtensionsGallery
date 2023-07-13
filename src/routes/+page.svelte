@@ -22,7 +22,7 @@
         <Extension
             image="/images/example.png"
             name="Test Gallery Item"
-            url="https://extensions.turbowarp.org/stretch.js"
+            url="https://extensions.turbowarp.org/JeremyGamer13/tween.js"
             creator="JeremyGamer13"
         >
             A basic gallery item. Use this as a base for adding extensions to

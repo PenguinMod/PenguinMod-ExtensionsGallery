@@ -1,21 +1,63 @@
 <script>
     import Extension from "$lib/Extension/Component.svelte";
+    import Logo from "$lib/Logo/Component.svelte";
 </script>
 
-<img src="/favicon.ico" alt="PenguinMod Logo" />
-<h1>PenguinMod Extra Extensions</h1>
-<p>
-    See some cool extensions made by other people here.
-    <br />
-    To use some of these extensions in your projects, click the "Copy URL" button
-    on an extension and
-    <a href="/load" target="_blank">load it into PenguinMod,</a>
-    or click the "View" button to create a new project with the extension.
-</p>
+<div class="top">
+    <div class="header">
+        <Logo />
+        <h1>PenguinMod Extra Extensions</h1>
+    </div>
+</div>
+<div class="main">
+    <p>See some cool extensions made by other people here.</p>
+    <p>
+        To use some of these extensions in your projects, click the "Copy URL"
+        button on an extension and
+        <a href="/load" target="_blank">load it into PenguinMod,</a>
+        or click the "View" button to create a new project with the extension.
+    </p>
 
-<Extension
-    image="/images/example.png"
-    url="https://extensions.turbowarp.org/stretch.js"
->
-    Test
-</Extension>
+    <div class="extension-list">
+        <!-- <Extension
+            image="/images/example.png"
+            name="Test Gallery Item"
+            url="https://extensions.turbowarp.org/stretch.js"
+        >
+            An easy way to display and animate text. Compatible with Scratch
+            Lab's Animated Text experiment.
+        </Extension> -->
+    </div>
+
+    <div style="height: 64px" />
+</div>
+
+<style>
+    .top {
+        width: 100%;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+    }
+    .header {
+        display: flex;
+        align-items: center;
+        flex-direction: row;
+        font-size: 1.35em;
+    }
+
+    .main {
+        width: 60%;
+        margin-left: 20%;
+        display: flex;
+        flex-direction: column;
+    }
+
+    .extension-list {
+        width: 100%;
+        display: flex;
+        flex-direction: row;
+        flex-wrap: wrap;
+        justify-content: center;
+    }
+</style>

@@ -2,6 +2,7 @@
     export let name = "Test";
     export let image = "/images/example.png";
     export let url = "";
+    export let creator = "";
 
     const baseUrl = "https://studio.penguinmod.site/editor.html?extension=";
 </script>
@@ -9,7 +10,20 @@
 <div class="block">
     <img src={image} alt="Thumb" class="image" />
     <p class="title">{name}</p>
-    <p class="description"><slot /></p>
+    <p class="description">
+        <slot />
+        {#if creator}
+            <p>
+                Created by
+                <a
+                    href={`https://scratch.mit.edu/users/${creator}/`}
+                    target="_blank"
+                >
+                    {creator}.
+                </a>
+            </p>
+        {/if}
+    </p>
     <button
         on:click={() => {
             navigator.clipboard.writeText(url);

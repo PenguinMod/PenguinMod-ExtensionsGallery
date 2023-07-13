@@ -19,14 +19,15 @@
     </p>
 
     <div class="extension-list">
-        <!-- <Extension
+        <Extension
             image="/images/example.png"
             name="Test Gallery Item"
             url="https://extensions.turbowarp.org/stretch.js"
+            creator="JeremyGamer13"
         >
-            An easy way to display and animate text. Compatible with Scratch
-            Lab's Animated Text experiment.
-        </Extension> -->
+            A basic gallery item. Use this as a base for adding extensions to
+            this list.
+        </Extension>
     </div>
 
     <div style="height: 64px" />

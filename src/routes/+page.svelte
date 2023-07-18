@@ -1,6 +1,13 @@
 <script>
+    import { onMount } from "svelte";
+
     import Extension from "$lib/Extension/Component.svelte";
     import Logo from "$lib/Logo/Component.svelte";
+
+    let origin = "";
+    onMount(() => {
+        origin = window.origin;
+    });
 </script>
 
 <div class="top">
@@ -19,6 +26,7 @@
     </p>
 
     <div class="extension-list">
+        <!--
         <Extension
             image="/images/example.png"
             name="Test Gallery Item"
@@ -28,8 +36,41 @@
             A basic gallery item. Use this as a base for adding extensions to
             this list.
         </Extension>
+        -->
+        <Extension
+            image="/images/NamelessCat/placeholder-corsproxy.png"
+            name="CORS Proxy"
+            url={origin + "/extensions/NamelessCat/corsproxy.js"}
+            creator="NamelessCat"
+        >
+            Accessible CORS Proxies for fetching information
+        </Extension>
     </div>
 
+    <div style="height: 24px" />
+    <div class="footer">
+        PenguinMod is not affiliated with TurboWarp, Scratch, the Scratch Team,
+        or the Scratch Foundation.
+    </div>
+    <div class="links">
+        <a
+            target="_blank"
+            href="https://github.com/PenguinMod/PenguinMod-ExtensionsGallery"
+        >
+            GitHub
+        </a>
+        <span style="margin: 0px 6px;">-</span>
+        <a target="_blank" href="https://studio.penguinmod.site/editor.html">
+            Editor
+        </a>
+        <span style="margin: 0px 6px;">-</span>
+        <a
+            target="_blank"
+            href="https://github.com/PenguinMod/PenguinMod-ExtensionsGallery/blob/main/README.md"
+        >
+            Submitting an extension
+        </a>
+    </div>
     <div style="height: 64px" />
 </div>
 
@@ -60,5 +101,20 @@
         flex-direction: row;
         flex-wrap: wrap;
         justify-content: center;
+    }
+
+    .links {
+        width: 100%;
+        display: flex;
+        flex-direction: row;
+        justify-content: center;
+        align-items: center;
+    }
+    .footer {
+        width: 100%;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        margin-bottom: 4px;
     }
 </style>

@@ -11,7 +11,21 @@
 		</style>
 		%sveltekit.head%
 	</head>
-	<body data-sveltekit-preload-data="hover">
+	<body data-sveltekit-preload-data="hover" id="PAGE_BODY">
 		<div style="display: contents">%sveltekit.body%</div>
 	</body>
+	<script>
+		const body = document.getElementById("PAGE_BODY");
+		const loop = () => {
+			const darkmode = String(localStorage.getItem("pm:dark")) === "true";
+			body.setAttribute("class", darkmode ? "dark-mode" : "");
+			if (darkmode) {
+				body.style.background = "#111";
+				return;
+			}
+			body.style.background = "";
+		}
+		setInterval(loop, 100);
+		loop();
+	</script>
 </html>

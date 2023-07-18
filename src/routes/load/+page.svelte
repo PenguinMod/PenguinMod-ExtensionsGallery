@@ -1,5 +1,6 @@
 <script>
     import Logo from "$lib/Logo/Component.svelte";
+    import Footer from "$lib/Footer/Component.svelte";
 </script>
 
 <div class="top">
@@ -60,14 +61,21 @@
         If you did it correctly, the extension should appear in the category
         list.
         <br />
-        If you have questions, feel free to join our
-        <a href="https://discord.gg/NZ9MBMYTZh">Discord.</a>
+        If you have questions, feel free to join our Discord.
     </p>
 
+    <Footer />
     <div style="height: 64px" />
 </div>
 
 <style>
+    :global(body.dark-mode) {
+        color: white;
+    }
+    :global(body.dark-mode) a {
+        color: dodgerblue;
+    }
+
     .top {
         width: 100%;
         display: flex;

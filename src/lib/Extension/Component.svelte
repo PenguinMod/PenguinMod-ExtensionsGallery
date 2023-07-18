@@ -44,6 +44,10 @@
         padding: 8px;
         margin: 4px;
     }
+    :global(body.dark-mode) .block {
+        border-color: rgba(255, 255, 255, 0.75);
+    }
+
     .image {
         width: calc(600px / 1.85);
         height: calc(372px / 1.85);
@@ -82,5 +86,9 @@
     }
     .green {
         background-color: rgb(0, 163, 0);
+    }
+
+    :global(body.dark-mode) a {
+        color: dodgerblue;
     }
 </style>

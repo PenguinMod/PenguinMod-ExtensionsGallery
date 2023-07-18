@@ -2,6 +2,7 @@
     import { onMount } from "svelte";
 
     import Extension from "$lib/Extension/Component.svelte";
+    import Footer from "$lib/Footer/Component.svelte";
     import Logo from "$lib/Logo/Component.svelte";
 
     let origin = "";
@@ -47,34 +48,18 @@
         </Extension>
     </div>
 
-    <div style="height: 24px" />
-    <div class="footer">
-        PenguinMod is not affiliated with TurboWarp, Scratch, the Scratch Team,
-        or the Scratch Foundation.
-    </div>
-    <div class="links">
-        <a
-            target="_blank"
-            href="https://github.com/PenguinMod/PenguinMod-ExtensionsGallery"
-        >
-            GitHub
-        </a>
-        <span style="margin: 0px 6px;">-</span>
-        <a target="_blank" href="https://studio.penguinmod.site/editor.html">
-            Editor
-        </a>
-        <span style="margin: 0px 6px;">-</span>
-        <a
-            target="_blank"
-            href="https://github.com/PenguinMod/PenguinMod-ExtensionsGallery/blob/main/README.md"
-        >
-            Submitting an extension
-        </a>
-    </div>
+    <Footer />
     <div style="height: 64px" />
 </div>
 
 <style>
+    :global(body.dark-mode) {
+        color: white;
+    }
+    :global(body.dark-mode) a {
+        color: dodgerblue;
+    }
+
     .top {
         width: 100%;
         display: flex;
@@ -101,20 +86,5 @@
         flex-direction: row;
         flex-wrap: wrap;
         justify-content: center;
-    }
-
-    .links {
-        width: 100%;
-        display: flex;
-        flex-direction: row;
-        justify-content: center;
-        align-items: center;
-    }
-    .footer {
-        width: 100%;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        margin-bottom: 4px;
     }
 </style>

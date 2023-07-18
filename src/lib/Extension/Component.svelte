@@ -5,8 +5,63 @@
     export let creator = "";
 
     const baseUrl = "https://studio.penguinmod.site/editor.html?extension=";
+
+    /**
+     * The button to copy the URL
+     * @type {HTMLButtonElement}
+     */
+    let copyButton;
+    /**
+     * The bubble with the copy message
+     * @type {HTMLDivElement}
+     */
+    let copyPrompt;
+
+    function copiedToClipboard() {
+        const rectButton = copyButton.getBoundingClientRect();
+        const rectPrompt = copyPrompt.getBoundingClientRect();
+        const x = rectButton.left + rectButton.width / 2 - rectPrompt.width / 2;
+        copyPrompt.style.left = `${x}px`;
+        copyPrompt.style.top = `${rectButton.top - (rectPrompt.height + 10)}px`;
+
+        const animationDuration = 80;
+        copyPrompt.animate(
+            [
+                {
+                    opacity: 0,
+                },
+                {
+                    opacity: 1,
+                },
+            ],
+            {
+                duration: animationDuration,
+                fill: "forwards",
+            }
+        );
+
+        setTimeout(() => {
+            copyPrompt.animate(
+                [
+                    {
+                        opacity: 1,
+                    },
+                    {
+                        opacity: 0,
+                    },
+                ],
+                {
+                    duration: animationDuration,
+                    fill: "forwards",
+                }
+            );
+        }, 1500);
+    }
 </script>
 
+<div bind:this={copyPrompt} class="copied" style="opacity: 0;">
+    <p>Copied to Clipboard!</p>
+</div>
 <div class="block">
     <img src={image} alt="Thumb" class="image" />
     <p class="title">{name}</p>
@@ -26,8 +81,11 @@
     </p>
     <button
         on:click={() => {
-            navigator.clipboard.writeText(url);
+            navigator.clipboard.writeText(url).then(() => {
+                copiedToClipboard();
+            });
         }}
+        bind:this={copyButton}
         class="green"
     >
         Copy URL
@@ -38,6 +96,31 @@
 </div>
 
 <style>
+    .copied {
+        position: absolute;
+        pointer-events: none;
+
+        background-color: #23a559;
+        border-radius: 6px;
+        color: white;
+        padding: 6px;
+
+        z-index: 9000;
+    }
+    .copied:before {
+        content: "";
+        position: absolute;
+        top: 100%;
+        left: calc(50% - 5px);
+        width: 0;
+        border-top: 5px solid #23a559;
+        border-left: 5px solid transparent;
+        border-right: 5px solid transparent;
+    }
+    .copied p {
+        margin-block: 0;
+    }
+
     .block {
         border: 2px solid rgba(0, 0, 0, 0.25);
         border-radius: 6px;

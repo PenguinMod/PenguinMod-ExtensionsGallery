@@ -94,7 +94,7 @@ let catBreeds = [
 class CAT {
   getInfo() {
     return {
-      id: 'ilovecats',
+      id: 'ginxilovecats',
       name: 'CATS',
       color1: '#7868B5',
       color2: '#564B7F',
@@ -155,7 +155,7 @@ class CAT {
           }
         })
         .then((data) => {
-          return data.data;
+          return String(data.data);
         })
         .catch((error) => {
           console.error(error);
@@ -171,7 +171,7 @@ class CAT {
           }
         })
         .then((data) => {
-          return data.fact;
+          return String(data.fact);
         })
         .catch((error) => {
           console.error(error);

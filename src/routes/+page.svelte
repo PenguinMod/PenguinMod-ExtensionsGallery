@@ -46,6 +46,14 @@
         >
             Accessible CORS Proxies for fetching information
         </Extension>
+        <Extension
+            image="/images/Gen1x/placeholder-cats.png"
+            name="CATS"
+            url={origin + "/extensions/Gen1x/CATS.js"}
+            creator="G1nX"
+        >
+            Blocks related to cats.
+        </Extension>
     </div>
 
     <Footer />

@@ -33,6 +33,14 @@ Now, paste your extension's code into the file.
 You should now be able to `Commit changes` or `Create a pull request`, it'll likely be a green button.
 
 ### Step 4.
+Update the extension ID.
+
+To avoid conflicts or issues with other extensions, please put your name in the extension ID.
+Use only characters `a-z` lowercase and numbers to ensure that the ID is valid.
+
+For example: `myExtension` could be `johnMyExtension` or `johnmyExtension`
+
+### Step 5.
 Create the pull request.
 
 Continue through the menus until it lets you create a pull request.

@@ -59,7 +59,7 @@
             image="/images/ObviousAlexC/penplus.png"
             name="Pen+"
             url={origin + "/extensions/ObviousAlexC/PenPlus.js"}
-            creator="ObviousAlexC"
+            creator="pinksheep2917"
         >
             Blocks related to cats.
         </Extension>

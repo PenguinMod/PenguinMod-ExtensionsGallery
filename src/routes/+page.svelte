@@ -56,7 +56,7 @@
         </Extension>
 
         <Extension
-            image="/images/ObviousAlexC/PenPlus.svg"
+            image="/images/ObviousAlexC/penplus.png"
             name="Pen+"
             url={origin + "/extensions/ObviousAlexC/PenPlus.js"}
             creator="ObviousAlexC"

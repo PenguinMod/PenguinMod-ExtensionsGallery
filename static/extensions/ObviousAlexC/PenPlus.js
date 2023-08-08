@@ -69,63 +69,43 @@ Though this may come off as rude.
   let depthBufferTexture = gl.createTexture();
 
   //?Make a function for updating the depth canvas to fit the scratch stage
+  const depthFrameBuffer = gl.createFramebuffer();
   const depthDepthBuffer = gl.createRenderbuffer();
 
   let lastFB = gl.getParameter(gl.FRAMEBUFFER_BINDING);
 
-  const lilPenDabble = (InativeSize, curTarget, util) => {
-    Scratch.vm.renderer.penLine(
-      Scratch.vm.renderer._penSkinId,
-      {
-        color4f: [1, 1, 1, 0.011],
-        diameter: 1,
-      },
-      InativeSize[0]/2,
-      InativeSize[1]/2,
-      InativeSize[0]/2,
-      InativeSize[1]/2
-    );
-  };
-
   //?Buffer handling and pen loading
   {
-    //gl.bindTexture(gl.TEXTURE_2D, depthBufferTexture);
-    //gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
-    //gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
-    //gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
-    //gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
-    //gl.texImage2D(
-    //  gl.TEXTURE_2D,
-    //  0,
-    //  gl.RGBA,
-    //  nativeSize[0],
-    //  nativeSize[1],
-    //  0,
-    //  gl.RGBA,
-    //  gl.UNSIGNED_BYTE,
-    //  null
-    //);
+    gl.bindTexture(gl.TEXTURE_2D, depthBufferTexture);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+    gl.texImage2D(
+      gl.TEXTURE_2D,
+      0,
+      gl.RGBA,
+      nativeSize[0],
+      nativeSize[1],
+      0,
+      gl.RGBA,
+      gl.UNSIGNED_BYTE,
+      null
+    );
 
-    //gl.activeTexture(gl.TEXTURE1);
-    //gl.bindTexture(gl.TEXTURE_2D, depthBufferTexture);
-    //gl.activeTexture(gl.TEXTURE0);
+    gl.activeTexture(gl.TEXTURE1);
+    gl.bindTexture(gl.TEXTURE_2D, depthBufferTexture);
+    gl.activeTexture(gl.TEXTURE0);
 
-    //gl.bindFramebuffer(gl.FRAMEBUFFER, depthFrameBuffer);
-    //gl.framebufferTexture2D(
-    //  gl.FRAMEBUFFER,
-    //  gl.COLOR_ATTACHMENT0,
-    //  gl.TEXTURE_2D,
-    //  depthBufferTexture,
-    //  0
-    //);
+    gl.bindFramebuffer(gl.FRAMEBUFFER, depthFrameBuffer);
+    gl.framebufferTexture2D(
+      gl.FRAMEBUFFER,
+      gl.COLOR_ATTACHMENT0,
+      gl.TEXTURE_2D,
+      depthBufferTexture,
+      0
+    );
 
-    if (!Scratch.vm.renderer._penSkinId) {
-      window.vm.renderer.createPenSkin();
-    }
-
-    lilPenDabble(nativeSize);
-
-    gl.bindFramebuffer(gl.FRAMEBUFFER, renderer._allSkins[renderer._penSkinId]._framebuffer.framebuffer);
     gl.bindRenderbuffer(gl.RENDERBUFFER, depthDepthBuffer);
     gl.renderbufferStorage(
       gl.RENDERBUFFER,
@@ -151,7 +131,7 @@ Though this may come off as rude.
 
       lastFB = gl.getParameter(gl.FRAMEBUFFER_BINDING);
 
-      gl.bindFramebuffer(gl.FRAMEBUFFER, renderer._allSkins[renderer._penSkinId]._framebuffer.framebuffer);
+      gl.bindFramebuffer(gl.FRAMEBUFFER, depthFrameBuffer);
       gl.bindRenderbuffer(gl.RENDERBUFFER, depthDepthBuffer);
       gl.renderbufferStorage(
         gl.RENDERBUFFER,
@@ -167,9 +147,12 @@ Though this may come off as rude.
     updateCanvasSize();
 
     //?Call every frame because I don't know of a way to detect when the stage is resized
-    vm.runtime.on("STAGE_SIZE_CHANGED", updateCanvasSize);
+    vm.runtime.on("BEFORE_EXECUTE", () => {
+      updateCanvasSize();
+    });
 
     gl.enable(gl.DEPTH_TEST);
+    gl.depthFunc(gl.LEQUAL);
 
     //?Make sure pen is loaded!
     if (!Scratch.vm.extensionManager.isExtensionLoaded("pen")) {
@@ -229,18 +212,31 @@ Though this may come off as rude.
                 attribute highp vec4 a_color;
                 varying vec4 v_color;
 
+                varying highp float v_depth;
+
                 void main()
                 {
                   v_color = a_color;
-                  gl_Position = a_position * vec4(a_position.w,a_position.w,1,1);
+                  v_depth = a_position.z;
+                  gl_Position = a_position * vec4(a_position.w,a_position.w,0,1);
                 }
             `,
         frag: `
                 varying highp vec4 v_color;
 
+                uniform mediump vec2 u_res;
+                uniform sampler2D u_depthTexture;
+
+                varying highp float v_depth;
+
                 void main()
                 {
                   gl_FragColor = v_color;
+                  highp vec4 v_depthPart = texture2D(u_depthTexture,gl_FragCoord.xy/u_res);
+                  highp float v_depthcalc = (v_depthPart.r+v_depthPart.g+v_depthPart.b)/3.0;
+                  if (v_depth > v_depthcalc){
+                    gl_FragColor.a = 0.0;
+                  }
                   gl_FragColor.rgb *= gl_FragColor.a;
                 }
             `,
@@ -253,15 +249,18 @@ Though this may come off as rude.
                 attribute highp vec4 a_position;
                 attribute highp vec4 a_color;
                 attribute highp vec2 a_texCoord;
-
+                
                 varying highp vec4 v_color;
                 varying highp vec2 v_texCoord;
+
+                varying highp float v_depth;
                 
                 void main()
                 {
                     v_color = a_color;
                     v_texCoord = a_texCoord;
-                    gl_Position = a_position * vec4(a_position.w,a_position.w,1,1);
+                    v_depth = a_position.z;
+                    gl_Position = a_position * vec4(a_position.w,a_position.w,0,1);
                 }
             `,
         frag: `
@@ -269,10 +268,20 @@ Though this may come off as rude.
 
                 varying highp vec2 v_texCoord;
                 varying highp vec4 v_color;
+
+                uniform mediump vec2 u_res;
+                uniform sampler2D u_depthTexture;
+
+                varying highp float v_depth;
                 
                 void main()
                 {
                     gl_FragColor = texture2D(u_texture, v_texCoord) * v_color;
+                    highp vec4 v_depthPart = texture2D(u_depthTexture,gl_FragCoord.xy/u_res);
+                    highp float v_depthcalc = (v_depthPart.r+v_depthPart.g+v_depthPart.b)/3.0;
+                    if (v_depth > v_depthcalc){
+                      gl_FragColor.a = 0.0;
+                    }
                     gl_FragColor.rgb *= gl_FragColor.a;
                     
                 }
@@ -414,6 +423,32 @@ Though this may come off as rude.
     "u_texture"
   );
 
+  const u_depthTexture_Location_untext = gl.getUniformLocation(
+    penPlusShaders.untextured.ProgramInf.program,
+    "u_depthTexture"
+  );
+
+  const u_depthTexture_Location_text = gl.getUniformLocation(
+    penPlusShaders.textured.ProgramInf.program,
+    "u_depthTexture"
+  );
+
+  const u_res_Location_untext = gl.getUniformLocation(
+    penPlusShaders.untextured.ProgramInf.program,
+    "u_res"
+  );
+
+  const u_res_Location_text = gl.getUniformLocation(
+    penPlusShaders.textured.ProgramInf.program,
+    "u_res"
+  );
+
+  //?Depth
+  const a_position_Location_depth = gl.getAttribLocation(
+    penPlusShaders.depth.ProgramInf.program,
+    "a_position"
+  );
+
   //?Enables Attributes
   const vertexBuffer = gl.createBuffer();
   const depthVertexBuffer = gl.createBuffer();
@@ -425,7 +460,7 @@ Though this may come off as rude.
     gl.enableVertexAttribArray(a_position_Location_text);
     gl.enableVertexAttribArray(a_color_Location_text);
     gl.enableVertexAttribArray(a_textCoord_Location_text);
-    //gl.enableVertexAttribArray(a_position_Location_depth);
+    gl.enableVertexAttribArray(a_position_Location_depth);
     gl.bindBuffer(gl.ARRAY_BUFFER, vertexBuffer);
     gl.bindBuffer(gl.ARRAY_BUFFER, null);
     gl.bindBuffer(gl.ARRAY_BUFFER, depthVertexBuffer);
@@ -434,6 +469,17 @@ Though this may come off as rude.
 
   //?Override pen Clear with pen+
   renderer.penClear = (penSkinID) => {
+    const lastCC = gl.getParameter(gl.COLOR_CLEAR_VALUE);
+    lastFB = gl.getParameter(gl.FRAMEBUFFER_BINDING);
+    //Pen+ Overrides default pen Clearing
+    gl.bindFramebuffer(gl.FRAMEBUFFER, depthFrameBuffer);
+    gl.clearColor(1, 1, 1, 1);
+    gl.clear(gl.DEPTH_BUFFER_BIT);
+    gl.clear(gl.COLOR_BUFFER_BIT);
+
+    gl.bindFramebuffer(gl.FRAMEBUFFER, lastFB);
+    gl.clearColor(lastCC[0], lastCC[1], lastCC[2], lastCC[3]);
+
     //? ^ just clear the depth buffer for when its added.
 
     //Old clearing
@@ -540,13 +586,11 @@ Though this may come off as rude.
 
       gl.useProgram(penPlusShaders.untextured.ProgramInf.program);
 
-      //gl.uniform1i(u_depthTexture_Location_untext, 1);
+      gl.uniform1i(u_depthTexture_Location_untext, 1);
 
-      //gl.uniform2fv(u_res_Location_untext, nativeSize);
+      gl.uniform2fv(u_res_Location_untext, nativeSize);
 
-      gl.depthFunc(gl.GEQUAL);
       gl.drawArrays(gl.TRIANGLES, 0, 3);
-      gl.depthFunc(gl.LEQUAL);
       //? Hacky fix but it works.
 
       //triFunctions.drawDepthTri(targetID, x1, y1, x2, y2, x3, y3);
@@ -664,15 +708,13 @@ Though this may come off as rude.
       gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, currentFilter);
       gl.uniform1i(u_texture_Location_text, 0);
 
-      //gl.uniform1i(u_depthTexture_Location_text, 1);
+      gl.uniform1i(u_depthTexture_Location_text, 1);
 
-      //gl.uniform2fv(u_res_Location_text, nativeSize);
+      gl.uniform2fv(u_res_Location_text, nativeSize);
 
-      gl.depthFunc(gl.GEQUAL);
       gl.drawArrays(gl.TRIANGLES, 0, 3);
-      gl.depthFunc(gl.LEQUAL);
       //? Hacky fix but it works.
-      //triFunctions.drawDepthTri(targetID, x1, y1, x2, y2, x3, y3);
+      triFunctions.drawDepthTri(targetID, x1, y1, x2, y2, x3, y3);
       gl.useProgram(penPlusShaders.pen.program);
     },
 
@@ -813,6 +855,24 @@ Though this may come off as rude.
         }
       }
     },
+  };
+
+  const lilPenDabble = (InativeSize, curTarget, util) => {
+    checkForPen(util);
+
+    const attrib = curTarget["_customState"]["Scratch.pen"].penAttributes;
+
+    Scratch.vm.renderer.penLine(
+      Scratch.vm.renderer._penSkinId,
+      {
+        color4f: [1, 1, 1, 0.011],
+        diameter: 1,
+      },
+      InativeSize[0]/2,
+      InativeSize[1]/2,
+      InativeSize[0]/2,
+      InativeSize[1]/2
+    );
   };
 
   //?Color Library

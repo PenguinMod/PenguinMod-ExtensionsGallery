@@ -54,6 +54,15 @@
         >
             Blocks related to cats.
         </Extension>
+
+        <Extension
+            image="/images/OAC/placeholder-cats.png"
+            name="CATS"
+            url={origin + "/extensions/Gen1x/CATS.js"}
+            creator="G1nX"
+        >
+            Blocks related to cats.
+        </Extension>
     </div>
 
     <Footer />

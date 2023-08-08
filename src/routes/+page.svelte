@@ -61,7 +61,7 @@
             url={origin + "/extensions/ObviousAlexC/PenPlus.js"}
             creator="pinksheep2917"
         >
-            Blocks related to cats.
+            Extended pen section!
         </Extension>
     </div>
 

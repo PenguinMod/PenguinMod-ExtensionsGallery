@@ -56,10 +56,10 @@
         </Extension>
 
         <Extension
-            image="/images/OAC/placeholder-cats.png"
-            name="CATS"
-            url={origin + "/extensions/Gen1x/CATS.js"}
-            creator="G1nX"
+            image="/images/ObviousAlexC/PenPlus.svg"
+            name="Pen+"
+            url={origin + "/extensions/ObviousAlexC/PenPlus.js"}
+            creator="ObviousAlexC"
         >
             Blocks related to cats.
         </Extension>

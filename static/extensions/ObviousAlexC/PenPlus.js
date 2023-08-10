@@ -1241,11 +1241,11 @@ Though this may come off as rude.
       [
         {
           text: "Closest",
-          value: gl.NEAREST,
+          value: Scratch.Cast.toString(gl.NEAREST),
         },
         {
           text: "Linear",
-          value: gl.LINEAR,
+          value: Scratch.Cast.toString(gl.LINEAR),
         },
       ],
       true

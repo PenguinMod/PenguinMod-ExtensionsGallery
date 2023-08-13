@@ -898,7 +898,7 @@ Though this may come off as rude.
       R = Math.min(Math.max(R, 0), 100) * 2.55;
       G = Math.min(Math.max(G, 0), 100) * 2.55;
       B = Math.min(Math.max(B, 0), 100) * 2.55;
-      return (Math.floor(R) * 256 + Math.floor(G)) * 256 + Math.floor(B);
+      return (Math.ceil(R) * 256 + Math.ceil(G)) * 256 + Math.ceil(B);
     },
   };
 

@@ -40,6 +40,14 @@
         -->
         <!-- TODO: Load this list from JSON. Makes it easier for contributors. -->
         <Extension
+            image="/images/ObviousAlexC/PenPlus.svg"
+            name="Pen+"
+            url={origin + "/extensions/ObviousAlexC/PenPlus.js"}
+            creator="pinksheep2917"
+        >
+            Extended pen section!
+        </Extension>
+        <Extension
             image="/images/SharkPool/BetterInput.svg"
             name="Better Input"
             url={origin + "/extensions/SharkPool/BetterInput.js"}
@@ -63,15 +71,6 @@
             creator="G1nX"
         >
             Blocks related to cats.
-        </Extension>
-
-        <Extension
-            image="/images/ObviousAlexC/penplus.png"
-            name="Pen+"
-            url={origin + "/extensions/ObviousAlexC/PenPlus.js"}
-            creator="pinksheep2917"
-        >
-            Extended pen section!
         </Extension>
     </div>
 

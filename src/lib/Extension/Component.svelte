@@ -137,6 +137,7 @@
     .image {
         width: calc(600px / 1.85);
         height: calc(300px / 1.85);
+        object-fit: cover;
         border-radius: 4px;
     }
     .title {

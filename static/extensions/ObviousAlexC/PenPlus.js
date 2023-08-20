@@ -2615,7 +2615,5 @@ Though this may come off as rude.
     penPlusShaders.pen.program = shaderManager._shaderCache.line[0].program;
   }
 
-  extension.addDocs("https://extensions.turbowarp.org/penplus");
-
   extension.register();
 })(window.Scratch);

@@ -52,3 +52,46 @@ Continue through the menus until it lets you create a pull request.
 You can post your extension banner / thumbnail and or description in the pull request.
 
 Once your pull request is merged, it'll be on the site or upcoming onto the site. You may get responses about things you should change or fix though.
+
+*Note: Vercel may comment on your pull request. This is the hosting service we use.*
+*If it has a link to visit a preview, you can click on it and see your changes. See the Optional Steps for more info on how to edit the site to show your extension.*
+
+# Optional Steps
+
+### Step 6.
+Add your extension banner to the website.
+
+To do this, your GitHub profile should now have a fork of the repository.
+It will probably be under the same name.
+
+Open this repository, and enter the `static/images` folder.
+
+If you are using the website to add the file:
+
+1. Click `Add File` at the top and click `Create new file`.
+2. At the top where the file name is, type your username and then a `/` character.
+3. Now type any file name and type anything inside the file, then create the file.
+4. Exit back into the folder you created and instead, upload a file.
+5. Upload your extension banner here. The banner should have the same name as your extension.
+6. Go back to your original file you created to make the folder, and delete the file.
+
+This should create the folder with the uploaded image inside.
+
+### Step 7.
+Add your extension onto the actual website.
+
+Enter the `src/lib/extensions.js` file in the repository.
+
+If you know JSON then you can tell how to edit the list inside, but otherwise try to keep the format of the last extension listed.
+Each extension is incased in `{}` brackets. Look below on how to copy it.
+
+```js
+{
+    name: "Evaluating Expressions", // The name of the extension.
+    description: "Blocks to return the result of an expression.", // The description for the extension.
+    code: "Username/extension.js", // The folder and file name for the code of the extension.
+    banner: "Username/Extension.png", // The folder and file name for the banner of the extension.
+    creator: "Username", // Your username. Adds a link to your profile.
+    isGitHub: false, // Optional. false means this is your Scratch username, true means this is your GitHub username.
+},
+```

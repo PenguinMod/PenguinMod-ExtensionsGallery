@@ -5,6 +5,8 @@
     import Footer from "$lib/Footer/Component.svelte";
     import Logo from "$lib/Logo/Component.svelte";
 
+    import extensions from "$lib/extensions.js";
+
     let origin = "";
     onMount(() => {
         origin = window.origin;
@@ -27,51 +29,18 @@
     </p>
 
     <div class="extension-list">
-        <!--
-        <Extension
-            image="/images/example.png"
-            name="Test Gallery Item"
-            url="https://extensions.turbowarp.org/JeremyGamer13/tween.js"
-            creator="JeremyGamer13"
-        >
-            A basic gallery item. Use this as a base for adding extensions to
-            this list.
-        </Extension>
-        -->
-        <!-- TODO: Load this list from JSON. Makes it easier for contributors. -->
-        <Extension
-            image="/images/ObviousAlexC/PenPlus.svg"
-            name="Pen+"
-            url={origin + "/extensions/ObviousAlexC/PenPlus.js"}
-            creator="pinksheep2917"
-        >
-            Extended pen section!
-        </Extension>
-        <Extension
-            image="/images/SharkPool/BetterInput.svg"
-            name="Better Input"
-            url={origin + "/extensions/SharkPool/BetterInput.js"}
-            creator="SharkPool-SP"
-            isGitHub={true}
-        >
-            Expansion to the Ask and Wait blocks.
-        </Extension>
-        <Extension
-            image="/images/NamelessCat/placeholder-corsproxy.png"
-            name="CORS Proxy"
-            url={origin + "/extensions/NamelessCat/corsproxy.js"}
-            creator="NamelessCat"
-        >
-            Accessible CORS Proxies for fetching information
-        </Extension>
-        <Extension
-            image="/images/Gen1x/placeholder-cats.png"
-            name="CATS"
-            url={origin + "/extensions/Gen1x/CATS.js"}
-            creator="G1nX"
-        >
-            Blocks related to cats.
-        </Extension>
+        <!-- This list can be modified in "src/lib/extensions.js" -->
+        {#each extensions as extension}
+            <Extension
+                image={`/images/${extension.banner}`}
+                name={extension.name}
+                url={`${origin}/extensions/${extension.code}`}
+                creator={extension.creator}
+                isGitHub={String(extension.isGitHub) === "true"}
+            >
+                {extension.description}
+            </Extension>
+        {/each}
     </div>
 
     <p style="text-align: center;">

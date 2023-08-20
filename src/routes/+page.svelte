@@ -64,6 +64,15 @@
         >
             Blocks related to cats.
         </Extension>
+
+        <Extension
+            image="/images/ObviousAlexC/penplus.png"
+            name="Pen+"
+            url={origin + "/extensions/ObviousAlexC/PenPlus.js"}
+            creator="pinksheep2917"
+        >
+            Extended pen section!
+        </Extension>
     </div>
 
     <p style="text-align: center;">

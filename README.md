@@ -18,6 +18,8 @@ The banner / thumbnail is not required, but it will be a solid color if not prov
 
 Your banner / thumbnail must also be MIT licensed (basically just make it yourself and the image should be usable anywhere)
 
+Ideally, this banner / thumbnail should be 600x300 pixels. (may be resized if it does not fit this size or edited to fit this size)
+
 ### Step 3.
 Add your extension in the `static/extensions` folder.
 
@@ -27,7 +29,7 @@ Click `Add File` at the top and click `Create new file`.
 
 GitHub will likely tell you to make a fork to do this step. Make sure to create one as you'll need to have the files somewhere.
 
-Create a new folder with your **Scratch** username. You can do this by typing the username as the file name, and then typing a `/`. Then type the actual file name, followed by `.js`.
+Create a new folder with your **Scratch** or **GitHub** username. You can do this by typing the username as the file name, and then typing a `/`. Then type the actual file name, followed by `.js`.
 
 Now, paste your extension's code into the file.
 You should now be able to `Commit changes` or `Create a pull request`, it'll likely be a green button.
@@ -38,6 +40,8 @@ Update the extension ID.
 To avoid conflicts or issues with other extensions, please put your name in the extension ID.
 Use only characters `a-z` lowercase and numbers to ensure that the ID is valid.
 
+*Note: Some extensions may be accepted without this rule if they provide reason.*
+
 For example: `myExtension` could be `johnMyExtension` or `johnmyExtension`
 
 ### Step 5.
@@ -47,4 +51,4 @@ Continue through the menus until it lets you create a pull request.
 
 You can post your extension banner / thumbnail and or description in the pull request.
 
-Once your pull request is merged, it'll be on the site. You may get responses about things you should change or fix though.
+Once your pull request is merged, it'll be on the site or upcoming onto the site. You may get responses about things you should change or fix though.

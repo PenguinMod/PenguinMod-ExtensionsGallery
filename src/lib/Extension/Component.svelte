@@ -3,6 +3,7 @@
     export let image = "/images/example.png";
     export let url = "";
     export let creator = "";
+    export let isGitHub = false;
 
     const baseUrl = "https://studio.penguinmod.site/editor.html?extension=";
 
@@ -71,7 +72,9 @@
             <p>
                 Created by
                 <a
-                    href={`https://scratch.mit.edu/users/${creator}/`}
+                    href={!isGitHub
+                        ? `https://scratch.mit.edu/users/${creator}/`
+                        : `https://github.com/${creator}/`}
                     target="_blank"
                 >
                     {creator}.
@@ -133,7 +136,7 @@
 
     .image {
         width: calc(600px / 1.85);
-        height: calc(372px / 1.85);
+        height: calc(300px / 1.85);
         border-radius: 4px;
     }
     .title {

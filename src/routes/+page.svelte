@@ -38,6 +38,16 @@
             this list.
         </Extension>
         -->
+        <!-- TODO: Load this list from JSON. Makes it easier for contributors. -->
+        <Extension
+            image="/images/SharkPool/BetterInput.svg"
+            name="Better Input"
+            url={origin + "/extensions/SharkPool/BetterInput.js"}
+            creator="SharkPool-SP"
+            isGitHub={true}
+        >
+            Expansion to the Ask and Wait blocks.
+        </Extension>
         <Extension
             image="/images/NamelessCat/placeholder-corsproxy.png"
             name="CORS Proxy"
@@ -55,6 +65,12 @@
             Blocks related to cats.
         </Extension>
     </div>
+
+    <p style="text-align: center;">
+        Note: Some extensions may be added to the Extension Gallery in
+        PenguinMod Studio.<br />If you cannot find an extension that was
+        previously listed here, check there.
+    </p>
 
     <Footer />
     <div style="height: 64px" />

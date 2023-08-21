@@ -1,6 +1,6 @@
 /*
  * This extension was made by SharkPool
- * Version 2.1 (Fixes, Booleans, More Customization, Rotation, More Effects, and Performance Updates)
+ * Version 2.1.1 (Fixes, Booleans, More Customization, Rotation, More Effects, and Performance Updates)
  * Next Update: Image Setting Additions
  * Do NOT delete these comments
  */
@@ -31,7 +31,7 @@
     constructor() {
       this.isWaitingForInput = false;
       this.isDropdownOpen = false;
-      this.userInput = "";
+      this.userInput = " ";
       this.fontSize = "14px";
       this.questionColor = "#000000";
       this.inputColor = "#000000";
@@ -39,7 +39,7 @@
       this.inputBackgroundColor = "#ffffff";
       this.inputOutlineColor = "#000000";
       this.textAlign = "left";
-      this.fontFamily = "Arial";
+      this.fontFamily = "Sans Serif";
       this.showCancelButton = true;
       this.showButton3 = false;
       this.showButton4 = false;
@@ -83,7 +83,7 @@
       this.exitSpeed = 10;
       this.activeOverlays = [];
       this.Blur = 0;
-      this.Brightness = 100;
+      this.Brightness = 0;
       this.Opacity = 100;
       this.Invert = 0;
       this.Saturation = 100;
@@ -95,6 +95,7 @@
       this.SkewY = 0;
       this.Rotation = 90;
       this.Timeout = 0;
+      this.imageSettings = ['100%', '100%'];
     }
 
     getInfo() {
@@ -217,7 +218,7 @@
               FONT: {
                 type: Scratch.ArgumentType.STRING,
                 menu: "fontMenu",
-                defaultValue: "Arial",
+                defaultValue: "Sans Serif",
               },
             },
           },
@@ -539,27 +540,13 @@
           fontMenu: {
             acceptReporters: true,
             items: [
-              "Arial",
-              "Times New Roman",
-              "Comic Sans MS",
-              "Verdana",
-              "Courier New",
-              "Impact",
-              "Cursive",
-              "Lucida Console",
               "Scratch",
-              "Arial Black",
-              "Calibri",
-              "Consolas",
               "Sans Serif",
               "Serif",
               "Handwriting",
               "Marker",
               "Curly",
-              "Pixel",
-              "MS PGothic",
-              "Malgun Gothic",
-              "Microsoft YaHei",
+              "Pixel"
             ],
           },
           buttonActionMenu: {
@@ -652,7 +639,7 @@
       this[effect] = args.AMT;
 
       this.activeOverlays.forEach((overlay) => {
-        this.updateEffect(overlay);
+        this.updateOverlay(overlay);
       });
     }
     
@@ -661,13 +648,13 @@
       this[effect] = this[effect] + args.AMT;
       
       this.activeOverlays.forEach((overlay) => {
-        this.updateEffect(overlay);
+        this.updateOverlay(overlay);
       });
     }
     
     resetEffect(args) {
       this.Blur = 0;
-      this.Brightness = 100;
+      this.Brightness = 0;
       this.Opacity = 100;
       this.Invert = 0;
       this.Saturation = 100;
@@ -679,30 +666,10 @@
       this.SkewY = 0;
       
       this.activeOverlays.forEach((overlay) => {
-        this.updateEffect(overlay);
+        this.updateOverlay(overlay);
       });
     }
 
-    updateEffect(overlay) {
-      const newOpacity =  this.Opacity / 100;
-      const newScale = this.Scale / 100;
-      overlay.style.filter = `
-        blur(${this.Blur}px)
-        brightness(${this.Brightness}%)
-        invert(${this.Invert}%)
-        saturate(${this.Saturation}%)
-        hue-rotate(${this.Hue}deg)
-        sepia(${this.Sepia}%)
-        contrast(${this.Contrast}%)
-      `;
-      overlay.style.opacity = newOpacity;
-      overlay.style.scale = newScale;
-      overlay.style.transform = `
-        SkewX(${this.SkewX}deg)
-        SkewY(${this.SkewY}deg)
-      `;
-    }
-    
     setColorSettings(args) {
       const colorType = args.COLOR_TYPE;
       const colorValue = args.COLOR;
@@ -773,10 +740,10 @@
           this.textBoxBorderRadius = value;
           break;
         case "Button 1":
-          this.cancelButtonBorderRadius = value;
+          this.submitButtonBorderRadius = value;
           break;
         case "Button 2":
-          this.submitButtonBorderRadius = value;
+          this.cancelButtonBorderRadius = value;
           break;
         case "Button 3":
           this.button3BorderRadius = value;
@@ -801,7 +768,7 @@
       this.Rotation = Scratch.Cast.toNumber(ROTATE);
 
       this.activeOverlays.forEach((overlay) => {
-        this.updateOverlayPosition(overlay);
+        this.updateOverlay(overlay);
       });
     }
     
@@ -810,7 +777,7 @@
       this.Rotation = this.Rotation + Scratch.Cast.toNumber(ROTATE);
 
       this.activeOverlays.forEach((overlay) => {
-        this.updateOverlayPosition(overlay);
+        this.updateOverlay(overlay);
       });
     }
     
@@ -828,7 +795,7 @@
       this.textBoxY = Scratch.Cast.toNumber(args.Y) * -1;
 
       this.activeOverlays.forEach((overlay) => {
-        this.updateOverlayPosition(overlay);
+        this.updateOverlay(overlay);
       });
     }
 
@@ -837,21 +804,38 @@
       this.textBoxY = this.textBoxY + Scratch.Cast.toNumber(args.Y) * -1;
 
       this.activeOverlays.forEach((overlay) => {
-        this.updateOverlayPosition(overlay);
+        this.updateOverlay(overlay);
       });
     }
 
-    updateOverlayPosition(overlay) {
+    updateOverlay(overlay) {
       if (this.Rotation > 359) {
         this.Rotation = 0;
       } else if (this.Rotation < 1) {
         this.Rotation = 360;
       }
+
+      const newOpacity =  this.Opacity / 100;
+      const newScale = this.Scale / 100;
+      const newBrightness = this.Brightness + 100;
+
       overlay.style.transform = `
         SkewX(${this.SkewX}deg)
         SkewY(${this.SkewY}deg)
         rotate(${this.Rotation - 90}deg)
       `;
+      overlay.style.filter = `
+        blur(${this.Blur}px)
+        brightness(${newBrightness}%)
+        invert(${this.Invert}%)
+        saturate(${this.Saturation}%)
+        hue-rotate(${this.Hue}deg)
+        sepia(${this.Sepia}%)
+        contrast(${this.Contrast}%)
+      `;
+      overlay.style.opacity = newOpacity;
+      overlay.style.scale = newScale;
+
       if (this.textBoxX !== null && this.textBoxY !== null) {
         overlay.style.left = `${41 + this.textBoxX}%`;
         overlay.style.top = `${44 + this.textBoxY}%`;
@@ -989,17 +973,16 @@
           overlay.style.fontSize = this.fontSize;
           overlay.style.textAlign = this.textAlign;
           overlay.style.fontFamily = this.fontFamily;
-          this.updateEffect(overlay);
 
           const overlayImageContainer = document.createElement("div");
           overlayImageContainer.style.background = `url("${encodeURI(this.overlayImage)}")`;
-          
-          //maybe in a future update we can make these customizable too...
-          overlayImageContainer.style.width = "100%";
-          overlayImageContainer.style.height = "100%";
+
+          overlayImageContainer.style.width = '100%';
+          overlayImageContainer.style.height = '100%';
           overlayImageContainer.style.position = "absolute";
-          overlayImageContainer.style.top = "0";
-          overlayImageContainer.style.left = "0";
+          overlayImageContainer.style.top = 0;
+          overlayImageContainer.style.left = 0;
+          overlayImageContainer.style.borderRadius = this.textBoxBorderRadius + "px";
           overlayImageContainer.style.zIndex = "-1";
 
           if (this.forceInput !== "Disabled") {
@@ -1020,7 +1003,13 @@
                   event.key === "Enter") ||
                 event.key === overlayInput
               ) {
-                this.userInput = inputField.value;
+                if (this.isInputEnabled === "Multi-Select Dropdown") {
+                  inputField.value = inputField.value.substring(1);
+                  inputField.value = inputField.value.replace(this.splitKey, '", "');
+                  this.userInput = '["' + inputField.value + '"]';
+                } else {
+                  this.userInput = inputField.value;
+                }
                 this.closeOverlay(overlay);
                 resolve();
               }
@@ -1076,7 +1065,13 @@
 
           submitButton.addEventListener("click", () => {
             if (this.isInputEnabled !== "Disabled") {
-              this.userInput = inputField.value;
+              if (this.isInputEnabled === "Multi-Select Dropdown") {
+                  inputField.value = inputField.value.substring(1);
+                  inputField.value = inputField.value.replace(this.splitKey, '", "');
+                  this.userInput = '["' + inputField.value + '"]';
+                } else {
+                  this.userInput = inputField.value;
+                }
             } else {
               this.userInput = this.submitButtonText;
             }
@@ -1095,9 +1090,7 @@
           this.cancelButtonBorderRadius + "px";
           cancelButton.style.cursor = "pointer";
           cancelButton.textContent = this.cancelButtonText;
-          cancelButton.style.display = this.showCancelButton
-            ? "inline-block"
-            : "none";
+          cancelButton.style.display = this.showCancelButton ? "inline-block" : "none";
 
           cancelButton.addEventListener("click", () => {
             if (this.isInputEnabled === "Disabled") {
@@ -1197,7 +1190,7 @@
                 } else {
                   inputField.value = [...selectedOptions, options[i - 1]].join(this.splitKey);
                 }
-                
+
                 const newSelectedOptions = inputField.value.split(this.splitKey);
                 
                 for (let j = 0; j < numOfOptions; j++) {
@@ -1302,6 +1295,11 @@
           document.addEventListener("mozfullscreenchange", resizeHandler);
           document.addEventListener("MSFullscreenChange", resizeHandler);
 
+          this.activeOverlays.forEach((overlay) => {
+            this.updateOverlay(overlay);
+            overlay.style.transform = `rotate(${this.Rotation - 90}deg)`;
+          });
+
           const observer = new MutationObserver((mutationsList) => {
             for (const mutation of mutationsList) {
               if (
@@ -1379,7 +1377,7 @@
     setImage(args) {
       this.overlayImage = args.IMAGE;
     }
-    
+
     removeOverlay(overlay) {
       const index = this.activeOverlays.indexOf(overlay);
       if (index !== -1) {

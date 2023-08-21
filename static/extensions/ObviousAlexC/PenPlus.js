@@ -70,6 +70,7 @@ Though this may come off as rude.
 
   //?Make a function for updating the depth canvas to fit the scratch stage
   const depthFrameBuffer = gl.createFramebuffer();
+  const depthColorBuffer = gl.createRenderbuffer();
   const depthDepthBuffer = gl.createRenderbuffer();
 
   let lastFB = gl.getParameter(gl.FRAMEBUFFER_BINDING);
@@ -98,12 +99,19 @@ Though this may come off as rude.
     gl.activeTexture(gl.TEXTURE0);
 
     gl.bindFramebuffer(gl.FRAMEBUFFER, depthFrameBuffer);
-    gl.framebufferTexture2D(
+
+    gl.bindRenderbuffer(gl.RENDERBUFFER, depthColorBuffer);
+    gl.renderbufferStorage(
+      gl.RENDERBUFFER,
+      gl.RGBA8 || gl.RGBA4,
+      nativeSize[0],
+      nativeSize[1]
+    );
+    gl.framebufferRenderbuffer(
       gl.FRAMEBUFFER,
       gl.COLOR_ATTACHMENT0,
-      gl.TEXTURE_2D,
-      depthBufferTexture,
-      0
+      gl.RENDERBUFFER,
+      depthColorBuffer
     );
 
     gl.bindRenderbuffer(gl.RENDERBUFFER, depthDepthBuffer);
@@ -120,6 +128,14 @@ Though this may come off as rude.
       depthDepthBuffer
     );
 
+    gl.framebufferTexture2D(
+      gl.FRAMEBUFFER,
+      gl.COLOR_ATTACHMENT0,
+      gl.TEXTURE_2D,
+      depthBufferTexture,
+      0
+    );
+
     gl.enable(gl.DEPTH_TEST);
 
     gl.bindFramebuffer(gl.FRAMEBUFFER, lastFB);
@@ -132,6 +148,15 @@ Though this may come off as rude.
       lastFB = gl.getParameter(gl.FRAMEBUFFER_BINDING);
 
       gl.bindFramebuffer(gl.FRAMEBUFFER, depthFrameBuffer);
+
+      gl.bindRenderbuffer(gl.RENDERBUFFER, depthColorBuffer);
+      gl.renderbufferStorage(
+        gl.RENDERBUFFER,
+        gl.RGBA8 || gl.RGBA4,
+        nativeSize[0],
+        nativeSize[1]
+      );
+
       gl.bindRenderbuffer(gl.RENDERBUFFER, depthDepthBuffer);
       gl.renderbufferStorage(
         gl.RENDERBUFFER,
@@ -140,6 +165,24 @@ Though this may come off as rude.
         nativeSize[1]
       );
 
+      gl.activeTexture(gl.TEXTURE1);
+
+      gl.texImage2D(
+        gl.TEXTURE_2D,
+        0,
+        gl.RGBA,
+        nativeSize[0],
+        nativeSize[1],
+        0,
+        gl.RGBA,
+        gl.UNSIGNED_BYTE,
+        null
+      );
+
+      console.log(nativeSize)
+
+      gl.activeTexture(gl.TEXTURE0);
+
       gl.bindFramebuffer(gl.FRAMEBUFFER, lastFB);
     };
 
@@ -147,8 +190,21 @@ Though this may come off as rude.
     updateCanvasSize();
 
     //?Call every frame because I don't know of a way to detect when the stage is resized
-    vm.runtime.on("BEFORE_EXECUTE", () => {
+
+    window.addEventListener("resize", updateCanvasSize);
+    vm.runtime.on("STAGE_SIZE_CHANGED", () => {
       updateCanvasSize();
+    });
+
+    let lastURL = window.location.href;
+    let lastHQPen = renderer.useHighQualityRender;
+
+    vm.runtime.on("BEFORE_EXECUTE", () => {
+      if (lastURL != window.location.href || lastHQPen != renderer.useHighQualityRender) {
+        lastURL = window.location.href;
+        lastHQPen = renderer.useHighQualityRender;
+        updateCanvasSize();
+      }
     });
 
     gl.enable(gl.DEPTH_TEST);
@@ -166,7 +222,7 @@ Though this may come off as rude.
   let penPlusImportWrapMode = gl.CLAMP_TO_EDGE;
 
   //?Debug for depth
-  //penPlusCostumeLibrary["!Debug_Depth"] = depthBufferTexture;
+  penPlusCostumeLibrary["!Debug_Depth"] = depthBufferTexture;
 
   const checkForPen = (util) => {
     const curTarget = util.target;
@@ -234,7 +290,7 @@ Though this may come off as rude.
                   gl_FragColor = v_color;
                   highp vec4 v_depthPart = texture2D(u_depthTexture,gl_FragCoord.xy/u_res);
                   highp float v_depthcalc = (v_depthPart.r+v_depthPart.g+v_depthPart.b)/3.0;
-                  if (v_depth > v_depthcalc){
+                  if (v_depth >= v_depthcalc - 0.075){
                     gl_FragColor.a = 0.0;
                   }
                   gl_FragColor.rgb *= gl_FragColor.a;
@@ -279,7 +335,7 @@ Though this may come off as rude.
                     gl_FragColor = texture2D(u_texture, v_texCoord) * v_color;
                     highp vec4 v_depthPart = texture2D(u_depthTexture,gl_FragCoord.xy/u_res);
                     highp float v_depthcalc = (v_depthPart.r+v_depthPart.g+v_depthPart.b)/3.0;
-                    if (v_depth > v_depthcalc){
+                    if (v_depth >= v_depthcalc - 0.075){
                       gl_FragColor.a = 0.0;
                     }
                     gl_FragColor.rgb *= gl_FragColor.a;
@@ -593,7 +649,7 @@ Though this may come off as rude.
       gl.drawArrays(gl.TRIANGLES, 0, 3);
       //? Hacky fix but it works.
 
-      //triFunctions.drawDepthTri(targetID, x1, y1, x2, y2, x3, y3);
+      triFunctions.drawDepthTri(targetID, x1, y1, x2, y2, x3, y3);
       gl.useProgram(penPlusShaders.pen.program);
     },
 
@@ -2614,6 +2670,8 @@ Though this may come off as rude.
 
     penPlusShaders.pen.program = shaderManager._shaderCache.line[0].program;
   }
+
+  extension.addDocs("https://extensions.turbowarp.org/penplus");
 
   extension.register();
 })(window.Scratch);

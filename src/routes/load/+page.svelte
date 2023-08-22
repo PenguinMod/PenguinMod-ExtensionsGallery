@@ -29,16 +29,18 @@
     <p>
         <b>Step 2:</b>
         <br />
-        • Scroll to the bottom of the list and click on "Custom Extension"
+        • Scroll to the bottom of the list and click on "Custom Extension" You can
+        also click the "Load Custom Extension" button on the left.
         <br />
-        <i>
-            (you can also click the "Custom" button on the top of the menu, next
-            to the search bar)
-        </i>
     </p>
     <img
         src="/examples/loadextensions/2.png"
         alt="Opening the custom extension screen"
+        style="width: 345px"
+    />
+    <img
+        src="/examples/loadextensions/2-alt.png"
+        alt="Opening the custom extension screen on the sidebar"
         style="width: 345px"
     />
 

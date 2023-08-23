@@ -57,6 +57,11 @@ class Storage {
           text: 'log in first',
         },
         {
+          opcode: 'loggedbool',
+          blockType: Scratch.BlockType.BOOLEAN,
+          text: 'logged in?',
+        },
+        {
           opcode: 'errorlog',
           blockType: Scratch.BlockType.REPORTER,
           text: 'error log (array format)',
@@ -192,6 +197,9 @@ class Storage {
   }
   errorlog() {
     return JSON.stringify(errors)
+  }
+  loggedbool() {
+    return access
   }
   errorlogclear() {
     errors = []

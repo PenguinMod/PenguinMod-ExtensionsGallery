@@ -63,6 +63,11 @@ class Storage {
           disableMonitor: true
         },
         {
+          opcode: 'errorlogclear',
+          blockType: Scratch.BlockType.COMMAND,
+          text: 'clear the error log'
+        },
+        {
           opcode: 'islocked',
           blockType: Scratch.BlockType.BOOLEAN,
           text: 'is key [KEY] reserved (read-only) [MENU]?',
@@ -157,9 +162,17 @@ class Storage {
       method: 'GET'
     })
       .then((response) => {
-        hadError = false
-        return response.text();
-      })
+          if (!response.ok) {
+            hadError = true;
+            return response.text().then((errorContent) => {
+              errorText = errorContent;
+              addNewError(errorContent)
+            });
+          }
+          hadError = false;
+          errorText = "";
+          return response.text();
+       })
       .catch((error) => {
         console.error(error);
         hadError = true
@@ -179,6 +192,9 @@ class Storage {
   }
   errorlog() {
     return JSON.stringify(errors)
+  }
+  errorlogclear() {
+    errors = []
   }
   islocked(args) {
     if (access) {

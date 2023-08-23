@@ -34,4 +34,12 @@ export default [
         banner: "Gen1x/placeholder-cats.png",
         creator: "G1nX",
     },
+    {
+        name: "Site Builder", // The name of the extension.
+        description: "Extension for making basic websites with PenguinMod blocks. Do know that this extension isn't completely done yet, I have plans to add more blocks to simplify making sites.", // The description for the extension.
+        code: "minidogg/sitebuilder.js", // The folder and file name for the code of the extension.
+        banner: "minidogg/site builder extension banner.png",
+        creator: "minidogg", // Your username. Adds a link to your profile.
+        isGitHub: true, // Optional. false means this is your Scratch username, true means this is your GitHub username.
+    },
 ];

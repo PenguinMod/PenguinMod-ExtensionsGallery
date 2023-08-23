@@ -111,7 +111,7 @@ class Storage {
         {
           opcode: 'getfromstorage',
           blockType: Scratch.BlockType.REPORTER,
-          text: 'get key [KEY] from server',
+          text: 'get value of key [KEY] from server',
           arguments: {
             KEY: {
               type: Scratch.ArgumentType.STRING,

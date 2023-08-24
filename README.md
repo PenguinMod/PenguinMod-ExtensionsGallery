@@ -54,6 +54,7 @@ You can post your extension banner / thumbnail and or description in the pull re
 Once your pull request is merged, it'll be on the site or upcoming onto the site. You may get responses about things you should change or fix though.
 
 *Note: Vercel may comment on your pull request. This is the hosting service we use.*
+
 *If it has a link to visit a preview, you can click on it and see your changes. See the Optional Steps for more info on how to edit the site to show your extension.*
 
 # Optional Steps

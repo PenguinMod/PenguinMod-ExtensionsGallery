@@ -34,4 +34,11 @@ export default [
         banner: "Gen1x/placeholder-cats.png",
         creator: "G1nX",
     },
+    {
+        name: "Better Storage",
+        description: "Like PenguinMod's Storage Extension, but with a couple more features, and faster servers.",
+        code: "Gen1x/better_storage.js",
+        banner: "Gen1x/placeholder-cats.png",
+        creator: "G1nX",
+    },
 ];

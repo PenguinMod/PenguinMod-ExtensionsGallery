@@ -26,7 +26,7 @@
       return {
         id: "ParticleToolsSP",
         name: "Particle Tools",
-        docsURI: "https://extensions.turbowarp.org/SharkPool/Particle-Tools",
+        docsURI: "https://extensions.penguinmod.site/docs/particle-tools",
         color1: "#0090ff",
         menuIconURI,
         blocks: [

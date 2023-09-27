@@ -21,6 +21,14 @@ export default [
         isGitHub: true,
     },
     {
+        name: "Particle Tools",
+        description: "Tools for making particle engines easier.",
+        code: "SharkPool/Particle-Tools.js",
+        banner: "SharkPool/Particle-Tools.svg",
+        creator: "SharkPool-SP",
+        isGitHub: true,
+    },
+    {
         name: "Better Storage",
         description: "Like PenguinMod's Storage Extension, but with a couple more features, and faster servers.",
         code: "Gen1x/better_storage.js",

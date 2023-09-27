@@ -153,6 +153,7 @@
     recordingSet(args) {
       if (args.MODE === "enabled") {
         if (!warningSent) {
+          // jg: TODO: this should be a Scratch permission.
           const confirmed = window.confirm(
             "Allow access to record Microphone Audio? Be aware of privacy concerns if you Accept.",
           );

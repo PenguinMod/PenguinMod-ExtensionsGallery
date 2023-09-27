@@ -37,6 +37,13 @@
     constructor() {
       this.audioContext = new (window.AudioContext ||
         window.webkitAudioContext)();
+
+      // jg: used so PM can pause the audio context, use volume slider, etc.
+      this.gainNode = this.audioContext.createGain();
+      this.gainNode.gain.value = 1;
+      this.gainNode.connect(this.audioContext.destination);
+      Scratch.vm.runtime.registerExtensionAudioContext("SPsoundWaves", this.audioContext, this.gainNode);
+
       this.currentNote = "C2";
       this.keyPressed = false;
       this.keyPressedTime = 0;
@@ -46,6 +53,11 @@
       this.gainNodes = new Map();
       this.playingStatus = new Map();
       this.registerKeyEvents();
+
+      // jg: stop all sounds when the project is stopped
+      Scratch.vm.runtime.on('PROJECT_STOP_ALL', () => {
+        this.stopNote();
+      });
     }
 
     getInfo() {
@@ -301,7 +313,7 @@
       const gainNode = this.audioContext.createGain();
       gainNode.gain.setValueAtTime(1.0, this.audioContext.currentTime);
       oscillator.connect(gainNode);
-      gainNode.connect(this.audioContext.destination);
+      gainNode.connect(this.gainNode);
       const now = this.audioContext.currentTime;
       oscillator.start(now);
 

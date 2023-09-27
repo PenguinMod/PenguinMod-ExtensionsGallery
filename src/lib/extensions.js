@@ -21,6 +21,14 @@ export default [
         isGitHub: true,
     },
     {
+        name: "Sprite Parenting",
+        description: "Link sprites together and make them follow the parent.",
+        code: "SharkPool/Sprite-Linking.js",
+        banner: "SharkPool/Sprite-Linking.svg",
+        creator: "SharkPool-SP",
+        isGitHub: true,
+    },
+    {
         name: "Particle Tools",
         description: "Tools for making particle engines easier.",
         code: "SharkPool/Particle-Tools.js",
@@ -34,6 +42,22 @@ export default [
         code: "Gen1x/better_storage.js",
         banner: "Gen1x/placeholder-betterstorage.png",
         creator: "G1nX",
+    },
+    {
+        name: "Sound Waves",
+        description: "Make sounds with oscillators!",
+        code: "SharkPool/Sound-Waves.js",
+        banner: "SharkPool/Sound-Waves.svg",
+        creator: "SharkPool-SP",
+        isGitHub: true,
+    },
+    {
+        name: "Recording",
+        description: "Record your voice while you run your projects!",
+        code: "SharkPool/Recording.js",
+        banner: "SharkPool/Recording.svg",
+        creator: "SharkPool-SP",
+        isGitHub: true,
     },
     {
         name: "CORS Proxy",

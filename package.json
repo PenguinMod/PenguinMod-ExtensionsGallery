@@ -13,5 +13,8 @@
 		"svelte": "^4.0.5",
 		"vite": "^4.4.2"
 	},
-	"type": "module"
+	"type": "module",
+	"dependencies": {
+		"markdown-it": "^13.0.1"
+	}
 }

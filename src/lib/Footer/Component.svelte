@@ -36,7 +36,13 @@
     <span style="margin: 0px 6px;">-</span>
     <a target="_blank" href="https://discord.gg/NZ9MBMYTZh">Discord</a>
 </div>
-<div style="height: 24px" />
+<div style="height: 12px" />
+<div class="footer">
+    <div>
+        <slot />
+    </div>
+</div>
+<div style="height: 12px" />
 <div class="footer">
     <select
         bind:this={themeSwitcher}

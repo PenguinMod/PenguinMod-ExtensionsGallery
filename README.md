@@ -98,7 +98,7 @@ If you are using the website to add the `.md` file:
 3. Now type your markdown code. GitHub may actually show you a preview of your markdown.
 
 #### Typing Scratch Blocks in your tutorial
-You might notice documentation pages like the one for [Particle Tools](extensions.penguinmod.site/docs/particle-tools)
+You might notice documentation pages like the one for [Particle Tools](https://extensions.penguinmod.site/docs/particle-tools)
 have blocks on them.
 
 To do this, `.md` files have something called code-blocks. You type \`\`\` and then some code, then type \`\`\` again.

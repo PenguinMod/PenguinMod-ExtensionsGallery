@@ -139,6 +139,8 @@ will become
 
 <img src="example_block.png" alt="Block" height="64"></img>
 
+*(visit https://scratchblocks.github.io to play with creating blocks like this)*
+
 Note that GitHub, Visual Studio Code or other Markdown editors likely will not support this. **This only works on the PenguinMod site.** This is also why Vercel may allow you to preview your pull request.
 
 #### Adding the tutorial to the site

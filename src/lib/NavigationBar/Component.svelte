@@ -2,6 +2,14 @@
     // Components
     import BarPage from "./Page.svelte";
     import BarButton from "./Button.svelte";
+
+    const toggleTheme = () => {
+        if (localStorage.getItem("pm:dark") !== "true") {
+            localStorage.setItem("pm:dark", true);
+            return;
+        }
+        localStorage.setItem("pm:dark", false);
+    };
 </script>
 
 <div class="bar">
@@ -9,6 +17,9 @@
         <img class="logo-image" src="/navicon.png" alt="PenguinMod" />
     </a>
     <div style="margin-right: 12px;" />
+    <BarPage style="padding:0.5rem" on:click={toggleTheme}>
+        <img src="/icons/moon.svg" alt="Theme" />
+    </BarPage>
     <BarPage link={"/docs"}>Documentation</BarPage>
     <BarButton
         highlighted="true"

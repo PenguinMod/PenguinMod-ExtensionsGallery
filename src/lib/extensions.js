@@ -41,7 +41,7 @@ export default [
         name: "Better Storage",
         description: "Like PenguinMod's Storage Extension, but with a couple more features, and faster servers.",
         code: "Gen1x/better_storage.js",
-        banner: "Gen1x/placeholder-betterstorage.png",
+        banner: "Gen1x/betterstorage.png",
         creator: "G1nX",
     },
     {
@@ -64,14 +64,14 @@ export default [
         name: "CORS Proxy",
         description: "Accessible CORS Proxies for fetching information",
         code: "NamelessCat/corsproxy.js",
-        banner: "NamelessCat/placeholder-corsproxy.png",
+        banner: "NamelessCat/corsproxy.png",
         creator: "NamelessCat",
     },
     {
         name: "CATS",
         description: "Blocks related to cats.",
         code: "Gen1x/CATS.js",
-        banner: "Gen1x/placeholder-cats.png",
+        banner: "Gen1x/cats.png",
         creator: "G1nX",
     },
 ];

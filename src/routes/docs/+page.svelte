@@ -29,7 +29,4 @@
     :global(body.dark-mode) {
         color: white;
     }
-    :global(body.dark-mode) a {
-        color: dodgerblue;
-    }
 </style>

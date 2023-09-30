@@ -19,11 +19,14 @@
     let copyPrompt;
 
     function copiedToClipboard() {
+        const scrollAmount = document.documentElement.scrollTop;
         const rectButton = copyButton.getBoundingClientRect();
         const rectPrompt = copyPrompt.getBoundingClientRect();
         const x = rectButton.left + rectButton.width / 2 - rectPrompt.width / 2;
         copyPrompt.style.left = `${x}px`;
-        copyPrompt.style.top = `${rectButton.top - (rectPrompt.height + 10)}px`;
+        copyPrompt.style.top = `${
+            rectButton.top + scrollAmount - (rectPrompt.height + 10)
+        }px`;
 
         const animationDuration = 80;
         copyPrompt.animate(
@@ -64,38 +67,44 @@
     <p>Copied to Clipboard!</p>
 </div>
 <div class="block">
-    <img src={image} alt="Thumb" class="image" />
-    <p class="title">{name}</p>
-    <p class="description">
-        <slot />
-        {#if creator}
-            <p>
-                Created by
-                <a
-                    href={!isGitHub
-                        ? `https://scratch.mit.edu/users/${creator}/`
-                        : `https://github.com/${creator}/`}
-                    target="_blank"
-                >
-                    {creator}.
-                </a>
-            </p>
-        {/if}
-    </p>
-    <button
-        on:click={() => {
-            navigator.clipboard.writeText(url).then(() => {
-                copiedToClipboard();
-            });
-        }}
-        bind:this={copyButton}
-        class="green"
-    >
-        Copy URL
-    </button>
-    <a href={baseUrl + url} target="_blank">
-        <button class="blue">View</button>
-    </a>
+    <div>
+        <img src={image} alt="Thumb" class="image" />
+        <p class="title">{name}</p>
+        <p class="description">
+            <slot />
+            {#if creator}
+                <p>
+                    Created by
+                    <a
+                        href={!isGitHub
+                            ? `https://scratch.mit.edu/users/${creator}/`
+                            : `https://github.com/${creator}/`}
+                        target="_blank"
+                    >
+                        {creator}.
+                    </a>
+                </p>
+            {/if}
+        </p>
+    </div>
+    <div class="block-buttons">
+        <div>
+            <button
+                on:click={() => {
+                    navigator.clipboard.writeText(url).then(() => {
+                        copiedToClipboard();
+                    });
+                }}
+                bind:this={copyButton}
+                class="blue"
+            >
+                Copy URL
+            </button>
+            <a href={baseUrl + url} target="_blank">
+                <button class="purple">View</button>
+            </a>
+        </div>
+    </div>
 </div>
 
 <style>
@@ -125,13 +134,21 @@
     }
 
     .block {
-        border: 2px solid rgba(0, 0, 0, 0.25);
+        border: 1px solid rgba(0, 0, 0, 0.25);
         border-radius: 6px;
         padding: 8px;
         margin: 4px;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
     }
     :global(body.dark-mode) .block {
         border-color: rgba(255, 255, 255, 0.75);
+    }
+    .block-buttons {
+        display: flex;
+        flex-direction: row;
+        align-items: center;
     }
 
     .image {
@@ -155,8 +172,8 @@
         font-size: 24px;
         margin-left: 6px;
         margin-right: 6px;
-        border: 2px solid rgba(0, 0, 0, 0.25);
-        border-radius: 8px;
+        border: 1px solid rgba(0, 0, 0, 0.35);
+        border-radius: 4px;
         padding: 4px 8px;
         color: white;
         font-weight: bold;
@@ -169,13 +186,9 @@
     }
 
     .blue {
-        background-color: rgb(0, 153, 255);
+        background-color: #00a2ff;
     }
-    .green {
-        background-color: rgb(0, 163, 0);
-    }
-
-    :global(body.dark-mode) a {
-        color: dodgerblue;
+    .purple {
+        background-color: #9d52ff;
     }
 </style>

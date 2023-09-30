@@ -9,7 +9,6 @@
         <img class="logo-image" src="/navicon.png" alt="PenguinMod" />
     </a>
     <div style="margin-right: 12px;" />
-    <BarPage link={"/"}>Extensions</BarPage>
     <BarPage link={"/docs"}>Documentation</BarPage>
     <BarButton
         highlighted="true"

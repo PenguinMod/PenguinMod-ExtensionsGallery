@@ -35,6 +35,7 @@ function openWindow(url) {
 }
 
 let access = false;
+
 class Storage {
   getInfo() {
     return {
@@ -136,7 +137,7 @@ class Storage {
 
   savetostorage(args) {
     if (access) {
-      fetch("https://save.genarunchisacoa.repl.co/set.php?key=" + encodeURIComponent(args.KEY) + "&value=" + encodeURIComponent(args.VALUE) + "&username=" + encodeURIComponent(username), {
+      fetch("https://corsproxy.io/?" + encodeURIComponent("http://better-storage.rf.gd/set.php?key=" + args.KEY + "&value=" + args.VALUE + "&username=" + username), {
         method: 'GET'
       })
         .then((response) => {
@@ -162,8 +163,38 @@ class Storage {
       alert("You are not logged in.");
     }
   }
+
+  leaderset(args) {
+    if (access) {
+      fetch("https://corsproxy.io/?" + encodeURIComponent("http://better-storage.rf.gd/set.php?key=" + args.KEY + "&value=" + args.VALUE + "&username=" + username), {
+        method: 'GET'
+      })
+        .then((response) => {
+          if (!response.ok) {
+            hadError = true;
+            return response.text().then((errorContent) => {
+              errorText = errorContent;
+              addNewError(errorContent)
+            });
+          }
+          hadError = false;
+          errorText = "";
+          return response.text();
+        })
+        .catch((error) => {
+          console.error(error);
+          hadError = true;
+          errorText = error;
+          addNewError(error)
+          return 'Uh oh! Something went wrong.';
+        });
+    } else {
+      alert("You are not logged in.");
+    }
+  }
+  
   getfromstorage(args) {
-    return fetch("https://save.genarunchisacoa.repl.co/get.php?key=" + encodeURIComponent(args.KEY), {
+    return fetch("https://corsproxy.io/?http://better-storage.rf.gd/get.php?key=" + encodeURIComponent(args.KEY), {
       method: 'GET'
     })
       .then((response) => {
@@ -208,9 +239,9 @@ class Storage {
     if (access) {
       var url;
       if (args.MENU == "for everyone else") {
-        url = "https://save.genarunchisacoa.repl.co/islocked.php?key=" + encodeURIComponent(args.KEY)
+        url = "https://corsproxy.io/?" + encodeURIComponent("http://better-storage.rf.gd/islocked.php?key=" + args.KEY)
       } else {
-        url = "https://save.genarunchisacoa.repl.co/islocked.php?key=" + encodeURIComponent(args.KEY) + "&username=" + encodeURIComponent(username)
+        url = "https://corsproxy.io/?" + encodeURIComponent("http://better-storage.rf.gd/islocked.php?key=" + args.KEY + "&username=" + username)
       }
       return fetch(url, {
         method: 'GET'

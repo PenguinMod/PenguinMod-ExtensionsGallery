@@ -36,6 +36,7 @@
                 name={extension.name}
                 url={`${origin}/extensions/${extension.code}`}
                 creator={extension.creator}
+                documentation={extension.documentation}
                 isGitHub={String(extension.isGitHub) === "true"}
             >
                 {extension.description}

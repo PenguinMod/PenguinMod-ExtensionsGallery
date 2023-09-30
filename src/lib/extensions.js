@@ -31,6 +31,7 @@ export default [
     {
         name: "Particle Tools",
         description: "Tools for making particle engines easier.",
+        documentation: "particle-tools",
         code: "SharkPool/Particle-Tools.js",
         banner: "SharkPool/Particle-Tools.svg",
         creator: "SharkPool-SP",

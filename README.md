@@ -79,6 +79,106 @@ If you are using the website to add the file:
 This should create the folder with the uploaded image inside.
 
 ### Step 7.
+Create instructions on using your extension.
+
+***This really only makes sense if your extension has features that may need explanation.***
+
+Enter the `src/lib/Documentation` folder in the repository.
+
+Inside this folder are a lot of `.md` files. You will need to make one for your documentation.
+These are **Markdown** files. It's a simple way to write information nicely. Right now, you are reading a markdown file.
+
+To learn how to write markdown, you can visit https://www.markdowntutorial.com/
+or just write your `.md` file using the same formatting tools that Discord has.
+
+If you are using the website to add the `.md` file:
+
+1. Click `Add File` at the top and click `Create new file`.
+2. At the top where the file name is, type your extensions name, and then `.md`. **DO NOT TYPE A `/` HERE!**
+3. Now type your markdown code. GitHub may actually show you a preview of your markdown.
+
+#### Typing Scratch Blocks in your tutorial
+You might notice documentation pages like the one for [Particle Tools](extensions.penguinmod.site/docs/particle-tools)
+have blocks on them.
+
+To do this, `.md` files have something called code-blocks. You type \`\`\` and then some code, then type \`\`\` again.
+
+Example:
+````
+```
+this is probably code
+```
+````
+will become
+```
+this is probably code
+```
+
+You can also specify a programming language (which will be important for showing blocks)
+
+Example:
+````
+```js
+console.log("Hello world!");
+```
+````
+will become
+```js
+console.log("Hello world!");
+```
+
+To type blocks in your documentation, specify `scratch` as the programming lanugage.
+
+Example:
+````
+```scratch
+hello, i am a scratch block ()
+```
+````
+will become
+
+<img src="example_block.png" alt="Block" height="64"></img>
+
+Note that GitHub, Visual Studio Code or other Markdown editors likely will not support this. **This only works on the PenguinMod site.** This is also why Vercel may allow you to preview your pull request.
+
+#### Adding the tutorial to the site
+So far we have covered creating and filling out the `.md` file, but it's not available yet.
+
+To do this, enter the `src/lib/Documentation/pages.js` file.
+
+In this file you will see some instructions. First off at the start of the file, follow the instructions to import your `.md` file.
+
+Example:
+*The documentation file is called `extension.md` in these examples.*
+```js
+import PageExtension from "./extension.md?raw";
+```
+```js
+import PageDocumentationExtension from "./extension.md?raw";
+```
+
+Now you will see some more instructions below. Here, you will create the page that leads to the documentation.
+
+Example:
+*The above example helps visualize this section easier.*
+```js
+"extension": PageExtension,
+```
+`/docs/extension` will lead to the docs here
+```js
+"extension": PageDocumentationExtension,
+```
+`/docs/extension` will lead to the docs here
+```js
+"afdoiewhfoqwijel": PageExtension,
+```
+`/docs/afdoiewhfoqwijel` will lead to the docs here
+
+Do not type a `/` or any characters that cannot be used in a URL here. Uppercase letters may also not work for the page link.
+
+Also try to keep the name recognizable to your extension as this name will also be used on the `/docs` page.
+
+### Step 8.
 Add your extension onto the actual website.
 
 Enter the `src/lib/extensions.js` file in the repository.
@@ -92,6 +192,7 @@ Each extension is incased in `{}` brackets. Look below on how to copy it.
     description: "Blocks to return the result of an expression.", // The description for the extension.
     code: "Username/extension.js", // The folder and file name for the code of the extension.
     banner: "Username/Extension.png", // The folder and file name for the banner of the extension.
+    documentation: "page-name", // Only applies if you created a documentation page. This is the page name for that documentation.
     creator: "Username", // Your username. Adds a link to your profile.
     isGitHub: false, // Optional. false means this is your Scratch username, true means this is your GitHub username.
 },

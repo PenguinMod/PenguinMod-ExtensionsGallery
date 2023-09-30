@@ -9,5 +9,5 @@ export default {
     // the key is the path to the docs page
     // so you can do "sharkpool-particle-tools" for example
     // you cant use / like "sharkpool/particle-tools" yet
-    "particle-tools": PageParticleTools
+    "particle-tools": PageParticleTools,
 };

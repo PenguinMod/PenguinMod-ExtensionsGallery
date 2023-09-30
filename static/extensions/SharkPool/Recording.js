@@ -214,7 +214,16 @@
 
     async saveRecording(args) {
       if (this.recording) {
-        const target = args.SPRITE;
+        let target = args.SPRITE;
+        if (target === "Stage") {
+          // jg: use getTargetForStage instead of target 0
+          target = Scratch.vm.runtime.getTargetForStage().id;
+        } else {
+          target = this.findID(target);
+        }
+        // jg: maybe dont do anything if the target ID is not there
+        //     ex: unknown sprite name, so no ID was returned
+        if (!target) return;
         Scratch.fetch(await this.convertBlobToBase64(this.recording, "mp3"))
           .then((r) => r.arrayBuffer())
           .then((arrayBuffer) => {
@@ -256,12 +265,7 @@
       for (let index = 0; index < targets.length; index++) {
         const target = targets[index];
         if (target.isOriginal) {
-          const targetName = target.getName();
-          const targetId = target.id;
-          spriteNames.push({
-            text: targetName,
-            value: targetId,
-          });
+          spriteNames.push(target.getName());
         }
       }
       if (spriteNames.length > 0) {
@@ -269,6 +273,13 @@
       } else {
         return [""];
       }
+    }
+
+    findID(sprite) {
+      // jg: its much faster to just, make the runtime find the target
+      const target = Scratch.vm.runtime.getSpriteTargetByName(sprite);
+      if (!target) return '';
+      return target.id;
     }
 
     startRecording() {

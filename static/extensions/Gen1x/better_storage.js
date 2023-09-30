@@ -218,7 +218,7 @@ class Storage {
       });
   }
   login() {
-    openWindow("https://storage-auth.genarunchisacoa.repl.co/")
+    openWindow("https://storage-extension-auth.onrender.com/")
   }
   haderror() {
     return hadError;

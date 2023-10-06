@@ -41,8 +41,8 @@ class Mathematics {
   constant(args) {
     switch (args.CONSTANT) {
       case "pi": return 3.141592653589793238462643383279502884197; break
-      case "tau"; return 3.141592653589793238462643383279502884197 * 2; break
-      case "phi"; return 1.61803398874989484820458683436563811; break
+      case "tau": return 3.141592653589793238462643383279502884197 * 2; break
+      case "phi": return 1.61803398874989484820458683436563811; break
       default: return 0; break
     }
   }

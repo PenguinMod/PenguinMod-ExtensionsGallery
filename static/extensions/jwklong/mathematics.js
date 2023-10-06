@@ -1,4 +1,4 @@
-class Strings2 {
+class Mathematics {
   getInfo() {
     return {
       id: 'jwklongmathematics',
@@ -42,4 +42,4 @@ class Strings2 {
     }
   }
 }
-Scratch.extensions.register(new Strings2())
+Scratch.extensions.register(new Mathematics())

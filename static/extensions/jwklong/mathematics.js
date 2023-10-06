@@ -25,7 +25,7 @@ class Mathematics {
         {
           opcode: 'matConditional',
           blockType: Scratch.BlockType.REPORTER,
-          text: '[X] → [Y]',
+          text: '[X] ⇒ [Y]',
           disableMonitor: true,
           arguments: {
             X: {
@@ -39,7 +39,7 @@ class Mathematics {
         {
           opcode: 'matBiconditional',
           blockType: Scratch.BlockType.REPORTER,
-          text: '[X] ↔ [Y]',
+          text: '[X] ⇔ [Y]',
           disableMonitor: true,
           arguments: {
             X: {

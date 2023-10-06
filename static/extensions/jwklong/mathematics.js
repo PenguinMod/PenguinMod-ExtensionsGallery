@@ -3,11 +3,14 @@ class Mathematics {
     return {
       id: 'jwklongmathematics',
       name: 'Mathematics',
+      color1: '#7ac94f',
+      color2: '#6aa14d',
       blocks: [
         {
           opcode: 'constant',
           blockType: Scratch.BlockType.REPORTER,
           text: 'constant [CONSTANT]',
+          disableMonitor: true,
           arguments: {
             CONSTANT: {
               type: Scratch.ArgumentType.STRING,

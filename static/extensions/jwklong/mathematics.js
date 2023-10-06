@@ -17,7 +17,39 @@ class Mathematics {
               menu: 'CONSTANT'
             }
           }
-        }
+        },
+        {
+          blockType: Scratch.BlockType.LABEL,
+          text: "Boolean Operations",
+        },
+        {
+          opcode: 'matConditional',
+          blockType: Scratch.BlockType.REPORTER,
+          text: '[X] → [Y]',
+          disableMonitor: true,
+          arguments: {
+            X: {
+              type: Scratch.ArgumentType.BOOLEAN,
+            },
+            Y: {
+              type: Scratch.ArgumentType.BOOLEAN,
+            }
+          }
+        },
+        {
+          opcode: 'matBiconditional',
+          blockType: Scratch.BlockType.REPORTER,
+          text: '[X] ↔ [Y]',
+          disableMonitor: true,
+          arguments: {
+            X: {
+              type: Scratch.ArgumentType.BOOLEAN,
+            },
+            Y: {
+              type: Scratch.ArgumentType.BOOLEAN,
+            }
+          }
+        },
       ],
       menus: {
         CONSTANT: {
@@ -48,6 +80,18 @@ class Mathematics {
       case "phi": return 1.61803398874989484820458683436563811; break
       default: return 0; break
     }
+  }
+
+  _matConditional(x, y) {
+    return !x || y
+  }
+  
+  matConditional(args) {
+    return this._matConditional(args.X, args.Y)
+  }
+  
+  matBiconditional(args) {
+    return this._matConditional(args.X, args.Y) && this._matConditional(args.Y, args.X)
   }
 }
 Scratch.extensions.register(new Mathematics())

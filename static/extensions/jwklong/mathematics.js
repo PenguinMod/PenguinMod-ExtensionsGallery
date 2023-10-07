@@ -66,6 +66,10 @@ class Mathematics {
             {
               text: 'ϕ',
               value: 'phi'
+            },
+            { 
+              text: 'e',
+              value: 'e'
             }
           ]
         }
@@ -77,7 +81,8 @@ class Mathematics {
     switch (args.CONSTANT) {
       case "pi": return 3.141592653589793238462643383279502884197; break
       case "tau": return 3.141592653589793238462643383279502884197 * 2; break
-      case "phi": return 1.61803398874989484820458683436563811; break
+      case "e": return 2.718281828459045235360287471352662497757; break
+      case "phi": return 1.618033988749894848204586834365638117720; break
       default: return 0; break
     }
   }

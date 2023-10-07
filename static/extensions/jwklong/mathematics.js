@@ -117,7 +117,7 @@ class Mathematics {
   }
 
   imaginary() {
-    return new ComplexNumber(0, 1)
+    return JSON.stringify(new ComplexNumber(0, 1))
   }
 }
 Scratch.extensions.register(new Mathematics())

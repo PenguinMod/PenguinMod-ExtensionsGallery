@@ -223,7 +223,7 @@ class Mathematics {
       var c = Number(x.real == 0 ? Infinity : x.real) / Number(y.imaginary == 0 ? Infinity : y.imaginary) * -1 || 0
       var d = Number(x.imaginary == 0 ? Infinity : x.imaginary) / Number(y.imaginary == 0 ? Infinity : y.imaginary) || 0
       
-      return JSON.stringify(new ComplexNumber(a + d, b + c))
+      return JSON.stringify(new ComplexNumber(a + d || 0, b + c || 0))
     } catch {
       return JSON.stringify(new ComplexNumber(0, 0))
     }

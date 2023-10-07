@@ -110,6 +110,16 @@ class Mathematics {
             Y: {}
           }
         },
+        {
+          opcode: 'divComplex',
+          blockType: Scratch.BlockType.REPORTER,
+          text: 'complex [X] / [Y]',
+          disableMonitor: true,
+          arguments: {
+            X: {},
+            Y: {}
+          }
+        },
       ],
       menus: {
         CONSTANT: {
@@ -198,6 +208,20 @@ class Mathematics {
       var d = Number(x.imaginary) * Number(y.imaginary) * -1
       
       return JSON.stringify(new ComplexNumber(a + d, b + c))
+    } catch {
+      return JSON.stringify(new ComplexNumber(0, 0))
+    }
+  }
+
+  divComplex(args) {
+    try {
+      var x = JSON.parse(args.X)
+      var y = JSON.parse(args.Y)
+      
+      return this.mulComplex({
+        X: x,
+        Y: new ComplexNumber(1 / Number(y.real), 1 / Number(y.imaginary))
+      })
     } catch {
       return JSON.stringify(new ComplexNumber(0, 0))
     }

@@ -217,11 +217,13 @@ class Mathematics {
     try {
       var x = JSON.parse(args.X)
       var y = JSON.parse(args.Y)
+
+      var a = Number(x.real == 0 ? Infinity : x.real) / Number(y.real == 0 ? Infinity : y.real) || 0
+      var b = Number(x.imaginary == 0 ? Infinity : x.imaginary) / Number(y.real == 0 ? Infinity : y.real) || 0
+      var c = Number(x.real == 0 ? Infinity : x.real) / Number(y.imaginary == 0 ? Infinity : y.imaginary) * -1 || 0
+      var d = Number(x.imaginary == 0 ? Infinity : x.imaginary) / Number(y.imaginary == 0 ? Infinity : y.imaginary) || 0
       
-      return this.mulComplex({
-        X: x,
-        Y: new ComplexNumber(1 / Number(y.real), 1 / Number(y.imaginary))
-      })
+      return JSON.stringify(new ComplexNumber(a + d, b + c))
     } catch {
       return JSON.stringify(new ComplexNumber(0, 0))
     }

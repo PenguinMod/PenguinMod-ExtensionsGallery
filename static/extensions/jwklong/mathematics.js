@@ -120,6 +120,25 @@ class Mathematics {
             Y: {}
           }
         },
+        "---",
+        {
+          opcode: 'realToNumber',
+          blockType: Scratch.BlockType.REPORTER,
+          text: 'convert real [NUMBER] to number',
+          disableMonitor: true,
+          arguments: {
+            NUMBER: {}
+          }
+        },
+        {
+          opcode: 'imaginaryToNumber',
+          blockType: Scratch.BlockType.REPORTER,
+          text: 'convert imaginary [NUMBER] to number',
+          disableMonitor: true,
+          arguments: {
+            NUMBER: {}
+          }
+        },
       ],
       menus: {
         CONSTANT: {
@@ -207,7 +226,7 @@ class Mathematics {
       var c = Number(x.real) * Number(y.imaginary)
       var d = Number(x.imaginary) * Number(y.imaginary) * -1
       
-      return JSON.stringify(new ComplexNumber(a + d, b + c))
+      return JSON.stringify(new ComplexNumber(Number(a + d), Number(b + c)))
     } catch {
       return JSON.stringify(new ComplexNumber(0, 0))
     }
@@ -223,9 +242,25 @@ class Mathematics {
       var c = Number(x.real == 0 ? Infinity : x.real) / Number(y.imaginary == 0 ? Infinity : y.imaginary) * -1 || 0
       var d = Number(x.imaginary == 0 ? Infinity : x.imaginary) / Number(y.imaginary == 0 ? Infinity : y.imaginary) || 0
       
-      return JSON.stringify(new ComplexNumber(a + d || 0, b + c || 0))
+      return JSON.stringify(new ComplexNumber(Number(a + d), Number(b + c)))
     } catch {
       return JSON.stringify(new ComplexNumber(0, 0))
+    }
+  }
+
+  realToNumber(args) {
+    try {
+      return Number(JSON.parse(args.NUMBER).real)
+    } catch {
+      return 0
+    }
+  }
+
+  imaginaryToNumber(args) {
+    try {
+      return Number(JSON.parse(args.NUMBER).imaginary)
+    } catch {
+      return 0
     }
   }
 }

@@ -1,3 +1,10 @@
+class ComplexNumber {
+  constructor(a = 0, b = 0) {
+    this.real = a
+    this.imaginary = b
+  }
+}
+
 class Mathematics {
   getInfo() {
     return {
@@ -24,7 +31,7 @@ class Mathematics {
         },
         {
           opcode: 'matConditional',
-          blockType: Scratch.BlockType.REPORTER,
+          blockType: Scratch.BlockType.BOOLEAN,
           text: '[X] ⇒ [Y]',
           disableMonitor: true,
           arguments: {
@@ -38,7 +45,7 @@ class Mathematics {
         },
         {
           opcode: 'matBiconditional',
-          blockType: Scratch.BlockType.REPORTER,
+          blockType: Scratch.BlockType.BOOLEAN,
           text: '[X] ⇔ [Y]',
           disableMonitor: true,
           arguments: {
@@ -49,6 +56,16 @@ class Mathematics {
               type: Scratch.ArgumentType.BOOLEAN,
             }
           }
+        },
+        {
+          blockType: Scratch.BlockType.LABEL,
+          text: "Complex Numbers",
+        },
+        {
+          opcode: 'imaginary',
+          blockType: Scratch.BlockType.REPORTER,
+          text: 'i',
+          disableMonitor: true
         },
       ],
       menus: {
@@ -97,6 +114,10 @@ class Mathematics {
   
   matBiconditional(args) {
     return this._matConditional(args.X, args.Y) && this._matConditional(args.Y, args.X)
+  }
+
+  imaginary() {
+    return new ComplexNumber(0, 1)
   }
 }
 Scratch.extensions.register(new Mathematics())

@@ -67,6 +67,18 @@ class Mathematics {
           text: 'i',
           disableMonitor: true
         },
+        {
+          opcode: 'toComplex',
+          blockType: Scratch.BlockType.REPORTER,
+          text: 'convert [NUMBER] to complex',
+          disableMonitor: true,
+          arguments: {
+            NUMBER: {
+              type: Scratch.ArgumentType.NUMBER,
+              defaultValue: 0
+            }
+          }
+        },
       ],
       menus: {
         CONSTANT: {
@@ -118,6 +130,10 @@ class Mathematics {
 
   imaginary() {
     return JSON.stringify(new ComplexNumber(0, 1))
+  }
+
+  toComplex(args) {
+    return JSON.stringify(new ComplexNumber(Number(args.NUMBER), 0))
   }
 }
 Scratch.extensions.register(new Mathematics())

@@ -79,6 +79,17 @@ class Mathematics {
             }
           }
         },
+        "---",
+        {
+          opcode: 'addComplex',
+          blockType: Scratch.BlockType.REPORTER,
+          text: 'convert [X] + [Y]',
+          disableMonitor: true,
+          arguments: {
+            X: {},
+            Y: {}
+          }
+        },
       ],
       menus: {
         CONSTANT: {

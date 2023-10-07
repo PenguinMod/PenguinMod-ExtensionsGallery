@@ -90,6 +90,26 @@ class Mathematics {
             Y: {}
           }
         },
+        {
+          opcode: 'subComplex',
+          blockType: Scratch.BlockType.REPORTER,
+          text: 'complex [X] - [Y]',
+          disableMonitor: true,
+          arguments: {
+            X: {},
+            Y: {}
+          }
+        },
+        {
+          opcode: 'mulComplex',
+          blockType: Scratch.BlockType.REPORTER,
+          text: 'complex [X] * [Y]',
+          disableMonitor: true,
+          arguments: {
+            X: {},
+            Y: {}
+          }
+        },
       ],
       menus: {
         CONSTANT: {
@@ -152,6 +172,32 @@ class Mathematics {
       var x = JSON.parse(args.X)
       var y = JSON.parse(args.Y)
       return JSON.stringify(new ComplexNumber(Number(x.real) + Number(y.real), Number(x.imaginary) + Number(y.imaginary)))
+    } catch {
+      return JSON.stringify(new ComplexNumber(0, 0))
+    }
+  }
+
+  subComplex(args) {
+    try {
+      var x = JSON.parse(args.X)
+      var y = JSON.parse(args.Y)
+      return JSON.stringify(new ComplexNumber(Number(x.real) - Number(y.real), Number(x.imaginary) - Number(y.imaginary)))
+    } catch {
+      return JSON.stringify(new ComplexNumber(0, 0))
+    }
+  }
+
+  mulComplex(args) {
+    try {
+      var x = JSON.parse(args.X)
+      var y = JSON.parse(args.Y)
+
+      var a = Number(x.real) * Number(y.real)
+      var b = Number(x.imaginary) * Number(y.real)
+      var c = Number(x.real) * Number(y.imaginary)
+      var d = Number(x.imaginary) * Number(y.imaginary) * -1
+      
+      return JSON.stringify(new ComplexNumber(a + d, b + c))
     } catch {
       return JSON.stringify(new ComplexNumber(0, 0))
     }

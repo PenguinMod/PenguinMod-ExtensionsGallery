@@ -83,7 +83,7 @@ class Mathematics {
         {
           opcode: 'addComplex',
           blockType: Scratch.BlockType.REPORTER,
-          text: 'convert [X] + [Y]',
+          text: 'complex [X] + [Y]',
           disableMonitor: true,
           arguments: {
             X: {},
@@ -145,6 +145,16 @@ class Mathematics {
 
   toComplex(args) {
     return JSON.stringify(new ComplexNumber(Number(args.NUMBER), 0))
+  }
+
+  addComplex(args) {
+    try {
+      var x = JSON.parse(args.X)
+      var y = JSON.parse(args.Y)
+      return JSON.stringify(new ComplexNumber(Number(x.real) + Number(y.real), Number(x.imaginary) + Number(y.imaginary)))
+    } catch {
+      return JSON.stringify(new ComplexNumber(0, 0))
+    }
   }
 }
 Scratch.extensions.register(new Mathematics())

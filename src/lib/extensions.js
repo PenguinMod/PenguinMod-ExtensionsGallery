@@ -90,4 +90,12 @@ export default [
         creator: "MikeDev101",
         isGitHub: true,
     },
+    {
+        name: "Mathematics",
+        description: "Complicated maths extension for nerds.",
+        code: "jwklong/mathematics.js",
+        banner: "jwklong/mathematics.png",
+        creator: "jwklong",
+        isGitHub: true,
+    },
 ];

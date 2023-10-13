@@ -82,4 +82,12 @@ export default [
         creator: "TheShovel",
         isGitHub: true,
     },
+    {
+        name: "CloudLink",
+        description: "A powerful WebSocket extension for Scratch.",
+        code: "MikeDev101/cloudlink.js",
+        banner: "MikeDev101/cloudlink.svg",
+        creator: "MikeDev101",
+        isGitHub: true,
+    },
 ];

@@ -74,4 +74,12 @@ export default [
         banner: "Gen1x/cats.png",
         creator: "G1nX",
     },
+    {
+        name: "Extension exposer",
+        description: "Access the raw functions from other extensions.",
+        code: "TheShovel/extexp.js",
+        banner: "TheShovel/placeholder-extexp.png",
+        creator: "TheShovel",
+        isGitHub: true,
+    },
 ];

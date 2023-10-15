@@ -13,6 +13,13 @@ export default [
         creator: "pinksheep2917",
     },
     {
+        name: "3D Math",
+        description: "A handful of utilities for making your own sprite-based 3D engine.",
+        code: "ObviousAlexC/3DMath.js",
+        banner: "ObviousAlexC/3DMath.svg",
+        creator: "pinksheep2917",
+    },
+    {
         name: "Better Input",
         description: "Expansion to the Ask and Wait blocks.",
         code: "SharkPool/BetterInput.js",
@@ -45,6 +52,13 @@ export default [
         creator: "G1nX",
     },
     {
+        name: "Mouth Washer",
+        description: "(ft. violet and jwklong) - Includes many utilities related to bad words, swearing and profanity. Thought as an extra layer of security for chat projects.",
+        code: "Gen1x/mouth_washer.js",
+        banner: "Gen1x/mw-placeholder.png",
+        creator: "G1nX",
+    },
+    {
         name: "Sound Waves",
         description: "Make sounds with oscillators!",
         code: "SharkPool/Sound-Waves.js",
@@ -73,5 +87,29 @@ export default [
         code: "Gen1x/CATS.js",
         banner: "Gen1x/cats.png",
         creator: "G1nX",
+    },
+    {
+        name: "Extension exposer",
+        description: "Access the raw functions from other extensions.",
+        code: "TheShovel/extexp.js",
+        banner: "TheShovel/placeholder-extexp.png",
+        creator: "TheShovel",
+        isGitHub: true,
+    },
+    {
+        name: "CloudLink",
+        description: "A powerful WebSocket extension for Scratch.",
+        code: "MikeDev101/cloudlink.js",
+        banner: "MikeDev101/cloudlink.svg",
+        creator: "MikeDev101",
+        isGitHub: true,
+    },
+    {
+        name: "Mathematics",
+        description: "Complicated maths extension for nerds.",
+        code: "jwklong/mathematics.js",
+        banner: "jwklong/mathematics.png",
+        creator: "jwklong",
+        isGitHub: true,
     },
 ];

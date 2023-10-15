@@ -13,6 +13,13 @@ export default [
         creator: "pinksheep2917",
     },
     {
+        name: "3D Math",
+        description: "A handful of utilities for making your own sprite-based 3D engine.",
+        code: "ObviousAlexC/3DMath.js",
+        banner: "ObviousAlexC/3DMath.svg",
+        creator: "pinksheep2917",
+    },
+    {
         name: "Better Input",
         description: "Expansion to the Ask and Wait blocks.",
         code: "SharkPool/BetterInput.js",

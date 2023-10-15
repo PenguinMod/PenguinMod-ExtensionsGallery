@@ -1,8 +1,8 @@
 (function(Scratch) {
   'use strict';
-   const gptIcon = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 30 30' width='30px' height='30px'%3E%3Cpath d='M 14.070312 2 C 11.330615 2 8.9844456 3.7162572 8.0390625 6.1269531 C 6.061324 6.3911222 4.2941948 7.5446684 3.2773438 9.3066406 C 1.9078196 11.678948 2.2198602 14.567816 3.8339844 16.591797 C 3.0745422 18.436097 3.1891418 20.543674 4.2050781 22.304688 C 5.5751778 24.677992 8.2359331 25.852135 10.796875 25.464844 C 12.014412 27.045167 13.895916 28 15.929688 28 C 18.669385 28 21.015554 26.283743 21.960938 23.873047 C 23.938676 23.608878 25.705805 22.455332 26.722656 20.693359 C 28.09218 18.321052 27.78014 15.432184 26.166016 13.408203 C 26.925458 11.563903 26.810858 9.4563257 25.794922 7.6953125 C 24.424822 5.3220082 21.764067 4.1478652 19.203125 4.5351562 C 17.985588 2.9548328 16.104084 2 14.070312 2 z M 14.070312 4 C 15.226446 4 16.310639 4.4546405 17.130859 5.2265625 C 17.068225 5.2600447 17.003357 5.2865019 16.941406 5.3222656 L 12.501953 7.8867188 C 12.039953 8.1527187 11.753953 8.6456875 11.751953 9.1796875 L 11.724609 15.146484 L 9.5898438 13.900391 L 9.5898438 8.4804688 C 9.5898438 6.0104687 11.600312 4 14.070312 4 z M 20.492188 6.4667969 C 21.927441 6.5689063 23.290625 7.3584375 24.0625 8.6953125 C 24.640485 9.696213 24.789458 10.862812 24.53125 11.958984 C 24.470201 11.920997 24.414287 11.878008 24.351562 11.841797 L 19.910156 9.2773438 C 19.448156 9.0113437 18.879016 9.0103906 18.416016 9.2753906 L 13.236328 12.236328 L 13.248047 9.765625 L 17.941406 7.0546875 C 18.743531 6.5915625 19.631035 6.4055313 20.492188 6.4667969 z M 7.5996094 8.2675781 C 7.5972783 8.3387539 7.5898438 8.4087418 7.5898438 8.4804688 L 7.5898438 13.607422 C 7.5898438 14.141422 7.8729844 14.635297 8.3339844 14.904297 L 13.488281 17.910156 L 11.34375 19.134766 L 6.6484375 16.425781 C 4.5094375 15.190781 3.7747656 12.443687 5.0097656 10.304688 C 5.5874162 9.3043657 6.522013 8.5923015 7.5996094 8.2675781 z M 18.65625 10.865234 L 23.351562 13.574219 C 25.490562 14.809219 26.225234 17.556313 24.990234 19.695312 C 24.412584 20.695634 23.477987 21.407698 22.400391 21.732422 C 22.402722 21.661246 22.410156 21.591258 22.410156 21.519531 L 22.410156 16.392578 C 22.410156 15.858578 22.127016 15.364703 21.666016 15.095703 L 16.511719 12.089844 L 18.65625 10.865234 z M 15.009766 12.947266 L 16.78125 13.980469 L 16.771484 16.035156 L 14.990234 17.052734 L 13.21875 16.017578 L 13.228516 13.964844 L 15.009766 12.947266 z M 18.275391 14.853516 L 20.410156 16.099609 L 20.410156 21.519531 C 20.410156 23.989531 18.399687 26 15.929688 26 C 14.773554 26 13.689361 25.54536 12.869141 24.773438 C 12.931775 24.739955 12.996643 24.713498 13.058594 24.677734 L 17.498047 22.113281 C 17.960047 21.847281 18.246047 21.354312 18.248047 20.820312 L 18.275391 14.853516 z M 16.763672 17.763672 L 16.751953 20.234375 L 12.058594 22.945312 C 9.9195938 24.180312 7.1725 23.443687 5.9375 21.304688 C 5.3595152 20.303787 5.2105423 19.137188 5.46875 18.041016 C 5.5297994 18.079003 5.5857129 18.121992 5.6484375 18.158203 L 10.089844 20.722656 C 10.551844 20.988656 11.120984 20.989609 11.583984 20.724609 L 16.763672 17.763672 z'/%3E%3C/svg%3E";
-   const extIcon = "data:image/svg+xml;base64,PHN2ZyBmaWxsPSIjNDBDMDU3IiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciICB2aWV3Qm94PSIwIDAgMjQgMjQiIHdpZHRoPSI5NnB4IiBoZWlnaHQ9Ijk2cHgiPjxwYXRoIGQ9Ik0gMTEuMTM0NzY2IDEuMDE1NjI1IEMgMTAuODcxNzMgMS4wMDI5MzU1IDEwLjYwNjc2NiAxLjAwODk1MzEgMTAuMzM3ODkxIDEuMDMzMjAzMSBDIDguMTEzNDc5MyAxLjIzMzkwMTkgNi4zMzYxOTE1IDIuNzk0MDA0NyA1LjYwOTM3NSA0LjgyMDMxMjUgQyAzLjg5NzA0ODggNS4xNzY4NTQ3IDIuNDM3MjcyMyA2LjMwNDAwOTIgMS42NzE4NzUgNy45NTcwMzEyIEMgMC43MzM5ODc3OSA5Ljk4MzI5MzIgMS4xOTcyODQyIDEyLjMwMDk2NiAyLjU4Nzg5MDYgMTMuOTQzMzU5IEMgMi4wNDAyNzk4IDE1LjYwNTI0MyAyLjI4NDc3ODQgMTcuNDM1NTgyIDMuMzMyMDMxMiAxOC45MjM4MjggQyA0LjYxODIwOTkgMjAuNzQ5NzE1IDYuODU4NTIxNiAyMS41MDY2NDYgOC45NzY1NjI1IDIxLjEyMzA0NyBDIDEwLjE0MTU3NyAyMi40MjgyMTEgMTEuODQ4NTE4IDIzLjEzMTIwOSAxMy42NjIxMDkgMjIuOTY2Nzk3IEMgMTUuODg2NDY4IDIyLjc2NjEwMyAxNy42NjM3NzYgMjEuMjA1OTI1IDE4LjM5MDYyNSAxOS4xNzk2ODggQyAyMC4xMDI5NTEgMTguODIzMTY2IDIxLjU2MjcyOCAxNy42OTUxNDggMjIuMzI4MTI1IDE2LjA0Mjk2OSBDIDIzLjI2NTk5NiAxNC4wMTY3NDIgMjIuODAyNjU5IDExLjcwMDk4MyAyMS40MTIxMDkgMTAuMDU4NTk0IEMgMjEuOTYwNDcyIDguMzk2MjM1OSAyMS43MTQ0ODggNi41NjQ5NTE0IDIwLjY2NjAxNiA1LjA3NjE3MTkgQyAxOS4zNzk4MzcgMy4yNTAyODQ3IDE3LjE0MTQ3OCAyLjQ5MzM1MzYgMTUuMDIzNDM4IDIuODc2OTUzMSBDIDE0LjAzMTE0MyAxLjc2NTI2OTEgMTIuNjQ1OTMyIDEuMDg4NTI3MyAxMS4xMzQ3NjYgMS4wMTU2MjUgeiBNIDExLjAyNTM5MSAyLjUxMzY3MTkgQyAxMS45MjA5NzMgMi41NDg4MTUzIDEyLjc1MzQxMyAyLjg3MzY5MjEgMTMuNDI5Njg4IDMuNDE5OTIxOSBDIDEzLjMxNjYyNiAzLjQ3NTk2NDQgMTMuMTk4MTUgMy41MTQ0NTcgMTMuMDg3ODkxIDMuNTc4MTI1IEwgOS41NjgzNTk0IDUuNjA5Mzc1IEMgOC45NTYzNTk0IDUuOTYyMzc1IDguNTc2MzU5NCA2LjYxMzMxMjUgOC41NjgzNTk0IDcuMzIwMzEyNSBMIDguNTE1NjI1IDEyLjIzODI4MSBMIDcuMjQwMjM0NCAxMS40ODA0NjkgQyA2LjkzNjIzNDQgMTEuMzAwNDY5IDYuNzUgMTAuOTcyMTQxIDYuNzUgMTAuNjE5MTQxIEwgNi43NSA2Ljc4NTE1NjIgQyA2Ljc1IDQuNjQ5MTU2MyA4LjMwNzU5MzggMi43NDIyNSAxMC40MzM1OTQgMi41MzEyNSBDIDEwLjYzMjk2OSAyLjUxMTUgMTAuODMwNDggMi41MDYwMjM0IDExLjAyNTM5MSAyLjUxMzY3MTkgeiBNIDE2LjEyNSA0LjI1NTg1OTQgQyAxNy4zOTg1ODQgNC4yNjM0MTggMTguNjM5ODQ0IDQuODI1MTU2MyAxOS40MTc5NjkgNS45MTAxNTYyIEMgMjAuMDcwODU4IDYuODE5NTg3IDIwLjMxMDI0MiA3LjkwMTk5MjkgMjAuMTQ2NDg0IDguOTQ3MjY1NiBDIDIwLjA0MTI3IDguODc3MjQxNCAxOS45NDgzMjUgOC43OTQyMzc0IDE5LjgzNzg5MSA4LjczMDQ2ODggTCAxNi4zMTgzNTkgNi42OTkyMTg4IEMgMTUuNzA2MzU5IDYuMzQ1MjE4NyAxNC45NTM4OTEgNi4zNDI0NTMxIDE0LjMzNzg5MSA2LjY4OTQ1MzEgTCAxMC4wNTI3MzQgOS4xMDM1MTU2IEwgMTAuMDcwMzEyIDcuNjE3MTg3NSBDIDEwLjA3NDMxMyA3LjI2NDE4NzUgMTAuMjY0MzEzIDYuOTQwNjcxOSAxMC41NzAzMTIgNi43NjM2NzE5IEwgMTMuODkwNjI1IDQuODQ3NjU2MiBDIDE0LjU4NDM3NSA0LjQ0NzE1NjIgMTUuMzYwODUgNC4yNTEzMjQyIDE2LjEyNSA0LjI1NTg1OTQgeiBNIDUuMjgzMjAzMSA2LjQ3MjY1NjIgQyA1LjI3NTIzNjIgNi41OTgzMDUgNS4yNSA2LjcyMDYyNTIgNS4yNSA2Ljg0NzY1NjIgTCA1LjI1IDEwLjkwODIwMyBDIDUuMjUgMTEuNjE1MjAzIDUuNjIyNDY4OCAxMi4yNzA4NTkgNi4yMzA0Njg4IDEyLjYzMDg1OSBMIDEwLjQ2Njc5NyAxNS4xMzY3MTkgTCA5LjE3MTg3NSAxNS44NjMyODEgQyA4Ljg2Mzg3NSAxNi4wMzYyODEgOC40ODc2NDA2IDE2LjAzNDQyMiA4LjE4MTY0MDYgMTUuODU3NDIyIEwgNC44NTkzNzUgMTMuOTM5NDUzIEMgMy4wMDkzNzUgMTIuODcxNDUzIDIuMTM3NTc4MSAxMC41NjcwOTQgMy4wMTc1NzgxIDguNjIxMDkzOCBDIDMuNDc5NTU4MyA3LjYwMDY4MzYgNC4yOTYzNjk3IDYuODUzNTc5MSA1LjI4MzIwMzEgNi40NzI2NTYyIHogTSAxNS4zMjYxNzIgOC4wMDc4MTI1IEMgMTUuNDk2OTIyIDguMDA4ODEyNSAxNS42NjczMTMgOC4wNTQwNzgxIDE1LjgyMDMxMiA4LjE0MjU3ODEgTCAxOS4xNDA2MjUgMTAuMDYwNTQ3IEMgMjAuOTkwNjI1IDExLjEyODU0NyAyMS44NjQzNzUgMTMuNDMyOTA2IDIwLjk4NDM3NSAxNS4zNzg5MDYgQyAyMC41MjIyODcgMTYuMzk5NTU0IDE5LjcwMzk0MSAxNy4xNDY1MDcgMTguNzE2Nzk3IDE3LjUyNzM0NCBDIDE4LjcyNDc5MiAxNy40MDE0NzMgMTguNzUgMTcuMjc5NjAyIDE4Ljc1IDE3LjE1MjM0NCBMIDE4Ljc1IDEzLjA4OTg0NCBDIDE4Ljc1IDEyLjM4Mjg0NCAxOC4zNzc1MzEgMTEuNzI5MTQxIDE3Ljc2OTUzMSAxMS4zNjkxNDEgTCAxMy41MzcxMDkgOC44NjMyODEyIEwgMTQuODMwMDc4IDguMTM2NzE4OCBDIDE0Ljk4NDA3OCA4LjA1MDIxODcgMTUuMTU1NDIyIDguMDA2ODEyNSAxNS4zMjYxNzIgOC4wMDc4MTI1IHogTSAxMi4wMjUzOTEgOS43MTI4OTA2IEwgMTMuOTk2MDk0IDEwLjg4MDg1OSBMIDEzLjk2ODc1IDEzLjE2Nzk2OSBMIDExLjk3NDYwOSAxNC4yODkwNjIgTCAxMC4wMDM5MDYgMTMuMTE5MTQxIEwgMTAuMDMxMjUgMTAuODMyMDMxIEwgMTIuMDI1MzkxIDkuNzEyODkwNiB6IE0gMTUuNDgyNDIyIDExLjc2MzY3MiBMIDE2Ljc1OTc2NiAxMi41MTk1MzEgQyAxNy4wNjM3NjYgMTIuNjk5NTMxIDE3LjI1IDEzLjAyNzg1OSAxNy4yNSAxMy4zODA4NTkgTCAxNy4yNSAxNy4yMTQ4NDQgQyAxNy4yNSAxOS4zNTA4NDQgMTUuNjkyNDA2IDIxLjI1Nzc1IDEzLjU2NjQwNiAyMS40Njg3NSBDIDEyLjQ1MDkzNCAyMS41NzkyNDggMTEuMzkzNzY4IDIxLjI0NTE4NyAxMC41NzAzMTIgMjAuNTgwMDc4IEMgMTAuNjgzMzc0IDIwLjUyNDAzNiAxMC44MDE4NSAyMC40ODU1NDMgMTAuOTEyMTA5IDIwLjQyMTg3NSBMIDE0LjQyOTY4OCAxOC4zOTA2MjUgQyAxNS4wNDE2ODggMTguMDM3NjI1IDE1LjQyMTY4OCAxNy4zODY2ODggMTUuNDI5Njg4IDE2LjY3OTY4OCBMIDE1LjQ4MjQyMiAxMS43NjM2NzIgeiBNIDEzLjk0NzI2NiAxNC44OTg0MzggTCAxMy45Mjk2ODggMTYuMzgyODEyIEMgMTMuOTI1Njg3IDE2LjczNTgxMyAxMy43MzU2ODcgMTcuMDU5MzI4IDEzLjQyOTY4OCAxNy4yMzYzMjggTCAxMC4xMDkzNzUgMTkuMTUyMzQ0IEMgOC4yNTkzNzUgMjAuMjIwMzQ0IDUuODI3MDMxMyAxOS44MjU4NDQgNC41ODIwMzEyIDE4LjA4OTg0NCBDIDMuOTI5MTQyNSAxNy4xODA0MTMgMy42ODk3NTc2IDE2LjA5ODAwNyAzLjg1MzUxNTYgMTUuMDUyNzM0IEMgMy45NTg3MzAzIDE1LjEyMjc1OSA0LjA1MTY3NTQgMTUuMjA1NzYzIDQuMTYyMTA5NCAxNS4yNjk1MzEgTCA3LjY4MTY0MDYgMTcuMzAwNzgxIEMgOC4yOTM2NDA2IDE3LjY1NDc4MSA5LjA0NjEwOTQgMTcuNjU3NTQ3IDkuNjYyMTA5NCAxNy4zMTA1NDcgTCAxMy45NDcyNjYgMTQuODk4NDM4IHoiLz48L3N2Zz4=";
-	// Initialize the api_url variable with a default value
+   const gptIcon = "data:image/svg+xml;base64,PHN2ZyB2ZXJzaW9uPSIxLjEiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyIgeG1sbnM6eGxpbms9Imh0dHA6Ly93d3cudzMub3JnLzE5OTkveGxpbmsiIHdpZHRoPSI3MC4wOTM4OCIgaGVpZ2h0PSI3MS4yMDk2MyIgdmlld0JveD0iMCwwLDcwLjA5Mzg4LDcxLjIwOTYzIj48ZyB0cmFuc2Zvcm09InRyYW5zbGF0ZSgtMjA0Ljk1MzA2LC0xNDQuMzk1MTgpIj48ZyBkYXRhLXBhcGVyLWRhdGE9InsmcXVvdDtpc1BhaW50aW5nTGF5ZXImcXVvdDs6dHJ1ZX0iIGZpbGw9IiNlZWVlZWUiIGZpbGwtcnVsZT0ibm9uemVybyIgc3Ryb2tlPSJub25lIiBzdHJva2Utd2lkdGg9IjEiIHN0cm9rZS1saW5lY2FwPSJidXR0IiBzdHJva2UtbGluZWpvaW49Im1pdGVyIiBzdHJva2UtbWl0ZXJsaW1pdD0iMTAiIHN0cm9rZS1kYXNoYXJyYXk9IiIgc3Ryb2tlLWRhc2hvZmZzZXQ9IjAiIHN0eWxlPSJtaXgtYmxlbmQtbW9kZTogbm9ybWFsIj48cGF0aCBkPSJNMjQ5Ljc5NDY2LDE1MC40NDYwNGM2Ljg2MTUyLC0xLjI0MjcgMTQuMTEyODMsMS4yMDk0MyAxOC4yNzk0OCw3LjEyNDUxYzMuMzk2NTksNC44MjMgNC4xOTM0NywxMC43NTU1NiAyLjQxNzAxLDE2LjE0MDg3YzQuNTA0NzcsNS4zMjA2MiA2LjAwNTc4LDEyLjgyMjY3IDIuOTY3NDksMTkuMzg2NzZjLTIuNDc5NTUsNS4zNTIzNCAtNy4yMDg1OSw5LjAwNjYyIC0xMi43NTU3OCwxMC4xNjE2Yy0yLjM1NDY4LDYuNTY0MTIgLTguMTEyMzcsMTEuNjE4NDIgLTE1LjMxODMyLDEyLjI2ODU4Yy01Ljg3NTI0LDAuNTMyNjIgLTExLjQwNDk4LC0xLjc0NDc4IC0xNS4xNzkxMiwtNS45NzI5NGMtNi44NjE1MiwxLjI0MjcgLTE0LjExOTE1LC0xLjIwOTQzIC0xOC4yODU4MiwtNy4xMjQ1MWMtMy4zOTI2NCwtNC44MjEyNiAtNC4xODQ3MSwtMTAuNzUwNzYgLTIuNDEwNjksLTE2LjEzNDU0Yy00LjUwNDk2LC01LjMyMDYzIC02LjAwNTgzLC0xMi44Mjg4OCAtMi45Njc0OSwtMTkuMzkzMDhjMi40Nzk1NSwtNS4zNTUwNyA3LjIwODU5LC05LjAwNjU2IDEyLjc1NTc4LC0xMC4xNjE1OWMyLjM1NDU3LC02LjU2NDM1IDguMTEyMiwtMTEuNjE4NCAxNS4zMTgzMiwtMTIuMjY4NThjMC44NzEwNCwtMC4wNzg1NiAxLjcyOTQxLC0wLjA5ODA1IDIuNTgxNTMsLTAuMDU2OTRjNC44OTU1MSwwLjIzNjE3IDkuMzgzLDIuNDI4NTIgMTIuNTk3Niw2LjAyOTg5ek0yMzQuOTI1NTcsMTQ5LjMyNjExYy02Ljg4NzMxLDAuNjgzNTUgLTExLjkzMzI0LDYuODYxMDkgLTExLjkzMzI0LDEzLjc4MDc5djEyLjQyMDQzYzAsMS4xNDM1NyAwLjYwMzMyLDIuMjA3MiAxLjU4ODE1LDIuNzkwMzJsNC4xMzE3MSwyLjQ1NDk4bDAuMTcwODQsLTE1LjkzMjA2YzAuMDI1OTIsLTIuMjkwMzcgMS4yNTY5NSwtNC4zOTkxMiAzLjIzOTU2LC01LjU0MjY5bDExLjQwMTc1LC02LjU4MDM2YzAuMzU3MTksLTAuMjA2MjUgMC43NDEsLTAuMzMwOTUgMS4xMDcyNywtMC41MTI1MWMtMi4xOTA4NCwtMS43Njk1NSAtNC44ODc1OCwtMi44MjIwMSAtNy43ODg4NywtMi45MzU4NWMtMC42MzE0MiwtMC4wMjQ3NyAtMS4yNzEyOCwtMC4wMDcwNCAtMS45MTcxNiwwLjA1Njk0ek0yNDYuMTI0ODQsMTU2LjgzMDI1bC0xMC43NTYzNiw2LjIwNzA1Yy0wLjk5MTMxLDAuNTczNCAtMS42MDY4MiwxLjYyMTQ1IC0xLjYxOTc4LDIuNzY1MDJsLTAuMDU2OTQsNC44MTUwNWwxMy44ODIwNCwtNy44MjA1MWMxLjk5NTU3LC0xLjEyNDEzIDQuNDMzMjQsLTEuMTE1MTcgNi40MTU4NSwwLjAzMTYzbDExLjQwMTc1LDYuNTgwMzZjMC4zNTc3NiwwLjIwNjU4IDAuNjU4ODYsMC40NzU0OCAwLjk5OTcsMC43MDIzM2MwLjUzMDUsLTMuMzg2MjMgLTAuMjQ0OTksLTYuODkyNzQgLTIuMzYwMDcsLTkuODM4OTFjLTIuNTIwNzgsLTMuNTE0OTMgLTYuNTQxOTIsLTUuMzM0NzEgLTEwLjY2Nzc4LC01LjM1OTJjLTIuNDc1NTEsLTAuMDE0NjkgLTQuOTkwOTUsMC42MTk3MiAtNy4yMzg0LDEuOTE3MTZ6TTIxMC45MDA5MiwxNjkuMDU0NTRjLTIuODUwODEsNi4zMDQxOSAtMC4wMjY1NywxMy43NjkzMSA1Ljk2NjYyLDE3LjIyOTE2bDEwLjc2MjY4LDYuMjEzMzhjMC45OTEzMSwwLjU3MzQgMi4yMTAxNCwwLjU3OTQzIDMuMjA3OTMsMC4wMTg5OGw0LjE5NDk4LC0yLjM1Mzc0bC0xMy43MjM4NSwtOC4xMTc4OWMtMS45Njk2NSwtMS4xNjYyNCAtMy4xNzYyOSwtMy4yOTAyOCAtMy4xNzYyOSwtNS41ODA2NXYtMTMuMTU0NGMwLC0wLjQxMTUyIDAuMDgxNzUsLTAuODA3NzggMC4xMDc1NiwtMS4yMTQ4NGMtMy4xOTY5MSwxLjIzNDAyIC01Ljg0MzAyLDMuNjU0MzIgLTcuMzM5NjMsNi45NnpNMjQ5LjE2ODI1LDE2Ny40ODUzN2wtNC4xODg2NiwyLjM1Mzc0bDEzLjcxMTIsOC4xMTc4OWMxLjk2OTY1LDEuMTY2MjQgMy4xNzYyOSwzLjI4Mzk1IDMuMTc2MjksNS41NzQzMnYxMy4xNjA3MmMwLDAuNDEyMjYgLTAuMDgxNjYsMC44MDcwNyAtMC4xMDc1NiwxLjIxNDg0YzMuMTk3OTIsLTEuMjMzNzUgNS44NDksLTMuNjUzNTUgNy4zNDU5NiwtNi45NmMyLjg1MDgxLC02LjMwNDE5IDAuMDIwMjUsLTEzLjc2OTMxIC01Ljk3Mjk0LC0xNy4yMjkxNmwtMTAuNzU2MzYsLTYuMjEzMzhjLTAuNDk1NjUsLTAuMjg2NyAtMS4wNDc2NCwtMC40MzMzNCAtMS42MDA4LC0wLjQzNjU4Yy0wLjU1MzE2LC0wLjAwMzI0IC0xLjEwODI0LDAuMTM3MzcgLTEuNjA3MTMsMC40MTc2ek0yMzMuNjIyMTUsMTc2LjIxNzAxbC0wLjA4ODU5LDcuNDA5MjRsNi4zODQyMSwzLjc5MDAzbDYuNDYwMTQsLTMuNjMxODVsMC4wODg1OSwtNy40MDkyNGwtNi4zODQyMSwtMy43ODM3ek0yNTEuMTEwNzMsMTk1LjE2MDg2Yy0wLjAyNTkyLDIuMjkwMzcgLTEuMjU2OTUsNC4zOTkxMiAtMy4yMzk1Niw1LjU0MjY5bC0xMS4zOTU0Miw2LjU4MDM2Yy0wLjM1NzE5LDAuMjA2MjUgLTAuNzQxLDAuMzMwOTUgLTEuMTA3MjcsMC41MTI1MWMyLjY2NzYzLDIuMTU0NjcgNi4wOTIzOSwzLjIzNjg3IDkuNzA2MDQsMi44Nzg5MWM2Ljg4NzMxLC0wLjY4MzU1IDExLjkzMzI0LC02Ljg2MTA5IDExLjkzMzI0LC0xMy43ODA3OXYtMTIuNDIwNDNjMCwtMS4xNDM1NyAtMC42MDMzMiwtMi4yMDcyIC0xLjU4ODE1LC0yLjc5MDMybC00LjEzODA0LC0yLjQ0ODY2ek0yMzIuNDI2MywxOTcuMjA0NTdjLTEuOTk1NTcsMS4xMjQxMyAtNC40MzMyNCwxLjExNTE3IC02LjQxNTg2LC0wLjAzMTYzbC0xMS40MDE3NCwtNi41ODAzNmMtMC4zNTc3NiwtMC4yMDY1OCAtMC42NTg4NiwtMC40NzU0OCAtMC45OTk3MSwtMC43MDIzM2MtMC41MzA1LDMuMzg2MjMgMC4yNDUsNi44OTI3NSAyLjM2MDA3LDkuODM4OTFjNC4wMzMyNiw1LjYyMzg4IDExLjkxMjk5LDYuOTAxODkgMTcuOTA2MTgsMy40NDIwNGwxMC43NTYzNiwtNi4yMDcwNWMwLjk5MTMxLC0wLjU3MzQgMS42MDY4MiwtMS42MjE0NSAxLjYxOTc4LC0yLjc2NTAybDAuMDU2OTQsLTQuODA4NzN6Ii8+PC9nPjwvZz48L3N2Zz48IS0tcm90YXRpb25DZW50ZXI6MzUuMDQ2OTM5NTY4MTQ0MTozNS42MDQ4MTY1MDg3OTAyOS0tPg==";
+   const extIcon = "data:image/svg+xml;base64,PHN2ZyB2ZXJzaW9uPSIxLjEiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyIgeG1sbnM6eGxpbms9Imh0dHA6Ly93d3cudzMub3JnLzE5OTkveGxpbmsiIHdpZHRoPSIxMTEuMzMzMzMiIGhlaWdodD0iMTExLjMzMzMzIiB2aWV3Qm94PSIwLDAsMTExLjMzMzMzLDExMS4zMzMzMyI+PGcgdHJhbnNmb3JtPSJ0cmFuc2xhdGUoLTE4NC4zMzMzMywtMTI0LjMzMzMzKSI+PGcgZGF0YS1wYXBlci1kYXRhPSJ7JnF1b3Q7aXNQYWludGluZ0xheWVyJnF1b3Q7OnRydWV9IiBmaWxsLXJ1bGU9Im5vbnplcm8iIHN0cm9rZS1saW5lY2FwPSJidXR0IiBzdHJva2UtbGluZWpvaW49Im1pdGVyIiBzdHJva2UtbWl0ZXJsaW1pdD0iMTAiIHN0cm9rZS1kYXNoYXJyYXk9IiIgc3Ryb2tlLWRhc2hvZmZzZXQ9IjAiIHN0eWxlPSJtaXgtYmxlbmQtbW9kZTogbm9ybWFsIj48cGF0aCBkPSJNMTg0LjMzMzMzLDE4MGMwLC0zMC43NDM4NSAyNC45MjI4MiwtNTUuNjY2NjcgNTUuNjY2NjcsLTU1LjY2NjY3YzMwLjc0Mzg1LDAgNTUuNjY2NjcsMjQuOTIyODIgNTUuNjY2NjcsNTUuNjY2NjdjMCwzMC43NDM4NSAtMjQuOTIyODIsNTUuNjY2NjcgLTU1LjY2NjY3LDU1LjY2NjY3Yy0zMC43NDM4NSwwIC01NS42NjY2NywtMjQuOTIyODIgLTU1LjY2NjY3LC01NS42NjY2N3oiIGZpbGw9IiM1NWI5NjciIHN0cm9rZS1vcGFjaXR5PSIwLjIiIHN0cm9rZT0iIzAwMDAwMCIgc3Ryb2tlLXdpZHRoPSIwIi8+PHBhdGggZD0iTTI1Mi4wOTM3OSwxNDMuNTA4NzFjOC40NzIxNiwtMS41MzQ0IDE3LjQyNTYsMS40OTMzMyAyMi41NzAzMSw4Ljc5Njg4YzQuMTkzODksNS45NTUxMiA1LjE3NzgyLDEzLjI4MDI2IDIuOTg0MzcsMTkuOTI5NjljNS41NjIyLDYuNTY5NTYgNy40MTU1NSwxNS44MzI1OSAzLjY2NDA2LDIzLjkzNzVjLTMuMDYxNTksNi42MDg3MiAtOC45MDA3LDExLjEyMDc5IC0xNS43NSwxMi41NDY4OGMtMi45MDc0LDguMTA0OTUgLTEwLjAxNjYzLDE0LjM0NTY2IC0xOC45MTQwNiwxNS4xNDg0NGMtNy4yNTQzNiwwLjY1NzY1IC0xNC4wODIxMywtMi4xNTQzNCAtMTguNzQyMTksLTcuMzc1Yy04LjQ3MjE2LDEuNTM0NCAtMTcuNDMzNDEsLTEuNDkzMzMgLTIyLjU3ODEzLC04Ljc5Njg4Yy00LjE4OTAxLC01Ljk1Mjk4IC01LjE2NzAxLC0xMy4yNzQzNCAtMi45NzY1NiwtMTkuOTIxODhjLTUuNTYyNDMsLTYuNTY5NTcgLTcuNDE1NjEsLTE1Ljg0MDI2IC0zLjY2NDA2LC0yMy45NDUzMWMzLjA2MTU5LC02LjYxMjA5IDguOTAwNywtMTEuMTIwNzEgMTUuNzUsLTEyLjU0Njg3YzIuOTA3MjcsLTguMTA1MjMgMTAuMDE2NDIsLTE0LjM0NTY0IDE4LjkxNDA2LC0xNS4xNDg0NGMxLjA3NTUsLTAuMDk3IDIuMTM1MzYsLTAuMTIxMDcgMy4xODc1LC0wLjA3MDMxYzYuMDQ0NjYsMC4yOTE2MSAxMS41ODU1MSwyLjk5ODU4IDE1LjU1NDY5LDcuNDQ1MzF6TTIzMy43MzQ0MiwxNDIuMTI1OWMtOC41MDQsMC44NDQgLTE0LjczNDM4LDguNDcxNjMgLTE0LjczNDM4LDE3LjAxNTYydjE1LjMzNTk0YzAsMS40MTIgMC43NDQ5NCwyLjcyNTMxIDEuOTYwOTQsMy40NDUzMWw1LjEwMTU2LDMuMDMxMjVsMC4yMTA5NCwtMTkuNjcxODdjMC4wMzIsLTIuODI4IDEuNTUyLC01LjQzMTc1IDQsLTYuODQzNzVsMTQuMDc4MTMsLTguMTI1YzAuNDQxMDQsLTAuMjU0NjcgMC45MTQ5NCwtMC40MDg2NCAxLjM2NzE5LC0wLjYzMjgxYy0yLjcwNTEsLTIuMTg0OTIgLTYuMDM0ODYsLTMuNDg0NDMgLTkuNjE3MTksLTMuNjI1Yy0wLjc3OTY0LC0wLjAzMDU5IC0xLjU2OTY5LC0wLjAwODY5IC0yLjM2NzE5LDAuMDcwMzF6TTI0Ny41NjI1NCwxNTEuMzkxNTJsLTEzLjI4MTI1LDcuNjY0MDZjLTEuMjI0LDAuNzA4IC0xLjk4NCwyLjAwMjA2IC0yLDMuNDE0MDZsLTAuMDcwMzEsNS45NDUzMWwxNy4xNDA2MywtOS42NTYyNWMyLjQ2NCwtMS4zODggNS40NzM4NywtMS4zNzY5NCA3LjkyMTg3LDAuMDM5MDZsMTQuMDc4MTMsOC4xMjVjMC40NDE3NCwwLjI1NTA3IDAuODEzNTIsMC41ODcwOSAxLjIzNDM3LDAuODY3MTljMC42NTUwMywtNC4xODEwOSAtMC4zMDI1LC04LjUxMDcxIC0yLjkxNDA2LC0xMi4xNDg0NGMtMy4xMTI1LC00LjM0IC04LjA3NzU0LC02LjU4Njk1IC0xMy4xNzE4OCwtNi42MTcxOWMtMy4wNTY2LC0wLjAxODE0IC02LjE2MjUsMC43NjUxOSAtOC45Mzc1LDIuMzY3MTl6TTIwNC4wNzAzNSwxNjYuNDg1MjdjLTMuNTIsNy43ODQgLTAuMDMyODEsMTcuMDAxNDQgNy4zNjcxOSwyMS4yNzM0NGwxMy4yODkwNiw3LjY3MTg4YzEuMjI0LDAuNzA4IDIuNzI4OTQsMC43MTU0NCAzLjk2MDk0LDAuMDIzNDRsNS4xNzk2OSwtMi45MDYyNWwtMTYuOTQ1MzEsLTEwLjAyMzQ0Yy0yLjQzMiwtMS40NCAtMy45MjE4OCwtNC4wNjI2MiAtMy45MjE4OCwtNi44OTA2MnYtMTYuMjQyMTljMCwtMC41MDgxMiAwLjEwMDk0LC0wLjk5NzQgMC4xMzI4MSwtMS41Yy0zLjk0NzMzLDEuNTIzNjkgLTcuMjE0NTgsNC41MTIxMSAtOS4wNjI1LDguNTkzNzV6TTI1MS4zMjAzNSwxNjQuNTQ3NzdsLTUuMTcxODgsMi45MDYyNWwxNi45Mjk2OSwxMC4wMjM0NGMyLjQzMiwxLjQ0IDMuOTIxODgsNC4wNTQ4MSAzLjkyMTg4LDYuODgyODF2MTYuMjVjMCwwLjUwOTAzIC0wLjEwMDgzLDAuOTk2NTIgLTAuMTMyODEsMS41YzMuOTQ4NTgsLTEuNTIzMzUgNy4yMjE5NiwtNC41MTExNiA5LjA3MDMxLC04LjU5Mzc1YzMuNTIsLTcuNzg0IDAuMDI1LC0xNy4wMDE0NCAtNy4zNzUsLTIxLjI3MzQ0bC0xMy4yODEyNSwtNy42NzE4OGMtMC42MTIsLTAuMzU0IC0xLjI5MzU2LC0wLjUzNTA2IC0xLjk3NjU2LC0wLjUzOTA2Yy0wLjY4MywtMC4wMDQgLTEuMzY4MzgsMC4xNjk2MiAtMS45ODQzOCwwLjUxNTYzek0yMzIuMTI1MDQsMTc1LjMyOTAybC0wLjEwOTM4LDkuMTQ4NDRsNy44ODI4MSw0LjY3OTY4bDcuOTc2NTYsLTQuNDg0MzdsMC4xMDkzOCwtOS4xNDg0NGwtNy44ODI4MSwtNC42NzE4N3pNMjUzLjcxODc5LDE5OC43MTk2NWMtMC4wMzIsMi44MjggLTEuNTUyLDUuNDMxNzUgLTQsNi44NDM3NWwtMTQuMDcwMzIsOC4xMjVjLTAuNDQxMDQsMC4yNTQ2NyAtMC45MTQ5NCwwLjQwODY0IC0xLjM2NzE5LDAuNjMyODFjMy4yOTM4MiwyLjY2MDQ0IDcuNTIyNDksMy45OTY2OCAxMS45ODQzOCwzLjU1NDY5YzguNTA0LC0wLjg0NCAxNC43MzQzOCwtOC40NzE2MiAxNC43MzQzOCwtMTcuMDE1NjJ2LTE1LjMzNTk0YzAsLTEuNDEyIC0wLjc0NDk0LC0yLjcyNTMxIC0xLjk2MDk0LC0zLjQ0NTMxbC01LjEwOTM4LC0zLjAyMzQ0ek0yMzAuNjQ4NDgsMjAxLjI0MzA5Yy0yLjQ2NCwxLjM4OCAtNS40NzM4OCwxLjM3Njk0IC03LjkyMTg4LC0wLjAzOTA2bC0xNC4wNzgxMiwtOC4xMjVjLTAuNDQxNzQsLTAuMjU1MDcgLTAuODEzNTIsLTAuNTg3MDkgLTEuMjM0MzgsLTAuODY3MTljLTAuNjU1MDMsNC4xODEwOSAwLjMwMjUxLDguNTEwNzIgMi45MTQwNiwxMi4xNDg0NGM0Ljk4LDYuOTQ0IDE0LjcwOTM4LDguNTIyIDIyLjEwOTM4LDQuMjVsMTMuMjgxMjUsLTcuNjY0MDZjMS4yMjQsLTAuNzA4IDEuOTg0LC0yLjAwMjA2IDIsLTMuNDE0MDZsMC4wNzAzMSwtNS45Mzc1eiIgZmlsbD0iI2VlZWVlZSIgc3Ryb2tlPSJub25lIiBzdHJva2Utd2lkdGg9IjEiLz48L2c+PC9nPjwvc3ZnPjwhLS1yb3RhdGlvbkNlbnRlcjo1NS42NjY2NjY2NjY2NjY2Njo1NS42NjY2NjY2NjY2NjY2ODYtLT4=";
+   // Initialize the api_url variable with a default value
 	let api_url = 'https://api.tmrace.net/v1/chat/completions';
 
   class WorkingTurboGPT {
@@ -17,10 +17,15 @@
         menuIconURI: extIcon,
         blockIconURI: gptIcon,
         blocks: [
+		{
+            opcode: "__NOUSEOPCODE",
+            blockType: Scratch.BlockType.LABEL,
+            text: "Reverse Proxy API Blocks",
+          },
 					{
 		  opcode: 'setApiUrl',
 		  blockType: Scratch.BlockType.COMMAND,
-		  text: 'Set Reverse Proxy API URL to [URL]',
+		  text: 'Set reverse proxy API URL to [URL]',
 		  arguments: {
 			URL: {
 			  type: Scratch.ArgumentType.STRING,
@@ -28,17 +33,62 @@
 			}
 		  },
 		},
-
+		{
+		  opcode: 'checkApiUrl',
+		  blockType: Scratch.BlockType.BOOLEAN,
+		  text: 'Is reverse proxy working?',
+		  disableMonitor: true,
+		},
+		{
+            opcode: "__NOUSEOPCODE",
+            blockType: Scratch.BlockType.LABEL,
+            text: "Prompts",
+          },
           {
             opcode: 'singlePrompt',
             blockType: Scratch.BlockType.REPORTER,
-            text: 'Generate from prompt [PROMPT]',
+            text: 'Generate from text (No Context): [PROMPT]',
             arguments: {
               PROMPT: {
                 type: Scratch.ArgumentType.STRING,
                 defaultValue: 'How are you?',
               },
             },
+          },
+		  {
+            opcode: 'advancedPrompt',
+            blockType: Scratch.BlockType.REPORTER,
+            text: 'Send text [PROMPT] to [chatID]',
+            arguments: {
+              PROMPT: {
+                type: Scratch.ArgumentType.STRING,
+                defaultValue: 'What is "Foo, Bar"?',
+              },
+              chatID: {
+                type: Scratch.ArgumentType.STRING,
+                defaultValue: 'Foo'
+              }
+            },
+          },
+		  		  {
+            opcode: 'informChat',
+            blockType: Scratch.BlockType.COMMAND,
+            text: 'Inform [chatID] that [inform]',
+            arguments: {
+              chatID: {
+                type: Scratch.ArgumentType.STRING,
+                defaultValue: 'Foo'
+              },
+              inform: {
+                type: Scratch.ArgumentType.STRING,
+                defaultValue: 'You can only speak in meows and other cat noises.'
+              }
+            },
+          },
+		  {
+            opcode: "__NOUSEOPCODE",
+            blockType: Scratch.BlockType.LABEL,
+            text: "Chatbot management",
           },
           {
             opcode: 'createChat',
@@ -47,42 +97,33 @@
             arguments: {
               chatID: {
                 type: Scratch.ArgumentType.STRING,
-                defaultValue: 'Apple'
+                defaultValue: 'Foo'
               }
             },
           },
-          {
-            opcode: 'informChat',
+		  		  {
+            opcode: 'removeChat',
             blockType: Scratch.BlockType.COMMAND,
-            text: 'Inform [chatID] that [inform]',
+            text: 'Delete chatbot [chatID]',
             arguments: {
               chatID: {
                 type: Scratch.ArgumentType.STRING,
-                defaultValue: 'Apple'
-              },
-              inform: {
-                type: Scratch.ArgumentType.STRING,
-                defaultValue: 'You can only speak the cat language'
+                defaultValue: 'Foo'
               }
             },
           },
-          {
-            opcode: 'advancedPrompt',
-            blockType: Scratch.BlockType.REPORTER,
-            text: 'Ask to [chatID] prompt [PROMPT]',
+		  {
+            opcode: 'resetChat',
+            blockType: Scratch.BlockType.COMMAND,
+            text: 'Reset chat history of [chatID]',
             arguments: {
-              PROMPT: {
-                type: Scratch.ArgumentType.STRING,
-                defaultValue: 'Hello!',
-              },
               chatID: {
                 type: Scratch.ArgumentType.STRING,
-                defaultValue: 'Apple'
+                defaultValue: 'Foo'
               }
             },
           },
-          '---',
-          {
+		  {
             opcode: 'lastGeneration',
             blockType: Scratch.BlockType.REPORTER,
             text: 'Last [type] from [chatID]',
@@ -93,79 +134,45 @@
               },
               chatID: {
                 type: Scratch.ArgumentType.STRING,
-                defaultValue: 'Apple'
+                defaultValue: 'Foo'
               }
             },
           },
-          '---',
-          {
-            opcode: 'listChats',
-            blockType: Scratch.BlockType.REPORTER,
-            text: 'Active chats',
-            disableMonitor: true,
-          },
-          {
+		  {
             opcode: 'exportChat',
             blockType: Scratch.BlockType.REPORTER,
-            text: 'Export chat history of [chatID] in json',
+            text: 'Chat history of [chatID] as Array',
             arguments: {
               chatID: {
                 type: Scratch.ArgumentType.STRING,
-                defaultValue: 'Apple'
+                defaultValue: 'Foo',
+				disableMonitor: false
               }
             },
           },
           {
             opcode: 'importChat',
             blockType: Scratch.BlockType.COMMAND,
-            text: 'Import chat history from [json] to [chatID]',
+            text: 'Import chat history from [json] as [chatID]',
             arguments: {
               json: {
                 type: Scratch.ArgumentType.STRING,
-                defaultValue: 'json here'
+                defaultValue: 'Array goes here'
               },
               chatID: {
                 type: Scratch.ArgumentType.STRING,
-                defaultValue: 'Apple'
+                defaultValue: 'Foo'
               }
             },
           },
-          {
-            opcode: 'resetChat',
-            blockType: Scratch.BlockType.COMMAND,
-            text: 'Reset chat history of [chatID]',
-            arguments: {
-              chatID: {
-                type: Scratch.ArgumentType.STRING,
-                defaultValue: 'Apple'
-              }
-            },
-          },
-          {
-            opcode: 'removeChat',
-            blockType: Scratch.BlockType.COMMAND,
-            text: 'Delete chatbot [chatID]',
-            arguments: {
-              chatID: {
-                type: Scratch.ArgumentType.STRING,
-                defaultValue: 'Apple'
-              }
-            },
-          },
-          {
-            opcode: 'exportAll',
-            blockType: Scratch.BlockType.REPORTER,
-            text: 'Export all chats in json',
-            disableMonitor: true,
-          },
-          {
+		            {
             opcode: 'importAll',
             blockType: Scratch.BlockType.COMMAND,
-            text: 'Import all from [json] and [merge]',
+            text: 'Import chats from [json] and [merge]',
             arguments: {
               json: {
                 type: Scratch.ArgumentType.STRING,
-                defaultValue: 'json here'
+                defaultValue: 'Array goes here'
               },
               merge: {
                 type: Scratch.ArgumentType.STRING,
@@ -173,15 +180,25 @@
               }
             },
           },
+          {
+            opcode: 'exportAll',
+            blockType: Scratch.BlockType.REPORTER,
+            text: 'All chats as Arrays',
+          },
+		  		  {
+            opcode: 'listChats',
+            blockType: Scratch.BlockType.REPORTER,
+            text: 'Currently Active chats'
+          },
         ],
         menus: {
           types: {
             acceptReporters: true,
-            items: ['prompt', 'generated text']
+            items: ['Generated Text', 'Request']
           },
           merge: {
             acceptReporters: true,
-            items: ['merge with existing chats', 'remove all and import']
+            items: ['Merge/Update existing chats', 'Remove all chatbots and import']
           }
         }
       };
@@ -192,6 +209,28 @@
 	  // Update the api_url variable
 	  api_url = newApiUrl;
 	}
+		checkApiUrl() {
+	  // Send a simple GET request to the api_url
+	  	  return Scratch.fetch(api_url, {
+		method: 'POST',
+		headers: {
+		  'Content-Type': 'application/json',
+		},
+		body: JSON.stringify({
+		  model: "gpt-3.5-turbo",
+		  messages: [{ role: "user", content: "Return nothing" }]
+		}),
+	  })
+	  .then(response => {
+		// Check if the response status code is in the 200 range (success)
+		return response.status >= 200 && response.status < 300;
+	  })
+	  .catch(error => {
+		// If there's an error, return false
+		return false;
+	  });
+	}
+
 
 		singlePrompt(args) {
 	  const prompt = args.PROMPT;
@@ -272,7 +311,7 @@
           }
         }
       }
-      return '';
+      return 'Error: There is no chat history available for that chatbot.';
     }
 
     exportChat(args) {
@@ -282,7 +321,7 @@
         const json = JSON.stringify(chatHistory);
         return json;
       } else {
-        return '';
+        return 'Error: There is no chat history available for that chatbot.';
       }
     }
 
@@ -323,14 +362,17 @@
       if (chatID in this.chatHistories) {
         delete this.chatHistories[chatID];
       }
+	  else {
+		return "Error: There is no chat history available for that chatbot.";
+		}
     }
 
-		advancedPrompt(args) {
+	advancedPrompt(args) {
 	  const prompt = args.PROMPT;
 	  const chatID = args.chatID;
 
 	  if (!(chatID in this.chatHistories)) {
-		return "Error: That Chatbot does not exist.";
+		return "Error: That chatbot does not exist.";
 	  }
 
 	  const chatHistory = this.chatHistories[chatID] || [];
@@ -344,7 +386,7 @@
 		body: JSON.stringify({
 		  model: "gpt-3.5-turbo",
 		  messages: chatHistory
-		}),
+		})
 	  })
 	  .then(response => {
 		if (!response.ok) {
@@ -358,21 +400,25 @@
 		  chatHistory.push({ role: "assistant", content: botResponse });
 		  this.chatHistories[chatID] = chatHistory;
 		  return botResponse;
-		} else if (data.error && data.error.message === "API quota exceeded") {
-		  return "Error: You exceeded the API's quota. Please try again later or use a different API URL.";
 		} else {
-		  // Return an empty string or a custom error message for unexpected errors
-		  console.error("Unexpected error:", data);
-		  return "Error: An unexpected error occurred. Perhaps try again later or use a different API URL. Check Console for response.";
+		  throw new Error("Unexpected response from the API");
 		}
 	  })
 	  .catch(error => {
 		console.error("Error sending prompt to GPT", error.message);
-		return "Error: An unexpected error occurred. Perhaps try again later or use a different API URL. Check Console for response.";
+		
+		// Handle different error scenarios with custom messages
+		if (error.message === "Unexpected response from the API") {
+		  return "Error: Unexpected response from the API.";
+		} else if (error.message === "Network response was not ok: 429 Too Many Requests") {
+		  return "Error: Too many requests. Please try again later.";
+		} else {
+		  return "Error: An unexpected error occurred. Please try again later.";
+		}
 	  });
 	}
 
-	
+
     exportAll() {
       const allChats = {};
       const chatIDs = Object.keys(this.chatHistories);
@@ -403,9 +449,11 @@
           }
         } else {
           console.error('Invalid merge option. Expected "remove all and import" or "merge with existing chats".');
+		  return 'Invalid merge option. Expected "remove all and import" or "merge with existing chats".';
         }
       } else {
         console.error('Invalid JSON format. Expected an object.');
+		return "Invalid JSON format. Expected an object.";
       }
     }
 

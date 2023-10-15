@@ -45,6 +45,13 @@ export default [
         creator: "G1nX",
     },
     {
+        name: "Mouth Washer",
+        description: "(ft. violet and jwklong) - Includes many utilities related to bad words, swearing and profanity. Thought as an extra layer of security for chat projects.",
+        code: "Gen1x/mouth_washer.js",
+        banner: "Gen1x/mw-placeholder.png",
+        creator: "G1nX",
+    },
+    {
         name: "Sound Waves",
         description: "Make sounds with oscillators!",
         code: "SharkPool/Sound-Waves.js",

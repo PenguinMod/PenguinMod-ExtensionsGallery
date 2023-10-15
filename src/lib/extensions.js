@@ -112,4 +112,12 @@ export default [
         creator: "jwklong",
         isGitHub: true,
     },
+    {
+        name: "Twitch",
+        description: "Communicate with your Twitch Chat on PenguinMod! Unofficial.",
+        code: "bop_tw/Twitch.js",
+        banner: "bop_tw/Twitch.png",
+        creator: "bop_tw",
+        isGitHub: true,
+    },
 ];

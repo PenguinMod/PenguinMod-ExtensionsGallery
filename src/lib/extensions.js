@@ -126,6 +126,6 @@ export default [
         code: "bop_tw/Twitch.js",
         banner: "bop_tw/Twitch.png",
         creator: "bop_tw",
-        isGitHub: true,
+        isGitHub: false,
     },
 ];

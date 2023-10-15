@@ -45,6 +45,14 @@ export default [
         isGitHub: true,
     },
     {
+        name: "Tile Grids",
+        description: "Place Sprites on Grids.",
+        code: "SharkPool/Tile-Grids.js",
+        banner: "SharkPool/Tile-Grids.svg",
+        creator: "SharkPool-SP",
+        isGitHub: true,
+    },
+    {
         name: "Better Storage",
         description: "Like PenguinMod's Storage Extension, but with a couple more features, and faster servers.",
         code: "Gen1x/better_storage.js",

@@ -7,7 +7,7 @@ Create your extension. You can find a lot of details [here](https://docs.turbowa
 #### Important notes:
 - Your extension should not already exist on the gallery. Please check the
 [Pull Requests](https://github.com/PenguinMod/PenguinMod-ExtensionsGallery/pulls)
-and [Gallery page](https://extensions.penguinmod.site/) to confirm.
+and [Gallery page](https://extensions.penguinmod.com/) to confirm.
 - Your extension should be created for a specific purpose. An extension with random blocks someone might need will likely not get accepted if the blocks are not in a certain theme, like math or rendering.
 - Your extension should be easily explainable in 1-2 sentences or a single picture. This is what will determine whether you can be on the gallery or not.
 - Your extension should be MIT licensed (not compatible with the MIT license, should be the actual MIT license. This may change in the future.)
@@ -98,7 +98,7 @@ If you are using the website to add the `.md` file:
 3. Now type your markdown code. GitHub may actually show you a preview of your markdown.
 
 #### Typing Scratch Blocks in your tutorial
-You might notice documentation pages like the one for [Particle Tools](https://extensions.penguinmod.site/docs/particle-tools)
+You might notice documentation pages like the one for [Particle Tools](https://extensions.penguinmod.com/docs/particle-tools)
 have blocks on them.
 
 To do this, `.md` files have something called code-blocks. You type \`\`\` and then some code, then type \`\`\` again.

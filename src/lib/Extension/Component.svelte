@@ -73,27 +73,25 @@
         <p class="title">{name}</p>
         <p class="description">
             <slot />
-            {#if creator}
-                <p>
-                    Created by
-                    <a
-                        href={!isGitHub
-                            ? `https://scratch.mit.edu/users/${creator}/`
-                            : `https://github.com/${creator}/`}
-                        target="_blank"
-                    >
-                        {creator}.
-                    </a>
-                </p>
-            {/if}
-            {#if documentation}
-                <p>
-                    <a href={`/docs/${documentation}`}>
-                        Extension Documentation
-                    </a>
-                </p>
-            {/if}
         </p>
+        {#if creator}
+            <p>
+                Created by
+                <a
+                    href={!isGitHub
+                        ? `https://scratch.mit.edu/users/${creator}/`
+                        : `https://github.com/${creator}/`}
+                    target="_blank"
+                >
+                    {creator}.
+                </a>
+            </p>
+        {/if}
+        {#if documentation}
+            <p>
+                <a href={`/docs/${documentation}`}> Extension Documentation </a>
+            </p>
+        {/if}
     </div>
     <div class="block-buttons">
         <div>
@@ -173,6 +171,7 @@
     .description {
         width: calc(600px / 1.85);
         margin-block: 6px;
+        white-space: pre-wrap;
     }
 
     button {

@@ -16,7 +16,7 @@ class jodieextexp {
         };
       return {
         id: 'jodieextexp',
-        name: 'Extension exposer',
+        name: 'Extension Exposer',
         blocks: [
           {
             opcode: 'runcommand',

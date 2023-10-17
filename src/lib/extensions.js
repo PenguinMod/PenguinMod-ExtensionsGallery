@@ -61,7 +61,7 @@ export default [
     },
     {
         name: "Mouth Washer",
-        description: "(ft. violet and jwklong) - Includes many utilities related to bad words, swearing and profanity. Thought as an extra layer of security for chat projects.",
+        description: "Includes many utilities related to cleaning bad words, swearing and profanity.\nThought as an extra layer of security for chat projects.\n\n(ft. violet and jwklong)",
         code: "Gen1x/mouth_washer.js",
         banner: "Gen1x/mw-placeholder.png",
         creator: "G1nX",
@@ -97,7 +97,7 @@ export default [
         creator: "G1nX",
     },
     {
-        name: "Extension exposer",
+        name: "Extension Exposer",
         description: "Access the raw functions from other extensions.",
         code: "TheShovel/extexp.js",
         banner: "TheShovel/placeholder-extexp.png",
@@ -122,7 +122,7 @@ export default [
     },
     {
         name: "Twitch",
-        description: "Communicate with your Twitch Chat on PenguinMod! Unofficial.",
+        description: "Communicate with your Twitch Chat on PenguinMod!\n\nPenguinMod is not affiliated with Twitch.",
         code: "bop_tw/Twitch.js",
         banner: "bop_tw/Twitch.png",
         creator: "bop_tw",

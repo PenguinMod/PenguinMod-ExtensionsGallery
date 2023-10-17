@@ -243,6 +243,37 @@
           "---",
 
           {
+            opcode: "setEnable",
+            blockType: Scratch.BlockType.COMMAND,
+            hideFromPalette: true,
+            text: "set [ENABLE_MENU] to be [ACTION]",
+            arguments: {
+              ENABLE_MENU: {
+                type: Scratch.ArgumentType.STRING,
+                menu: "enableMenu",
+                defaultValue: "Button 2",
+              },
+              ACTION: {
+                type: Scratch.ArgumentType.STRING,
+                menu: "inputActionMenu",
+                defaultValue: "Enabled",
+              }
+            },
+          },
+          {
+            opcode: "getBoxCount",
+            blockType: Scratch.BlockType.REPORTER,
+            hideFromPalette: true,
+            text: "box count",
+          },
+          {
+            opcode: "getMaxCount",
+            blockType: Scratch.BlockType.REPORTER,
+            hideFromPalette: true,
+            text: "box limit",
+          },
+
+          {
             opcode: "setButton",
             blockType: Scratch.BlockType.COMMAND,
             text: "[BUTTON] button named [NAME]",
@@ -684,6 +715,10 @@
             acceptReporters: true,
             items: ["Enabled", "Disabled"],
           },
+          enableMenu: {
+            acceptReporters: true,
+            items: ["Button 2", "Button 3", "Button 4", "Textbox Shadow"],
+          },
           inputActionMenu: {
             acceptReporters: true,
             items: [
@@ -796,6 +831,16 @@
         overlay.style.left = "50%";
         overlay.style.top = "50%";
       }
+    }
+
+    setEnable() {
+      throw new Error('This block is removed in Better Input V3. Please use the more powerful and better blocks.');
+    }
+    getBoxCount() {
+      throw new Error('This block is removed in Better Input V3. Please use the more powerful and better blocks.');
+    }
+    getBoxCount() {
+      throw new Error('This block is removed in Better Input V3. Please use the more powerful and better blocks.');
     }
 
     updateOverlay(overlay) {

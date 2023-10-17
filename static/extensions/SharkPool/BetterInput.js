@@ -839,7 +839,7 @@
     getBoxCount() {
       throw new Error('This block is removed in Better Input V3. Please use the more powerful and better blocks.');
     }
-    getBoxCount() {
+    getMaxCount() {
       throw new Error('This block is removed in Better Input V3. Please use the more powerful and better blocks.');
     }
 

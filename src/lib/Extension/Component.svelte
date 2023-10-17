@@ -6,7 +6,7 @@
     export let documentation = "";
     export let isGitHub = false;
 
-    const baseUrl = "https://studio.penguinmod.site/editor.html?extension=";
+    const baseUrl = "https://studio.penguinmod.com/editor.html?extension=";
 
     /**
      * The button to copy the URL

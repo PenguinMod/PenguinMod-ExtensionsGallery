@@ -26,7 +26,7 @@
       return {
         id: "ParticleToolsSP",
         name: "Particle Tools",
-        docsURI: "https://extensions.penguinmod.site/docs/particle-tools",
+        docsURI: "https://extensions.penguinmod.com/docs/particle-tools",
         color1: "#0090ff",
         menuIconURI,
         blocks: [

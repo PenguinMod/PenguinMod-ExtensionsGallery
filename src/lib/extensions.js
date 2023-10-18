@@ -128,4 +128,12 @@ export default [
         creator: "bop_tw",
         isGitHub: false,
     },
+    {
+        name: "Project Page",
+        description: "How annoying can a extension possibly be? Modify and effect the project page from the code.",
+        code: "jwklong/projectpage.js",
+        banner: "jwklong/projectpage.png",
+        creator: "jwklong",
+        isGitHub: true,
+    },
 ];

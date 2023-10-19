@@ -57,7 +57,7 @@ class ProjectPage {
   }
 
   setBodyStyle(args) {
-    document.body.setAttribute('style', "width:100%;height:100%;position:fixed;"+args.STR)
+    document.body.setAttribute('style', "width:100%;position:absolute!important;"+args.STR)
   }
 }
 

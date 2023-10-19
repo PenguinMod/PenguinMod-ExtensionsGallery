@@ -8,7 +8,7 @@
 
     getInfo() {
       return {
-        id: "emilcounterplusplus",
+        id: "redstoniacounterplusplus",
         name: "Counter++",
         color1: "#4A4A5E",
         blocks: [

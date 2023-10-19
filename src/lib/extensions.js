@@ -53,6 +53,23 @@ export default [
         isGitHub: true,
     },
     {
+        name: "Animations",
+        description: "Play Animations and Keyframes for your Sprites.",
+        documentation: "particle-tools",
+        code: "SharkPool/Animations.js",
+        banner: "SharkPool/Animations.svg",
+        creator: "SharkPool-SP",
+        isGitHub: true,
+    },
+    {
+        name: "Time Calculations",
+        description: "Blocks for calculating and converting time.",
+        code: "SharkPool/Time-Calculations.js",
+        banner: "SharkPool/Time-Calculations.svg",
+        creator: "SharkPool-SP",
+        isGitHub: true,
+    },
+    {
         name: "Better Storage",
         description: "Like PenguinMod's Storage Extension, but with a couple more features, and faster servers.",
         code: "Gen1x/better_storage.js",

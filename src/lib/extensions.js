@@ -55,7 +55,6 @@ export default [
     {
         name: "Animations",
         description: "Play Animations and Keyframes for your Sprites.",
-        documentation: "particle-tools",
         code: "SharkPool/Animations.js",
         banner: "SharkPool/Animations.svg",
         creator: "SharkPool-SP",

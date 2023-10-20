@@ -526,7 +526,8 @@
           //#Pen+ Integration #
           {
             disableMonitor: true,
-            hideFromPalette:(!penPLoaded),
+            //JUst here for testing.
+            hideFromPalette:true,
             opcode: "penTest",
             blockType: Scratch.BlockType.COMMAND,
             text: "PEN+ is loaded!",

@@ -45,8 +45,8 @@ export default [
         isGitHub: true,
     },
     {
-        name: "Random Utils",
-        description: "Many blocks related to randomness.\nSome new features are seed-based number generation, true number generation, UUID's, random string, etc.",
+        name: "Random Utilities",
+        description: "Many blocks related to randomness.\nSome new features are seed-based number generation, true number generation, UUID's, random strings, etc.",
         code: "Gen1x/random_utils.js",
         banner: "Gen1x/randomutils.png",
         creator: "G1nX",

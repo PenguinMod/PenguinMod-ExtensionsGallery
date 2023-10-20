@@ -45,6 +45,13 @@ export default [
         isGitHub: true,
     },
     {
+        name: "Random Utils",
+        description: "Many blocks related to randomness.\nSome new features are seed-based number generation, true number generation, UUID's, random string, etc.",
+        code: "Gen1x/random_utils.js",
+        banner: "Gen1x/randomutils.png",
+        creator: "G1nX",
+    },
+    {
         name: "Tile Grids",
         description: "Place Sprites on Grids.",
         code: "SharkPool/Tile-Grids.js",

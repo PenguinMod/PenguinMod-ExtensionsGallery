@@ -6,7 +6,7 @@
   let colours = ["#ADC213","#A0B312","#697700"];
   {
     const TW_ADDONS = JSON.parse(localStorage.getItem("tw:addons"));
-    const colourScheme = TW_ADDONS["editor-theme3"].text
+    const colourScheme = (TW_ADDONS["editor-theme3"] || {text:"white"}).text
 
     switch (colourScheme) {
       //We don't need one for white nor black since those are default colour schemes but the neon we need!
@@ -623,7 +623,7 @@
           },
           tdMathPPCosMen: {
             items: "tdMathPPCosMen", acceptReporters: true
-          }
+          },
         },
         name: "3D Math",
         id: "obviousAlexCMath3d",
@@ -640,10 +640,18 @@
     draw3dTri({ point1, point2, point3 },util) {
       if (!penPModule) throw "Pen+ module not found";
       point1 = JSON.parse(point1);point2 = JSON.parse(point2);point3 = JSON.parse(point3);
+      //Check if points are valid
+      if (!(point1.length >= 3 && point2.length >=3 && point3.length >= 3)) throw "All points are not Vector3s!";
       //cast points to number
-      point1[0] = Scratch.Cast.toNumber(point1[0]) - camera.position[0];point1[1] = Scratch.Cast.toNumber(point1[1]) - camera.position[1];point1[2] = Scratch.Cast.toNumber(point1[2]) - camera.position[2];
-      point2[0] = Scratch.Cast.toNumber(point2[0]) - camera.position[0];point2[1] = Scratch.Cast.toNumber(point2[1]) - camera.position[1];point2[2] = Scratch.Cast.toNumber(point2[2]) - camera.position[2];
-      point3[0] = Scratch.Cast.toNumber(point3[0]) - camera.position[0];point3[1] = Scratch.Cast.toNumber(point3[1]) - camera.position[1];point3[2] = Scratch.Cast.toNumber(point3[2]) - camera.position[2];
+
+      const target = util.target;
+      const sprX = spriteData[target.id][0];
+      const sprY = spriteData[target.id][1];
+      const sprZ = spriteData[target.id][2];
+
+      point1[0] = Scratch.Cast.toNumber(point1[0]) - camera.position[0] + sprX;point1[1] = Scratch.Cast.toNumber(point1[1]) - camera.position[1] + sprY;point1[2] = Scratch.Cast.toNumber(point1[2]) - camera.position[2] + sprZ;
+      point2[0] = Scratch.Cast.toNumber(point2[0]) - camera.position[0] + sprX;point2[1] = Scratch.Cast.toNumber(point2[1]) - camera.position[1] + sprY;point2[2] = Scratch.Cast.toNumber(point2[2]) - camera.position[2] + sprZ;
+      point3[0] = Scratch.Cast.toNumber(point3[0]) - camera.position[0] + sprX;point3[1] = Scratch.Cast.toNumber(point3[1]) - camera.position[1] + sprY;point3[2] = Scratch.Cast.toNumber(point3[2]) - camera.position[2] + sprZ;
 
       //Rotate points around camera
       let temp = point1[0];
@@ -693,6 +701,8 @@
     draw3dTexTri({ point1, point2, point3, texture },util) {
       if (!penPModule) throw "Pen+ module not found";
       point1 = JSON.parse(point1);point2 = JSON.parse(point2);point3 = JSON.parse(point3);
+      //Check if we have all needed points
+      if (!(point1.length >= 3 && point2.length >=3 && point3.length >= 3)) throw "All points are not Vector3s!";
       //cast points to number
       point1[0] = Scratch.Cast.toNumber(point1[0]) - camera.position[0];point1[1] = Scratch.Cast.toNumber(point1[1]) - camera.position[1];point1[2] = Scratch.Cast.toNumber(point1[2]) - camera.position[2];
       point2[0] = Scratch.Cast.toNumber(point2[0]) - camera.position[0];point2[1] = Scratch.Cast.toNumber(point2[1]) - camera.position[1];point2[2] = Scratch.Cast.toNumber(point2[2]) - camera.position[2];

@@ -1,2704 +1,1363 @@
-// Name: Pen Plus
-// ID: penP
-// Description: Various Additions to the pen.
-// By: ObviousAlexC <https://scratch.mit.edu/users/pinksheep2917/>
 (function (Scratch) {
   "use strict";
-
-  //?some smaller optimizations just store the multiplacation for later
-  const f32_4 = 4 * Float32Array.BYTES_PER_ELEMENT;
-  const f32_8 = 8 * Float32Array.BYTES_PER_ELEMENT;
-  const f32_10 = 10 * Float32Array.BYTES_PER_ELEMENT;
-  const d2r = 0.0174533;
-
-  //?Declare most of the main repo's we are going to use around the scratch vm
   const vm = Scratch.vm;
-  const runtime = vm.runtime;
-  const renderer = runtime.renderer;
-  const shaderManager = renderer._shaderManager;
 
-  const canvas = renderer.canvas;
-  const gl = renderer._gl;
-  let currentFilter = gl.NEAREST;
 
-  let nativeSize = renderer.useHighQualityRender
-    ? [canvas.width, canvas.height]
-    : renderer._nativeSize;
-
-  //?create the depth buffer's texture
-  //*Create it in scratch's gl so that we have it stored in there!
-  let depthBufferTexture = gl.createTexture();
-
-  //?Make a function for updating the depth canvas to fit the scratch stage
-  const depthFrameBuffer = gl.createFramebuffer();
-  const depthColorBuffer = gl.createRenderbuffer();
-  const depthDepthBuffer = gl.createRenderbuffer();
-
-  let lastFB = gl.getParameter(gl.FRAMEBUFFER_BINDING);
-
-  //?Buffer handling and pen loading
-  {
-    gl.bindTexture(gl.TEXTURE_2D, depthBufferTexture);
-    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
-    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
-    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
-    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
-    gl.texImage2D(
-      gl.TEXTURE_2D,
+  //3dMath variables
+  const spriteData = {};
+  let fov = 300;
+  const d2r = 0.0174533;
+  const camera = {
+    position: [0, 0, 0],
+    rotation: [0, 0, 0],
+    sinAndCos: [
       0,
-      gl.RGBA,
-      nativeSize[0],
-      nativeSize[1],
+      1,
       0,
-      gl.RGBA,
-      gl.UNSIGNED_BYTE,
-      null
-    );
+      1,
+      0,
+      1,
+    ],
+  };
 
-    gl.activeTexture(gl.TEXTURE1);
-    gl.bindTexture(gl.TEXTURE_2D, depthBufferTexture);
-    gl.activeTexture(gl.TEXTURE0);
+  //I'm going to write a whole library for pen+ interaction in the future.
+  let penPLoaded = false;let penPModule = null;
+  let penPIcon = "data:image/svg+xml;base64,PHN2ZyB2ZXJzaW9uPSIxLjEiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyIgeG1sbnM6eGxpbms9Imh0dHA6Ly93d3cudzMub3JnLzE5OTkveGxpbmsiIHdpZHRoPSI2My45NDMyMiIgaGVpZ2h0PSI2My45NDMyMiIgdmlld0JveD0iMCwwLDYzLjk0MzIyLDYzLjk0MzIyIj48ZyB0cmFuc2Zvcm09InRyYW5zbGF0ZSgtMjA4LjAyODM3LC0xNDguMDI4MzkpIj48ZyBkYXRhLXBhcGVyLWRhdGE9InsmcXVvdDtpc1BhaW50aW5nTGF5ZXImcXVvdDs6dHJ1ZX0iIHN0cm9rZS1taXRlcmxpbWl0PSIxMCIgc3Ryb2tlLWRhc2hhcnJheT0iIiBzdHJva2UtZGFzaG9mZnNldD0iMCIgc3R5bGU9Im1peC1ibGVuZC1tb2RlOiBub3JtYWwiPjxwYXRoIGQ9Ik0yMTIuNTU4NCwyMDcuMTgyNjJ2LTM3Ljg4NDU3aDM3Ljc1NzQ0djM3Ljg4NDU3eiIgZmlsbD0iI2FkYzIxMyIgZmlsbC1ydWxlPSJub256ZXJvIiBzdHJva2U9IiNmZmZmZmYiIHN0cm9rZS13aWR0aD0iMCIgc3Ryb2tlLWxpbmVjYXA9ImJ1dHQiIHN0cm9rZS1saW5lam9pbj0ibWl0ZXIiLz48cGF0aCBkPSJNMjEzLjk1NjgzLDE2OS42Nzk0NWwxNi4zOTk2OSwtMTcuNTQzODZsMzUuODUwNSwwLjUwODUybC0xNS41MDk3OSwxNi42NTM5NXoiIGZpbGw9IiNhZGMyMTMiIGZpbGwtcnVsZT0ibm9uemVybyIgc3Ryb2tlPSJub25lIiBzdHJva2Utd2lkdGg9IjAiIHN0cm9rZS1saW5lY2FwPSJidXR0IiBzdHJva2UtbGluZWpvaW49Im1pdGVyIi8+PHBhdGggZD0iTTI1MC45NTE0OSwyMDYuNTQ2OTh2LTUzLjAxMjk3aDE2LjkwODIxbC0wLjYzNTY1LDM2LjQ4NjE0eiIgZmlsbD0iI2FkYzIxMyIgZmlsbC1ydWxlPSJub256ZXJvIiBzdHJva2U9IiNmZmZmZmYiIHN0cm9rZS13aWR0aD0iMCIgc3Ryb2tlLWxpbmVjYXA9ImJ1dHQiIHN0cm9rZS1saW5lam9pbj0ibWl0ZXIiLz48cGF0aCBkPSJNMjY4LjgzMDA0LDE1Mi4zNzEyNHYzOC40NDAwMmMwLDAuMDY5NzEgLTAuMDI4ODMsMC4xMzIyMSAtMC4wNDA4OCwwLjE5OTQ1Yy0wLjAxNDQyLDAuMDg4ODYgLTAuMDE5MTQsMC4xNzUzNSAtMC4wNTI4MiwwLjI1OTQ3Yy0wLjA2MDAyLDAuMTQ2NTIgLTAuMTQ4OTksMC4yODEwOSAtMC4yNTk0NywwLjM5MTU3bC0xNi44MTc0OSwxNi44MTc0OWMtMC4wMDk2OSwwLjAwOTU3IC0wLjAyNDEsMC4wMTIwNSAtMC4wMzM2NywwLjAyMTYyYy0wLjEwNTY0LDAuMDk2MTggLTAuMjIwOTUsMC4xODAxOSAtMC4zNTU1MywwLjIzNTQ4Yy0wLjE0NjYzLDAuMDYyNSAtMC4zMDI3MiwwLjA5MzcgLTAuNDU4OTIsMC4wOTM3aC0zOC40NDAwMmMtMC42NjMwOSwwIC0xLjIwMTI5LC0wLjUzODIgLTEuMjAxMjksLTEuMjAxMTh2LTM4LjQzNTI5YzAsLTAuMTU4NTcgMC4wMzEyLC0wLjMxNDc3IDAuMDkxMzMsLTAuNDY2MTJjMC4wNTUzLC0wLjEzMjEgMC4xMzk0MiwtMC4yNDk5IDAuMjM1NDgsLTAuMzUzMTdjMC4wMTE5NCwtMC4wMDk2OSAwLjAxNDQyLC0wLjAyNDEgMC4wMjM5OSwtMC4wMzM2N2wxNi44MTczOCwtMTYuODE3NDljMC4xMTI5NiwtMC4xMTI4NCAwLjI0NTA2LC0wLjE5OTMzIDAuMzk0MDUsLTAuMjYxODRjMC4wODE3NiwtMC4wMzM2NyAwLjE3MDYyLC0wLjAzNjA0IDAuMjU3MTEsLTAuMDUwNDVjMC4wNjczNSwtMC4wMTIwNSAwLjEyOTc0LC0wLjA0MDg4IDAuMTk5NDUsLTAuMDQwODhoMzguNDQwMDJjMC4wOTEzMywwIDAuMTcyOTgsMC4wMzM2NyAwLjI1NDc0LDAuMDUwNDVjMC4wNjcyMywwLjAxNjg5IDAuMTM0NDcsMC4wMTQ0MiAwLjE5Njk3LDAuMDQwODhjMC4yOTc4NywwLjEyMjUzIDAuNTMzMzYsMC4zNTgwMSAwLjY1NTg4LDAuNjU1ODhjMC4wMjY0NywwLjA2MjM5IDAuMDI2NDcsMC4xMzIxIDAuMDQwODgsMC4xOTY5N2MwLjAxOTE0LDAuMDg0MTIgMC4wNTI4MiwwLjE2NTc3IDAuMDUyODIsMC4yNTcxMXpNMjQ5LjYwOTk3LDE3MC4zOTAwMmgtMzYuMDM3NTZ2MzYuMDM3NTZoMzYuMDM3NTZ6TTI2NC43Mjg5NSwxNTMuNTcyNDJoLTM1LjA0MjkybC0xNC40MTUwMiwxNC40MTUwMmgzNS4wNDI5MnpNMjY2LjQyNzU3LDE1NS4yNzEwM2wtMTQuNDE1MDIsMTQuNDE1MDJ2MzUuMDQyOTJsMTQuNDE1MDIsLTE0LjQxNTAyeiIgZmlsbD0iIzdlOGQwYiIgZmlsbC1ydWxlPSJub256ZXJvIiBzdHJva2U9IiM3ZThkMGIiIHN0cm9rZS13aWR0aD0iNiIgc3Ryb2tlLWxpbmVjYXA9ImJ1dHQiIHN0cm9rZS1saW5lam9pbj0ibWl0ZXIiLz48cGF0aCBkPSJNMjIyLjUyNzU2LDE5OC45ODA5NmwtMy4yMjM0NywxLjM1MDA2bDEuMzUyMzQsLTMuMjEzNjFjMC45MjM4MSwtMi4xOTM0OCAyLjIwNDg1LC00LjExMzE1IDMuODE1MDcsLTUuNzE3M2wxNC45Nzk2NSwtMTQuOTI0MjhjMC42NDE2NiwtMC42Mzg2MyAyLjAwOTkzLC0wLjMxMDk3IDMuMDU4MTIsMC43MzM0M2MxLjA0NjY4LDEuMDQyODkgMS4zNzczNywyLjQwNjYgMC43MzU3MSwzLjA0NTIzbC0xNC45Nzk2NSwxNC45MjUwNGMtMS42MTAyMiwxLjYwNDkxIC0zLjUzNzQ3LDIuODgyMTYgLTUuNzM3NzcsMy44MDE0MiIgZmlsbD0iI2I3YzI2NiIgZmlsbC1ydWxlPSJldmVub2RkIiBzdHJva2U9IiM3ZThkMGIiIHN0cm9rZS13aWR0aD0iMSIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIi8+PHBhdGggZD0iTTIyOC42NzQ5LDE4Mi45MjEyNmMwLDAgMS45ODQxNCwxLjY4Mzc5IDMuMjk5MzEsLTEuMTcyNThjMi44NDU3NSwtNi4xODE0NyA2LjIyMDkxLC00LjM3Nzg1IDYuMjIwOTEsLTQuMzc3ODUiIGZpbGw9Im5vbmUiIGZpbGwtcnVsZT0iZXZlbm9kZCIgc3Ryb2tlPSIjN2U4ZDBiIiBzdHJva2Utd2lkdGg9IjEiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIvPjxwYXRoIGQ9Ik0yNDMuNTExOTYsMTc5LjQzMDA2YzAsMC4zNTExNyAtMC4xMDYxOCwwLjY2MjE0IC0wLjMyNzY2LDAuODgyODVsLTcuMDgwMjUsNy4wNTM3MWMwLjIxMzg5LC0wLjIxOTk1IDAuMzEwOTcsLTAuNTA2NjUgMC4zMTA5NywtMC44NDk0OGMwLC0wLjY2MjkgLTAuMzg0NTQsLTEuNDg4ODYgLTEuMDY2NCwtMi4xNzUyN2MtMS4wMzMwMywtMS4wMjk5OSAtMi4zODY4OCwtMS4zNjUyMyAtMy4wMzUzNywtMC43NTA4OGw3LjA4MDI1LC03LjA1NDQ3YzAuNjQwMTQsLTAuNjM3MTEgMi4wMDk5MywtMC4zMTA5NyAzLjA2MDQsMC43MjgxMmMwLjY4MTEsMC42ODU2NSAxLjA1ODgxLDEuNTAzMjcgMS4wNTg4MSwyLjE2NTQxTTIyMy44NjM5NywxOTguMzUyOTZjLTAuNDM0NiwwLjIyOTA2IC0wLjg3NzU0LDAuNDMyMzIgLTEuMzM3OTMsMC42Mjk1MmwtMy4yMjQyMywxLjM0ODU1bDEuMzU0NjIsLTMuMjEyMDljMC4xOTU2OCwtMC40NTgxMSAwLjQwMTk5LC0wLjg5OTU0IDAuNjMxOCwtMS4zMzI2MmMwLjUyMzM0LDAuMTM4OCAxLjA5ODI1LDAuNDc0MDQgMS41OTg4NCwwLjk3MjM1YzAuNTAwNTksMC40OTkwNyAwLjgzNTgzLDEuMDcwOTUgMC45NzYxNCwxLjU5NDI5IiBmaWxsPSIjYWRjMjEzIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiIHN0cm9rZT0iIzdlOGQwYiIgc3Ryb2tlLXdpZHRoPSIxIiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiLz48cGF0aCBkPSJNMjQzLjU3MTEyLDE3OS4zNzE2NmMwLDAuMzUxOTMgLTAuMTA2MTgsMC42NjI5IC0wLjMyODQxLDAuODgzNjFsLTE0Ljk3MzU4LDE0LjkyNjU2Yy0xLjYxNTUzLDEuNjAwMzYgLTMuNTQ0MywyLjg3Njg1IC01Ljc0MzA4LDMuNzk5OWwtMy4yMjQyMywxLjM0Nzc5bDAuNzM4NzQsLTEuNzU2NmwxLjQ2MDA0LC0wLjYxMjg0YzIuMTk4MDMsLTAuOTIzODEgNC4xMjYwNCwtMi4xOTk1NCA1Ljc0MTU3LC0zLjc5OTlsMTQuOTc0MzQsLTE0LjkyNjU2YzAuMjIxNDcsLTAuMjIxNDcgMC4zMjc2NiwtMC41MzI0NCAwLjMyNzY2LC0wLjg4MzYxYzAsLTAuNDg5OTcgLTAuMjA0NzksLTEuMDYxODUgLTAuNTkxNiwtMS42MDk0NmMwLjE4OTYyLDAuMTMwNDYgMC4zNzkyMywwLjI4NTk0IDAuNTU4OTksMC40NjU3YzAuNjgxMSwwLjY4NjQxIDEuMDU4ODEsMS41MDQwMyAxLjA1ODgxLDIuMTY2MTciIGZpbGw9IiM1NzVlNzUiIGZpbGwtcnVsZT0iZXZlbm9kZCIgc3Ryb2tlPSIjNTc1ZTc1IiBzdHJva2Utd2lkdGg9IjEiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIgb3BhY2l0eT0iMC4xNSIvPjxwYXRoIGQ9Ik0yMjkuODgyMzgsMTgyLjQ2NzdjMCwwLjM3OTIzIC0wLjMwNjQyLDAuNjg2NDEgLTAuNjg1NjUsMC42ODY0MWMtMC4zNzkyMywwIC0wLjY4NjQxLC0wLjMwNzE4IC0wLjY4NjQxLC0wLjY4NTY1YzAsLTAuMzc5MjMgMC4zMDg2OSwtMC42ODQ4OSAwLjY4NzE3LC0wLjY4NDg5YzAuMzc5MjMsMCAwLjY4NTY1LDAuMzA2NDIgMC42ODU2NSwwLjY4NTY1eiIgZmlsbD0iIzdlOGQwYiIgZmlsbC1ydWxlPSJldmVub2RkIiBzdHJva2U9IiM3ZThkMGIiIHN0cm9rZS13aWR0aD0iMSIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIi8+PHBhdGggZD0iTTIzNC44NDg4NSwxOTMuMjU1MzFoNy4yMTg3OSIgZmlsbD0ibm9uZSIgZmlsbC1ydWxlPSJub256ZXJvIiBzdHJva2U9IiNiN2MyNjYiIHN0cm9rZS13aWR0aD0iMS41IiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0ibWl0ZXIiLz48cGF0aCBkPSJNMjM4LjQ1ODI0LDE5Ni44NjQ3di03LjIxODc5IiBmaWxsPSJub25lIiBmaWxsLXJ1bGU9Im5vbnplcm8iIHN0cm9rZT0iI2I3YzI2NiIgc3Ryb2tlLXdpZHRoPSIxLjUiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgc3Ryb2tlLWxpbmVqb2luPSJtaXRlciIvPjwvZz48L2c+PC9zdmc+PCEtLXJvdGF0aW9uQ2VudGVyOjMxLjk3MTYzMDY4NzExOTI3MzozMS45NzE2MDU2ODcxMTkzMDgtLT4=";
+  const penPCheck = () => {
+    if (penPLoaded) {return;} // Return if pen+ integration is loaded
+    if (vm.runtime.ext_penP) {penPLoaded = true;}
+    penPModule = vm.runtime.ext_penP;
 
-    gl.bindFramebuffer(gl.FRAMEBUFFER, depthFrameBuffer);
+    if (penPModule) {penPModule.turnAdvancedSettingOff({Setting:"wValueUnderFlow",onOrOff:"on"});}
 
-    gl.bindRenderbuffer(gl.RENDERBUFFER, depthColorBuffer);
-    gl.renderbufferStorage(
-      gl.RENDERBUFFER,
-      gl.RGBA8 || gl.RGBA4,
-      nativeSize[0],
-      nativeSize[1]
-    );
-    gl.framebufferRenderbuffer(
-      gl.FRAMEBUFFER,
-      gl.COLOR_ATTACHMENT0,
-      gl.RENDERBUFFER,
-      depthColorBuffer
-    );
-
-    gl.bindRenderbuffer(gl.RENDERBUFFER, depthDepthBuffer);
-    gl.renderbufferStorage(
-      gl.RENDERBUFFER,
-      gl.DEPTH_COMPONENT16,
-      nativeSize[0],
-      nativeSize[1]
-    );
-    gl.framebufferRenderbuffer(
-      gl.FRAMEBUFFER,
-      gl.DEPTH_ATTACHMENT,
-      gl.RENDERBUFFER,
-      depthDepthBuffer
-    );
-
-    gl.framebufferTexture2D(
-      gl.FRAMEBUFFER,
-      gl.COLOR_ATTACHMENT0,
-      gl.TEXTURE_2D,
-      depthBufferTexture,
-      0
-    );
-
-    gl.enable(gl.DEPTH_TEST);
-
-    gl.bindFramebuffer(gl.FRAMEBUFFER, lastFB);
-
-    const updateCanvasSize = () => {
-      nativeSize = renderer.useHighQualityRender
-        ? [canvas.width, canvas.height]
-        : renderer._nativeSize;
-
-      lastFB = gl.getParameter(gl.FRAMEBUFFER_BINDING);
-
-      gl.bindFramebuffer(gl.FRAMEBUFFER, depthFrameBuffer);
-
-      gl.bindRenderbuffer(gl.RENDERBUFFER, depthColorBuffer);
-      gl.renderbufferStorage(
-        gl.RENDERBUFFER,
-        gl.RGBA8 || gl.RGBA4,
-        nativeSize[0],
-        nativeSize[1]
-      );
-
-      gl.bindRenderbuffer(gl.RENDERBUFFER, depthDepthBuffer);
-      gl.renderbufferStorage(
-        gl.RENDERBUFFER,
-        gl.DEPTH_COMPONENT16,
-        nativeSize[0],
-        nativeSize[1]
-      );
-
-      gl.activeTexture(gl.TEXTURE1);
-
-      gl.texImage2D(
-        gl.TEXTURE_2D,
-        0,
-        gl.RGBA,
-        nativeSize[0],
-        nativeSize[1],
-        0,
-        gl.RGBA,
-        gl.UNSIGNED_BYTE,
-        null
-      );
-
-      gl.activeTexture(gl.TEXTURE0);
-
-      gl.bindFramebuffer(gl.FRAMEBUFFER, lastFB);
-    };
-
-    //?Call it to have it consistant
-    updateCanvasSize();
-
-    //?Call every frame because I don't know of a way to detect when the stage is resized
-
-    window.addEventListener("resize", updateCanvasSize);
-    vm.runtime.on("STAGE_SIZE_CHANGED", () => {
-      updateCanvasSize();
-    });
-
-    vm.runtime.on("BEFORE_EXECUTE", () => {
-      if (
-        (renderer.useHighQualityRender
-          ? [canvas.width, canvas.height]
-          : renderer._nativeSize) != nativeSize
-      ) {
-        nativeSize = renderer.useHighQualityRender
-          ? [canvas.width, canvas.height]
-          : renderer._nativeSize;
-        updateCanvasSize();
-      }
-    });
-
-    gl.enable(gl.DEPTH_TEST);
-    gl.depthFunc(gl.LEQUAL);
-
-    //?Make sure pen is loaded!
-    if (!Scratch.vm.extensionManager.isExtensionLoaded("pen")) {
-      runtime.extensionManager.loadExtensionIdSync("pen");
-    }
+    vm.runtime.extensionManager.refreshBlocks();
   }
-
-  //?Ported from Pen+ version 5
-  //?Just a costume library for data uris
-  const penPlusCostumeLibrary = {};
-  let penPlusImportWrapMode = gl.CLAMP_TO_EDGE;
-
-  //?Debug for depth
-  penPlusCostumeLibrary["!Debug_Depth"] = depthBufferTexture;
-
-  const checkForPen = (util) => {
-    const curTarget = util.target;
-    const customState = curTarget["_customState"];
-    if (!customState["Scratch.pen"]) {
-      customState["Scratch.pen"] = {
-        penDown: false,
-        color: 66.66,
-        saturation: 100,
-        brightness: 100,
-        transparency: 0,
-        _shade: 50,
-        penAttributes: {
-          color4f: [0, 0, 1, 1],
-          diameter: 1,
-        },
-      };
-    }
-  };
-
-  //*Define PEN+ variables >:)
-  const triangleDefaultAttributes = [
-    // U V  TINT R G B  Z W transparency U V  TINT R G B  Z W transparency U V  TINT R G B  Z W transparency
-    0,
-    0, 1, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1, 0, 1, 1, 1, 0, 1, 1, 1, 0, 1, 1, 1, 1,
-    1,
-  ];
-  const squareDefaultAttributes = [
-    // width* height*  rotation  u-mul u     v-mul   v    r g b transparency
-    1, 1, 90, 1, 0, 1, 0, 1, 1, 1, 1, 1,
-  ];
-
-  const triangleAttributesOfAllSprites = {}; //!it dawned on me I have to do this
-
-  const squareAttributesOfAllSprites = {}; //?Doing this for part 2
-
-  //?Get Shaders
-  const penPlusShaders = {
-    untextured: {
-      Shaders: {
-        vert: `
-                attribute highp vec4 a_position;
-                attribute highp vec4 a_color;
-                varying highp vec4 v_color;
-
-                varying highp float v_depth;
-                
-                void main()
-                {
-                    v_color = a_color;
-                    v_depth = a_position.z;
-                    gl_Position = a_position * vec4(a_position.w,a_position.w,0,1);
-                }
-            `,
-        frag: `
-                varying highp vec4 v_color;
-
-                uniform mediump vec2 u_res;
-                uniform sampler2D u_depthTexture;
-
-                varying highp float v_depth;
-
-                void main()
-                {
-                  gl_FragColor = v_color;
-                  highp vec4 v_depthPart = texture2D(u_depthTexture,gl_FragCoord.xy/u_res);
-                  highp float v_depthcalc = v_depthPart.r + floor((v_depthPart.g + floor(v_depthPart.b * 100.0 )) * 100.0);
-
-                  highp float v_inDepth = v_depth;
-
-                  if (v_depth < 0.0 ) {
-                    v_inDepth = 0.0;
-                  }
-                  if (v_depth > 10000.0 ) {
-                    v_inDepth = 10000.0;
-                  }
-
-                  if (v_depthcalc < v_inDepth){
-                    gl_FragColor.a = 0.0;
-                  }
-
-                  gl_FragColor.rgb *= gl_FragColor.a;
-                }
-            `,
-      },
-      ProgramInf: null,
-    },
-    textured: {
-      Shaders: {
-        vert: `
-                attribute highp vec4 a_position;
-                attribute highp vec4 a_color;
-                attribute highp vec2 a_texCoord;
-                
-                varying highp vec4 v_color;
-                varying highp vec2 v_texCoord;
-
-                varying highp float v_depth;
-                
-                void main()
-                {
-                    v_color = a_color;
-                    v_texCoord = a_texCoord;
-                    v_depth = a_position.z;
-                    gl_Position = a_position * vec4(a_position.w,a_position.w,0,1);
-                }
-            `,
-        frag: `
-                uniform sampler2D u_texture;
-
-                varying highp vec2 v_texCoord;
-                varying highp vec4 v_color;
-
-                uniform mediump vec2 u_res;
-                uniform sampler2D u_depthTexture;
-
-                varying highp float v_depth;
-                
-                void main()
-                {
-                    gl_FragColor = texture2D(u_texture, v_texCoord) * v_color;
-                    highp vec4 v_depthPart = texture2D(u_depthTexture,gl_FragCoord.xy/u_res);
-                    highp float v_depthcalc = v_depthPart.r + floor((v_depthPart.g + floor(v_depthPart.b * 100.0 )) * 100.0);
-
-                    highp float v_inDepth = v_depth;
-
-                    if (v_depth < 0.0 ) {
-                      v_inDepth = 0.0;
-                    }
-                    if (v_depth > 10000.0 ) {
-                      v_inDepth = 10000.0;
-                    }
-
-                    if (v_depthcalc < v_inDepth){
-                      gl_FragColor.a = 0.0;
-                    }
-
-                    gl_FragColor.rgb *= gl_FragColor.a;
-                    
-                }
-            `,
-      },
-      ProgramInf: null,
-    },
-    depth: {
-      Shaders: {
-        vert: `
-                attribute highp vec4 a_position;
-                
-                varying highp float v_depth;
-                
-                void main()
-                {
-                    v_depth = a_position.z;
-                    gl_Position = a_position * vec4(a_position.w,a_position.w,a_position.w * 0.0001,1);
-                }
-            `,
-        frag: `
-                varying highp float v_depth;
-                
-                void main()
-                {
-                    if (v_depth >= 10000.0) {
-                      gl_FragColor = vec4(1,1,1,1);
-                    }
-                    else {
-                      highp float d_100 = floor(v_depth / 100.0);
-                      gl_FragColor = vec4(
-                        mod(v_depth,1.0),
-                        mod( floor( v_depth - mod(v_depth,1.0) )/100.0,1.0),
-                        mod( floor( d_100 - mod(d_100,1.0) )/100.0,1.0),
-                        1);
-                    }
-                }
-            `,
-      },
-      ProgramInf: null,
-    },
-    pen: {
-      program: null,
-    },
-    createAndCompileShaders: (vert, frag) => {
-      //? compile vertex Shader
-      const vertShader = gl.createShader(gl.VERTEX_SHADER);
-      try {
-        gl.shaderSource(vertShader, vert.trim());
-        gl.compileShader(vertShader);
-        if (!gl.getShaderParameter(vertShader, gl.COMPILE_STATUS)) {
-          throw gl.getShaderInfoLog(vertShader);
-        }
-      } catch (error) {
-        console.error(error);
-      }
-
-      //? compile fragment Shader
-      const fragShader = gl.createShader(gl.FRAGMENT_SHADER);
-      try {
-        gl.shaderSource(fragShader, frag.trim());
-        gl.compileShader(fragShader);
-        if (!gl.getShaderParameter(fragShader, gl.COMPILE_STATUS)) {
-          throw gl.getShaderInfoLog(fragShader);
-        }
-      } catch (error) {
-        console.error(error);
-      }
-
-      //? compile program
-      const program = gl.createProgram();
-      try {
-        gl.attachShader(program, vertShader);
-        gl.attachShader(program, fragShader);
-        gl.linkProgram(program);
-        if (!gl.getProgramParameter(program, gl.LINK_STATUS)) {
-          throw gl.getProgramInfoLog(program);
-        }
-
-        gl.validateProgram(program);
-        if (!gl.getProgramParameter(program, gl.VALIDATE_STATUS)) {
-          throw gl.getProgramInfoLog(program);
-        }
-      } catch (error) {
-        console.error(error);
-      }
-
-      return {
-        program: program,
-        vert: vertShader,
-        frag: fragShader,
-      };
-    },
-  };
-
-  //? Create program info
-  {
-    penPlusShaders.untextured.ProgramInf =
-      penPlusShaders.createAndCompileShaders(
-        penPlusShaders.untextured.Shaders.vert,
-        penPlusShaders.untextured.Shaders.frag
-      );
-    penPlusShaders.textured.ProgramInf = penPlusShaders.createAndCompileShaders(
-      penPlusShaders.textured.Shaders.vert,
-      penPlusShaders.textured.Shaders.frag
-    );
-
-    penPlusShaders.depth.ProgramInf = penPlusShaders.createAndCompileShaders(
-      penPlusShaders.depth.Shaders.vert,
-      penPlusShaders.depth.Shaders.frag
-    );
-  }
-
-  //?Untextured
-  const a_position_Location_untext = gl.getAttribLocation(
-    penPlusShaders.untextured.ProgramInf.program,
-    "a_position"
-  );
-  const a_color_Location_untext = gl.getAttribLocation(
-    penPlusShaders.untextured.ProgramInf.program,
-    "a_color"
-  );
-
-  //?Textured
-  const a_position_Location_text = gl.getAttribLocation(
-    penPlusShaders.textured.ProgramInf.program,
-    "a_position"
-  );
-  const a_color_Location_text = gl.getAttribLocation(
-    penPlusShaders.textured.ProgramInf.program,
-    "a_color"
-  );
-  const a_textCoord_Location_text = gl.getAttribLocation(
-    penPlusShaders.textured.ProgramInf.program,
-    "a_texCoord"
-  );
-
-  //?Uniforms
-  const u_texture_Location_text = gl.getUniformLocation(
-    penPlusShaders.textured.ProgramInf.program,
-    "u_texture"
-  );
-
-  const u_depthTexture_Location_untext = gl.getUniformLocation(
-    penPlusShaders.untextured.ProgramInf.program,
-    "u_depthTexture"
-  );
-
-  const u_depthTexture_Location_text = gl.getUniformLocation(
-    penPlusShaders.textured.ProgramInf.program,
-    "u_depthTexture"
-  );
-
-  const u_res_Location_untext = gl.getUniformLocation(
-    penPlusShaders.untextured.ProgramInf.program,
-    "u_res"
-  );
-
-  const u_res_Location_text = gl.getUniformLocation(
-    penPlusShaders.textured.ProgramInf.program,
-    "u_res"
-  );
-
-  //?Depth
-  const a_position_Location_depth = gl.getAttribLocation(
-    penPlusShaders.depth.ProgramInf.program,
-    "a_position"
-  );
-
-  //?Enables Attributes
-  const vertexBuffer = gl.createBuffer();
-  const depthVertexBuffer = gl.createBuffer();
-  let vertexBufferData = null;
-
-  {
-    gl.enableVertexAttribArray(a_position_Location_untext);
-    gl.enableVertexAttribArray(a_color_Location_untext);
-    gl.enableVertexAttribArray(a_position_Location_text);
-    gl.enableVertexAttribArray(a_color_Location_text);
-    gl.enableVertexAttribArray(a_textCoord_Location_text);
-    gl.enableVertexAttribArray(a_position_Location_depth);
-    gl.bindBuffer(gl.ARRAY_BUFFER, vertexBuffer);
-    gl.bindBuffer(gl.ARRAY_BUFFER, null);
-    gl.bindBuffer(gl.ARRAY_BUFFER, depthVertexBuffer);
-    gl.bindBuffer(gl.ARRAY_BUFFER, null);
-  }
-
-  //?Override pen Clear with pen+
-  renderer.penClear = (penSkinID) => {
-    const lastCC = gl.getParameter(gl.COLOR_CLEAR_VALUE);
-    lastFB = gl.getParameter(gl.FRAMEBUFFER_BINDING);
-    //Pen+ Overrides default pen Clearing
-    gl.bindFramebuffer(gl.FRAMEBUFFER, depthFrameBuffer);
-    gl.clearColor(1, 1, 1, 1);
-    gl.clear(gl.DEPTH_BUFFER_BIT);
-    gl.clear(gl.COLOR_BUFFER_BIT);
-
-    gl.bindFramebuffer(gl.FRAMEBUFFER, lastFB);
-    gl.clearColor(lastCC[0], lastCC[1], lastCC[2], lastCC[3]);
-
-    //? ^ just clear the depth buffer for when its added.
-
-    //Old clearing
-    renderer.dirty = true;
-    const skin = /** @type {PenSkin} */ renderer._allSkins[penSkinID];
-    skin.clear();
-  };
-
-  //Pen+ advanced options update
-  //I plan to add more later
-  const penPlusAdvancedSettings = {
-    wValueUnderFlow: false,
-    useDepthBuffer: true,
-    _ClampZ: false,
-    _maxDepth: 1000,
-  };
-
-  //?Have this here for ez pz tri drawing on the canvas
-  const triFunctions = {
-    drawTri: (curProgram, x1, y1, x2, y2, x3, y3, penColor, targetID) => {
-      //? get triangle attributes for current sprite.
-      const triAttribs = triangleAttributesOfAllSprites[targetID];
-
-      if (triAttribs) {
-        vertexBufferData = new Float32Array([
-          x1,
-          -y1,
-          triAttribs[5],
-          triAttribs[6],
-          penColor[0] * triAttribs[2],
-          penColor[1] * triAttribs[3],
-          penColor[2] * triAttribs[4],
-          penColor[3] * triAttribs[7],
-
-          x2,
-          -y2,
-          triAttribs[13],
-          triAttribs[14],
-          penColor[0] * triAttribs[10],
-          penColor[1] * triAttribs[11],
-          penColor[2] * triAttribs[12],
-          penColor[3] * triAttribs[15],
-
-          x3,
-          -y3,
-          triAttribs[21],
-          triAttribs[22],
-          penColor[0] * triAttribs[18],
-          penColor[1] * triAttribs[19],
-          penColor[2] * triAttribs[20],
-          penColor[3] * triAttribs[23],
-        ]);
-      } else {
-        vertexBufferData = new Float32Array([
-          x1,
-          -y1,
-          1,
-          1,
-          penColor[0],
-          penColor[1],
-          penColor[2],
-          penColor[3],
-
-          x2,
-          -y2,
-          1,
-          1,
-          penColor[0],
-          penColor[1],
-          penColor[2],
-          penColor[3],
-
-          x3,
-          -y3,
-          1,
-          1,
-          penColor[0],
-          penColor[1],
-          penColor[2],
-          penColor[3],
-        ]);
-      }
-
-      //? Bind Positional Data
-
-      gl.bindBuffer(gl.ARRAY_BUFFER, vertexBuffer);
-      gl.bufferData(gl.ARRAY_BUFFER, vertexBufferData, gl.STATIC_DRAW);
-      gl.blendFunc(gl.ONE, gl.ONE_MINUS_SRC_ALPHA);
-
-      gl.vertexAttribPointer(
-        a_position_Location_untext,
-        4,
-        gl.FLOAT,
-        false,
-        f32_8,
-        0
-      );
-      gl.vertexAttribPointer(
-        a_color_Location_untext,
-        4,
-        gl.FLOAT,
-        false,
-        f32_8,
-        f32_4
-      );
-
-      gl.useProgram(penPlusShaders.untextured.ProgramInf.program);
-
-      gl.uniform1i(u_depthTexture_Location_untext, 1);
-
-      gl.uniform2fv(u_res_Location_untext, nativeSize);
-
-      gl.drawArrays(gl.TRIANGLES, 0, 3);
-      //? Hacky fix but it works.
-
-      if (penPlusAdvancedSettings.useDepthBuffer) {
-        triFunctions.drawDepthTri(targetID, x1, y1, x2, y2, x3, y3);
-      }
-      gl.useProgram(penPlusShaders.pen.program);
-    },
-
-    drawTextTri: (curProgram, x1, y1, x2, y2, x3, y3, targetID, texture) => {
-      //? get triangle attributes for current sprite.
-      const triAttribs = triangleAttributesOfAllSprites[targetID];
-
-      if (triAttribs) {
-        vertexBufferData = new Float32Array([
-          x1,
-          -y1,
-          penPlusAdvancedSettings.useDepthBuffer ? triAttribs[5] : 0,
-          triAttribs[6],
-          triAttribs[2],
-          triAttribs[3],
-          triAttribs[4],
-          triAttribs[7],
-          triAttribs[0],
-          triAttribs[1],
-
-          x2,
-          -y2,
-          penPlusAdvancedSettings.useDepthBuffer ? triAttribs[13] : 0,
-          triAttribs[14],
-          triAttribs[10],
-          triAttribs[11],
-          triAttribs[12],
-          triAttribs[15],
-          triAttribs[8],
-          triAttribs[9],
-
-          x3,
-          -y3,
-          penPlusAdvancedSettings.useDepthBuffer ? triAttribs[21] : 0,
-          triAttribs[22],
-          triAttribs[18],
-          triAttribs[19],
-          triAttribs[20],
-          triAttribs[23],
-          triAttribs[16],
-          triAttribs[17],
-        ]);
-      } else {
-        vertexBufferData = new Float32Array([
-          x1,
-          -y1,
-          0,
-          1,
-          1,
-          1,
-          1,
-          1,
-          0,
-          0,
-
-          x2,
-          -y2,
-          0,
-          1,
-          1,
-          1,
-          1,
-          1,
-          1,
-          1,
-
-          x3,
-          -y3,
-          0,
-          1,
-          1,
-          1,
-          1,
-          1,
-          1,
-          0,
-        ]);
-      }
-      //? Bind Positional Data
-      gl.bindBuffer(gl.ARRAY_BUFFER, vertexBuffer);
-      gl.bufferData(gl.ARRAY_BUFFER, vertexBufferData, gl.DYNAMIC_DRAW);
-
-      gl.vertexAttribPointer(
-        a_position_Location_text,
-        4,
-        gl.FLOAT,
-        false,
-        f32_10,
-        0
-      );
-      gl.vertexAttribPointer(
-        a_color_Location_text,
-        4,
-        gl.FLOAT,
-        false,
-        f32_10,
-        f32_4
-      );
-      gl.vertexAttribPointer(
-        a_textCoord_Location_text,
-        2,
-        gl.FLOAT,
-        false,
-        f32_10,
-        f32_8
-      );
-
-      gl.useProgram(penPlusShaders.textured.ProgramInf.program);
-
-      gl.bindTexture(gl.TEXTURE_2D, texture);
-      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, currentFilter);
-      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, currentFilter);
-      gl.uniform1i(u_texture_Location_text, 0);
-
-      gl.uniform1i(u_depthTexture_Location_text, 1);
-
-      gl.uniform2fv(u_res_Location_text, nativeSize);
-
-      gl.drawArrays(gl.TRIANGLES, 0, 3);
-      if (penPlusAdvancedSettings.useDepthBuffer) {
-        triFunctions.drawDepthTri(targetID, x1, y1, x2, y2, x3, y3);
-      }
-      gl.useProgram(penPlusShaders.pen.program);
-    },
-
-    //? this is so I don't have to go through the hassle of replacing default scratch shaders
-    //? many of curse words where exchanged between me and a pillow while writing this extension
-    //? but I have previaled!
-    drawDepthTri: (targetID, x1, y1, x2, y2, x3, y3) => {
-      lastFB = gl.getParameter(gl.FRAMEBUFFER_BINDING);
-      const triAttribs = triangleAttributesOfAllSprites[targetID];
-      gl.bindFramebuffer(gl.FRAMEBUFFER, depthFrameBuffer);
-
-      if (triAttribs) {
-        vertexBufferData = new Float32Array([
-          x1,
-          -y1,
-          triAttribs[5],
-          triAttribs[6],
-
-          x2,
-          -y2,
-          triAttribs[13],
-          triAttribs[14],
-
-          x3,
-          -y3,
-          triAttribs[21],
-          triAttribs[22],
-        ]);
-      } else {
-        vertexBufferData = new Float32Array([
-          x1,
-          -y1,
-          0,
-          1,
-
-          x2,
-          -y2,
-          0,
-          1,
-
-          x3,
-          -y3,
-          0,
-          1,
-        ]);
-      }
-
-      //? Bind Positional Data
-      gl.bindBuffer(gl.ARRAY_BUFFER, depthVertexBuffer);
-      gl.bufferData(gl.ARRAY_BUFFER, vertexBufferData, gl.DYNAMIC_DRAW);
-
-      gl.vertexAttribPointer(
-        a_position_Location_depth,
-        4,
-        gl.FLOAT,
-        false,
-        f32_4,
-        0
-      );
-
-      gl.useProgram(penPlusShaders.depth.ProgramInf.program);
-
-      gl.drawArrays(gl.TRIANGLES, 0, 3);
-
-      gl.bindFramebuffer(gl.FRAMEBUFFER, lastFB);
-    },
-
-    setValueAccordingToCaseTriangle: (
-      targetId,
-      attribute,
-      value,
-      wholeTri,
-      offset
-    ) => {
-      offset = offset + attribute || attribute;
-      let valuetoSet = 0;
-      switch (attribute) {
-        //U
-        case 0:
-          valuetoSet = value;
-          break;
-        //V
-        case 1:
-          valuetoSet = value;
-          break;
-
-        //100 since that is what scratch users are accustomed to.
-        //R
-        case 2:
-          valuetoSet = Math.min(Math.max(value, 0), 100) * 0.01;
-          break;
-        //G
-        case 3:
-          valuetoSet = Math.min(Math.max(value, 0), 100) * 0.01;
-          break;
-        //B
-        case 4:
-          valuetoSet = Math.min(Math.max(value, 0), 100) * 0.01;
-          break;
-
-        //Clamp to 0 so we can't go behind the stage.
-        //Z
-        case 5:
-          if (penPlusAdvancedSettings._ClampZ) {
-            if (value < 0) {
-              valuetoSet = 0;
-              break;
-            }
-            //convert to depth space for best accuracy
-            valuetoSet = Math.min(
-              (value * 10000) / penPlusAdvancedSettings._maxDepth,
-              10000
-            );
-            break;
-          }
-          //convert to depth space for best accuracy
-          valuetoSet = (value * 10000) / penPlusAdvancedSettings._maxDepth;
-          break;
-
-        //Clamp to 1 so we don't accidentally clip.
-        //W
-        case 6:
-          if (penPlusAdvancedSettings.wValueUnderFlow == true) {
-            valuetoSet = value;
-          } else {
-            valuetoSet = Math.max(value, 1);
-          }
-          break;
-        //Transparency
-        //Same story as color
-        case 7:
-          valuetoSet = Math.min(Math.max(value, 0), 1000) * 0.01;
-          break;
-
-        //Just break if value isn't valid
-        default:
-          break;
-      }
-      //Check if the index even exists.
-      if (attribute >= 0 && attribute <= 7) {
-        if (wholeTri) {
-          triangleAttributesOfAllSprites[targetId][attribute] = valuetoSet;
-          triangleAttributesOfAllSprites[targetId][attribute + 8] = valuetoSet;
-          triangleAttributesOfAllSprites[targetId][attribute + 16] = valuetoSet;
-        } else {
-          triangleAttributesOfAllSprites[targetId][offset] = valuetoSet;
-        }
-      }
-    },
-  };
-
-  const lilPenDabble = (InativeSize, curTarget, util) => {
-    checkForPen(util);
-
-    const attrib = curTarget["_customState"]["Scratch.pen"].penAttributes;
-
-    Scratch.vm.renderer.penLine(
-      Scratch.vm.renderer._penSkinId,
-      {
-        color4f: [1, 1, 1, 0.011],
-        diameter: 1,
-      },
-      InativeSize[0] / 2,
-      InativeSize[1] / 2,
-      InativeSize[0] / 2,
-      InativeSize[1] / 2
-    );
-  };
-
-  //?Color Library
-  const colors = {
-    hexToRgb: (hex) => {
-      if (typeof hex == "string") {
-        const splitHex = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
-        return {
-          r: parseInt(splitHex[1], 16),
-          g: parseInt(splitHex[2], 16),
-          b: parseInt(splitHex[3], 16),
-        };
-      }
-      hex = Scratch.Cast.toNumber(hex);
-      return {
-        r: Math.floor(hex / 65536),
-        g: Math.floor(hex / 256) % 256,
-        b: hex % 256,
-      };
-    },
-
-    rgbtoSColor: ({ R, G, B }) => {
-      R = Math.min(Math.max(R, 0), 100) * 2.55;
-      G = Math.min(Math.max(G, 0), 100) * 2.55;
-      B = Math.min(Math.max(B, 0), 100) * 2.55;
-      return (Math.ceil(R) * 256 + Math.ceil(G)) * 256 + Math.ceil(B);
-    },
-  };
-
-  const textureFunctions = {
-    createBlankPenPlusTextureInfo: function (
-      width,
-      height,
-      color,
-      name,
-      clamp
-    ) {
-      const texture = penPlusCostumeLibrary[name]
-        ? penPlusCostumeLibrary[name].texture
-        : gl.createTexture();
-      gl.bindTexture(gl.TEXTURE_2D, texture);
-      // Fill the texture with a 1x1 blue pixel.
-
-      const pixelData = new Uint8Array(width * height * 4);
-
-      const decodedColor = colors.hexToRgb(color);
-
-      for (let pixelID = 0; pixelID < pixelData.length / 4; pixelID++) {
-        pixelData[pixelID * 4] = decodedColor.r;
-        pixelData[pixelID * 4 + 1] = decodedColor.g;
-        pixelData[pixelID * 4 + 2] = decodedColor.b;
-        pixelData[pixelID * 4 + 3] = 255;
-      }
-
-      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, clamp);
-      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, clamp);
-
-      gl.texImage2D(
-        gl.TEXTURE_2D,
-        0,
-        gl.RGBA,
-        width,
-        height,
-        0,
-        gl.RGBA,
-        gl.UNSIGNED_BYTE,
-        pixelData
-      );
-
-      penPlusCostumeLibrary[name] = {
-        texture: texture,
-        width: width,
-        height: height,
-      };
-    },
-    createPenPlusTextureInfo: function (url, name, clamp) {
-      const texture = penPlusCostumeLibrary[name]
-        ? penPlusCostumeLibrary[name].texture
-        : gl.createTexture();
-      gl.bindTexture(gl.TEXTURE_2D, texture);
-      // Fill the texture with a 1x1 blue pixel.
-      gl.texImage2D(
-        gl.TEXTURE_2D,
-        0,
-        gl.RGBA,
-        1,
-        1,
-        0,
-        gl.RGBA,
-        gl.UNSIGNED_BYTE,
-        new Uint8Array([0, 0, 255, 255])
-      );
-
-      // Let's assume all images are not a power of 2
-      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, clamp);
-      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, clamp);
-      return new Promise((resolve, reject) => {
-        Scratch.canFetch(url).then((allowed) => {
-          if (!allowed) {
-            reject(false);
-          }
-          // Permission is checked earlier.
-          // eslint-disable-next-line no-restricted-syntax
-          const image = new Image();
-          image.onload = function () {
-            gl.bindTexture(gl.TEXTURE_2D, texture);
-            gl.texImage2D(
-              gl.TEXTURE_2D,
-              0,
-              gl.RGBA,
-              gl.RGBA,
-              gl.UNSIGNED_BYTE,
-              image
-            );
-            penPlusCostumeLibrary[name] = {
-              texture: texture,
-              width: image.width,
-              height: image.height,
-            };
-            resolve(texture);
-          };
-          image.crossOrigin = "anonymous";
-          image.src = url;
-        });
-      });
-    },
-
-    getTextureData: (texture, width, height) => {
-      //?Initilize the temp framebuffer and assign it
-      const readBuffer = gl.createFramebuffer();
-
-      lastFB = gl.getParameter(gl.FRAMEBUFFER_BINDING);
-
-      gl.bindFramebuffer(gl.FRAMEBUFFER, readBuffer);
-
-      gl.framebufferTexture2D(
-        gl.FRAMEBUFFER,
-        gl.COLOR_ATTACHMENT0,
-        gl.TEXTURE_2D,
-        texture,
-        0
-      );
-
-      //?make sure to unbind the framebuffer and delete it!
-      const removeBuffer = () => {
-        gl.deleteFramebuffer(readBuffer);
-      };
-
-      //?if sucessful read
-      if (
-        gl.checkFramebufferStatus(gl.FRAMEBUFFER) == gl.FRAMEBUFFER_COMPLETE
-      ) {
-        //?Make an array to write the pixels onto
-        let dataArray = new Uint8Array(width * height * 4);
-        gl.readPixels(
-          0,
-          0,
-          width,
-          height,
-          gl.RGBA,
-          gl.UNSIGNED_BYTE,
-          dataArray
-        );
-
-        //?Remove Buffer data and return data
-        removeBuffer();
-        return dataArray;
-      }
-
-      //?If not return undefined
-      removeBuffer();
-      return undefined;
-    },
-
-    getTextureAsURI: (texture, width, height) => {
-      //?Initilize the temp framebuffer and assign it
-      const readBuffer = gl.createFramebuffer();
-
-      lastFB = gl.getParameter(gl.FRAMEBUFFER_BINDING);
-
-      gl.bindFramebuffer(gl.FRAMEBUFFER, readBuffer);
-
-      gl.framebufferTexture2D(
-        gl.FRAMEBUFFER,
-        gl.COLOR_ATTACHMENT0,
-        gl.TEXTURE_2D,
-        texture,
-        0
-      );
-
-      //?make sure to unbind the framebuffer and delete it!
-      const removeBuffer = () => {
-        gl.deleteFramebuffer(readBuffer);
-      };
-
-      //?if sucessful read
-      if (
-        gl.checkFramebufferStatus(gl.FRAMEBUFFER) == gl.FRAMEBUFFER_COMPLETE
-      ) {
-        //?Make an array to write the pixels onto
-        let dataArray = new Uint8Array(width * height * 4);
-        gl.readPixels(
-          0,
-          0,
-          width,
-          height,
-          gl.RGBA,
-          gl.UNSIGNED_BYTE,
-          dataArray
-        );
-
-        //Make an invisible canvas
-        const dataURICanvas = document.createElement("canvas");
-        dataURICanvas.width = width;
-        dataURICanvas.height = height;
-        const dataURIContext = dataURICanvas.getContext("2d");
-
-        // Copy the pixels to a 2D canvas
-        const imageData = dataURIContext.createImageData(width, height);
-        imageData.data.set(dataArray);
-        dataURIContext.putImageData(imageData, 0, 0);
-
-        //?Remove Buffer data and return data
-        removeBuffer();
-        return dataURICanvas.toDataURL();
-      }
-
-      //?If not return undefined
-      removeBuffer();
-      return undefined;
-    },
-  };
+  penPCheck();
+  Scratch.vm.addListener("BLOCKSINFO_UPDATE", penPCheck);
+  vm.runtime.on("EXTENSION_ADDED", penPCheck);
 
   class extension {
     getInfo() {
       return {
         blocks: [
+          //#3D Vector Math#
           {
-            opcode: "__NOUSEOPCODE",
             blockType: Scratch.BlockType.LABEL,
-            text: "Pen Properties",
+            text: "Vector 3",
           },
           {
             disableMonitor: true,
-            opcode: "isPenDown",
-            blockType: Scratch.BlockType.BOOLEAN,
-            text: "pen is down?",
-            arguments: {},
-            filter: "sprite",
-          },
-          {
-            disableMonitor: true,
-            opcode: "getPenHSV",
+            opcode: "newV3",
             blockType: Scratch.BlockType.REPORTER,
-            text: "pen [HSV]",
+            text: "vector 3 x:[x] y:[y] z:[z]",
             arguments: {
-              HSV: {
+              x: { type: Scratch.ArgumentType.NUMBER, defaultValue: 0 },
+              y: { type: Scratch.ArgumentType.NUMBER, defaultValue: 0 },
+              z: { type: Scratch.ArgumentType.NUMBER, defaultValue: 0 },
+            },
+          },
+          {
+            disableMonitor: true,
+            opcode: "newV3fromValue",
+            blockType: Scratch.BlockType.REPORTER,
+            text: "vector 3 from [value]",
+            arguments: {
+              value: { type: Scratch.ArgumentType.NUMBER, defaultValue: 0 },
+            },
+          },
+          {
+            disableMonitor: true,
+            opcode: "getAxisOfV3",
+            blockType: Scratch.BlockType.REPORTER,
+            text: "get the [axis] axis of [vector]",
+            arguments: {
+              axis: { type: Scratch.ArgumentType.STRING, menu: "axisMenu" },
+              vector: {
                 type: Scratch.ArgumentType.STRING,
-                defaultValue: "color",
-                menu: "hsvMenu",
+                defaultValue: "[0,0,0]",
               },
             },
-            filter: "sprite",
+          },
+          {
+            blockType: Scratch.BlockType.LABEL,
+            text: "Equations",
           },
           {
             disableMonitor: true,
-            opcode: "drawDot",
-            blockType: Scratch.BlockType.COMMAND,
-            text: "draw dot at [x] [y]",
+            opcode: "addV3",
+            blockType: Scratch.BlockType.REPORTER,
+            text: "V3: [a] + [b]",
+            arguments: {
+              a: { type: Scratch.ArgumentType.STRING, defaultValue: "[0,0,0]" },
+              b: { type: Scratch.ArgumentType.STRING, defaultValue: "[0,0,0]" },
+            },
+          },
+          {
+            disableMonitor: true,
+            opcode: "subV3",
+            blockType: Scratch.BlockType.REPORTER,
+            text: "V3: [a] - [b]",
+            arguments: {
+              a: { type: Scratch.ArgumentType.STRING, defaultValue: "[0,0,0]" },
+              b: { type: Scratch.ArgumentType.STRING, defaultValue: "[0,0,0]" },
+            },
+          },
+          {
+            disableMonitor: true,
+            opcode: "mulV3",
+            blockType: Scratch.BlockType.REPORTER,
+            text: "V3: [a] * [b]",
+            arguments: {
+              a: { type: Scratch.ArgumentType.STRING, defaultValue: "[0,0,0]" },
+              b: { type: Scratch.ArgumentType.STRING, defaultValue: "[0,0,0]" },
+            },
+          },
+          {
+            disableMonitor: true,
+            opcode: "divV3",
+            blockType: Scratch.BlockType.REPORTER,
+            text: "V3: [a] / [b]",
+            arguments: {
+              a: { type: Scratch.ArgumentType.STRING, defaultValue: "[0,0,0]" },
+              b: { type: Scratch.ArgumentType.STRING, defaultValue: "[0,0,0]" },
+            },
+          },
+          {
+            disableMonitor: true,
+            opcode: "dotProductOfV3",
+            blockType: Scratch.BlockType.REPORTER,
+            text: "V3: dot product between [a] and [b]",
+            arguments: {
+              a: { type: Scratch.ArgumentType.STRING, defaultValue: "[0,0,0]" },
+              b: { type: Scratch.ArgumentType.STRING, defaultValue: "[0,0,0]" },
+            },
+          },
+          {
+            disableMonitor: true,
+            opcode: "crossProductOfV3",
+            blockType: Scratch.BlockType.REPORTER,
+            text: "V3: cross product between [a] and [b]",
+            arguments: {
+              a: { type: Scratch.ArgumentType.STRING, defaultValue: "[0,0,0]" },
+              b: { type: Scratch.ArgumentType.STRING, defaultValue: "[0,0,0]" },
+            },
+          },
+          {
+            disableMonitor: true,
+            opcode: "magnitudeV3",
+            blockType: Scratch.BlockType.REPORTER,
+            text: "V3: magnitude of [a]",
+            arguments: {
+              a: { type: Scratch.ArgumentType.STRING, defaultValue: "[0,0,0]" },
+            },
+          },
+          {
+            disableMonitor: true,
+            opcode: "distanceV3",
+            blockType: Scratch.BlockType.REPORTER,
+            text: "V3: distance between [a] and [b]",
+            arguments: {
+              a: { type: Scratch.ArgumentType.STRING, defaultValue: "[0,0,0]" },
+              b: { type: Scratch.ArgumentType.STRING, defaultValue: "[0,0,0]" },
+            },
+          },
+          {
+            disableMonitor: true,
+            opcode: "rotateAroundPointV3",
+            blockType: Scratch.BlockType.REPORTER,
+            text: "V3: rotate [a] around [b] by yaw:[yaw] pitch:[pitch], and roll:[roll]",
+            arguments: {
+              a: { type: Scratch.ArgumentType.STRING, defaultValue: "[0,0,0]" },
+              b: { type: Scratch.ArgumentType.STRING, defaultValue: "[0,0,0]" },
+              yaw: { type: Scratch.ArgumentType.STRING, defaultValue: "0" },
+              pitch: { type: Scratch.ArgumentType.STRING, defaultValue: "0" },
+              roll: { type: Scratch.ArgumentType.STRING, defaultValue: "0" },
+            },
+          },
+          {
+            disableMonitor: true,
+            opcode: "rotateAroundCenterV3",
+            blockType: Scratch.BlockType.REPORTER,
+            text: "V3: rotate [a] around the center by yaw:[yaw] pitch:[pitch], and roll:[roll]",
+            arguments: {
+              a: { type: Scratch.ArgumentType.STRING, defaultValue: "[0,0,0]" },
+              yaw: { type: Scratch.ArgumentType.STRING, defaultValue: "0" },
+              pitch: { type: Scratch.ArgumentType.STRING, defaultValue: "0" },
+              roll: { type: Scratch.ArgumentType.STRING, defaultValue: "0" },
+            },
+          },
+
+          //#2D Vector Math#
+          {
+            blockType: Scratch.BlockType.LABEL,
+            text: "Vector 2",
+          },
+          {
+            disableMonitor: true,
+            opcode: "newV2",
+            blockType: Scratch.BlockType.REPORTER,
+            text: "vector 2 x:[x] y:[y]",
             arguments: {
               x: { type: Scratch.ArgumentType.NUMBER, defaultValue: 0 },
               y: { type: Scratch.ArgumentType.NUMBER, defaultValue: 0 },
             },
-            filter: "sprite",
           },
           {
             disableMonitor: true,
-            opcode: "drawLine",
-            blockType: Scratch.BlockType.COMMAND,
-            text: "draw line from [x1] [y1] to [x2] [y2]",
+            opcode: "newV2fromValue",
+            blockType: Scratch.BlockType.REPORTER,
+            text: "vector 2 from [value]",
             arguments: {
-              x1: { type: Scratch.ArgumentType.NUMBER, defaultValue: 0 },
-              y1: { type: Scratch.ArgumentType.NUMBER, defaultValue: 0 },
-              x2: { type: Scratch.ArgumentType.NUMBER, defaultValue: 10 },
-              y2: { type: Scratch.ArgumentType.NUMBER, defaultValue: 10 },
+              value: { type: Scratch.ArgumentType.NUMBER, defaultValue: 0 },
+            },
+          },
+          {
+            disableMonitor: true,
+            opcode: "getAxisOfV2",
+            blockType: Scratch.BlockType.REPORTER,
+            text: "V2: get the [axis] axis of [vector]",
+            arguments: {
+              axis: { type: Scratch.ArgumentType.STRING, menu: "axisMenu2D" },
+              vector: {
+                type: Scratch.ArgumentType.STRING,
+                defaultValue: "[0,0]",
+              },
+            },
+          },
+          {
+            disableMonitor: true,
+            opcode: "project2DFromCam",
+            blockType: Scratch.BlockType.REPORTER,
+            text: "get projected [a] to 2D from camera",
+            arguments: {
+              a: {
+                type: Scratch.ArgumentType.STRING,
+                defaultValue: "[0,0,100]",
+              },
+            },
+          },
+          {
+            disableMonitor: true,
+            opcode: "project2DFromPos",
+            blockType: Scratch.BlockType.REPORTER,
+            text: "get projected [a] to 2D from [b] yaw:[yaw] pitch:[pitch] roll:[roll]",
+            arguments: {
+              a: {
+                type: Scratch.ArgumentType.STRING,
+                defaultValue: "[0,0,100]",
+              },
+              b: { type: Scratch.ArgumentType.STRING, defaultValue: "[0,0,0]" },
+              yaw: { type: Scratch.ArgumentType.STRING, defaultValue: "0" },
+              pitch: { type: Scratch.ArgumentType.STRING, defaultValue: "0" },
+              roll: { type: Scratch.ArgumentType.STRING, defaultValue: "0" },
+            },
+          },
+          {
+            blockType: Scratch.BlockType.LABEL,
+            text: "Equations",
+          },
+          {
+            disableMonitor: true,
+            opcode: "addV2",
+            blockType: Scratch.BlockType.REPORTER,
+            text: "V2: [a] + [b]",
+            arguments: {
+              a: { type: Scratch.ArgumentType.STRING, defaultValue: "[0,0]" },
+              b: { type: Scratch.ArgumentType.STRING, defaultValue: "[0,0]" },
+            },
+          },
+          {
+            disableMonitor: true,
+            opcode: "subV2",
+            blockType: Scratch.BlockType.REPORTER,
+            text: "V2: [a] - [b]",
+            arguments: {
+              a: { type: Scratch.ArgumentType.STRING, defaultValue: "[0,0]" },
+              b: { type: Scratch.ArgumentType.STRING, defaultValue: "[0,0]" },
+            },
+          },
+          {
+            disableMonitor: true,
+            opcode: "mulV2",
+            blockType: Scratch.BlockType.REPORTER,
+            text: "V2: [a] * [b]",
+            arguments: {
+              a: { type: Scratch.ArgumentType.STRING, defaultValue: "[0,0]" },
+              b: { type: Scratch.ArgumentType.STRING, defaultValue: "[0,0]" },
+            },
+          },
+          {
+            disableMonitor: true,
+            opcode: "divV2",
+            blockType: Scratch.BlockType.REPORTER,
+            text: "V2: [a] / [b]",
+            arguments: {
+              a: { type: Scratch.ArgumentType.STRING, defaultValue: "[0,0]" },
+              b: { type: Scratch.ArgumentType.STRING, defaultValue: "[0,0]" },
+            },
+          },
+          {
+            disableMonitor: true,
+            opcode: "dotProductOfV2",
+            blockType: Scratch.BlockType.REPORTER,
+            text: "V2: dot product between [a] and [b]",
+            arguments: {
+              a: { type: Scratch.ArgumentType.STRING, defaultValue: "[0,0]" },
+              b: { type: Scratch.ArgumentType.STRING, defaultValue: "[0,0]" },
+            },
+          },
+          {
+            disableMonitor: true,
+            opcode: "crossProductOfV2",
+            blockType: Scratch.BlockType.REPORTER,
+            text: "V2: cross product between [a] and [b]",
+            arguments: {
+              a: { type: Scratch.ArgumentType.STRING, defaultValue: "[0,0]" },
+              b: { type: Scratch.ArgumentType.STRING, defaultValue: "[0,0]" },
+            },
+          },
+          {
+            disableMonitor: true,
+            opcode: "magnitudeV2",
+            blockType: Scratch.BlockType.REPORTER,
+            text: "V2: magnitude of [a]",
+            arguments: {
+              a: { type: Scratch.ArgumentType.STRING, defaultValue: "[0,0]" },
+            },
+          },
+          {
+            disableMonitor: true,
+            opcode: "distanceV2",
+            blockType: Scratch.BlockType.REPORTER,
+            text: "V2: distance between [a] and [b]",
+            arguments: {
+              a: { type: Scratch.ArgumentType.STRING, defaultValue: "[0,0]" },
+              b: { type: Scratch.ArgumentType.STRING, defaultValue: "[0,0]" },
+            },
+          },
+          {
+            disableMonitor: true,
+            opcode: "rotateAroundPointV2",
+            blockType: Scratch.BlockType.REPORTER,
+            text: "V2: rotate [a] around [b] by [yaw] degrees",
+            arguments: {
+              a: { type: Scratch.ArgumentType.STRING, defaultValue: "[0,0]" },
+              b: { type: Scratch.ArgumentType.STRING, defaultValue: "[0,0]" },
+              yaw: { type: Scratch.ArgumentType.STRING, defaultValue: "0" },
+            },
+          },
+          {
+            disableMonitor: true,
+            opcode: "rotateAroundCenterV2",
+            blockType: Scratch.BlockType.REPORTER,
+            text: "V2: rotate [a] around the center by [yaw] degrees",
+            arguments: {
+              a: { type: Scratch.ArgumentType.STRING, defaultValue: "[0,0]" },
+              yaw: { type: Scratch.ArgumentType.STRING, defaultValue: "0" },
+            },
+          },
+
+          //#CAMERA CONTROLS#
+          {
+            blockType: Scratch.BlockType.LABEL,
+            text: "camera",
+          },
+          {
+            disableMonitor: true,
+            opcode: "cam3DsetPosition",
+            blockType: Scratch.BlockType.COMMAND,
+            text: "set camera position to [a]",
+            arguments: {
+              a: { type: Scratch.ArgumentType.STRING, defaultValue: "[0,0,0]" },
+            },
+          },
+          {
+            disableMonitor: true,
+            opcode: "cam3DchangePosition",
+            blockType: Scratch.BlockType.COMMAND,
+            text: "change camera position by [a]",
+            arguments: {
+              a: { type: Scratch.ArgumentType.STRING, defaultValue: "[5,0,0]" },
+            },
+          },
+          {
+            disableMonitor: true,
+            opcode: "cam3DchangePositionOnAxis",
+            blockType: Scratch.BlockType.COMMAND,
+            text: "change camera [axis] by [a]",
+            arguments: {
+              a: { type: Scratch.ArgumentType.NUMBER, defaultValue: "15" },
+              axis: { type: Scratch.ArgumentType.STRING, defaultValue: "0", menu: "axisMenu2"},
+            },
+          },
+          {
+            disableMonitor: false,
+            opcode: "cam3DgetPosition",
+            blockType: Scratch.BlockType.REPORTER,
+            text: "get camera position",
+            arguments: {},
+          },
+
+          {
+            disableMonitor: true,
+            opcode: "cam3DsetRotation",
+            blockType: Scratch.BlockType.COMMAND,
+            text: "set camera rotation to [a]",
+            arguments: {
+              a: { type: Scratch.ArgumentType.STRING, defaultValue: "[0,0,0]" },
+            },
+          },
+          {
+            disableMonitor: true,
+            opcode: "cam3DchangeRotation",
+            blockType: Scratch.BlockType.COMMAND,
+            text: "change camera rotation by [a]",
+            arguments: {
+              a: { type: Scratch.ArgumentType.STRING, defaultValue: "[15,0,0]" },
+            },
+          },
+          {
+            disableMonitor: true,
+            opcode: "cam3DchangeRotationOnAxis",
+            blockType: Scratch.BlockType.COMMAND,
+            text: "change camera [rotator] by [a]",
+            arguments: {
+              a: { type: Scratch.ArgumentType.NUMBER, defaultValue: "15" },
+              rotator: { type: Scratch.ArgumentType.STRING, defaultValue: "0", menu: "angleMenu"},
+            },
+          },
+          {
+            disableMonitor: false,
+            opcode: "cam3DgetRotation",
+            blockType: Scratch.BlockType.REPORTER,
+            text: "get camera rotation",
+            arguments: {},
+          },
+          {
+            disableMonitor: true,
+            opcode: "setFov",
+            blockType: Scratch.BlockType.COMMAND,
+            text: "set fov to [dist]",
+            arguments: {
+              dist: { type: Scratch.ArgumentType.NUMBER, defaultValue: 300 },
+            },
+          },
+          {
+            disableMonitor: true,
+            opcode: "changeFov",
+            blockType: Scratch.BlockType.COMMAND,
+            text: "change fov by [dist]",
+            arguments: {
+              dist: { type: Scratch.ArgumentType.NUMBER, defaultValue: 10 },
+            },
+          },
+          {
+            disableMonitor: false,
+            opcode: "getFov",
+            blockType: Scratch.BlockType.REPORTER,
+            text: "fov",
+          },
+
+          //#SPRITE 3D#
+          {
+            blockType: Scratch.BlockType.LABEL,
+            text: "sprite 3D",
+          },
+          {
+            disableMonitor: true,
+            opcode: "spr3DsetPosition",
+            blockType: Scratch.BlockType.COMMAND,
+            text: "set my position to [a]",
+            arguments: {
+              a: { type: Scratch.ArgumentType.STRING, defaultValue: "[0,0,0]" },
             },
             filter: "sprite",
           },
           {
-            opcode: "__NOUSEOPCODE",
-            blockType: Scratch.BlockType.LABEL,
-            text: "Square Pen Blocks",
+            disableMonitor: true,
+            opcode: "spr3DsetPositionComponent",
+            blockType: Scratch.BlockType.COMMAND,
+            text: "set my [component] to [a]",
+            arguments: {
+              component: { type: Scratch.ArgumentType.STRING, defaultValue: "0", menu: "axisMenu2"},
+              a: { type: Scratch.ArgumentType.NUMBER, defaultValue: 0 },
+            },
+            filter: "sprite",
           },
           {
             disableMonitor: true,
-            opcode: "squareDown",
+            opcode: "spr3DchangePosition",
             blockType: Scratch.BlockType.COMMAND,
-            text: "stamp pen square",
+            text: "change my position by [a]",
+            arguments: {
+              a: { type: Scratch.ArgumentType.STRING, defaultValue: "[0,0,0]" },
+            },
+            filter: "sprite",
+          },
+          {
+            disableMonitor: true,
+            opcode: "spr3DchangePositionComponent",
+            blockType: Scratch.BlockType.COMMAND,
+            text: "change my [component] by [a]",
+            arguments: {
+              component: { type: Scratch.ArgumentType.STRING, defaultValue: "0", menu: "axisMenu2"},
+              a: { type: Scratch.ArgumentType.NUMBER, defaultValue: 5 },
+            },
+            filter: "sprite",
+          },
+          {
+            disableMonitor: true,
+            opcode: "spr3DgetPosition",
+            blockType: Scratch.BlockType.REPORTER,
+            text: "my 3d position",
             arguments: {},
             filter: "sprite",
           },
           {
             disableMonitor: true,
-            opcode: "squareTexDown",
-            blockType: Scratch.BlockType.COMMAND,
-            text: "stamp pen square with the texture of [tex]",
-            arguments: {
-              tex: { type: Scratch.ArgumentType.STRING, menu: "costumeMenu" },
-            },
-            filter: "sprite",
-          },
-          {
-            disableMonitor: true,
-            opcode: "setStampAttribute",
-            blockType: Scratch.BlockType.COMMAND,
-            text: "set pen square's [target] to [number]",
-            arguments: {
-              target: {
-                type: Scratch.ArgumentType.NUMBER,
-                defaultValue: 0,
-                menu: "stampSquare",
-              },
-              number: { type: Scratch.ArgumentType.NUMBER, defaultValue: 1 },
-            },
-            filter: "sprite",
-          },
-          {
-            disableMonitor: true,
-            opcode: "getStampAttribute",
+            opcode: "spr3DgetPositionComponent",
             blockType: Scratch.BlockType.REPORTER,
-            text: "Get pen square's [target]",
+            text: "my [component] position",
             arguments: {
-              target: {
-                type: Scratch.ArgumentType.NUMBER,
-                defaultValue: 0,
-                menu: "stampSquare",
-              },
+              component: { type: Scratch.ArgumentType.STRING, defaultValue: "0", menu: "axisMenu2"},
             },
             filter: "sprite",
           },
           {
             disableMonitor: true,
-            opcode: "tintSquare",
+            opcode: "spr3DsetSize",
             blockType: Scratch.BlockType.COMMAND,
-            text: "tint pen square to [color]",
+            text: "set my 3d size to [a]",
             arguments: {
-              color: {
-                type: Scratch.ArgumentType.COLOR,
-                defaultValue: "#0000ff",
-              },
+              a: { type: Scratch.ArgumentType.NUMBER, defaultValue: 100 },
             },
             filter: "sprite",
           },
           {
             disableMonitor: true,
-            opcode: "resetSquareAttributes",
+            opcode: "spr3DchangeSize",
             blockType: Scratch.BlockType.COMMAND,
-            text: "reset square Attributes",
-            arguments: {},
-            filter: "sprite",
-          },
-          {
-            opcode: "__NOUSEOPCODE",
-            blockType: Scratch.BlockType.LABEL,
-            text: "Triangle Blocks",
-          },
-          {
-            disableMonitor: true,
-            opcode: "setTriangleFilterMode",
-            blockType: Scratch.BlockType.COMMAND,
-            text: "set triangle filter mode to [filter]",
+            text: "change my 3d size by [a]",
             arguments: {
-              filter: {
-                type: Scratch.ArgumentType.NUMBER,
-                defaultValue: 9728,
-                menu: "filterType",
-              },
+              a: { type: Scratch.ArgumentType.NUMBER, defaultValue: 10 },
             },
             filter: "sprite",
           },
           {
             disableMonitor: true,
-            opcode: "setTrianglePointAttribute",
-            blockType: Scratch.BlockType.COMMAND,
-            text: "set triangle point [point]'s [attribute] to [value]",
-            arguments: {
-              point: {
-                type: Scratch.ArgumentType.STRING,
-                defaultValue: "1",
-                menu: "pointMenu",
-              },
-              attribute: {
-                type: Scratch.ArgumentType.NUMBER,
-                defaultValue: "2",
-                menu: "triAttribute",
-              },
-              value: { type: Scratch.ArgumentType.NUMBER, defaultValue: 1 },
-            },
-            filter: "sprite",
-          },
-          {
-            disableMonitor: true,
-            opcode: "setWholeTrianglePointAttribute",
-            blockType: Scratch.BlockType.COMMAND,
-            text: "set triangle's [wholeAttribute] to [value]",
-            arguments: {
-              wholeAttribute: {
-                type: Scratch.ArgumentType.NUMBER,
-                defaultValue: "2",
-                menu: "wholeTriAttribute",
-              },
-              value: { type: Scratch.ArgumentType.NUMBER, defaultValue: 1 },
-            },
-            filter: "sprite",
-          },
-          {
-            disableMonitor: true,
-            opcode: "tintTriPoint",
-            blockType: Scratch.BlockType.COMMAND,
-            text: "tint triangle point [point] to [color]",
-            arguments: {
-              point: {
-                type: Scratch.ArgumentType.STRING,
-                defaultValue: "1",
-                menu: "pointMenu",
-              },
-              color: {
-                type: Scratch.ArgumentType.COLOR,
-                defaultValue: "#0000ff",
-              },
-            },
-            filter: "sprite",
-          },
-          {
-            disableMonitor: true,
-            opcode: "tintTri",
-            blockType: Scratch.BlockType.COMMAND,
-            text: "tint triangle to [color]",
-            arguments: {
-              point: {
-                type: Scratch.ArgumentType.STRING,
-                defaultValue: "1",
-                menu: "pointMenu",
-              },
-              color: {
-                type: Scratch.ArgumentType.COLOR,
-                defaultValue: "#0000ff",
-              },
-            },
-            filter: "sprite",
-          },
-          {
-            disableMonitor: true,
-            opcode: "getTrianglePointAttribute",
+            opcode: "spr3DgetSize",
             blockType: Scratch.BlockType.REPORTER,
-            text: "get triangle point [point]'s [attribute]",
-            arguments: {
-              point: {
-                type: Scratch.ArgumentType.STRING,
-                defaultValue: "1",
-                menu: "pointMenu",
-              },
-              attribute: {
-                type: Scratch.ArgumentType.NUMBER,
-                defaultValue: 2,
-                menu: "triAttribute",
-              },
-            },
-            filter: "sprite",
-          },
-          {
-            disableMonitor: true,
-            opcode: "resetWholeTriangleAttributes",
-            blockType: Scratch.BlockType.COMMAND,
-            text: "reset triangle attributes",
+            text: "my 3d size",
             arguments: {},
             filter: "sprite",
           },
           {
             disableMonitor: true,
-            opcode: "drawSolidTri",
+            opcode: "spr3D",
             blockType: Scratch.BlockType.COMMAND,
-            text: "draw triangle between [x1] [y1], [x2] [y2] and [x3] [y3]",
-            arguments: {
-              x1: { type: Scratch.ArgumentType.NUMBER, defaultValue: 0 },
-              y1: { type: Scratch.ArgumentType.NUMBER, defaultValue: 0 },
-              x2: { type: Scratch.ArgumentType.NUMBER, defaultValue: 10 },
-              y2: { type: Scratch.ArgumentType.NUMBER, defaultValue: 10 },
-              x3: { type: Scratch.ArgumentType.NUMBER, defaultValue: 10 },
-              y3: { type: Scratch.ArgumentType.NUMBER, defaultValue: 0 },
-            },
+            text: "go to my position in 3D",
+            arguments: {},
             filter: "sprite",
           },
+
+          //#Pen+ Integration #
           {
-            disableMonitor: true,
-            opcode: "drawTexTri",
-            blockType: Scratch.BlockType.COMMAND,
-            text: "draw textured triangle between [x1] [y1], [x2] [y2] and [x3] [y3] with the texture [tex]",
-            arguments: {
-              x1: { type: Scratch.ArgumentType.NUMBER, defaultValue: 0 },
-              y1: { type: Scratch.ArgumentType.NUMBER, defaultValue: 0 },
-              x2: { type: Scratch.ArgumentType.NUMBER, defaultValue: 10 },
-              y2: { type: Scratch.ArgumentType.NUMBER, defaultValue: 10 },
-              x3: { type: Scratch.ArgumentType.NUMBER, defaultValue: 10 },
-              y3: { type: Scratch.ArgumentType.NUMBER, defaultValue: 0 },
-              tex: { type: Scratch.ArgumentType.STRING, menu: "costumeMenu" },
-            },
-            filter: "sprite",
-          },
-          {
-            opcode: "__NOUSEOPCODE",
+            hideFromPalette:(!penPLoaded),
             blockType: Scratch.BlockType.LABEL,
-            text: "Color",
+            text: "Pen+ 3D",
           },
           {
             disableMonitor: true,
-            opcode: "RGB2HEX",
-            blockType: Scratch.BlockType.REPORTER,
-            text: "Red [R] Green [G] Blue [B]",
-            arguments: {
-              R: { type: Scratch.ArgumentType.NUMBER, defaultValue: 0 },
-              G: { type: Scratch.ArgumentType.NUMBER, defaultValue: 0 },
-              B: { type: Scratch.ArgumentType.NUMBER, defaultValue: 100 },
-            },
-          },
-          {
-            disableMonitor: true,
-            opcode: "HSV2RGB",
-            blockType: Scratch.BlockType.REPORTER,
-            text: "Hue [H] Saturation [S] Value [V]",
-            arguments: {
-              H: { type: Scratch.ArgumentType.NUMBER, defaultValue: 0 },
-              S: { type: Scratch.ArgumentType.NUMBER, defaultValue: 100 },
-              V: { type: Scratch.ArgumentType.NUMBER, defaultValue: 100 },
-            },
-          },
-          {
-            opcode: "__NOUSEOPCODE",
-            blockType: Scratch.BlockType.LABEL,
-            text: "Images",
-          },
-          {
-            disableMonitor: true,
-            opcode: "setDURIclampmode",
+            hideFromPalette:(!penPLoaded),
+            opcode: "draw3dTri",
             blockType: Scratch.BlockType.COMMAND,
-            text: "set imported image wrap mode to [clampMode]",
+            text: "draw 3d triangle between [point1], [point2], [point3]",
             arguments: {
-              clampMode: {
-                type: Scratch.ArgumentType.STRING,
-                defaultValue: "33071",
-                menu: "wrapType",
-              },
+                point1: { type: Scratch.ArgumentType.STRING, defaultValue: "[0,0,100]"},
+                point2: { type: Scratch.ArgumentType.STRING, defaultValue: "[10,0,100]"},
+                point3: { type: Scratch.ArgumentType.STRING, defaultValue: "[10,10,100]"},
             },
-          },
-          {
-            disableMonitor: true,
-            opcode: "addBlankIMG",
-            blockType: Scratch.BlockType.COMMAND,
-            text: "add blank image that is [color] and the size of [width], [height] named [name] to Pen+ Library",
-            arguments: {
-              color: {
-                type: Scratch.ArgumentType.COLOR,
-                defaultValue: "#ffffff",
-              },
-              width: { type: Scratch.ArgumentType.NUMBER, defaultValue: 128 },
-              height: { type: Scratch.ArgumentType.NUMBER, defaultValue: 128 },
-              name: {
-                type: Scratch.ArgumentType.STRING,
-                defaultValue: "Image",
-              },
-            },
-          },
-          {
-            disableMonitor: true,
-            opcode: "addIMGfromDURI",
-            blockType: Scratch.BlockType.COMMAND,
-            text: "add image named [name] from [dataURI] to Pen+ Library",
-            arguments: {
-              dataURI: {
-                type: Scratch.ArgumentType.STRING,
-                defaultValue: "https://extensions.turbowarp.org/dango.png",
-              },
-              name: {
-                type: Scratch.ArgumentType.STRING,
-                defaultValue: "Image",
-              },
-            },
-          },
-          {
-            disableMonitor: true,
-            opcode: "removeIMGfromDURI",
-            blockType: Scratch.BlockType.COMMAND,
-            text: "remove image named [name] from Pen+ Library",
-            arguments: {
-              name: {
-                type: Scratch.ArgumentType.STRING,
-                defaultValue: "Image",
-              },
-            },
+            blockIconURI: penPIcon,
             filter: "sprite",
           },
           {
             disableMonitor: true,
-            opcode: "doesIMGexist",
-            blockType: Scratch.BlockType.BOOLEAN,
-            text: "does [name] exist in Pen+ Library",
-            arguments: {
-              name: {
-                type: Scratch.ArgumentType.STRING,
-                defaultValue: "Image",
-              },
-            },
-            filter: "sprite",
-          },
-          {
-            disableMonitor: true,
-            opcode: "getCostumeDataURI",
-            blockType: Scratch.BlockType.REPORTER,
-            text: "get data uri for costume [costume]",
-            arguments: {
-              costume: {
-                type: Scratch.ArgumentType.STRING,
-                menu: "getCostumeDataURI_costume_Menu",
-              },
-            },
-            filter: "sprite",
-          },
-          {
-            disableMonitor: true,
-            opcode: "getDimensionOf",
-            blockType: Scratch.BlockType.REPORTER,
-            text: "get the [dimension] of [costume] in pen+ costume library",
-            arguments: {
-              dimension: {
-                type: Scratch.ArgumentType.STRING,
-                menu: "getDimensionOf_dimension_Menu",
-              },
-              costume: {
-                type: Scratch.ArgumentType.STRING,
-                menu: "penPlusCostumes",
-              },
-            },
-            filter: "sprite",
-          },
-          {
-            disableMonitor: true,
-            opcode: "setpixelcolor",
+            hideFromPalette:(!penPLoaded),
+            opcode: "draw3dTexTri",
             blockType: Scratch.BlockType.COMMAND,
-            text: "set pixel [x] [y]'s color to [color] in [costume]",
+            text: "draw 3d triangle between [point1], [point2], [point3] with the image [texture]",
             arguments: {
-              x: { type: Scratch.ArgumentType.NUMBER, defaultValue: 1 },
-              y: { type: Scratch.ArgumentType.NUMBER, defaultValue: 1 },
-              color: {
-                type: Scratch.ArgumentType.COLOR,
-                defaultValue: "#0000ff",
-              },
-              costume: {
-                type: Scratch.ArgumentType.STRING,
-                menu: "penPlusCostumes",
-              },
+                point1: { type: Scratch.ArgumentType.STRING, defaultValue: "[0,0,100]"},
+                point2: { type: Scratch.ArgumentType.STRING, defaultValue: "[10,0,100]"},
+                point3: { type: Scratch.ArgumentType.STRING, defaultValue: "[10,10,100]"},
+                texture: { menu: "tdMathPPCosMen"}
             },
-          },
-          {
-            disableMonitor: true,
-            opcode: "getpixelcolor",
-            blockType: Scratch.BlockType.REPORTER,
-            text: "get pixel [x] [y]'s color in [costume]",
-            arguments: {
-              x: { type: Scratch.ArgumentType.NUMBER, defaultValue: 1 },
-              y: { type: Scratch.ArgumentType.NUMBER, defaultValue: 1 },
-              costume: {
-                type: Scratch.ArgumentType.STRING,
-                menu: "penPlusCostumes",
-              },
-            },
-          },
-          {
-            disableMonitor: true,
-            opcode: "getPenPlusCostumeURI",
-            blockType: Scratch.BlockType.REPORTER,
-            text: "get data uri of [costume] in the pen+ costume library",
-            arguments: {
-              costume: {
-                type: Scratch.ArgumentType.STRING,
-                menu: "penPlusCostumes",
-              },
-            },
-          },
-          {
-            opcode: "__NOUSEOPCODE",
-            blockType: Scratch.BlockType.LABEL,
-            text: "Advanced options",
-          },
-          {
-            disableMonitor: true,
-            opcode: "turnAdvancedSettingOff",
-            blockType: Scratch.BlockType.COMMAND,
-            text: "turn advanced setting [Setting] [onOrOff]",
-            arguments: {
-              Setting: {
-                type: Scratch.ArgumentType.STRING,
-                menu: "advancedSettingsMenu",
-              },
-              onOrOff: { type: Scratch.ArgumentType.STRING, menu: "onOffMenu" },
-            },
-          },
-          {
-            disableMonitor: true,
-            opcode: "setAdvancedOptionValueTo",
-            blockType: Scratch.BlockType.COMMAND,
-            text: "set [setting] to [value]",
-            arguments: {
-              setting: {
-                type: Scratch.ArgumentType.STRING,
-                menu: "advancedSettingValuesMenu",
-              },
-              value: {
-                type: Scratch.ArgumentType.STRING,
-                defaultValue: "1000",
-              },
-            },
+            blockIconURI: penPIcon,
+            filter: "sprite",
           },
         ],
         menus: {
-          hsvMenu: {
+          axisMenu: {
             items: [
-              "color",
-              "saturation",
-              "brightness",
-              "transparency",
-              "size",
+              { text: "x / yaw", value: "0" },
+              { text: "y / pitch", value: "1" },
+              { text: "z / roll", value: "2" },
             ],
-            acceptReporters: true,
-          },
-          stampSquare: {
-            items: [
-              { text: "Width", value: "0" },
-              { text: "Height", value: "1" },
-              { text: "Rotation", value: "2" },
-              { text: "U-Multiplier", value: "3" },
-              { text: "U-Offset", value: "4" },
-              { text: "V-Multiplier", value: "5" },
-              { text: "V-Offset", value: "6" },
-              { text: "Red Tint", value: "7" },
-              { text: "Green Tint", value: "8" },
-              { text: "Blue Tint", value: "9" },
-              { text: "Transparency", value: "10" },
-              { text: "depth value", value: "11" },
-            ],
-            acceptReporters: true,
-          },
-          triAttribute: {
-            items: [
-              { text: "U value", value: "0" },
-              { text: "V value", value: "1" },
-              { text: "red tint", value: "2" },
-              { text: "green tint", value: "3" },
-              { text: "blue tint", value: "4" },
-              { text: "transparency", value: "7" },
-              { text: "corner pinch", value: "6" },
-              { text: "depth value", value: "5" },
-            ],
-            acceptReporters: true,
-          },
-          wholeTriAttribute: {
-            items: [
-              { text: "red tint", value: "2" },
-              { text: "green tint", value: "3" },
-              { text: "blue tint", value: "4" },
-              { text: "transparency", value: "7" },
-              { text: "depth value", value: "5" },
-            ],
-            acceptReporters: true,
-          },
-          filterType: {
-            items: [
-              { text: "Closest", value: "9728" },
-              { text: "Linear", value: "9729" },
-            ],
-            acceptReporters: true,
-          },
-          wrapType: {
-            items: [
-              { text: "Clamp", value: "33071" },
-              { text: "Repeat", value: "10497" },
-              { text: "Mirrored", value: "33648" },
-            ],
-            acceptReporters: true,
-          },
-          pointMenu: { items: ["1", "2", "3"], acceptReporters: true },
-          onOffMenu: { items: ["on", "off"], acceptReporters: true },
-          costumeMenu: { items: "costumeMenuFunction", acceptReporters: true },
-          penPlusCostumes: {
-            items: "penPlusCostumesFunction",
-            acceptReporters: true,
-          },
-          advancedSettingsMenu: {
-            items: [
-              { text: "allow 'Corner Pinch < 1'", value: "wValueUnderFlow" },
-              { text: "toggle depth buffer", value: "useDepthBuffer" },
-              { text: "clamp depth value", value: "_ClampZ" },
-            ],
-            acceptReporters: true,
-          },
-          advancedSettingValuesMenu: {
-            items: [{ text: "maximum depth value", value: "depthMax" }],
             acceptReporters: false,
           },
-          getCostumeDataURI_costume_Menu: {
-            items: "getCostumeDataURI_costume_MenuFunction",
+          axisMenu2D: {
+            items: [
+              { text: "x", value: "0" },
+              { text: "y", value: "1" },
+            ],
+            acceptReporters: false,
+          },
+          angleMenu: {
+            items: [
+              { text: "yaw", value: "0" },
+              { text: "pitch", value: "1" },
+              { text: "roll", value: "2" },
+            ],
             acceptReporters: true,
           },
-          getDimensionOf_dimension_Menu: {
-            items: ["width", "height"],
+          axisMenu2: {
+            items: [
+              { text: "x", value: "0" },
+              { text: "y", value: "1" },
+              { text: "z", value: "2" },
+            ],
             acceptReporters: true,
+          },
+          tdMathPPCosMen: {
+            items: "tdMathPPCosMen", acceptReporters: true
           },
         },
-        name: "Pen+",
-        id: "penP",
+        name: "3D Math",
+        id: "obviousAlexCMath3d",
         menuIconURI:
-          "data:image/svg+xml;base64,PHN2ZyB2ZXJzaW9uPSIxLjEiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyIgeG1sbnM6eGxpbms9Imh0dHA6Ly93d3cudzMub3JnLzE5OTkveGxpbmsiIHdpZHRoPSIzMi45OTk3MiIgaGVpZ2h0PSIzMi44ODIwNyIgdmlld0JveD0iMCwwLDMyLjk5OTcyLDMyLjg4MjA3Ij48ZyB0cmFuc2Zvcm09InRyYW5zbGF0ZSgtMjI0LC0xNjMuOTk5OTMpIj48ZyBkYXRhLXBhcGVyLWRhdGE9InsmcXVvdDtpc1BhaW50aW5nTGF5ZXImcXVvdDs6dHJ1ZX0iIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgc3Ryb2tlLW1pdGVybGltaXQ9IjEwIiBzdHJva2UtZGFzaGFycmF5PSIiIHN0cm9rZS1kYXNob2Zmc2V0PSIwIiBzdHlsZT0ibWl4LWJsZW5kLW1vZGU6IG5vcm1hbCI+PHBhdGggZD0iTTIyOC43NTMsMTk0LjYwMmwtNC4yNSwxLjc4bDEuNzgzLC00LjIzN2MxLjIxOCwtMi44OTIgMi45MDcsLTUuNDIzIDUuMDMsLTcuNTM4bDE5Ljc1LC0xOS42NzdjMC44NDYsLTAuODQyIDIuNjUsLTAuNDEgNC4wMzIsMC45NjdjMS4zOCwxLjM3NSAxLjgxNiwzLjE3MyAwLjk3LDQuMDE1bC0xOS43NSwxOS42NzhjLTIuMTIzLDIuMTE2IC00LjY2NCwzLjggLTcuNTY1LDUuMDEyIiBmaWxsPSIjZmZmZmZmIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiIHN0cm9rZT0iIzU3NWU3NSIgc3Ryb2tlLXdpZHRoPSIxIiBzdHJva2UtbGluZWpvaW49InJvdW5kIi8+PHBhdGggZD0iTTIzNi44NTgsMTczLjQyOGMwLDAgMi42MTYsMi4yMiA0LjM1LC0xLjU0NmMzLjc1MiwtOC4xNSA4LjIwMiwtNS43NzIgOC4yMDIsLTUuNzcyIiBmaWxsPSJub25lIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiIHN0cm9rZT0iIzU3NWU3NSIgc3Ryb2tlLXdpZHRoPSIxIiBzdHJva2UtbGluZWpvaW49InJvdW5kIi8+PHBhdGggZD0iTTI1Ni40MiwxNjguODI1YzAsMC40NjMgLTAuMTQsMC44NzMgLTAuNDMyLDEuMTY0bC05LjMzNSw5LjNjMC4yODIsLTAuMjkgMC40MSwtMC42NjggMC40MSwtMS4xMmMwLC0wLjg3NCAtMC41MDcsLTEuOTYzIC0xLjQwNiwtMi44NjhjLTEuMzYyLC0xLjM1OCAtMy4xNDcsLTEuOCAtNC4wMDIsLTAuOTlsOS4zMzUsLTkuMzAxYzAuODQ0LC0wLjg0IDIuNjUsLTAuNDEgNC4wMzUsMC45NmMwLjg5OCwwLjkwNCAxLjM5NiwxLjk4MiAxLjM5NiwyLjg1NU0yMzAuNTE1LDE5My43NzRjLTAuNTczLDAuMzAyIC0xLjE1NywwLjU3IC0xLjc2NCwwLjgzbC00LjI1MSwxLjc3OGwxLjc4NiwtNC4yMzVjMC4yNTgsLTAuNjA0IDAuNTMsLTEuMTg2IDAuODMzLC0xLjc1N2MwLjY5LDAuMTgzIDEuNDQ4LDAuNjI1IDIuMTA4LDEuMjgyYzAuNjYsMC42NTggMS4xMDIsMS40MTIgMS4yODcsMi4xMDIiIGZpbGw9IiM0Yzk3ZmYiIGZpbGwtcnVsZT0iZXZlbm9kZCIgc3Ryb2tlPSIjNTc1ZTc1IiBzdHJva2Utd2lkdGg9IjEiIHN0cm9rZS1saW5lam9pbj0icm91bmQiLz48cGF0aCBkPSJNMjU2LjQ5OCwxNjguNzQ4YzAsMC40NjQgLTAuMTQsMC44NzQgLTAuNDMzLDEuMTY1bC0xOS43NDIsMTkuNjhjLTIuMTMsMi4xMSAtNC42NzMsMy43OTMgLTcuNTcyLDUuMDFsLTQuMjUxLDEuNzc3bDAuOTc0LC0yLjMxNmwxLjkyNSwtMC44MDhjMi44OTgsLTEuMjE4IDUuNDQsLTIuOSA3LjU3LC01LjAxbDE5Ljc0MywtMTkuNjhjMC4yOTIsLTAuMjkyIDAuNDMyLC0wLjcwMiAwLjQzMiwtMS4xNjVjMCwtMC42NDYgLTAuMjcsLTEuNCAtMC43OCwtMi4xMjJjMC4yNSwwLjE3MiAwLjUsMC4zNzcgMC43MzcsMC42MTRjMC44OTgsMC45MDUgMS4zOTYsMS45ODMgMS4zOTYsMi44NTYiIGZpbGw9IiM1NzVlNzUiIGZpbGwtcnVsZT0iZXZlbm9kZCIgc3Ryb2tlPSIjNTc1ZTc1IiBzdHJva2Utd2lkdGg9IjEiIHN0cm9rZS1saW5lam9pbj0icm91bmQiIG9wYWNpdHk9IjAuMTUiLz48cGF0aCBkPSJNMjM4LjQ1LDE3Mi44M2MwLDAuNSAtMC40MDQsMC45MDUgLTAuOTA0LDAuOTA1Yy0wLjUsMCAtMC45MDUsLTAuNDA1IC0wLjkwNSwtMC45MDRjMCwtMC41IDAuNDA3LC0wLjkwMyAwLjkwNiwtMC45MDNjMC41LDAgMC45MDQsMC40MDQgMC45MDQsMC45MDR6IiBmaWxsPSIjNTc1ZTc1IiBmaWxsLXJ1bGU9ImV2ZW5vZGQiIHN0cm9rZT0iIzU3NWU3NSIgc3Ryb2tlLXdpZHRoPSIxIiBzdHJva2UtbGluZWpvaW49InJvdW5kIi8+PHBhdGggZD0iTTI0NC45OTgwNywxODcuMDUyOThoOS41MTc2NSIgZmlsbD0ibm9uZSIgZmlsbC1ydWxlPSJub256ZXJvIiBzdHJva2U9IiNmZmZmZmYiIHN0cm9rZS13aWR0aD0iMS41IiBzdHJva2UtbGluZWpvaW49Im1pdGVyIi8+PHBhdGggZD0iTTI0OS43NTY4OSwxOTEuODExOHYtOS41MTc2NSIgZmlsbD0ibm9uZSIgZmlsbC1ydWxlPSJub256ZXJvIiBzdHJva2U9IiNmZmZmZmYiIHN0cm9rZS13aWR0aD0iMS41IiBzdHJva2UtbGluZWpvaW49Im1pdGVyIi8+PC9nPjwvZz48L3N2Zz48IS0tcm90YXRpb25DZW50ZXI6MTY6MTYuMDAwMDY5MjMwODQyMTQzLS0+",
+          "data:image/svg+xml;base64,PHN2ZyB2ZXJzaW9uPSIxLjEiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyIgeG1sbnM6eGxpbms9Imh0dHA6Ly93d3cudzMub3JnLzE5OTkveGxpbmsiIHdpZHRoPSI4OC44NTEwNCIgaGVpZ2h0PSI4OC44NTEwNCIgdmlld0JveD0iMCwwLDg4Ljg1MTA0LDg4Ljg1MTA0Ij48ZyB0cmFuc2Zvcm09InRyYW5zbGF0ZSgtMTk1LjU3NDQ5LC0xMzUuNTc0NDkpIj48ZyBkYXRhLXBhcGVyLWRhdGE9InsmcXVvdDtpc1BhaW50aW5nTGF5ZXImcXVvdDs6dHJ1ZX0iIGZpbGwtcnVsZT0ibm9uemVybyIgc3Ryb2tlLWxpbmVjYXA9ImJ1dHQiIHN0cm9rZS1saW5lam9pbj0ibWl0ZXIiIHN0cm9rZS1taXRlcmxpbWl0PSIxMCIgc3Ryb2tlLWRhc2hhcnJheT0iIiBzdHJva2UtZGFzaG9mZnNldD0iMCIgc3R5bGU9Im1peC1ibGVuZC1tb2RlOiBub3JtYWwiPjxwYXRoIGQ9Ik0xOTUuNTc0NSwxODAuMDAwMDFjMCwtMjQuNTM1NTQgMTkuODg5OTgsLTQ0LjQyNTUyIDQ0LjQyNTUyLC00NC40MjU1MmMyNC41MzU1NCwwIDQ0LjQyNTUyLDE5Ljg4OTk4IDQ0LjQyNTUyLDQ0LjQyNTUyYzAsMjQuNTM1NTQgLTE5Ljg4OTk4LDQ0LjQyNTUyIC00NC40MjU1Miw0NC40MjU1MmMtMjQuNTM1NTQsMCAtNDQuNDI1NTIsLTE5Ljg4OTk4IC00NC40MjU1MiwtNDQuNDI1NTJ6IiBmaWxsPSIjYzJkOTE2IiBzdHJva2U9IiMwMDAwMDAiIHN0cm9rZS13aWR0aD0iMCIvPjxwYXRoIGQ9Ik0yMTIuNTU4NDIsMjA3LjE4MjYydi0zNy44ODQ1N2gzNy43NTc0NHYzNy44ODQ1N3oiIGZpbGw9IiNhZGMyMTMiIHN0cm9rZT0iI2ZmZmZmZiIgc3Ryb2tlLXdpZHRoPSIwIi8+PHBhdGggZD0iTTIxMy45NTY4NSwxNjkuNjc5NDRsMTYuMzk5NjksLTE3LjU0Mzg2bDM1Ljg1MDUsMC41MDg1MmwtMTUuNTA5NzksMTYuNjUzOTV6IiBmaWxsPSIjYWRjMjEzIiBzdHJva2U9Im5vbmUiIHN0cm9rZS13aWR0aD0iMCIvPjxwYXRoIGQ9Ik0yNTAuOTUxNTEsMjA2LjU0Njk4di01My4wMTI5N2gxNi45MDgyMWwtMC42MzU2NSwzNi40ODYxNHoiIGZpbGw9IiNhZGMyMTMiIHN0cm9rZT0iI2ZmZmZmZiIgc3Ryb2tlLXdpZHRoPSIwIi8+PHBhdGggZD0iTTI2OC44MzAwNiwxNTIuMzcxMjR2MzguNDQwMDJjMCwwLjA2OTcxIC0wLjAyODgzLDAuMTMyMjEgLTAuMDQwODgsMC4xOTk0NWMtMC4wMTQ0MiwwLjA4ODg2IC0wLjAxOTE0LDAuMTc1MzUgLTAuMDUyODIsMC4yNTk0N2MtMC4wNjAwMiwwLjE0NjUyIC0wLjE0ODk5LDAuMjgxMDkgLTAuMjU5NDcsMC4zOTE1N2wtMTYuODE3NDksMTYuODE3NDljLTAuMDA5NjksMC4wMDk1NyAtMC4wMjQxLDAuMDEyMDUgLTAuMDMzNjcsMC4wMjE2MmMtMC4xMDU2NCwwLjA5NjE4IC0wLjIyMDk1LDAuMTgwMTkgLTAuMzU1NTMsMC4yMzU0OGMtMC4xNDY2MywwLjA2MjUgLTAuMzAyNzIsMC4wOTM3IC0wLjQ1ODkyLDAuMDkzN2gtMzguNDQwMDJjLTAuNjYzMDksMCAtMS4yMDEyOSwtMC41MzgyIC0xLjIwMTI5LC0xLjIwMTE4di0zOC40MzUyOWMwLC0wLjE1ODU3IDAuMDMxMiwtMC4zMTQ3NyAwLjA5MTMzLC0wLjQ2NjEyYzAuMDU1MywtMC4xMzIxIDAuMTM5NDIsLTAuMjQ5OSAwLjIzNTQ4LC0wLjM1MzE3YzAuMDExOTQsLTAuMDA5NjkgMC4wMTQ0MiwtMC4wMjQxIDAuMDIzOTksLTAuMDMzNjdsMTYuODE3MzgsLTE2LjgxNzQ5YzAuMTEyOTYsLTAuMTEyODQgMC4yNDUwNiwtMC4xOTkzMyAwLjM5NDA1LC0wLjI2MTg0YzAuMDgxNzYsLTAuMDMzNjcgMC4xNzA2MiwtMC4wMzYwNCAwLjI1NzExLC0wLjA1MDQ1YzAuMDY3MzUsLTAuMDEyMDUgMC4xMjk3NCwtMC4wNDA4OCAwLjE5OTQ1LC0wLjA0MDg4aDM4LjQ0MDAyYzAuMDkxMzMsMCAwLjE3Mjk4LDAuMDMzNjcgMC4yNTQ3NCwwLjA1MDQ1YzAuMDY3MjMsMC4wMTY4OSAwLjEzNDQ3LDAuMDE0NDIgMC4xOTY5NywwLjA0MDg4YzAuMjk3ODcsMC4xMjI1MyAwLjUzMzM2LDAuMzU4MDEgMC42NTU4OCwwLjY1NTg4YzAuMDI2NDcsMC4wNjIzOSAwLjAyNjQ3LDAuMTMyMSAwLjA0MDg4LDAuMTk2OTdjMC4wMTkxNCwwLjA4NDEyIDAuMDUyODIsMC4xNjU3NyAwLjA1MjgyLDAuMjU3MTF6TTI0OS42MDk5OSwxNzAuMzkwMDJoLTM2LjAzNzU2djM2LjAzNzU2aDM2LjAzNzU2ek0yNjQuNzI4OTgsMTUzLjU3MjQyaC0zNS4wNDI5MmwtMTQuNDE1MDIsMTQuNDE1MDJoMzUuMDQyOTJ6TTI2Ni40Mjc1OSwxNTUuMjcxMDNsLTE0LjQxNTAyLDE0LjQxNTAydjM1LjA0MjkybDE0LjQxNTAyLC0xNC40MTUwMnoiIGZpbGw9IiM3ZThkMGIiIHN0cm9rZT0iIzdlOGQwYiIgc3Ryb2tlLXdpZHRoPSI2Ii8+PC9nPjwvZz48L3N2Zz48IS0tcm90YXRpb25DZW50ZXI6NDQuNDI1NTA0OTk5OTk5OTk6NDQuNDI1NTE0OTk5OTk5OTktLT4=",
         blockIconURI:
-          "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHZpZXdCb3g9IjAgMCA0MCA0MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48dGl0bGU+cGVuLWljb248L3RpdGxlPjxnIHN0cm9rZT0iIzU3NUU3NSIgZmlsbD0ibm9uZSIgZmlsbC1ydWxlPSJldmVub2RkIiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiPjxwYXRoIGQ9Ik04Ljc1MyAzNC42MDJsLTQuMjUgMS43OCAxLjc4My00LjIzN2MxLjIxOC0yLjg5MiAyLjkwNy01LjQyMyA1LjAzLTcuNTM4TDMxLjA2NiA0LjkzYy44NDYtLjg0MiAyLjY1LS40MSA0LjAzMi45NjcgMS4zOCAxLjM3NSAxLjgxNiAzLjE3My45NyA0LjAxNUwxNi4zMTggMjkuNTljLTIuMTIzIDIuMTE2LTQuNjY0IDMuOC03LjU2NSA1LjAxMiIgZmlsbD0iI0ZGRiIvPjxwYXRoIGQ9Ik0yOS40MSA2LjExcy00LjQ1LTIuMzc4LTguMjAyIDUuNzcyYy0xLjczNCAzLjc2Ni00LjM1IDEuNTQ2LTQuMzUgMS41NDYiLz48cGF0aCBkPSJNMzYuNDIgOC44MjVjMCAuNDYzLS4xNC44NzMtLjQzMiAxLjE2NGwtOS4zMzUgOS4zYy4yODItLjI5LjQxLS42NjguNDEtMS4xMiAwLS44NzQtLjUwNy0xLjk2My0xLjQwNi0yLjg2OC0xLjM2Mi0xLjM1OC0zLjE0Ny0xLjgtNC4wMDItLjk5TDMwLjk5IDUuMDFjLjg0NC0uODQgMi42NS0uNDEgNC4wMzUuOTYuODk4LjkwNCAxLjM5NiAxLjk4MiAxLjM5NiAyLjg1NU0xMC41MTUgMzMuNzc0Yy0uNTczLjMwMi0xLjE1Ny41Ny0xLjc2NC44M0w0LjUgMzYuMzgybDEuNzg2LTQuMjM1Yy4yNTgtLjYwNC41My0xLjE4Ni44MzMtMS43NTcuNjkuMTgzIDEuNDQ4LjYyNSAyLjEwOCAxLjI4Mi42Ni42NTggMS4xMDIgMS40MTIgMS4yODcgMi4xMDIiIGZpbGw9IiM0Qzk3RkYiLz48cGF0aCBkPSJNMzYuNDk4IDguNzQ4YzAgLjQ2NC0uMTQuODc0LS40MzMgMS4xNjVsLTE5Ljc0MiAxOS42OGMtMi4xMyAyLjExLTQuNjczIDMuNzkzLTcuNTcyIDUuMDFMNC41IDM2LjM4bC45NzQtMi4zMTYgMS45MjUtLjgwOGMyLjg5OC0xLjIxOCA1LjQ0LTIuOSA3LjU3LTUuMDFsMTkuNzQzLTE5LjY4Yy4yOTItLjI5Mi40MzItLjcwMi40MzItMS4xNjUgMC0uNjQ2LS4yNy0xLjQtLjc4LTIuMTIyLjI1LjE3Mi41LjM3Ny43MzcuNjE0Ljg5OC45MDUgMS4zOTYgMS45ODMgMS4zOTYgMi44NTYiIGZpbGw9IiM1NzVFNzUiIG9wYWNpdHk9Ii4xNSIvPjxwYXRoIGQ9Ik0xOC40NSAxMi44M2MwIC41LS40MDQuOTA1LS45MDQuOTA1cy0uOTA1LS40MDUtLjkwNS0uOTA0YzAtLjUuNDA3LS45MDMuOTA2LS45MDMuNSAwIC45MDQuNDA0LjkwNC45MDR6IiBmaWxsPSIjNTc1RTc1Ii8+PC9nPjwvc3ZnPg==",
-        docsURI: "https://extensions.turbowarp.org/penplus",
+          "data:image/svg+xml;base64,PHN2ZyB2ZXJzaW9uPSIxLjEiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyIgeG1sbnM6eGxpbms9Imh0dHA6Ly93d3cudzMub3JnLzE5OTkveGxpbmsiIHdpZHRoPSI2My45NDMyMiIgaGVpZ2h0PSI2My45NDMyMiIgdmlld0JveD0iMCwwLDYzLjk0MzIyLDYzLjk0MzIyIj48ZyB0cmFuc2Zvcm09InRyYW5zbGF0ZSgtMjA4LjAyODQsLTE0OC4wMjgzOCkiPjxnIGRhdGEtcGFwZXItZGF0YT0ieyZxdW90O2lzUGFpbnRpbmdMYXllciZxdW90Ozp0cnVlfSIgZmlsbC1ydWxlPSJub256ZXJvIiBzdHJva2UtbGluZWNhcD0iYnV0dCIgc3Ryb2tlLWxpbmVqb2luPSJtaXRlciIgc3Ryb2tlLW1pdGVybGltaXQ9IjEwIiBzdHJva2UtZGFzaGFycmF5PSIiIHN0cm9rZS1kYXNob2Zmc2V0PSIwIiBzdHlsZT0ibWl4LWJsZW5kLW1vZGU6IG5vcm1hbCI+PHBhdGggZD0iTTIxMi41NTg0MywyMDcuMTgyNjJ2LTM3Ljg4NDU3aDM3Ljc1NzQ0djM3Ljg4NDU3eiIgZmlsbD0iI2FkYzIxMyIgc3Ryb2tlPSIjZmZmZmZmIiBzdHJva2Utd2lkdGg9IjAiLz48cGF0aCBkPSJNMjEzLjk1Njg2LDE2OS42Nzk0NGwxNi4zOTk2OSwtMTcuNTQzODZsMzUuODUwNSwwLjUwODUybC0xNS41MDk3OSwxNi42NTM5NXoiIGZpbGw9IiNhZGMyMTMiIHN0cm9rZT0ibm9uZSIgc3Ryb2tlLXdpZHRoPSIwIi8+PHBhdGggZD0iTTI1MC45NTE1MiwyMDYuNTQ2OTh2LTUzLjAxMjk3aDE2LjkwODIxbC0wLjYzNTY1LDM2LjQ4NjE0eiIgZmlsbD0iI2FkYzIxMyIgc3Ryb2tlPSIjZmZmZmZmIiBzdHJva2Utd2lkdGg9IjAiLz48cGF0aCBkPSJNMjY4LjgzMDA3LDE1Mi4zNzEyNHYzOC40NDAwMmMwLDAuMDY5NzEgLTAuMDI4ODMsMC4xMzIyMSAtMC4wNDA4OCwwLjE5OTQ1Yy0wLjAxNDQyLDAuMDg4ODYgLTAuMDE5MTQsMC4xNzUzNSAtMC4wNTI4MiwwLjI1OTQ3Yy0wLjA2MDAyLDAuMTQ2NTIgLTAuMTQ4OTksMC4yODEwOSAtMC4yNTk0NywwLjM5MTU3bC0xNi44MTc0OSwxNi44MTc0OWMtMC4wMDk2OSwwLjAwOTU3IC0wLjAyNDEsMC4wMTIwNSAtMC4wMzM2NywwLjAyMTYyYy0wLjEwNTY0LDAuMDk2MTggLTAuMjIwOTUsMC4xODAxOSAtMC4zNTU1MywwLjIzNTQ4Yy0wLjE0NjYzLDAuMDYyNSAtMC4zMDI3MiwwLjA5MzcgLTAuNDU4OTIsMC4wOTM3aC0zOC40NDAwMmMtMC42NjMwOSwwIC0xLjIwMTI5LC0wLjUzODIgLTEuMjAxMjksLTEuMjAxMTh2LTM4LjQzNTI5YzAsLTAuMTU4NTcgMC4wMzEyLC0wLjMxNDc3IDAuMDkxMzMsLTAuNDY2MTJjMC4wNTUzLC0wLjEzMjEgMC4xMzk0MiwtMC4yNDk5IDAuMjM1NDgsLTAuMzUzMTdjMC4wMTE5NCwtMC4wMDk2OSAwLjAxNDQyLC0wLjAyNDEgMC4wMjM5OSwtMC4wMzM2N2wxNi44MTczOCwtMTYuODE3NDljMC4xMTI5NiwtMC4xMTI4NCAwLjI0NTA2LC0wLjE5OTMzIDAuMzk0MDUsLTAuMjYxODRjMC4wODE3NiwtMC4wMzM2NyAwLjE3MDYyLC0wLjAzNjA0IDAuMjU3MTEsLTAuMDUwNDVjMC4wNjczNSwtMC4wMTIwNSAwLjEyOTc0LC0wLjA0MDg4IDAuMTk5NDUsLTAuMDQwODhoMzguNDQwMDJjMC4wOTEzMywwIDAuMTcyOTgsMC4wMzM2NyAwLjI1NDc0LDAuMDUwNDVjMC4wNjcyMywwLjAxNjg5IDAuMTM0NDcsMC4wMTQ0MiAwLjE5Njk3LDAuMDQwODhjMC4yOTc4NywwLjEyMjUzIDAuNTMzMzYsMC4zNTgwMSAwLjY1NTg4LDAuNjU1ODhjMC4wMjY0NywwLjA2MjM5IDAuMDI2NDcsMC4xMzIxIDAuMDQwODgsMC4xOTY5N2MwLjAxOTE0LDAuMDg0MTIgMC4wNTI4MiwwLjE2NTc3IDAuMDUyODIsMC4yNTcxMXpNMjQ5LjYxLDE3MC4zOTAwMmgtMzYuMDM3NTZ2MzYuMDM3NTZoMzYuMDM3NTZ6TTI2NC43Mjg5OCwxNTMuNTcyNDJoLTM1LjA0MjkybC0xNC40MTUwMiwxNC40MTUwMmgzNS4wNDI5MnpNMjY2LjQyNzYsMTU1LjI3MTAzbC0xNC40MTUwMiwxNC40MTUwMnYzNS4wNDI5MmwxNC40MTUwMiwtMTQuNDE1MDJ6IiBmaWxsPSIjN2U4ZDBiIiBzdHJva2U9IiM3ZThkMGIiIHN0cm9rZS13aWR0aD0iNiIvPjwvZz48L2c+PC9zdmc+PCEtLXJvdGF0aW9uQ2VudGVyOjMxLjk3MTU5NTY4NzExOTI3NjozMS45NzE2MTU2ODcxMTkyODItLT4=",
+        color1: "#ADC213",
+        color2: "#A0B312",
+        color3: "#697700",
       };
     }
-    costumeMenuFunction() {
-      const myCostumes = runtime._editingTarget.sprite.costumes;
+    
+    draw3dTri({ point1, point2, point3 },util) {
+      if (!penPModule) throw "Pen+ module not found";
+      point1 = JSON.parse(point1);point2 = JSON.parse(point2);point3 = JSON.parse(point3);
+      //Check if points are valid
+      if (!(point1.length >= 3 && point2.length >=3 && point3.length >= 3)) throw "All points are not Vector3s!";
+      //cast points to number
 
-      let readCostumes = [];
-      for (
-        let curCostumeID = 0;
-        curCostumeID < myCostumes.length;
-        curCostumeID++
-      ) {
-        const currentCostume = myCostumes[curCostumeID].name;
-        readCostumes.push(currentCostume);
+      const target = util.target;
+      
+      this.checkFor3dPositionData(target.id);
+      const sprX = spriteData[target.id].position[0] - camera.position[0];
+      const sprY = spriteData[target.id].position[1] - camera.position[1];
+      const sprZ = spriteData[target.id].position[2] - camera.position[2];
+
+      point1[0] = Scratch.Cast.toNumber(point1[0]) + sprX;point1[1] = Scratch.Cast.toNumber(point1[1]) + sprY;point1[2] = Scratch.Cast.toNumber(point1[2]) + sprZ;
+      point2[0] = Scratch.Cast.toNumber(point2[0]) + sprX;point2[1] = Scratch.Cast.toNumber(point2[1]) + sprY;point2[2] = Scratch.Cast.toNumber(point2[2]) + sprZ;
+      point3[0] = Scratch.Cast.toNumber(point3[0]) + sprX;point3[1] = Scratch.Cast.toNumber(point3[1]) + sprY;point3[2] = Scratch.Cast.toNumber(point3[2]) + sprZ;
+
+      //Rotate points around camera
+      let temp = point1[0];
+      point1[0] = point1[2] * camera.sinAndCos[0] + point1[0] * camera.sinAndCos[1];point1[2] = point1[2] * camera.sinAndCos[1] - temp * camera.sinAndCos[0];
+      temp = point1[1];
+      point1[1] = point1[2] * camera.sinAndCos[2] + point1[1] * camera.sinAndCos[3];point1[2] = point1[2] * camera.sinAndCos[3] - temp * camera.sinAndCos[2];
+      temp = point1[0];
+      point1[0] = point1[1] * camera.sinAndCos[4] + point1[0] * camera.sinAndCos[5];point1[1] = point1[1] * camera.sinAndCos[5] - temp * camera.sinAndCos[4];
+
+      temp = point2[0];
+      point2[0] = point2[2] * camera.sinAndCos[0] + point2[0] * camera.sinAndCos[1];point2[2] = point2[2] * camera.sinAndCos[1] - temp * camera.sinAndCos[0];
+      temp = point2[1];
+      point2[1] = point2[2] * camera.sinAndCos[2] + point2[1] * camera.sinAndCos[3];point2[2] = point2[2] * camera.sinAndCos[3] - temp * camera.sinAndCos[2];
+      temp = point2[0];
+      point2[0] = point2[1] * camera.sinAndCos[4] + point2[0] * camera.sinAndCos[5];point2[1] = point2[1] * camera.sinAndCos[5] - temp * camera.sinAndCos[4];
+
+      temp = point3[0];
+      point3[0] = point3[2] * camera.sinAndCos[0] + point3[0] * camera.sinAndCos[1];point3[2] = point3[2] * camera.sinAndCos[1] - temp * camera.sinAndCos[0];
+      temp = point3[1];
+      point3[1] = point3[2] * camera.sinAndCos[2] + point3[1] * camera.sinAndCos[3];point3[2] = point3[2] * camera.sinAndCos[3] - temp * camera.sinAndCos[2];
+      temp = point3[0];
+      point3[0] = point3[1] * camera.sinAndCos[4] + point3[0] * camera.sinAndCos[5];point3[1] = point3[1] * camera.sinAndCos[5] - temp * camera.sinAndCos[4];
+      
+      if (point1[2] < 1 && point2[2] < 1 && point3[2] < 1) {return;}
+
+      //Get projection points
+      let project1 = fov / point1[2];
+      let project2 = fov / point2[2];
+      let project3 = fov / point3[2];
+
+      point1[0] = point1[0] * project1;point1[1] = point1[1] * project1;
+      point2[0] = point2[0] * project2;point2[1] = point2[1] * project2;
+      point3[0] = point3[0] * project3;point3[1] = point3[1] * project3;
+
+      //Corner Pinch
+      penPModule.setTrianglePointAttribute({ point:1, attribute:6, value:point1[2] }, util);
+      penPModule.setTrianglePointAttribute({ point:2, attribute:6, value:point2[2] }, util);
+      penPModule.setTrianglePointAttribute({ point:3, attribute:6, value:point3[2] }, util);
+      //Depth Buffer Value
+      penPModule.setTrianglePointAttribute({ point:1, attribute:5, value:point1[2] }, util);
+      penPModule.setTrianglePointAttribute({ point:2, attribute:5, value:point2[2] }, util);
+      penPModule.setTrianglePointAttribute({ point:3, attribute:5, value:point3[2] }, util);
+
+      penPModule.drawSolidTri({ x1:point1[0], y1:point1[1], x2:point2[0], y2:point2[1], x3:point3[0], y3:point3[1] },util);
+    }
+    draw3dTexTri({ point1, point2, point3, texture },util) {
+      if (!penPModule) throw "Pen+ module not found";
+      point1 = JSON.parse(point1);point2 = JSON.parse(point2);point3 = JSON.parse(point3);
+      //Check if we have all needed points
+      if (!(point1.length >= 3 && point2.length >=3 && point3.length >= 3)) throw "All points are not Vector3s!";
+      //cast points to number
+      
+      const target = util.target;
+      
+      this.checkFor3dPositionData(target.id);
+      const sprX = spriteData[target.id].position[0] - camera.position[0];
+      const sprY = spriteData[target.id].position[1] - camera.position[1];
+      const sprZ = spriteData[target.id].position[2] - camera.position[2];
+
+      point1[0] = Scratch.Cast.toNumber(point1[0]) + sprX;point1[1] = Scratch.Cast.toNumber(point1[1]) + sprY;point1[2] = Scratch.Cast.toNumber(point1[2]) + sprZ;
+      point2[0] = Scratch.Cast.toNumber(point2[0]) + sprX;point2[1] = Scratch.Cast.toNumber(point2[1]) + sprY;point2[2] = Scratch.Cast.toNumber(point2[2]) + sprZ;
+      point3[0] = Scratch.Cast.toNumber(point3[0]) + sprX;point3[1] = Scratch.Cast.toNumber(point3[1]) + sprY;point3[2] = Scratch.Cast.toNumber(point3[2]) + sprZ;
+      //Rotate points around camera
+      let temp = point1[0];
+      point1[0] = point1[2] * camera.sinAndCos[0] + point1[0] * camera.sinAndCos[1];point1[2] = point1[2] * camera.sinAndCos[1] - temp * camera.sinAndCos[0];
+      temp = point1[1];
+      point1[1] = point1[2] * camera.sinAndCos[2] + point1[1] * camera.sinAndCos[3];point1[2] = point1[2] * camera.sinAndCos[3] - temp * camera.sinAndCos[2];
+      temp = point1[0];
+      point1[0] = point1[1] * camera.sinAndCos[4] + point1[0] * camera.sinAndCos[5];point1[1] = point1[1] * camera.sinAndCos[5] - temp * camera.sinAndCos[4];
+
+      temp = point2[0];
+      point2[0] = point2[2] * camera.sinAndCos[0] + point2[0] * camera.sinAndCos[1];point2[2] = point2[2] * camera.sinAndCos[1] - temp * camera.sinAndCos[0];
+      temp = point2[1];
+      point2[1] = point2[2] * camera.sinAndCos[2] + point2[1] * camera.sinAndCos[3];point2[2] = point2[2] * camera.sinAndCos[3] - temp * camera.sinAndCos[2];
+      temp = point2[0];
+      point2[0] = point2[1] * camera.sinAndCos[4] + point2[0] * camera.sinAndCos[5];point2[1] = point2[1] * camera.sinAndCos[5] - temp * camera.sinAndCos[4];
+
+      temp = point3[0];
+      point3[0] = point3[2] * camera.sinAndCos[0] + point3[0] * camera.sinAndCos[1];point3[2] = point3[2] * camera.sinAndCos[1] - temp * camera.sinAndCos[0];
+      temp = point3[1];
+      point3[1] = point3[2] * camera.sinAndCos[2] + point3[1] * camera.sinAndCos[3];point3[2] = point3[2] * camera.sinAndCos[3] - temp * camera.sinAndCos[2];
+      temp = point3[0];
+      point3[0] = point3[1] * camera.sinAndCos[4] + point3[0] * camera.sinAndCos[5];point3[1] = point3[1] * camera.sinAndCos[5] - temp * camera.sinAndCos[4];
+      
+      if (point1[2] < 1 && point2[2] < 1 && point3[2] < 1) {return;}
+
+      //Get projection points
+      let project1 = fov / point1[2];
+      let project2 = fov / point2[2];
+      let project3 = fov / point3[2];
+
+      point1[0] = point1[0] * project1;point1[1] = point1[1] * project1;
+      point2[0] = point2[0] * project2;point2[1] = point2[1] * project2;
+      point3[0] = point3[0] * project3;point3[1] = point3[1] * project3;
+
+      //Corner Pinch
+      penPModule.setTrianglePointAttribute({ point:1, attribute:6, value:point1[2] }, util);
+      penPModule.setTrianglePointAttribute({ point:2, attribute:6, value:point2[2] }, util);
+      penPModule.setTrianglePointAttribute({ point:3, attribute:6, value:point3[2] }, util);
+      //Depth Buffer Value
+      penPModule.setTrianglePointAttribute({ point:1, attribute:5, value:point1[2] }, util);
+      penPModule.setTrianglePointAttribute({ point:2, attribute:5, value:point2[2] }, util);
+      penPModule.setTrianglePointAttribute({ point:3, attribute:5, value:point3[2] }, util);
+
+      penPModule.drawTexTri({ x1:point1[0], y1:point1[1], x2:point2[0], y2:point2[1], x3:point3[0], y3:point3[1], tex:texture },util);
+    }
+    tdMathPPCosMen() {
+      if (!penPModule) throw "Pen+ module not found";
+      return penPModule.costumeMenuFunction();
+    }
+    newV3({ x, y, z }) {
+      return JSON.stringify([
+        Scratch.Cast.toNumber(x) || 0,
+        Scratch.Cast.toNumber(y) || 0,
+        Scratch.Cast.toNumber(z) || 0,
+      ]);
+    }
+    newV3fromValue({ value }) {
+      if (typeof value == "number") {
+        return JSON.stringify([value, value, value]);
       }
-
-      const keys = Object.keys(penPlusCostumeLibrary);
-      if (keys.length > 0) {
-        for (let curCostumeID = 0; curCostumeID < keys.length; curCostumeID++) {
-          const currentCostume = keys[curCostumeID];
-          readCostumes.push(currentCostume);
+      return JSON.stringify([0, 0, 0]);
+    }
+    getAxisOfV3({ axis, vector }) {
+      axis = Scratch.Cast.toNumber(axis);
+      vector = JSON.parse(vector);
+      if (vector) {
+        return vector[axis];
+      }
+      return 0;
+    }
+    addV3({ a, b }) {
+      a = JSON.parse(a);
+      b = JSON.parse(b);
+      if (a && b) {
+        return JSON.stringify([a[0] + b[0], a[1] + b[1], a[2] + b[2]]);
+      }
+      return "[0,0,0]";
+    }
+    subV3({ a, b }) {
+      a = JSON.parse(a);
+      b = JSON.parse(b);
+      if (a && b) {
+        return JSON.stringify([a[0] - b[0], a[1] - b[1], a[2] - b[2]]);
+      }
+      return "[0,0,0]";
+    }
+    mulV3({ a, b }) {
+      a = JSON.parse(a);
+      b = JSON.parse(b);
+      if (a && b) {
+        return JSON.stringify([a[0] * b[0], a[1] * b[1], a[2] * b[2]]);
+      }
+      return "[0,0,0]";
+    }
+    divV3({ a, b }) {
+      a = JSON.parse(a);
+      b = JSON.parse(b);
+      if (a && b) {
+        const c = [0, 0, 0];
+        c[0] = a[0] / b[0];
+        c[1] = a[1] / b[1];
+        c[2] = a[2] / b[2];
+        if (isNaN(c[0])) {
+          c[0] = 0;
         }
-      }
 
-      return readCostumes;
-    }
-    penPlusCostumesFunction() {
-      const readCostumes = [];
-      const keys = Object.keys(penPlusCostumeLibrary);
-      if (keys.length > 0) {
-        for (let curCostumeID = 0; curCostumeID < keys.length; curCostumeID++) {
-          const currentCostume = keys[curCostumeID];
-          readCostumes.push(currentCostume);
+        if (isNaN(c[1])) {
+          c[1] = 0;
         }
-        return readCostumes;
-      }
 
-      return ["no pen+ costumes!"];
-    }
-    isPenDown(args, util) {
-      checkForPen(util);
-      const curTarget = util.target;
-      return curTarget["_customState"]["Scratch.pen"].penDown;
-    }
-    getPenHSV({ HSV }, util) {
-      checkForPen(util);
-      const curTarget = util.target;
-      if (HSV == "size") {
-        return curTarget["_customState"]["Scratch.pen"].penAttributes.diameter;
-      }
-      return curTarget["_customState"]["Scratch.pen"][HSV];
-    }
-    drawDot({ x, y }, util) {
-      checkForPen(util);
-      const curTarget = util.target;
-      const attrib = curTarget["_customState"]["Scratch.pen"].penAttributes;
-
-      curTarget.runtime.ext_pen.penDown(null, util);
-
-      Scratch.vm.renderer.penPoint(
-        Scratch.vm.renderer._penSkinId,
-        attrib,
-        x,
-        y
-      );
-
-      curTarget.runtime.ext_pen.penUp(null, util);
-    }
-    drawLine({ x1, y1, x2, y2 }, util) {
-      checkForPen(util);
-      const curTarget = util.target;
-      const attrib = curTarget["_customState"]["Scratch.pen"].penAttributes;
-
-      curTarget.runtime.ext_pen.penDown(null, util);
-
-      Scratch.vm.renderer.penLine(
-        Scratch.vm.renderer._penSkinId,
-        attrib,
-        x1,
-        y1,
-        x2,
-        y2
-      );
-
-      curTarget.runtime.ext_pen.penUp(null, util);
-    }
-    squareDown(arg, util) {
-      //Just a simple thing to allow for pen drawing
-      const curTarget = util.target;
-
-      checkForPen(util);
-
-      const attrib = curTarget["_customState"]["Scratch.pen"].penAttributes;
-      const diam = attrib.diameter;
-
-      nativeSize = renderer.useHighQualityRender
-        ? [canvas.width, canvas.height]
-        : renderer._nativeSize;
-
-      lilPenDabble(nativeSize, curTarget, util); // Do this so the renderer doesn't scream at us
-
-      if (
-        typeof triangleAttributesOfAllSprites["squareStamp_" + curTarget.id] ==
-        "undefined"
-      ) {
-        triangleAttributesOfAllSprites["squareStamp_" + curTarget.id] =
-          triangleDefaultAttributes;
-      }
-
-      if (typeof squareAttributesOfAllSprites[curTarget.id] == "undefined") {
-        squareAttributesOfAllSprites[curTarget.id] = squareDefaultAttributes;
-      }
-
-      const myAttributes = squareAttributesOfAllSprites[curTarget.id];
-
-      //trying my best to reduce memory usage
-      gl.viewport(0, 0, nativeSize[0], nativeSize[1]);
-      const dWidth = 1 / nativeSize[0];
-      const dHeight = 1 / nativeSize[1];
-
-      const spritex = curTarget.x;
-      const spritey = curTarget.y;
-
-      //correction for HQ pen
-      const typSize = renderer._nativeSize;
-      const mul = renderer.useHighQualityRender
-        ? 2 * ((canvas.width + canvas.height) / (typSize[0] + typSize[1]))
-        : 2;
-
-      //Predifine stuff so there aren't as many calculations
-      const wMulX = mul * myAttributes[0];
-      const wMulY = mul * myAttributes[1];
-
-      const offDiam = 0.5 * diam;
-
-      const sprXoff = spritex * mul;
-      const sprYoff = spritey * mul;
-      //Paratheses because I know some obscure browser will screw this up.
-      let x1 = Scratch.Cast.toNumber(-offDiam) * wMulX;
-      let x2 = Scratch.Cast.toNumber(offDiam) * wMulX;
-      let x3 = Scratch.Cast.toNumber(offDiam) * wMulX;
-      let x4 = Scratch.Cast.toNumber(-offDiam) * wMulX;
-
-      let y1 = Scratch.Cast.toNumber(offDiam) * wMulY;
-      let y2 = Scratch.Cast.toNumber(offDiam) * wMulY;
-      let y3 = Scratch.Cast.toNumber(-offDiam) * wMulY;
-      let y4 = Scratch.Cast.toNumber(-offDiam) * wMulY;
-
-      function rotateTheThings(ox1, oy1, ox2, oy2, ox3, oy3, ox4, oy4) {
-        let sin = Math.sin(myAttributes[2] * d2r);
-        let cos = Math.cos(myAttributes[2] * d2r);
-
-        x1 = ox1 * sin + oy1 * cos;
-        y1 = ox1 * cos - oy1 * sin;
-
-        x2 = ox2 * sin + oy2 * cos;
-        y2 = ox2 * cos - oy2 * sin;
-
-        x3 = ox3 * sin + oy3 * cos;
-        y3 = ox3 * cos - oy3 * sin;
-
-        x4 = ox4 * sin + oy4 * cos;
-        y4 = ox4 * cos - oy4 * sin;
-      }
-
-      rotateTheThings(x1, y1, x2, y2, x3, y3, x4, y4);
-
-      x1 += sprXoff;
-      y1 += sprYoff;
-
-      x2 += sprXoff;
-      y2 += sprYoff;
-
-      x3 += sprXoff;
-      y3 += sprYoff;
-
-      x4 += sprXoff;
-      y4 += sprYoff;
-
-      x1 *= dWidth;
-      y1 *= dHeight;
-
-      x2 *= dWidth;
-      y2 *= dHeight;
-
-      x3 *= dWidth;
-      y3 *= dHeight;
-
-      x4 *= dWidth;
-      y4 *= dHeight;
-
-      const Attribute_ID = "squareStamp_" + curTarget.id;
-
-      triangleAttributesOfAllSprites[Attribute_ID][2] = myAttributes[7];
-      triangleAttributesOfAllSprites[Attribute_ID][3] = myAttributes[8];
-      triangleAttributesOfAllSprites[Attribute_ID][4] = myAttributes[9];
-      triangleAttributesOfAllSprites[Attribute_ID][5] = myAttributes[11];
-      triangleAttributesOfAllSprites[Attribute_ID][7] = myAttributes[10];
-      triangleAttributesOfAllSprites[Attribute_ID][10] = myAttributes[7];
-      triangleAttributesOfAllSprites[Attribute_ID][11] = myAttributes[8];
-      triangleAttributesOfAllSprites[Attribute_ID][12] = myAttributes[9];
-      triangleAttributesOfAllSprites[Attribute_ID][13] = myAttributes[11];
-      triangleAttributesOfAllSprites[Attribute_ID][15] = myAttributes[10];
-      triangleAttributesOfAllSprites[Attribute_ID][18] = myAttributes[7];
-      triangleAttributesOfAllSprites[Attribute_ID][19] = myAttributes[8];
-      triangleAttributesOfAllSprites[Attribute_ID][20] = myAttributes[9];
-      triangleAttributesOfAllSprites[Attribute_ID][21] = myAttributes[11];
-      triangleAttributesOfAllSprites[Attribute_ID][23] = myAttributes[10];
-
-      triFunctions.drawTri(
-        gl.getParameter(gl.CURRENT_PROGRAM),
-        x1,
-        y1,
-        x2,
-        y2,
-        x3,
-        y3,
-        attrib.color4f,
-        Attribute_ID
-      );
-
-      triFunctions.drawTri(
-        gl.getParameter(gl.CURRENT_PROGRAM),
-        x1,
-        y1,
-        x3,
-        y3,
-        x4,
-        y4,
-        attrib.color4f,
-        Attribute_ID
-      );
-    }
-    squareTexDown({ tex }, util) {
-      //Just a simple thing to allow for pen drawing
-      const curTarget = util.target;
-
-      let currentTexture = null;
-      if (penPlusCostumeLibrary[tex]) {
-        currentTexture = penPlusCostumeLibrary[tex].texture;
-      } else {
-        const costIndex = curTarget.getCostumeIndexByName(
-          Scratch.Cast.toString(tex)
-        );
-        if (costIndex >= 0) {
-          const curCostume = curTarget.sprite.costumes_[costIndex];
-          if (costIndex != curTarget.currentCostume) {
-            curTarget.setCostume(costIndex);
-          }
-
-          currentTexture = renderer._allSkins[curCostume.skinId].getTexture();
+        if (isNaN(c[2])) {
+          c[2] = 0;
         }
+
+        return JSON.stringify(c);
       }
-
-      checkForPen(util);
-
-      const attrib = curTarget["_customState"]["Scratch.pen"].penAttributes;
-      const diam = attrib.diameter;
-
-      nativeSize = renderer.useHighQualityRender
-        ? [canvas.width, canvas.height]
-        : renderer._nativeSize;
-
-      lilPenDabble(nativeSize, curTarget, util); // Do this so the renderer doesn't scream at us
-
-      if (!triangleAttributesOfAllSprites["squareStamp_" + curTarget.id]) {
-        triangleAttributesOfAllSprites["squareStamp_" + curTarget.id] =
-          triangleDefaultAttributes;
+      return "[0,0,0]";
+    }
+    dotProductOfV3({ a, b }) {
+      a = JSON.parse(a);
+      b = JSON.parse(b);
+      if (a.length == 3 && b.length == 3) {
+        return a[0] * b[0] + a[1] * b[1] + a[2] + b[2];
       }
-
-      if (!squareAttributesOfAllSprites[curTarget.id]) {
-        squareAttributesOfAllSprites[curTarget.id] = squareDefaultAttributes;
+      return 0;
+    }
+    dotProductOfV2({ a, b }) {
+      a = JSON.parse(a);
+      b = JSON.parse(b);
+      if (a.length == 2 && b.length == 2) {
+        return a[0] * b[0] + a[1] * b[1];
       }
+      return 0;
+    }
+    crossProductOfV3({ a, b }) {
+      a = JSON.parse(a);
+      b = JSON.parse(b);
 
-      const myAttributes = squareAttributesOfAllSprites[curTarget.id];
+      if (a && b) {
+        const c = [0, 0, 0];
 
-      //trying my best to reduce memory usage
-      gl.viewport(0, 0, nativeSize[0], nativeSize[1]);
-      const dWidth = 1 / nativeSize[0];
-      const dHeight = 1 / nativeSize[1];
+        c[0] = a[1] * b[2] - a[2] * b[1];
+        c[1] = a[2] * b[0] - a[0] * b[2];
+        c[2] = a[0] * b[1] - a[1] * b[0];
 
-      const spritex = curTarget.x;
-      const spritey = curTarget.y;
-
-      //correction for HQ pen
-      const typSize = renderer._nativeSize;
-      const mul = renderer.useHighQualityRender
-        ? 2 * ((canvas.width + canvas.height) / (typSize[0] + typSize[1]))
-        : 2;
-
-      //Predifine stuff so there aren't as many calculations
-      const wMulX = mul * myAttributes[0];
-      const wMulY = mul * myAttributes[1];
-
-      const offDiam = 0.5 * diam;
-
-      const sprXoff = spritex * mul;
-      const sprYoff = spritey * mul;
-      //Paratheses because I know some obscure browser will screw this up.
-      let x1 = Scratch.Cast.toNumber(-offDiam) * wMulX;
-      let x2 = Scratch.Cast.toNumber(offDiam) * wMulX;
-      let x3 = Scratch.Cast.toNumber(offDiam) * wMulX;
-      let x4 = Scratch.Cast.toNumber(-offDiam) * wMulX;
-
-      let y1 = Scratch.Cast.toNumber(offDiam) * wMulY;
-      let y2 = Scratch.Cast.toNumber(offDiam) * wMulY;
-      let y3 = Scratch.Cast.toNumber(-offDiam) * wMulY;
-      let y4 = Scratch.Cast.toNumber(-offDiam) * wMulY;
-
-      function rotateTheThings(ox1, oy1, ox2, oy2, ox3, oy3, ox4, oy4) {
-        let sin = Math.sin(myAttributes[2] * d2r);
-        let cos = Math.cos(myAttributes[2] * d2r);
-
-        x1 = ox1 * sin + oy1 * cos;
-        y1 = ox1 * cos - oy1 * sin;
-
-        x2 = ox2 * sin + oy2 * cos;
-        y2 = ox2 * cos - oy2 * sin;
-
-        x3 = ox3 * sin + oy3 * cos;
-        y3 = ox3 * cos - oy3 * sin;
-
-        x4 = ox4 * sin + oy4 * cos;
-        y4 = ox4 * cos - oy4 * sin;
+        return JSON.stringify(c);
       }
-
-      rotateTheThings(x1, y1, x2, y2, x3, y3, x4, y4);
-
-      x1 += sprXoff;
-      y1 += sprYoff;
-
-      x2 += sprXoff;
-      y2 += sprYoff;
-
-      x3 += sprXoff;
-      y3 += sprYoff;
-
-      x4 += sprXoff;
-      y4 += sprYoff;
-
-      x1 *= dWidth;
-      y1 *= dHeight;
-
-      x2 *= dWidth;
-      y2 *= dHeight;
-
-      x3 *= dWidth;
-      y3 *= dHeight;
-
-      x4 *= dWidth;
-      y4 *= dHeight;
-
-      if (currentTexture != null && typeof currentTexture != "undefined") {
-        const Attribute_ID = "squareStamp_" + curTarget.id;
-        triangleAttributesOfAllSprites[Attribute_ID][0] =
-          (0 + myAttributes[4]) * myAttributes[3];
-        triangleAttributesOfAllSprites[Attribute_ID][1] =
-          (1 + myAttributes[6]) * myAttributes[5];
-
-        triangleAttributesOfAllSprites[Attribute_ID][2] = myAttributes[7];
-        triangleAttributesOfAllSprites[Attribute_ID][3] = myAttributes[8];
-        triangleAttributesOfAllSprites[Attribute_ID][4] = myAttributes[9];
-        triangleAttributesOfAllSprites[Attribute_ID][5] = myAttributes[11];
-        triangleAttributesOfAllSprites[Attribute_ID][7] = myAttributes[10];
-
-        triangleAttributesOfAllSprites[Attribute_ID][8] =
-          (1 + myAttributes[4]) * myAttributes[3];
-        triangleAttributesOfAllSprites[Attribute_ID][9] =
-          (1 + myAttributes[6]) * myAttributes[5];
-
-        triangleAttributesOfAllSprites[Attribute_ID][10] = myAttributes[7];
-        triangleAttributesOfAllSprites[Attribute_ID][11] = myAttributes[8];
-        triangleAttributesOfAllSprites[Attribute_ID][12] = myAttributes[9];
-        triangleAttributesOfAllSprites[Attribute_ID][13] = myAttributes[11];
-        triangleAttributesOfAllSprites[Attribute_ID][15] = myAttributes[10];
-
-        triangleAttributesOfAllSprites[Attribute_ID][16] =
-          (1 + myAttributes[4]) * myAttributes[3];
-        triangleAttributesOfAllSprites[Attribute_ID][17] =
-          (0 + myAttributes[6]) * myAttributes[5];
-
-        triangleAttributesOfAllSprites[Attribute_ID][18] = myAttributes[7];
-        triangleAttributesOfAllSprites[Attribute_ID][19] = myAttributes[8];
-        triangleAttributesOfAllSprites[Attribute_ID][20] = myAttributes[9];
-        triangleAttributesOfAllSprites[Attribute_ID][21] = myAttributes[11];
-        triangleAttributesOfAllSprites[Attribute_ID][23] = myAttributes[10];
-
-        triFunctions.drawTextTri(
-          gl.getParameter(gl.CURRENT_PROGRAM),
-          x1,
-          y1,
-          x2,
-          y2,
-          x3,
-          y3,
-          Attribute_ID,
-          currentTexture
-        );
-
-        triangleAttributesOfAllSprites[Attribute_ID][0] =
-          (0 + myAttributes[4]) * myAttributes[3];
-        triangleAttributesOfAllSprites[Attribute_ID][1] =
-          (1 + myAttributes[6]) * myAttributes[5];
-
-        triangleAttributesOfAllSprites[Attribute_ID][8] =
-          (1 + myAttributes[4]) * myAttributes[3];
-        triangleAttributesOfAllSprites[Attribute_ID][9] =
-          (0 + myAttributes[6]) * myAttributes[5];
-
-        triangleAttributesOfAllSprites[Attribute_ID][16] =
-          (0 + myAttributes[4]) * myAttributes[3];
-        triangleAttributesOfAllSprites[Attribute_ID][17] =
-          (0 + myAttributes[6]) * myAttributes[5];
-
-        triFunctions.drawTextTri(
-          gl.getParameter(gl.CURRENT_PROGRAM),
-          x1,
-          y1,
-          x3,
-          y3,
-          x4,
-          y4,
-          Attribute_ID,
-          currentTexture
+      return "[0,0,0]";
+    }
+    magnitudeV3({ a }) {
+      a = JSON.parse(a);
+      if (a) {
+        return Math.sqrt(
+          Math.pow(a[0], 2) + Math.pow(a[1], 2) + Math.pow(a[2], 2)
         );
       }
+      return 0;
     }
-    setStampAttribute({ target, number }, util) {
-      const curTarget = util.target;
-      if (!squareAttributesOfAllSprites[curTarget.id]) {
-        squareAttributesOfAllSprites[curTarget.id] = squareDefaultAttributes;
+    distanceV3({ a, b }) {
+      a = JSON.parse(a);
+      b = JSON.parse(b);
+      if (a && b) {
+        return Math.sqrt(
+          Math.pow(a[0] - b[0], 2) +
+            Math.pow(a[1] - b[1], 2) +
+            Math.pow(a[2] - b[2], 2)
+        );
       }
-
-      let valuetoSet = 0;
-
-      const attributeNum = Scratch.Cast.toNumber(target);
-      if (attributeNum >= 7) {
-        if (attributeNum == 11) {
-          if (penPlusAdvancedSettings._ClampZ) {
-            Math.min(
-              Math.max(number / penPlusAdvancedSettings._maxDepth, 0),
-              1
-            );
-            return;
-          }
-          valuetoSet = number / penPlusAdvancedSettings._maxDepth;
-          squareAttributesOfAllSprites[curTarget.id][attributeNum] =
-            number / penPlusAdvancedSettings._maxDepth;
-          return;
-        }
-        squareAttributesOfAllSprites[curTarget.id][attributeNum] =
-          Math.min(Math.max(number, 0), 100) * 0.01;
-        return;
-      }
-      squareAttributesOfAllSprites[curTarget.id][attributeNum] = number;
+      return 0;
     }
-    getStampAttribute({ target }, util) {
-      const curTarget = util.target;
-      if (!squareAttributesOfAllSprites[curTarget.id]) {
-        squareAttributesOfAllSprites[curTarget.id] = squareDefaultAttributes;
-      }
+    rotateAroundPointV3({ a, b, yaw, pitch, roll }) {
+      a = JSON.parse(a);
+      b = JSON.parse(b);
 
-      return squareAttributesOfAllSprites[curTarget.id][
-        Scratch.Cast.toNumber(target)
-      ];
-    }
-    tintSquare({ color }, util) {
-      const curTarget = util.target;
+      if (a && b) {
+        a[0] -= b[0];
+        a[1] -= b[1];
+        a[2] -= b[2];
 
-      if (!squareAttributesOfAllSprites[curTarget.id]) {
-        squareAttributesOfAllSprites[curTarget.id] = squareDefaultAttributes;
-      }
-
-      const calcColor = colors.hexToRgb(color);
-
-      squareAttributesOfAllSprites[curTarget.id][7] = calcColor.r / 255;
-      squareAttributesOfAllSprites[curTarget.id][8] = calcColor.g / 255;
-      squareAttributesOfAllSprites[curTarget.id][9] = calcColor.b / 255;
-    }
-    resetSquareAttributes(args, util) {
-      const curTarget = util.target;
-      squareAttributesOfAllSprites[curTarget.id] = [
-        1, 1, 90, 1, 0, 1, 0, 1, 1, 1, 1, 0,
-      ];
-    }
-    setTriangleFilterMode({ filter }) {
-      currentFilter = filter;
-    }
-    setTrianglePointAttribute({ point, attribute, value }, util) {
-      const trianglePointStart = (point - 1) * 8;
-
-      const targetId = util.target.id;
-
-      if (!triangleAttributesOfAllSprites[targetId]) {
-        triangleAttributesOfAllSprites[targetId] = triangleDefaultAttributes;
-      }
-      triFunctions.setValueAccordingToCaseTriangle(
-        targetId,
-        Scratch.Cast.toNumber(attribute),
-        value,
-        false,
-        trianglePointStart
-      );
-    }
-    setWholeTrianglePointAttribute({ wholeAttribute, value }, util) {
-      const targetId = util.target.id;
-
-      if (!triangleAttributesOfAllSprites[targetId]) {
-        triangleAttributesOfAllSprites[targetId] = triangleDefaultAttributes;
-      }
-      triFunctions.setValueAccordingToCaseTriangle(
-        targetId,
-        Scratch.Cast.toNumber(wholeAttribute),
-        value,
-        true,
-        0
-      );
-    }
-    tintTriPoint({ point, color }, util) {
-      const curTarget = util.target;
-
-      const trianglePointStart = (point - 1) * 8;
-
-      const targetId = util.target.id;
-
-      if (!triangleAttributesOfAllSprites[targetId]) {
-        triangleAttributesOfAllSprites[targetId] = triangleDefaultAttributes;
-      }
-
-      const calcColor = colors.hexToRgb(color);
-
-      triFunctions.setValueAccordingToCaseTriangle(
-        targetId,
-        2,
-        calcColor.r / 2.55,
-        false,
-        trianglePointStart
-      );
-
-      triFunctions.setValueAccordingToCaseTriangle(
-        targetId,
-        3,
-        calcColor.g / 2.55,
-        false,
-        trianglePointStart
-      );
-
-      triFunctions.setValueAccordingToCaseTriangle(
-        targetId,
-        4,
-        calcColor.b / 2.55,
-        false,
-        trianglePointStart
-      );
-    }
-    tintTri({ point, color }, util) {
-      const curTarget = util.target;
-
-      const trianglePointStart = (point - 1) * 8;
-
-      const targetId = util.target.id;
-
-      if (!triangleAttributesOfAllSprites[targetId]) {
-        triangleAttributesOfAllSprites[targetId] = triangleDefaultAttributes;
-      }
-
-      const calcColor = colors.hexToRgb(color);
-
-      triFunctions.setValueAccordingToCaseTriangle(
-        targetId,
-        2,
-        calcColor.r / 2.55,
-        true,
-        trianglePointStart
-      );
-
-      triFunctions.setValueAccordingToCaseTriangle(
-        targetId,
-        3,
-        calcColor.g / 2.55,
-        true,
-        trianglePointStart
-      );
-
-      triFunctions.setValueAccordingToCaseTriangle(
-        targetId,
-        4,
-        calcColor.b / 2.55,
-        true,
-        trianglePointStart
-      );
-    }
-    getTrianglePointAttribute({ point, attribute }, util) {
-      const trianglePointStart = (point - 1) * 8;
-
-      const targetId = util.target.id;
-
-      if (!triangleAttributesOfAllSprites[targetId]) {
-        triangleAttributesOfAllSprites[targetId] = triangleDefaultAttributes;
-      }
-      let value =
-        triangleAttributesOfAllSprites[targetId][
-          trianglePointStart + attribute
+        const sinAndCos = [
+          Math.sin(yaw * d2r),
+          Math.cos(yaw * d2r),
+          Math.sin(pitch * d2r),
+          Math.cos(pitch * d2r),
+          Math.sin(roll * d2r),
+          Math.cos(roll * d2r),
         ];
 
-      if ((attribute >= 2 && attribute <= 4) || attribute == 7) {
-        value *= 100;
+        let temp = a[0];
+
+        a[0] = a[2] * sinAndCos[0] + a[0] * sinAndCos[1];
+        a[2] = a[2] * sinAndCos[1] - temp * sinAndCos[0];
+
+        temp = a[1];
+
+        a[1] = a[2] * sinAndCos[2] + a[1] * sinAndCos[3];
+        a[2] = a[2] * sinAndCos[3] - temp * sinAndCos[2];
+
+        temp = a[0];
+
+        a[0] = a[1] * sinAndCos[4] + a[0] * sinAndCos[5];
+        a[1] = a[1] * sinAndCos[5] - temp * sinAndCos[4];
+
+        a[0] += b[0];
+        a[1] += b[1];
+        a[2] += b[2];
+
+        return JSON.stringify(a);
       }
-      return value;
+      return "[0,0,0]";
     }
-    resetWholeTriangleAttributes(args, util) {
-      const targetId = util.target.id;
-      triangleAttributesOfAllSprites[targetId] = [
-        0, 0, 1, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1, 0, 1, 1, 1, 0, 1, 1, 1, 0, 1, 1,
-        1, 1, 1,
-      ];
+    rotateAroundCenterV3({ a, yaw, pitch, roll }) {
+      a = JSON.parse(a);
+
+      if (a) {
+        const sinAndCos = [
+          Math.sin(yaw * d2r),
+          Math.cos(yaw * d2r),
+          Math.sin(pitch * d2r),
+          Math.cos(pitch * d2r),
+          Math.sin(roll * d2r),
+          Math.cos(roll * d2r),
+        ];
+
+        let temp = a[0];
+
+        a[0] = a[2] * sinAndCos[0] + a[0] * sinAndCos[1];
+        a[2] = a[2] * sinAndCos[1] - temp * sinAndCos[0];
+
+        temp = a[1];
+
+        a[1] = a[2] * sinAndCos[2] + a[1] * sinAndCos[3];
+        a[2] = a[2] * sinAndCos[3] - temp * sinAndCos[2];
+
+        temp = a[0];
+
+        a[0] = a[1] * sinAndCos[4] + a[0] * sinAndCos[5];
+        a[1] = a[1] * sinAndCos[5] - temp * sinAndCos[4];
+
+        return JSON.stringify(a);
+      }
+      return "[0,0,0]";
     }
-    drawSolidTri({ x1, y1, x2, y2, x3, y3 }, util) {
-      const curTarget = util.target;
-      checkForPen(util);
-      const attrib = curTarget["_customState"]["Scratch.pen"].penAttributes;
-
-      nativeSize = renderer.useHighQualityRender
-        ? [canvas.width, canvas.height]
-        : renderer._nativeSize;
-
-      //if (triangleAttributesOfAllSprites[curTarget.id]) {
-      //  triangleAttributesOfAllSprites[curTarget.id][5] = 1;
-      //  triangleAttributesOfAllSprites[curTarget.id][13] = 1;
-      //  triangleAttributesOfAllSprites[curTarget.id][21] = 1;
-      //}
-
-      //?Renderer Freaks out if we don't do this so do it.
-      lilPenDabble(nativeSize, curTarget, util); // Do this so the renderer doesn't scream at us
-
-      //trying my best to reduce memory usage
-      gl.viewport(0, 0, nativeSize[0], nativeSize[1]);
-      const dWidth = 1 / nativeSize[0];
-      const dHeight = 1 / nativeSize[1];
-
-      //correction for HQ pen
-      const typSize = renderer._nativeSize;
-      const mul = renderer.useHighQualityRender
-        ? 2 * ((canvas.width + canvas.height) / (typSize[0] + typSize[1]))
-        : 2;
-      //Paratheses because I know some obscure browser will screw this up.
-      x1 = Scratch.Cast.toNumber(x1) * dWidth * mul;
-      x2 = Scratch.Cast.toNumber(x2) * dWidth * mul;
-      x3 = Scratch.Cast.toNumber(x3) * dWidth * mul;
-
-      y1 = Scratch.Cast.toNumber(y1) * dHeight * mul;
-      y2 = Scratch.Cast.toNumber(y2) * dHeight * mul;
-      y3 = Scratch.Cast.toNumber(y3) * dHeight * mul;
-
-      triFunctions.drawTri(
-        gl.getParameter(gl.CURRENT_PROGRAM),
-        x1,
-        y1,
-        x2,
-        y2,
-        x3,
-        y3,
-        attrib.color4f,
-        curTarget.id
-      );
+    newV2({ x, y }) {
+      return JSON.stringify([
+        Scratch.Cast.toNumber(x) || 0,
+        Scratch.Cast.toNumber(y) || 0,
+      ]);
     }
-    drawTexTri({ x1, y1, x2, y2, x3, y3, tex }, util) {
-      const curTarget = util.target;
-      let currentTexture = null;
-      if (penPlusCostumeLibrary[tex]) {
-        currentTexture = penPlusCostumeLibrary[tex].texture;
+    newV2fromValue({ value }) {
+      if (typeof value == "number") {
+        return JSON.stringify([value, value]);
+      }
+      return JSON.stringify([0, 0]);
+    }
+    getAxisOfV2({ axis, vector }) {
+      axis = Scratch.Cast.toNumber(axis);
+      vector = JSON.parse(vector);
+      if (vector) {
+        return vector[axis];
+      }
+      return 0;
+    }
+    project2DFromCam({ a }) {
+      a = JSON.parse(a);
+
+      if (a) {
+        a[0] -= camera.position[0];
+        a[1] -= camera.position[1];
+        a[2] -= camera.position[2];
+
+        let temp = a[0];
+
+        a[0] = a[2] * camera.sinAndCos[0] + a[0] * camera.sinAndCos[1];
+        a[2] = a[2] * camera.sinAndCos[1] - temp * camera.sinAndCos[0];
+
+        temp = a[1];
+
+        a[1] = a[2] * camera.sinAndCos[2] + a[1] * camera.sinAndCos[3];
+        a[2] = a[2] * camera.sinAndCos[3] - temp * camera.sinAndCos[2];
+
+        temp = a[0];
+
+        a[0] = a[1] * camera.sinAndCos[4] + a[0] * camera.sinAndCos[5];
+        a[1] = a[1] * camera.sinAndCos[5] - temp * camera.sinAndCos[4];
+
+        let project = fov / a[2];
+
+        return JSON.stringify([a[0] * project, a[1] * project]);
+      }
+      return "[0,0]";
+    }
+    project2DFromPos({ a, b, yaw, pitch, roll }) {
+      a = JSON.parse(a);
+      b = JSON.parse(b);
+
+      if (a && b) {
+        a[0] -= b[0];
+        a[1] -= b[1];
+        a[2] -= b[2];
+
+        const sinAndCos = [
+          Math.sin(-yaw * d2r),
+          Math.cos(-yaw * d2r),
+          Math.sin(-pitch * d2r),
+          Math.cos(-pitch * d2r),
+          Math.sin(-roll * d2r),
+          Math.cos(-roll * d2r),
+        ];
+
+        let temp = a[0];
+
+        a[0] = a[2] * sinAndCos[0] + a[0] * sinAndCos[1];
+        a[2] = a[2] * sinAndCos[1] - temp * sinAndCos[0];
+
+        temp = a[1];
+
+        a[1] = a[2] * sinAndCos[2] + a[1] * sinAndCos[3];
+        a[2] = a[2] * sinAndCos[3] - temp * sinAndCos[2];
+
+        temp = a[0];
+
+        a[0] = a[1] * sinAndCos[4] + a[0] * sinAndCos[5];
+        a[1] = a[1] * sinAndCos[5] - temp * sinAndCos[4];
+
+        let project = fov / a[2];
+
+        return JSON.stringify([a[0] * project, a[1] * project]);
+      }
+      return "[0,0]";
+    }
+    addV2({ a, b }) {
+      a = JSON.parse(a);
+      b = JSON.parse(b);
+      if (a && b) {
+        return JSON.stringify([a[0] + b[0], a[1] + b[1]]);
+      }
+      return "[0,0]";
+    }
+    subV2({ a, b }) {
+      a = JSON.parse(a);
+      b = JSON.parse(b);
+      if (a && b) {
+        return JSON.stringify([a[0] - b[0], a[1] - b[1], a[2] - b[2]]);
+      }
+      return "[0,0]";
+    }
+    mulV2({ a, b }) {
+      a = JSON.parse(a);
+      b = JSON.parse(b);
+      if (a && b) {
+        return JSON.stringify([a[0] * b[0], a[1] * b[1]]);
+      }
+      return "[0,0]";
+    }
+    divV2({ a, b }) {
+      a = JSON.parse(a);
+      b = JSON.parse(b);
+      if (a && b) {
+        const c = [0, 0];
+        c[0] = a[0] / b[0];
+        c[1] = a[1] / b[1];
+        if (isNaN(c[0])) {
+          c[0] = 0;
+        }
+
+        if (isNaN(c[1])) {
+          c[1] = 0;
+        }
+
+        return JSON.stringify(c);
+      }
+      return "[0,0]";
+    }
+    crossProductOfV2({ a, b }) {
+      a = JSON.parse(a);
+      b = JSON.parse(b);
+
+      if (a && b) {
+        const c = [0, 0];
+
+        c[0] = a[1] - b[1];
+        c[1] = b[0] - a[0];
+
+        return JSON.stringify(c);
+      }
+      return 0;
+    }
+    magnitudeV2({ a }) {
+      a = JSON.parse(a);
+      if (a) {
+        return Math.sqrt(Math.pow(a[0], 2) + Math.pow(a[1], 2));
+      }
+      return 0;
+    }
+    distanceV2({ a, b }) {
+      a = JSON.parse(a);
+      b = JSON.parse(b);
+      if (a && b) {
+        return Math.sqrt(Math.pow(a[0] - b[0], 2) + Math.pow(a[1] - b[1], 2));
+      }
+      return 0;
+    }
+    rotateAroundPointV2({ a, b, yaw }) {
+      a = JSON.parse(a);
+      b = JSON.parse(b);
+
+      if (a && b) {
+        a[0] -= b[0];
+        a[1] -= b[1];
+
+        const sinAndCos = [Math.sin(yaw * d2r), Math.cos(yaw * d2r)];
+
+        let temp = a[0];
+
+        a[0] = a[1] * sinAndCos[0] + a[0] * sinAndCos[1];
+        a[1] = a[1] * sinAndCos[1] - temp * sinAndCos[0];
+
+        a[0] += b[0];
+        a[1] += b[1];
+
+        return JSON.stringify(a);
+      }
+      return "[0,0]";
+    }
+    rotateAroundCenterV2({ a, yaw }) {
+      a = JSON.parse(a);
+
+      if (a) {
+        const sinAndCos = [Math.sin(yaw * d2r), Math.cos(yaw * d2r)];
+
+        let temp = a[0];
+
+        a[0] = a[1] * sinAndCos[0] + a[0] * sinAndCos[1];
+        a[1] = a[1] * sinAndCos[1] - temp * sinAndCos[0];
+
+        return JSON.stringify(a);
+      }
+      return "[0,0]";
+    }
+    cam3DsetPosition({ a }) {
+      a = JSON.parse(a);
+
+      if (a) {
+        camera.position = a;
+      }
+    }
+    cam3DchangePosition({ a }) {
+      a = JSON.parse(a);
+
+      if (a[0] != undefined && a[1] != undefined && a[2] != undefined) {
+        camera.position[0] += a[0];
+        camera.position[1] += a[1];
+        camera.position[2] += a[2];
+      }
+    }
+    cam3DchangePositionOnAxis({ a, axis}) {
+      a = Scratch.Cast.toNumber(a);
+      axis = Scratch.Cast.toNumber(axis);
+
+      if (camera.position[axis] != undefined) {
+        camera.position[axis] += a;
+      }
+    }
+    cam3DgetPosition() {
+      return JSON.stringify(camera.position);
+    }
+    cam3DsetRotation({ a }) {
+      a = JSON.parse(a);
+
+      if (a) {
+        camera.rotation = a;
+
+        camera.sinAndCos = [
+          Math.sin(-camera.rotation[0] * d2r),
+          Math.cos(-camera.rotation[0] * d2r),
+          Math.sin(-camera.rotation[1] * d2r),
+          Math.cos(-camera.rotation[1] * d2r),
+          Math.sin(-camera.rotation[2] * d2r),
+          Math.cos(-camera.rotation[2] * d2r),
+        ];
+      }
+    }
+    cam3DchangeRotation({ a }) {
+      a = JSON.parse(a);
+
+      if (a[0] != undefined && a[1] != undefined && a[2] != undefined) {
+        camera.rotation[0] += a[0];
+        camera.rotation[1] += a[1];
+        camera.rotation[2] += a[2];
+        camera.sinAndCos = [
+          Math.sin(-camera.rotation[0] * d2r),
+          Math.cos(-camera.rotation[0] * d2r),
+          Math.sin(-camera.rotation[1] * d2r),
+          Math.cos(-camera.rotation[1] * d2r),
+          Math.sin(-camera.rotation[2] * d2r),
+          Math.cos(-camera.rotation[2] * d2r),
+        ];
+      }
+    }
+    cam3DchangeRotationOnAxis({ a, rotator}) {
+      a = Scratch.Cast.toNumber(a);
+      rotator = Scratch.Cast.toNumber(rotator);
+
+      if (camera.rotation[rotator] != undefined) {
+        camera.rotation[rotator] += a;
+        camera.sinAndCos = [
+          Math.sin(-camera.rotation[0] * d2r),
+          Math.cos(-camera.rotation[0] * d2r),
+          Math.sin(-camera.rotation[1] * d2r),
+          Math.cos(-camera.rotation[1] * d2r),
+          Math.sin(-camera.rotation[2] * d2r),
+          Math.cos(-camera.rotation[2] * d2r),
+        ];
+      }
+    }
+    cam3DgetRotation() {
+      return JSON.stringify(camera.rotation);
+    }
+    setFov({ dist }) {
+      fov = dist;
+    }
+    changeFov({ dist }) {
+      fov += dist;
+    }
+    getFov() {
+      return fov;
+    }
+    checkFor3dPositionData(targetID) {
+      if (!spriteData[targetID]) {
+        spriteData[targetID] = {position:[0, 0, fov], size:100};
+      }
+    }
+    spr3DsetPosition({ a }, util) {
+      const target = util.target;
+      this.checkFor3dPositionData(target.id);
+
+      a = JSON.parse(a);
+      if (a) {
+        spriteData[target.id].position[0] = a[0];
+        spriteData[target.id].position[1] = a[1];
+        spriteData[target.id].position[2] = a[2];
+      }
+    }
+    spr3DsetPositionComponent({ a, component }, util){
+      const target = util.target;
+      this.checkFor3dPositionData(target.id);
+
+      a = JSON.parse(a);
+
+      if (a) {
+        //String literal for the funnies!
+        if (spriteData[target.id].position[component] == undefined) throw `Component ${component} doesn't exist`;
+        spriteData[target.id].position[component] = a;
+      }
+    }
+    spr3DchangePosition({ a }, util) {
+      const target = util.target;
+      this.checkFor3dPositionData(target.id);
+
+      a = JSON.parse(a);
+
+      if (a) {
+        spriteData[target.id].position[0] += a[0];
+        spriteData[target.id].position[1] += a[1];
+        spriteData[target.id].position[2] += a[2];
+      }
+    }
+    spr3DchangePositionComponent({ a, component }, util){
+      const target = util.target;
+      this.checkFor3dPositionData(target.id);
+      //String literal for the funnies!
+      if (spriteData[target.id].position[component] == undefined) throw `Component ${component} doesn't exist`;
+      spriteData[target.id].position[component] += a;
+    }
+    spr3DgetPositionComponent({component}, util) {
+      const target = util.target;
+      this.checkFor3dPositionData(target.id);
+      //String literal for the funnies!
+      if ((spriteData[target.id].position[component] == undefined)) throw `Component ${component} doesn't exist`;
+      return spriteData[target.id].position[component];
+    }
+    spr3DgetPosition(args, util) {
+      const target = util.target;
+      this.checkFor3dPositionData(target.id);
+      return JSON.stringify(spriteData[target.id].position);
+    }
+    spr3DsetSize({ a }, util) {
+      const target = util.target;
+      this.checkFor3dPositionData(target.id);
+      spriteData[target.id].size = a;
+    }
+    spr3DchangeSize({ a }, util) {
+      const target = util.target;
+      this.checkFor3dPositionData(target.id);
+      spriteData[target.id].size += a;
+    }
+    spr3DgetSize(args, util) {
+      const target = util.target;
+      this.checkFor3dPositionData(target.id);
+      return spriteData[target.id].size;
+    }
+    spr3D(args, util) {
+      const target = util.target;
+      this.checkFor3dPositionData(target.id);
+      const myData = JSON.parse(JSON.stringify(spriteData[target.id]));
+
+      myData.position[0] -= camera.position[0];
+      myData.position[1] -= camera.position[1];
+      myData.position[2] -= camera.position[2];
+
+      let temp = myData.position[0];
+
+      myData.position[0] = myData.position[2] * camera.sinAndCos[0] + myData.position[0] * camera.sinAndCos[1];
+      myData.position[2] = myData.position[2] * camera.sinAndCos[1] - temp * camera.sinAndCos[0];
+
+      temp = myData.position[1];
+
+      myData.position[1] = myData.position[2] * camera.sinAndCos[2] + myData.position[1] * camera.sinAndCos[3];
+      myData.position[2] = myData.position[2] * camera.sinAndCos[3] - temp * camera.sinAndCos[2];
+
+      temp = myData[0];
+
+      myData.position[0] = myData.position[1] * camera.sinAndCos[4] + myData.position[0] * camera.sinAndCos[5];
+      myData.position[1] = myData.position[1] * camera.sinAndCos[5] - temp * camera.sinAndCos[4];
+
+      let project = fov / myData.position[2];
+
+      if (myData.position[2] < 1) {
+        target.setVisible(false);
       } else {
-        const costIndex = curTarget.getCostumeIndexByName(
-          Scratch.Cast.toString(tex)
-        );
-        if (costIndex >= 0) {
-          const curCostume = curTarget.sprite.costumes_[costIndex];
-          if (costIndex != curTarget.currentCostume) {
-            curTarget.setCostume(costIndex);
-          }
-
-          currentTexture = renderer._allSkins[curCostume.skinId].getTexture();
-        }
-      }
-
-      nativeSize = renderer.useHighQualityRender
-        ? [canvas.width, canvas.height]
-        : renderer._nativeSize;
-
-      //?Renderer Freaks out if we don't do this so do it.
-      lilPenDabble(nativeSize, curTarget, util); // Do this so the renderer doesn't scream at us
-
-      //trying my best to reduce memory usage
-      gl.viewport(0, 0, nativeSize[0], nativeSize[1]);
-      const dWidth = 1 / nativeSize[0];
-      const dHeight = 1 / nativeSize[1];
-
-      //correction for HQ pen
-      const typSize = renderer._nativeSize;
-      const mul = renderer.useHighQualityRender
-        ? 2 * ((canvas.width + canvas.height) / (typSize[0] + typSize[1]))
-        : 2;
-      //Paratheses because I know some obscure browser will screw this up.
-      x1 = Scratch.Cast.toNumber(x1) * dWidth * mul;
-      x2 = Scratch.Cast.toNumber(x2) * dWidth * mul;
-      x3 = Scratch.Cast.toNumber(x3) * dWidth * mul;
-
-      y1 = Scratch.Cast.toNumber(y1) * dHeight * mul;
-      y2 = Scratch.Cast.toNumber(y2) * dHeight * mul;
-      y3 = Scratch.Cast.toNumber(y3) * dHeight * mul;
-
-      if (currentTexture != null && typeof currentTexture != "undefined") {
-        triFunctions.drawTextTri(
-          gl.getParameter(gl.CURRENT_PROGRAM),
-          x1,
-          y1,
-          x2,
-          y2,
-          x3,
-          y3,
-          curTarget.id,
-          currentTexture
-        );
+        target.setVisible(true);
+        target.setSize(myData.size * project);
+        target.setXY(myData.position[0] * project, myData.position[1] * project);
       }
     }
-    RGB2HEX({ R, G, B }) {
-      return colors.rgbtoSColor({ R: R, G: G, B: B });
-    }
-    HSV2RGB({ H, S, V }) {
-      S = S / 100;
-      V = V / 100;
-      S = Math.min(Math.max(S, 0), 1);
-      V = Math.min(Math.max(V, 0), 1);
-      H = H % 360;
-      const C = V * S;
-      const X = C * (1 - Math.abs(((H / 60) % 2) - 1));
-      const M = V - C;
-      let Primes = [0, 0, 0];
-      if (H >= 0 && H < 60) {
-        Primes[0] = C;
-        Primes[1] = X;
-      } else if (H >= 60 && H < 120) {
-        Primes[0] = X;
-        Primes[1] = C;
-      } else if (H >= 120 && H < 180) {
-        Primes[1] = C;
-        Primes[2] = X;
-      } else if (H >= 180 && H < 240) {
-        Primes[1] = X;
-        Primes[2] = C;
-      } else if (H >= 240 && H < 300) {
-        Primes[0] = X;
-        Primes[2] = C;
-      }
-      if (H >= 300 && H < 360) {
-        Primes[0] = C;
-        Primes[2] = X;
-      }
-      Primes[0] = (Primes[0] + M) * 255;
-      Primes[1] = (Primes[1] + M) * 255;
-      Primes[2] = (Primes[2] + M) * 255;
-      return colors.rgbtoSColor({
-        R: Primes[0] / 2.55,
-        G: Primes[1] / 2.55,
-        B: Primes[2] / 2.55,
-      });
-    }
-    setDURIclampmode({ clampMode }) {
-      penPlusImportWrapMode = clampMode;
-    }
-    addBlankIMG({ color, width, height, name }) {
-      //Just a simple thing to allow for pen drawing
-      textureFunctions.createBlankPenPlusTextureInfo(
-        width,
-        height,
-        color,
-        "!" + name,
-        penPlusImportWrapMode
-      );
-    }
-    addIMGfromDURI({ dataURI, name }) {
-      //Just a simple thing to allow for pen drawing
-      textureFunctions.createPenPlusTextureInfo(
-        dataURI,
-        "!" + name,
-        penPlusImportWrapMode
-      );
-    }
-    removeIMGfromDURI({ name }, util) {
-      //Just a simple thing to allow for pen drawing
-      if (penPlusCostumeLibrary["!" + name]) {
-        delete penPlusCostumeLibrary["!" + name];
-      }
-    }
-    doesIMGexist({ name }, util) {
-      //Just a simple thing to allow for pen drawing
-      return typeof penPlusCostumeLibrary["!" + name] != "undefined";
-    }
-    getCostumeDataURI({ costume }, util) {
-      //Just a simple thing to allow for pen drawing
-      const curTarget = util.target;
-      const costIndex = curTarget.getCostumeIndexByName(
-        Scratch.Cast.toString(costume)
-      );
-      if (costIndex >= 0) {
-        const curCostume =
-          curTarget.sprite.costumes_[costIndex].asset.encodeDataURI();
-        return curCostume;
-      }
-    }
-    getCostumeDataURI_costume_MenuFunction() {
-      const myCostumes = runtime._editingTarget.sprite.costumes;
-
-      let readCostumes = [];
-      for (
-        let curCostumeID = 0;
-        curCostumeID < myCostumes.length;
-        curCostumeID++
-      ) {
-        const currentCostume = myCostumes[curCostumeID].name;
-        readCostumes.push(currentCostume);
-      }
-
-      return readCostumes;
-    }
-    getDimensionOf({ dimension, costume }, util) {
-      //Just a simple thing to allow for pen drawing
-      const costIndex = penPlusCostumeLibrary[costume];
-      if (costIndex) {
-        return costIndex[dimension];
-      }
-    }
-    setpixelcolor({ x, y, color, costume }) {
-      const curCostume = penPlusCostumeLibrary[costume];
-      if (curCostume) {
-        const textureData = textureFunctions.getTextureData(
-          curCostume.texture,
-          curCostume.width,
-          curCostume.height
-        );
-        if (textureData) {
-          x = Math.floor(x - 1);
-          y = Math.floor(y - 1);
-          const colorIndex = (y * curCostume.width + x) * 4;
-          if (
-            textureData[colorIndex] != undefined &&
-            x < curCostume.width &&
-            x >= 0
-          ) {
-            const retColor = colors.hexToRgb(color);
-            textureData[colorIndex] = retColor.r;
-            textureData[colorIndex + 1] = retColor.g;
-            textureData[colorIndex + 2] = retColor.b;
-            textureData[colorIndex + 3] = 255;
-
-            gl.bindTexture(gl.TEXTURE_2D, curCostume.texture);
-            gl.texImage2D(
-              gl.TEXTURE_2D,
-              0,
-              gl.RGBA,
-              curCostume.width,
-              curCostume.height,
-              0,
-              gl.RGBA,
-              gl.UNSIGNED_BYTE,
-              textureData
-            );
-          }
-        }
-      }
-    }
-    getpixelcolor({ x, y, costume }) {
-      const curCostume = penPlusCostumeLibrary[costume];
-      if (curCostume) {
-        const textureData = textureFunctions.getTextureData(
-          curCostume.texture,
-          curCostume.width,
-          curCostume.height
-        );
-        if (textureData) {
-          x = Math.floor(x - 1);
-          y = Math.floor(y - 1);
-          const colorIndex = (y * curCostume.width + x) * 4;
-          if (textureData[colorIndex] && x < curCostume.width && x >= 0) {
-            return colors.rgbtoSColor({
-              R: textureData[colorIndex] / 2.55,
-              G: textureData[colorIndex + 1] / 2.55,
-              B: textureData[colorIndex + 2] / 2.55,
-            });
-          }
-          return colors.rgbtoSColor({ R: 100, G: 100, B: 100 });
-        }
-      }
-    }
-    getPenPlusCostumeURI({ costume }) {
-      const curCostume = penPlusCostumeLibrary[costume];
-      if (curCostume) {
-        const textureData = textureFunctions.getTextureAsURI(
-          curCostume.texture,
-          curCostume.width,
-          curCostume.height
-        );
-        if (textureData) {
-          return textureData;
-        }
-        return "";
-      }
-    }
-    turnAdvancedSettingOff({ Setting, onOrOff }) {
-      if (onOrOff == "on") {
-        penPlusAdvancedSettings[Setting] = true;
-        return;
-      }
-      penPlusAdvancedSettings[Setting] = false;
-    }
-    setAdvancedOptionValueTo({ setting, value }) {
-      switch (setting) {
-        case "depthMax":
-          penPlusAdvancedSettings._maxDepth = Math.max(value, 100);
-          break;
-
-        default:
-          break;
-      }
-    }
-    runtime = Scratch.vm.runtime;
   }
-
-  //? A small hack to stop the renderer from immediatly dying. And to allow for immediate use
-  {
-    if (!Scratch.vm.renderer._penSkinId) {
-      window.vm.renderer.createPenSkin();
-    }
-    renderer.penClear(Scratch.vm.renderer._penSkinId);
-    Scratch.vm.renderer.penLine(
-      Scratch.vm.renderer._penSkinId,
-      {
-        color4f: [0, 0, 1, 1],
-        diameter: 1,
-      },
-      0,
-      0,
-      0,
-      0
-    );
-
-    penPlusShaders.pen.program = shaderManager._shaderCache.line[0].program;
-  }
-
   Scratch.extensions.register(new extension());
 })(Scratch);

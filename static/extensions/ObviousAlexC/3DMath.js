@@ -673,6 +673,8 @@
       //cast points to number
 
       const target = util.target;
+      
+      this.checkFor3dPositionData(target.id);
       const sprX = spriteData[target.id].position[0] - camera.position[0];
       const sprY = spriteData[target.id].position[1] - camera.position[1];
       const sprZ = spriteData[target.id].position[2] - camera.position[2];
@@ -733,6 +735,8 @@
       //cast points to number
       
       const target = util.target;
+      
+      this.checkFor3dPositionData(target.id);
       const sprX = spriteData[target.id].position[0] - camera.position[0];
       const sprY = spriteData[target.id].position[1] - camera.position[1];
       const sprZ = spriteData[target.id].position[2] - camera.position[2];

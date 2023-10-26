@@ -1342,7 +1342,7 @@
       myData.position[1] = myData.position[2] * camera.sinAndCos[2] + myData.position[1] * camera.sinAndCos[3];
       myData.position[2] = myData.position[2] * camera.sinAndCos[3] - temp * camera.sinAndCos[2];
 
-      temp = myData[0];
+      temp = myData.position[0];
 
       myData.position[0] = myData.position[1] * camera.sinAndCos[4] + myData.position[0] * camera.sinAndCos[5];
       myData.position[1] = myData.position[1] * camera.sinAndCos[5] - temp * camera.sinAndCos[4];

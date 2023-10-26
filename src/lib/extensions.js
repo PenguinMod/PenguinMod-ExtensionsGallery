@@ -14,7 +14,7 @@ export default [
     },
     {
         name: "3D Math",
-        description: "A handful of utilities for making your own sprite-based 3D engine.",
+        description: "A handful of utilities for making your own sprite-based 3D engine. DO NOT CLICK VIEW",
         code: "ObviousAlexC/3DMath.js",
         banner: "ObviousAlexC/3DMath.svg",
         creator: "pinksheep2917",

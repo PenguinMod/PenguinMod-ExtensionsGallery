@@ -33,7 +33,6 @@
     vm.runtime.extensionManager.refreshBlocks();
   }
   penPCheck();
-  Scratch.vm.addListener("BLOCKSINFO_UPDATE", penPCheck);
   vm.runtime.on("EXTENSION_ADDED", penPCheck);
 
   class extension {

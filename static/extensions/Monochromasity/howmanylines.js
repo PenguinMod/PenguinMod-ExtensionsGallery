@@ -28,7 +28,7 @@
     }
 
     hml(args) {
-      let inp = args.INP
+      let inp = Scratch.Cast.toString(args.INP)
       const lines = inp.split('\n');
       const nonEmptyLines = lines.filter(line => line.trim() !== '');
       return nonEmptyLines.length;

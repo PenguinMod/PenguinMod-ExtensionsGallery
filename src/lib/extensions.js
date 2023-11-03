@@ -6,6 +6,14 @@
 */
 export default [
     {
+        name: "Object",
+        description: "Handle large JSON files at an extreme speed.",
+        code: "skyhigh173/object.js",
+        banner: "skyhigh173/object.svg",
+        creator: "skyhigh173",
+        isGitHub: true,
+    },
+    {
         name: "Pen+",
         description: "Extended pen section!",
         code: "ObviousAlexC/PenPlus.js",

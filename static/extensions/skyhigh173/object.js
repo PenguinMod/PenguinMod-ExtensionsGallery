@@ -10,7 +10,7 @@
   // ! they are important.
 
   // ! custom functions
-  Map._e = {
+  window.Map._e = {
     get empty() {
       return new Map();
     },
@@ -84,7 +84,7 @@
     }
   };
 
-  Map.prototype.toString = function() { return JSON.stringify(Object.fromEntries(this), Map._e.replacer); };
+  window.Map.prototype.toString = function() { return JSON.stringify(Object.fromEntries(this), Map._e.replacer); };
 
 
   const exampleJSON = {

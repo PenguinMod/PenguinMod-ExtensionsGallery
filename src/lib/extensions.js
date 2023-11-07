@@ -90,6 +90,14 @@ export default [
         creator: "G1nX",
     },
     {
+        name: "All Menus",
+        description: "Every dropdown menu for each block, in one extension.",
+        code: "Lily/AllMenus.js",
+        banner: "Lily/AllMenus.svg",
+        creator: "LilyMakesThings",
+        isGitHub: false,
+    },
+    {
         name: "Sound Waves",
         description: "Make sounds with oscillators!",
         code: "SharkPool/Sound-Waves.js",

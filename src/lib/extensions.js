@@ -76,6 +76,14 @@ export default [
         isGitHub: true,
     },
     {
+        name: "How many lines?",
+        description: "Blocks to determine the amount of new lines in a piece of text.",
+        code: "Monochromasity/howmanylines.js",
+        banner: "Monochromasity/placeholder-howmanylines.png",
+        creator: "Monochromasity",
+        isGitHub: true,
+    },
+    {
         name: "Better Storage",
         description: "Like PenguinMod's Storage Extension, but with a couple more features, and faster servers.",
         code: "Gen1x/better_storage.js",

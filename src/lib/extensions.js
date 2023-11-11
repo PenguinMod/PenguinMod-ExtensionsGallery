@@ -6,6 +6,15 @@
 */
 export default [
     {
+        name: "FREE Servers",
+        description: "Here you can find a free server for your projects. And also check whether it is working now or not.",
+        code: "WAYLIVES/FreeServers.js",
+        banner: "WAYLIVES/FreeServers.svg",
+        documentation: "FreeServers.md",
+        creator: "WAYLIVES",
+        isGitHub: false,
+    },
+    {
         name: "Pen+",
         description: "Extended pen section!",
         code: "ObviousAlexC/PenPlus.js",

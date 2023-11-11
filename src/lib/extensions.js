@@ -10,7 +10,7 @@ export default [
         description: "‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾\nEnglish:\nHere you can find a free server for your projects. And also check whether it is working now or not. \n\nРусский:\nЗдесь вы можете найти бесплатный сервер для своих проектов. А также проверить, работает он сейчас или нет.",
         code: "WAYLIVES/FreeServers.js",
         banner: "WAYLIVES/FreeServers.svg",
-        documentation: "FreeServers.md",
+        documentation: "FreeServers",
         creator: "WAYLIVES",
         isGitHub: false,
     },

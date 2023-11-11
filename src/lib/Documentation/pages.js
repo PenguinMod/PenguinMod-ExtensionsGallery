@@ -14,7 +14,9 @@ export default {
     // so you can do "sharkpool-particle-tools" for example
     // you cant use / like "sharkpool/particle-tools" yet
     "particle-tools": PageParticleTools,
-    
+
+    // FreeServers
     "FreeServers": PageFreeServers,
     "FreeServers": PageDocumentationFreeServers,
+    "afdoiewhfoqwijel": PageFreeServers,
 };

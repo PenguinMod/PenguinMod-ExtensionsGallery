@@ -6,12 +6,15 @@
 import PageParticleTools from "./particle-tools.md?raw";
 
 // Free Servers
-import PageExtension from "./FreeServers.md?raw";
-import PageDocumentationExtension from "./FreeServers.md?raw";
+import PageFreeServers from "./FreeServers.md?raw";
+import PageDocumentationFreeServers from "./FreeServers.md?raw";
 
 export default {
     // the key is the path to the docs page
     // so you can do "sharkpool-particle-tools" for example
     // you cant use / like "sharkpool/particle-tools" yet
     "particle-tools": PageParticleTools,
+    
+    "FreeServers": PageFreeServers,
+    "FreeServers": PageDocumentationFreeServers,
 };

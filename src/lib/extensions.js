@@ -7,7 +7,7 @@
 export default [
     {
         name: "FREE Servers",
-        description: "Here you can find a free server for your projects. And also check whether it is working now or not.",
+        description: "Here you can find a free server for your projects. And also check whether it is working now or not. (Здесь вы можете найти бесплатный сервер для своих проектов. А также проверить, работает он сейчас или нет.)",
         code: "WAYLIVES/FreeServers.js",
         banner: "WAYLIVES/FreeServers.svg",
         documentation: "FreeServers.md",

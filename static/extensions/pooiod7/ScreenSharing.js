@@ -7,6 +7,8 @@
     throw new Error('This extension must run unsandboxed');
   }
 
+  var canShareScreen = false;
+
   // Create a hidden video element for screen sharing
   const videoElement = document.createElement('video');
   videoElement.style.display = 'none';
@@ -23,19 +25,30 @@
         color2: '#006bff',
         blocks: [
           {
+            opcode: 'askToShare',
+            blockType: Scratch.BlockType.COMMAND,
+            text: 'ask to share screen',
+          },
+          {
+            opcode: 'canShare',
+            blockType: Scratch.BlockType.BOOLEAN,
+            text: 'allowed to share screen?',
+          },
+          '---',
+          {
             opcode: 'startScreenSharing',
             blockType: Scratch.BlockType.COMMAND,
-            text: 'Start Screen Sharing',
+            text: 'start screen sharing',
           },
           {
             opcode: 'stopScreenSharing',
             blockType: Scratch.BlockType.COMMAND,
-            text: 'Stop Screen Sharing',
+            text: 'stop screen sharing',
           },
           {
             opcode: 'getVideoImage',
             blockType: Scratch.BlockType.REPORTER,
-            text: 'Get Video Image as Hex Colors with Resolution [REZ]',
+            text: 'get video image as hex colors with resolution [REZ]',
             arguments: {
               REZ: {
                 type: Scratch.ArgumentType.NUMBER,
@@ -46,7 +59,7 @@
           {
             opcode: 'getFrameDataURI',
             blockType: Scratch.BlockType.REPORTER,
-            text: 'Get Frame as Data URI with Resolution [REZ]',
+            text: 'get frame as data URI with resolution [REZ]',
             arguments: {
               REZ: {
                 type: Scratch.ArgumentType.NUMBER,
@@ -57,7 +70,7 @@
           {
             opcode: 'getCompressedFrameDataURI',
             blockType: Scratch.BlockType.REPORTER,
-            text: 'Get Compressed rez [REZ] Quality [QUALITY]',
+            text: 'get compressed rez [REZ] quality [QUALITY]',
             arguments: {
               REZ: {
                 type: Scratch.ArgumentType.NUMBER,
@@ -72,19 +85,30 @@
           {
             opcode: 'isSharing',
             blockType: Scratch.BlockType.BOOLEAN,
-            text: 'Is Sharing?',
+            text: 'is sharing?',
           },
           {
             opcode: 'getAspectRatio',
             blockType: Scratch.BlockType.REPORTER,
-            text: 'Stream Size',
+            text: 'stream size',
           },
         ],
       };
     }
 
+    askToShare() {
+      if (!canShareScreen) {
+        canShareScreen = confirm("This project would like to share your screen.");
+      }
+    }
+
+    canShare() {
+      return canShareScreen;
+    }
+
     startScreenSharing() {
-      navigator.mediaDevices
+      if (canShareScreen) {
+        navigator.mediaDevices
         .getDisplayMedia({ video: true })
         .then((stream) => {
           mediaStream = stream; 
@@ -94,6 +118,9 @@
         .catch((error) => {
           console.error('Error starting screen sharing:', error);
         });
+      } else {
+        console.warn("Please run the 'ask to share' command before attempting to share the user's screen.");
+      }
     }
 
     stopScreenSharing() {

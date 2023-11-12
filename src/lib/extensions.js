@@ -175,4 +175,12 @@ export default [
         creator: "jwklong",
         isGitHub: true,
     },
+    {
+        name: "Counter++",
+        description: "Count anything, at any time, in Scratch!",
+        code: "MrRedstonia/counter++.js",
+        banner: "MrRedstonia/counterplusplus.png",
+        creator: "MrRedstonia",
+        isGitHub: true,
+    },
 ];

@@ -19,8 +19,8 @@
       return {
         id: 'pooscreensharing',
         name: 'Screen Sharing',
-      color1: '#00a1ff',
-      color2: '#006bff',
+        color1: '#00a1ff',
+        color2: '#006bff',
         blocks: [
           {
             opcode: 'startScreenSharing',

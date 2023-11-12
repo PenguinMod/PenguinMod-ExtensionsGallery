@@ -1,12 +1,14 @@
-// Name: Pen Plus
+// Name: Pen Plus V6
 // ID: penP
-// Description: Various Additions to the pen.
+// Description: Advanced rendering capabilities.
 // By: ObviousAlexC <https://scratch.mit.edu/users/pinksheep2917/>
+
 (function (Scratch) {
   "use strict";
 
   //?some smaller optimizations just store the multiplacation for later
   const f32_4 = 4 * Float32Array.BYTES_PER_ELEMENT;
+  const f32_6 = 6 * Float32Array.BYTES_PER_ELEMENT;
   const f32_8 = 8 * Float32Array.BYTES_PER_ELEMENT;
   const f32_10 = 10 * Float32Array.BYTES_PER_ELEMENT;
   const d2r = 0.0174533;
@@ -30,7 +32,7 @@
   let depthBufferTexture = gl.createTexture();
 
   //?Make a function for updating the depth canvas to fit the scratch stage
-  const depthFrameBuffer = gl.createFramebuffer();
+  const triFrameBuffer = gl.createFramebuffer();
   const depthColorBuffer = gl.createRenderbuffer();
   const depthDepthBuffer = gl.createRenderbuffer();
 
@@ -59,7 +61,7 @@
     gl.bindTexture(gl.TEXTURE_2D, depthBufferTexture);
     gl.activeTexture(gl.TEXTURE0);
 
-    gl.bindFramebuffer(gl.FRAMEBUFFER, depthFrameBuffer);
+    gl.bindFramebuffer(gl.FRAMEBUFFER, triFrameBuffer);
 
     gl.bindRenderbuffer(gl.RENDERBUFFER, depthColorBuffer);
     gl.renderbufferStorage(
@@ -108,8 +110,9 @@
 
       lastFB = gl.getParameter(gl.FRAMEBUFFER_BINDING);
 
-      gl.bindFramebuffer(gl.FRAMEBUFFER, depthFrameBuffer);
+      gl.bindFramebuffer(gl.FRAMEBUFFER, triFrameBuffer);
 
+      gl.clear(gl.DEPTH_BUFFER_BIT | gl.COLOR_BUFFER_BIT);
       gl.bindRenderbuffer(gl.RENDERBUFFER, depthColorBuffer);
       gl.renderbufferStorage(
         gl.RENDERBUFFER,
@@ -156,10 +159,11 @@
     });
 
     vm.runtime.on("BEFORE_EXECUTE", () => {
+      let calcSize = (renderer.useHighQualityRender
+        ? [canvas.width, canvas.height]
+        : renderer._nativeSize);
       if (
-        (renderer.useHighQualityRender
-          ? [canvas.width, canvas.height]
-          : renderer._nativeSize) != nativeSize
+        (calcSize[0] != nativeSize[0]) || (calcSize[1] != nativeSize[1])
       ) {
         nativeSize = renderer.useHighQualityRender
           ? [canvas.width, canvas.height]
@@ -181,9 +185,6 @@
   //?Just a costume library for data uris
   const penPlusCostumeLibrary = {};
   let penPlusImportWrapMode = gl.CLAMP_TO_EDGE;
-
-  //?Debug for depth
-  penPlusCostumeLibrary["!Debug_Depth"] = depthBufferTexture;
 
   const checkForPen = (util) => {
     const curTarget = util.target;
@@ -228,43 +229,19 @@
                 attribute highp vec4 a_position;
                 attribute highp vec4 a_color;
                 varying highp vec4 v_color;
-
-                varying highp float v_depth;
                 
                 void main()
                 {
                     v_color = a_color;
-                    v_depth = a_position.z;
-                    gl_Position = a_position * vec4(a_position.w,a_position.w,0,1);
+                    gl_Position = a_position * vec4(a_position.w,a_position.w,-1.0/a_position.w,1);
                 }
             `,
         frag: `
                 varying highp vec4 v_color;
 
-                uniform mediump vec2 u_res;
-                uniform sampler2D u_depthTexture;
-
-                varying highp float v_depth;
-
                 void main()
                 {
                   gl_FragColor = v_color;
-                  highp vec4 v_depthPart = texture2D(u_depthTexture,gl_FragCoord.xy/u_res);
-                  highp float v_depthcalc = v_depthPart.r + floor((v_depthPart.g + floor(v_depthPart.b * 100.0 )) * 100.0);
-
-                  highp float v_inDepth = v_depth;
-
-                  if (v_depth < 0.0 ) {
-                    v_inDepth = 0.0;
-                  }
-                  if (v_depth > 10000.0 ) {
-                    v_inDepth = 10000.0;
-                  }
-
-                  if (v_depthcalc < v_inDepth){
-                    gl_FragColor.a = 0.0;
-                  }
-
                   gl_FragColor.rgb *= gl_FragColor.a;
                 }
             `,
@@ -280,15 +257,12 @@
                 
                 varying highp vec4 v_color;
                 varying highp vec2 v_texCoord;
-
-                varying highp float v_depth;
                 
                 void main()
                 {
                     v_color = a_color;
                     v_texCoord = a_texCoord;
-                    v_depth = a_position.z;
-                    gl_Position = a_position * vec4(a_position.w,a_position.w,0,1);
+                    gl_Position = a_position * vec4(a_position.w,a_position.w,-1.0/a_position.w,1);
                 }
             `,
         frag: `
@@ -296,31 +270,10 @@
 
                 varying highp vec2 v_texCoord;
                 varying highp vec4 v_color;
-
-                uniform mediump vec2 u_res;
-                uniform sampler2D u_depthTexture;
-
-                varying highp float v_depth;
                 
                 void main()
                 {
                     gl_FragColor = texture2D(u_texture, v_texCoord) * v_color;
-                    highp vec4 v_depthPart = texture2D(u_depthTexture,gl_FragCoord.xy/u_res);
-                    highp float v_depthcalc = v_depthPart.r + floor((v_depthPart.g + floor(v_depthPart.b * 100.0 )) * 100.0);
-
-                    highp float v_inDepth = v_depth;
-
-                    if (v_depth < 0.0 ) {
-                      v_inDepth = 0.0;
-                    }
-                    if (v_depth > 10000.0 ) {
-                      v_inDepth = 10000.0;
-                    }
-
-                    if (v_depthcalc < v_inDepth){
-                      gl_FragColor.a = 0.0;
-                    }
-
                     gl_FragColor.rgb *= gl_FragColor.a;
                     
                 }
@@ -328,35 +281,29 @@
       },
       ProgramInf: null,
     },
-    depth: {
+    draw: {
       Shaders: {
         vert: `
                 attribute highp vec4 a_position;
-                
-                varying highp float v_depth;
+
+                varying highp vec2 v_texCoord;
+                attribute highp vec2 a_texCoord;
                 
                 void main()
                 {
-                    v_depth = a_position.z;
-                    gl_Position = a_position * vec4(a_position.w,a_position.w,a_position.w * 0.0001,1);
+                    gl_Position = a_position * vec4(a_position.w,a_position.w,0,1);
+                    v_texCoord = (a_position.xy / 2.0) + vec2(0.5,0.5);
                 }
             `,
         frag: `
-                varying highp float v_depth;
+                varying highp vec2 v_texCoord;
+
+                uniform sampler2D u_drawTex;
                 
                 void main()
                 {
-                    if (v_depth >= 10000.0) {
-                      gl_FragColor = vec4(1,1,1,1);
-                    }
-                    else {
-                      highp float d_100 = floor(v_depth / 100.0);
-                      gl_FragColor = vec4(
-                        mod(v_depth,1.0),
-                        mod( floor( v_depth - mod(v_depth,1.0) )/100.0,1.0),
-                        mod( floor( d_100 - mod(d_100,1.0) )/100.0,1.0),
-                        1);
-                    }
+                  gl_FragColor = texture2D(u_drawTex, v_texCoord);
+                  gl_FragColor.rgb *= gl_FragColor.a;
                 }
             `,
       },
@@ -428,9 +375,9 @@
       penPlusShaders.textured.Shaders.frag
     );
 
-    penPlusShaders.depth.ProgramInf = penPlusShaders.createAndCompileShaders(
-      penPlusShaders.depth.Shaders.vert,
-      penPlusShaders.depth.Shaders.frag
+    penPlusShaders.draw.ProgramInf = penPlusShaders.createAndCompileShaders(
+      penPlusShaders.draw.Shaders.vert,
+      penPlusShaders.draw.Shaders.frag
     );
   }
 
@@ -463,31 +410,21 @@
     penPlusShaders.textured.ProgramInf.program,
     "u_texture"
   );
-
-  const u_depthTexture_Location_untext = gl.getUniformLocation(
-    penPlusShaders.untextured.ProgramInf.program,
-    "u_depthTexture"
-  );
-
-  const u_depthTexture_Location_text = gl.getUniformLocation(
-    penPlusShaders.textured.ProgramInf.program,
-    "u_depthTexture"
-  );
-
-  const u_res_Location_untext = gl.getUniformLocation(
-    penPlusShaders.untextured.ProgramInf.program,
-    "u_res"
-  );
-
-  const u_res_Location_text = gl.getUniformLocation(
-    penPlusShaders.textured.ProgramInf.program,
-    "u_res"
-  );
-
+  
   //?Depth
-  const a_position_Location_depth = gl.getAttribLocation(
-    penPlusShaders.depth.ProgramInf.program,
+  const u_depthTexture_Location_draw = gl.getUniformLocation(
+    penPlusShaders.draw.ProgramInf.program,
+    "u_drawTex"
+  );
+
+  const a_position_Location_draw = gl.getAttribLocation(
+    penPlusShaders.draw.ProgramInf.program,
     "a_position"
+  );
+
+  const a_textCoord_Location_draw = gl.getAttribLocation(
+    penPlusShaders.textured.ProgramInf.program,
+    "a_texCoord"
   );
 
   //?Enables Attributes
@@ -501,7 +438,8 @@
     gl.enableVertexAttribArray(a_position_Location_text);
     gl.enableVertexAttribArray(a_color_Location_text);
     gl.enableVertexAttribArray(a_textCoord_Location_text);
-    gl.enableVertexAttribArray(a_position_Location_depth);
+    gl.enableVertexAttribArray(a_position_Location_draw);
+    gl.enableVertexAttribArray(a_textCoord_Location_draw);
     gl.bindBuffer(gl.ARRAY_BUFFER, vertexBuffer);
     gl.bindBuffer(gl.ARRAY_BUFFER, null);
     gl.bindBuffer(gl.ARRAY_BUFFER, depthVertexBuffer);
@@ -513,7 +451,7 @@
     const lastCC = gl.getParameter(gl.COLOR_CLEAR_VALUE);
     lastFB = gl.getParameter(gl.FRAMEBUFFER_BINDING);
     //Pen+ Overrides default pen Clearing
-    gl.bindFramebuffer(gl.FRAMEBUFFER, depthFrameBuffer);
+    gl.bindFramebuffer(gl.FRAMEBUFFER, triFrameBuffer);
     gl.clearColor(1, 1, 1, 1);
     gl.clear(gl.DEPTH_BUFFER_BIT);
     gl.clear(gl.COLOR_BUFFER_BIT);
@@ -541,6 +479,11 @@
   //?Have this here for ez pz tri drawing on the canvas
   const triFunctions = {
     drawTri: (curProgram, x1, y1, x2, y2, x3, y3, penColor, targetID) => {
+      lastFB = gl.getParameter(gl.FRAMEBUFFER_BINDING);
+      gl.bindFramebuffer(gl.FRAMEBUFFER, triFrameBuffer);
+      gl.viewport(0, 0, nativeSize[0], nativeSize[1]);
+      
+      gl.clear(gl.COLOR_BUFFER_BIT);
       //? get triangle attributes for current sprite.
       const triAttribs = triangleAttributesOfAllSprites[targetID];
 
@@ -629,20 +572,21 @@
 
       gl.useProgram(penPlusShaders.untextured.ProgramInf.program);
 
-      gl.uniform1i(u_depthTexture_Location_untext, 1);
-
-      gl.uniform2fv(u_res_Location_untext, nativeSize);
-
       gl.drawArrays(gl.TRIANGLES, 0, 3);
       //? Hacky fix but it works.
 
-      if (penPlusAdvancedSettings.useDepthBuffer) {
-        triFunctions.drawDepthTri(targetID, x1, y1, x2, y2, x3, y3);
-      }
+      gl.bindFramebuffer(gl.FRAMEBUFFER, lastFB);
+      triFunctions.drawOnScreen();
+
       gl.useProgram(penPlusShaders.pen.program);
     },
 
     drawTextTri: (curProgram, x1, y1, x2, y2, x3, y3, targetID, texture) => {
+      lastFB = gl.getParameter(gl.FRAMEBUFFER_BINDING);
+      gl.bindFramebuffer(gl.FRAMEBUFFER, triFrameBuffer);
+      gl.viewport(0, 0, nativeSize[0], nativeSize[1]);
+      
+      gl.clear(gl.COLOR_BUFFER_BIT);
       //? get triangle attributes for current sprite.
       const triAttribs = triangleAttributesOfAllSprites[targetID];
 
@@ -753,79 +697,94 @@
       gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, currentFilter);
       gl.uniform1i(u_texture_Location_text, 0);
 
-      gl.uniform1i(u_depthTexture_Location_text, 1);
-
-      gl.uniform2fv(u_res_Location_text, nativeSize);
-
       gl.drawArrays(gl.TRIANGLES, 0, 3);
-      if (penPlusAdvancedSettings.useDepthBuffer) {
-        triFunctions.drawDepthTri(targetID, x1, y1, x2, y2, x3, y3);
-      }
+
+      gl.bindFramebuffer(gl.FRAMEBUFFER, lastFB);
+      triFunctions.drawOnScreen();
+
       gl.useProgram(penPlusShaders.pen.program);
     },
 
     //? this is so I don't have to go through the hassle of replacing default scratch shaders
     //? many of curse words where exchanged between me and a pillow while writing this extension
     //? but I have previaled!
-    drawDepthTri: (targetID, x1, y1, x2, y2, x3, y3) => {
-      lastFB = gl.getParameter(gl.FRAMEBUFFER_BINDING);
-      const triAttribs = triangleAttributesOfAllSprites[targetID];
-      gl.bindFramebuffer(gl.FRAMEBUFFER, depthFrameBuffer);
+    drawOnScreen: () => {
+      vertexBufferData = new Float32Array([
+        -1,
+        -1,
+        0,
+        1,
+        0,
+        1,
 
-      if (triAttribs) {
-        vertexBufferData = new Float32Array([
-          x1,
-          -y1,
-          triAttribs[5],
-          triAttribs[6],
+        1,
+        -1,
+        0,
+        1,
+        1,
+        1,
 
-          x2,
-          -y2,
-          triAttribs[13],
-          triAttribs[14],
-
-          x3,
-          -y3,
-          triAttribs[21],
-          triAttribs[22],
-        ]);
-      } else {
-        vertexBufferData = new Float32Array([
-          x1,
-          -y1,
-          0,
-          1,
-
-          x2,
-          -y2,
-          0,
-          1,
-
-          x3,
-          -y3,
-          0,
-          1,
-        ]);
-      }
+        1,
+        1,
+        0,
+        1,
+        1,
+        0,
+      ]);
 
       //? Bind Positional Data
       gl.bindBuffer(gl.ARRAY_BUFFER, depthVertexBuffer);
       gl.bufferData(gl.ARRAY_BUFFER, vertexBufferData, gl.DYNAMIC_DRAW);
 
       gl.vertexAttribPointer(
-        a_position_Location_depth,
+        a_position_Location_draw,
         4,
         gl.FLOAT,
         false,
-        f32_4,
+        f32_6,
         0
       );
-
-      gl.useProgram(penPlusShaders.depth.ProgramInf.program);
+      gl.vertexAttribPointer(
+        a_textCoord_Location_draw,
+        2,
+        gl.FLOAT,
+        false,
+        f32_6,
+        f32_4
+      );
+      
+      gl.useProgram(penPlusShaders.draw.ProgramInf.program);
+      
+      gl.uniform1i(u_depthTexture_Location_draw, 1);
 
       gl.drawArrays(gl.TRIANGLES, 0, 3);
+    
+      vertexBufferData = new Float32Array([
+        -1,
+        -1,
+        0,
+        1,
+        0,
+        1,
 
-      gl.bindFramebuffer(gl.FRAMEBUFFER, lastFB);
+        -1,
+        1,
+        0,
+        1,
+        0,
+        0,
+
+        1,
+        1,
+        0,
+        1,
+        1,
+        0,
+      ]);
+
+      gl.bufferData(gl.ARRAY_BUFFER, vertexBufferData, gl.DYNAMIC_DRAW);
+
+      gl.drawArrays(gl.TRIANGLES, 0, 3);
     },
 
     setValueAccordingToCaseTriangle: (
@@ -870,14 +829,11 @@
               break;
             }
             //convert to depth space for best accuracy
-            valuetoSet = Math.min(
-              (value * 10000) / penPlusAdvancedSettings._maxDepth,
-              10000
-            );
+            valuetoSet = (value);
             break;
           }
           //convert to depth space for best accuracy
-          valuetoSet = (value * 10000) / penPlusAdvancedSettings._maxDepth;
+          valuetoSet = (value);
           break;
 
         //Clamp to 1 so we don't accidentally clip.
@@ -973,7 +929,7 @@
 
       const pixelData = new Uint8Array(width * height * 4);
 
-      const decodedColor = colors.hexToRgb(color);
+      const decodedColor = Scratch.Cast.toRgbColorObject(color);
 
       for (let pixelID = 0; pixelID < pixelData.length / 4; pixelID++) {
         pixelData[pixelID * 4] = decodedColor.r;
@@ -1258,7 +1214,7 @@
             disableMonitor: true,
             opcode: "getStampAttribute",
             blockType: Scratch.BlockType.REPORTER,
-            text: "Get pen square's [target]",
+            text: "get pen square's [target]",
             arguments: {
               target: {
                 type: Scratch.ArgumentType.NUMBER,
@@ -1446,7 +1402,7 @@
             disableMonitor: true,
             opcode: "RGB2HEX",
             blockType: Scratch.BlockType.REPORTER,
-            text: "Red [R] Green [G] Blue [B]",
+            text: "red [R] green [G] blue [B]",
             arguments: {
               R: { type: Scratch.ArgumentType.NUMBER, defaultValue: 0 },
               G: { type: Scratch.ArgumentType.NUMBER, defaultValue: 0 },
@@ -1457,7 +1413,7 @@
             disableMonitor: true,
             opcode: "HSV2RGB",
             blockType: Scratch.BlockType.REPORTER,
-            text: "Hue [H] Saturation [S] Value [V]",
+            text: "hue [H] saturation [S] value [V]",
             arguments: {
               H: { type: Scratch.ArgumentType.NUMBER, defaultValue: 0 },
               S: { type: Scratch.ArgumentType.NUMBER, defaultValue: 100 },
@@ -1745,13 +1701,12 @@
             acceptReporters: true,
           },
         },
-        name: "Pen+",
+        name: "Pen+ V6",
         id: "penP",
         menuIconURI:
           "data:image/svg+xml;base64,PHN2ZyB2ZXJzaW9uPSIxLjEiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyIgeG1sbnM6eGxpbms9Imh0dHA6Ly93d3cudzMub3JnLzE5OTkveGxpbmsiIHdpZHRoPSIzMi45OTk3MiIgaGVpZ2h0PSIzMi44ODIwNyIgdmlld0JveD0iMCwwLDMyLjk5OTcyLDMyLjg4MjA3Ij48ZyB0cmFuc2Zvcm09InRyYW5zbGF0ZSgtMjI0LC0xNjMuOTk5OTMpIj48ZyBkYXRhLXBhcGVyLWRhdGE9InsmcXVvdDtpc1BhaW50aW5nTGF5ZXImcXVvdDs6dHJ1ZX0iIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgc3Ryb2tlLW1pdGVybGltaXQ9IjEwIiBzdHJva2UtZGFzaGFycmF5PSIiIHN0cm9rZS1kYXNob2Zmc2V0PSIwIiBzdHlsZT0ibWl4LWJsZW5kLW1vZGU6IG5vcm1hbCI+PHBhdGggZD0iTTIyOC43NTMsMTk0LjYwMmwtNC4yNSwxLjc4bDEuNzgzLC00LjIzN2MxLjIxOCwtMi44OTIgMi45MDcsLTUuNDIzIDUuMDMsLTcuNTM4bDE5Ljc1LC0xOS42NzdjMC44NDYsLTAuODQyIDIuNjUsLTAuNDEgNC4wMzIsMC45NjdjMS4zOCwxLjM3NSAxLjgxNiwzLjE3MyAwLjk3LDQuMDE1bC0xOS43NSwxOS42NzhjLTIuMTIzLDIuMTE2IC00LjY2NCwzLjggLTcuNTY1LDUuMDEyIiBmaWxsPSIjZmZmZmZmIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiIHN0cm9rZT0iIzU3NWU3NSIgc3Ryb2tlLXdpZHRoPSIxIiBzdHJva2UtbGluZWpvaW49InJvdW5kIi8+PHBhdGggZD0iTTIzNi44NTgsMTczLjQyOGMwLDAgMi42MTYsMi4yMiA0LjM1LC0xLjU0NmMzLjc1MiwtOC4xNSA4LjIwMiwtNS43NzIgOC4yMDIsLTUuNzcyIiBmaWxsPSJub25lIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiIHN0cm9rZT0iIzU3NWU3NSIgc3Ryb2tlLXdpZHRoPSIxIiBzdHJva2UtbGluZWpvaW49InJvdW5kIi8+PHBhdGggZD0iTTI1Ni40MiwxNjguODI1YzAsMC40NjMgLTAuMTQsMC44NzMgLTAuNDMyLDEuMTY0bC05LjMzNSw5LjNjMC4yODIsLTAuMjkgMC40MSwtMC42NjggMC40MSwtMS4xMmMwLC0wLjg3NCAtMC41MDcsLTEuOTYzIC0xLjQwNiwtMi44NjhjLTEuMzYyLC0xLjM1OCAtMy4xNDcsLTEuOCAtNC4wMDIsLTAuOTlsOS4zMzUsLTkuMzAxYzAuODQ0LC0wLjg0IDIuNjUsLTAuNDEgNC4wMzUsMC45NmMwLjg5OCwwLjkwNCAxLjM5NiwxLjk4MiAxLjM5NiwyLjg1NU0yMzAuNTE1LDE5My43NzRjLTAuNTczLDAuMzAyIC0xLjE1NywwLjU3IC0xLjc2NCwwLjgzbC00LjI1MSwxLjc3OGwxLjc4NiwtNC4yMzVjMC4yNTgsLTAuNjA0IDAuNTMsLTEuMTg2IDAuODMzLC0xLjc1N2MwLjY5LDAuMTgzIDEuNDQ4LDAuNjI1IDIuMTA4LDEuMjgyYzAuNjYsMC42NTggMS4xMDIsMS40MTIgMS4yODcsMi4xMDIiIGZpbGw9IiM0Yzk3ZmYiIGZpbGwtcnVsZT0iZXZlbm9kZCIgc3Ryb2tlPSIjNTc1ZTc1IiBzdHJva2Utd2lkdGg9IjEiIHN0cm9rZS1saW5lam9pbj0icm91bmQiLz48cGF0aCBkPSJNMjU2LjQ5OCwxNjguNzQ4YzAsMC40NjQgLTAuMTQsMC44NzQgLTAuNDMzLDEuMTY1bC0xOS43NDIsMTkuNjhjLTIuMTMsMi4xMSAtNC42NzMsMy43OTMgLTcuNTcyLDUuMDFsLTQuMjUxLDEuNzc3bDAuOTc0LC0yLjMxNmwxLjkyNSwtMC44MDhjMi44OTgsLTEuMjE4IDUuNDQsLTIuOSA3LjU3LC01LjAxbDE5Ljc0MywtMTkuNjhjMC4yOTIsLTAuMjkyIDAuNDMyLC0wLjcwMiAwLjQzMiwtMS4xNjVjMCwtMC42NDYgLTAuMjcsLTEuNCAtMC43OCwtMi4xMjJjMC4yNSwwLjE3MiAwLjUsMC4zNzcgMC43MzcsMC42MTRjMC44OTgsMC45MDUgMS4zOTYsMS45ODMgMS4zOTYsMi44NTYiIGZpbGw9IiM1NzVlNzUiIGZpbGwtcnVsZT0iZXZlbm9kZCIgc3Ryb2tlPSIjNTc1ZTc1IiBzdHJva2Utd2lkdGg9IjEiIHN0cm9rZS1saW5lam9pbj0icm91bmQiIG9wYWNpdHk9IjAuMTUiLz48cGF0aCBkPSJNMjM4LjQ1LDE3Mi44M2MwLDAuNSAtMC40MDQsMC45MDUgLTAuOTA0LDAuOTA1Yy0wLjUsMCAtMC45MDUsLTAuNDA1IC0wLjkwNSwtMC45MDRjMCwtMC41IDAuNDA3LC0wLjkwMyAwLjkwNiwtMC45MDNjMC41LDAgMC45MDQsMC40MDQgMC45MDQsMC45MDR6IiBmaWxsPSIjNTc1ZTc1IiBmaWxsLXJ1bGU9ImV2ZW5vZGQiIHN0cm9rZT0iIzU3NWU3NSIgc3Ryb2tlLXdpZHRoPSIxIiBzdHJva2UtbGluZWpvaW49InJvdW5kIi8+PHBhdGggZD0iTTI0NC45OTgwNywxODcuMDUyOThoOS41MTc2NSIgZmlsbD0ibm9uZSIgZmlsbC1ydWxlPSJub256ZXJvIiBzdHJva2U9IiNmZmZmZmYiIHN0cm9rZS13aWR0aD0iMS41IiBzdHJva2UtbGluZWpvaW49Im1pdGVyIi8+PHBhdGggZD0iTTI0OS43NTY4OSwxOTEuODExOHYtOS41MTc2NSIgZmlsbD0ibm9uZSIgZmlsbC1ydWxlPSJub256ZXJvIiBzdHJva2U9IiNmZmZmZmYiIHN0cm9rZS13aWR0aD0iMS41IiBzdHJva2UtbGluZWpvaW49Im1pdGVyIi8+PC9nPjwvZz48L3N2Zz48IS0tcm90YXRpb25DZW50ZXI6MTY6MTYuMDAwMDY5MjMwODQyMTQzLS0+",
         blockIconURI:
           "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHZpZXdCb3g9IjAgMCA0MCA0MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48dGl0bGU+cGVuLWljb248L3RpdGxlPjxnIHN0cm9rZT0iIzU3NUU3NSIgZmlsbD0ibm9uZSIgZmlsbC1ydWxlPSJldmVub2RkIiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiPjxwYXRoIGQ9Ik04Ljc1MyAzNC42MDJsLTQuMjUgMS43OCAxLjc4My00LjIzN2MxLjIxOC0yLjg5MiAyLjkwNy01LjQyMyA1LjAzLTcuNTM4TDMxLjA2NiA0LjkzYy44NDYtLjg0MiAyLjY1LS40MSA0LjAzMi45NjcgMS4zOCAxLjM3NSAxLjgxNiAzLjE3My45NyA0LjAxNUwxNi4zMTggMjkuNTljLTIuMTIzIDIuMTE2LTQuNjY0IDMuOC03LjU2NSA1LjAxMiIgZmlsbD0iI0ZGRiIvPjxwYXRoIGQ9Ik0yOS40MSA2LjExcy00LjQ1LTIuMzc4LTguMjAyIDUuNzcyYy0xLjczNCAzLjc2Ni00LjM1IDEuNTQ2LTQuMzUgMS41NDYiLz48cGF0aCBkPSJNMzYuNDIgOC44MjVjMCAuNDYzLS4xNC44NzMtLjQzMiAxLjE2NGwtOS4zMzUgOS4zYy4yODItLjI5LjQxLS42NjguNDEtMS4xMiAwLS44NzQtLjUwNy0xLjk2My0xLjQwNi0yLjg2OC0xLjM2Mi0xLjM1OC0zLjE0Ny0xLjgtNC4wMDItLjk5TDMwLjk5IDUuMDFjLjg0NC0uODQgMi42NS0uNDEgNC4wMzUuOTYuODk4LjkwNCAxLjM5NiAxLjk4MiAxLjM5NiAyLjg1NU0xMC41MTUgMzMuNzc0Yy0uNTczLjMwMi0xLjE1Ny41Ny0xLjc2NC44M0w0LjUgMzYuMzgybDEuNzg2LTQuMjM1Yy4yNTgtLjYwNC41My0xLjE4Ni44MzMtMS43NTcuNjkuMTgzIDEuNDQ4LjYyNSAyLjEwOCAxLjI4Mi42Ni42NTggMS4xMDIgMS40MTIgMS4yODcgMi4xMDIiIGZpbGw9IiM0Qzk3RkYiLz48cGF0aCBkPSJNMzYuNDk4IDguNzQ4YzAgLjQ2NC0uMTQuODc0LS40MzMgMS4xNjVsLTE5Ljc0MiAxOS42OGMtMi4xMyAyLjExLTQuNjczIDMuNzkzLTcuNTcyIDUuMDFMNC41IDM2LjM4bC45NzQtMi4zMTYgMS45MjUtLjgwOGMyLjg5OC0xLjIxOCA1LjQ0LTIuOSA3LjU3LTUuMDFsMTkuNzQzLTE5LjY4Yy4yOTItLjI5Mi40MzItLjcwMi40MzItMS4xNjUgMC0uNjQ2LS4yNy0xLjQtLjc4LTIuMTIyLjI1LjE3Mi41LjM3Ny43MzcuNjE0Ljg5OC45MDUgMS4zOTYgMS45ODMgMS4zOTYgMi44NTYiIGZpbGw9IiM1NzVFNzUiIG9wYWNpdHk9Ii4xNSIvPjxwYXRoIGQ9Ik0xOC40NSAxMi44M2MwIC41LS40MDQuOTA1LS45MDQuOTA1cy0uOTA1LS40MDUtLjkwNS0uOTA0YzAtLjUuNDA3LS45MDMuOTA2LS45MDMuNSAwIC45MDQuNDA0LjkwNC45MDR6IiBmaWxsPSIjNTc1RTc1Ii8+PC9nPjwvc3ZnPg==",
-        docsURI: "https://extensions.turbowarp.org/penplus",
       };
     }
     costumeMenuFunction() {
@@ -1807,24 +1762,17 @@
       checkForPen(util);
       const curTarget = util.target;
       const attrib = curTarget["_customState"]["Scratch.pen"].penAttributes;
-
-      curTarget.runtime.ext_pen.penDown(null, util);
-
       Scratch.vm.renderer.penPoint(
         Scratch.vm.renderer._penSkinId,
         attrib,
         x,
         y
       );
-
-      curTarget.runtime.ext_pen.penUp(null, util);
     }
     drawLine({ x1, y1, x2, y2 }, util) {
       checkForPen(util);
       const curTarget = util.target;
       const attrib = curTarget["_customState"]["Scratch.pen"].penAttributes;
-
-      curTarget.runtime.ext_pen.penDown(null, util);
 
       Scratch.vm.renderer.penLine(
         Scratch.vm.renderer._penSkinId,
@@ -1834,8 +1782,6 @@
         x2,
         y2
       );
-
-      curTarget.runtime.ext_pen.penUp(null, util);
     }
     squareDown(arg, util) {
       //Just a simple thing to allow for pen drawing
@@ -2224,7 +2170,7 @@
         squareAttributesOfAllSprites[curTarget.id] = squareDefaultAttributes;
       }
 
-      const calcColor = colors.hexToRgb(color);
+      const calcColor = Scratch.Cast.toRgbColorObject(color);
 
       squareAttributesOfAllSprites[curTarget.id][7] = calcColor.r / 255;
       squareAttributesOfAllSprites[curTarget.id][8] = calcColor.g / 255;
@@ -2280,7 +2226,7 @@
         triangleAttributesOfAllSprites[targetId] = triangleDefaultAttributes;
       }
 
-      const calcColor = colors.hexToRgb(color);
+      const calcColor = Scratch.Cast.toRgbColorObject(color);
 
       triFunctions.setValueAccordingToCaseTriangle(
         targetId,
@@ -2317,7 +2263,7 @@
         triangleAttributesOfAllSprites[targetId] = triangleDefaultAttributes;
       }
 
-      const calcColor = colors.hexToRgb(color);
+      const calcColor = Scratch.Cast.toRgbColorObject(color);
 
       triFunctions.setValueAccordingToCaseTriangle(
         targetId,
@@ -2600,7 +2546,7 @@
             x < curCostume.width &&
             x >= 0
           ) {
-            const retColor = colors.hexToRgb(color);
+            const retColor = Scratch.Cast.toRgbColorObject(color);
             textureData[colorIndex] = retColor.r;
             textureData[colorIndex + 1] = retColor.g;
             textureData[colorIndex + 2] = retColor.b;

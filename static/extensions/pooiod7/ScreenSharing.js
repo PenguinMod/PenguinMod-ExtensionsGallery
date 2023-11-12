@@ -17,7 +17,7 @@
   class ScreenSharing {
     getInfo() {
       return {
-        id: 'screensharing',
+        id: 'pooscreensharing',
         name: 'Screen Sharing',
       color1: '#00a1ff',
       color2: '#006bff',

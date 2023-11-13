@@ -84,6 +84,14 @@ export default [
         isGitHub: true,
     },
     {
+        name: "More Conditions",
+        description: "\nHere you can find more conditional blocks for your projects. \nЗдесь вы можете найти больше условных блоков для ваших проектов.",
+        code: "WAYLIVES/MoreConditions.js",
+        banner: "WAYLIVES/MoreConditions.svg",
+        creator: "WAYLIVES",
+        isGitHub: false,
+    },
+    {
         name: "Free Servers",
         description: "\nHere you can find a free server for your projects. And also check whether it is working now or not. \nЗдесь вы можете найти бесплатный сервер для своих проектов. А также проверить, работает он сейчас или нет.",
         code: "WAYLIVES/FreeServers.js",

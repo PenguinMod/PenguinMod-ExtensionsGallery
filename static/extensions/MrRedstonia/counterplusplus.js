@@ -73,9 +73,6 @@
               },
             },
           },
-          {
-            blockType: Scratch.BlockType.SEPARATOR,
-          },
         ],
       };
     }

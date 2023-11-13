@@ -8,7 +8,11 @@
 (function (Scratch) {
   "use strict";
 
-  const MenuIcon = "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTAwIiBoZWlnaHQ9IjEwMCIgdmlld0JveD0iMCAwIDEwMCAxMDAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSIxMDAiIGhlaWdodD0iMTAwIiByeD0iMjYiIGZpbGw9IiNFMjI2NDgiLz4KPHJlY3QgeD0iMTYiIHk9IjE4IiB3aWR0aD0iNjgiIGhlaWdodD0iMzIiIHJ4PSI4IiBzdHJva2U9IiM1RjBGMUQiIHN0cm9rZS13aWR0aD0iOCIvPgo8Y2lyY2xlIGN4PSI2NyIgY3k9IjM0IiByPSI3IiBmaWxsPSIjNUYwRjFEIi8+CjxyZWN0IHg9IjI1IiB5PSIyNyIgd2lkdGg9IjgiIGhlaWdodD0iMTQiIHJ4PSI0IiBmaWxsPSIjNUYwRjFEIi8+CjxyZWN0IHg9IjM4IiB5PSIyNyIgd2lkdGg9IjgiIGhlaWdodD0iMTQiIHJ4PSI0IiBmaWxsPSIjNUYwRjFEIi8+CjxyZWN0IHg9IjE2IiB5PSI1MCIgd2lkdGg9IjY4IiBoZWlnaHQ9IjMyIiByeD0iOCIgc3Ryb2tlPSIjNUYwRjFEIiBzdHJva2Utd2lkdGg9IjgiLz4KPGNpcmNsZSBjeD0iNjciIGN5PSI2NiIgcj0iNyIgZmlsbD0iIzVGMEYxRCIvPgo8cmVjdCB4PSIyNSIgeT0iNTkiIHdpZHRoPSI4IiBoZWlnaHQ9IjE0IiByeD0iNCIgZmlsbD0iIzVGMEYxRCIvPgo8cmVjdCB4PSIzOCIgeT0iNTkiIHdpZHRoPSI4IiBoZWlnaHQ9IjE0IiByeD0iNCIgZmlsbD0iIzVGMEYxRCIvPgo8L3N2Zz4K"; 
+  if (!Scratch.extensions.unsandboxed) {
+    throw new Error("Error :(");
+  }
+
+  const menuIconURI = "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTAwIiBoZWlnaHQ9IjEwMCIgdmlld0JveD0iMCAwIDEwMCAxMDAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSIxMDAiIGhlaWdodD0iMTAwIiByeD0iMTAiIGZpbGw9IiNFMjI2NDgiLz4KPHJlY3QgeD0iMjUiIHk9IjI1IiB3aWR0aD0iNTAiIGhlaWdodD0iMjUiIHJ4PSIzIiBzdHJva2U9IndoaXRlIiBzdHJva2Utd2lkdGg9IjYiLz4KPHJlY3QgeD0iNDciIHk9IjQ4IiB3aWR0aD0iNiIgaGVpZ2h0PSIyNSIgZmlsbD0id2hpdGUiLz4KPHJlY3QgeD0iNzgiIHk9IjY4IiB3aWR0aD0iNiIgaGVpZ2h0PSI1NiIgcng9IjMiIHRyYW5zZm9ybT0icm90YXRlKDkwIDc4IDY4KSIgZmlsbD0id2hpdGUiLz4KPGNpcmNsZSBjeD0iNTAiIGN5PSI3MSIgcj0iNSIgZmlsbD0iI0UyMjY0OCIgc3Ryb2tlPSJ3aGl0ZSIgc3Ryb2tlLXdpZHRoPSI0Ii8+CjxjaXJjbGUgY3g9IjYyLjUiIGN5PSIzNy41IiByPSI1LjUiIGZpbGw9IndoaXRlIi8+Cjwvc3ZnPgo="; 
   
   const computing = new Map();
   const computed = new Map();
@@ -83,11 +87,11 @@
     getInfo() {
       return {              
         id: "FreeServers",
-        name: "FREE Servers",
+        name: "Free Servers",
         color1: "#E22648",
         color2: "#B01D38",
         color3: "#B01D38",
-        MenuIcon,
+        menuIconURI: menuIconURI,
         
         blocks: [
           

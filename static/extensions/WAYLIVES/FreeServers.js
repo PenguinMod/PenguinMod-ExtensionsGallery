@@ -8,10 +8,6 @@
 (function (Scratch) {
   "use strict";
 
-  if (!Scratch.extensions.unsandboxed) {
-    throw new Error("Error");
-  }
-
   const menuIconURI = "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTAwIiBoZWlnaHQ9IjEwMCIgdmlld0JveD0iMCAwIDEwMCAxMDAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSIxMDAiIGhlaWdodD0iMTAwIiByeD0iMTAiIGZpbGw9IiNFMjI2NDgiLz4KPHJlY3QgeD0iMjUiIHk9IjI1IiB3aWR0aD0iNTAiIGhlaWdodD0iMjUiIHJ4PSIzIiBzdHJva2U9IndoaXRlIiBzdHJva2Utd2lkdGg9IjYiLz4KPHJlY3QgeD0iNDciIHk9IjQ4IiB3aWR0aD0iNiIgaGVpZ2h0PSIyNSIgZmlsbD0id2hpdGUiLz4KPHJlY3QgeD0iNzgiIHk9IjY4IiB3aWR0aD0iNiIgaGVpZ2h0PSI1NiIgcng9IjMiIHRyYW5zZm9ybT0icm90YXRlKDkwIDc4IDY4KSIgZmlsbD0id2hpdGUiLz4KPGNpcmNsZSBjeD0iNTAiIGN5PSI3MSIgcj0iNSIgZmlsbD0iI0UyMjY0OCIgc3Ryb2tlPSJ3aGl0ZSIgc3Ryb2tlLXdpZHRoPSI0Ii8+CjxjaXJjbGUgY3g9IjYyLjUiIGN5PSIzNy41IiByPSI1LjUiIGZpbGw9IndoaXRlIi8+Cjwvc3ZnPgo="; 
   
   const computing = new Map();

@@ -178,7 +178,7 @@ export default [
     {
         name: "Counter++",
         description: "Count anything, at any time, in Scratch!",
-        code: "MrRedstonia/counter++.js",
+        code: "MrRedstonia/counterplusplus.js",
         banner: "MrRedstonia/counterplusplus.png",
         creator: "MrRedstonia",
         isGitHub: true,

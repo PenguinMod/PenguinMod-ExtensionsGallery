@@ -7,9 +7,9 @@
 export default [
     {
         name: "FREE Servers",
-        description: "‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾\nEnglish:\nHere you can find a free server for your projects. And also check whether it is working now or not. \n\nРусский:\nЗдесь вы можете найти бесплатный сервер для своих проектов. А также проверить, работает он сейчас или нет.",
+        description: "\nEnglish:\nHere you can find a free server for your projects. And also check whether it is working now or not. \n\nРусский:\nЗдесь вы можете найти бесплатный сервер для своих проектов. А также проверить, работает он сейчас или нет.",
         code: "WAYLIVES/FreeServers.js",
-        banner: "WAYLIVES/FreeServers.svg",
+        banner: "WAYLIVES/FreeServersIMG.svg",
         documentation: "FreeServers",
         creator: "WAYLIVES",
         isGitHub: false,

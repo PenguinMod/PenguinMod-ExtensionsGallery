@@ -25,36 +25,6 @@
         menuIconURI: menuIconURI,
         
         blocks: [
-          
-          {
-            opcode: 'A',
-            blockType: Scratch.BlockType.BOOLEAN,
-            text: 'if [IFA] then [THENA]',
-            arguments: {
-              IFA: {
-                type: Scratch.ArgumentType.BOOLEAN
-              },
-              THENA: {
-                type: Scratch.ArgumentType.STRING,
-              }
-            }
-          },
-          {
-            opcode: 'B',
-            blockType: Scratch.BlockType.BOOLEAN,
-            text: 'if [IFB] then [THENB] else [ELSEB]',
-            arguments: {
-              IFB: {
-                type: Scratch.ArgumentType.BOOLEAN
-              },
-              THENB: {
-                type: Scratch.ArgumentType.STRING,
-              },
-              ELSEB: {
-                type: Scratch.ArgumentType.STRING,
-              }
-            }
-          },
           {
             opcode: 'C',
             blockType: Scratch.BlockType.REPORTER,
@@ -170,15 +140,6 @@
     }
     false() {
       return 'false';
-    }
-
-    A(args) {
-      if (args.IFA) return args.THENA;
-      return "";
-    }
-
-    B({IFB,THENB,ELSEB}) {
-      return IFB?THENB:ELSEB;
     }
 
     C(args) {

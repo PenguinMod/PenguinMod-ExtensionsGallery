@@ -192,4 +192,12 @@ export default [
         creator: "MrRedstonia",
         isGitHub: true,
     },
+    {
+        name: "Socket.IO",
+        description: "Blocks to interact with Socket.IO.",
+        code: "GigantTech/socket.io.js",
+        banner: "GigantTech/socket.io.png",
+        creator: "GigantTech",
+        isGitHub: false,
+    },
 ];

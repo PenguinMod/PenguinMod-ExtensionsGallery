@@ -3,7 +3,7 @@
 // Description: Expansion of the "ask and wait" Blocks
 // By: SharkPool <https://github.com/SharkPool-SP>
 
-// Version V.3.0.0 (Infinite Buttons + More Live Updated Elements + Image setting for Buttons)
+// Version V.3.0.1 (Formatting Changes and Code Simplifications)
 
 (function (Scratch) {
   "use strict";
@@ -241,37 +241,6 @@
           },
 
           "---",
-
-          {
-            opcode: "setEnable",
-            blockType: Scratch.BlockType.COMMAND,
-            hideFromPalette: true,
-            text: "set [ENABLE_MENU] to be [ACTION]",
-            arguments: {
-              ENABLE_MENU: {
-                type: Scratch.ArgumentType.STRING,
-                menu: "enableMenu",
-                defaultValue: "Button 2",
-              },
-              ACTION: {
-                type: Scratch.ArgumentType.STRING,
-                menu: "inputActionMenu",
-                defaultValue: "Enabled",
-              }
-            },
-          },
-          {
-            opcode: "getBoxCount",
-            blockType: Scratch.BlockType.REPORTER,
-            hideFromPalette: true,
-            text: "box count",
-          },
-          {
-            opcode: "getMaxCount",
-            blockType: Scratch.BlockType.REPORTER,
-            hideFromPalette: true,
-            text: "box limit",
-          },
 
           {
             opcode: "setButton",
@@ -715,10 +684,6 @@
             acceptReporters: true,
             items: ["Enabled", "Disabled"],
           },
-          enableMenu: {
-            acceptReporters: true,
-            items: ["Button 2", "Button 3", "Button 4", "Textbox Shadow"],
-          },
           inputActionMenu: {
             acceptReporters: true,
             items: [
@@ -833,16 +798,6 @@
       }
     }
 
-    setEnable() {
-      throw new Error('This block is removed in Better Input V3. Please use the more powerful and better blocks.');
-    }
-    getBoxCount() {
-      throw new Error('This block is removed in Better Input V3. Please use the more powerful and better blocks.');
-    }
-    getMaxCount() {
-      throw new Error('This block is removed in Better Input V3. Please use the more powerful and better blocks.');
-    }
-
     updateOverlay(overlay) {
       const newOpacity =  this.Opacity / 100;
       const newBrightness = this.Brightness + 100;
@@ -878,9 +833,7 @@
 
     updateButtonImages(overlay) {
       let text = overlay.querySelector(".question");
-      if (text) {
-        text.style.color = this.questionColor;
-      }
+      if (text) text.style.color = this.questionColor;
 
       const inputField = overlay.querySelector("input");
       if (inputField) {
@@ -925,7 +878,7 @@
             element.style.background = `url(${encodeURI(url)})`;
             element.style.backgroundSize = scale + "%";
           } else {
-            console.log("Cannot fetch content from the URL.");
+            console.log("Cannot fetch content from the URL");
           }
         });
       }
@@ -1072,9 +1025,7 @@
     setBorderRadius(args) {
       const element = args.ELEMENT;
       let value = args.VALUE;
-      if (value < 0) {
-        value = 0;
-      }
+      if (value < 0)  value = 0;
       switch (element) {
         case "Textbox":
           this.overlayBorderRadius[0] = value;
@@ -1166,9 +1117,7 @@
       });
     }
 
-    reportDirection() {
-      return this.Rotation;
-    }
+    reportDirection() { return this.Rotation }
 
     setPrePosition(args) {
       this.textBoxX = Scratch.Cast.toNumber(args.X) / (screen.width / 400);
@@ -1191,17 +1140,11 @@
       });
     }
 
-    getXpos() {
-      return this.textBoxX * (screen.width / 400);
-    }
+    getXpos() { return this.textBoxX * (screen.width / 400) }
 
-    getYpos() {
-      return this.textBoxY * (screen.height / -300);
-    }
+    getYpos() { return this.textBoxY * (screen.height / -300) }
 
-    setFontSize(args) {
-      this.fontSize = args.SIZE + "px";
-    }
+    setFontSize(args) { this.fontSize = args.SIZE + "px" }
 
     setTextAlignment(args) {
       this.textAlign = args.ALIGNMENT;
@@ -1217,9 +1160,7 @@
       });
     }
 
-    setSlider(args) {
-      this.sliderInfo = [args.MIN, args.MAX, args.DEFAULT];
-    }
+    setSlider(args) { this.sliderInfo = [args.MIN, args.MAX, args.DEFAULT] }
 
     setInputType(args) {
       if (args.ACTION === "Text" || args.ACTION ===  "None") {
@@ -1229,9 +1170,7 @@
       }
     }
 
-    enableShadow(args) {
-      this.shadowEnabled = args.ACTION === "Enabled";
-    }
+    enableShadow(args) { this.shadowEnabled = args.ACTION === "Enabled" }
 
     setButtonText(args) {
       const buttonMenu = args.BUTTON_MENU;
@@ -1262,9 +1201,7 @@
         }
         if (this.askBoxPromises) {
           const index = this.activeOverlays.indexOf(overlay);
-          if (index !== -1) {
-            this.askBoxPromises[index].resolve("removed");
-          }
+          if (index !== -1) this.askBoxPromises[index].resolve("removed");
         }
       });
       this.askBoxPromises = [];
@@ -1398,7 +1335,6 @@
           dropdownButton.textContent = this.DropdownText;
           dropdownButton.style.padding = "5px 10px";
           dropdownButton.style.border = "none";
-
           const dropdownContent = document.createElement("div");
           dropdownContent.id = "myDropdown";
           dropdownContent.className = "dropdown-content";
@@ -1408,7 +1344,7 @@
           optionLabels.forEach((label, index) => {
             const optionLabel = document.createElement("label");
             optionLabel.style.color = this.questionColor;
-            optionLabel.textContent = label + " ";
+            optionLabel.textContent = "";
             const optionRadio = document.createElement("input");
             optionRadio.type = this.isInputEnabled === "Dropdown" ? "radio" : "checkbox";
             optionRadio.name = "dropdownOptions";
@@ -1421,16 +1357,13 @@
                 } else {
                   selectedOptions.push(label);
                 }
-                if (selectedOptions.length > 0) {
-                  inputField.value = "[\"" + selectedOptions.join("\", \"") + "\"]";
-                } else {
-                  inputField.value = "";
-                }
+                inputField.value = selectedOptions.length > 0 ? JSON.stringify(selectedOptions) : "";
               } else {
                 inputField.value = label;
               }
             });
             optionLabel.appendChild(optionRadio);
+            optionLabel.appendChild(document.createTextNode(" " + label));
             optionLabel.appendChild(document.createElement("br"));
             dropdownContent.appendChild(optionLabel);
           });
@@ -1535,9 +1468,7 @@
     }
 
     closeOverlay(overlay) {
-      if (this.askBoxInfo[0] < 2) {
-        this.isWaitingForInput = false;
-      }
+      if (this.askBoxInfo[0] < 2) this.isWaitingForInput = false;
       this.isDropdownOpen = false;
       this.askBoxInfo[0]--;
       const index = this.activeOverlays.indexOf(overlay);
@@ -1567,38 +1498,24 @@
       Scratch.vm.extensionManager.refreshBlocks()
     }
 
-    isWaitingInput() {
-      return this.isWaitingForInput;
-    }
+    isWaitingInput() { return this.isWaitingForInput }
 
-    isDropdown() {
-      return this.isDropdownOpen;
-    }
+    isDropdown() { return this.isDropdownOpen }
 
-    setMaxBoxCount(args) {
-      this.askBoxInfo[1] = args.MAX;
-    }
+    setMaxBoxCount(args) { this.askBoxInfo[1] = args.MAX }
 
     setTimeout(args) {
       this.Timeout = args.TIME;
       this.Condition = args.CONDITION;
     }
 
-    reportTimeout() {
-      return this.Timeout;
-    }
+    reportTimeout() { return this.Timeout }
 
-    getUserInput() {
-      return this.userInput === null ? "" : this.userInput;
-    }
+    getUserInput() { return this.userInput === null ? "" : this.userInput }
 
-    getBoxInfo(args) {
-      return this.askBoxInfo[args.INFO === "count" ? 0 : 1];
-    }
+    getBoxInfo(args) { return this.askBoxInfo[args.INFO === "count" ? 0 : 1] }
 
-    setSubmitEvent(args) {
-      this.forceInput = args.ENTER;
-    }
+    setSubmitEvent(args) { this.forceInput = args.ENTER }
   }
 
   Scratch.extensions.register(new BetterInputSP());

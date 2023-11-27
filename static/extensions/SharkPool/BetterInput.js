@@ -239,9 +239,37 @@
               },
             },
           },
-
           "---",
-
+          {
+            opcode: "setEnable",
+            blockType: Scratch.BlockType.COMMAND,
+            hideFromPalette: true,
+            text: "set [ENABLE_MENU] to be [ACTION]",
+            arguments: {
+              ENABLE_MENU: {
+                type: Scratch.ArgumentType.STRING,
+                menu: "enableMenu",
+                defaultValue: "Button 2",
+              },
+              ACTION: {
+                type: Scratch.ArgumentType.STRING,
+                menu: "inputActionMenu",
+                defaultValue: "Enabled",
+              }
+            },
+          },
+          {
+            opcode: "getBoxCount",
+            blockType: Scratch.BlockType.REPORTER,
+            hideFromPalette: true,
+            text: "box count",
+          },
+          {
+            opcode: "getMaxCount",
+            blockType: Scratch.BlockType.REPORTER,
+            hideFromPalette: true,
+            text: "box limit",
+          },
           {
             opcode: "setButton",
             blockType: Scratch.BlockType.COMMAND,
@@ -714,6 +742,10 @@
           shadowStuff: {
             acceptReporters: true,
             items: ["Size", "X", "Y", "Opacity"],
+          },
+          enableMenu: {
+            acceptReporters: true,
+            items: ["Button 2", "Button 3", "Button 4", "Textbox Shadow"],
           },
           buttonMenu: {
             acceptReporters: true,
@@ -1516,6 +1548,16 @@
     getBoxInfo(args) { return this.askBoxInfo[args.INFO === "count" ? 0 : 1] }
 
     setSubmitEvent(args) { this.forceInput = args.ENTER }
+
+    setEnable() {
+      throw new Error('This block is removed in Better Input V3. Please use the more powerful and better blocks.');
+    }
+    getBoxCount() {
+      throw new Error('This block is removed in Better Input V3. Please use the more powerful and better blocks.');
+    }
+    getMaxCount() {
+      throw new Error('This block is removed in Better Input V3. Please use the more powerful and better blocks.');
+    }
   }
 
   Scratch.extensions.register(new BetterInputSP());

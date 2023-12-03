@@ -192,4 +192,12 @@ export default [
         creator: "MrRedstonia",
         isGitHub: true,
     },
+    {
+        name: "Ruby Utils",
+        description: "Some Random Utilities like Embed Discord Webhook and Google Search just for you!",
+        code: "MubiLop/rubyutils.js",
+        banner: "MubiLop/rubyutils.png",
+        creator: "Mubilop",
+        isGitHub: false,
+    },
 ];

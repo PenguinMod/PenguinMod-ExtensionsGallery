@@ -106,7 +106,6 @@
         id: 'skyhigh173object',
         name: 'Object',
         color1: '#9999FF',
-        exemptFromNormalization: true,
         blocks: [
           {
             opcode: 'newObject',
@@ -121,6 +120,7 @@
             arguments: {
               obj: {
                 type: Scratch.ArgumentType.STRING,
+                exemptFromNormalization: true,
                 defaultValue: exampleJSON.keyValue
               }
             }
@@ -132,6 +132,7 @@
             arguments: {
               obj: {
                 type: Scratch.ArgumentType.STRING,
+                exemptFromNormalization: true,
                 defaultValue: exampleJSON.keyValue
               }
             }
@@ -159,6 +160,7 @@
             arguments: {
               obj: {
                 type: Scratch.ArgumentType.STRING,
+                exemptFromNormalization: true,
                 defaultValue: exampleJSON.empty
               },
               key: {
@@ -178,6 +180,7 @@
             arguments: {
               obj: {
                 type: Scratch.ArgumentType.STRING,
+                exemptFromNormalization: true,
                 defaultValue: exampleJSON.keyValue
               },
               key: {
@@ -193,6 +196,7 @@
             arguments: {
               obj: {
                 type: Scratch.ArgumentType.STRING,
+                exemptFromNormalization: true,
                 defaultValue: exampleJSON.keyValue
               },
               key: {
@@ -223,6 +227,7 @@
             arguments: {
               obj: {
                 type: Scratch.ArgumentType.STRING,
+                exemptFromNormalization: true,
                 defaultValue: exampleJSON.empty
               }
             }
@@ -235,10 +240,12 @@
             arguments: {
               obj1: {
                 type: Scratch.ArgumentType.STRING,
+                exemptFromNormalization: true,
                 defaultValue: exampleJSON.keyValue
               },
               obj2: {
                 type: Scratch.ArgumentType.STRING,
+                exemptFromNormalization: true,
                 defaultValue: exampleJSON.keyValue2
               }
             }
@@ -255,6 +262,7 @@
               },
               obj: {
                 type: Scratch.ArgumentType.STRING,
+                exemptFromNormalization: true,
                 defaultValue: exampleJSON.double
               }
             }
@@ -270,6 +278,7 @@
               },
               obj: {
                 type: Scratch.ArgumentType.STRING,
+                exemptFromNormalization: true,
                 defaultValue: exampleJSON.double
               }
             }
@@ -282,6 +291,7 @@
             arguments: {
               obj: {
                 type: Scratch.ArgumentType.STRING,
+                exemptFromNormalization: true,
                 defaultValue: exampleJSON.keyValue
               }
             }
@@ -293,6 +303,7 @@
             arguments: {
               obj: {
                 type: Scratch.ArgumentType.STRING,
+                exemptFromNormalization: true,
                 defaultValue: exampleJSON.keyValue
               }
             }
@@ -304,6 +315,7 @@
             arguments: {
               obj: {
                 type: Scratch.ArgumentType.STRING,
+                exemptFromNormalization: true,
                 defaultValue: exampleJSON.keyValue
               }
             }
@@ -316,6 +328,7 @@
             arguments: {
               obj: {
                 type: Scratch.ArgumentType.STRING,
+                exemptFromNormalization: true,
                 defaultValue: ' '
               }
             }
@@ -328,6 +341,7 @@
             arguments: {
               obj: {
                 type: Scratch.ArgumentType.STRING,
+                exemptFromNormalization: true,
                 defaultValue: exampleJSON.keyValue
               }
             }
@@ -339,6 +353,7 @@
             arguments: {
               obj: {
                 type: Scratch.ArgumentType.STRING,
+                exemptFromNormalization: true,
                 defaultValue: exampleJSON.array
               }
             }
@@ -355,6 +370,7 @@
               },
               obj: {
                 type: Scratch.ArgumentType.STRING,
+                exemptFromNormalization: true,
                 defaultValue: exampleJSON.array
               }
             }
@@ -370,6 +386,7 @@
               },
               obj: {
                 type: Scratch.ArgumentType.STRING,
+                exemptFromNormalization: true,
                 defaultValue: exampleJSON.array
               }
             }
@@ -390,6 +407,7 @@
               },
               obj: {
                 type: Scratch.ArgumentType.STRING,
+                exemptFromNormalization: true,
                 defaultValue: exampleJSON.array
               }
             }
@@ -405,6 +423,7 @@
               },
               obj: {
                 type: Scratch.ArgumentType.STRING,
+                exemptFromNormalization: true,
                 defaultValue: exampleJSON.array
               }
             }
@@ -424,6 +443,7 @@
               },
               obj: {
                 type: Scratch.ArgumentType.STRING,
+                exemptFromNormalization: true,
                 defaultValue: exampleJSON.array
               }
             }
@@ -447,6 +467,7 @@
               },
               obj: {
                 type: Scratch.ArgumentType.STRING,
+                exemptFromNormalization: true,
                 defaultValue: exampleJSON.array
               }
             }
@@ -474,6 +495,7 @@
               },
               obj: {
                 type: Scratch.ArgumentType.STRING,
+                exemptFromNormalization: true,
                 defaultValue: exampleJSON.array
               }
             }

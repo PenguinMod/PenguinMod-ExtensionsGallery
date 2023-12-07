@@ -106,6 +106,7 @@
         id: 'skyhigh173object',
         name: 'Object',
         color1: '#9999FF',
+        exemptFromNormalization: true,
         blocks: [
           {
             opcode: 'newObject',

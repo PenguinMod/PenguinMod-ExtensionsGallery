@@ -6,7 +6,7 @@
  * All other code is by 0znzw
  * Inspired by TheShovel and her among us blocks, along with inline blocks.
  * DO NOT REMOVE THIS COMMENT
- * LICENSED UNDER MIT LICENSE | v1.0 en-us | 2023
+ * LICENSED UNDER MIT LICENSE | v1.2 en-us | 2023
  *
  */
 (function (Scratch) {
@@ -87,7 +87,7 @@
               block.opcode === 'pmBlock0znzw_test'
             )
               g.innerHTML = `<svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="92" height="92" viewBox="0,0,92,92" id="ashime">
-  <image href="https://extensions.penguinmod.com/static/${mehPath}/test.png" height="92" width="92" />
+  <image href="https://extensions.penguinmod.com/${mehPath}/test.png" height="92" width="92" />
   </svg><!--rotationCenter:0:0-->`;
   
             if (
@@ -95,7 +95,7 @@
               block.opcode === 'pmBlock0znzw_jeremy'
             )
               g.innerHTML = `<svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="92" height="92" viewBox="0,0,92,92" id="jeremy">
-  <image href="https://extensions.penguinmod.com/static/${mehPath}/jeremy.png" height="92" width="92" />
+  <image href="https://extensions.penguinmod.com/${mehPath}/jeremy.png" height="92" width="92" />
   </svg><!--rotationCenter:0:0-->`;
   
             if (
@@ -103,7 +103,7 @@
               block.opcode === 'pmBlock0znzw_moneutils'
             )
               g.innerHTML = `<svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="92" height="92" viewBox="0,0,92,92" id="moneutils">
-  <image href="https://extensions.penguinmod.com/static/${mehPath}/sharkpool.png" height="92" width="92" />
+  <image href="https://extensions.penguinmod.com/${mehPath}/sharkpool.png" height="92" width="92" />
   </svg><!--rotationCenter:0:0-->`;
   
             if (
@@ -123,17 +123,17 @@
               block.opcode === 'pmBlock0znzw_funneline'
             )
               g.innerHTML = `<svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="1" height="500" viewBox="0,0,92,92" id="funneline">
-  <image href="https://extensions.penguinmod.com/static/${mehPath}/line.png" height="1" width="500" />
+  <image href="https://extensions.penguinmod.com/${mehPath}/line.png" height="1" width="500" />
   </svg><!--rotationCenter:0:0-->`;
   
             if (
               !g.querySelector('svg#trol') &&
               block.opcode === 'pmBlock0znzw_trol'
             )
-              g.innerHTML = `<svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="2000" height="2000" viewBox="0,0,2000,2000" id="trol">
-              <foreignObject width="20" height="200">
+              g.innerHTML = `<svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="2000" height="2000" viewBox="0,0,200,200" id="trol">
+              <foreignObject width="200" height="200">
                   <video xmlns="http://www.w3.org/1999/xhtml" width="200" height="200" autoplay="" muted="" loop="">
-                      <source src="https://extensions.penguinmod.com/static/${mehPath}/trol.mp4" type="video/mp4" />
+                      <source src="https://extensions.penguinmod.com/${mehPath}/trol.mp4" type="video/mp4" />
                   </video>
               </foreignObject>
   </svg><!--rotationCenter:0:0-->`;
@@ -150,8 +150,11 @@
           id: 'pmBlock0znzw',
           name: 'Image blocks',
           blocks: [
-            label('Warning!'),
-            label('These blocks only work in the workspace!'),
+            {
+              blockType: Scratch.BlockType.BUTTON,
+              func: 'warning',
+              text: 'READ ME'
+            },
             //we have to use a 0 width character or it will not display correctly
             // i use https://unicode-explorer.com/c/200E
             label('Penguin'),
@@ -208,12 +211,16 @@
             },
             label('???'),
             {
+              disableMonitor: true,
               blockType: 'reporter',
               opcode: 'trol',
               text: '‎',
             },
           ],
         };
+      }
+      warning() {
+          alert(`These blocks will only work when placed in the workspace!!`);
       }
       pb() {
         return 'Penguin Block';
@@ -243,7 +250,7 @@
     function spawnPm() {
       //blockly uses the category name????
       setTimeout(() => {
-        injectPenguin('0znzw | Image blocks');
+        injectPenguin('Image blocks');
       }, 25);
     }
     vm.runtime.on('PROJECT_CHANGED', spawnPm);

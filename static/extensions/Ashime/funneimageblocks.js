@@ -15,6 +15,8 @@
     }
     var runtime = vm.runtime;
     const isPM = Object.hasOwn(runtime, 'ext_pm_liveTests');
+    const mehPath = '0znzwImageBlocks';
+    
     function injectPenguin(cat) {
       document
         .querySelector('g.blocklyWorkspace')
@@ -85,15 +87,7 @@
               block.opcode === 'pmBlock0znzw_test'
             )
               g.innerHTML = `<svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="92" height="92" viewBox="0,0,92,92" id="ashime">
-  <image href="https://corsproxy.io/?https://cdn.discordapp.com/avatars/1124880299302592643/de911c4365c9e90483a94282efd2acf8.webp?size=128" height="92" width="92" />
-  </svg><!--rotationCenter:0:0-->`;
-  
-            if (
-              !g.querySelector('svg#lily') &&
-              block.opcode === 'pmBlock0znzw_lily'
-            )
-              g.innerHTML = `<svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="92" height="92" viewBox="0,0,92,92" id="lily">
-  <image href="https://corsproxy.io/?https://cdn.discordapp.com/avatars/568867130418921532/4699dba98491a698e5879ba125f24ac9.webp?size=128" height="92" width="92" />
+  <image href="https://extensions.penguinmod.com/static/${mehPath}/test.png" height="92" width="92" />
   </svg><!--rotationCenter:0:0-->`;
   
             if (
@@ -101,7 +95,7 @@
               block.opcode === 'pmBlock0znzw_jeremy'
             )
               g.innerHTML = `<svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="92" height="92" viewBox="0,0,92,92" id="jeremy">
-  <image href="https://corsproxy.io/?https://cdn.discordapp.com/avatars/462098932571308033/c73514e047487ce73f945717977c7afd.webp?size=128" height="92" width="92" />
+  <image href="https://extensions.penguinmod.com/static/${mehPath}/jeremy.png" height="92" width="92" />
   </svg><!--rotationCenter:0:0-->`;
   
             if (
@@ -109,7 +103,7 @@
               block.opcode === 'pmBlock0znzw_moneutils'
             )
               g.innerHTML = `<svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="92" height="92" viewBox="0,0,92,92" id="moneutils">
-  <image href="https://corsproxy.io/?https://cdn.discordapp.com/avatars/977995410234826814/7e794676cb8a82aabb0a40d01f33ce7a.webp?size=128" height="92" width="92" />
+  <image href="https://extensions.penguinmod.com/static/${mehPath}/sharkpool.png" height="92" width="92" />
   </svg><!--rotationCenter:0:0-->`;
   
             if (
@@ -118,18 +112,10 @@
             )
               g.innerHTML = `<svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="300" height="200" viewBox="0,0,300,200" id="mrbeast">
               <foreignObject width="500" height="400">
-                  <video xmlns="http://www.w3.org/1999/xhtml" width="300" height="200" autoplay="">
+                  <video xmlns="http://www.w3.org/1999/xhtml" width="300" height="200" autoplay="" muted="" loop="">
                       <source src="https://penguinmod.com/mrbeast.mp4" type="video/mp4" />
                   </video>
               </foreignObject>
-  </svg><!--rotationCenter:0:0-->`;
-  
-            if (
-              !g.querySelector('svg#garbo') &&
-              block.opcode === 'pmBlock0znzw_garbomuffin'
-            )
-              g.innerHTML = `<svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="92" height="92" viewBox="0,0,92,92" id="garbo">
-  <image href="https://corsproxy.io/?https://uploads.scratch.mit.edu/get_image/user/17340565_92x92.png" height="92" width="92" />
   </svg><!--rotationCenter:0:0-->`;
   
             if (
@@ -137,7 +123,7 @@
               block.opcode === 'pmBlock0znzw_funneline'
             )
               g.innerHTML = `<svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="1" height="500" viewBox="0,0,92,92" id="funneline">
-  <image href="https://corsproxy.io/?https://i.ibb.co/RvrX4MK/lmao.png" height="1" width="500" />
+  <image href="https://extensions.penguinmod.com/static/${mehPath}/line.png" height="1" width="500" />
   </svg><!--rotationCenter:0:0-->`;
   
             if (
@@ -145,9 +131,9 @@
               block.opcode === 'pmBlock0znzw_trol'
             )
               g.innerHTML = `<svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="2000" height="2000" viewBox="0,0,2000,2000" id="trol">
-              <foreignObject width="2100" height="2100">
-                  <video xmlns="http://www.w3.org/1999/xhtml" width="2000" height="2000" autoplay="" muted="" loop="">
-                      <source src="https://images-ext-2.discordapp.net/external/glXwDOcOgz85FoIO8UVuramrWktClzZkPFA1glSnNzQ/https/media.tenor.com/dgOeYF87AdoAAAPo/troll-troll-face.mp4" type="video/mp4" />
+              <foreignObject width="20" height="200">
+                  <video xmlns="http://www.w3.org/1999/xhtml" width="200" height="200" autoplay="" muted="" loop="">
+                      <source src="https://extensions.penguinmod.com/static/${mehPath}/trol.mp4" type="video/mp4" />
                   </video>
               </foreignObject>
   </svg><!--rotationCenter:0:0-->`;
@@ -162,49 +148,43 @@
       getInfo() {
         return {
           id: 'pmBlock0znzw',
-          name: '0znzw | Image blocks',
+          name: 'Image blocks',
           blocks: [
+            label('Warning!'),
+            label('These blocks only work in the workspace!'),
             //we have to use a 0 width character or it will not display correctly
             // i use https://unicode-explorer.com/c/200E
             label('Penguin'),
             {
-              disableReporter: true,
+              disableMonitor: true,
               blockType: 'reporter',
               opcode: 'pb',
               text: '‎',
             },
             label('Dango'),
             {
-              disableReporter: true,
+              disableMonitor: true,
               blockType: 'reporter',
               opcode: 'db',
               text: '‎',
             },
             label('Test'),
             {
-              disableReporter: true,
+              disableMonitor: true,
               blockType: 'reporter',
               opcode: 'test',
               text: '‎',
             },
-            label('Lily', isPM),
-            {
-              disableReporter: true,
-              //pm devs dont like lily :((( so i hide block
-              hideFromPalette: isPM,
-              blockType: 'reporter',
-              opcode: 'lily',
-              text: '‎',
-            },
             label('Jeremy'),
             {
+              disableMonitor: true,
               blockType: 'reporter',
               opcode: 'jeremy',
               text: '‎',
             },
             label('SharkPool', !isPM),
             {
-              disableReporter: true,
+              disableMonitor: true,
               //heheheheheh
               hideFromPalette: !isPM,
               blockType: 'reporter',
@@ -213,23 +193,15 @@
             },
             label('MrBeast', !isPM),
             {
-              disableReporter: true,
+              disableMonitor: true,
               hideFromPalette: !isPM,
               blockType: 'reporter',
               opcode: 'mrbeast',
               text: '‎',
             },
-            // i hid garbo cause his pfp is just bland :sob:
-            label('GarboMuffin', true),
-            {
-              disableReporter: true,
-              hideFromPalette: true,
-              blockType: 'reporter',
-              opcode: 'garbomuffin',
-              text: '‎',
-            },
             label('Funne line'),
             {
+              disableMonitor: true,
               blockType: 'reporter',
               opcode: 'funneline',
               text: '‎',
@@ -252,9 +224,6 @@
       test() {
         return 'Test Block';
       }
-      lily() {
-        return 'lily makes blocks';
-      }
       jeremy() {
         return '';
       }
@@ -263,9 +232,6 @@
       }
       mrbeast() {
         return 'why do ppl like this lmao';
-      }
-      garbomuffin() {
-        return 'no funny on the gallery';
       }
       funneline() {
         return '';
@@ -328,16 +294,7 @@
               if (reportBox && block) {
                 switch (block.opcode) {
                   case 'pmBlock0znzw_trol':
-                    div.style.transform = 'translate(700px, 1285px)';
-                    if (!Object.hasOwn(window, 'rr_')) {
-                      var rr = new Audio();
-                      rr.loop = true;
-                      //rr.onload = ()=>{rr.play()};
-                      rr.src = 'https://ia802505.us.archive.org/24/items/nvrgnnagvuup/rickroll.mp3';
-                      window.rr_ = 'funne';
-                    }
-                    rr.pause(); rr.time = 0;
-                    rr.play();
+                    div.style.transform = 'translate(105px, 105px)';
                     break;
                   case 'pmBlock0znzw_pb':
                     div.style.transform = 'translate(0px, 50px)';

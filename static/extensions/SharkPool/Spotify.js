@@ -22,6 +22,12 @@
 
   class SPspotify {
     constructor() {
+      // jg: update to use AudioContext so it can be used in the volume slider & recording addon
+      this.audioContext = new AudioContext();
+      this.gainNode = this.audioContext.createGain();
+      this.gainNode.gain.value = 1;
+      this.gainNode.connect(this.audioContext.destination);
+      Scratch.vm.runtime.registerExtensionAudioContext("SPspotify", this.audioContext, this.gainNode);
       Scratch.vm.runtime.on("PROJECT_STOP_ALL", () => {
         this.stopAll();
       });
@@ -295,19 +301,50 @@
       return "";
     }
 
-    async playSongURL(args) {
-      /* eslint-disable */
-      const audio = new Audio();
-      audio.src = await this.getSongURL(args);
-      /* eslint-enable */
-      audio.play();
-      audioInstances.push(audio);
+    // jg: update to use AudioContext so it can be used in the volume slider & recording addon
+    getUrlAudioBuffer(url) {
+      return new Promise((resolve, reject) => {
+        fetch(url)
+          .then(response => {
+            response.arrayBuffer()
+              .then(arrayBuffer => {
+                this.audioContext.decodeAudioData(arrayBuffer, (audioBuffer) => {
+                  resolve(audioBuffer);
+                }, reject).catch(reject);
+              })
+              .catch(reject);
+          })
+          .catch(reject);
+      });
     }
 
+    // jg: update to use AudioContext so it can be used in the volume slider & recording addon
+    async playSongURL(args) {
+      const url = await this.getSongURL(args);
+      if (!(await Scratch.canFetch(url))) return; // we cant do that
+      let buffer = null;
+      try {
+        buffer = await this.getUrlAudioBuffer(url);
+      } catch (err) {
+        return console.warn('Couldn\'t decode AudioBuffer', err);
+      }
+      /* eslint-disable */
+      const node = this.audioContext.createBufferSource();
+      node.buffer = buffer;
+      node.connect(this.gainNode);
+      node.start(0);
+      /* eslint-enable */
+      audioInstances.push(node);
+    }
+
+    // jg: update to use AudioContext so it can be used in the volume slider & recording addon
     stopAll() {
-      audioInstances.forEach(audio => {
-        audio.pause();
-        audio.currentTime = 0;
+      audioInstances.forEach(node => {
+        try {
+          node.stop();
+        } catch {
+          // jg: we dont really care if this errors
+        }
       });
       audioInstances = [];
     }

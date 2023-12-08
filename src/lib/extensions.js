@@ -53,6 +53,14 @@ export default [
         isGitHub: true,
     },
     {
+        name: "Spotify API",
+        description: "Fetch Statistics and Information and Play Songs from Spotify.",
+        code: "SharkPool/Spotify.js",
+        banner: "SharkPool/Spotify.svg",
+        creator: "SharkPool-SP",
+        isGitHub: true,
+    },
+    {
         name: "Random Utilities",
         description: "Many blocks related to randomness.\nSome new features are seed-based number generation, true number generation, UUID's, random strings, etc.",
         code: "Gen1x/random_utils.js",

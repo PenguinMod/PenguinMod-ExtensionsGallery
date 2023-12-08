@@ -13,7 +13,7 @@
 
 
 ---
---
+
 ## Server verification block (Блок проверка сервера):
 
 ```scratch

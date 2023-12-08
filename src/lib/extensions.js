@@ -28,6 +28,14 @@ export default [
         creator: "pinksheep2917",
     },
     {
+        name: "Variables Expanded",
+        description: "New Variable blocks and New Display Monitor types.\n(some contributions by DogeIsCut)",
+        code: "SharkPool/Variables-Expanded.js",
+        banner: "SharkPool/Variables-Expanded.svg",
+        creator: "SharkPool-SP",
+        isGitHub: true,
+    },
+    {
         name: "Better Input",
         description: "Expansion to the Ask and Wait blocks.",
         code: "SharkPool/BetterInput.js",
@@ -101,7 +109,7 @@ export default [
     },
     {
         name: "Free Servers",
-        description: "\nHere you can find a free server for your projects. And also check whether it is working now or not. \nЗдесь вы можете найти бесплатный сервер для своих проектов. А также проверить, работает он сейчас или нет.",
+        description: "Here you can find a free server for your projects. And also check whether it is working now or not.\n\nЗдесь вы можете найти бесплатный сервер для своих проектов. А также проверить, работает он сейчас или нет.",
         code: "WAYLIVES/FreeServers.js",
         banner: "WAYLIVES/FreeServersIMG.svg",
         documentation: "FreeServers",
@@ -117,7 +125,7 @@ export default [
     },
     {
         name: "Mouth Washer",
-        description: "Includes many utilities related to cleaning bad words, swearing and profanity.\nThought as an extra layer of security for chat projects.\n\n(ft. violet and jwklong)",
+        description: "Includes many utilities related to cleaning bad words, swearing and profanity.\nThought as an extra layer of security for filtering messages.\n\n(ft. violet and jwklong)",
         code: "Gen1x/mouth_washer.js",
         banner: "Gen1x/mw-placeholder.png",
         creator: "G1nX",

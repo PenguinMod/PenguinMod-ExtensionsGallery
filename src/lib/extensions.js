@@ -28,6 +28,14 @@ export default [
         creator: "pinksheep2917",
     },
     {
+        name: "Sprite Effects",
+        description: "Apply New Non-Vanilla Effects to Sprites and the Canvas!",
+        code: "SharkPool/Sprite-Effects.js",
+        banner: "SharkPool/Sprite-Effects.svg",
+        creator: "SharkPool-SP",
+        isGitHub: true,
+    },
+    {
         name: "Variables Expanded",
         description: "New Variable blocks and New Display Monitor types.\n(some contributions by DogeIsCut)",
         code: "SharkPool/Variables-Expanded.js",

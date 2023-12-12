@@ -6,6 +6,14 @@
 */
 export default [
     {
+        name: "Object",
+        description: "Handle large JSON files at an extreme speed.",
+        code: "skyhigh173/object.js",
+        banner: "skyhigh173/object.svg",
+        creator: "skyhigh173",
+        isGitHub: true,
+    },
+    {
         name: "Pen+",
         description: "Extended pen section!",
         code: "ObviousAlexC/PenPlus.js",
@@ -20,14 +28,6 @@ export default [
         creator: "pinksheep2917",
     },
     {
-        name: "Variables Expanded",
-        description: "New Variable blocks and New Display Monitor types.\n(some contributions by DogeIsCut)",
-        code: "SharkPool/Variables-Expanded.js",
-        banner: "SharkPool/Variables-Expanded.svg",
-        creator: "SharkPool-SP",
-        isGitHub: true,
-    },
-    {
         name: "Sprite Effects",
         description: "Apply New Non-Vanilla Effects to Sprites and the Canvas!",
         code: "SharkPool/Sprite-Effects.js",
@@ -36,10 +36,10 @@ export default [
         isGitHub: true,
     },
     {
-        name: "Sprite Parenting",
-        description: "Link sprites together and make them follow the parent.",
-        code: "SharkPool/Sprite-Linking.js",
-        banner: "SharkPool/Sprite-Linking.svg",
+        name: "Variables Expanded",
+        description: "New Variable blocks and New Display Monitor types.\n(some contributions by DogeIsCut)",
+        code: "SharkPool/Variables-Expanded.js",
+        banner: "SharkPool/Variables-Expanded.svg",
         creator: "SharkPool-SP",
         isGitHub: true,
     },
@@ -52,11 +52,27 @@ export default [
         isGitHub: true,
     },
     {
+        name: "Sprite Parenting",
+        description: "Link sprites together and make them follow the parent.",
+        code: "SharkPool/Sprite-Linking.js",
+        banner: "SharkPool/Sprite-Linking.svg",
+        creator: "SharkPool-SP",
+        isGitHub: true,
+    },
+    {
         name: "Particle Tools",
         description: "Tools for making particle engines easier.",
         documentation: "particle-tools",
         code: "SharkPool/Particle-Tools.js",
         banner: "SharkPool/Particle-Tools.svg",
+        creator: "SharkPool-SP",
+        isGitHub: true,
+    },
+    {
+        name: "Spotify API",
+        description: "Fetch Statistics and Information and Play Songs from Spotify.",
+        code: "SharkPool/Spotify.js",
+        banner: "SharkPool/Spotify.svg",
         creator: "SharkPool-SP",
         isGitHub: true,
     },
@@ -101,7 +117,7 @@ export default [
     },
     {
         name: "Free Servers",
-        description: "\nHere you can find a free server for your projects. And also check whether it is working now or not. \nЗдесь вы можете найти бесплатный сервер для своих проектов. А также проверить, работает он сейчас или нет.",
+        description: "Here you can find a free server for your projects. And also check whether it is working now or not.\n\nЗдесь вы можете найти бесплатный сервер для своих проектов. А также проверить, работает он сейчас или нет.",
         code: "WAYLIVES/FreeServers.js",
         banner: "WAYLIVES/FreeServersIMG.svg",
         documentation: "FreeServers",
@@ -117,7 +133,7 @@ export default [
     },
     {
         name: "Mouth Washer",
-        description: "Includes many utilities related to cleaning bad words, swearing and profanity.\nThought as an extra layer of security for chat projects.\n\n(ft. violet and jwklong)",
+        description: "Includes many utilities related to cleaning bad words, swearing and profanity.\nThought as an extra layer of security for filtering messages.\n\n(ft. violet and jwklong)",
         code: "Gen1x/mouth_washer.js",
         banner: "Gen1x/mw-placeholder.png",
         creator: "G1nX",

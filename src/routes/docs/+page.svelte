@@ -17,7 +17,9 @@
 </p>
 
 {#each pages as page}
-    <a href={`/docs/${page}`}>{page}</a>
+    <p>
+        <a href={`/docs/${page}`}>{page}</a>
+    </p>
 {/each}
 
 <div style="height: 32px;" />

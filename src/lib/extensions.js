@@ -44,6 +44,14 @@ export default [
         isGitHub: true,
     },
     {
+        name: "Display Text",
+        description: "Display Advanced Text in Your Projects!",
+        code: "SharkPool/Display-Text.js",
+        banner: "SharkPool/Display-Text.svg",
+        creator: "SharkPool-SP",
+        isGitHub: true,
+    },
+    {
         name: "Better Input",
         description: "Expansion to the Ask and Wait blocks.",
         code: "SharkPool/BetterInput.js",

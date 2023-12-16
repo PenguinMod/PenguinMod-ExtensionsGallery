@@ -235,8 +235,8 @@ export default [
     {
         name: "Grayscale",
         description: "Toggle a dramatic grayscale effect on your project.",
-        code: "Mr_rudy/greyscale.js",
-        banner: "MrRedstonia/counterplusplus.png",
+        code: "Mr_rudy/grayscale.js",
+        banner: "Mr_rudy/grayscale.svg",
         creator: "Mr_rudy",
         isGitHub: false,
     },

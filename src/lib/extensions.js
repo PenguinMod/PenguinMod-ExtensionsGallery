@@ -232,4 +232,12 @@ export default [
         creator: "MrRedstonia",
         isGitHub: true,
     },
+    {
+        name: "Grayscale",
+        description: "Toggle a dramatic grayscale effect on your project.",
+        code: "Mr_rudy/greyscale.js",
+        banner: "MrRedstonia/counterplusplus.png",
+        creator: "Mr_rudy",
+        isGitHub: false,
+    },
 ];

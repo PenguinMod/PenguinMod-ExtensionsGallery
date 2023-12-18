@@ -44,6 +44,14 @@ export default [
         isGitHub: true,
     },
     {
+        name: "Sty-Lists",
+        description: "Customize and Organize Lists Monitors.",
+        code: "SharkPool/Sty-Lists.js",
+        banner: "SharkPool/Sty-Lists.svg",
+        creator: "SharkPool-SP",
+        isGitHub: true,
+    },
+    {
         name: "Display Text",
         description: "Display Advanced Text in Your Projects!",
         code: "SharkPool/Display-Text.js",

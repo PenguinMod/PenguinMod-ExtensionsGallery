@@ -3,7 +3,7 @@
 // Description: Display Text in Your Projects!
 // By: SharkPool
 
-// Version V.1.0.1
+// Version V.1.1.0
 
 (function (Scratch) {
   "use strict";
@@ -22,6 +22,19 @@
     "Serif", "Handwriting",
     "Marker", "Curly", "Pixel"
   ];
+
+  const xmlEscape = function (unsafe) {
+    unsafe = String(unsafe);
+    return unsafe.replace(/[<>&'"]/g, c => {
+      switch (c) {
+        case "<": return "&lt;";
+        case ">": return "&gt;";
+        case "&": return "&amp;";
+        case "'": return "&apos;";
+        case "\"": return "&quot;";
+      }
+    });
+  };
 
   class SPdisText {
     getInfo() {
@@ -158,6 +171,14 @@
             arguments: {
               ID: { type: Scratch.ArgumentType.STRING, defaultValue: "my-text" },
               ATT: { type: Scratch.ArgumentType.STRING, menu: "FORMATS" }
+            },
+          },
+          {
+            opcode: "lineCnt",
+            blockType: Scratch.BlockType.REPORTER,
+            text: "# of lines in text ID [ID]",
+            arguments: {
+              ID: { type: Scratch.ArgumentType.STRING, defaultValue: "my-text" }
             },
           },
           { blockType: Scratch.BlockType.LABEL, text: "Text Visuals" },
@@ -317,7 +338,7 @@
               { text: "margin width", value: "width" },
               { text: "margin height", value: "height" },
               { text: "letter spacing", value: "letterSpacing" },
-              { text: "text spacing", value: "lineHeight" },
+              { text: "line spacing", value: "lineHeight" },
               { text: "overflow type", value: "overflow" }
             ]
           },
@@ -349,8 +370,9 @@
     }
 
     printTxt(args) {
+      args.ID = args.ID.replaceAll(" ", "_");
       const newTextElement = document.createElement("div");
-      newTextElement.textContent = args.TXT;
+      newTextElement.innerHTML = xmlEscape(args.TXT).replace(/\n/g, "<br>");
       newTextElement.id = `SP_Text-Ext-${args.ID}`;
       newTextElement.classList.add(args.ID);
       render.addOverlay(newTextElement, "scale-centered");
@@ -375,7 +397,7 @@
     replaceTxt(args) {
       const elements = document.querySelectorAll(`#SP_Text-Ext-${args.ID}`);
       if (elements.length > 0) {
-        elements.forEach((element) => { element.textContent = args.TXT });
+        elements.forEach((element) => { element.innerHTML = xmlEscape(args.TXT).replace(/\n/g, "<br>") });
       } else {
         this.printTxt(args);
       }
@@ -439,7 +461,7 @@
     setTextDropShadow(args) {
       const elements = document.querySelectorAll(`#SP_Text-Ext-${args.ID}`);
       elements.forEach((element) => {
-        element.style.textShadow = `${args.x}px ${args.y * -1}px ${args.z}px ${args.COLOR}`;
+        element.style.textShadow = args.z === 0 ? "none" : `${args.x}px ${args.y * -1}px ${args.z}px ${args.COLOR}`;
       });
       lastRecdVals["textSHA"] = {inputs: args};
     }
@@ -543,6 +565,16 @@
       elements.forEach((element) => { value = element.style[args.ATT] });
       value = args.ATT === "fontFamily" || args.ATT === "textAlign" || args.ATT === "overflow" ? value : parseFloat(value);
       return value || "";
+    }
+  
+    lineCnt(args) {
+      const elements = document.querySelectorAll(`#SP_Text-Ext-${args.ID}`);
+      let value = [];
+      elements.forEach((element) => {
+        value.push(element.querySelectorAll("br").length + 1 || 1); 
+      });
+      value = value.length > 1 ? JSON.stringify(value) : (value[0] || 0);
+      return value;
     }
 
     setTextZIndex(args) {

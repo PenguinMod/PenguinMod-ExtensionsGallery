@@ -74,7 +74,7 @@
   const version = {
     editorType: "PenguinMod",
     versionNumber: 2,
-    versionString: "0.1.2",
+    versionString: "0.1.3PM",
   };
 
   // Store extension state
@@ -2037,6 +2037,7 @@
       console.log("[CloudLink] Disconnecting...");
       clVars.linkState.isAttemptingGracefulDisconnect = true;
       clVars.socket.close(1000, "Client going away");
+      clVars.ulist = [];
     }
 
     // Command - Sets the username of the client on the server.

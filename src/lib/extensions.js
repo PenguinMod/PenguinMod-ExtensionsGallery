@@ -93,6 +93,14 @@ export default [
         isGitHub: true,
     },
     {
+        name: "Speech Bubbles",
+        description: "Customizable Speech Bubbles",
+        code: "SharkPool/Speech-Bubbles.js",
+        banner: "SharkPool/Speech-Bubbles.svg",
+        creator: "SharkPool-SP",
+        isGitHub: true,
+    },
+    {
         name: "Random Utilities",
         description: "Many blocks related to randomness.\nSome new features are seed-based number generation, true number generation, UUID's, random strings, etc.",
         code: "Gen1x/random_utils.js",

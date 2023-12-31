@@ -240,4 +240,12 @@ export default [
         creator: "MrRedstonia",
         isGitHub: true,
     },
+    {
+        name: "Images",
+        description: "Manipulate images on the spot!",
+        code: "AlphaTechNinja/images.js",
+        banner: "AlphaTechNinja/images.svg",
+        creator: "AlphaTechNinja",
+        isGitHub: true,
+    },
 ];

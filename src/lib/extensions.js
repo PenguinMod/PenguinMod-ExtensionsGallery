@@ -163,6 +163,14 @@ export default [
         isGitHub: false,
     },
     {
+        name: "Font Manager",
+        description: "Manage, Create, and Delete Fonts.\n(Some Contributions by Ashimee)",
+        code: "SharkPool/Font-Manager.js",
+        banner: "SharkPool/Font-Manager.svg",
+        creator: "SharkPool-SP",
+        isGitHub: true,
+    },
+    {
         name: "Sound Waves",
         description: "Make sounds with oscillators!",
         code: "SharkPool/Sound-Waves.js",

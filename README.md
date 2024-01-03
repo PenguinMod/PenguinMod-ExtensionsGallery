@@ -1,6 +1,12 @@
 # Extension Gallery
 
 ## Submitting an extension
+
+### NOTE!
+Once submitted, your extension CANNOT be removed from the files. Your extension may be delisted, but the code must NEVER be removed.
+
+This is to prevent projects being broken. If we remove your code, anyone who used your extension will have to remake their ENTIRE project without editing their file manually.
+
 ### Step 1.
 Create your extension. You can find a lot of details [here](https://docs.turbowarp.org/development/extensions/introduction).
 

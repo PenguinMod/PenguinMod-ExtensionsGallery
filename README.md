@@ -4,13 +4,15 @@
 ### Step 1.
 Create your extension. You can find a lot of details [here](https://docs.turbowarp.org/development/extensions/introduction).
 
-#### Important notes:
+#### Important Guidelines:
 - Your extension should not already exist on the gallery. Please check the
 [Pull Requests](https://github.com/PenguinMod/PenguinMod-ExtensionsGallery/pulls)
 and [Gallery page](https://extensions.penguinmod.com/) to confirm.
 - Your extension should be created for a specific purpose. An extension with random blocks someone might need will likely not get accepted if the blocks are not in a certain theme, like math or rendering.
 - Your extension should be easily explainable in 1-2 sentences or a single picture. This is what will determine whether you can be on the gallery or not.
 - Your extension should be MIT licensed (not compatible with the MIT license, should be the actual MIT license. This may change in the future.)
+- Your extension **CANNOT** reference or use any content from a website not suitable for ages 13+
+- Your extension **CANNOT** contain content not suitable for ages 10+ (including extension icon and extension code)
 
 ### Step 2.
 Create info for your extension, like a description and a banner / thumbnail.

@@ -13,6 +13,7 @@ and [Gallery page](https://extensions.penguinmod.com/) to confirm.
 - Your extension should be MIT licensed (not compatible with the MIT license, should be the actual MIT license. This may change in the future.)
 - Your extension **CANNOT** reference or use any content from a website not suitable for ages 13+
 - Your extension **CANNOT** contain content not suitable for ages 10+ (including extension icon and extension code)
+- Your extension **CANNOT** contain discriminatory content or content that is against a certain group or minority
 
 ### Step 2.
 Create info for your extension, like a description and a banner / thumbnail.

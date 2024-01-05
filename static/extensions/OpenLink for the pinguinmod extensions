@@ -1,0 +1,45 @@
+class OpenLinkExtension {
+    getInfo() {
+        return {
+            id: 'openLinks',
+            name: 'Open Link',
+            color1: '#A0A0A0', // GREY
+            blocks: [
+                {
+                    opcode: 'openLinkccc',
+                    blockType: Scratch.BlockType.COMMAND,
+                    text: 'open Link new window [URL]',
+                    arguments: {
+                        URL: {
+                            type: Scratch.ArgumentType.STRING,
+                            defaultValue: 'https://turbowarp.org/editor'
+                        }
+                    }
+                },
+                {
+                    opcode: 'openLink',
+                    blockType: Scratch.BlockType.COMMAND,
+                    text: 'Open link [URL]',
+                    arguments: {
+                        URL: {
+                            type: Scratch.ArgumentType.STRING,
+                            defaultValue: 'https://turbowarp.org/editor'
+                        }
+                    }
+                }
+            ]
+        };
+    }
+
+    openLinkccc(args) {
+        const url = args.URL;
+        window.open(url, '_blank','width=400,height=500');
+    }
+
+    openLink(args) {
+        const url = args.URL;
+        window.open(url, '_blank');
+    }
+}
+
+Scratch.extensions.register(new OpenLinkExtension());

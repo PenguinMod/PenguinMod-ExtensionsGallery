@@ -256,4 +256,11 @@ export default [
         creator: "MrRedstonia",
         isGitHub: true,
     },
+    {
+        name: "String Mutilation",
+        description: "Blocks that allows for text modification.",
+        code: "ddededodediamante/stringmutilation.js",
+        creator: "ddededodediamante",
+        isGitHub: true,
+    },
 ];

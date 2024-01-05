@@ -6,6 +6,14 @@
 */
 export default [
     {
+        name: "Gtoolbox",
+        description: "a utilities extension made with turbobuilder.",
+        code: "meysam/gtoolbox.js",
+        banner: "meysam/Gtoolbox-menu-icon",
+        creator: "meysam",
+        isGitHub: true,
+    },
+    {
         name: "Object",
         description: "Handle large JSON files at an extreme speed.",
         code: "skyhigh173/object.js",

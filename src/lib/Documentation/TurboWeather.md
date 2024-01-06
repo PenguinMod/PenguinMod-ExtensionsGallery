@@ -45,7 +45,7 @@ get location from coordinates:: #e0bb4a
 
 (get the fetched location JSON:: #e0bb4a)
 
-(get day and time for timezone [America/New_York]):: #e0bb4a)
+(get day and time for timezone [America/New_York]:: #e0bb4a)
 ```
 All of these may seem too advanced, but don't worry. Getting used to these is really easy and fast. Just keep reading!
 

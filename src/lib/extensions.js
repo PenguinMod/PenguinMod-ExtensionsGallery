@@ -11,7 +11,7 @@ export default [
         code: "RubyDevs/turboweather.js",
         banner: "RubyDevs/turboweather.webp",
         documentation: "TurboWeather",
-        creator: "Ruby Devs",
+        creator: "RubyDevs",
     },
     {
         name: "Object",

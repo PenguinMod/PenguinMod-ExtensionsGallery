@@ -136,8 +136,8 @@ class TurboWeather {
           blockType: Scratch.BlockType.COMMAND,
         },
         {
-          opcode: 'measuringsystemget',
-          text: 'get selected measuring system',
+          opcode: 'measurementsystemget',
+          text: 'get selected measurement system',
           blockType: Scratch.BlockType.REPORTER,
         },
         {
@@ -161,13 +161,13 @@ class TurboWeather {
           blockType: Scratch.BlockType.BOOLEAN,
         },
         {
-          opcode: 'measuringsystemset',
-          text: 'set measuring system to [SYSTEM]',
+          opcode: 'measurementsystemset',
+          text: 'set measurement system to [SYSTEM]',
           blockType: Scratch.BlockType.COMMAND,
           arguments: {
             SYSTEM: {
               type: Scratch.ArgumentType.STRING,
-              menu: 'MEASURINGSYSTEM',
+              menu: 'MEASUREMENTSYSTEM',
             }
           }
         },
@@ -263,7 +263,7 @@ class TurboWeather {
         },
       ],
       menus: {
-        MEASURINGSYSTEM: {
+        MEASUREMENTSYSTEM: {
           acceptReporters: false,
           items: ['metric', 'imperial']
         },
@@ -300,7 +300,7 @@ class TurboWeather {
     return userLocated
   }
 
-  measuringsystemget() {
+  measurementsystemget() {
     if (metric) {
       return "metric"
     } else {
@@ -308,7 +308,7 @@ class TurboWeather {
     }
   }
 
-  measuringsystemset(args) {
+  measurementsystemset(args) {
     metric = args.SYSTEM == 'metric'
   }
 
@@ -363,9 +363,14 @@ class TurboWeather {
       } else {
         return "undefined";
       }
+
+      // Check if the current value is a string and not the last key
+      if (typeof value === 'string' && keys.indexOf(key) < keys.length - 1) {
+        return value;
+      }
     }
 
-    return value
+    return JSON.stringify(value);
   }
 
   getarrayitem(args) {

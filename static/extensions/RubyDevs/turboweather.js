@@ -422,20 +422,13 @@ class TurboWeather {
       const response = await fetch(url);
       const data = await response.json();
 
-      if ('lat' in data && 'lon' in data && 'address' in data && 'display_name' in data) {
-        delete data.place_id;
-        delete data.lat;
-        delete data.lon;
-        delete data.address.house_number;
-        delete data.address.city_district;
-        delete data.address.road;
-        delete data.display_name;
-      }
-
-      delete data.boundingbox;
+      let result = {
+        "country": data.address.country || "Unknown",
+        "country_code": data.address.country_code || "Unknown",
+      };
 
       // Store the location in a variable (adjust the variable name as needed)
-      locationdata = data;
+      locationdata = result;
     } catch (error) {
       console.error(error);
       return "Failed to get location from coordinates.";

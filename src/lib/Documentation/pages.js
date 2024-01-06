@@ -21,5 +21,5 @@ export default {
     "FreeServers": PageFreeServers,
 
     //TurboWeather
-    "TurboWeather": TurboWeather,
+    "TurboWeather": PageTurboWeather,
 };

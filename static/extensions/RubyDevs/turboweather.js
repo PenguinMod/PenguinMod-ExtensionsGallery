@@ -276,27 +276,32 @@ class TurboWeather {
   }
 
   async usercoords() {
-    userLocated = false
-    if ('geolocation' in navigator) {
-      if (Scratch.canGeolocate()) {
+      userLocated = false;
+
+      if ('geolocation' in navigator) {
         try {
-          const position = await new Promise((resolve, reject) => {
-            navigator.geolocation.getCurrentPosition(resolve, reject);
-          });
+          const canGeolocate = await Scratch.canGeolocate();
 
-          lat = position.coords.latitude;
-          lon = position.coords.longitude;
+          if (canGeolocate) {
+            const position = await new Promise((resolve, reject) => {
+              navigator.geolocation.getCurrentPosition(resolve, reject);
+            });
 
-          userLocated = true;
+            lat = position.coords.latitude;
+            lon = position.coords.longitude;
+
+            userLocated = true;
+          }
         } catch (error) {
           throw new Error("Failed to get user's coordinates.");
           userLocated = false;
         }
+      } else {
+        throw new Error("Geolocation is not available in this browser.");
+        userLocated = false;
       }
-    } else {
-      throw new Error("Geolocation is not available in this browser.");
-      userLocated = false;
-  }
+    }
+
 
   resultusercoords() {
     return userLocated

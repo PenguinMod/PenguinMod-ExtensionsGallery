@@ -6,27 +6,6 @@ const nominatimEndpoint = 'https://nominatim.openstreetmap.org/reverse';
 
 // Weather API Docs: https://open-meteo.com/en/docs/
 
-/*
-Gen1x:
-        80% DONE!
-        Stuff done by me:
-          - Weather JSON fetching
-          - Store JSON result in variable
-          - Get user coords
-          - Get JSON keys from result directly
-          - Get array items from result directly
-          - Added both metric and imperial systems for measuring
-          - Get (limited) location data from coordinates
-          - In fetched weather data and location data, remove latitude and longitude, as 
-            well as some other data that can be used to doxx.
-        To do:
-          - Better error handling
-          - Icon
-          - Documentation
-
-        To test, just import to TW or PM with sandbox disabled (via text)
-*/
-
 const weatherCodes = [
   // ww = 00-49: No precipitation at the station at the time of observation
   "Cloud development not observed or not observable",
@@ -469,7 +448,10 @@ class TurboWeather {
 
       const options = {
         timeZone: timezone,
-        weekday: 'long', // Get full weekday name
+        month: 'long',    // Get full month name
+        day: 'numeric',    // Get day number
+        year: 'numeric',   // Get year
+        weekday: 'long',   // Get full weekday name
         hour: 'numeric',
         minute: 'numeric',
         second: 'numeric',

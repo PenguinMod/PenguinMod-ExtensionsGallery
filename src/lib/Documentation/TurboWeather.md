@@ -86,7 +86,7 @@ get coordinates of user:: #e0bb4a
 if <get user coordinates successful?:: #e0bb4a> then
 get the weather data:: #e0bb4a
 if <not <(get the fetched weather JSON:: #e0bb4a) = [{}]>> then
-say (join [In your timezone, it's ] (get day and time for timezone (get key [timezone] out of [location v] data:: #e0bb4a))
+say (join [In your timezone, it's ] (get day and time for timezone (get key [timezone] out of [location v] data:: #e0bb4a):: #e0bb4a)
 end
 end
 ```

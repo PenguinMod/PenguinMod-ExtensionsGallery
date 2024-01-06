@@ -256,4 +256,13 @@ export default [
         creator: "MrRedstonia",
         isGitHub: true,
     },
+    {
+    name: "Logic Gates", // The name of the extension.
+    description: "Blocks which add XOR, NOR, BUFFER, NAND, etc.", // The description for the extension.
+    code: "hampersta/LogicGates.js", // The folder and file name for the code of the extension.
+    banner: "hampersta/LogicGates.PNG", // The folder and file name for the banner of the extension.
+    documentation: "logicgates", // Only applies if you created a documentation page. This is the page name for that documentation.
+    creator: "Hampersta", // Your username. Adds a link to your profile.
+    isGitHub: false, // Optional. false means this is your Scratch username, true means this is your GitHub username.
+    },
 ];

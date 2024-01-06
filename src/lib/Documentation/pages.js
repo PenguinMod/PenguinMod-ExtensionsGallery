@@ -8,6 +8,9 @@ import PageParticleTools from "./particle-tools.md?raw";
 // Free Servers
 import PageFreeServers from "./FreeServers.md?raw";
 
+// TurboWeather
+import PageTurboWeather from "./TurboWeather.md?raw";
+
 export default {
     // the key is the path to the docs page
     // so you can do "sharkpool-particle-tools" for example
@@ -16,4 +19,7 @@ export default {
 
     // FreeServers
     "FreeServers": PageFreeServers,
+
+    //TurboWeather
+    "TurboWeather": TurboWeather,
 };

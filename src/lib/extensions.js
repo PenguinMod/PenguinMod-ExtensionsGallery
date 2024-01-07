@@ -6,6 +6,14 @@
 */
 export default [
     {
+        name: "TurboWeather",
+        description: "Show weather and location data for any place in our world. Data that could be used for doxxing is deleted from results.",
+        code: "RubyDevs/turboweather.js",
+        banner: "RubyDevs/turboweather.webp",
+        documentation: "TurboWeather",
+        creator: "RubyDevs",
+    },
+    {
         name: "Object",
         description: "Handle large JSON files at an extreme speed.",
         code: "skyhigh173/object.js",

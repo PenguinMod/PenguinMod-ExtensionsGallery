@@ -6,6 +6,13 @@
 */
 export default [
     {
+        name: "PenguinHook",
+        description: "Extended pen section!",
+        code: "MubiLop/penguinhook.js",
+        // Jeremy please make an banner for this
+        creator: "MubiLop",
+    },
+    {
         name: "Object",
         description: "Handle large JSON files at an extreme speed.",
         code: "skyhigh173/object.js",

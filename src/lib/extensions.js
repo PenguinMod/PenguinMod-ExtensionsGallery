@@ -256,4 +256,12 @@ export default [
         creator: "MrRedstonia",
         isGitHub: true,
     },
+    {
+        name: "Pang API",
+        description: "Fetch information from the PenguinMod API.",
+        code: "SammerLOL/extension.js",
+        banner: "example.png",
+        creator: "oc9x97",
+        isGitHub: true,
+    },
 ];

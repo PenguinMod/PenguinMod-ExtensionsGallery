@@ -169,7 +169,8 @@ class PMAPI {
 
       return JSON.stringify(badges);
     } catch (error) {
-      return 'Error fetching badges: ' + error;
+      console.error('Error fetching badges: ' + error);
+      return '';
     }
   }
 
@@ -189,7 +190,8 @@ class PMAPI {
 
       return JSON.stringify(rank);
     } catch (error) {
-      return 'Error fetching ranks: ' + error;
+      console.error('Error fetching ranks: ' + error);
+      return '';
     }
   }
 
@@ -207,7 +209,8 @@ class PMAPI {
 
       return JSON.stringify(id);
     } catch (error) {
-      return 'Error fetching project ID: ' + error;
+      console.error('Error fetching project ID: ' + error);
+      return '';
     }
   }
 
@@ -237,7 +240,8 @@ class PMAPI {
 
       return JSON.stringify(flws);
     } catch (error) {
-      return 'Error fetching follows: ' + error;
+      console.error('Error fetching followers: ' + error);
+      return '';
     }
   }
 
@@ -257,7 +261,8 @@ class PMAPI {
 
       return JSON.stringify(vw);
     } catch (error) {
-      return 'Error fetching viewability: ' + error;
+      console.error('Error fetching viewability: ' + error);
+      return '';
     }
   }
 
@@ -277,7 +282,8 @@ class PMAPI {
 
       return JSON.stringify(ru);
     } catch (error) {
-      return 'Error fetching rank up permission: ' + error;
+      console.error('Error fetching permission: ' + error);
+      return '';
     }
   }
 
@@ -297,7 +303,8 @@ class PMAPI {
 
       return JSON.stringify(prj);
     } catch (error) {
-      return 'Error fetching projects: ' + error;
+      console.error('Error fetching projects: ' + error);
+      return '';
     }
   }
 
@@ -317,7 +324,8 @@ class PMAPI {
 
       return JSON.stringify(donator);
     } catch (error) {
-      return 'Error fetching donator: ' + error;
+      console.error('Error fetching donator: ' + error);
+      return '';
     }
   }
 
@@ -337,7 +345,8 @@ class PMAPI {
 
       return JSON.stringify(ban);
     } catch (error) {
-      return 'Error fetching ban: ' + error;
+      console.error('Error fetching ban: ' + error);
+      return '';
     }
   }
 
@@ -355,7 +364,8 @@ class PMAPI {
 
       return JSON.stringify(data.projects);
     } catch (error) {
-      return 'Error fetching projects: ' + error;
+      console.error('Error fetching projects: ' + error);
+      return '';
     }
   }
 
@@ -377,7 +387,8 @@ class PMAPI {
         return 'No projects found';
       }
     } catch (error) {
-      return 'Error fetching projects: ' + error;
+      console.error('Error fetching projects: ' + error);
+      return '';
     }
   }
 
@@ -393,7 +404,8 @@ class PMAPI {
 
       return JSON.stringify(data);
     } catch (error) {
-      return 'Error fetching projects: ' + error;
+      console.error('Error fetching projects: ' + error)
+      return '';
     }
   }
 }

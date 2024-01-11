@@ -1,7 +1,7 @@
 class PMAPI {
   getInfo() {
     return {
-      id: 'penguinapi',
+      id: 'sammerpenguinapi',
       name: 'Pang API',
       color1: '#00b3ff',
       color2: '#0aa2cc',

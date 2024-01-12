@@ -266,9 +266,9 @@ export default [
     },
     {
         name: "Leap Year and Unix Utils",
-        description: "Blocks to return the result of an expression.",
+        description: "Blocks to check for a leap year, get a unix timestamp, and convert miliseconds.",
         code: "Mr_rudy/leapandunix.js",
-        banner: "Mr_rudy/leapandunix.png",
+        banner: "Mr_rudy/leapandunixutils.png",
         creator: "Mr_rudy",
         isGitHub: false, 
     },

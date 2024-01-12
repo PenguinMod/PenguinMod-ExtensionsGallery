@@ -1,5 +1,3 @@
-// Created by @Mr_rudy on Scratch, or nmsderp on github
-
 (async function (Scratch) {
     const blocks = [];
 

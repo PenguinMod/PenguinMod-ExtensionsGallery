@@ -264,4 +264,12 @@ export default [
         creator: "oc9x97",
         isGitHub: true,
     },
+    {
+        name: "Leap Year and Unix Utils",
+        description: "Blocks to return the result of an expression.",
+        code: "Mr_rudy/leapandunix.js",
+        banner: "Mr_rudy/leapandunix.png",
+        creator: "Mr_rudy",
+        isGitHub: false, 
+    },
 ];

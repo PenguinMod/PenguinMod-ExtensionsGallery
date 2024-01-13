@@ -1,3 +1,5 @@
+*This extension has a section in the [PenguinMod Privacy Policy](https://penguinmod.com/privacy) under "Editor extensions"*
+
 ## Early documentation.
 
 # Introduction
@@ -16,7 +18,8 @@ All services are third-party, and as such, we don't control what they do with yo
 If you have doubts about the security of your data or are worried about your privacy, we invite you to read these pages of the following services we retrieve our data from:
 - [OpenMeteo (weather data) - Terms of Service](https://open-meteo.com/en/terms)
 - [OpenStreetMap (location data) - Privacy Policy](https://osmfoundation.org/wiki/Privacy_Policy)
-# The blocks
+
+# Blocks
 These are all the blocks in TurboWeather:
 ```scratch
 get coordinates of user:: #e0bb4a
@@ -49,7 +52,7 @@ get location from coordinates:: #e0bb4a
 ```
 All of these may seem too advanced, but don't worry. Getting used to these is really easy and fast. Just keep reading!
 
-# Explaining these blocks like you're 5
+# Block Explanations
 TurboWeather provides various blocks to interact with weather and location data. Here's a simplified explanation for each block:
 
 1. **Get Coordinates of User:** Retrieves the user's coordinates using browser geolocation.

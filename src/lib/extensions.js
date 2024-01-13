@@ -14,6 +14,13 @@ export default [
         isGitHub: true,
     },
     {
+        name: "Ruby Analytics",
+        description: "Record actions inside your project, make statistics and see them later in our website! A great tool for seeing what the users do when they play your project.",
+        code: "RubyDevs/analytics.js",
+        banner: "RubyDevs/analytics_thumb.svg",
+        creator: "RubyDevs",
+    },
+    {
         name: "Pen+",
         description: "Extended pen section!",
         code: "ObviousAlexC/PenPlus.js",

@@ -268,7 +268,7 @@ export default [
         name: "Pang API",
         description: "Fetch information from the PenguinMod API.",
         code: "SammerLOL/pangapi.js",
-        banner: "example.png",
+        banner: "SammerLOL/pangapi.png",
         creator: "oc9x97",
         isGitHub: true,
     },

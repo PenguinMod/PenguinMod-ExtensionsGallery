@@ -272,4 +272,12 @@ export default [
         creator: "oc9x97",
         isGitHub: true,
     },
+    {
+        name: "Scope Variable",
+        description: "Manage your variables in block like structure.",
+        code: "0znzw/ScopeVars.js",
+        banner: "0znzw/ScopeVars.png",
+        creator: "Ashimee",
+        isGitHub: true,
+    },
 ];

@@ -101,6 +101,14 @@ export default [
         isGitHub: true,
     },
     {
+        name: "Pause Utilities",
+        description: "Utilities for (Un)Pausing Scripts, Sprites, and Projects. Can Run Code When Project Paused as Well",
+        code: "SharkPool/Pause-Utilities.js",
+        banner: "SharkPool/Pause-Utilities.svg",
+        creator: "SharkPool-SP",
+        isGitHub: true,
+    },
+    {
         name: "Speech Bubbles",
         description: "Customizable Speech Bubbles",
         code: "SharkPool/Speech-Bubbles.js",

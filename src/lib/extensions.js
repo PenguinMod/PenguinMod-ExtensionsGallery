@@ -6,6 +6,14 @@
 */
 export default [
     {
+        name: "Pause Utilities",
+        description: "Utilities for (Un)Pausing Scripts, Sprites, and Projects. Can Run Code When Project Paused as Well",
+        code: "SharkPool/Pause-Utilities.js",
+        banner: "SharkPool/Pause-Utilities.svg",
+        creator: "SharkPool-SP",
+        isGitHub: true,
+    },
+    {
         name: "TurboWeather",
         description: "Show weather and location data for any place in our world. Data that could be used for doxxing is deleted from results.",
         code: "RubyDevs/turboweather.js",

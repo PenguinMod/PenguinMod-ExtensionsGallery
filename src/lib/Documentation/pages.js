@@ -12,7 +12,7 @@ import PageFreeServers from "./FreeServers.md?raw";
 import PageTurboWeather from "./TurboWeather.md?raw";
 
 // Penguin-Console
-import Pagepenguinconsole from "./penguin-console.md?raw";
+import PagePenguinConsole from "./penguin-console.md?raw";
 
 export default {
     // the key is the path to the docs page
@@ -27,5 +27,5 @@ export default {
     "TurboWeather": PageTurboWeather,
     
     // Penguin-Console
-    "penguin-console": Pagepenguinconsole,
+    "penguin-console": PagePenguinConsole,
 };

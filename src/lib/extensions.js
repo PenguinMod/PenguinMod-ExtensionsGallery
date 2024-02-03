@@ -14,6 +14,13 @@ export default [
         isGitHub: true,
     },
     {
+        name: "Penguin Console",
+        description: "Unleash power of console with this extension!",
+        code: "justablock/penguin-console.js",
+        banner: "justablock/PCON.png",
+        creator: "justablock",
+    },
+    {
         name: "TurboWeather",
         description: "Show weather and location data for any place in our world. Data that could be used for doxxing is deleted from results.",
         code: "RubyDevs/turboweather.js",

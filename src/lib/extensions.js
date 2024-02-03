@@ -15,10 +15,11 @@ export default [
     },
     {
         name: "Penguin Console",
-        description: "Unleash power of console with this extension!",
+        description: "Send messages and get control over the console.",
         code: "justablock/penguin-console.js",
         banner: "justablock/PCON.png",
         creator: "justablock",
+        isGithub: false,
     },
     {
         name: "TurboWeather",

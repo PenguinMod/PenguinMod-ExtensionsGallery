@@ -3,7 +3,7 @@
 // Description: Expansion of Monitor Types and Variable Blocks.
 // By: SharkPool and DogeIsCut
 
-// Version 1.2.3
+// Version 1.2.4
 
 (function (Scratch) {
   "use strict";
@@ -17,7 +17,7 @@
 "data:image/svg+xml;base64,PHN2ZyB2ZXJzaW9uPSIxLjEiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyIgeG1sbnM6eGxpbms9Imh0dHA6Ly93d3cudzMub3JnLzE5OTkveGxpbmsiIHdpZHRoPSIzMjEiIGhlaWdodD0iMzIxIiB2aWV3Qm94PSIwLDAsMzIxLDMyMSI+PGcgdHJhbnNmb3JtPSJ0cmFuc2xhdGUoLTc5LjUsLTE5LjUpIj48ZyBkYXRhLXBhcGVyLWRhdGE9InsmcXVvdDtpc1BhaW50aW5nTGF5ZXImcXVvdDs6dHJ1ZX0iIHN0cm9rZS1saW5lY2FwPSJidXR0IiBzdHJva2UtbGluZWpvaW49Im1pdGVyIiBzdHJva2UtbWl0ZXJsaW1pdD0iMTAiIHN0cm9rZS1kYXNoYXJyYXk9IiIgc3Ryb2tlLWRhc2hvZmZzZXQ9IjAiIHN0eWxlPSJtaXgtYmxlbmQtbW9kZTogbm9ybWFsIj48cGF0aCBkPSJNOTQsMTgwYzAsLTgwLjYzMzU3IDY1LjM2NjQyLC0xNDYgMTQ2LC0xNDZjODAuNjMzNTgsMCAxNDYsNjUuMzY2NDMgMTQ2LDE0NmMwLDgwLjYzMzU4IC02NS4zNjY0MiwxNDYgLTE0NiwxNDZjLTgwLjYzMzU4LDAgLTE0NiwtNjUuMzY2NDIgLTE0NiwtMTQ2eiIgZmlsbD0iI2ZmOGMxYSIgZmlsbC1ydWxlPSJub256ZXJvIiBzdHJva2U9Im5vbmUiIHN0cm9rZS13aWR0aD0iMCIvPjxwYXRoIGQ9Ik0xNjkuMDg3MzIsODQuMDM5NzRjNi4yMTQ2MSwyLjczMDg3IDkuMDQ1MDIsOS45Nzc2MyA2LjMyNjQyLDE2LjE5NzYxYy05LjQ4MDc2LDIxLjc0MDEgLTE0LjM1NDY2LDQ1LjIwODYxIC0xNC4zMTQ0NSw2OC45MjYwMmMwLDI0LjUzMDI3IDUuMTIwMjEsNDcuODI5NzMgMTQuMzI2NzYsNjguOTI2MDJjMi40NzI4OSw2LjE3MzU1IC0wLjQwNTQxLDEzLjE5NDk2IC02LjUwMDA2LDE1Ljg1NjM4Yy02LjA5NDY0LDIuNjYxNDIgLTEzLjIwMTE4LDAuMDAwMTkgLTE2LjA0ODYxLC02LjAwOTgxYy0xMC44NDQ4LC0yNC44NDQwMiAtMTYuNDI2ODYsLTUxLjY2NDc3IC0xNi4zOTQ1NCwtNzguNzcyNTljMCwtMjcuOTg4ODggNS44NDY0LC01NC42NDg0OCAxNi4zOTQ1NCwtNzguNzcyNTljMS4zMDY4OCwtMi45OTIxOSAzLjc0OTEzLC01LjM0MjQ2IDYuNzg5MjgsLTYuNTMzNThjMy4wNDAxMiwtMS4xOTExMiA2LjQyODk2LC0xLjEyNTQ2IDkuNDIwNjYsMC4xODI1NHpNMjcxLjM4MDkyLDEzMi4yMzg3MmMtMTEuMjE0NjcsMC4wMDI1MiAtMjEuODIwNDIsNS4xMDE2MiAtMjguODI1ODUsMTMuODU5MDZsLTQuMDM3MSw1LjA0NjM2bC0xLjM2NjIxLC0zLjQzMzk5Yy0zLjczNzYsLTkuMzQwOCAtMTIuNzgzMjIsLTE1LjQ2NzA3IC0yMi44NDQwNiwtMTUuNDcxNDNoLTMuOTc1NTZjLTYuNzk3NjQsMCAtMTIuMzA4MjIsNS41MTA1OCAtMTIuMzA4MjIsMTIuMzA4MjJjMCw2Ljc5NzY0IDUuNTEwNTgsMTIuMzA4MjIgMTIuMzA4MjIsMTIuMzA4MjJoMy45NzU1Nmw2LjU0Nzk3LDE2LjM2OTkybC0xMi43MzksMTUuOTM5MTRjLTIuMzM2ODUsMi45MTg3MyAtNS44NzM3NSw0LjYxNjk5IC05LjYxMjcyLDQuNjE1NTloLTAuNDgwMDJjLTYuNzk3NjQsMCAtMTIuMzA4MjIsNS41MTA1NyAtMTIuMzA4MjIsMTIuMzA4MjJjMCw2Ljc5NzY0IDUuNTEwNTcsMTIuMzA4MjIgMTIuMzA4MjIsMTIuMzA4MjJoMC40ODAwMmMxMS4yMTQ2NywtMC4wMDI1MiAyMS44MjA0MSwtNS4xMDE2MiAyOC44MjU4NSwtMTMuODU5MDZsNC4wMzcxLC01LjA0NjM2bDEuMzY2MjIsMy40MzRjMy43MzkyNiw5LjM0NDk2IDEyLjc5MTA0LDE1LjQ3MjExIDIyLjg1NjM3LDE1LjQ3MTQzaDMuOTc1NTVjNi43OTc2NCwwIDEyLjMwODIyLC01LjUxMDU4IDEyLjMwODIyLC0xMi4zMDgyMmMwLC02Ljc5NzY0IC01LjUxMDU4LC0xMi4zMDgyMiAtMTIuMzA4MjIsLTEyLjMwODIyaC0zLjk3NTU1bC02LjU0Nzk4LC0xNi4zNjk5MmwxMi43MzkwMSwtMTUuOTM5MTNjMi4zMzY4NiwtMi45MTg3MyA1Ljg3Mzc2LC00LjYxNjk4IDkuNjEyNzMsLTQuNjE1NTloMC40ODAwMWM2Ljc5NzY1LDAgMTIuMzA4MjIsLTUuNTEwNTggMTIuMzA4MjIsLTEyLjMwODIyYzAsLTYuNzk3NjQgLTUuNTEwNTcsLTEyLjMwODIyIC0xMi4zMDgyMiwtMTIuMzA4MjJoLTAuNDgwMDF6TTI5NC40NDY1MSwxMDAuMjM3MzdjLTIuNjc2MjMsLTYuMjIxMTEgMC4xNzYxNCwtMTMuNDM1NTMgNi4zODMwNiwtMTYuMTQ0NTFjNi4yMDY5MywtMi43MDg5NyAxMy40MzYyNywwLjEwNTM0IDE2LjE3NzksNi4yOTc5M2MxMC44NDkwMiwyNC44NDMxMSAxNi40MzUzLDUxLjY2MzkxIDE2LjQwNjg2LDc4Ljc3MjZjMCwyNy45ODg4OCAtNS44NDYzOSw1NC42NDg0OCAtMTYuMzk0NTQsNzguNzcyNmMtMS42Njg2Niw0LjE2NTc0IC01LjQ3MjI0LDcuMDkzMTggLTkuOTI2MzMsNy42Mzk4M2MtNC40NTQwOSwwLjU0NjY1IC04Ljg1MjcsLTEuMzc0MTQgLTExLjQ3OTE3LC01LjAxMjczYy0yLjYyNjQ3LC0zLjYzODYxIC0zLjA2NDUsLTguNDE4MjggLTEuMTQzMTUsLTEyLjQ3MzY3YzkuNDg1MzIsLTIxLjczOTA4IDE0LjM2MzQ1LC00NS4yMDc3MSAxNC4zMjY3OCwtNjguOTI2MDFjMCwtMjQuNTMwMjcgLTUuMTIwMjIsLTQ3LjgyOTc0IC0xNC4zMzkwOCwtNjguOTI2MDJ6IiBmaWxsPSIjZmZmZmZmIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiIHN0cm9rZT0ibm9uZSIgc3Ryb2tlLXdpZHRoPSIxIi8+PGcgZmlsbC1ydWxlPSJub256ZXJvIj48cGF0aCBkPSJNMjk1LjEwNTIxLDMwOC45OTEwMmMtMTAuMjYxNjgsMCAtMTguNTgwNDIsLTguMzE4NzMgLTE4LjU4MDQyLC0xOC41ODA0MXYtOTAuNDI0NjdjMCwtMTAuMjYxNjggOC4zMTg3MywtMTguNTgwNDEgMTguNTgwNDIsLTE4LjU4MDQxaDEuMjM4N2MxMC4yNjE2OCwwIDE4LjU4MDQxLDguMzE4NzMgMTguNTgwNDEsMTguNTgwNDF2OTAuNDI0NjdjMCwxMC4yNjE2OCAtOC4zMTg3MywxOC41ODA0MSAtMTguNTgwNDEsMTguNTgwNDF6IiBmaWxsPSIjZmY4YzFhIiBzdHJva2U9IiNmZjhjMWEiIHN0cm9rZS13aWR0aD0iMTIuNSIvPjxwYXRoIGQ9Ik0yMzEuOTMxODIsMjQ0LjU3ODkzYzAsLTEwLjI2MTY4IDguMzE4NzQsLTE4LjU4MDQyIDE4LjU4MDQxLC0xOC41ODA0Mmg5MC40MjQ2NmMxMC4yNjE2OCwwIDE4LjU4MDQsOC4zMTg3MyAxOC41ODA0LDE4LjU4MDQydjEuMjM4N2MwLDEwLjI2MTY5IC04LjMxODcyLDE4LjU4MDQgLTE4LjU4MDQsMTguNTgwNGgtOTAuNDI0NjZjLTEwLjI2MTY3LDAgLTE4LjU4MDQxLC04LjMxODczIC0xOC41ODA0MSwtMTguNTgwNHoiIGZpbGw9IiNmZjhjMWEiIHN0cm9rZT0iI2ZmOGMxYSIgc3Ryb2tlLXdpZHRoPSIxMi41Ii8+PHBhdGggZD0iTTIzOS44ODAxMiwyNDQuNzkwMDZjMCwtNi43NjM1MSA1LjQ4MjkxLC0xMi4yNDY0MSAxMi4yNDY0MiwtMTIuMjQ2NDFoODcuMjk5M2M2Ljc2MzUxLDAgMTIuMjQ2NDIsNS40ODI5IDEyLjI0NjQyLDEyLjI0NjQxdjAuODE2NDVjMCw2Ljc2MzUxIC01LjQ4MjkxLDEyLjI0NjQyIC0xMi4yNDY0MiwxMi4yNDY0MmgtODcuMjk5M2MtNi43NjM1MSwwIC0xMi4yNDY0MiwtNS40ODI5MiAtMTIuMjQ2NDIsLTEyLjI0NjQyeiIgZmlsbD0iI2ZmZmZmZiIgc3Ryb2tlPSIjZmZmZmZmIiBzdHJva2Utd2lkdGg9IjIiLz48cGF0aCBkPSJNMjk2LjE4NDM5LDE4OS4zMDIxOWM2Ljc2MzUxLDAgMTIuMjQ2NDEsNS40ODI5MSAxMi4yNDY0MSwxMi4yNDY0MXY4Ny4yOTkzYzAsNi43NjM1MSAtNS40ODI5LDEyLjI0NjQyIC0xMi4yNDY0MSwxMi4yNDY0MmgtMC44MTY0NWMtNi43NjM1MSwwIC0xMi4yNDY0MiwtNS40ODI5MSAtMTIuMjQ2NDEsLTEyLjI0NjQyYzAsMCAwLC00OS4yMzE5NSAwLC02NC44NjIyN2MwLC04Ljg0ODEzIDAsLTIyLjQzNzA0IDAsLTIyLjQzNzA0YzAsLTYuNzYzNTEgNS40ODI5MSwtMTIuMjQ2NDEgMTIuMjQ2NDIsLTEyLjI0NjQyeiIgZmlsbD0iI2ZmZmZmZiIgc3Ryb2tlPSIjZmZmZmZmIiBzdHJva2Utd2lkdGg9IjIiLz48L2c+PHBhdGggZD0iTTg3LDE4MGMwLC04NC40OTk1NyA2OC41MDA0MywtMTUzIDE1MywtMTUzYzg0LjQ5OTU3LDAgMTUzLDY4LjUwMDQzIDE1MywxNTNjMCw4NC40OTk1NyAtNjguNTAwNDMsMTUzIC0xNTMsMTUzYy04NC40OTk1NywwIC0xNTMsLTY4LjUwMDQzIC0xNTMsLTE1M3oiIGZpbGw9Im5vbmUiIGZpbGwtcnVsZT0ibm9uemVybyIgc3Ryb2tlPSIjZGI2ZTAwIiBzdHJva2Utd2lkdGg9IjE1Ii8+PC9nPjwvZz48L3N2Zz4=";
 
   const xmlEscape = function (unsafe) {
-    return unsafe.replace(/[<>&'"]/g, c => {
+    return Scratch.Cast.toString(unsafe).replace(/[<>&'"]/g, c => {
       switch (c) {
         case "<": return "&lt;";
         case ">": return "&gt;";
@@ -35,13 +35,8 @@
   }
 
   const builtInFonts = [
-    "Scratch",
-    "Sans Serif",
-    "Serif",
-    "Handwriting",
-    "Marker",
-    "Curly",
-    "Pixel"
+    "Scratch", "Sans Serif", "Serif",
+    "Handwriting", "Marker", "Curly", "Pixel"
   ];
 
   class MonitorsPlus {
@@ -167,8 +162,7 @@
               },
               TYPE: {
                 type: Scratch.ArgumentType.STRING,
-                menu: "variableTypeCreate",
-                defaultValue: "globally",
+                menu: "variableTypeCreate"
               }
             },
           },
@@ -255,8 +249,7 @@
               },
               POSITION: {
                 type: Scratch.ArgumentType.STRING,
-                menu: "POSITIONS",
-                defaultValue: "x",
+                menu: "POSITIONS"
               },
             },
           },
@@ -313,8 +306,7 @@
             arguments: {
               FONT: {
                 type: Scratch.ArgumentType.STRING,
-                menu: "allFonts",
-                defaultValue: "Scratch",
+                menu: "allFonts"
               },
               VARIABLE: {
                 type: Scratch.ArgumentType.STRING,
@@ -345,8 +337,7 @@
               },
               EFFECT: {
                 type: Scratch.ArgumentType.STRING,
-                menu: "EFFECTS",
-                defaultValue: "blur",
+                menu: "EFFECTS"
               },
               VARIABLE: {
                 type: Scratch.ArgumentType.STRING,
@@ -365,8 +356,7 @@
               },
               EFFECT: {
                 type: Scratch.ArgumentType.STRING,
-                menu: "EFFECTS",
-                defaultValue: "blur",
+                menu: "EFFECTS"
               },
             },
           },
@@ -375,16 +365,10 @@
           variablesTypeMenu: {
             acceptReporters: true,
             items: [
-              "normal readout",
-              "large readout",
-              "slider",
-              "text",
-              "checkbox",
-              "color",
-              "button",
-              "file",
-              "image",
-              "audio"
+              "normal readout", "large readout",
+              "slider", "text", "checkbox",
+              "color", "button", "file",
+              "image", "audio"
             ],
           },
           sliderMaxMinMenu: ["min", "max"],
@@ -401,18 +385,10 @@
           EFFECTS: {
             acceptReporters: true,
             items: [
-              "blur",
-              "saturation",
-              "contrast",
-              "brightness",
-              "hue",
-              "opacity",
-              "sepia",
-              "invert",
-              "direction",
-              "scale",
-              "skew x",
-              "skew y"
+              "blur", "saturation", "contrast",
+              "brightness", "hue", "opacity",
+              "sepia", "invert", "direction",
+              "scale", "skew x", "skew y"
             ],
           },
         }
@@ -436,10 +412,7 @@
 
     getFonts() {
       const customFonts = Scratch.vm.runtime.fontManager ? Scratch.vm.runtime.fontManager.getFonts().map((i) => ({text: i.name, value: i.family})) : [];
-      return [
-        ...builtInFonts,
-        ...customFonts,
-      ];
+      return [ ...builtInFonts, ...customFonts ];
     }
 
     findVariable(variable, sprite) {
@@ -549,7 +522,7 @@
               <div class="monitor_label_ci1ok">${variableName}</div>
             </div>
             <div class="monitor_row_2y_kM">
-              <input type="text" id="text_${variableId}" class="monitor_slider_1CHwk no-drag" value="${Vvalue}">
+              <input type="text" id="text_${variableId}" class="monitor_slider_1CHwk no-drag" value="${xmlEscape(Vvalue)}">
             </div>`;
           variableMonitor.appendChild(container);
           typeElement = container.querySelector(`[id="text_${variableId}"]`);
@@ -595,11 +568,8 @@
           });
           break;
         case "color":
-          if (hexColorRegex.test(Vvalue)) {
-            isHex = Vvalue;
-          } else {
-            isHex = "#ff0000";
-          }
+          if (hexColorRegex.test(Vvalue)) isHex = xmlEscape(Vvalue);
+          else isHex = "#ff0000";
           if (variableMonitor.querySelector(`[class^="monitor_default-monitor_SPnew1"]`)) {
             container = variableMonitor.querySelector(`[class^="monitor_default-monitor_SPnew1"]`);
           } else {
@@ -677,9 +647,7 @@
                   const variable = util.target.lookupOrCreateVariable(nameID, variableName);
                   variable.value = reader.result;
                 };
-                reader.onerror = function (error) {
-                  console.log("Error: ", error);
-                };
+                reader.onerror = function (error) { console.log("Error: ", error) };
               }
             }
           });
@@ -899,22 +867,16 @@
       let setEffect = EFFECT;
       let amountIn = AMOUNT;
 
-      if (setEffect === "saturation") {
-        setEffect = "saturate";
-      } else if (setEffect === "hue") {
-        setEffect = "hue-rotate";
-      } else if (setEffect === "direction") {
+      if (setEffect === "saturation") setEffect = "saturate";
+      else if (setEffect === "hue") setEffect = "hue-rotate";
+      else if (setEffect === "direction") {
         setEffect = "rotate";
         amountIn = AMOUNT - 90;
-      } else if (setEffect === "scale") {
-        amountIn = AMOUNT / 100;
-      } else if (setEffect === "brightness") {
-        amountIn = AMOUNT + 100;
-      } else if (setEffect === "skew x") {
-        setEffect = "skewX";
-      } else if (setEffect === "skew y") {
-        setEffect = "skewY";
       }
+      else if (setEffect === "scale") amountIn = AMOUNT / 100;
+      else if (setEffect === "brightness") amountIn = AMOUNT + 100;
+      else if (setEffect === "skew x") setEffect = "skewX";
+      else if (setEffect === "skew y") setEffect = "skewY";
       const regex = new RegExp(`${setEffect}\\([^)]+\\)`, "g");
       currentTransform = currentTransform.replace(regex, "").trim();
       currentFilterEffect = currentFilterEffect.replace(regex, "").trim();
@@ -935,22 +897,15 @@
       const currentTransform = variableMonitor.style.transform;
       const currentFilterEffect = variableMonitor.style.filter || "";
       const setEffect = {
-        saturation: "saturate",
-        hue: "hue-rotate",
-        direction: "rotate",
-        scale: "scale",
-        brightness: "brightness",
-        opacity: "opacity",
-        "skew x": "skewX",
-        "skew y": "skewY",
+        saturation: "saturate", hue: "hue-rotate",
+        direction: "rotate", scale: "scale",
+        brightness: "brightness", opacity: "opacity",
+        "skew x": "skewX", "skew y": "skewY",
       }[args.EFFECT] || args.EFFECT;
       const defaultV = {
-        saturation: 100,
-        hue: 0,
-        direction: 90,
-        scale: 100,
-        brightness: 0,
-        opacity: 100,
+        saturation: 100, hue: 0,
+        direction: 90, scale: 100,
+        brightness: 0, opacity: 100,
       }[args.EFFECT] || 0;
 
       const regex = new RegExp(`${setEffect}\\(([^)]+)\\)`);
@@ -960,18 +915,11 @@
       if (filterMatch || transformMatch) {
         const valueWithUnits = (filterMatch || transformMatch)[1];
         const numericValue = parseFloat(valueWithUnits.replace(/[^0-9.-]/g, ""));
-        if (setEffect === "brightness") {
-          return numericValue - 100;
-        } else if (setEffect === "rotate") {
-          return numericValue + 90;
-        } else if (setEffect === "scale") {
-          return numericValue * 100;
-        } else {
-          return numericValue;
-        }
-      } else {
-        return defaultV;
-      }
+        if (setEffect === "brightness") return numericValue - 100;
+        else if (setEffect === "rotate") return numericValue + 90;
+        else if (setEffect === "scale") return numericValue * 100;
+        else return numericValue;
+      } else { return defaultV }
     }
 
     resetEffect(args, util) {
@@ -991,9 +939,20 @@
 
     makeVariable(args, util) {
       if (args.TYPE === "for this sprite only") {
-        return util.target.lookupOrCreateVariable(this.generateId(), args.VARIABLE, "");
+        util.target.lookupOrCreateVariable(this.generateId(), args.VARIABLE, "");
       } else {
-        return runtime.createNewGlobalVariable(args.VARIABLE, "");
+        runtime.createNewGlobalVariable(args.VARIABLE, "");
+      }
+      return this.refresh();
+    }
+
+    refresh() {
+      if (!runtime.isPackaged) {
+        Scratch.vm.emitWorkspaceUpdate();
+        window.ScratchBlocks.getMainWorkspace().toolboxRefreshEnabled_ = true;
+        window.ScratchBlocks.getMainWorkspace().refreshToolboxSelection_();
+        window.ScratchBlocks.getMainWorkspace().toolboxRefreshEnabled_ = false;
+        setTimeout(function() { vm.runtime.requestBlocksUpdate() }, 10);
       }
     }
 
@@ -1002,16 +961,17 @@
       if (variableId) {
         runtime.getTargetForStage().deleteVariable(variableId)
         util.target.deleteVariable(variableId);
+        return this.refresh();
       }
     }
 
     generateId() {
-      const chars = ["a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m", "n", "o", "p", "q", "r", "s", "t", "u", "v", "w", "x", "y", "z", "A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "O", "P", "Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z", "0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "/", "|", ",", ".", "{", "}", "[", "]", "(", ")", "+", "-", "!", "?", "`"];
-      const array = Array.from(Array(20).keys());
-      const normalArray = array.map(() => {
-        return chars[Math.round(Math.random() * (chars.length - 1))]
-      })
-      return normalArray.join("");
+      const soup = "!#%()*+,-./:;=?@[]^_`{|}~ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+      const id = [];
+      for (let i = 0; i < 20; i++) {
+        id[i] = soup.charAt(Math.random() * soup.length);
+      }
+      return id.join("");
     }
 
     reAddDeleted(variable, id, name, util) {

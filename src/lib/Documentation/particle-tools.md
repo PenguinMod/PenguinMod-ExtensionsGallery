@@ -44,6 +44,20 @@ This Block deletes the inputted ID and its values.
 ---
 
 ```scratch
+when particle ID is [added v] :: #0090ff :: hat
+```
+This Block runs when a ID is deleted/added.
+
+---
+
+```scratch
+particle ID [2] [exists v] ? :: #0090ff :: boolean
+```
+This Block checks if an ID exists or if its being used.
+
+---
+
+```scratch
 (particle ID: [5] (all v):: #0090ff)
 ```
 This Block reports the specified values of the inputted ID.
@@ -51,11 +65,11 @@ This Block reports the specified values of the inputted ID.
 For example, I made an ID with the ID set to **5**, x velocity set to **3**, and y velocity set to **8**.
 Depending on what you set the dropdown to (__left column__), the Block will report different values (__right column__):
 
-| Left columns |                Right columns                 |
-| ------------ | :------------------------------------------: |
-| all          | {"ID":"5","X Velocity":"3","Y Velocity":"8"} |
-| x velocity   |                      3                       |
-| y velocity   |                      8                       |
+| Left columns  | Right columns |
+| ------------- |:-------------:|
+| all      | {"ID":"5","X Velocity":"3","Y Velocity":"8"} |
+| x velocity     | 3 |
+| y velocity      | 8 |
 
 #### Note: Setting the dropdown to 'all' will output a JSON...
 

@@ -5,7 +5,7 @@
 class RandomlyBlocks {
     getInfo() {
       return {
-        id: 'randomlyblockscool',
+        id: 'randomlyblocks',
         name: 'Randomly Blocks',
         color1: '#07f290',
         color2: '#1ee894',
@@ -94,6 +94,7 @@ class RandomlyBlocks {
     consoleError(args) {
       window.console.error(args.STR)
     }
+
     getDate(args) {
       let date = Date()
       return date

@@ -5,7 +5,7 @@
 class RandomlyBlocks {
     getInfo() {
       return {
-        id: 'randomlyblocks',
+        id: 'randomlyblockscool',
         name: 'Randomly Blocks',
         color1: '#07f290',
         color2: '#1ee894',
@@ -83,7 +83,7 @@ class RandomlyBlocks {
     alertname(args) {
       alert(args.STR)
     }
-  
+
     changeTitle(args) {
         document.title = args.STR
     }
@@ -93,6 +93,14 @@ class RandomlyBlocks {
   }
     consoleError(args) {
       window.console.error(args.STR)
+    }
+
+      async notExist(args) {
+        return false
+      }
+
+    amExist(args) {
+        return true
     }
 
     getDate(args) {
@@ -110,5 +118,5 @@ class RandomlyBlocks {
   }
 
   }
-  
+
   Scratch.extensions.register(new RandomlyBlocks())

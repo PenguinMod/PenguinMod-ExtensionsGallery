@@ -288,4 +288,12 @@ export default [
         creator: "Ashimee",
         isGitHub: true,
     },
+    {
+    name: "Randomly Blocks",
+    description: "Makes projects feel like websites", 
+    code: "mariocraft987/randomlyBlocks.js",
+    banner: "mariocrft987/randomlyBlocksBanner.svg", 
+    creator: "mariocraft987",
+    isGitHub: true, 
+},
 ];

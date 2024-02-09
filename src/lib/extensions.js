@@ -298,7 +298,7 @@ export default [
     },
     {
         name: "Discord Auth",
-        description: "Authenticate with Discord, and get data there username and profile picture. Orginally from Snail IDE, but ported to PenguinMod.",
+        description: "Authenticate with Discord, and get data their username and profile picture. Orginally from Snail IDE, but ported to PenguinMod.",
         code: "Mr_rudy/discord.js",
         banner: "Mr_rudy/discord.png",
         creator: "Mr_rudy",

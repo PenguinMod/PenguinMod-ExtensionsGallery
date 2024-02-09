@@ -295,5 +295,13 @@ export default [
         banner: "mariocraft987/randomlyBlocksBanner.svg",
         creator: "mariocraft987",
         isGithub: true,
+    },
+    {
+        name: "Discord Auth",
+        description: "Authenticate with Discord, and get data there username and profile picture. Orginally from Snail IDE, but ported to PenguinMod.",
+        code: "Mr_rudy/discord.js",
+        banner: "Mr_rudy/discord.png",
+        creator: "Mr_rudy",
+        isGithub: false,
     }
 ];

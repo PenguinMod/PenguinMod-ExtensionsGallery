@@ -60,18 +60,6 @@ class RandomlyBlocks {
           },
           "---",
           {
-            opcode: 'amExist',
-            blockType: Scratch.BlockType.BOOLEAN,
-            text: 'Do I exist?',
-            disableMonitor: true,
-          },
-          {
-            opcode: 'notExist',
-            blockType: Scratch.BlockType.BOOLEAN,
-            text: 'Do Dinosaurs exist?',
-            disableMonitor: true,
-          },
-          {
             opcode: 'getDate',
             blockType: Scratch.BlockType.REPORTER,
             text: 'get Date',
@@ -106,15 +94,6 @@ class RandomlyBlocks {
     consoleError(args) {
       window.console.error(args.STR)
     }
-
-      async notExist(args) {
-        return false
-      }
-
-    amExist(args) {
-        return true
-    }
-
     getDate(args) {
       let date = Date()
       return date

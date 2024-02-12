@@ -236,13 +236,17 @@ function RGBAToHex(rgba, forceRemoveAlpha = false) {
             saved[this.current] = image;
         };
         importImage({uri,name}) {
-            let image = new Image("data:");
+            let image = new Image();
+            image.src = uri;
             saved[name] = image;
+            /*
+            TODO
             return new Promise((resolve, reject) => {
                 image.onload = resolve;
                 image.onerror = reject;
                 image.src = uri;
             });
+            */
         };
         readPixel({x,y}) {
             if (!saved[this.current]) {

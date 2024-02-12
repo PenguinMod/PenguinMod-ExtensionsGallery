@@ -240,13 +240,13 @@ function RGBAToHex(rgba, forceRemoveAlpha = false) {
         };
         importImage({uri,name}) {
             let image;
-            const ImportPromise = new Promise(resolve => {
-                image = new Image();
+            image = new Image();
+            saved[name] = image;
+            return new Promise((resolve, reject) => {
                 image.onload = resolve;
-                image.src = imageUrl;
-                saved[name] = image;
+                image.onerror = reject;
+                image.src = uri;
             });
-            return ImportPromise;
         };
         readPixel({x,y}) {
             if (!saved[this.current]) {

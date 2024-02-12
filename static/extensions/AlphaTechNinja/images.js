@@ -244,6 +244,7 @@ function RGBAToHex(rgba, forceRemoveAlpha = false) {
                 image = new Image();
                 image.onload = resolve;
                 image.src = imageUrl;
+                saved[name] = image;
             });
             return ImportPromise;
         };

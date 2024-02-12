@@ -124,7 +124,7 @@ function RGBAToHex(rgba, forceRemoveAlpha = false) {
                         arguments:{
                             uri:{
                                 type:Scratch.ArgumentType.STRING,
-                                defaultValue:"data:image/svg+xml;base64,PHN2ZyB2ZXJzaW9uPSIxLjEiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyIgeG1sbnM6eGxpbms9Imh0dHA6Ly93d3cudzMub3JnLzE5OTkveGxpbmsiIHdpZHRoPSIxMjIuOTc3MjIiIGhlaWdodD0iMTEyLjU5MzUiIHZpZXdCb3g9IjAsMCwxMjIuOTc3MjIsMTEyLjU5MzUiPjxnIHRyYW5zZm9ybT0idHJhbnNsYXRlKC0xNzkuNTA5ODksLTEyNC43MDE3NSkiPjxnIGRhdGEtcGFwZXItZGF0YT0ieyZxdW90O2lzUGFpbnRpbmdMYXllciZxdW90Ozp0cnVlfSIgZmlsbD0ibm9uZSIgZmlsbC1ydWxlPSJub256ZXJvIiBzdHJva2Utd2lkdGg9IjIiIHN0cm9rZS1saW5lY2FwPSJidXR0IiBzdHJva2UtbGluZWpvaW49Im1pdGVyIiBzdHJva2UtbWl0ZXJsaW1pdD0iMTAiIHN0cm9rZS1kYXNoYXJyYXk9IiIgc3Ryb2tlLWRhc2hvZmZzZXQ9IjAiIHN0eWxlPSJtaXgtYmxlbmQtbW9kZTogbm9ybWFsIj48cGF0aCBkPSJNMTk2Ljg2NjMyLDIxNi42NDI4MmwxNi40ODYzOCwtMjcuNTgxNzhsMTYuNDg2MzksMjcuNTgxNzh6IiBzdHJva2U9IiMyMWM1MDAiLz48cGF0aCBkPSJNMjI5LjI3NjEyLDIxNi41ODg3NGwyMy45ODAyLC00Ni4wNzc3OWwyMy45ODAyLDQ2LjA3Nzc5eiIgc3Ryb2tlPSIjMjFjNTAwIi8+PHBhdGggZD0iTTE4Ni41MDY4OSwyMzYuMjk1MjVjLTIuMjA5MTQsMCAtNCwtMS45Mzc1MyAtNCwtNC4zMjc1OXYtOTkuOTQxMzJjMCwtMi4zOTAwNiAxLjc5MDg2LC00LjMyNzU5IDQsLTQuMzI3NTloMTEwLjk4MDIyYzIuMjA5MTQsMCA0LDEuOTM3NTMgNCw0LjMyNzU5djk5Ljk0MTMyYzAsMi4zOTAwNiAtMS43OTA4Niw0LjMyNzU5IC00LDQuMzI3NTl6IiBzdHJva2U9IiMwMGEwZDYiLz48cGF0aCBkPSJNMTg0LjUwOTg5LDIzNC4yOTgyNWMtMi4yMDkxNCwwIC00LC0xLjkzNzUzIC00LC00LjMyNzU5di05OS45NDEzMmMwLC0yLjM5MDA2IDEuNzkwODYsLTQuMzI3NTkgNCwtNC4zMjc1OWgxMTAuOTgwMjJjMi4yMDkxNCwwIDQsMS45Mzc1MyA0LDQuMzI3NTl2OTkuOTQxMzJjMCwyLjM5MDA2IC0xLjc5MDg2LDQuMzI3NTkgLTQsNC4zMjc1OXoiIHN0cm9rZT0iIzAwYzFmZiIvPjxwYXRoIGQ9Ik0xOTQuNTM1OTksMjE0LjY0NTgzbDE2LjQ4NjM4LC0yNy41ODE3OGwxNi40ODYzOSwyNy41ODE3OHoiIHN0cm9rZT0iIzI0ZGUwMCIvPjxwYXRoIGQ9Ik0yOTMuMzkzOTQsMTU0LjgyNzE5YzAsOS42Nzc0NCAtNy4yNjM5OSwxNy41MjI1NCAtMTYuMjI0NTcsMTcuNTIyNTRjLTguOTYwNTgsMCAtMTYuMjI0NTgsLTcuODQ1MTEgLTE2LjIyNDU4LC0xNy41MjI1NGMwLC05LjY3NzQ0IDcuMjYzOTksLTE3LjUyMjU0IDE2LjIyNDU4LC0xNy41MjI1NGM4Ljk2MDU4LDAgMTYuMjI0NTcsNy44NDUxMSAxNi4yMjQ1NywxNy41MjI1NHoiIHN0cm9rZT0iI2QyY2IwMCIvPjxwYXRoIGQ9Ik0yMjcuMjc5MTMsMjE0LjU5MTc0bDIzLjk4MDIsLTQ2LjA3Nzc5bDIzLjk4MDE5LDQ2LjA3Nzc5eiIgc3Ryb2tlPSIjMjRkZTAwIi8+PHBhdGggZD0iTTI5MS4wNjM2MSwxNTIuODMwMTljMCw5LjY3NzQ0IC03LjI2Mzk5LDE3LjUyMjU0IC0xNi4yMjQ1NywxNy41MjI1NGMtOC45NjA1OCwwIC0xNi4yMjQ1OCwtNy44NDUxMSAtMTYuMjI0NTgsLTE3LjUyMjU0YzAsLTkuNjc3NDQgNy4yNjM5OSwtMTcuNTIyNTQgMTYuMjI0NTgsLTE3LjUyMjU0YzguOTYwNTgsMCAxNi4yMjQ1Nyw3Ljg0NTExIDE2LjIyNDU3LDE3LjUyMjU0eiIgc3Ryb2tlPSIjZmZmNzAwIi8+PC9nPjwvZz48L3N2Zz48IS0tcm90YXRpb25DZW50ZXI6NjAuNDkwMTA5OTk5OTk5OTk6NTUuMjk4MjQ5OTk5OTk5OTk2LS0+"
+                                defaultValue:"data:"
                             },
                             name:{
                                 type:Scratch.ArgumentType.STRING,
@@ -214,6 +214,9 @@ function RGBAToHex(rgba, forceRemoveAlpha = false) {
             saved[name] = image;
         };
         removeImage({name}) {
+            if (!saved[name]) {
+                return null;
+            };
             delete saved[name];
         }
         setCurrent({name}) {
@@ -224,6 +227,9 @@ function RGBAToHex(rgba, forceRemoveAlpha = false) {
                 throw new Error("image does not exists!");
             }
             let image = saved[this.current];
+            if (!image) {
+                return null;
+            }
             this.canvas.width = image.width;
             this.canvas.height = image.height;
             this.ctx.drawImage(image,0,0);
@@ -242,6 +248,9 @@ function RGBAToHex(rgba, forceRemoveAlpha = false) {
                 throw new Error("image does not exists!");
             }
             let image = saved[this.current];
+            if (!image) {
+                return -1;
+            }
             this.canvas.width = image.width;
             this.canvas.height = image.height;
             this.ctx.drawImage(image,0,0);

@@ -238,10 +238,15 @@ function RGBAToHex(rgba, forceRemoveAlpha = false) {
             image.src = this.canvas.toDataURL('image/png');
             saved[this.current] = image;
         };
-        importImage({uri,name}) {
-            let image = document.createElement("img");
-            image.src = uri;
-            saved[name] = image;
+        async importImage({uri,name}) {
+            let image;
+            const ImportPromise = new Promise(resolve => {
+                image = document.createElement("img");
+                image.onload = resolve;
+                image.src = uri;
+                saved[name] = image;
+            })
+            await ImportPromise;
         };
         readPixel({x,y}) {
             if (!saved[this.current]) {

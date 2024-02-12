@@ -223,9 +223,6 @@ function RGBAToHex(rgba, forceRemoveAlpha = false) {
             this.current = name;
         };
         writePixel({color,x,y}) {
-            if (!saved[this.current]) {
-                throw new Error("image does not exists!");
-            }
             let image = saved[this.current];
             if (!image) {
                 return null;
@@ -239,8 +236,7 @@ function RGBAToHex(rgba, forceRemoveAlpha = false) {
             saved[this.current] = image;
         };
         importImage({uri,name}) {
-            let image;
-            image = new Image();
+            let image = new Image("data:");
             saved[name] = image;
             return new Promise((resolve, reject) => {
                 image.onload = resolve;

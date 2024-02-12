@@ -245,12 +245,9 @@ function RGBAToHex(rgba, forceRemoveAlpha = false) {
         };
         readPixel({x,y}) {
             if (!saved[this.current]) {
-                throw new Error("image does not exists!");
-            }
-            let image = saved[this.current];
-            if (!image) {
                 return -1;
             }
+            let image = saved[this.current];
             this.canvas.width = image.width;
             this.canvas.height = image.height;
             this.ctx.drawImage(image,0,0);
@@ -263,18 +260,27 @@ function RGBAToHex(rgba, forceRemoveAlpha = false) {
             return JSON.stringify(Object.keys(saved));
         };
         getCurrent() {
+            if (!saved[this.current]) {
+                return -1;
+            };
             return this.current;
         };
         getWidth() {
+            if (!saved[this.current]) {
+                return -1;
+            };
             return saved[this.current].width;
         };
         getHeight() {
+            if (!saved[this.current]) {
+                return -1;
+            };
             return saved[this.current].height;
         };
         // a harder function
         grabRegion({x,y,width,height}) {
             if (!saved[this.current]) {
-                throw new Error("image does not exists!");
+                return -1;
             }
             let image = saved[this.current];
             this.canvas.width = image.width;
@@ -293,6 +299,9 @@ function RGBAToHex(rgba, forceRemoveAlpha = false) {
             return JSON.stringify(array);
         };
         exportImage({format}) {
+            if (!saved[this.current]) {
+                return -1;
+            };
             let image = saved[this.current];
             this.canvas.width = image.width;
             this.canvas.height = image.height;

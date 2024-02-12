@@ -238,7 +238,7 @@ function RGBAToHex(rgba, forceRemoveAlpha = false) {
             image.src = this.canvas.toDataURL('image/png');
             saved[this.current] = image;
         };
-        async importImage({uri,name}) {
+        importImage({uri,name}) {
             let image;
             const ImportPromise = new Promise(resolve => {
                 image = new Image();

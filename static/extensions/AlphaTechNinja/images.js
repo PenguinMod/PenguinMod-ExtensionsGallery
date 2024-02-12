@@ -241,12 +241,11 @@ function RGBAToHex(rgba, forceRemoveAlpha = false) {
         async importImage({uri,name}) {
             let image;
             const ImportPromise = new Promise(resolve => {
-                image = document.createElement("img");
+                image = new Image();
                 image.onload = resolve;
-                image.src = uri;
-                saved[name] = image;
-            })
-            await ImportPromise;
+                image.src = imageUrl;
+            });
+            return ImportPromise;
         };
         readPixel({x,y}) {
             if (!saved[this.current]) {

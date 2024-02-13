@@ -231,7 +231,7 @@ function RGBAToHex(rgba, forceRemoveAlpha = false) {
             this.canvas.height = image.height;
             this.ctx.drawImage(image,0,0);
             this.ctx.fillStyle = hexToRGB(color);
-            this.ctx.fillRect(x + 1,y + 1,x + 1,y + 1);
+            this.ctx.fillRect(x,y,x,y);
             image.src = this.canvas.toDataURL('image/png');
             saved[this.current] = image;
         };

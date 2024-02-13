@@ -7,7 +7,7 @@ COME SEE RANDOMLY BLOCKS
 class CakeUtilitys {
     getInfo() {
       return {
-        id: 'utilitysForCakeBwahaha',
+        id: 'utilitysForCake',
         name: 'Cake Utilitys',
         color1: '#f75b00',
         color2: '#e85500',
@@ -40,12 +40,34 @@ class CakeUtilitys {
               },
             }
           },
-          
+          {
+            opcode: 'addupit',
+            blockType: Scratch.BlockType.REPORTER,
+            text: 'round [input]',
+            disableMonitor: true,
+            arguments: {
+              input: {
+                type: Scratch.ArgumentType.STRING,
+                defaultValue: "4.7"
+              },
+            {
+            opcode: 'pieinmath',
+            blockType: Scratch.BlockType.REPORTER,
+            text: 'Math Pie',
+            disableMonitor: true,
+            },
         ],
       }
     }
     addmore(args) {
       return args.first + args.second + args.third + args.fourth + args.fifth;
+    }
+    additup(args) {
+        let input = args.input
+    return Math.round(input);
+    }
+    pieinmath(args) {
+        return Math.PI
     }
 
   }

@@ -6,6 +6,22 @@
 */
 export default [
     {
+        name: "Pause Utilities",
+        description: "Utilities for (Un)Pausing Scripts, Sprites, and Projects. Can Run Code When Project Paused as Well",
+        code: "SharkPool/Pause-Utilities.js",
+        banner: "SharkPool/Pause-Utilities.svg",
+        creator: "SharkPool-SP",
+        isGitHub: true,
+    },
+    {
+        name: "TurboWeather",
+        description: "Show weather and location data for any place in our world. Data that could be used for doxxing is deleted from results.",
+        code: "RubyDevs/turboweather.js",
+        banner: "RubyDevs/turboweather.webp",
+        documentation: "TurboWeather",
+        creator: "RubyDevs",
+    },
+    {
         name: "Object",
         description: "Handle large JSON files at an extreme speed.",
         code: "skyhigh173/object.js",
@@ -256,4 +272,28 @@ export default [
         creator: "MrRedstonia",
         isGitHub: true,
     },
+    {
+        name: "Pang API",
+        description: "Fetch information from the PenguinMod API.",
+        code: "SammerLOL/pangapi.js",
+        banner: "SammerLOL/pangapi.png",
+        creator: "oc9x97",
+        isGitHub: true,
+    },
+    {
+        name: "Scope Variable",
+        description: "Manage your variables in block like structure.",
+        code: "0znzw/ScopeVars.js",
+        banner: "0znzw/ScopeVars.png",
+        creator: "Ashimee",
+        isGitHub: true,
+    },
+    {
+        name: "Randomly Blocks",
+        description: "Have your project feel like a website.",
+        code: "mariocraft987/randomlyBlocks.js",
+        banner: "mariocraft987/randomlyBlocksBanner.svg",
+        creator: "mariocraft987",
+        isGithub: true,
+    }
 ];

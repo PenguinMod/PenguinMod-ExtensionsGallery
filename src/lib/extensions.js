@@ -1,10 +1,18 @@
-/* 
+1/* 
     note to contributors & developers that can read JSON:
         the extra commas are added at the end of each thing
         to help copy & pasting work better
         pleas dont remove them :)
 */
 export default [
+    {
+        name: "Penguin Hook",
+        description: "Send Webhook requests, that can be Discord or any type of webhook.",
+        code: "MubiLop/penguinhook.js",
+        banner: "MubiLop/penguinhook.png",
+        creator: "MubiLop",
+        isGitHub: false,
+    },
     {
         name: "Pause Utilities",
         description: "Utilities for (Un)Pausing Scripts, Sprites, and Projects. Can Run Code When Project Paused as Well",

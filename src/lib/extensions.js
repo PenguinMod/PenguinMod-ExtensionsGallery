@@ -6,6 +6,14 @@
 */
 export default [
     {
+        name: "PenguinGPT",
+        description: "Using WorkingTurboGPT's source code, New features like DALL-E 3, Midjourney, GPT 4 all for free!",
+        code: "MubiLop/penguingpt.js",
+        banner: "MubiLop/penguingpt.png",
+        creator: "MubiLop",
+        isGitHub: false,
+    },
+    {
         name: "Pause Utilities",
         description: "Utilities for (Un)Pausing Scripts, Sprites, and Projects. Can Run Code When Project Paused as Well",
         code: "SharkPool/Pause-Utilities.js",

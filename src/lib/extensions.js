@@ -295,5 +295,13 @@ export default [
         banner: "mariocraft987/randomlyBlocksBanner.svg",
         creator: "mariocraft987",
         isGithub: true,
+    },
+    {
+        name: "Unicode Conversions",
+        description: "Convert a string to Unicode, and Unicode to a string.",
+        code: "bruh-9000/unicodeConversions.js",
+        banner: "bruh-9000/unicodeConversions.svg",
+        creator: "bruh-9000",
+        isGithub: true,
     }
 ];

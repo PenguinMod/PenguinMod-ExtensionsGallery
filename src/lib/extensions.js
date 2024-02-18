@@ -295,5 +295,13 @@ export default [
         banner: "mariocraft987/randomlyBlocksBanner.svg",
         creator: "mariocraft987",
         isGithub: true,
+    },
+    {
+        name: "Better Math",
+        description: "Add more math evaluators.",
+        code: "bruh-9000/betterMath.js",
+        banner: "bruh-9000/betterMath.png",
+        creator: "bruh-9000",
+        isGithub: true,
     }
 ];

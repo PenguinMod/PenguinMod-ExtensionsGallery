@@ -1,7 +1,7 @@
 /**!
  * Scope Variables (Compiled)
  * @author 0znzw https://scratch.mit.edu/users/0znzw/
- * @version 1.1.1
+ * @version 1.1.2
  * @copyright MIT License
  * Original Idea: SinanShiki & SkyHigh173
  * Do not remove this comment
@@ -15,7 +15,7 @@
         runtime = vm.runtime;
 
     /**!
-     * Compiler-Utility [v2.1] created by 0znzw.
+     * Compiler-Utility [v2.1.1] created by 0znzw.
      * https://scratch.mit.edu/users/0znzw/
      * Patch code by CST1229
      * https://scratch.mit.edu/users/CST1229/

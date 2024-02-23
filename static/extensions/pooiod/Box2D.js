@@ -33,19 +33,6 @@
   
   var simspeed = 0;
 
-  function genLabelXML(text, _GAP) {
-    text = text.replaceAll('"', '&quot;');
-    text = text.split('\n');
-    let gap = _GAP;
-    for (let i = 0; i < text.length; i++) {
-      let str = text[i];
-      str = `<label text="${str}"/><sep gap="${gap}"/>`;
-      text[i] = str;
-    }
-    text = text.join('');
-    return text;
-  }
-
   const menuIconURI = "data:image/svg+xml;base64,PHN2ZyB2ZXJzaW9uPSIxLjEiDQoJIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyIgeG1sbnM6eGxpbms9Imh0dHA6Ly93d3cudzMub3JnLzE5OTkveGxpbmsiIHhtbG5zOmE9Imh0dHA6Ly9ucy5hZG9iZS5jb20vQWRvYmVTVkdWaWV3ZXJFeHRlbnNpb25zLzMuMC8iDQoJIHg9IjBweCIgeT0iMHB4IiB3aWR0aD0iNDBweCIgaGVpZ2h0PSI0MHB4IiB2aWV3Qm94PSItMy43IC0zLjcgNDAgNDAiIGVuYWJsZS1iYWNrZ3JvdW5kPSJuZXcgLTMuNyAtMy43IDQwIDQwIg0KCSB4bWw6c3BhY2U9InByZXNlcnZlIj4NCjxkZWZzPg0KPC9kZWZzPg0KPHJlY3QgeD0iOC45IiB5PSIxLjUiIGZpbGw9IiNGRkZGRkYiIHN0cm9rZT0iIzE2OUZCMCIgc3Ryb2tlLXdpZHRoPSIzIiB3aWR0aD0iMTQuOCIgaGVpZ2h0PSIxNC44Ii8+DQo8cmVjdCB4PSIxLjUiIHk9IjE2LjMiIGZpbGw9IiNGRkZGRkYiIHN0cm9rZT0iIzE2OUZCMCIgc3Ryb2tlLXdpZHRoPSIzIiB3aWR0aD0iMTQuOCIgaGVpZ2h0PSIxNC44Ii8+DQo8cmVjdCB4PSIxNi4zIiB5PSIxNi4zIiBmaWxsPSIjRkZGRkZGIiBzdHJva2U9IiMxNjlGQjAiIHN0cm9rZS13aWR0aD0iMyIgd2lkdGg9IjE0LjgiIGhlaWdodD0iMTQuOCIvPg0KPC9zdmc+";
   
   class BoxPhys {
@@ -70,8 +57,7 @@
         menuIconURI: menuIconURI,
         docsURI: 'https://pooiod7.neocities.org/markdown/#/projects/scratch/extensions/other/markdown/box2D.md',
         blocks: [
-          { blockType: Scratch.BlockType.XML,
-            xml: genLabelXML('Define objects', this.gap) },
+          { blockType: Scratch.BlockType.LABEL, text: "Define objects" },
           {
             opcode: 'setBodyAttrs',
             blockType: Scratch.BlockType.COMMAND,
@@ -167,8 +153,7 @@
               },
             },
           },
-          { blockType: Scratch.BlockType.XML,
-            xml: genLabelXML('Modify objects', this.gap) },
+          { blockType: Scratch.BlockType.LABEL, text: "Modify objects" },
           {
             opcode: 'destroyBody',
             blockType: Scratch.BlockType.COMMAND,
@@ -327,8 +312,7 @@
               },
             },
           },
-          { blockType: Scratch.BlockType.XML,
-            xml: genLabelXML('Define joints', this.gap) },
+          { blockType: Scratch.BlockType.LABEL, text: "Define joints" },
           {
             opcode: 'defineSpring',
             blockType: Scratch.BlockType.COMMAND,
@@ -388,8 +372,7 @@
               },
             },
           },
-          { blockType: Scratch.BlockType.XML,
-            xml: genLabelXML('Modify joints', this.gap) },
+          { blockType: Scratch.BlockType.LABEL, text: "Modify joints" },
           {
             opcode: 'destroyJoint',
             blockType: Scratch.BlockType.COMMAND,
@@ -455,8 +438,7 @@
               },
             },
           },
-          { blockType: Scratch.BlockType.XML,
-            xml: genLabelXML('World functions', this.gap) },
+          { blockType: Scratch.BlockType.LABEL, text: "World functions" },
           {
             opcode: 'init',
             blockType: Scratch.BlockType.COMMAND,

@@ -44,6 +44,13 @@ export default [
         creator: "pinksheep2917",
     },
     {
+        name: "Box2D Physics",
+        description: "Implements the Box2D physics engine into PenguinMod.",
+        code: "pooiod/Box2D.js",
+        banner: "pooiod/Box2D.png",
+        creator: "pooiod7",
+    },
+    {
         name: "Sprite Effects",
         description: "Apply New Non-Vanilla Effects to Sprites and the Canvas!",
         code: "SharkPool/Sprite-Effects.js",

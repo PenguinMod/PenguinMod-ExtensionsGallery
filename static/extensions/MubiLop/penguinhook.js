@@ -165,7 +165,7 @@
           headers: {
             'Content-Type': 'application/json'
           },
-          body: JSON.stringify(payload)
+          body: Scratch.Cast.toString(payload)
         })
         .then(response => {
           if (!response.ok) {
@@ -211,7 +211,7 @@
           headers: {
             'Content-Type': 'application/json'
           },
-          body: JSON.stringify(payload)
+          body: Scratch.Cast.toString(payload)
         })
         .then(response => {
           if (!response.ok) {
@@ -232,7 +232,7 @@
               headers: {
                 'Content-type': 'application/json'
               },
-              body: (args.JSON_DATA)
+              body: (Scratch.Cast.toString(args.JSON_DATA))
             }).then(res => {
               console.log(res);
             })

@@ -61,6 +61,29 @@ class BoxPhys {
       docsURI: 'https://pooiod7.neocities.org/markdown/#/projects/scratch/extensions/other/markdown/box2D.md',
       blocks: [
         {
+          opcode: 'stepSimulation',
+          blockType: Scratch.BlockType.COMMAND,
+          text: 'Step Simulation',
+        },
+        "---",
+        {
+          opcode: 'setsimspeed',
+          blockType: Scratch.BlockType.COMMAND,
+          text: 'Set slow motion to [VALUE]',
+          arguments: {
+            VALUE: {
+              type: Scratch.ArgumentType.NUMBER,
+              defaultValue: 30,
+            },
+          },
+        },
+        {
+          opcode: 'getsimspeed',
+          blockType: Scratch.BlockType.REPORTER,
+          text: 'Slow motion',
+        },
+        "---",
+        {
           opcode: 'init',
           blockType: Scratch.BlockType.COMMAND,
           text: 'Init World, scale 1m: [SCALE]  gravity: [GRAVITY]  scene: [SCENE]',
@@ -80,6 +103,7 @@ class BoxPhys {
             },
           },
         },
+        "---",
         {
           opcode: 'setBodyAttrs',
           blockType: Scratch.BlockType.COMMAND,
@@ -164,6 +188,18 @@ class BoxPhys {
             },
           },
         },
+        "---",
+        {
+          opcode: 'destroyBody',
+          blockType: Scratch.BlockType.COMMAND,
+          text: 'Destroy Body [NAME]',
+          arguments: {
+            NAME: {
+              type: Scratch.ArgumentType.STRING,
+              defaultValue: 'name',
+            },
+          },
+        },
         {
           opcode: 'createNoCollideSet',
           blockType: Scratch.BlockType.COMMAND,
@@ -176,13 +212,47 @@ class BoxPhys {
           },
         },
         {
-          opcode: 'destroyBody',
+          opcode: 'moveto',
           blockType: Scratch.BlockType.COMMAND,
-          text: 'Destroy Body [NAME]',
+          text: 'Move object [NAME] to x [X] y [Y]',
+          arguments: {
+            X: {
+              type: Scratch.ArgumentType.NUMBER,
+              defaultValue: 0,
+            },
+            Y: {
+              type: Scratch.ArgumentType.NUMBER,
+              defaultValue: 0,
+            },
+            NAME: {
+              type: Scratch.ArgumentType.STRING,
+              defaultValue: "name",
+            },
+          },
+        },
+        {
+          opcode: 'rotateto',
+          blockType: Scratch.BlockType.COMMAND,
+          text: 'Set rotation of object [NAME] to [ROT]',
+          arguments: {
+            ROT: {
+              type: Scratch.ArgumentType.NUMBER,
+              defaultValue: 90,
+            },
+            NAME: {
+              type: Scratch.ArgumentType.STRING,
+              defaultValue: "name",
+            },
+          },
+        },
+        {
+          opcode: 'clearvel',
+          blockType: Scratch.BlockType.COMMAND,
+          text: 'Clear velocity of object [NAME]',
           arguments: {
             NAME: {
               type: Scratch.ArgumentType.STRING,
-              defaultValue: 'name',
+              defaultValue: "name",
             },
           },
         },
@@ -220,6 +290,7 @@ class BoxPhys {
             },
           },
         },
+        "---",
         {
           opcode: 'getBodyIDAt',
           blockType: Scratch.BlockType.REPORTER,
@@ -288,6 +359,7 @@ class BoxPhys {
             },
           },
         },
+        "---",
         {
           opcode: 'defineSpring',
           blockType: Scratch.BlockType.COMMAND,
@@ -379,21 +451,6 @@ class BoxPhys {
           },
         },
         {
-          opcode: 'getJointAttr',
-          blockType: Scratch.BlockType.REPORTER,
-          text: 'Get Joint [JOINTATTRREAD] of joint [JOINTID]',
-          arguments: {
-            JOINTATTRREAD: {
-              type: Scratch.ArgumentType.STRING,
-              menu: 'JointAttrRead',
-            },
-            JOINTID: {
-              type: Scratch.ArgumentType.STRING,
-              defaultValue: 'Joint ID',
-            },
-          },
-        },
-        {
           opcode: 'setJointTarget',
           blockType: Scratch.BlockType.COMMAND,
           text: 'Set Mouse Joint Target [JOINTID] to x: [X]  y: [Y]',
@@ -413,70 +470,19 @@ class BoxPhys {
           },
         },
         {
-          opcode: 'moveto',
-          blockType: Scratch.BlockType.COMMAND,
-          text: 'Move object [NAME] to x [X] y [Y]',
-          arguments: {
-            X: {
-              type: Scratch.ArgumentType.NUMBER,
-              defaultValue: 0,
-            },
-            Y: {
-              type: Scratch.ArgumentType.NUMBER,
-              defaultValue: 0,
-            },
-            NAME: {
-              type: Scratch.ArgumentType.STRING,
-              defaultValue: "name",
-            },
-          },
-        },
-        {
-          opcode: 'rotateto',
-          blockType: Scratch.BlockType.COMMAND,
-          text: 'Set rotation of object [NAME] to [ROT]',
-          arguments: {
-            ROT: {
-              type: Scratch.ArgumentType.NUMBER,
-              defaultValue: 90,
-            },
-            NAME: {
-              type: Scratch.ArgumentType.STRING,
-              defaultValue: "name",
-            },
-          },
-        },
-        {
-          opcode: 'clearvel',
-          blockType: Scratch.BlockType.COMMAND,
-          text: 'Clear velocity of object [NAME]',
-          arguments: {
-            NAME: {
-              type: Scratch.ArgumentType.STRING,
-              defaultValue: "name",
-            },
-          },
-        },
-        {
-          opcode: 'getsimspeed',
+          opcode: 'getJointAttr',
           blockType: Scratch.BlockType.REPORTER,
-          text: 'Slow motion',
-        },
-        {
-          opcode: 'setsimspeed',
-          blockType: Scratch.BlockType.COMMAND,
-          text: 'Set slow motion to [VALUE]',
+          text: 'Get Joint [JOINTATTRREAD] of joint [JOINTID]',
           arguments: {
-            VALUE: {
-              type: Scratch.ArgumentType.NUMBER,
-              defaultValue: 30,
+            JOINTATTRREAD: {
+              type: Scratch.ArgumentType.STRING,
+              menu: 'JointAttrRead',
+            },
+            JOINTID: {
+              type: Scratch.ArgumentType.STRING,
+              defaultValue: 'Joint ID',
             },
           },
-        },
-        {
-          opcode: 'stepSimulation',
-          blockType: Scratch.BlockType.COMMAND,
-          text: 'Step Simulation',
         },
       ],
       menus: {

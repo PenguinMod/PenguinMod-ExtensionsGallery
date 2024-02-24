@@ -387,6 +387,7 @@
         id: 'vgscompiledvalues',
         name: 'More Types',
         color1: "#B300FF",
+        docsURI: "https://extensions.penguinmod.com/docs/more-types",
         blocks: [
           this.makeLabel("If you hover over blocks,"),
           this.makeLabel("there will be a tooltip."),
@@ -422,7 +423,7 @@
             opcode: "setVar",
             func: "noComp",
             blockType: Scratch.BlockType.COMMAND,
-            text: "set [VARIABLE] to [VALUE]",
+            text: "set [VARIABLE] to [VALUE] (works with these values)",
             arguments: {
               VARIABLE: {
                 type: Scratch.ArgumentType.VARIABLE,

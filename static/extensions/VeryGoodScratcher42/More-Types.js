@@ -422,7 +422,7 @@
             opcode: "setVar",
             func: "noComp",
             blockType: Scratch.BlockType.COMMAND,
-            text: "set [VARIABLE] to [VALUE] (works with these values)",
+            text: "set [VARIABLE] to [VALUE]",
             arguments: {
               VARIABLE: {
                 type: Scratch.ArgumentType.VARIABLE,

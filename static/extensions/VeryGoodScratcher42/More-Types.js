@@ -1,11 +1,12 @@
 (function(Scratch) {
   'use strict';
-  // This is built for PM
-  // NOTE: add structuredClone() block.
+  // This is built for PM and not turbowarp.
+  // NOTE TO SELF: add structuredClone() block.
   if (!Scratch.extensions.unsandboxed) {
     throw new Error('This Hello World example must run unsandboxed');
   }
     // i stole all of this code from here: https://github.com/BlueDome77/Turbowarp-Extension-List/blob/main/Extensions/Inline%20Blocks.js
+    // EDIT: this is probably not needed since i removed functions, but who cares.
     const PATCHES_ID = "__patches_" + "vgscompiledvalues";
 	const patch = (obj, functions) => {
 		if (obj[PATCHES_ID]) return;
@@ -384,7 +385,8 @@
     getInfo() {
       return {
         id: 'vgscompiledvalues',
-        name: 'Advanced Compiled Values',
+        name: 'More Types',
+        color1: "#B300FF",
         blocks: [
           this.makeLabel("If you hover over blocks,"),
           this.makeLabel("there will be a tooltip."),

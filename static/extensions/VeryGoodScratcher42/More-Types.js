@@ -3,7 +3,7 @@
   // This is built for PM and not turbowarp.
   // NOTE TO SELF: add structuredClone() block.
   if (!Scratch.extensions.unsandboxed) {
-    throw new Error('This Hello World example must run unsandboxed');
+    throw new Error('More Types must run unsandboxed');
   }
     // i stole all of this code from here: https://github.com/BlueDome77/Turbowarp-Extension-List/blob/main/Extensions/Inline%20Blocks.js
     // EDIT: this is probably not needed since i removed functions, but who cares.
@@ -45,7 +45,7 @@
 		}
 	});
 
-  class HelloWorld {
+  class MoreTypes {
     constructor(runtime) {
       let jsValues = this
       jsValues.runtime = runtime;
@@ -981,5 +981,5 @@
 		return res;
 	}
 	
-  Scratch.extensions.register(new HelloWorld(Scratch.vm.runtime));
+  Scratch.extensions.register(new MoreTypes(Scratch.vm.runtime));
 })(Scratch);

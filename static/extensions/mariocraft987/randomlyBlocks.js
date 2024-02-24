@@ -1,6 +1,7 @@
 /*
-@MIT LICENSE
-@VERSION 1.0
+@MIT LICENSE (C)
+@VERSION 1.2
+@MARIOCRAFT987
 */
 class RandomlyBlocks {
     getInfo() {
@@ -72,6 +73,18 @@ class RandomlyBlocks {
             disableMonitor: true,
           },
           {
+            opcode: 'YesNoAlert',
+            blockType: Scratch.BlockType.BOOLEAN,
+            text: '"Ok" button pressed on alert [STR]?',
+            disableMonitor: true,
+            arguments: {
+              STR: {
+                type: Scratch.ArgumentType.STRING,
+                defaultValue: "Popup"
+              },
+            }
+          },
+          {
             opcode: 'getDate',
             blockType: Scratch.BlockType.REPORTER,
             text: 'get Date',
@@ -89,16 +102,21 @@ class RandomlyBlocks {
             text: 'get Miliseconds since 1970',
             disableMonitor: true,
           },
+            
         ],
-      }
+      };
     }
     alertname(args) {
       alert(args.STR)
+    }
+    YNalert(args) {
+        return("hello!")
     }
   
     changeTitle(args) {
         document.title = args.STR
     }
+    
 
     consoleAdd(args) {
       console.log(args.STR)
@@ -128,6 +146,17 @@ class RandomlyBlocks {
     let date = new Date()
     return date.getTime();
   }
+
+    YesNoAlert(args) {
+    let jtext = args.STR
+    var pressLog
+  if (confirm(jtext) == true) {
+    pressLog = true
+  } else {
+    pressLog = false
+  }
+        return pressLog
+}
 
   }
   

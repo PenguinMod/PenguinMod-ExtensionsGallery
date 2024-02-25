@@ -1,6 +1,6 @@
 /*
 @Under MIT LICENSE (C)
-@Version 1.3
+@Version 1.5
 @Created by Mariocraft987
 */
 
@@ -88,6 +88,22 @@
             }
           },
           {
+            opcode: 'inputAlert',
+            blockType: Scratch.BlockType.REPORTER,
+            text: 'Input of [STR] with default of [default]',
+            disableMonitor: true,
+            arguments: {
+              STR: {
+                type: Scratch.ArgumentType.STRING,
+                defaultValue: "What's your username?"
+              },
+              default: {
+                type: Scratch.ArgumentType.STRING,
+                defaultValue: "mariocraft987"
+              },
+            }
+          },
+          {
             opcode: 'getDate',
             blockType: Scratch.BlockType.REPORTER,
             text: 'get Date',
@@ -168,7 +184,17 @@
       }
       return pressLog
     }
-            currentHolliday(args) {
+    
+    inputAlert(args) {
+        let question = args.STR
+        let normal = args.default
+        let answer = prompt(question, normal);
+      if (answer != null) {
+        return answer
+      }
+    }
+    
+        currentHolliday(args) {
 
         let date = new Date();
         let month = date.getMonth()
@@ -213,8 +239,6 @@
             if (month = 11) {
                 if (day == 25) {return "christmas"}
                 if (day == 31) {return "new years eve"}
-            }else{
-                return "No Importent Hollidays Today!"
             }
             return "No Importent Hollidays Today!"
         }

@@ -108,6 +108,14 @@ export default [
         isGitHub: true,
     },
     {
+        name: "SoundCloud API",
+        description: "Fetch Songs and Statistics from Soundcloud",
+        code: "SharkPool/SoundCloud-API.js",
+        banner: "SharkPool/SoundCloud-API.svg",
+        creator: "SharkPool-SP",
+        isGitHub: true,
+    },
+    {
         name: "Spotify API",
         description: "Fetch Statistics and Information and Play Songs from Spotify.",
         code: "SharkPool/Spotify.js",

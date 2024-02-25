@@ -57,6 +57,9 @@
         if (!stores.get(thread)) {
           stores.set(thread, {[str]: {}});
         }
+        if (!stores.get(thread)[str]) {
+          stores.get(thread)[str] = {};
+        }
         return stores.get(thread)[str];
       }
       jsValues.retireStore= function(thread, str) {
@@ -192,12 +195,15 @@
           return value;
         }
         set(num, value) {
-          let key = Math.abs(Math.floor(Number(num))) - 1;
+          let key = Math.abs(Math.floor(Number(num)));
           if (num === "length") {
-            return this.setLength(key)
+            return this.setLength(Number(value) || this.__values.length)
           }
           if (typeof num !== "number" && typeof num !== "boolean" && (typeof num !== "string" || Number.isNaN(key))) {
             throw "Attempted to set property of <Array> with a key that cannot be parsed as a number and is not length."
+          }
+          if (key > 12e6) {
+            throw "The maximum index for an array is 12 million. "
           }
           if (jsValues.typeof(value) === "unknown") {
             throw `Attempted to set property of <Array> with unknown value: ${value}`

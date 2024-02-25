@@ -429,7 +429,8 @@
             opcode: "setVar",
             func: "noComp",
             blockType: Scratch.BlockType.COMMAND,
-            text: "set [VARIABLE] to [VALUE] (works with these values)",
+            text: "set [VARIABLE] to [VALUE]",
+            tooltip: "bro it sets variable to a value what do you expect",
             arguments: {
               VARIABLE: {
                 type: Scratch.ArgumentType.VARIABLE,
@@ -447,6 +448,7 @@
             outputShape: 3,
             blockShape: Scratch.BlockShape.SQUARE,
             text: "variable [VARIABLE]",
+            tooltip: "why do you want to read this? learn scratch instead.",
             arguments: {
               VARIABLE: {
                 type: Scratch.ArgumentType.VARIABLE
@@ -515,6 +517,7 @@
             func: "noComp",
             blockType: Scratch.BlockType.COMMAND,
             text: "remove key [KEY] of [OBJECT]",
+            tooltip: "Remove the key, so that key in object is false.",
             arguments: {
               KEY: {
                 type: Scratch.ArgumentType.STRING,
@@ -598,6 +601,7 @@
             func: "noComp",
             blockType: Scratch.BlockType.LOOP,
             text: ["for key [KEY] value [VALUE] in [OBJECT]"],
+            tooltip: "Allows you to iterate through all of the keys and values of an object",
             branchCount: 1,
             arguments: {
               KEY: {
@@ -619,6 +623,7 @@
             func: "noComp",
             blockType: Scratch.BlockType.REPORTER,
             blockShape: Scratch.BlockShape.SQUARE,
+            tooltip: "Creates a symbol, which is a globally unique value. This means that every new symbol, is different from every other symbol.",
             text: "create a symbol",
           },
           {
@@ -626,6 +631,7 @@
             func: "noComp",
             blockType: Scratch.BlockType.REPORTER,
             blockShape: Scratch.BlockShape.SQUARE,
+            tooltip: "The \"Nothing\" value",
             text: "nothing"
           }
           // Planning on adding ==, === and ==== (basically just Object.is) for objects
@@ -968,13 +974,13 @@
 		if (!res.json.branchCount) res.json.branchCount = blockInfo.branchCount;
 		//f (!res.json.inputsInline) res.json.inputsInline = blockInfo.inputsInline
 		blockInfo.tooltip ? res.json.tooltip = blockInfo.tooltip : 0;
-		if (blockInfo.opcode === "anonymousFunction" && categoryInfo.id === "vgscompiledvalues") {
+		/*if (blockInfo.opcode === "anonymousFunction" && categoryInfo.id === "vgscompiledvalues") {
 		  res.json.colour = "#FF0000"
 		  res.json.colourSecondary = "#CC0000"
 		  res.json.colourTertiary = "#880000"
-		}
+		}*/ // I removed functions
 		// Add argument tooltips.
-		const args0 = res.json.args0;
+		/*const args0 = res.json.args0;
 		console.log(args0)
 		
 		for (const input in (args0 || {})) {
@@ -984,7 +990,7 @@
 		    }
 		  }
 		}
-		console.log(res.json)
+		console.log(res.json)*/ // remove all this dev stuff, and argument tooltips prob not needed.
 		return res;
 	}
 	

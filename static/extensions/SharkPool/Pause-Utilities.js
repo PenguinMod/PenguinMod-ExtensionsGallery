@@ -255,7 +255,7 @@
         runtime.pause();
       } else {
         const pauseButton = document.querySelector(
-          runtime.isPackaged ? `[class*="pause-button"]` :
+          typeof scaffolding !== "undefined" ? `[class*="pause-button"]` :
           "img.pause-btn.addons-display-none-pause"
         );
         if (pauseButton) pauseButton.click();

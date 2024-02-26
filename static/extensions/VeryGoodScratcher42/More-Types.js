@@ -107,8 +107,8 @@
         if (value instanceof jsValues.Map) {
           return "Map"
         }
-        if (value instanceof jsValues.RegExp) {
-          return "RegularExpression"
+        if (value instanceof jsValues.Symbol) {
+          return "Symbol"
         }
         return "unknown"
       }
@@ -148,13 +148,13 @@
           return value;
         }
         set(key, value) {
-          if (typeof key !== "string" && typeof key !== "symbol") {
+          if (typeof key !== "string" && typeof key !== "Symbol") {
             throw "Attempted to set property of <Object> with a non-string and non-symbol key. "
           }
           if (jsValues.typeof(value) === "unknown") {
             throw `Attempted to set property of <Object> with unknown value: ${value}`
           }
-          return this.__values[key] = value
+          return this.__values[(jsValues.typeof(key) === "Symbol") ? key.symbol : key] = value
         }
         delete(key) {
           return (delete this.__values[key])
@@ -311,9 +311,21 @@
           return "Maps do not save."
         }
       }
-      jsValues.Map.prototype.type = "Map";
+      jsValues.Map.prototype.type = "Map";	    
       
-      jsValues.RegExp = class RegularExpression {
+      jsValues.Symbol = class SymbolContainer {
+        constructor() {
+          this.symbol = Symbol();
+        }
+        toString() {
+          return `<Symbol>`;
+        }
+        toJSON() {
+          return "Symbols do not save."
+        }
+      }
+      jsValues.Symbl.prototype.type = "symbol"
+      /*jsValues.RegExp = class RegularExpression {
         constructor(obj) {
           this.__values = obj || new RegExp();
         }
@@ -324,7 +336,7 @@
           throw "Cannot overwrite the toString method of an object."
         }
         toJSON() {
-          return "Regular Expressions do not save. "
+          return "Regular Expbressions do not save. "
         }
       }
       jsValues.RegExp.prototype.type = "RegularExpression";
@@ -341,7 +353,7 @@
           // Something is wrong
           throw "Attempted to iterate over something that is not iterable. "
         }
-      }
+      }*/
       jsValues.toIterable = (value) => {
         // since forEach does not allow continue, i have to use toIterable.
         if (jsValues.typeof(value) === "Map" || jsValues.typeof(value) === "Set" || jsValues.typeof(value) === "Array") {
@@ -939,7 +951,7 @@
             return new (imports.TypedInput)(`((${getObj} = ${obj.asUnknown()}),(typeof (${getObj} ? ${getObj} : \{\}).size === "number")\n  ? ${getObj}.size\n  : runtime.ext_vgscompiledvalues.throwErr(\`Cannot read properties of \${${getObj}}\`))`, imports.TYPE_NUMBER)
           },
           createSymbol: (node, compiler, imports) => {
-            return new (imports.TypedInput)(`Symbol("")`, imports.TYPE_UNKNOWN);
+            return new (imports.TypedInput)(`new (runtime.ext_vgscompiledvalues).Symbol()`, imports.TYPE_UNKNOWN);
           },
           nothingValue: (node, compiler, imports) => {
             return new (imports.TypedInput)(`runtime.ext_vgscompiledvalues.Nothing`, imports.TYPE_UNKNOWN);

@@ -133,12 +133,12 @@
           this.__values = obj || {}
         }
         get(key) {
-          if (typeof key !== "string" && typeof key !== "symbol") {
+          if (typeof key !== "string" && typeof key !== "Symbol") {
             throw "Attempted to index <Object> with a non-string and non-symbol key. "
           }
           let exists = Object.hasOwn(this.__values, key);
           if (!exists) return jsValues.Nothing;
-          let value = this.__values[key];
+          let value = this.__values[jsValues.typeof(key) === "Symbol" ? key.symbol : key];
           if (jsValues.typeof(value) === "unknown") {
             return jsValues.Nothing
           }

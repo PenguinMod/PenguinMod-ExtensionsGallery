@@ -1,7 +1,7 @@
 /*
-@MIT LICENSE (C)
-@VERSION 1.2
-@MARIOCRAFT987
+@Under MIT LICENSE (C)
+@Version 1.5
+@Created by Mariocraft987
 */
 
 (function (Scratch) {
@@ -88,6 +88,22 @@
             }
           },
           {
+            opcode: 'inputAlert',
+            blockType: Scratch.BlockType.REPORTER,
+            text: 'Input of [STR] with default of [default]',
+            disableMonitor: true,
+            arguments: {
+              STR: {
+                type: Scratch.ArgumentType.STRING,
+                defaultValue: "What's your username?"
+              },
+              default: {
+                type: Scratch.ArgumentType.STRING,
+                defaultValue: "mariocraft987"
+              },
+            }
+          },
+          {
             opcode: 'getDate',
             blockType: Scratch.BlockType.REPORTER,
             text: 'get Date',
@@ -104,6 +120,12 @@
             blockType: Scratch.BlockType.REPORTER,
             text: 'get Miliseconds since 1970',
             disableMonitor: true,
+          },
+          {
+            opcode: 'currentHolliday',
+            blockType: Scratch.BlockType.REPORTER,
+            text: 'current holliday',
+            disableMonitor: true, 
           },
             
         ],
@@ -162,6 +184,62 @@
       }
       return pressLog
     }
+    
+    inputAlert(args) {
+        let question = args.STR
+        let normal = args.default
+        let answer = prompt(question, normal);
+      if (answer != null) {
+        return answer
+      }
+    }
+    
+    currentHolliday(args) {
+        let date = new Date();
+        let month = date.getMonth()
+        let day = date.getDate()
+            if (month = 0) {
+                if (day == 1) {return "new year"}
+                if (day == 15) {return "martin luther king"}
+            }else
+            if (month = 1) {
+                if (day == 2) {return "groundhogs day"}
+                if (day == 19) {return "presidents day"}
+            }else
+            if (month = 2) {
+                if (day == 31) {return "easter"}
+            }else
+            if (month = 3) {
+                if (day == 15) {return "tax day"}
+            }else
+            if (month = 4) {
+                if (day == 12) {return "mothers day"}
+            }else
+            if (month = 5) {
+                if (day == 16) {return "fathers day"}
+            }else
+            if (month = 6) {
+                if (day == 4) {return "independence day"}
+                if (day == 28) {return "parents day"}
+            }else
+            if (month = 7) {
+                /* Nothing much */
+            }else
+            if (month = 8) {
+                if (day == 2) {return "labor day"}
+            }else
+            if (month = 9) {
+                if (day == 31) {return "halloween"}
+            }else
+            if (month = 10) {
+                if (day == 28) {return "thanksgiving"}
+            }else
+            if (month = 11) {
+                if (day == 25) {return "christmas"}
+                if (day == 31) {return "new years eve"}
+            }
+            return "No Importent Hollidays Today!"
+        }
   }
   
   Scratch.extensions.register(new RandomlyBlocks())

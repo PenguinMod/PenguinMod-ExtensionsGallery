@@ -305,9 +305,9 @@ export default [
     },
     {
         name: "Randomly Blocks",
-        description: "Have your project feel like a website.",
+        description: "Utilitys to have your project feel like a website.",
         code: "mariocraft987/randomlyBlocks.js",
-        banner: "mariocraft987/randomlyBlocksBanner.svg",
+        banner: "mariocraft987/randomlyBlocks.svg",
         creator: "mariocraft987",
         isGithub: true,
     }

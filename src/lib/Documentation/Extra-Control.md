@@ -9,7 +9,7 @@ force hat (when I start as clone v) to [restart v] on activate :: control
 
 force hat (when I start as clone v) to [finish v] on activate :: control
 ```
-This Block allows you to control whether Hat/Event Blocks should (if already running) **restart** the script or wait for it to **finish** before running again.
+This Block allows you to control whether Selected Hat/Event Blocks should (if already running) **restart** the script or wait for it to **finish** before running again.
 
 ---
 
@@ -127,7 +127,7 @@ This Block will Each Inner Block **Individually** and will wait for Each to **Co
 ---
 
 ```scratch
-start new thread with (argument ::control) set to () {
+start new thread with (argument ::control) set to [data] {
 } @loopArrow ::control
 ```
 This Block Run the Inner Script in a **new Thread** without Waiting for it to Finish
@@ -151,10 +151,10 @@ The **key difference** is that once the Condition becomes **false**, the Block w
 
 ```scratch
 if <> {
-} my ID () ::control
+} my ID [my-block1] ::control
 
 else {
-} my ID () ::control
+} my ID [my-block1] ::control
 ```
 These Blocks are essentially "if else" Blocks but with a Twist...
 First, assign these Blocks a **Custom ID**, whatever you want it to be (Fun Fact: Multiple "if" & "else" Blocks can use the Same ID)
@@ -173,11 +173,11 @@ Additionally, you are allowed to put these Blocks in different **Scripts**, so l
 ## Inline Message Blocks
 
 ```scratch
-on call () run {
+on call [message 1] run {
 } ::control
 
-call () to run ::control
-call () to run and wait ::control
+call [message 1] to run ::control
+call [message 1] to run and wait ::control
 ```
 These Blocks work in the same way as "messages", the **Key Differences** are that these Blocks can be placed **Inside Scripts/By Itself** and there is no **menu**
 

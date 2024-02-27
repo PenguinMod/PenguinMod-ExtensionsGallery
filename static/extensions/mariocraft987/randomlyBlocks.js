@@ -194,12 +194,10 @@
       }
     }
     
-        currentHolliday(args) {
-
+    currentHolliday(args) {
         let date = new Date();
         let month = date.getMonth()
         let day = date.getDate()
-        
             if (month = 0) {
                 if (day == 1) {return "new year"}
                 if (day == 15) {return "martin luther king"}
@@ -242,7 +240,6 @@
             }
             return "No Importent Hollidays Today!"
         }
-    
   }
   
   Scratch.extensions.register(new RandomlyBlocks())

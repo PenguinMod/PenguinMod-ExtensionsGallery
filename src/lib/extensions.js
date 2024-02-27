@@ -14,6 +14,14 @@ export default [
         isGitHub: true,
     },
     {
+    name: "Git Penguin",
+    description: "Make requests and control the files for your GitHub repository.",
+    code: "justablock/gitpenguin.js",
+    banner: "justablock/gitpenguin.png",
+    creator: "justablock",
+    isGitHub: false, 
+},
+    {
         name: "TurboWeather",
         description: "Show weather and location data for any place in our world. Data that could be used for doxxing is deleted from results.",
         code: "RubyDevs/turboweather.js",

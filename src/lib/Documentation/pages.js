@@ -5,6 +5,8 @@
 //      "./particle-tools.md?raw"
 import PageParticleTools from "./particle-tools.md?raw";
 
+// Extra Control (unlisted)
+import PageExtraControl from "./Extra-Control.md?raw";
 // Free Servers
 import PageFreeServers from "./FreeServers.md?raw";
 
@@ -16,6 +18,7 @@ export default {
     // so you can do "sharkpool-particle-tools" for example
     // you cant use / like "sharkpool/particle-tools" yet
     "particle-tools": PageParticleTools,
+    "Extra-Control": PageExtraControl,
 
     // FreeServers
     "FreeServers": PageFreeServers,

@@ -110,6 +110,9 @@
         if (value instanceof jsValues.Symbol) {
           return "Symbol"
         }
+        if (value instanceof jsValues.Function) {
+          return "Function"
+        }
         return "unknown"
       }
       jsValues.clone = function CLONE(value) {
@@ -133,12 +136,12 @@
           this.__values = obj || {}
         }
         get(key) {
-          if (typeof key !== "string" && typeof key !== "Symbol") {
+          if (typeof key !== "string" && typeof key !== "symbol") {
             throw "Attempted to index <Object> with a non-string and non-symbol key. "
           }
           let exists = Object.hasOwn(this.__values, key);
           if (!exists) return jsValues.Nothing;
-          let value = this.__values[jsValues.typeof(key) === "Symbol" ? key.symbol : key];
+          let value = this.__values[key];
           if (jsValues.typeof(value) === "unknown") {
             return jsValues.Nothing
           }
@@ -324,7 +327,21 @@
           return "Symbols do not save."
         }
       }
-      jsValues.Symbl.prototype.type = "symbol"
+      jsValues.Symbol.prototype.type = "symbol";
+      
+      jsValues.Function = class Function {
+        constructor(target, func) {
+          this.func = func;
+          this.name = target.getName();
+          this.original = target.isOriginal;
+        }
+        toString() {
+          return `<Function in ${this.name}${!this.original ? "'s clone" : ""}>`;
+        }
+        call() {
+          return this.func();
+        }
+      }
       /*jsValues.RegExp = class RegularExpression {
         constructor(obj) {
           this.__values = obj || new RegExp();
@@ -645,9 +662,10 @@
             blockShape: Scratch.BlockShape.SQUARE,
             tooltip: "The \"Nothing\" value",
             text: "nothing"
-          }
+          },
           // Planning on adding ==, === and ==== (basically just Object.is) for objects
-          /* this is just way too buggy, plus, yield doesnt work here. 
+          // I FOUND A WAY TO MAKE FUNCTIONS
+          // https://github.com/PenguinMod/PenguinMod-Vm/blob/develop/src/compiler/jsgen.js#L556
           this.makeLabel("Anonymous Functions"),
           {
             opcode: "anonymousFunction",
@@ -697,7 +715,7 @@
                defaultValue: "Insert Function Here",
              }
             }
-          },*/
+          },
         ],
         menus: {
           objectClasses: {
@@ -855,16 +873,22 @@
 			const stackSrc = compiler.source.substring(oldSrc.length);
 			compiler.source = oldSrc;
 			
-			return new (imports.TypedInput)(`Object.assign((function(target = __target){try{${stackSrc};}catch(e){throw e};return runtime.ext_vgscompiledvalues.Nothing}), {type: "Function", original: target.isOriginal, sprite: target.getName(),e:console.log(target), toString: function(){return \`<Function in \${this.sprite}\${!this.original ? "'s clone" : ""}>\`}})`, imports.TYPE_UNKNOWN)
+			return new (imports.TypedInput)(`new (runtime.ext_vgscompiledvalues.Function)(target, (function*(){${stackSrc};\nreturn runtime.ext_vgscompiledvalues.Nothing;}))`, imports.TYPE_UNKNOWN)
           },
           returnFromFunction: (node, compiler, imports) => {
-            compiler.source += `try{if(!new.target){return ${compiler.descendInput(node.value).asUnknown()}}}catch(e){throw "You can only return from a function"}\n`
+            compiler.source += `return ${compiler.descendInput(node.value).asUnknown()};\n`
           },
           callFunction: (node, compiler, imports) => {
-            compiler.source += `(function(){const func=${compiler.descendInput(node.func).asUnknown()};(typeof func === "function" && func.type === "Function")?func():null})()\n`
+            const local = compiler.localVariables.next();
+            const func = compiler.descendInput(node.func);
+            const getFunc = `(runtime.ext_vgscompiledvalues.getStore(globalState.thread, "${local}")).func`;
+            compiler.source+=`(yield* (${getFunc} = ${func.asUnknown()},\n  (runtime.ext_vgscompiledvalues.typeof(${getFunc}) === "Function") ?\n  \ \ ${getFunc}.call() :\n  \ \ runtime.ext_vgscompiledvalues.throwErr("Attempted to call non-function.")));`
           },
           callFunctionOutput: (node, compiler, imports) => {
-            return new (imports.TypedInput)(`(function(){const func=${compiler.descendInput(node.func).asUnknown()};if(typeof func==="function"&&func.type==="Function"){return func()}return runtime.ext_vgscompiler.Nothing})()`, imports.TYPE_UNKNOWN)
+            const local = compiler.localVariables.next();
+            const func = compiler.descendInput(node.func);
+            const getFunc = `(runtime.ext_vgscompiledvalues.getStore(globalState.thread, "${local}")).func`;
+            return new (imports.TypedInput)(`(yield* (${getFunc} = ${func.asUnknown()},\n  (runtime.ext_vgscompiledvalues.typeof(${getFunc}) === "Function") ?\n  \ \ ${getFunc}.call() :\n  \ \ runtime.ext_vgscompiledvalues.throwErr("Attempted to call non-function.")))`, imports.TYPE_UNKNOWN)
           },
           setVar: (node, compiler, imports) => {
             const variable = compiler.descendVariable(node.variable);

@@ -98,3 +98,23 @@ create a symbol::#B300FF reporter
 nothing::#B300FF reporter
 ```
 The first one creates a symbol (which is a guaranteed-to-be-unique value that can be used as an object or map key), and the second one is the special value called nothing (which is the value you get when you peek inside an empty room)
+
+### Anonymous Function / return
+```scratch
+Anonymous Function {
+}::#B300FF cap
+
+return []::#B300FF cap
+```
+Anonymous Function essentially dynamically creates a custom block, which can then be "called". Return allows you to immediately stop the execution of the blocks inside of the function, and "returns" a value.
+
+### Call function
+
+```scratch
+call function [Insert Function Here]::#B300FF
+
+call function [Insert Function Here] and get return value::#B300FF reporter
+```
+The first block allows you to execute the function, as the sprite it was created in, but ignores whatever value the function returned.
+
+The seconds block does what the first block does, but it is an input, and it gets you the value that the function returned.

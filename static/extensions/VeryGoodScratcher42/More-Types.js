@@ -500,6 +500,19 @@
               }
             }
           },
+          {
+            opcode: "typeof",
+            func: "noComp",
+            blockType: Scratch.BlockType.REPORTER,
+            text: "typeof [OBJECT]",
+            tooltip: "Gets the type of an object.",
+            arguments: {
+              OBJECT: {
+                type: Scratch.ArgumentType.STRING,
+                defaultValue: "Insert Anything Here"
+              }
+            }
+          },
           "---",
           this.makeLabel("Objects, Arrays, Sets, and Maps"),
           {
@@ -831,6 +844,10 @@
             kind: "input",
             object: generator.descendInputOfBlock(block, "OBJECT")
           }),
+          typeof: (generator, block) => ({
+            kind: "input",
+            object: generator.descendInputOfBlock(block, "OBJECT")
+          }),
           createSymbol: (generator, block) => ({
             kind: "input"
           }),
@@ -974,6 +991,10 @@
             const getObj = `(runtime.ext_vgscompiledvalues.getStore(globalState.thread, "${local1}")).obj`
             return new (imports.TypedInput)(`((${getObj} = ${obj.asUnknown()}),(typeof (${getObj} ? ${getObj} : \{\}).size === "number")\n  ? ${getObj}.size\n  : runtime.ext_vgscompiledvalues.throwErr(\`Cannot read properties of \${${getObj}}\`))`, imports.TYPE_NUMBER)
           },
+          typeof: (node, compiler, imports) => {
+            const obj = compiler.descendInput(node.object);
+            return new (imports.TypedInput)(`(runtime.ext_vgscompiledvalues.typeof(${obj.asUnknown()}))`, imports.TYPE_NUMBER)
+          },
           createSymbol: (node, compiler, imports) => {
             return new (imports.TypedInput)(`new (runtime.ext_vgscompiledvalues).Symbol()`, imports.TYPE_UNKNOWN);
           },
@@ -1010,11 +1031,6 @@
 		if (!res.json.branchCount) res.json.branchCount = blockInfo.branchCount;
 		//f (!res.json.inputsInline) res.json.inputsInline = blockInfo.inputsInline
 		blockInfo.tooltip ? res.json.tooltip = blockInfo.tooltip : 0;
-		/*if (blockInfo.opcode === "anonymousFunction" && categoryInfo.id === "vgscompiledvalues") {
-		  res.json.colour = "#FF0000"
-		  res.json.colourSecondary = "#CC0000"
-		  res.json.colourTertiary = "#880000"
-		}*/ // I removed functions
 		// Add argument tooltips.
 		/*const args0 = res.json.args0;
 		console.log(args0)

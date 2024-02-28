@@ -32,6 +32,22 @@ This is the same as the regular get variable block, except that you know that it
 new [Object v]::#B300FF reporter
 ```
 Creates an object, array, set, or map.
+
+### typeof
+```scratch
+typeof [Insert Anything Here]::#B300FF reporter
+```
+Gets the type of the value provided, it can be:
+string,
+number,
+boolean,
+Object,
+Array,
+Set,
+Map,
+Symbol,
+nothing,
+or Function.
 ### get / set / remove Key
 ```scratch
 get key [foo] of [Insert Object / Array / Map Here]::#B300FF reporter

@@ -1,5 +1,5 @@
 # More Types
-More Types introduces 6 new types to PenguinMod: Object, Array, Set, Map, Symbol, and Nothing. 
+More Types introduces 7 new types to PenguinMod: Object, Array, Set, Map, Symbol, Nothing, and Function. 
 
 These types can be used to do all sorts of things.
 

@@ -73,7 +73,7 @@ class DiscordAuthExtension {
   openPopupAndWait() {
     const callbackUrlBase64 = btoa(window.location.href);
     this.popup = window.open(`https://discordauth.penguinmod.com/verify?callback=${callbackUrlBase64}`, 'PopupWindow', 'width=450,height=700');
-    const pollInterval = setInterval(() => {
+    const pollInterval = setInterval(async () => {
       if (!this.popup || this.popup.closed) {
         clearInterval(pollInterval);
       } else {

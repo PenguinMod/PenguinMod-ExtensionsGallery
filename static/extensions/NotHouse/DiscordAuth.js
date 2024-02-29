@@ -77,7 +77,6 @@ class DiscordAuthExtension {
       const pollInterval = setInterval(()=> {
         if (!this.popup || this.popup.closed) {
           clearInterval(pollInterval);
-          resolve();
         } else {
           try {
             const urlParams = new URLSearchParams(this.popup.location.search);

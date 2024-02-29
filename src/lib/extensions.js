@@ -9,7 +9,7 @@ export default [
         name: "Discord Auth",
         description: "Login with discord to your projects. Identify users by ID and username in a secure and easy way!",
         code: "NotHouse/DiscordAuth.js",
-        banner: "NotHouse/DiscordAuth.png",
+        banner: "NotHouse/DiscordAuth-banner.png",
         creator: "NotHouse",
         isGitHub: true,
     },

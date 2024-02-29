@@ -77,6 +77,7 @@ class DiscordAuthExtension {
       const pollInterval = setInterval(async () => {
         if (!this.popup || this.popup.closed) {
           clearInterval(pollInterval);
+          resolve();
         } else {
           try {
             const urlParams = new URLSearchParams(this.popup.location.search);
@@ -85,8 +86,9 @@ class DiscordAuthExtension {
               this.privateCode = privateCode;
               clearInterval(pollInterval);
               this.popup.close();
+              resolve();
             }
-          } catch (error) {}
+          } catch (error) {resolve();}
         }
       }, 1000);
     });

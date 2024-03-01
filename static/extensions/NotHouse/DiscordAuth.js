@@ -1,5 +1,5 @@
 // Made by NotHouse
-// Version 1.0.3 [This is a beta version, expect bugs]
+// Version 1.0.4 [This is a beta version, expect bugs]
 function getDataFromObject(data, field) {
   if (data.hasOwnProperty(field)) {
     return data[field];
@@ -83,7 +83,6 @@ class DiscordAuthExtension {
           {text: 'Banner Color', value: 'banner_color'},
           {text: 'MFA Enabled', value: 'mfa_enabled'},
           {text: 'Locale', value: 'locale'},
-          {text: 'Email', value: 'email'},
           {text: 'Verified', value: 'verified'}
         ]
       }
@@ -171,7 +170,6 @@ class DiscordAuthExtension {
 	if (/\s/.test(args.PRIVATECODE)) {
       return "null"
     }
-
     const apiUrl = `https://discordauth.penguinmod.com/user?privatecode=${args.PRIVATECODE}`;
     try {
         const response = await fetch(apiUrl);
@@ -186,68 +184,6 @@ class DiscordAuthExtension {
         return "null";
     }
   }
-  
-  
-  async getUserID(args) {
-    if (/\s/.test(args.PRIVATECODE)) {
-      return "null"
-    }
-
-    const apiUrl = `https://discordauth.penguinmod.com/user?privatecode=${args.PRIVATECODE}`;
-    try {
-        const response = await fetch(apiUrl);
-        if (response.status === 200) {
-          const data = await response.json();
-          return data.id;
-        } else {
-          return "null";
-        }
-    } catch (error) {
-        console.error('Error:', error);
-        return "null";
-    }
-  }
-
-  async getUsername(args) {
-    if (/\s/.test(args.PRIVATECODE)) {
-      return "null"
-    }
-
-    const apiUrl = `https://discordauth.penguinmod.com/user?privatecode=${args.PRIVATECODE}`;
-    try {
-        const response = await fetch(apiUrl);
-        if (response.status === 200) {
-          const data = await response.json();
-          return data.username;
-        } else {
-          return "null";
-        }
-    } catch (error) {
-        console.error('Error:', error);
-        return "null";
-    }
-  }
-
-  async getNickname(args) {
-    if (/\s/.test(args.PRIVATECODE)) {
-      return "null"
-    }
-
-    const apiUrl = `https://discordauth.penguinmod.com/user?privatecode=${args.PRIVATECODE}`;
-    try {
-        const response = await fetch(apiUrl);
-        if (response.status === 200) {
-          const data = await response.json();
-          return data.global_name;
-        } else {
-          return "null";
-        }
-    } catch (error) {
-        console.error('Error:', error);
-        return "null";
-    }
-  }
-
 }
 
 Scratch.extensions.register(new DiscordAuthExtension());

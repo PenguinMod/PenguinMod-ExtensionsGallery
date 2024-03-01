@@ -103,8 +103,11 @@ class DiscordAuthExtension {
             this.privateCode = privateCode;
             clearInterval(pollInterval);
             this.popup.close();
+          } else {
+            console.log("Weird error happened!");
+            this.popup.close();
           }
-        } catch (error) {}
+        } catch (error) {this.popup.close();}
       }
     }, 1000);
   }

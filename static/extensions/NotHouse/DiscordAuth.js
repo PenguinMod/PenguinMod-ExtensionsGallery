@@ -1,4 +1,4 @@
-// Made by NotHouse
+// Made by NotHouse (and windowsbuild3r :D)
 // Version 1.0.2 [This is a beta version, expect bugs]
 
 class DiscordAuthExtension {
@@ -71,26 +71,35 @@ class DiscordAuthExtension {
   }
 
   openPopupAndWait() {
-    return new Promise((resolve, reject) => {
-      const callbackUrlBase64 = btoa(window.location.href);
-      this.popup = window.open(`https://discordauth.penguinmod.com/verify?callback=${callbackUrlBase64}`, 'PopupWindow', 'width=450,height=700');
-      const pollInterval = setInterval(()=> {
+    const callbackUrlBase64 = btoa(window.location.href);
+    this.popup = window.open(`https://discordauth.penguinmod.com/verify?callback=${callbackUrlBase64}`, 'PopupWindow', 'width=450,height=700');
+    const pollInterval = setInterval(() => {
         if (!this.popup || this.popup.closed) {
-          clearInterval(pollInterval);
+            clearInterval(pollInterval);
         } else {
-          try {
-            const urlParams = new URLSearchParams(this.popup.location.search);
-            const privateCode = urlParams.get('privatecode');
-            if (privateCode) {
-              this.privateCode = privateCode;
-              clearInterval(pollInterval);
-              this.popup.close();
-              resolve();
-            }
-          } catch (error) {resolve();}
+            try {
+                const urlParams = new URLSearchParams(this.popup.location.search);
+                const privateCode = urlParams.get('privatecode');
+                if (privateCode) {
+                    const apiUrl = `https://discordauth.penguinmod.com/user?privatecode=${privateCode}`;
+                    fetch(apiUrl)
+                        .then(response => {
+                            if (response.status === 200) {
+                                this.privateCode = privateCode;
+                                console.log('It works! Yay :D')
+                            }
+                            clearInterval(pollInterval);
+                            this.popup.close();
+                        })
+                        .catch(error => {
+                            console.error('Error:', error);
+                            clearInterval(pollInterval);
+                            this.popup.close();
+                        });
+                }
+            } catch (error) {}
         }
-      }, 1000);
-    });
+    }, 1000);
   }
 
   getPrivateCode() {

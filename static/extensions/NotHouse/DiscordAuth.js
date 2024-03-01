@@ -1,5 +1,5 @@
 // Made by NotHouse
-// Version 1.0.2 [This is a beta version, expect bugs]
+// Version 1.0.3 [This is a beta version, expect bugs]
 function getDataFromObject(data, field) {
   if (data.hasOwnProperty(field)) {
     return data[field];

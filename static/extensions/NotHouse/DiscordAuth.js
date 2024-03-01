@@ -107,7 +107,7 @@ class DiscordAuthExtension {
             console.log("Weird error happened!");
             this.popup.close();
           }
-        } catch (error) {this.popup.close();}
+        } catch (error) {}
       }
     }, 1000);
   }

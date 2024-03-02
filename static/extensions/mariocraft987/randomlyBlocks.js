@@ -1,6 +1,6 @@
 /*
 @Under MIT LICENSE (C)
-@Version 1.5
+@Version 1.7
 @Created by Mariocraft987
 */
 
@@ -66,7 +66,7 @@
           {
             opcode: 'amExist',
             blockType: Scratch.BlockType.BOOLEAN,
-            text: 'Do I exist?',
+            text: 'True?',
             disableMonitor: true,
           },
           {
@@ -133,7 +133,7 @@
     }
     alertname(args) {
       alert(args.STR)
-    }
+    }    
       // Old Block Test
     YNalert(args) {
       return("hello!")
@@ -150,15 +150,15 @@
     consoleError(args) {
       window.console.error(args.STR)
     }
-
+    
+    amExist(args) {
+      return "Imposter Reporter as a Boolean!!"
+    }
+    
     notExist(args) {
       return false
     }
-
-    amExist(args) {
-      return true
-    }
-
+    
     getDate(args) {
       let date = Date()
       return date
@@ -198,43 +198,43 @@
         let date = new Date();
         let month = date.getMonth()
         let day = date.getDate()
-            if (month = 0) {
+            if (month == 0) {
                 if (day == 1) {return "new year"}
                 if (day == 15) {return "martin luther king"}
             }else
-            if (month = 1) {
+            if (month == 1) {
                 if (day == 2) {return "groundhogs day"}
                 if (day == 19) {return "presidents day"}
             }else
-            if (month = 2) {
+            if (month == 2) {
                 if (day == 31) {return "easter"}
             }else
-            if (month = 3) {
+            if (month == 3) {
                 if (day == 15) {return "tax day"}
             }else
-            if (month = 4) {
+            if (month == 4) {
                 if (day == 12) {return "mothers day"}
             }else
-            if (month = 5) {
+            if (month == 5) {
                 if (day == 16) {return "fathers day"}
             }else
-            if (month = 6) {
+            if (month == 6) {
                 if (day == 4) {return "independence day"}
                 if (day == 28) {return "parents day"}
             }else
-            if (month = 7) {
+            if (month == 7) {
                 /* Nothing much */
             }else
-            if (month = 8) {
+            if (month == 8) {
                 if (day == 2) {return "labor day"}
             }else
-            if (month = 9) {
+            if (month == 9) {
                 if (day == 31) {return "halloween"}
             }else
-            if (month = 10) {
+            if (month == 10) {
                 if (day == 28) {return "thanksgiving"}
             }else
-            if (month = 11) {
+            if (month == 11) {
                 if (day == 25) {return "christmas"}
                 if (day == 31) {return "new years eve"}
             }

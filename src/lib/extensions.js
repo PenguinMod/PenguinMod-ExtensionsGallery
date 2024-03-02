@@ -6,6 +6,14 @@
 */
 export default [
     {
+        name: "Discord Auth",
+        description: "Login with discord to your projects. Identify users by ID and username in a secure and easy way!",
+        code: "NotHouse/DiscordAuth.js",
+        banner: "NotHouse/DiscordAuth-banner.png",
+        creator: "NotHouse",
+        isGitHub: true,
+    },
+    {
         name: "Pause Utilities",
         description: "Utilities for (Un)Pausing Scripts, Sprites, and Projects. Can Run Code When Project Paused as Well",
         code: "SharkPool/Pause-Utilities.js",
@@ -199,6 +207,14 @@ export default [
         code: "Lily/AllMenus.js",
         banner: "Lily/AllMenus.svg",
         creator: "LilyMakesThings",
+        isGitHub: false,
+    },
+    {
+        name: "More Types",
+        description: "Add more types (that are compiled). This includes Objects, Arrays, Sets, Maps, Symbol and Nothing.",
+        code: "VeryGoodScratcher42/More-Types.js",
+        banner: "VeryGoodScratcher42/More-Types.png",
+        creator: "VeryGoodScratcher42",
         isGitHub: false,
     },
     {

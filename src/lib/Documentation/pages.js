@@ -13,6 +13,8 @@ import PageFreeServers from "./FreeServers.md?raw";
 // TurboWeather
 import PageTurboWeather from "./TurboWeather.md?raw";
 
+import PageMoreTypes from "./More-Types.md?raw";
+
 export default {
     // the key is the path to the docs page
     // so you can do "sharkpool-particle-tools" for example
@@ -25,4 +27,6 @@ export default {
 
     //TurboWeather
     "TurboWeather": PageTurboWeather,
+
+    "more-types": PageMoreTypes,
 };

@@ -212,7 +212,7 @@ export default [
     {
         name: "More Types",
         description: "Add more types (that are compiled). This includes Objects, Arrays, Sets, Maps, Symbol and Nothing.",
-        code: "VeryGoodScratch42/More-Types.js",
+        code: "VeryGoodScratcher42/More-Types.js",
         banner: "VeryGoodScratcher42/More-Types.png",
         creator: "VeryGoodScratcher42",
         isGitHub: false,

@@ -1,6 +1,6 @@
 /*
 @Under MIT LICENSE (C)
-@Version 0.5.2
+@Version 0.5.3
 @Created by Mariocraft987 <https://scratch.mit.edu/users/mariocraft987>
 DO NOT REMOVE THIS COMMENT OR ELSE
 */
@@ -130,6 +130,31 @@ DO NOT REMOVE THIS COMMENT OR ELSE
             text: "Random color hex",
             disableMonitor: true,
           },
+          { blockType: Scratch.BlockType.LABEL, text: "Random" },
+          {
+            opcode: "color",
+            blockType: Scratch.BlockType.REPORTER,
+            text: "Color hex [STR]",
+            disableMonitor: true,
+            arguments: {
+              STR: {
+                type: Scratch.ArgumentType.COLOR,
+                defaultValue: "#1e90ff"
+              }
+            }
+          },
+          {
+            opcode: "error",
+            blockType: Scratch.BlockType.REPORTER,
+            text: "Throw error [STR]",
+            disableMonitor: true,
+            arguments: {
+              STR: {
+                type: Scratch.ArgumentType.STRING,
+                defaultValue: "Oops an error!"
+              }
+            }
+          },
           { blockType: Scratch.BlockType.LABEL, text: "Danger Zone" },
           {
             opcode: "localSet",
@@ -213,6 +238,14 @@ DO NOT REMOVE THIS COMMENT OR ELSE
     
     AIcolor(args) {
       return "#000000".replace(/0/g,function(){return (~~(Math.random()*16)).toString(16);})
+    }
+
+    color(args) {
+      return args.STR
+    }
+
+    error(args) {
+      throw new Error(args.STR);
     }
     
     localSet(args) {

@@ -326,5 +326,13 @@ export default [
         banner: "mariocraft987/randomlyBlocks.svg",
         creator: "mariocraft987",
         isGithub: true,
-    }
+    },
+    {
+        name: "Smart Cubes",
+        description: "More utilitys such as arrays, localstorage, and comments.",
+        code: "mariocraft987/smartCubes.js",
+        banner: "mariocraft987/smartCubes.svg",
+        creator: "mariocraft987",
+        isGithub: true,
+    },
 ];

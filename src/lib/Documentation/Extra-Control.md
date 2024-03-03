@@ -194,10 +194,26 @@ You can Choose whether to **wait** or **dont wait** for the Script to **Finish**
 ---
 
 ```scratch
+(get (...:: #EC9C13) from (Stage v) :: control)
+```
+This Block returns the Value of the Inputted Block (**Reporter/Boolean**) from the Selected **Sprite**
+
+---
+
+```scratch
 as clones of (myself v) with [private variable] set to [value] {
 } :: control
 ```
 This Block Runs the Inner Script in a Selected **Clone** of a **Sprite**.
+**Private Variable** Refers to Variables set to "for this sprite only"
+
+
+---
+```scratch
+(get (...:: #EC9C13) from clone (1) of (myself v) with [private variable] set to [0] :: control)
+```
+This Block returns the Value of the Inputted Block (**Reporter/Boolean**) from the Selected **Clone** of a **Sprite**
+**Private Variable** Refers to Variables set to "for this sprite only"
 
 ---
 

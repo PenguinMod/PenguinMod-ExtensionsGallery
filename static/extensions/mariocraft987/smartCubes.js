@@ -7,6 +7,7 @@ DO NOT REMOVE THIS COMMENT OR ELSE
 
 (async function (Scratch) {
   const array = [];
+  const variables = [];
   
   class SmartCubes {
     getInfo() {
@@ -37,6 +38,35 @@ DO NOT REMOVE THIS COMMENT OR ELSE
             blockType: Scratch.BlockType.CONDITIONAL,
             text: "/*",
             disableMonitor: true,
+          },
+          { blockType: Scratch.BlockType.LABEL, text: "Variable Blocks" },
+          {
+            opcode: "setVar",
+            blockType: Scratch.BlockType.COMMAND,
+            text: "set [STR] to [value]",
+            disableMonitor: true,
+            arguments: {
+              STR: {
+                type: Scratch.ArgumentType.STRING,
+                defaultValue: "health"
+              },
+              value: {
+                type: Scratch.ArgumentType.STRING,
+                defaultValue: "3"
+              }
+            }
+          },
+          {
+            opcode: "getVar",
+            blockType: Scratch.BlockType.REPORTER,
+            text: "get [STR]",
+            disableMonitor: true,
+            arguments: {
+               STR: {
+                type: Scratch.ArgumentType.STRING,
+                defaultValue: "health"
+              },
+            }
           },
           { blockType: Scratch.BlockType.LABEL, text: "Array Blocks" },
           {
@@ -196,6 +226,18 @@ DO NOT REMOVE THIS COMMENT OR ELSE
         return ""
       }else{
         return value
+      }
+    }
+    
+    setVar(args) {
+      variables[args.STR] = args.value;
+    }
+    getVar(args) {
+      let value = args.STR
+      if (!value) {
+        return ""
+      }else{
+        return variables[value];
       }
     }
     

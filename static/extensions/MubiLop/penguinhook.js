@@ -1,5 +1,5 @@
 // Penguin Hook
-// By MubiLop from Ruby Team (https://rubyteam.tech/)
+// By MubiLop under MIT License, you can find it on choosealicense.com specifically on here: https://choosealicense.com/licenses/mit/
 // I didn't see any extension with embed support so yeah i made it.
 
 (function (Scratch) {
@@ -10,11 +10,9 @@
 
         getInfo() {
             return {
-                id: 'penguinhook',
+                id: 'mubiloppenguinhook',
                 name: 'PenguinHook',
                 color1: "#02b4e0",
-                color2: "#02b4e0",
-                color3: "#02b4e0",
                 blocks: [
                     {
                         blockType: Scratch.BlockType.LABEL,
@@ -165,6 +163,10 @@
                 nameReq = name;
             }
 
+            if (!Scratch.canFetch(webhookUrl)) {
+                return;
+            }
+
             const payload = {
                 username: nameReq,
                 avatar_url: imageUrl,
@@ -219,6 +221,10 @@
                 username: name.name,
             };
 
+            if (!Scratch.canFetch(webhookUrl)) {
+                return;
+            }
+
             return fetch(webhookUrl, {
                 method: 'POST',
                 headers: {
@@ -240,6 +246,10 @@
         }
 
         sendjson(args) {
+            if (!Scratch.canFetch(webhookUrl)) {
+                return;
+            }
+            
             try {
                 return fetch(args.WEBHOOK, {
                     method: "POST",

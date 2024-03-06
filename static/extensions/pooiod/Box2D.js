@@ -1,9 +1,15 @@
-// Boxed Physics v1.4.0 by pooiod7
+/* Boxed Physics v1.4.2 by pooiod7
+
+This extension was originally based off of the Box2D Physics extension
+for ScratchX by Griffpatch, but has since deviated to have more features
+and to generally feel much nicer in scratch3. If you were to port a ScratchX
+Box2D project to scratch3 with this, you would have no compatability errors :)
+Ignoring the fact that you need to manually tranlate from 2.0 to 3.0 */
 
 (function(Scratch) {
   'use strict';
   if (!Scratch.extensions.unsandboxed) {
-    throw new Error('Box2D can\'t run in the sandbox');
+    throw new Error('Boxed Physics can\'t run in the sandbox');
   }
 
   var b2Vec2, b2AABB, b2BodyDef, b2Body, b2FixtureDef, b2Fixture, b2World, b2MassData, b2PolygonShape, b2CircleShape, b2DebugDraw, b2MouseJointDef;
@@ -20,14 +26,26 @@
 
   var bodyDef;
 
-  var uid_seq = 0;
-  var ujid_seq = 0;
+  var uid_seq = 0; var ujid_seq = 0;
+  /* unused catagory system (still in the 2.0 format)
+  var categorySeq = 1; var categories = {'default':1}
+  ext.defineCategory = function(categoryIDs) {
+    var cids = categoryIDs.split(' ');
+    bodyCategoryBits = 0;
+    for (var i=0; i<cids.length; i++) {
+      var cid = cids[i];
+      if (cid.length>0) {
+        var cat = categories[cid];
+        if (!cat) {
+          cat = categories[cid] = categorySeq = categorySeq*2;
+        }
+        bodyCategoryBits |= cat;
+      }
+    }
+  }; */
 
   var bodies = {};
   var joints = {};
-
-  var categorySeq = 1;
-  var categories = { 'default': 1 }
 
   var bodyCategoryBits = 1;
   var bodyMaskBits = 1;
@@ -63,7 +81,7 @@
         color1: "#2cb0c0",
         color2: '#4eb88a',
         menuIconURI: menuIconURI,
-        docsURI: 'https://pooiod7.neocities.org/markdown/#/projects/scratch/extensions/other/markdown/box2D.md',
+        docsURI: 'https://pooiod7.neocities.org/markdown/#/projects/scratch/extensions/other/markdown/box2D',
         blocks: [
           { blockType: Scratch.BlockType.LABEL, text: "Define objects" },
           {
@@ -570,22 +588,9 @@
           AngForceType: ['Impulse'],
           JointType: ['Rotating', 'Spring', 'Weld', 'Slider', 'Mouse'],
           JointAttr: ['Motor On', 'Motor Speed', 'Max Torque', 'Limits On', 'Lower Limit', 'Upper Limit'],
-          JointAttrRead: ['Angle', 'Speed', 'Motor Torque', 'Reaction Torque', 'Upper Limit', 'Lower Limit'],
+          JointAttrRead: ['Angle', 'Speed', 'Motor Torque', 'Reaction Torque'],
         },
       };
-    }
-
-    physoptions(args) {
-      b2Dworld.SetContinuousPhysics(args.CONPHYS);
-      b2Dworld.SetWarmStarting(args.WARMSTART);
-      positerations = args.POS;
-      if (positerations <= 0) {
-        positerations = 1;
-      }
-      veliterations = args.VEL;
-      if (veliterations <= 0) {
-          veliterations = 1;
-      }
     }
 
     js_debug(args) {
@@ -600,7 +605,7 @@
     } debug() { // this prompts the user if they want debug mode
       if (physdebugmode == true && !window.location.hash) {wipblocks = true;}
       if (window.confirm("Enable debug?")) {physdebugmode = true;}
-      return physdebugmode; }ignore(){ return "Extension Exposer be like";
+      return physdebugmode; } ignore() { return "Extension Exposer be like";
     }
 
     init(args) {
@@ -706,14 +711,6 @@
       fixDef.density = dens;		    // 1.0
       fixDef.friction = fric;		   // 0.5
       fixDef.restitution = rest;	// 0.2
-    }
-
-    setsimspeed(args) {
-      simspeed = args.VALUE;
-    }
-
-    getsimspeed() {
-      return simspeed;
     }
 
     defineCircle(args) {
@@ -1161,6 +1158,27 @@
         } catch (error) {
           return '';
         }
+      }
+    }
+
+    setsimspeed(args) {
+      simspeed = args.VALUE;
+    }
+
+    getsimspeed() {
+      return simspeed;
+    }
+
+    physoptions(args) {
+      b2Dworld.SetContinuousPhysics(args.CONPHYS);
+      b2Dworld.SetWarmStarting(args.WARMSTART);
+      positerations = args.POS;
+      if (positerations <= 0) {
+        positerations = 0.0001;
+      }
+      veliterations = args.VEL;
+      if (veliterations <= 0) {
+        veliterations = 0.0001;
       }
     }
 

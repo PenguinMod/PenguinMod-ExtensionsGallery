@@ -1,4 +1,4 @@
-/* Boxed Physics v1.4.2 by pooiod7
+/* Boxed Physics v1.4.1 by pooiod7
 
 This extension was originally based off of the Box2D Physics extension
 for ScratchX by Griffpatch, but has since deviated to have more features
@@ -61,7 +61,7 @@ Ignoring the fact that you need to manually tranlate from 2.0 to 3.0 */
     constructor() {
       this.vm = Scratch.vm;
 
-      this.squaretype = window.location.href.includes('penguinmod.com') ? Scratch.BlockShape.SQUARE : '';
+      this.squaretype = Scratch.extensions.isPenguinMod ? Scratch.BlockShape.SQUARE : '';
 
       vm.runtime.on('PROJECT_LOADED', () => {
         this.physoptions({"CONPHYS":true, "WARMSTART":true, "POS":10, "VEL":10});
@@ -529,6 +529,7 @@ Ignoring the fact that you need to manually tranlate from 2.0 to 3.0 */
           },
           {
             opcode: 'getsimspeed',
+            blockShape: this.squaretype,
             blockType: Scratch.BlockType.REPORTER,
             text: 'Slow motion',
           },
@@ -548,35 +549,14 @@ Ignoring the fact that you need to manually tranlate from 2.0 to 3.0 */
             blockType: Scratch.BlockType.COMMAND,
             text: 'Step Simulation',
           },
-          { hideFromPalette: !physdebugmode, blockType: Scratch.BlockType.LABEL, text: "Dev blocks" },
-          { opcode: 'debug', hideFromPalette: true, blockShape: this.squaretype,
-            blockType: Scratch.BlockType.REPORTER, text: 'Scratch Block', },
-          {
-            opcode: 'js_debug',
-            hideFromPalette: !physdebugmode,
-            blockShape: this.squaretype,
-            // tooltip: "",
-            blockType: Scratch.BlockType.REPORTER,
-            text: 'Javascript [JS]',
-            arguments: {
-              JS: {
-                type: Scratch.ArgumentType.STRING,
-                defaultValue: "alert(\"Hello, World!\");",
-              },
-            },
-          },
-          { // this will ignore your input
+          { hideFromPalette: !wipblocks || !wipblocks,
+           blockType: Scratch.BlockType.LABEL,
+           text: "Upcoming blocks (can brake projects)" },
+          { 
             opcode: 'ignore',
-            hideFromPalette: !physdebugmode,
+            hideFromPalette: !physdebugmode || !wipblocks,
             blockType: Scratch.BlockType.COMMAND,
             text: 'Ignore [VALUE]',
-          },
-          { hideFromPalette: !wipblocks, blockType: Scratch.BlockType.LABEL, text: "Upcoming blocks (can brake projects)" },
-          {
-            opcode: 'clearproject',
-            hideFromPalette: !wipblocks,
-            blockType: Scratch.BlockType.COMMAND,
-            text: 'Clear Project',
           },
         ],
         menus: {
@@ -601,12 +581,14 @@ Ignoring the fact that you need to manually tranlate from 2.0 to 3.0 */
         } catch (error) {
           return javascript;
         }
-      } else { throw new Error("Invalid or unexpected token"); }
-    } debug() { // this prompts the user if they want debug mode
-      if (physdebugmode == true && !window.location.hash) {wipblocks = true;}
-      if (window.confirm("Enable debug?")) {physdebugmode = true;}
-      return physdebugmode; } ignore() { return "Extension Exposer be like";
-    }
+      } else {
+        if (window.confirm("Do you want to enable javascript debugging?")) {
+          physdebugmode = true;
+        }
+        return physdebugmode;
+      }
+    } 
+    ignore() {}
 
     init(args) {
       b2Vec2 = Box2D.Common.Math.b2Vec2;
@@ -678,8 +660,8 @@ Ignoring the fact that you need to manually tranlate from 2.0 to 3.0 */
       uid_seq = 0;
       ujid_seq = 0;
 
-      categorySeq = 1;
-      categories = { 'default': 1 }
+      // categorySeq = 1;
+      // categories = { 'default': 1 }
       bodyCategoryBits = 1;
       noCollideSeq = 0;
 

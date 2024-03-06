@@ -2,6 +2,7 @@
 // ID: penP
 // Description: Advanced rendering capabilities.
 // By: ObviousAlexC <https://scratch.mit.edu/users/pinksheep2917/>
+// License: MIT
 
 (function (Scratch) {
   "use strict";
@@ -42,20 +43,20 @@
   //?And some fun statistics
   let trianglesDrawn = 0;
   let inDrawRegion = false;
-  let currentDrawShader = undefined;
   let penPlusDrawRegion = {
     enter: () => {
       trianglesDrawn = 0;
       inDrawRegion = true;
-      //lastFB = gl.getParameter(gl.FRAMEBUFFER_BINDING);
       gl.bindFramebuffer(gl.FRAMEBUFFER, triFrameBuffer);
       gl.viewport(0, 0, nativeSize[0], nativeSize[1]);
+      renderer.dirty = true;
     },
     exit: () => {
+      gl.clear(gl.DEPTH_BUFFER_BIT);
       inDrawRegion = false;
       gl.bindFramebuffer(
         gl.FRAMEBUFFER,
-        renderer._allSkins[renderer._penSkinId]._framebuffer.framebuffer
+        renderer._allSkins[renderer._penSkinId]._framebuffer.framebuffer,
       );
       triFunctions.drawOnScreen();
       gl.useProgram(penPlusShaders.pen.program);
@@ -78,7 +79,7 @@
       0,
       gl.RGBA,
       gl.UNSIGNED_BYTE,
-      null
+      null,
     );
 
     gl.activeTexture(gl.TEXTURE1);
@@ -92,13 +93,13 @@
       gl.RENDERBUFFER,
       gl.RGBA8 || gl.RGBA4,
       nativeSize[0],
-      nativeSize[1]
+      nativeSize[1],
     );
     gl.framebufferRenderbuffer(
       gl.FRAMEBUFFER,
       gl.COLOR_ATTACHMENT0,
       gl.RENDERBUFFER,
-      depthColorBuffer
+      depthColorBuffer,
     );
 
     gl.bindRenderbuffer(gl.RENDERBUFFER, depthDepthBuffer);
@@ -106,13 +107,13 @@
       gl.RENDERBUFFER,
       gl.DEPTH_COMPONENT16,
       nativeSize[0],
-      nativeSize[1]
+      nativeSize[1],
     );
     gl.framebufferRenderbuffer(
       gl.FRAMEBUFFER,
       gl.DEPTH_ATTACHMENT,
       gl.RENDERBUFFER,
-      depthDepthBuffer
+      depthDepthBuffer,
     );
 
     gl.framebufferTexture2D(
@@ -120,7 +121,7 @@
       gl.COLOR_ATTACHMENT0,
       gl.TEXTURE_2D,
       depthBufferTexture,
-      0
+      0,
     );
     gl.enable(gl.DEPTH_TEST);
 
@@ -143,7 +144,7 @@
         gl.RENDERBUFFER,
         gl.RGBA8 || gl.RGBA4,
         nativeSize[0],
-        nativeSize[1]
+        nativeSize[1],
       );
 
       gl.bindRenderbuffer(gl.RENDERBUFFER, depthDepthBuffer);
@@ -151,7 +152,7 @@
         gl.RENDERBUFFER,
         gl.DEPTH_COMPONENT16,
         nativeSize[0],
-        nativeSize[1]
+        nativeSize[1],
       );
 
       gl.activeTexture(gl.TEXTURE1);
@@ -165,7 +166,7 @@
         0,
         gl.RGBA,
         gl.UNSIGNED_BYTE,
-        null
+        null,
       );
 
       gl.activeTexture(gl.TEXTURE0);
@@ -401,63 +402,63 @@
     penPlusShaders.untextured.ProgramInf =
       penPlusShaders.createAndCompileShaders(
         penPlusShaders.untextured.Shaders.vert,
-        penPlusShaders.untextured.Shaders.frag
+        penPlusShaders.untextured.Shaders.frag,
       );
     penPlusShaders.textured.ProgramInf = penPlusShaders.createAndCompileShaders(
       penPlusShaders.textured.Shaders.vert,
-      penPlusShaders.textured.Shaders.frag
+      penPlusShaders.textured.Shaders.frag,
     );
 
     penPlusShaders.draw.ProgramInf = penPlusShaders.createAndCompileShaders(
       penPlusShaders.draw.Shaders.vert,
-      penPlusShaders.draw.Shaders.frag
+      penPlusShaders.draw.Shaders.frag,
     );
   }
 
   //?Untextured
   const a_position_Location_untext = gl.getAttribLocation(
     penPlusShaders.untextured.ProgramInf.program,
-    "a_position"
+    "a_position",
   );
   const a_color_Location_untext = gl.getAttribLocation(
     penPlusShaders.untextured.ProgramInf.program,
-    "a_color"
+    "a_color",
   );
 
   //?Textured
   const a_position_Location_text = gl.getAttribLocation(
     penPlusShaders.textured.ProgramInf.program,
-    "a_position"
+    "a_position",
   );
   const a_color_Location_text = gl.getAttribLocation(
     penPlusShaders.textured.ProgramInf.program,
-    "a_color"
+    "a_color",
   );
   const a_textCoord_Location_text = gl.getAttribLocation(
     penPlusShaders.textured.ProgramInf.program,
-    "a_texCoord"
+    "a_texCoord",
   );
 
   //?Uniforms
   const u_texture_Location_text = gl.getUniformLocation(
     penPlusShaders.textured.ProgramInf.program,
-    "u_texture"
+    "u_texture",
   );
 
   //?Depth
   const u_depthTexture_Location_draw = gl.getUniformLocation(
     penPlusShaders.draw.ProgramInf.program,
-    "u_drawTex"
+    "u_drawTex",
   );
 
   const a_position_Location_draw = gl.getAttribLocation(
     penPlusShaders.draw.ProgramInf.program,
-    "a_position"
+    "a_position",
   );
 
   const a_textCoord_Location_draw = gl.getAttribLocation(
     penPlusShaders.textured.ProgramInf.program,
-    "a_texCoord"
+    "a_texCoord",
   );
 
   //?Enables Attributes
@@ -595,7 +596,7 @@
         gl.FLOAT,
         false,
         f32_8,
-        0
+        0,
       );
       gl.vertexAttribPointer(
         a_color_Location_untext,
@@ -603,7 +604,7 @@
         gl.FLOAT,
         false,
         f32_8,
-        f32_4
+        f32_4,
       );
 
       gl.useProgram(penPlusShaders.untextured.ProgramInf.program);
@@ -697,7 +698,7 @@
         gl.FLOAT,
         false,
         f32_10,
-        0
+        0,
       );
       gl.vertexAttribPointer(
         a_color_Location_text,
@@ -705,7 +706,7 @@
         gl.FLOAT,
         false,
         f32_10,
-        f32_4
+        f32_4,
       );
       gl.vertexAttribPointer(
         a_textCoord_Location_text,
@@ -713,7 +714,7 @@
         gl.FLOAT,
         false,
         f32_10,
-        f32_8
+        f32_8,
       );
 
       gl.useProgram(penPlusShaders.textured.ProgramInf.program);
@@ -755,7 +756,7 @@
         gl.FLOAT,
         false,
         f32_6,
-        0
+        0,
       );
       gl.vertexAttribPointer(
         a_textCoord_Location_draw,
@@ -763,7 +764,7 @@
         gl.FLOAT,
         false,
         f32_6,
-        f32_4
+        f32_4,
       );
 
       gl.useProgram(penPlusShaders.draw.ProgramInf.program);
@@ -779,7 +780,7 @@
       attribute,
       value,
       wholeTri,
-      offset
+      offset,
     ) => {
       offset = offset + attribute || attribute;
       let valuetoSet = 0;
@@ -855,24 +856,6 @@
     },
   };
 
-  const lilPenDabble = (InativeSize, curTarget, util) => {
-    checkForPen(util);
-
-    const attrib = curTarget["_customState"]["Scratch.pen"].penAttributes;
-
-    Scratch.vm.renderer.penLine(
-      Scratch.vm.renderer._penSkinId,
-      {
-        color4f: [1, 1, 1, 0.011],
-        diameter: 1,
-      },
-      InativeSize[0] / 2,
-      InativeSize[1] / 2,
-      InativeSize[0] / 2,
-      InativeSize[1] / 2
-    );
-  };
-
   //?Color Library
   const colors = {
     hexToRgb: (hex) => {
@@ -906,7 +889,7 @@
       height,
       color,
       name,
-      clamp
+      clamp,
     ) {
       const texture = penPlusCostumeLibrary[name]
         ? penPlusCostumeLibrary[name].texture
@@ -937,7 +920,7 @@
         0,
         gl.RGBA,
         gl.UNSIGNED_BYTE,
-        pixelData
+        pixelData,
       );
 
       penPlusCostumeLibrary[name] = {
@@ -961,7 +944,7 @@
         0,
         gl.RGBA,
         gl.UNSIGNED_BYTE,
-        new Uint8Array([0, 0, 255, 255])
+        new Uint8Array([0, 0, 255, 255]),
       );
 
       // Let's assume all images are not a power of 2
@@ -983,7 +966,7 @@
               gl.RGBA,
               gl.RGBA,
               gl.UNSIGNED_BYTE,
-              image
+              image,
             );
             penPlusCostumeLibrary[name] = {
               texture: texture,
@@ -1011,7 +994,7 @@
         gl.COLOR_ATTACHMENT0,
         gl.TEXTURE_2D,
         texture,
-        0
+        0,
       );
 
       //?make sure to unbind the framebuffer and delete it!
@@ -1032,7 +1015,7 @@
           height,
           gl.RGBA,
           gl.UNSIGNED_BYTE,
-          dataArray
+          dataArray,
         );
 
         //?Remove Buffer data and return data
@@ -1058,7 +1041,7 @@
         gl.COLOR_ATTACHMENT0,
         gl.TEXTURE_2D,
         texture,
-        0
+        0,
       );
 
       //?make sure to unbind the framebuffer and delete it!
@@ -1079,7 +1062,7 @@
           height,
           gl.RGBA,
           gl.UNSIGNED_BYTE,
-          dataArray
+          dataArray,
         );
 
         //Make an invisible canvas
@@ -1752,7 +1735,7 @@
         Scratch.vm.renderer._penSkinId,
         attrib,
         x,
-        y
+        y,
       );
     }
     drawLine({ x1, y1, x2, y2 }, util) {
@@ -1766,7 +1749,7 @@
         x1,
         y1,
         x2,
-        y2
+        y2,
       );
     }
     squareDown(arg, util) {
@@ -1781,8 +1764,6 @@
       nativeSize = renderer.useHighQualityRender
         ? [canvas.width, canvas.height]
         : renderer._nativeSize;
-
-      lilPenDabble(nativeSize, curTarget, util); // Do this so the renderer doesn't scream at us
 
       if (
         typeof triangleAttributesOfAllSprites["squareStamp_" + curTarget.id] ==
@@ -1803,9 +1784,6 @@
 
       const spritex = curTarget.x;
       const spritey = curTarget.y;
-
-      //correction for HQ pen
-      const typSize = renderer._nativeSize;
 
       //Predifine stuff so there aren't as many calculations
       const wMulX = myAttributes[0];
@@ -1883,7 +1861,7 @@
           y3: y3,
         },
         util,
-        true
+        true,
       );
 
       this.drawSolidTri(
@@ -1896,7 +1874,7 @@
           y3: y4,
         },
         util,
-        true
+        true,
       );
     }
     squareTexDown({ tex }, util) {
@@ -1911,8 +1889,6 @@
       nativeSize = renderer.useHighQualityRender
         ? [canvas.width, canvas.height]
         : renderer._nativeSize;
-
-      lilPenDabble(nativeSize, curTarget, util); // Do this so the renderer doesn't scream at us
 
       if (
         typeof triangleAttributesOfAllSprites["squareStamp_" + curTarget.id] ==
@@ -1933,9 +1909,6 @@
 
       const spritex = curTarget.x;
       const spritey = curTarget.y;
-
-      //correction for HQ pen
-      const typSize = renderer._nativeSize;
 
       //Predifine stuff so there aren't as many calculations
       const wMulX = myAttributes[0];
@@ -2029,7 +2002,7 @@
           tex: tex,
         },
         util,
-        true
+        true,
       );
 
       triangleAttributesOfAllSprites[Attribute_ID][0] =
@@ -2057,7 +2030,7 @@
           tex: tex,
         },
         util,
-        true
+        true,
       );
     }
     setStampAttribute({ target, number }, util) {
@@ -2073,21 +2046,21 @@
         if (attributeNum == 11) {
           if (penPlusAdvancedSettings._ClampZ) {
             Math.min(
-              Math.max(number / penPlusAdvancedSettings._maxDepth, 0),
-              1
+              Math.max(valuetoSet / penPlusAdvancedSettings._maxDepth, 0),
+              1,
             );
             return;
           }
-          valuetoSet = number / penPlusAdvancedSettings._maxDepth;
+          valuetoSet = valuetoSet / penPlusAdvancedSettings._maxDepth;
           squareAttributesOfAllSprites[curTarget.id][attributeNum] =
-            number / penPlusAdvancedSettings._maxDepth;
+            valuetoSet / penPlusAdvancedSettings._maxDepth;
           return;
         }
         squareAttributesOfAllSprites[curTarget.id][attributeNum] =
-          Math.min(Math.max(number, 0), 100) * 0.01;
+          Math.min(Math.max(valuetoSet, 0), 100) * 0.01;
         return;
       }
-      squareAttributesOfAllSprites[curTarget.id][attributeNum] = number;
+      squareAttributesOfAllSprites[curTarget.id][attributeNum] = valuetoSet;
     }
     getStampAttribute({ target }, util) {
       const curTarget = util.target;
@@ -2134,7 +2107,7 @@
         Scratch.Cast.toNumber(attribute),
         value,
         false,
-        trianglePointStart
+        trianglePointStart,
       );
     }
     setWholeTrianglePointAttribute({ wholeAttribute, value }, util) {
@@ -2148,12 +2121,10 @@
         Scratch.Cast.toNumber(wholeAttribute),
         value,
         true,
-        0
+        0,
       );
     }
     tintTriPoint({ point, color }, util) {
-      const curTarget = util.target;
-
       const trianglePointStart = (point - 1) * 8;
 
       const targetId = util.target.id;
@@ -2169,7 +2140,7 @@
         2,
         calcColor.r / 2.55,
         false,
-        trianglePointStart
+        trianglePointStart,
       );
 
       triFunctions.setValueAccordingToCaseTriangle(
@@ -2177,7 +2148,7 @@
         3,
         calcColor.g / 2.55,
         false,
-        trianglePointStart
+        trianglePointStart,
       );
 
       triFunctions.setValueAccordingToCaseTriangle(
@@ -2185,12 +2156,10 @@
         4,
         calcColor.b / 2.55,
         false,
-        trianglePointStart
+        trianglePointStart,
       );
     }
     tintTri({ point, color }, util) {
-      const curTarget = util.target;
-
       const trianglePointStart = (point - 1) * 8;
 
       const targetId = util.target.id;
@@ -2206,7 +2175,7 @@
         2,
         calcColor.r / 2.55,
         true,
-        trianglePointStart
+        trianglePointStart,
       );
 
       triFunctions.setValueAccordingToCaseTriangle(
@@ -2214,7 +2183,7 @@
         3,
         calcColor.g / 2.55,
         true,
-        trianglePointStart
+        trianglePointStart,
       );
 
       triFunctions.setValueAccordingToCaseTriangle(
@@ -2222,7 +2191,7 @@
         4,
         calcColor.b / 2.55,
         true,
-        trianglePointStart
+        trianglePointStart,
       );
     }
     getTrianglePointAttribute({ point, attribute }, util) {
@@ -2266,7 +2235,6 @@
       //}
 
       //?Renderer Freaks out if we don't do this so do it.
-      lilPenDabble(nativeSize, curTarget, util); // Do this so the renderer doesn't scream at us
 
       //trying my best to reduce memory usage
       gl.viewport(0, 0, nativeSize[0], nativeSize[1]);
@@ -2295,7 +2263,7 @@
         x3,
         y3,
         attrib.color4f,
-        curTarget.id
+        curTarget.id,
       );
     }
     drawTexTri({ x1, y1, x2, y2, x3, y3, tex }, util) {
@@ -2305,7 +2273,7 @@
         currentTexture = penPlusCostumeLibrary[tex].texture;
       } else {
         const costIndex = curTarget.getCostumeIndexByName(
-          Scratch.Cast.toString(tex)
+          Scratch.Cast.toString(tex),
         );
         if (costIndex >= 0) {
           const curCostume = curTarget.sprite.costumes_[costIndex];
@@ -2322,7 +2290,6 @@
         : renderer._nativeSize;
 
       //?Renderer Freaks out if we don't do this so do it.
-      lilPenDabble(nativeSize, curTarget, util); // Do this so the renderer doesn't scream at us
 
       //trying my best to reduce memory usage
       gl.viewport(0, 0, nativeSize[0], nativeSize[1]);
@@ -2352,7 +2319,7 @@
           x3,
           y3,
           curTarget.id,
-          currentTexture
+          currentTexture,
         );
       }
     }
@@ -2408,7 +2375,7 @@
         height,
         color,
         "!" + name,
-        penPlusImportWrapMode
+        penPlusImportWrapMode,
       );
     }
     addIMGfromDURI({ dataURI, name }) {
@@ -2416,7 +2383,7 @@
       textureFunctions.createPenPlusTextureInfo(
         dataURI,
         "!" + name,
-        penPlusImportWrapMode
+        penPlusImportWrapMode,
       );
     }
     removeIMGfromDURI({ name }, util) {
@@ -2433,7 +2400,7 @@
       //Just a simple thing to allow for pen drawing
       const curTarget = util.target;
       const costIndex = curTarget.getCostumeIndexByName(
-        Scratch.Cast.toString(costume)
+        Scratch.Cast.toString(costume),
       );
       if (costIndex >= 0) {
         const curCostume =
@@ -2469,7 +2436,7 @@
         const textureData = textureFunctions.getTextureData(
           curCostume.texture,
           curCostume.width,
-          curCostume.height
+          curCostume.height,
         );
         if (textureData) {
           x = Math.floor(x - 1);
@@ -2496,7 +2463,7 @@
               0,
               gl.RGBA,
               gl.UNSIGNED_BYTE,
-              textureData
+              textureData,
             );
           }
         }
@@ -2508,7 +2475,7 @@
         const textureData = textureFunctions.getTextureData(
           curCostume.texture,
           curCostume.width,
-          curCostume.height
+          curCostume.height,
         );
         if (textureData) {
           x = Math.floor(x - 1);
@@ -2531,7 +2498,7 @@
         const textureData = textureFunctions.getTextureAsURI(
           curCostume.texture,
           curCostume.width,
-          curCostume.height
+          curCostume.height,
         );
         if (textureData) {
           return textureData;
@@ -2577,7 +2544,7 @@
       0,
       0,
       0,
-      0
+      0,
     );
 
     penPlusShaders.pen.program = shaderManager._shaderCache.line[0].program;

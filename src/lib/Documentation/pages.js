@@ -5,21 +5,28 @@
 //      "./particle-tools.md?raw"
 import PageParticleTools from "./particle-tools.md?raw";
 
+// Extra Control (unlisted)
+import PageExtraControl from "./Extra-Control.md?raw";
 // Free Servers
 import PageFreeServers from "./FreeServers.md?raw";
 
 // TurboWeather
 import PageTurboWeather from "./TurboWeather.md?raw";
 
+import PageMoreTypes from "./More-Types.md?raw";
+
 export default {
     // the key is the path to the docs page
     // so you can do "sharkpool-particle-tools" for example
     // you cant use / like "sharkpool/particle-tools" yet
     "particle-tools": PageParticleTools,
+    "Extra-Control": PageExtraControl,
 
     // FreeServers
     "FreeServers": PageFreeServers,
 
     //TurboWeather
     "TurboWeather": PageTurboWeather,
+
+    "more-types": PageMoreTypes,
 };

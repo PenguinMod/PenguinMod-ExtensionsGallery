@@ -3,7 +3,7 @@
 // Description: Apply New Non-Vanilla Effects to Sprites and the Canvas!
 // By: SharkPool
 
-// Version V.1.3.0
+// Version V.1.3.2
 
 (function (Scratch) {
   "use strict";
@@ -621,9 +621,9 @@
             acceptReporters: true,
             items: [
               "blur", "saturation", "contrast", "sepia", "bloom",
-              "amplify", "discrete", "thermal", "posterize",
-              "inflate", "bevel", "liquify", "ripple", "erode",
-              "torn", "disolve", "displacement", "grain"
+              "bloom v2", "amplify", "discrete", "thermal",
+              "posterize", "inflate", "bevel", "liquify", "ripple",
+              "erode", "torn", "disolve", "displacement", "grain"
             ],
           },
           DISTORTION: {
@@ -804,10 +804,13 @@
           case "bloom":
             filterElement = `<filter id="bloom"><feGaussianBlur in="SourceGraphic" stdDeviation="5" /><feComposite in2="SourceGraphic" operator="arithmetic" k2="${amtIn / 100}" k3="1" /></filter>`;
             break;
+          case "bloom v2":
+            filterElement = `<filter id="bloom-v2"><feGaussianBlur in="SourceGraphic" stdDeviation="5" /><feComposite in2="SourceGraphic" operator="arithmetic" k2="${amtIn / 100}" k3="1" color-interpolation-filters="sRGB" /></filter>`;
+            break;
           default:
             filterElement = `<filter id="blur"><feGaussianBlur stdDeviation="${Math.abs(amtIn)}" in="SourceGraphic" result="BLUR"></feGaussianBlur></filter>`;
         }
-        return this.filterApplier(svg, filterElement, args.EFFECT);
+        return this.filterApplier(svg, filterElement, args.EFFECT.replaceAll(" ", "-"));
       }
       return svg;
     }
@@ -997,7 +1000,6 @@
         const mul = args.SPRITE === "_canvas_" ? vm.renderer.canvas.width / vm.runtime.stageWidth * 2 : 1;
         const amts = [Scratch.Cast.toNumber(args.NUM), Scratch.Cast.toNumber(args.X), Scratch.Cast.toNumber(args.Y)];
         if (!displacementSrCs[2] && !override) await this.getSources();
-        const scaleFactor = (amts[0] * 1.5).toFixed(2);
         let tableValue = [100 + 2 * (100 - amts[0]) / 2];
         tableValue[1] = (100 - tableValue[0]) / 2;
         const filterElement =`<filter id="${override ? "customDistort" : args.EFFECT}" xmlns:xlink="http://www.w3.org/1999/xlink">

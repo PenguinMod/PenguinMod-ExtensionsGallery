@@ -21,7 +21,9 @@
             const matchesTitle = title.includes(searchTerm);
             const matchesDescription = description.includes(searchTerm);
 
-            if (matchesTitle || matchesDescription) {
+            if (matchesTitle) {
+                extension.style.display = 'block';
+            } else if (matchesDescription) {
                 extension.style.display = 'block';
             } else {
                 extension.style.display = 'none';

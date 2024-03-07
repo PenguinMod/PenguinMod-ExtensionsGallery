@@ -10,6 +10,24 @@
         }
         localStorage.setItem("pm:dark", false);
     };
+
+    const searchExtensions = () => {
+        const extensions = document.querySelectorAll('.block');
+        const searchTerm = document.getElementById('searchInput').value.trim().toLowerCase();
+
+        extensions.forEach(extension => {
+            const title = extension.querySelector('.title').textContent.toLowerCase();
+            const description = extension.querySelector('.description').textContent.toLowerCase();
+            const matchesTitle = title.includes(searchTerm);
+            const matchesDescription = description.includes(searchTerm);
+
+            if (matchesTitle || matchesDescription) {
+                extension.style.display = 'block';
+            } else {
+                extension.style.display = 'none';
+            }
+        });
+    };
 </script>
 
 <div class="bar">
@@ -28,6 +46,7 @@
     >
         Join our Discord!
     </BarButton>
+    <input type="text" id="searchInput" placeholder="Search..." style="margin-left: auto; margin-right: 12px; background: var(--penguinmod-color); color: white; border: 1px solid var(--penguinmod-color); border-radius: 5px; padding: 0.5rem;" on:input={searchExtensions} />
 </div>
 
 <style>

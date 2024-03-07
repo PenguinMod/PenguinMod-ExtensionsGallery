@@ -41,7 +41,7 @@
         <img src="/icons/moon.svg" alt="Theme" />
     </BarPage>
     <BarPage link={"/docs"}>Documentation</BarPage>
-    <input type="text" id="searchInput" placeholder="Search..." style="background: var(--penguinmod-color); color: white; border: 1px solid white; border-radius: 5px; padding: 0.5rem; margin-right: 12px;::placeholder { color: rgba(255, 255, 255, 0.7); }" on:input={searchExtensions} />
+    <input type="text" id="searchInput" placeholder="Search..." style="background: var(--penguinmod-color); color: white; border: 1px solid white; border-radius: 5px; padding: 0.5rem; margin-right: 12px;" on:input={searchExtensions} />
     <BarButton
         highlighted="true"
         link={"https://discord.gg/NZ9MBMYTZh"}

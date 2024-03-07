@@ -507,7 +507,7 @@ Ignoring the fact that you need to manually tranlate from 2.0 to 3.0 */
           {
             opcode: 'physoptions',
             blockType: Scratch.BlockType.COMMAND,
-            text: 'Set world options to, Position Iterations: [POS] Velocity Iterations: [VEL] Continuous Physics: [CONPHYS] Warm Starting: [WARMSTART]',
+            text: 'Set physics Position Iterations: [POS] Velocity Iterations: [VEL] Continuous Physics: [CONPHYS] Warm Starting: [WARMSTART]',
             arguments: {
               POS: {
                 type: Scratch.ArgumentType.NUMBER,
@@ -549,7 +549,7 @@ Ignoring the fact that you need to manually tranlate from 2.0 to 3.0 */
             blockType: Scratch.BlockType.COMMAND,
             text: 'Step Simulation',
           },
-          { hideFromPalette: !wipblocks || !wipblocks,
+          { hideFromPalette: !physdebugmode || !wipblocks,
            blockType: Scratch.BlockType.LABEL,
            text: "Upcoming blocks (can brake projects)" },
           { 
@@ -557,6 +557,12 @@ Ignoring the fact that you need to manually tranlate from 2.0 to 3.0 */
             hideFromPalette: !physdebugmode || !wipblocks,
             blockType: Scratch.BlockType.COMMAND,
             text: 'Ignore [VALUE]',
+            arguments: {
+              VALUE: {
+                type: Scratch.ArgumentType.STRING,
+                defaultValue: "",
+              },
+            },
           },
         ],
         menus: {
@@ -568,12 +574,26 @@ Ignoring the fact that you need to manually tranlate from 2.0 to 3.0 */
           AngForceType: ['Impulse'],
           JointType: ['Rotating', 'Spring', 'Weld', 'Slider', 'Mouse'],
           JointAttr: ['Motor On', 'Motor Speed', 'Max Torque', 'Limits On', 'Lower Limit', 'Upper Limit'],
-          JointAttrRead: ['Angle', 'Speed', 'Motor Torque', 'Reaction Torque'],
+          JointAttrRead: ['Angle', 'Speed', 'Motor Torque', 'Reaction Torque', 'Tension'],
         },
       };
     }
 
-    js_debug() {} 
+    js_debug(args) {
+      if (physdebugmode == true) {
+        var javascript = eval(args.JS);
+        try {
+          return JSON.stringify(javascript) || javascript;
+        } catch (error) {
+          return javascript;
+        }
+      } else {
+        if (window.confirm("Do you want to enable javascript debugging?")) {
+          physdebugmode = true;
+        }
+        return physdebugmode;
+      }
+    } 
     ignore() {}
 
     init(args) {
@@ -691,60 +711,29 @@ Ignoring the fact that you need to manually tranlate from 2.0 to 3.0 */
       fixDef.shape.SetAsBox(args.WIDTH / 2 / b2Dzoom, args.HEIGHT / 2 / b2Dzoom);
     }
 
-    svgtopoints(fullSvgString) {
-      // Regular expressions to extract paths, circles, and boxes from the SVG string
-      const pathRegex = /<path d="(.*?)"/g;
-      const circleRegex = /<circle cx="(.*?)" cy="(.*?)" r="(.*?)"/g;
-      const boxRegex = /<rect x="(.*?)" y="(.*?)" width="(.*?)" height="(.*?)"/g;
+    svgtopoints(fullSvgString) { // just the bounding box for now
+      var ingurl = "data:image/svg+xml;base64,"+btoa(fullSvgString);
+      
+        // Create an HTML image element
+        const img = new Image();
+        img.src = ingurl;
 
-      // Match paths, circles, and boxes in the SVG string
-      const pathMatches = fullSvgString.match(pathRegex) || [];
-      const circleMatches = fullSvgString.match(circleRegex) || [];
-      const boxMatches = fullSvgString.match(boxRegex) || [];
+        // Wait for the image to load
+        img.onload = () => {
+            // Get the image dimensions
+            const width = img.width;
+            const height = img.height;
 
-      // Function to convert circle to edge points
-      function circleToEdgePoints(cx, cy, r) {
-        const edgePoints = 8; // Number of edge points on a circle
-        const points = [];
-        for (let i = 0; i < edgePoints; i++) {
-          const angle = (i / edgePoints) * Math.PI * 2;
-          const x = parseFloat(cx) + Math.cos(angle) * parseFloat(r);
-          const y = parseFloat(cy) + Math.sin(angle) * parseFloat(r);
-          points.push(`${x} ${y}`);
-        }
-        return points;
-      }
+            const x1 = -width/2;
+            const y1 = -height/2;
+            const x2 = width/2;
+            const y2 = height/2;
 
-      // Function to convert box to edge points
-      function boxToEdgePoints(x, y, width, height) {
-        return [`${x} ${y}`, `${x + width} ${y}`, `${x + width} ${y + height}`, `${x} ${y + height}`];
-      }
-
-      // Extract and convert shapes to edge points
-      const edgePoints = [];
-      for (const pathMatch of pathMatches) {
-        const coords = pathMatch.match(/\d+/g);
-        for (let i = 0; i < coords.length; i += 2) {
-          edgePoints.push(`${coords[i]} ${coords[i + 1]}`);
-        }
-      }
-
-      for (const circleMatch of circleMatches) {
-        const [cx, cy, r] = circleMatch.match(/\d+/g);
-        edgePoints.push(...circleToEdgePoints(cx, cy, r));
-      }
-
-      for (const boxMatch of boxMatches) {
-        const [x, y, width, height] = boxMatch.match(/\d+/g);
-        edgePoints.push(...boxToEdgePoints(parseFloat(x), parseFloat(y), parseFloat(width), parseFloat(height)));
-      }
-
-      // Create a single continuous edge path without looping back onto the inside of itself
-      const continuousPath = [edgePoints[0], ...edgePoints.filter((point, index) => index > 0 && point !== edgePoints[index - 1])];
-
-      const formattedEdgePoints = edgePoints.join('   ');
-
-      return formattedEdgePoints;
+            // Format the outline as a string
+            var outline = `${x1.toFixed(2)} ${y1.toFixed(2)}   ${x2.toFixed(2)} ${y2.toFixed(2)}`;
+          console.log(outline);
+        };
+      return outline;
     }
 
     definePoly(args) {
@@ -753,8 +742,8 @@ Ignoring the fact that you need to manually tranlate from 2.0 to 3.0 */
 
       // this feature does not work yet :( 
       if (points.charAt(0) === '<') {
-        console.warn("svg object conversion does not work yet");
-        points = this.svgtopoints(points);
+        console.warn("svg object conversion is not yet supported");
+        // points = this.svgtopoints(points);
       }
 
       try {
@@ -771,11 +760,13 @@ Ignoring the fact that you need to manually tranlate from 2.0 to 3.0 */
           vertices.push(new b2Vec2(parseFloat(pts[i - 2]) / b2Dzoom, parseFloat(pts[i - 1]) / b2Dzoom));
         }
         fixDef.shape.SetAsArray(vertices);
+        return true;
       } catch (error) {
         fixDef.shape = new b2CircleShape;
         fixDef.shape.SetRadius(100 / 2 / b2Dzoom);
         console.warn("Incorrect polly format");
-        //alert("Incorrect polly format");
+        console.log(points);
+        return false;
       }
     }
 
@@ -873,6 +864,22 @@ Ignoring the fact that you need to manually tranlate from 2.0 to 3.0 */
         case 'Yvel': return body.GetLinearVelocity().y;
         case 'Dvel': return body.GetAngularVelocity();
         case 'awake': return body.IsAwake() ? 1 : 0;
+          
+        case 'Tension':
+          // Assume that body is a b2Body object that represents the object
+          var force = 0; // Initialize the force to 0
+          var contact = body.GetContactList(); // Get the contact list
+          while (contact) { // Loop through the contacts
+            var impulse = contact.impulse; // Get the impulse object
+            var normalImpulse = impulse.normalImpulses[0]; // Get the normal impulse
+            var tangentImpulse = impulse.tangentImpulses[0]; // Get the tangent impulse
+            var impulseMagnitude = Math.sqrt(normalImpulse * normalImpulse + tangentImpulse * tangentImpulse); // Calculate the impulse magnitude
+            force += impulseMagnitude; // Add the impulse magnitude to the force
+            contact = contact.next; // Move to the next contact
+          }
+          console.log("The force applied to the object by other objects is " + force + " N"); // Print the result
+        return force;
+          
         //case 'touching': return JSON.stringify(this.getTouchingObjectNames(body));
       }
       return '';
@@ -1119,6 +1126,14 @@ Ignoring the fact that you need to manually tranlate from 2.0 to 3.0 */
             case 'Motor Torque': return joint.GetMotorTorque();
             case 'Reaction Torque': return joint.GetReactionTorque();
 
+            case 'Tension': 
+              var force = joint.GetReactionForce(1);
+              var tension = Math.sqrt(force.x * force.x + force.y * force.y);
+              if (!joint.GetBodyA().IsAwake() && !joint.GetBodyB().IsAwake()) {
+                tension = 0;
+              }
+            return Math.floor(tension*100)/10;
+
             // Sliders only
             case 'Lower Limit': return joint.GetLowerLimit();
             case 'Upper Limit': return joint.GetUpperLimit();
@@ -1176,8 +1191,8 @@ Ignoring the fact that you need to manually tranlate from 2.0 to 3.0 */
     * 2. Altered source versions must be plainly marked as such, and must not be
     * misrepresented as being the original software.
     * 3. This notice may not be removed or altered from any source distribution.
-    | 
-    */// Prepare for 90% of this extensions code: the box2D lib.
+    | /// https://www.npmjs.com/package/box2d-es6 (the lib by itself)
+    */// Prepare for 90% of this extensions code: the box2D_es6 lib.
 
   'use strict';
 

@@ -246,6 +246,7 @@
         }
 
         sendjson(args) {
+            const webhookUrl = Scratch.Cast.toString(args.WEBHOOK);
             if (!Scratch.canFetch(webhookUrl)) {
                 return;
             }

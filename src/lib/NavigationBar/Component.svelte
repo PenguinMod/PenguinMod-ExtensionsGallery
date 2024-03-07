@@ -34,11 +34,12 @@
     <a class="logo" href="/">
         <img class="logo-image" src="/navicon.png" alt="PenguinMod" />
     </a>
-    <div style="margin-right: 12px;" />
+    <div style="margin-right: 12px;"></div>
     <BarPage style="padding:0.5rem" on:click={toggleTheme}>
         <img src="/icons/moon.svg" alt="Theme" />
     </BarPage>
     <BarPage link={"/docs"}>Documentation</BarPage>
+    <input type="text" id="searchInput" placeholder="Search..." style="background: var(--penguinmod-color); color: white; border: 1px solid var(--penguinmod-color); border-radius: 5px; padding: 0.5rem; margin-right: 12px;" on:input={searchExtensions} />
     <BarButton
         highlighted="true"
         link={"https://discord.gg/NZ9MBMYTZh"}
@@ -46,7 +47,6 @@
     >
         Join our Discord!
     </BarButton>
-    <input type="text" id="searchInput" placeholder="Search..." style="margin-left: auto; margin-right: 12px; background: var(--penguinmod-color); color: white; border: 1px solid var(--penguinmod-color); border-radius: 5px; padding: 0.5rem;" on:input={searchExtensions} />
 </div>
 
 <style>

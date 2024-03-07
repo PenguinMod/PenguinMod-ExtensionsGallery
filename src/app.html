@@ -40,8 +40,24 @@
     		    color: #af72ff;
     		}
 		</style>
+		<style>
+		input[type="text"] {
+		    padding: 10px;
+		    margin: 10px;
+		    border: 1px solid #ccc;
+		    border-radius: 5px;
+		    font-size: 16px;
+		    width: 300px;
+		}
+	
+		input[type="text"]:focus {
+		    outline: none;
+		    border-color: dodgerblue;
+		}
+		</style>
 		%sveltekit.head%
 	</head>
+    	<input type="text" id="searchInput" placeholder="Search...">
 	<body data-sveltekit-preload-data="hover" id="PAGE_BODY">
 		<div style="display: contents">%sveltekit.body%</div>
 	</body>
@@ -59,4 +75,25 @@
 		setInterval(loop, 100);
 		loop();
 	</script>
+	<script>
+        const extensions = document.querySelectorAll('.block');
+        const searchInput = document.getElementById('searchInput');
+
+        searchInput.addEventListener('input', function() {
+            const searchTerm = this.value.trim().toLowerCase();
+
+            extensions.forEach(extension => {
+                const title = extension.querySelector('.title').textContent.toLowerCase();
+                const description = extension.querySelector('.description').textContent.toLowerCase();
+                const matchesTitle = title.includes(searchTerm);
+                const matchesDescription = description.includes(searchTerm);
+
+                if (matchesTitle || matchesDescription) {
+                    extension.style.display = 'block';
+                } else {
+                    extension.style.display = 'none';
+                }
+            });
+        });
+    	</script>
 </html>

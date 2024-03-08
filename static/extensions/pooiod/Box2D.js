@@ -579,21 +579,7 @@ Ignoring the fact that you need to manually tranlate from 2.0 to 3.0 */
       };
     }
 
-    js_debug(args) {
-      if (physdebugmode == true) {
-        var javascript = eval(args.JS);
-        try {
-          return JSON.stringify(javascript) || javascript;
-        } catch (error) {
-          return javascript;
-        }
-      } else {
-        if (window.confirm("Do you want to enable javascript debugging?")) {
-          physdebugmode = true;
-        }
-        return physdebugmode;
-      }
-    } 
+    js_debug() {} 
     ignore() {}
 
     init(args) {

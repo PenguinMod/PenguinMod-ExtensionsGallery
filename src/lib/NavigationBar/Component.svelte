@@ -1,7 +1,10 @@
 <script>
+    import { createEventDispatcher } from "svelte";
+
     // Components
     import BarPage from "./Page.svelte";
     import BarButton from "./Button.svelte";
+    import SearchSVG from "./SearchIcon.svelte";
 
     const toggleTheme = () => {
         if (localStorage.getItem("pm:dark") !== "true") {
@@ -11,24 +14,15 @@
         localStorage.setItem("pm:dark", false);
     };
 
+    export let displaySearchBar = false;
+    const dispatch = createEventDispatcher();
+    let searchInput;
+
     const searchExtensions = () => {
-        const extensions = document.querySelectorAll('.block');
-        const searchTerm = document.getElementById('searchInput').value.trim().toLowerCase();
+        const searchTerm = String(searchInput.value)
+            .trim().toLowerCase();
 
-        extensions.forEach(extension => {
-            const title = extension.querySelector('.title').textContent.toLowerCase();
-            const description = extension.querySelector('.description').textContent.toLowerCase();
-            const matchesTitle = title.includes(searchTerm);
-            const matchesDescription = description.includes(searchTerm);
-
-            if (matchesTitle) {
-                extension.style.display = 'block';
-            } else if (matchesDescription) {
-                extension.style.display = 'block';
-            } else {
-                extension.style.display = 'none';
-            }
-        });
+        dispatch("search", searchTerm);
     };
 </script>
 
@@ -41,7 +35,28 @@
         <img src="/icons/moon.svg" alt="Theme" />
     </BarPage>
     <BarPage link={"/docs"}>Documentation</BarPage>
-    <input type="text" id="searchInput" placeholder="Search..." style="background: var(--penguinmod-color); color: white; border: 1px solid white; border-radius: 5px; padding: 0.5rem; margin-right: 12px;" on:input={searchExtensions} />
+
+    {#if displaySearchBar}
+        <div class="search">
+            <button class="search-button" on:click={searchExtensions}>
+                <SearchSVG
+                    width="30px"
+                    height="20px"
+                    color="#ffffff"
+                    scale="2px"
+                    style="margin-bottom:5px; margin-top: 5px;"
+                />
+            </button>
+            <input
+                type="text"
+                class="search-bar"
+                placeholder="Search for an extension..."
+                on:input={searchExtensions}
+                bind:this={searchInput}
+            />
+        </div>
+    {/if}
+    
     <BarButton
         highlighted="true"
         link={"https://discord.gg/NZ9MBMYTZh"}
@@ -92,5 +107,55 @@
         margin-top: 5%;
         height: 90%;
         transition: 0.15s ease all;
+    }
+
+    .search {
+        margin-left: 0.25rem;
+        margin-right: 0.25rem;
+        padding: 0px 0.25rem;
+        font-weight: 600;
+        font-size: 0.85rem;
+        border: 0px;
+        border-radius: 4px;
+        outline: 0px;
+        background-color: #00000026;
+        color: #fff;
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+    }
+    .search-button {
+        cursor: pointer;
+        height: 100%;
+        background: transparent;
+        border: 0;
+        padding: 0.2rem;
+        display: flex;
+        align-items: center;
+        flex-direction: row;
+    }
+    .search-bar {
+        cursor: text;
+        width: 16rem;
+        height: 30px;
+        background: transparent;
+        border: 0;
+        color: white;
+        font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+        outline: 0;
+    }
+
+    /* dont use <selector>, because browsers will ignore it if one of the selectors is unknown */
+    ::placeholder {
+        color: white;
+        opacity: 0.75;
+    }
+    :-ms-input-placeholder {
+        color: white;
+        opacity: 0.75;
+    }
+    ::-ms-input-placeholder {
+        color: white;
+        opacity: 0.75;
     }
 </style>

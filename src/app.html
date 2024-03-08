@@ -60,25 +60,4 @@
 		setInterval(loop, 100);
 		loop();
 	</script>
-	<script>
-        const extensions = document.querySelectorAll('.block');
-        const searchInput = document.getElementById('searchInput');
-
-        searchInput.addEventListener('input', function() {
-            const searchTerm = this.value.trim().toLowerCase();
-
-            extensions.forEach(extension => {
-                const title = extension.querySelector('.title').textContent.toLowerCase();
-                const description = extension.querySelector('.description').textContent.toLowerCase();
-                const matchesTitle = title.includes(searchTerm);
-                const matchesDescription = description.includes(searchTerm);
-
-                if (matchesTitle || matchesDescription) {
-                    extension.style.display = 'block';
-                } else {
-                    extension.style.display = 'none';
-                }
-            });
-        });
-    	</script>
 </html>

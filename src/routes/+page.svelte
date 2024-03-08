@@ -1,15 +1,24 @@
 <script>
-    import { onMount } from "svelte";
+    import { page } from '$app/stores';
 
     import Extension from "$lib/Extension/Component.svelte";
     import Footer from "$lib/Footer/Component.svelte";
     import Logo from "$lib/Logo/Component.svelte";
 
     import extensions from "$lib/extensions.js";
+    import { searchQuery } from '$lib/stores.js'
 
-    let origin = "";
-    onMount(() => {
-        origin = window.origin;
+    const origin = $page.url.origin;
+    const searchable = (text = '') => {
+        text = String(text);
+        return text.toLowerCase().trim();
+    };
+
+    let showNoExtensionsFound = false;
+    searchQuery.subscribe((query) => {
+        showNoExtensionsFound = extensions
+            .filter(extension => searchable(extension.name).includes(query))
+            .length <= 0;
     });
 </script>
 
@@ -31,17 +40,22 @@
     <div class="extension-list">
         <!-- This list can be modified in "src/lib/extensions.js" -->
         {#each extensions as extension}
-            <Extension
-                image={`/images/${extension.banner}`}
-                name={extension.name}
-                url={`${origin}/extensions/${extension.code}`}
-                creator={extension.creator}
-                documentation={extension.documentation}
-                isGitHub={String(extension.isGitHub) === "true"}
-            >
-                {extension.description}
-            </Extension>
+            {#if searchable(extension.name).includes($searchQuery)}
+                <Extension
+                    image={`/images/${extension.banner}`}
+                    name={extension.name}
+                    url={`${origin}/extensions/${extension.code}`}
+                    creator={extension.creator}
+                    documentation={extension.documentation}
+                    isGitHub={String(extension.isGitHub) === "true"}
+                >
+                    {extension.description}
+                </Extension>
+            {/if}
         {/each}
+        {#if showNoExtensionsFound}
+            <p class="no-exts">No extensions found under that search query.</p>
+        {/if}
     </div>
 
     <p style="text-align: center;">
@@ -85,5 +99,13 @@
         flex-direction: row;
         flex-wrap: wrap;
         justify-content: center;
+    }
+    .no-exts {
+        padding: 8px 32px;
+        border: 1px solid rgba(0, 0, 0, 0.25);
+        border-radius: 4px;
+    }
+    :global(body.dark-mode) .no-exts {
+        border-color: rgba(255, 255, 255, 0.25);
     }
 </style>

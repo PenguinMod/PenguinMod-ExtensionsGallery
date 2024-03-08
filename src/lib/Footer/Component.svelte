@@ -1,5 +1,5 @@
 <script>
-    import { onMount } from "svelte";
+    import { browser } from "$app/environment";
 
     let themeSwitcher;
     let displayedTheme = "light";
@@ -8,10 +8,10 @@
         localStorage.setItem("pm:dark", isDark);
     }
 
-    onMount(() => {
+    if (browser) {
         const darkTheme = String(localStorage.getItem("pm:dark")) === "true";
         displayedTheme = darkTheme ? "dark" : "light";
-    });
+    }
 </script>
 
 <div style="height: 24px" />

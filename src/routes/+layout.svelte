@@ -2,7 +2,7 @@
     import { page } from '$app/stores';
 
     import NavigationBar from "$lib/NavigationBar/Component.svelte";
-    import { searchQuery } from '$lib/stores.js'
+    import { searchQuery } from '$lib/stores.js';
 
     const onSearch = (event) => {
         const query = event.detail;

@@ -1,5 +1,6 @@
 <script>
     import { createEventDispatcher } from "svelte";
+    import { searchRecommendations } from '$lib/stores.js';
 
     // Components
     import BarPage from "./Page.svelte";
@@ -19,11 +20,16 @@
     let searchInput;
 
     const searchExtensions = () => {
+        if (!searchInput) return;
         const searchTerm = String(searchInput.value)
             .trim().toLowerCase();
 
         dispatch("search", searchTerm);
     };
+    searchRecommendations.subscribe(() => {
+        if (!searchInput) return;
+        searchInput.focus();
+    });
 </script>
 
 <div class="bar">
@@ -54,6 +60,17 @@
                 on:input={searchExtensions}
                 bind:this={searchInput}
             />
+            {#each $searchRecommendations as searchRecommendation, idx}
+                <button
+                    class="search-recommendation"
+                    style="margin-top: {idx * 3}em;
+                    {idx === 0 ? ' border-top: 0;' : ''}
+                    {idx === ($searchRecommendations.length - 1) ? ' border-bottom-left-radius: 8px; border-bottom-right-radius: 8px;' : ''}"
+                    on:click={searchRecommendation.callback}
+                >
+                    <p>{searchRecommendation.name}</p>
+                </button>
+            {/each}
         </div>
     {/if}
     
@@ -110,6 +127,7 @@
     }
 
     .search {
+        position: relative;
         margin-left: 0.25rem;
         margin-right: 0.25rem;
         padding: 0px 0.25rem;
@@ -157,5 +175,23 @@
     ::-ms-input-placeholder {
         color: white;
         opacity: 0.75;
+    }
+
+    .search-recommendation {
+        position: absolute;
+        left: 0;
+        top: calc(3rem - 0.4rem);
+        width: 100%;
+        padding: 0 8px;
+        background: var(--penguinmod-color);
+        border: 1px solid #00000026;
+        border-radius: 0;
+        color: white;
+        text-align: left;
+        font-weight: bold;
+        cursor: pointer;
+    }
+    .search-recommendation:active {
+        filter: brightness(0.8);
     }
 </style>

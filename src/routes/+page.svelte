@@ -6,19 +6,37 @@
     import Logo from "$lib/Logo/Component.svelte";
 
     import extensions from "$lib/extensions.js";
-    import { searchQuery } from '$lib/stores.js'
+    import { searchQuery, searchRecommendations, selectedRecommendedExt } from '$lib/stores.js';
 
     const origin = $page.url.origin;
     const searchable = (text = '') => {
         text = String(text);
         return text.toLowerCase().trim();
     };
+    const createExtUrl = (relativeUrl) => {
+        return `${origin}/extensions/${relativeUrl}`;
+    };
 
+    let recommendedExtensions = [];
     let showNoExtensionsFound = false;
     searchQuery.subscribe((query) => {
-        showNoExtensionsFound = extensions
-            .filter(extension => searchable(extension.name).includes(query))
-            .length <= 0;
+        const matchingExts = extensions
+            .filter(extension => searchable(extension.name).includes(query));
+        showNoExtensionsFound = matchingExts.length <= 0;
+
+        $searchRecommendations = [];
+        if (matchingExts.length > 5 || showNoExtensionsFound) {
+            recommendedExtensions = [];
+            return;
+        }
+        recommendedExtensions = matchingExts.slice(0, 2);
+        $searchRecommendations = recommendedExtensions.map(ext => ({
+            name: `Copy ${ext.name} to clipboard`,
+            callback: () => {
+                $selectedRecommendedExt = ''; // reset first
+                $selectedRecommendedExt = ext.code;
+            }
+        }));
     });
 </script>
 
@@ -42,10 +60,11 @@
         {#each extensions as extension}
             {#if searchable(extension.name).includes($searchQuery)}
                 <Extension
-                    image={`/images/${extension.banner}`}
                     name={extension.name}
-                    url={`${origin}/extensions/${extension.code}`}
+                    image={`/images/${extension.banner}`}
                     creator={extension.creator}
+                    url={createExtUrl(extension.code)}
+                    relUrl={extension.code}
                     documentation={extension.documentation}
                     isGitHub={String(extension.isGitHub) === "true"}
                 >

@@ -1,13 +1,12 @@
-/* Boxed Physics v1.4.1 by pooiod7
+/* Boxed Physics v1.6.2 by pooiod7
 
 This extension was originally based off of the Box2D Physics extension
-for ScratchX by Griffpatch, but has since deviated to have more features
-and to generally feel much nicer in scratch3. If you were to port a ScratchX
-Box2D project to scratch3 with this, you would have no compatability errors :)
-Ignoring the fact that you need to manually tranlate from 2.0 to 3.0 */
+for ScratchX by Griffpatch, but has since deviated to have more features,
+while keeping general compatability. (made with box2D js es6) */ 
 
 (function(Scratch) {
   'use strict';
+  var b2Dversion = "1.6.3";
   if (!Scratch.extensions.unsandboxed) {
     throw new Error('Boxed Physics can\'t run in the sandbox');
   }
@@ -27,8 +26,9 @@ Ignoring the fact that you need to manually tranlate from 2.0 to 3.0 */
   var bodyDef;
 
   var uid_seq = 0; var ujid_seq = 0;
+  var categorySeq = 0; var categories = {'default':1};
   /* unused catagory system (still in the 2.0 format)
-  var categorySeq = 1; var categories = {'default':1}
+// this went unused in favor of just always changing the group index
   ext.defineCategory = function(categoryIDs) {
     var cids = categoryIDs.split(' ');
     bodyCategoryBits = 0;
@@ -146,24 +146,13 @@ Ignoring the fact that you need to manually tranlate from 2.0 to 3.0 */
             },
           },
           {
-            opcode: 'createNoCollideSet',
-            blockType: Scratch.BlockType.COMMAND,
-            text: 'Create no collide set [NAMES]',
-            arguments: {
-              NAMES: {
-                type: Scratch.ArgumentType.STRING,
-                defaultValue: 'name1 name2',
-              },
-            },
-          },
-          {
             opcode: 'placeBody',
             blockType: Scratch.BlockType.COMMAND,
             text: 'Make object [NAME] at x: [X]  y: [Y]  dir: [DIR]',
             arguments: {
               NAME: {
                 type: Scratch.ArgumentType.STRING,
-                defaultValue: 'name',
+                defaultValue: 'Object',
               },
               X: {
                 type: Scratch.ArgumentType.NUMBER,
@@ -187,7 +176,29 @@ Ignoring the fact that you need to manually tranlate from 2.0 to 3.0 */
             arguments: {
               NAME: {
                 type: Scratch.ArgumentType.STRING,
-                defaultValue: 'name',
+                defaultValue: 'Object',
+              },
+            },
+          },
+          {
+            opcode: 'createNoCollideSet',
+            blockType: Scratch.BlockType.COMMAND,
+            text: 'Disable collision between [NAMES]',
+            arguments: {
+              NAMES: {
+                type: Scratch.ArgumentType.STRING,
+                defaultValue: 'Object1 Object2',
+              },
+            },
+          },
+          {
+            opcode: 'createYesCollideSet',
+            blockType: Scratch.BlockType.COMMAND,
+            text: 'Reset collision of objects [NAMES]',
+            arguments: {
+              NAMES: {
+                type: Scratch.ArgumentType.STRING,
+                defaultValue: 'Object1 Object2',
               },
             },
           },
@@ -202,7 +213,7 @@ Ignoring the fact that you need to manually tranlate from 2.0 to 3.0 */
               },
               NAME: {
                 type: Scratch.ArgumentType.STRING,
-                defaultValue: 'name',
+                defaultValue: 'Object',
               },
               VALUE: {
                 type: Scratch.ArgumentType.NUMBER,
@@ -222,7 +233,7 @@ Ignoring the fact that you need to manually tranlate from 2.0 to 3.0 */
               },
               NAME: {
                 type: Scratch.ArgumentType.STRING,
-                defaultValue: 'name',
+                defaultValue: 'Object',
               },
               X: {
                 type: Scratch.ArgumentType.NUMBER,
@@ -254,7 +265,7 @@ Ignoring the fact that you need to manually tranlate from 2.0 to 3.0 */
               },
               NAME: {
                 type: Scratch.ArgumentType.STRING,
-                defaultValue: 'name',
+                defaultValue: 'Object',
               },
               POWER: {
                 type: Scratch.ArgumentType.NUMBER,
@@ -277,7 +288,30 @@ Ignoring the fact that you need to manually tranlate from 2.0 to 3.0 */
               },
               NAME: {
                 type: Scratch.ArgumentType.STRING,
-                defaultValue: "name",
+                defaultValue: "Object",
+              },
+            },
+          },
+          {
+            opcode: 'changevel',
+            blockType: Scratch.BlockType.COMMAND,
+            text: 'Set Velocity of [NAME] to x [X] y [Y] dir [DIR]',
+            arguments: {
+              X: {
+                type: Scratch.ArgumentType.NUMBER,
+                defaultValue: 0,
+              },
+              Y: {
+                type: Scratch.ArgumentType.NUMBER,
+                defaultValue: 0,
+              },
+              DIR: {
+                type: Scratch.ArgumentType.NUMBER,
+                defaultValue: 0,
+              },
+              NAME: {
+                type: Scratch.ArgumentType.STRING,
+                defaultValue: "Object",
               },
             },
           },
@@ -292,7 +326,7 @@ Ignoring the fact that you need to manually tranlate from 2.0 to 3.0 */
               },
               NAME: {
                 type: Scratch.ArgumentType.STRING,
-                defaultValue: "name",
+                defaultValue: "Object",
               },
             },
           },
@@ -303,7 +337,7 @@ Ignoring the fact that you need to manually tranlate from 2.0 to 3.0 */
             arguments: {
               NAME: {
                 type: Scratch.ArgumentType.STRING,
-                defaultValue: "name",
+                defaultValue: "Object",
               },
             },
           },
@@ -318,7 +352,7 @@ Ignoring the fact that you need to manually tranlate from 2.0 to 3.0 */
               },
               NAME: {
                 type: Scratch.ArgumentType.STRING,
-                defaultValue: 'name',
+                defaultValue: 'Object',
               },
             },
           },
@@ -393,7 +427,7 @@ Ignoring the fact that you need to manually tranlate from 2.0 to 3.0 */
               },
               BODY1: {
                 type: Scratch.ArgumentType.STRING,
-                defaultValue: 'BodyID',
+                defaultValue: 'Object1',
               },
               X1: {
                 type: Scratch.ArgumentType.NUMBER,
@@ -405,7 +439,7 @@ Ignoring the fact that you need to manually tranlate from 2.0 to 3.0 */
               },
               BODY2: {
                 type: Scratch.ArgumentType.STRING,
-                defaultValue: 'BodyID',
+                defaultValue: 'Object2',
               },
               X2: {
                 type: Scratch.ArgumentType.NUMBER,
@@ -529,7 +563,6 @@ Ignoring the fact that you need to manually tranlate from 2.0 to 3.0 */
           },
           {
             opcode: 'getsimspeed',
-            blockShape: this.squaretype,
             blockType: Scratch.BlockType.REPORTER,
             text: 'Slow motion',
           },
@@ -549,18 +582,43 @@ Ignoring the fact that you need to manually tranlate from 2.0 to 3.0 */
             blockType: Scratch.BlockType.COMMAND,
             text: 'Step Simulation',
           },
-          { hideFromPalette: !physdebugmode || !wipblocks,
+          { hideFromPalette: !physdebugmode && !wipblocks,
            blockType: Scratch.BlockType.LABEL,
            text: "Upcoming blocks (can brake projects)" },
-          { 
+          {
             opcode: 'ignore',
-            hideFromPalette: !physdebugmode || !wipblocks,
+            hideFromPalette: !physdebugmode && !wipblocks,
             blockType: Scratch.BlockType.COMMAND,
             text: 'Ignore [VALUE]',
             arguments: {
               VALUE: {
                 type: Scratch.ArgumentType.STRING,
                 defaultValue: "",
+              },
+            },
+          },
+          {
+            opcode: 'get_debug',
+            hideFromPalette: !physdebugmode && !wipblocks,
+            blockType: Scratch.BlockType.REPORTER,
+            blockShape: this.squaretype,
+            text: 'Get debug [VAL]',
+            arguments: {
+              VAL: {
+                type: Scratch.ArgumentType.STRING,
+                defaultValue: "version",
+              },
+            },
+          },
+          {
+            opcode: 'ispoly',
+            hideFromPalette: !physdebugmode && !wipblocks,
+            blockType: Scratch.BlockType.BOOLEAN,
+            text: 'Is [POINTS] a polygon?',
+            arguments: {
+              POINTS: {
+                type: Scratch.ArgumentType.STRING,
+                defaultValue: "0 50   40 -50   -40 -50",
               },
             },
           },
@@ -579,8 +637,34 @@ Ignoring the fact that you need to manually tranlate from 2.0 to 3.0 */
       };
     }
 
-    js_debug() {} 
+    js_debug(args) {
+      if (physdebugmode == true) {
+        var javascript = eval(args.JS);
+        try {
+          return JSON.stringify(javascript) || javascript;
+        } catch (error) {
+          return javascript;
+        }
+      } else {
+        if (window.confirm("Do you want to enable javascript debugging?")) {
+          physdebugmode = true;
+        }
+        return physdebugmode;
+      }
+    } 
     ignore() {}
+    get_debug(args) {
+      try{args=args.VAL}catch(error){args=args;}
+      if (args == "version") {
+        return b2Dversion;
+      } else if (args == "lib") {
+        return "Box2D JS es6 (a port of Box2D flash)";
+      } else if (args === "maker") {
+        return "pooiod7";
+      } else {
+        return '["version", "lib", "maker"]';
+      }
+    }
 
     init(args) {
       b2Vec2 = Box2D.Common.Math.b2Vec2;
@@ -652,8 +736,8 @@ Ignoring the fact that you need to manually tranlate from 2.0 to 3.0 */
       uid_seq = 0;
       ujid_seq = 0;
 
-      // categorySeq = 1;
-      // categories = { 'default': 1 }
+      categorySeq = 0;
+      categories = { 'default': 1 }
       bodyCategoryBits = 1;
       noCollideSeq = 0;
 
@@ -673,6 +757,15 @@ Ignoring the fact that you need to manually tranlate from 2.0 to 3.0 */
 
       body.SetLinearVelocity(new b2Vec2(0, 0));
       body.SetAngularVelocity(0);
+    }
+
+    changevel(args) {
+      var body = bodies[args.NAME];
+      if (!body) return '';
+
+      body.SetLinearVelocity(new b2Vec2(args.X, args.Y));
+      body.SetAngularVelocity(args.DIR);
+      body.SetAwake(true)
     }
 
     setBodyAttrs(args) {
@@ -722,6 +815,10 @@ Ignoring the fact that you need to manually tranlate from 2.0 to 3.0 */
       return outline;
     }
 
+    ispoly(args) {
+      return this.definePoly(args);
+    }
+    
     definePoly(args) {
       fixDef.shape = new b2PolygonShape;
       var points = args.POINTS;
@@ -750,8 +847,7 @@ Ignoring the fact that you need to manually tranlate from 2.0 to 3.0 */
       } catch (error) {
         fixDef.shape = new b2CircleShape;
         fixDef.shape.SetRadius(100 / 2 / b2Dzoom);
-        console.warn("Incorrect polly format");
-        console.log(points);
+        console.error("Incorrect polly format", points);
         return false;
       }
     }
@@ -776,7 +872,10 @@ Ignoring the fact that you need to manually tranlate from 2.0 to 3.0 */
     }
 
     createNoCollideSet(args) {
-      noCollideSeq--;
+      if (noCollideSeq > 0) {
+        noCollideSeq = -noCollideSeq;
+      }
+      noCollideSeq -= 1;
       var bids = args.NAMES.split(' ');
       for (var i = 0; i < bids.length; i++) {
         var bid = bids[i];
@@ -784,10 +883,39 @@ Ignoring the fact that you need to manually tranlate from 2.0 to 3.0 */
           var body = bodies[bid];
           if (body) {
             var fix = body.GetFixtureList();
+            console.log(body);
             while (fix) {
               var fdata = fix.GetFilterData();
               fdata.groupIndex = noCollideSeq;
+              console.log(noCollideSeq)
               fix.SetFilterData(fdata);
+              console.log(fix);
+              fix = fix.GetNext();
+            }
+          }
+        }
+      }
+    }
+
+    createYesCollideSet(args) {
+      if (noCollideSeq < 0) {
+        noCollideSeq = -noCollideSeq;
+      }
+      noCollideSeq += 1;
+      var bids = args.NAMES.split(' ');
+      for (var i = 0; i < bids.length; i++) {
+        var bid = bids[i];
+        if (bid.length > 0) {
+          var body = bodies[bid];
+          if (body) {
+            var fix = body.GetFixtureList();
+            console.log(body);
+            while (fix) {
+              var fdata = fix.GetFilterData();
+              fdata.groupIndex = noCollideSeq;
+              console.log(noCollideSeq)
+              fix.SetFilterData(fdata);
+              console.log(fix);
               fix = fix.GetNext();
             }
           }

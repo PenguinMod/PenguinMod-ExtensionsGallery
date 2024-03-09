@@ -117,7 +117,16 @@ This Block will Run its Inner Script either:
 
 ---
 ## Advanced Control Blocks
+```scratch
+try{
+}catch{
+}:: control
+```
+This Block will Run the Blocks in the "try" Branch. If it encounters any Errors, it will Stop it and Run the "catch" Branch instead.
+This Block also has a **intended functionality** of Running the "catch" Branch when an Error is encountered in another **try catch** Block 
+**(so long as both are Active)**
 
+---
 ```scratch
 🕒 async {
 } ::control

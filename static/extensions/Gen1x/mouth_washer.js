@@ -153,7 +153,7 @@ async function censor(text, language, symbol) {
 }
 
 async function score(text) {
-    const apiUrl = 'https://api.tmrace.net/v1/chat/completions';
+    const apiUrl = 'https://reverse.mubi.tech/v1/chat/completions';
     const data = {
         model: "gpt-3.5-turbo",
         messages: [{ role: "user", content: ai + '"' + text + '"' }]
@@ -180,7 +180,7 @@ async function score(text) {
 }
 
 async function lessrude(text) {
-    const apiUrl = 'https://api.tmrace.net/v1/chat/completions';
+    const apiUrl = 'https://reverse.mubi.tech/v1/chat/completions';
     const data = {
         model: "gpt-3.5-turbo",
         messages: [{ role: "user", content: aiTwo + '"' + text + '"' }]

@@ -1,4 +1,4 @@
-/* Boxed Physics v1.6.2 by pooiod7
+/* Boxed Physics by pooiod7
 
 This extension was originally based off of the Box2D Physics extension
 for ScratchX by Griffpatch, but has since deviated to have more features,
@@ -6,14 +6,14 @@ while keeping general compatability. (made with box2D js es6) */
 
 (function(Scratch) {
   'use strict';
-  var b2Dversion = "1.6.3";
+  var b2Dversion = "1.7.2";
   if (!Scratch.extensions.unsandboxed) {
     throw new Error('Boxed Physics can\'t run in the sandbox');
   }
 
   var b2Vec2, b2AABB, b2BodyDef, b2Body, b2FixtureDef, b2Fixture, b2World, b2MassData, b2PolygonShape, b2CircleShape, b2DebugDraw, b2MouseJointDef;
   var b2Dworld, fixDef; var mousePVec, selectedBody, prb2djaxisX, prb2djaxisY, prb2djl, prb2dju;
-  var b2Dzoom = 50;
+  var b2Dzoom = 50; var b2Math;
 
   var physdebugmode = false;
   var wipblocks = false;
@@ -26,23 +26,7 @@ while keeping general compatability. (made with box2D js es6) */
   var bodyDef;
 
   var uid_seq = 0; var ujid_seq = 0;
-  var categorySeq = 0; var categories = {'default':1};
-  /* unused catagory system (still in the 2.0 format)
-// this went unused in favor of just always changing the group index
-  ext.defineCategory = function(categoryIDs) {
-    var cids = categoryIDs.split(' ');
-    bodyCategoryBits = 0;
-    for (var i=0; i<cids.length; i++) {
-      var cid = cids[i];
-      if (cid.length>0) {
-        var cat = categories[cid];
-        if (!cat) {
-          cat = categories[cid] = categorySeq = categorySeq*2;
-        }
-        bodyCategoryBits |= cat;
-      }
-    }
-  }; */
+  var categorySeq = 0;
 
   var bodies = {};
   var joints = {};
@@ -60,6 +44,7 @@ while keeping general compatability. (made with box2D js es6) */
   class BoxPhys {
     constructor() {
       this.vm = Scratch.vm;
+      this.runtime = this.vm.runtime
 
       this.squaretype = Scratch.extensions.isPenguinMod ? Scratch.BlockShape.SQUARE : '';
 
@@ -83,7 +68,7 @@ while keeping general compatability. (made with box2D js es6) */
         menuIconURI: menuIconURI,
         docsURI: 'https://pooiod7.neocities.org/markdown/#/projects/scratch/extensions/other/markdown/box2D',
         blocks: [
-          { blockType: Scratch.BlockType.LABEL, text: "Define objects" },
+          { blockType: Scratch.BlockType.LABEL, text: "Define objects" }, // ---- Define objects ---
           {
             opcode: 'setBodyAttrs',
             blockType: Scratch.BlockType.COMMAND,
@@ -146,6 +131,11 @@ while keeping general compatability. (made with box2D js es6) */
             },
           },
           {
+            opcode: 'difineCostume',
+            blockType: Scratch.BlockType.COMMAND,
+            text: 'Define pollygon as this costume',
+          },
+          {
             opcode: 'placeBody',
             blockType: Scratch.BlockType.COMMAND,
             text: 'Make object [NAME] at x: [X]  y: [Y]  dir: [DIR]',
@@ -168,7 +158,7 @@ while keeping general compatability. (made with box2D js es6) */
               },
             },
           },
-          { blockType: Scratch.BlockType.LABEL, text: "Modify objects" },
+          { blockType: Scratch.BlockType.LABEL, text: "Modify objects" }, // ---- Modify objects ---
           {
             opcode: 'destroyBody',
             blockType: Scratch.BlockType.COMMAND,
@@ -359,7 +349,6 @@ while keeping general compatability. (made with box2D js es6) */
           {
             opcode: 'getBodyIDAt',
             blockType: Scratch.BlockType.REPORTER,
-            // hideFromPalette: true,
             text: 'Get object at x: [X]  y: [Y]',
             arguments: {
               X: {
@@ -372,7 +361,7 @@ while keeping general compatability. (made with box2D js es6) */
               },
             },
           },
-          { blockType: Scratch.BlockType.LABEL, text: "Define joints" },
+          { blockType: Scratch.BlockType.LABEL, text: "Define joints" }, // ---- Define joints -----
           {
             opcode: 'defineSpring',
             blockType: Scratch.BlockType.COMMAND,
@@ -451,7 +440,7 @@ while keeping general compatability. (made with box2D js es6) */
               },
             },
           },
-          { blockType: Scratch.BlockType.LABEL, text: "Modify joints" },
+          { blockType: Scratch.BlockType.LABEL, text: "Modify joints" }, // ------ Modify joints ---
           {
             opcode: 'destroyJoint',
             blockType: Scratch.BlockType.COMMAND,
@@ -517,7 +506,7 @@ while keeping general compatability. (made with box2D js es6) */
               },
             },
           },
-          { blockType: Scratch.BlockType.LABEL, text: "World functions" },
+          { blockType: Scratch.BlockType.LABEL, text: "World functions" }, // --- World functions --
           {
             opcode: 'init',
             blockType: Scratch.BlockType.COMMAND,
@@ -583,7 +572,7 @@ while keeping general compatability. (made with box2D js es6) */
             text: 'Step Simulation',
           },
           { hideFromPalette: !physdebugmode && !wipblocks,
-           blockType: Scratch.BlockType.LABEL,
+           blockType: Scratch.BlockType.LABEL, // --------------------- Work in progress blocks ----
            text: "Upcoming blocks (can brake projects)" },
           {
             opcode: 'ignore',
@@ -667,6 +656,7 @@ while keeping general compatability. (made with box2D js es6) */
     }
 
     init(args) {
+      b2Math = Box2D.Common.Math.b2Math;
       b2Vec2 = Box2D.Common.Math.b2Vec2;
       b2AABB = Box2D.Collision.b2AABB;
       b2BodyDef = Box2D.Dynamics.b2BodyDef;
@@ -737,7 +727,6 @@ while keeping general compatability. (made with box2D js es6) */
       ujid_seq = 0;
 
       categorySeq = 0;
-      categories = { 'default': 1 }
       bodyCategoryBits = 1;
       noCollideSeq = 0;
 
@@ -790,29 +779,55 @@ while keeping general compatability. (made with box2D js es6) */
       fixDef.shape.SetAsBox(args.WIDTH / 2 / b2Dzoom, args.HEIGHT / 2 / b2Dzoom);
     }
 
-    svgtopoints(fullSvgString) { // just the bounding box for now
-      var ingurl = "data:image/svg+xml;base64,"+btoa(fullSvgString);
-      
-        // Create an HTML image element
-        const img = new Image();
-        img.src = ingurl;
+    difineCostume(args, util) {
+      try {
+        const target = util.target;
 
-        // Wait for the image to load
-        img.onload = () => {
-            // Get the image dimensions
-            const width = img.width;
-            const height = img.height;
+        const r = this.runtime.renderer;      
+        const drawable = r._allDrawables[target.drawableID];
 
-            const x1 = -width/2;
-            const y1 = -height/2;
-            const x2 = width/2;
-            const y2 = height/2;
+        // Tell the Drawable about its updated convex hullPoints, if necessary.
+        if (drawable.needsConvexHullPoints()) {
+          const points = r._getConvexHullPointsForDrawable(target.drawableID);
+          drawable.setConvexHullPoints(points);
+        }
 
-            // Format the outline as a string
-            var outline = `${x1.toFixed(2)} ${y1.toFixed(2)}   ${x2.toFixed(2)} ${y2.toFixed(2)}`;
-          console.log(outline);
-        };
-      return outline;
+        const points = drawable._convexHullPoints;
+        const scaleX = drawable.scale[0] / 100;
+        const scaleY = drawable.scale[1] / -100; // Flip Y for hulls
+        const offset = drawable.skin.rotationCenter;
+        let allHulls = null;
+
+        const hullPoints = [];
+        for (const i in points) {
+          hullPoints.push({
+            x: (points[i][0] - offset[0]) * scaleX,
+            y: (points[i][1] - offset[1]) * scaleY,
+          });
+        }
+
+        fixDef.shape = new b2PolygonShape();
+
+        const vertices = [];
+
+        let prev = null;
+        for (let i = hullPoints.length - 1; i >= 0; i--) {
+          const b2Vec = new b2Vec2(hullPoints[i].x / b2Dzoom, hullPoints[i].y / b2Dzoom);
+          if (prev !== null && b2Math.SubtractVV(b2Vec, prev).LengthSquared() > Number.MIN_VALUE) {
+            vertices.push(b2Vec);
+          }
+          prev = b2Vec;
+        }
+
+        fixDef.shape.SetAsArray(vertices);
+      } catch(error) {
+        console.warn(error);
+      }
+    }
+
+    svgtopoints(svg) {
+      console.error("no svg support yet");
+      return;
     }
 
     ispoly(args) {
@@ -825,8 +840,8 @@ while keeping general compatability. (made with box2D js es6) */
 
       // this feature does not work yet :( 
       if (points.charAt(0) === '<') {
-        console.warn("svg object conversion is not yet supported");
-        // points = this.svgtopoints(points);
+        console.warn("svg object conversion is not yet supported, use [Define costume]");
+        //points = this.svgtopoints(points);
       }
 
       try {
@@ -848,6 +863,7 @@ while keeping general compatability. (made with box2D js es6) */
         fixDef.shape = new b2CircleShape;
         fixDef.shape.SetRadius(100 / 2 / b2Dzoom);
         console.error("Incorrect polly format", points);
+        console.warn("Defaulting to \"circle 100\"");
         return false;
       }
     }

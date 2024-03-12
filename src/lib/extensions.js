@@ -320,18 +320,17 @@ export default [
         creator: "WAYLIVES",
         isGitHub: false,
     },
-         
-     {
-         name: "TimeKeeper",
-         description: "adds extra blocks to the editor that are related to the timer reporter.",
-         code: "SparkyCreations/TimeKeeper.js",
-         banner: "SparkyCreations/TimeKeeper.js",
-         creator: "SparkyCreations",
+    {
+        name: "TimeKeeper",
+        description: "Adds extra blocks to the editor that are related to the timer reporter.",
+        code: "SparkyCreations/TimeKeeper.js",
+        banner: "SparkyCreations/TimeKeeper.js",
+        creator: "SparkyCreations",
         isGithub: true,
-     },
+    },
     // Does not follow the main guideline of "Your extension should be created for a specific purpose." Description is misleading.
     // {
-    //     name: "Randomly blocks",
+    //     name: "Randomly Blocks",
     //     description: "Utilities to have your project feel more like a website.",
     //     code: "mariocraft987/randomlyBlocks.js",
     //     banner: "mariocraft987/randomlyBlocks.svg",

@@ -323,7 +323,7 @@ export default [
          
      {
          name: "TimeKeeper",
-         description: "adds extra blocks to the editor that are related to the timer.",
+         description: "adds extra blocks to the editor that are related to the timer reporter.",
          code: "SparkyCreations/TimeKeeper.js",
          banner: "SparkyCreations/TimeKeeper.js",
          creator: "SparkyCreations",

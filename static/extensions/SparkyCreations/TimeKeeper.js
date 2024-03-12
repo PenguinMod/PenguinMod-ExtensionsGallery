@@ -8,7 +8,7 @@ class PauseResumeExtension {
 
   getInfo() {
     return {
-      id: 'pauseresume',
+      id: 'sparkycreations',
       name: 'TimeKeeper',
       color1: '#5CB1D6',
       blocks: [

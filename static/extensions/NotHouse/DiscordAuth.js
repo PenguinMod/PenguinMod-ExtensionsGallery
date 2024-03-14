@@ -22,7 +22,7 @@ class DiscordAuthExtension {
       name: 'Discord Auth Extension',
       blocks: [
         {
-          opcode: 'openPopup',
+          opcode: 'openPopupAndWait',
           blockType: Scratch.BlockType.COMMAND,
           text: 'Open authentification window'
         },
@@ -92,7 +92,7 @@ class DiscordAuthExtension {
     };
   }
 
-  async openPopup() {
+  async openPopupAndWait() {
     const callbackUrlBase64 = btoa("https://studio.penguinmod.com");
     this.popup = await window.open(`https://discordauth.penguinmod.com/verify?callback=${callbackUrlBase64}`, 'PopupWindow', 'width=450,height=700');
     const startTime = Date.now();

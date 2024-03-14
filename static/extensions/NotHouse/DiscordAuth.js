@@ -1,5 +1,7 @@
-// Made by NotHouse
-// Version 1.0.4 [This is a beta version, expect bugs]
+// DiscordAuth - Made by NotHouse
+// Version 1.2.1
+// Get the lastest official release from https://extensions.penguinmod.com/extensions/NotHouse/DiscordAuth.js
+
 function getDataFromObject(data, field) {
   if (data.hasOwnProperty(field)) {
     return data[field];
@@ -20,9 +22,9 @@ class DiscordAuthExtension {
       name: 'Discord Auth Extension',
       blocks: [
         {
-          opcode: 'openPopupAndWait',
+          opcode: 'openPopup',
           blockType: Scratch.BlockType.COMMAND,
-          text: 'Open authentification window and wait'
+          text: 'Open authentification window'
         },
         {
           opcode: 'getPrivateCode',
@@ -83,32 +85,39 @@ class DiscordAuthExtension {
           {text: 'Banner Color', value: 'banner_color'},
           {text: 'MFA Enabled', value: 'mfa_enabled'},
           {text: 'Locale', value: 'locale'},
+          {text: 'Email', value: 'email'},
           {text: 'Verified', value: 'verified'}
         ]
       }
     };
   }
 
-  openPopupAndWait() {
-    const callbackUrlBase64 = btoa(window.location.href);
-    this.popup = window.open(`https://discordauth.penguinmod.com/verify?callback=${callbackUrlBase64}`, 'PopupWindow', 'width=450,height=700');
-    const pollInterval = setInterval(() => {
-      if (!this.popup || this.popup.closed) {
-        clearInterval(pollInterval);
-      } else {
-        try {
-          const urlParams = new URLSearchParams(this.popup.location.search);
-          const privateCode = urlParams.get('privatecode');
-          if (privateCode) {
-            this.privateCode = privateCode;
+  async openPopup() {
+    const callbackUrlBase64 = btoa("https://studio.penguinmod.com");
+    this.popup = await window.open(`https://discordauth.penguinmod.com/verify?callback=${callbackUrlBase64}`, 'PopupWindow', 'width=450,height=700');
+    const startTime = Date.now();
+    const pollInterval = setInterval(async () => {
+        if (!this.popup || this.popup.closed) {
             clearInterval(pollInterval);
-            this.popup.close();
-          } else {
-            console.log("Weird error happened!");
-            this.popup.close();
-          }
-        } catch (error) {}
-      }
+            const elapsedTime = Date.now() - startTime;
+            if (elapsedTime >= 5000) {
+                console.log("Timeout reached, private code not obtained. Aborted. Report bug to NotHouse.");
+            }
+        } else {
+            try {
+                const urlParams = new URLSearchParams(this.popup.location.search);
+                const privateCode = urlParams.get('privatecode');
+                if (privateCode) {
+                    this.privateCode = privateCode;
+                    clearInterval(pollInterval);
+                    this.popup.close();
+                } else {
+                    console.log("No private code found yet, waiting...");
+                }
+            } catch (error) {
+                console.error("Error occurred while checking for private code:", error);
+            }
+        }
     }, 1000);
   }
 
@@ -173,6 +182,7 @@ class DiscordAuthExtension {
 	if (/\s/.test(args.PRIVATECODE)) {
       return "null"
     }
+
     const apiUrl = `https://discordauth.penguinmod.com/user?privatecode=${args.PRIVATECODE}`;
     try {
         const response = await fetch(apiUrl);
@@ -187,6 +197,68 @@ class DiscordAuthExtension {
         return "null";
     }
   }
+  
+  
+  async getUserID(args) {
+    if (/\s/.test(args.PRIVATECODE)) {
+      return "null"
+    }
+
+    const apiUrl = `https://discordauth.penguinmod.com/user?privatecode=${args.PRIVATECODE}`;
+    try {
+        const response = await fetch(apiUrl);
+        if (response.status === 200) {
+          const data = await response.json();
+          return data.id;
+        } else {
+          return "null";
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        return "null";
+    }
+  }
+
+  async getUsername(args) {
+    if (/\s/.test(args.PRIVATECODE)) {
+      return "null"
+    }
+
+    const apiUrl = `https://discordauth.penguinmod.com/user?privatecode=${args.PRIVATECODE}`;
+    try {
+        const response = await fetch(apiUrl);
+        if (response.status === 200) {
+          const data = await response.json();
+          return data.username;
+        } else {
+          return "null";
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        return "null";
+    }
+  }
+
+  async getNickname(args) {
+    if (/\s/.test(args.PRIVATECODE)) {
+      return "null"
+    }
+
+    const apiUrl = `https://discordauth.penguinmod.com/user?privatecode=${args.PRIVATECODE}`;
+    try {
+        const response = await fetch(apiUrl);
+        if (response.status === 200) {
+          const data = await response.json();
+          return data.global_name;
+        } else {
+          return "null";
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        return "null";
+    }
+  }
+
 }
 
 Scratch.extensions.register(new DiscordAuthExtension());

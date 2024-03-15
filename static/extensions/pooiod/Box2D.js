@@ -6,7 +6,7 @@ while keeping general compatability. (made with box2D js es6) */
 
 (function(Scratch) {
   'use strict';
-  var b2Dversion = "1.7.2";
+  var b2Dversion = "1.7.3";
   if (!Scratch.extensions.unsandboxed) {
     throw new Error('Boxed Physics can\'t run in the sandbox');
   }
@@ -46,6 +46,7 @@ while keeping general compatability. (made with box2D js es6) */
       this.vm = Scratch.vm;
       this.runtime = this.vm.runtime
 
+      // this is a penguinmod only thing
       this.squaretype = Scratch.extensions.isPenguinMod ? Scratch.BlockShape.SQUARE : '';
 
       vm.runtime.on('PROJECT_LOADED', () => {
@@ -133,6 +134,7 @@ while keeping general compatability. (made with box2D js es6) */
           {
             opcode: 'difineCostume',
             blockType: Scratch.BlockType.COMMAND,
+            filter: [Scratch.TargetType.SPRITE],
             text: 'Define pollygon as this costume',
           },
           {
@@ -780,9 +782,11 @@ while keeping general compatability. (made with box2D js es6) */
     }
 
     difineCostume(args, util) {
+      const target = util.target;
+      if (target.isStage) {
+        return;
+      }
       try {
-        const target = util.target;
-
         const r = this.runtime.renderer;      
         const drawable = r._allDrawables[target.drawableID];
 

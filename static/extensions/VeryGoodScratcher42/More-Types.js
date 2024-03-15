@@ -782,11 +782,11 @@
             kind: "stack",
             value: generator.descendInputOfBlock(block, "VALUE")
           }),
-          callFunction: (generator, block) => ({
+          callFunction: (generator, block) => (generator.script.yields = true, { // Tell the compiler that the script needs to yield cuz it does
             kind: "stack",
             func: generator.descendInputOfBlock(block, "FUNCTION")
           }),
-          callFunctionOutput: (generator, block) => ({
+          callFunctionOutput: (generator, block) => (generator.script.yields = true, {
             kind: "input",
             func: generator.descendInputOfBlock(block, "FUNCTION")
           }),
@@ -889,7 +889,6 @@
 			compiler.descendStack(node.stack, new (imports.Frame)(false));
 			const stackSrc = compiler.source.substring(oldSrc.length);
 			compiler.source = oldSrc;
-			
 			return new (imports.TypedInput)(`new (runtime.ext_vgscompiledvalues.Function)(target, (function*(){${stackSrc};\nreturn runtime.ext_vgscompiledvalues.Nothing;}))`, imports.TYPE_UNKNOWN)
           },
           returnFromFunction: (node, compiler, imports) => {
@@ -899,12 +898,14 @@
             const local = compiler.localVariables.next();
             const func = compiler.descendInput(node.func);
             const getFunc = `(runtime.ext_vgscompiledvalues.getStore(globalState.thread, "${local}")).func`;
+            if (!compiler.script.yields === true) throw "Something happened in the More Types extension"
             compiler.source+=`(yield* (${getFunc} = ${func.asUnknown()},\n  (runtime.ext_vgscompiledvalues.typeof(${getFunc}) === "Function") ?\n  \ \ ${getFunc}.call() :\n  \ \ runtime.ext_vgscompiledvalues.throwErr("Attempted to call non-function.")));`
           },
           callFunctionOutput: (node, compiler, imports) => {
             const local = compiler.localVariables.next();
             const func = compiler.descendInput(node.func);
             const getFunc = `(runtime.ext_vgscompiledvalues.getStore(globalState.thread, "${local}")).func`;
+            if (!compiler.script.yields === true) throw "Something happened in the More Types extension"
             return new (imports.TypedInput)(`(yield* (${getFunc} = ${func.asUnknown()},\n  (runtime.ext_vgscompiledvalues.typeof(${getFunc}) === "Function") ?\n  \ \ ${getFunc}.call() :\n  \ \ runtime.ext_vgscompiledvalues.throwErr("Attempted to call non-function.")))`, imports.TYPE_UNKNOWN)
           },
           setVar: (node, compiler, imports) => {

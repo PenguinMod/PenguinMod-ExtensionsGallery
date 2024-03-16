@@ -87,6 +87,13 @@ This Block will Break Out of the Loop (C-Block) it is in.
 ---
 
 ```scratch
+wait until (...:: #EC9C13) changes ::control
+```
+This Block will wait until the inputted Block changes its Value
+
+---
+
+```scratch
 simultaneously run {
 } {
 } ::control
@@ -177,6 +184,11 @@ Additionally, you are allowed to put these Blocks in different **Scripts**, so l
 
 **Important:** These do **NOT** start new Threads.
 **Important:** The "else" Block will **NEVER** run until an "if" Block with the same ID is ran.
+
+```scratch
+<if with ID [my-block1] true? ::control>
+```
+Additionally, this block simply reports wether the Condition in the "if/else" Block with the same ID was true/false
 
 ---
 ## Inline Message Blocks

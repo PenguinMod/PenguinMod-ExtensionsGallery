@@ -1113,7 +1113,7 @@
             kind: "input",
             stack: generator.descendSubstack(block, "SUBSTACK")
           }),
-          anonymousClassExtends: (generator, block) => (console.log(block), {
+          anonymousClassExtends: (generator, block) => ({
             kind: "input",
             stack: generator.descendSubstack(block, "SUBSTACK"),
             "extends": generator.descendInputOfBlock(block, "CLASS")
@@ -1145,9 +1145,9 @@
         js: {
           log: (node, compiler, imports) => {
             let x = compiler.descendInput(node.contents)
-            compiler.source += `console.log(${x.asUnknown()});\n`
-            console.log(x)
-            console.log(compiler)
+            compiler.source += `console.log("MORE TYPES LOG: " ,${x.asUnknown()});\n`
+            //console.log(x)
+            //console.log(compiler)
           },
           newObject: (node, compiler, imports) => {
             let object;
@@ -1397,7 +1397,7 @@
 		blockInfo.tooltip ? res.json.tooltip = blockInfo.tooltip : 0;
 		// Add argument tooltips.
 		/*const args0 = res.json.args0;
-		console.log(args0)
+		//console.log(args0)
 		
 		for (const input in (args0 || {})) {
 		  for (const argument in (blockInfo.arguments || {})) {
@@ -1406,7 +1406,7 @@
 		    }
 		  }
 		}
-		console.log(res.json)*/ // remove all this dev stuff, and argument tooltips prob not needed.
+		//console.log(res.json)*/ // remove all this dev stuff, and argument tooltips prob not needed.
 		return res;
 	}
 	

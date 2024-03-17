@@ -189,9 +189,14 @@ Like functions, methods can execute code and return a value.
 
 ### Construct
 ```Scratch
-Construct an instance of [Insert Class Here]
+Construct an instance of [Insert Class Here]::#B300FF
 ```
 This block creates an instance of the class, and executes the class on the instance.
+### instanceof
+```Scratch
+is [Insert Anything Here] an instance of [Put in a class, or use the menu]::#B300FF boolean
+```
+It checks if something is an instance of a class.
 ## How to read the console
 
 The console is incredibly complex, but this section will teach you how to read the console.

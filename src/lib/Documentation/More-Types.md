@@ -188,12 +188,12 @@ When you append a method to a class, it will create an invisible property on all
 Like functions, methods can execute code and return a value.
 
 ### Construct
-```Scratch
+```scratch
 Construct an instance of [Insert Class Here]::#B300FF
 ```
 This block creates an instance of the class, and executes the class on the instance.
 ### instanceof
-```Scratch
+```scratch
 is [Insert Anything Here] an instance of [Put in a class, or use the menu]::#B300FF boolean
 ```
 It checks if something is an instance of a class.

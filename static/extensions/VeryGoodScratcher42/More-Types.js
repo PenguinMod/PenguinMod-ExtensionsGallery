@@ -949,6 +949,23 @@
               }
             }
           },
+          {
+            opcode: "instanceof",
+            func: "noComp",
+            blockType: Scratch.BlockType.BOOLEAN,
+            text: "is [OBJECT] an instance of [CLASS]",
+            arguments: {
+              OBJECT: {
+                type: Scratch.ArgumentType.STRING,
+                defaultValue: "Insert Anything Here"
+              },
+              CLASS: {
+                type: Scratch.ArgumentType.STRING,
+                menu: "defaultClasses",
+                defaultValue: "Put in a class, or use the menu."
+              }
+            }
+          },
           this.makeLabel("Temporary Variables Support"),
           {
             opcode: "iterateObjectTempVars",
@@ -1140,6 +1157,11 @@
           construct: (generator, block) => (generator.script.yields = true, {
             kind: "input",
             "class": generator.descendInputOfBlock(block, "CLASS")
+          }),
+          instanceof: (generator, block) => ({
+            kind: "input",
+            "class": generator.descendInputOfBlock(block, "CLASS"),
+            obj: generator.descendInputOfBlock(block, "OBJECT")
           })
         },
         js: {
@@ -1364,6 +1386,11 @@
           construct: (node, compiler, imports) => {
             const constructor = compiler.descendInput(node.class).asUnknown();
             return new (imports.TypedInput)(`(yield* (runtime.ext_vgscompiledvalues.constructFrom(${constructor})))`, imports.TYPE_UNKNOWN)
+          },
+          instanceof: (node, compiler, imports) => {
+            const constructor = compiler.descendInput(node.class).asUnknown();
+            const obj = compiler.descendInput(node.obj).asUnknown();
+            return new (imports.TypedInput)(`(${obj} instanceof runtime.ext_vgscompiledvalues.getClassToExtend(${constructor}))`, imports.TYPE_BOOLEAN)
           }
         }
       }

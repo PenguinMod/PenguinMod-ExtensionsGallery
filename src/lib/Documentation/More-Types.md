@@ -79,7 +79,7 @@ For maps, key can be anything; key can even be the map itself.
 
 ### add to end
 ```scratch
-add [foo] to the end of [Insert Array / Set Here]
+add [foo] to the end of [Insert Array / Set Here]::#B300FF
 ```
 Sets are really just a list of unique values, and arrays are really just a list.
 This block adds a new value and puts it at the end.
@@ -112,6 +112,7 @@ for key [my variable v] value [my variable v] in [Insert Object / Array / Map / 
 It loops through the object / array / set / map. The variable after "key" is the variable which is set to the key. The variable after "value" is the variable which is set to the value.
 For sets, key and value are the same.
 
+There is also a variation of this block which uses the variables from the PenguinMod Temporary Variables extension.
 ### create a symbol and nothing
 ```scratch
 create a symbol::#B300FF reporter
@@ -139,6 +140,58 @@ The first block allows you to execute the function, as the sprite it was created
 
 The seconds block does what the first block does, but it is an input, and it gets you the value that the function returned.
 
+### Classes
+
+```scratch
+anonymous class {
+
+}::#B300FF cap
+
+anonymous class extends [Put in a class, or use the menu] {
+
+}::#B300FF
+```
+
+Classes are similar to functions, as they can execute code, but are slightly different.
+
+Classes are basically blueprints for new objects, that can "extend" each other and be "constructed"
+
+Extending another class is basically taking a blueprint, and modifying it. When a class extends another class, it will have access to a "super" call, which is basically calling the class that it extends before the actual class contents.
+
+However, in More Types, you have no choice but to let the super call run.
+
+The code inside your class can use a "this" block which will be discussed later.
+
+### This
+
+```scratch
+this::#B300FF reporter
+```
+This block allows you to access the object being constructed inside classes, and allow you to access the receiver of the method (discussed later) inside a method.
+
+### Methods
+
+```scratch
+append method [Insert Function Here] with name [foo] to class or object [Insert Object / Array / Set / Map / Class Here]::#B300FF
+
+call method with name [foo] on [Insert Object / Array / Set / Map Here]::#B300FF
+
+call method with name [foo] on [Insert Object / Array / Set / Map Here] and get return value::#B300FF reporter
+```
+
+Methods are functions that are executed with a receiver (the object the method was added to), where the receiver can be access via the "this" block.
+
+When you append a method to an object, it creates an invisible property that can be called.
+
+When you append a method to a class, it will create an invisible property on all current and future instances of the class (and classes that extend that class) that can be called.
+
+Like functions, methods can execute code and return a value.
+
+### Construct
+```Scratch
+Construct an instance of [Insert Class Here]
+```
+This block creates an instance of the class, and executes the class on the instance.
 ## How to read the console
 
 The console is incredibly complex, but this section will teach you how to read the console.

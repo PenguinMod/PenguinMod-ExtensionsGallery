@@ -1,9 +1,11 @@
 # More Types
-More Types introduces 7 new types to PenguinMod: Object, Array, Set, Map, Symbol, Nothing, and Function. 
+More Types introduces 8 new types to PenguinMod: Object, Array, Set, Map, Symbol, Nothing, Function, and Class. 
 
 These types can be used to do all sorts of things.
 
 All of the new types, except for Nothing, are passed by reference, meaning that each new instance you create is different from every other instance.
+
+More Types also introduces OOP (Object Oriented Programming) to PenguinMod.
 
 NOTE: The square inputs cannot be displayed here, and we have turned them into circular inputs.
 ## Blocks
@@ -14,6 +16,8 @@ Here are the blocks are their usage:
 print [Hello, World!] to console::#B300FF
 ```
 This block outputs a value into the JavaScript console. You can open the console by pressing Ctrl + Shift + I (but don't type anything in if you don't know what you're doing).
+
+More on this block later.
 
 ### set variable to
 ```scratch
@@ -134,3 +138,41 @@ call function [Insert Function Here] and get return value::#B300FF reporter
 The first block allows you to execute the function, as the sprite it was created in, but ignores whatever value the function returned.
 
 The seconds block does what the first block does, but it is an input, and it gets you the value that the function returned.
+
+## How to read the console
+
+The console is incredibly complex, but this section will teach you how to read the console.
+
+The first thing you need to do is find a textbox that says "Filter", and in this textbox you want to type in "MORE TYPES LOG:" without the quotations.
+
+You should see all of the outputs now.
+
+### Reading objects
+
+This section is for when you encounter the following items:
+
+\> PlainObject (Objects)
+
+\> Array (Arrays)
+
+\> Set (Sets)
+
+\> Map (Maps)
+
+\> MORETYPESCLASS (Instances of More Types classes)
+
+For PlainObject, Array, Set, Map, and MORETYPESCLASS, you need to press the arrow, and there should be a piece of text called __values, open the arrow for that, and you should see the raw object.
+
+The raw object is either an object ({...}), an array (\[...\] or Array(n)), a map (Map(n) {... => ...}), or a set (Set(n) {...}}).
+
+For objects, the thingy before the colon (:) is the key, and the thingy after the colon (:) is the value.
+
+For arrays, you need to expand the array, and you should see n: value, where n is the key (starts from 0) and value is the value.
+
+For maps, you need to expand the map, and expand \[\[Entries]], and only look at the items after the colon (:), you should see key => value.
+
+For sets, you need to expand the set, and expand \[\[Entires]], and only look at the items after the colon (:), those items are the values of inside the set.
+
+### Other Items
+
+You can ignore all of the other things that More Types outputs, as they do not provide much information.

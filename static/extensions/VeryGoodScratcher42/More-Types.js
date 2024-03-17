@@ -492,7 +492,7 @@
           throw "Attempted to construct from non-class."
         }
       }
-      jsValues.getClassToExtend = (strOrClass) => {
+      jsValues.getClassToExtend = (strOrClass, isForInstanceof) => {
         if (jsValues.typeof(strOrClass) === "Class") return strOrClass.class;
         switch (strOrClass) {
           case ("Object"):
@@ -504,7 +504,11 @@
           case ("Map"):
             return jsValues.Map;
           default:
-            throw "Tried to extend invalid value"
+            if (!isForInstanceof) {
+	      throw "Tried to extend invalid value"
+	    } else {
+	      throw "Invalid class for instanceof"
+	    }
         }
       }
       jsValues.isObject = (value) => {
@@ -1390,7 +1394,7 @@
           instanceof: (node, compiler, imports) => {
             const constructor = compiler.descendInput(node.class).asUnknown();
             const obj = compiler.descendInput(node.obj).asUnknown();
-            return new (imports.TypedInput)(`(${obj} instanceof runtime.ext_vgscompiledvalues.getClassToExtend(${constructor}))`, imports.TYPE_BOOLEAN)
+            return new (imports.TypedInput)(`(${obj} instanceof runtime.ext_vgscompiledvalues.getClassToExtend(${constructor}, true))`, imports.TYPE_BOOLEAN)
           }
         }
       }

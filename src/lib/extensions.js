@@ -24,7 +24,7 @@ export default [
         name: "Boxed Physics",
         description: "Implements the Box2D physics engine into PenguinMod, adding joints, springs, etc. This is different from TurboWarp's implementation.",
         code: "pooiod/Box2D.js",
-        banner: "pooiod/Box2D.png",
+        banner: "pooiod/B2Dimg.svg",
         creator: "pooiod7",
     },
     {
@@ -139,10 +139,10 @@ export default [
         isGitHub: true,
     },
     {
-        name: "PenguinHook",
-        description: "Send Webhook requests, that can be Discord or any type of webhook.",
-        code: "MubiLop/penguinhook.js",
-        banner: "MubiLop/penguinhook.png",
+        name: "PenguinGPT",
+        description: "Talk to ChatGPT! Use models like DALL-E 3, Midjourney, and GPT 4.",
+        code: "MubiLop/penguingpt.js",
+        banner: "MubiLop/penguingpt.png",
         creator: "MubiLop",
         isGitHub: false,
     },
@@ -161,6 +161,14 @@ export default [
         banner: "SharkPool/Spotify.svg",
         creator: "SharkPool-SP",
         isGitHub: true,
+    },
+    {
+        name: "PenguinHook",
+        description: "Send Webhook requests, that can be Discord or any type of webhook.",
+        code: "MubiLop/penguinhook.js",
+        banner: "MubiLop/penguinhook.png",
+        creator: "MubiLop",
+        isGitHub: false,
     },
     {
         name: "Tile Grids",

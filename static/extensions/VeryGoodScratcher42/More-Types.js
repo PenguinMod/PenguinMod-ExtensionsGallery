@@ -113,6 +113,9 @@
         if (value instanceof jsValues.Function) {
           return "Function"
         }
+        if (value instanceof jsValues.Class) {
+          return "Class"
+        }
         return "unknown"
       }
       jsValues.clone = function CLONE(value) {
@@ -341,6 +344,9 @@
         call() {
           return this.func();
         }
+        callWithThis(self) {
+          return this.func.call(self)
+        }
       }
       /*jsValues.RegExp = class RegularExpression {
         constructor(obj) {
@@ -414,6 +420,121 @@
         } catch(e) {
           return e
         }
+      }
+      
+      jsValues.Class = class Class { // wrapper class for classes
+        constructor(someClass) {
+          this.class = someClass;
+          this.class.WRAPPER = this;
+        }
+        toString() {
+          return "<Class>"
+        }
+        toJSON() {
+          return "Classes do not save"
+        }
+      }
+      jsValues.__methodsOfObjects = new WeakMap();
+      jsValues.appendMethod = (obj, name, method) => {
+        if (typeof obj !== "object" || !obj) throw "Attempted to append method on invalid value " + obj; // im too lazy to check if its a jsValues object
+        if (!(jsValues.__methodsOfObjects.has(obj))) {
+          jsValues.__methodsOfObjects.set(obj, Object.create(null))
+        }
+        if (jsValues.typeof(method) !== "Function") throw "Attempted to append method, but the method is not a function."
+        if (Object.hasOwn(jsValues.__methodsOfObjects.get(obj), name)) {
+          throw `Object ${obj} already has method ${name}, cannot append method.`
+        }
+        return jsValues.__methodsOfObjects.get(obj)[name] = method;
+      }
+      jsValues.executeMethod = (obj, name) => {
+        if (!jsValues.isObject(obj)) throw "Attempted to call method on invalid receiver " + obj;
+        const methods = jsValues.__methodsOfObjects.get(obj);
+        
+        if (!methods) {
+          // Try to find this method on its class
+          if (obj.constructor?.WRAPPER) {
+            const wrapper = obj.constructor.WRAPPER;
+            if (jsValues.__methodsOfObjects.get(wrapper)?.[name]) {
+              return jsValues.__methodsOfObjects.get(wrapper)[name].callWithThis(obj);
+            }
+            let success = false;
+            let oldWrapper = wrapper;
+            while (true) {
+              // Keep looking
+              const newWrapper = Object.getPrototypeOf(oldWrapper.class).WRAPPER;
+              let method = null;
+              if (!newWrapper) break;
+              if (method = jsValues.__methodsOfObjects.get(newWrapper)?.[name]) {
+                method.callWithThis(obj)
+              }
+              oldWrapper = newWrapper; // go to next iteration
+            }
+          }
+          throw `Attempted to call non-existent method ${name} on ${obj}`;
+        }
+        if (!methods[name]) {
+          throw `Attempted to call non-existent method ${name} on ${obj}`;
+        }
+        return methods[name].callWithThis(obj)
+      }
+      // OOP Helper functions
+      jsValues.canConstruct = (value) => {
+        return jsValues.typeof(value) === "Class" && (typeof value.class.prototype.init) === "function"
+      }
+      jsValues.inheritsFrom = (value, otherClass) => {
+        return value.class.prototype instanceof (jsValues.typeof(value) === "Class" ? value.class : value)
+      }
+      jsValues.constructFrom = function* (value) { // do (yield* runtime.ext_vgscompiledvalues.constructFrom(someClass));
+        if (jsValues.canConstruct(value)) {
+          const instance = new (value.class)();
+          return (yield* instance.init());
+        } else {
+          throw "Attempted to construct from non-class."
+        }
+      }
+      jsValues.getClassToExtend = (strOrClass, isForInstanceof) => {
+        if (jsValues.typeof(strOrClass) === "Class") return strOrClass.class;
+        switch (strOrClass) {
+          case ("Object"):
+            return jsValues.Object;
+          case ("Array"):
+            return jsValues.Array;
+          case ("Set"):
+            return jsValues.Set;
+          case ("Map"):
+            return jsValues.Map;
+          default:
+            if (!isForInstanceof) {
+	      throw "Tried to extend invalid value"
+	    } else {
+	      throw "Invalid class for instanceof"
+	    }
+        }
+      }
+      jsValues.isObject = (value) => {
+        return (jsValues.typeof(value) === "Object" || jsValues.typeof(value) === "Array" || jsValues.typeof(value) === "Set" || jsValues.typeof(value) === "Map")
+      }
+      jsValues.trySuper = function* (self) {
+        const constructor = self.constructor;
+        const superClasses = [];
+        if (constructor) {
+          // Use a loop to find all superClasses
+          let oldClass = constructor;
+          while (true) {
+            const superClass = Object.getPrototypeOf(oldClass);
+            if (!(superClass === Function || superClass === jsValues.Object || superClass === jsValues.Array || superClass === jsValues.Set || superClass === jsValues.Map) && !(superClass == null)) {
+              superClasses.unshift(superClass); // Use unshift to mimic the behavior of super in javascript.
+              //(yield* (superClass.prototype.init.call(self, true)))
+            } else {
+              break;
+            }
+            oldClass = superClass
+          }
+          for (const superClass of superClasses) {
+            (yield* (superClass.prototype.init.call(self, true)));
+          }
+        }
+        // If the function gets here and superClass.init hasn't been called, act as if nothing had happened.
       }
       Scratch.vm.runtime.registerCompiledExtensionBlocks("vgscompiledvalues", this.getCompileInfo());
     }
@@ -686,6 +807,7 @@
             output: ["Function"],
             blockShape: Scratch.BlockShape.SQUARE,
             blockType: Scratch.BlockType.OUTPUT, // basically just undefined
+            disableMonitor: true,
             branchCount: 1,
             text: "Anonymous Function"
           },
@@ -729,10 +851,157 @@
              }
             }
           },
+          this.makeLabel("OOP"),
+          {
+            opcode: "anonymousClass",
+            func: "noComp",
+            blockType: Scratch.BlockType.REPORTER,
+            blockShape: Scratch.BlockShape.SQUARE,
+            branchCount: 1,
+            disableMonitor: true,
+            text: "anonymous class" // extends object
+          }, // done!
+          {
+            opcode: "anonymousClassExtends",
+            func: "noComp",
+            blockType: Scratch.BlockType.REPORTER,
+            blockShape: Scratch.BlockShape.SQUARE,
+            branchCount: 1,
+            disableMonitor: true,
+            text: "anonymous class extends [CLASS]",
+            arguments: {
+              CLASS: {
+                type: Scratch.ArgumentType.STRING,
+                menu: "defaultClasses",
+                defaultValue: "Put in a class, or use the menu"
+              }
+            }
+          },
+          {
+            opcode: "this",
+            func: "noComp",
+            blockType: Scratch.BlockType.REPORTER,
+            blockShape: Scratch.BlockShape.SQUARE,
+            text: "this",
+            disableMonitor: true,
+          },
+          {
+            opcode: "appendMethod",
+            func: "noComp",
+            blockType: Scratch.BlockType.COMMAND,
+            text: "append method [METHOD] with name [NAME] to class or object [VALUE]",
+            arguments: {
+              METHOD: {
+                type: Scratch.ArgumentType.STRING,
+                defaultValue: "Insert Function Here"
+              },
+              NAME: {
+                type: Scratch.ArgumentType.STRING,
+                defaultValue: "foo"
+              },
+              VALUE: {
+                type: Scratch.ArgumentType.STRING,
+                defaultValue: "Insert Object / Array / Set / Map / Class Here"
+              }
+            }
+          },
+          {
+            opcode: "callMethod",
+            func: "noComp",
+            blockType: Scratch.BlockType.COMMAND,
+            tooltip: "Calls a method with a \"this\" value",
+            text: "call method with name [NAME] on [VALUE]",
+            arguments: {
+              NAME: {
+                type: Scratch.ArgumentType.STRING,
+                defaultValue: "foo"
+              },
+              VALUE: {
+                type: Scratch.ArgumentType.STRING,
+                defaultValue: "Insert Object / Array / Set / Map Here"
+              }
+            }
+          },
+          {
+            opcode: "callMethodOutput",
+            func: "noComp",
+            blockType: Scratch.BlockType.REPORTER,
+            blockShape: Scratch.BlockShape.SQUARE,
+            tooltip: "Calls a method with a \"this\" value",
+            text: "call method with name [NAME] on [VALUE] and get return value",
+            arguments: {
+              NAME: {
+                type: Scratch.ArgumentType.STRING,
+                defaultValue: "foo"
+              },
+              VALUE: {
+                type: Scratch.ArgumentType.STRING,
+                defaultValue: "Insert Object / Array / Set / Map Here"
+              }
+            }
+          },
+          {
+            opcode: "construct",
+            func: "noComp",
+            blockType: Scratch.BlockType.REPORTER,
+            blockShape: Scratch.BlockShape.SQUARE,
+            text: "Construct an instance of [CLASS]",
+            arguments: {
+              CLASS: {
+                type: Scratch.ArgumentType.STRING,
+                defaultValue: "Insert Class Here"
+              }
+            }
+          },
+          {
+            opcode: "instanceof",
+            func: "noComp",
+            blockType: Scratch.BlockType.BOOLEAN,
+            text: "is [OBJECT] an instance of [CLASS]",
+            arguments: {
+              OBJECT: {
+                type: Scratch.ArgumentType.STRING,
+                defaultValue: "Insert Anything Here"
+              },
+              CLASS: {
+                type: Scratch.ArgumentType.STRING,
+                menu: "defaultClasses",
+                defaultValue: "Put in a class, or use the menu."
+              }
+            }
+          },
+          this.makeLabel("Temporary Variables Support"),
+          {
+            opcode: "iterateObjectTempVars",
+            func: "noComp",
+            blockType: Scratch.BlockType.LOOP,
+            text: ["for key [KEY] value [VALUE] in [OBJECT]"],
+            tooltip: "Allows you to iterate through all of the keys and values of an object",
+            branchCount: 1,
+            arguments: {
+              KEY: {
+                type: Scratch.ArgumentType.STRING,
+                defaultValue: "k"
+              },
+              VALUE: {
+                type: Scratch.ArgumentType.STRING,
+                defaultValue: "v"
+              },
+              OBJECT: {
+                type: Scratch.ArgumentType.STRING,
+                defaultValue: "Insert Object / Array/ Set / Map Here" // you can use string too
+              }
+            }
+          },
         ],
         menus: {
           objectClasses: {
             allowReporters: false,
+            items: ["Object", "Array", "Set", "Map"]
+          },
+          defaultClasses: {
+            allowReporters: true,
+            isTypeable: true,
             items: ["Object", "Array", "Set", "Map"]
           }
         }
@@ -782,11 +1051,11 @@
             kind: "stack",
             value: generator.descendInputOfBlock(block, "VALUE")
           }),
-          callFunction: (generator, block) => ({
+          callFunction: (generator, block) => (generator.script.yields = true, { // Tell the compiler that the script needs to yield cuz it does
             kind: "stack",
             func: generator.descendInputOfBlock(block, "FUNCTION")
           }),
-          callFunctionOutput: (generator, block) => ({
+          callFunctionOutput: (generator, block) => (generator.script.yields = true, {
             kind: "input",
             func: generator.descendInputOfBlock(block, "FUNCTION")
           }),
@@ -815,6 +1084,13 @@
             stack: generator.descendSubstack(block, "SUBSTACK"),
             key: generator.descendVariable(block, "KEY"),
             value: generator.descendVariable(block, "VALUE"),
+            object: generator.descendInputOfBlock(block, "OBJECT")
+          }),
+          iterateObjectTempVars: (generator, block) => ({
+            kind: "stack",
+            stack: generator.descendSubstack(block, "SUBSTACK"),
+            key: generator.descendInputOfBlock(block, "KEY"),
+            value: generator.descendInputOfBlock(block, "VALUE"),
             object: generator.descendInputOfBlock(block, "OBJECT")
           }),
           isSame: (generator, block) => ({
@@ -853,14 +1129,51 @@
           }),
           nothingValue: (generator, block) => ({
             kind: "input"
+          }),
+          anonymousClass: (generator, block) => ({
+            kind: "input",
+            stack: generator.descendSubstack(block, "SUBSTACK")
+          }),
+          anonymousClassExtends: (generator, block) => ({
+            kind: "input",
+            stack: generator.descendSubstack(block, "SUBSTACK"),
+            "extends": generator.descendInputOfBlock(block, "CLASS")
+          }),
+          this: (generator, block) => ({
+            kind: "input"
+          }),
+          appendMethod: (generator, block) => ({
+            kind: "stack",
+            method: generator.descendInputOfBlock(block, "METHOD"),
+            name: generator.descendInputOfBlock(block, "NAME"),
+            obj: generator.descendInputOfBlock(block, "VALUE")
+          }),
+          callMethod: (generator, block) => (generator.script.yields = true, {
+            kind: "stack",
+            name: generator.descendInputOfBlock(block, "NAME"),
+            obj: generator.descendInputOfBlock(block, "VALUE")
+          }),
+          callMethodOutput: (generator, block) => (generator.script.yields = true, {
+            kind: "input",
+            name: generator.descendInputOfBlock(block, "NAME"),
+            obj: generator.descendInputOfBlock(block, "VALUE")
+          }),
+          construct: (generator, block) => (generator.script.yields = true, {
+            kind: "input",
+            "class": generator.descendInputOfBlock(block, "CLASS")
+          }),
+          instanceof: (generator, block) => ({
+            kind: "input",
+            "class": generator.descendInputOfBlock(block, "CLASS"),
+            obj: generator.descendInputOfBlock(block, "OBJECT")
           })
         },
         js: {
           log: (node, compiler, imports) => {
             let x = compiler.descendInput(node.contents)
-            compiler.source += `console.log(${x.asUnknown()});\n`
-            console.log(x)
-            console.log(compiler)
+            compiler.source += `console.log("MORE TYPES LOG: " ,${x.asUnknown()});\n`
+            //console.log(x)
+            //console.log(compiler)
           },
           newObject: (node, compiler, imports) => {
             let object;
@@ -885,12 +1198,11 @@
           },
           anonymousFunction: (node, compiler, imports) => {
             // big hack ALSO STOLEN
-			const oldSrc = compiler.source;
-			compiler.descendStack(node.stack, new (imports.Frame)(false));
-			const stackSrc = compiler.source.substring(oldSrc.length);
-			compiler.source = oldSrc;
-			
-			return new (imports.TypedInput)(`new (runtime.ext_vgscompiledvalues.Function)(target, (function*(){${stackSrc};\nreturn runtime.ext_vgscompiledvalues.Nothing;}))`, imports.TYPE_UNKNOWN)
+      			const oldSrc = compiler.source;
+      			compiler.descendStack(node.stack, new (imports.Frame)(false));
+      			const stackSrc = compiler.source.substring(oldSrc.length);
+      			compiler.source = oldSrc;
+      			return new (imports.TypedInput)(`new (runtime.ext_vgscompiledvalues.Function)(target, (function*(){${stackSrc};\nreturn runtime.ext_vgscompiledvalues.Nothing;}))`, imports.TYPE_UNKNOWN)
           },
           returnFromFunction: (node, compiler, imports) => {
             compiler.source += `return ${compiler.descendInput(node.value).asUnknown()};\n`
@@ -899,12 +1211,14 @@
             const local = compiler.localVariables.next();
             const func = compiler.descendInput(node.func);
             const getFunc = `(runtime.ext_vgscompiledvalues.getStore(globalState.thread, "${local}")).func`;
+            if (!compiler.script.yields === true) throw "Something happened in the More Types extension"
             compiler.source+=`(yield* (${getFunc} = ${func.asUnknown()},\n  (runtime.ext_vgscompiledvalues.typeof(${getFunc}) === "Function") ?\n  \ \ ${getFunc}.call() :\n  \ \ runtime.ext_vgscompiledvalues.throwErr("Attempted to call non-function.")));`
           },
           callFunctionOutput: (node, compiler, imports) => {
             const local = compiler.localVariables.next();
             const func = compiler.descendInput(node.func);
             const getFunc = `(runtime.ext_vgscompiledvalues.getStore(globalState.thread, "${local}")).func`;
+            if (!compiler.script.yields === true) throw "Something happened in the More Types extension"
             return new (imports.TypedInput)(`(yield* (${getFunc} = ${func.asUnknown()},\n  (runtime.ext_vgscompiledvalues.typeof(${getFunc}) === "Function") ?\n  \ \ ${getFunc}.call() :\n  \ \ runtime.ext_vgscompiledvalues.throwErr("Attempted to call non-function.")))`, imports.TYPE_UNKNOWN)
           },
           setVar: (node, compiler, imports) => {
@@ -944,6 +1258,20 @@
             const iterable = compiler.localVariables.next();
             const keyValue = compiler.localVariables.next();
             compiler.source += `const ${objVar} = ${obj.asUnknown()};\nconst ${iterable} = runtime.ext_vgscompiledvalues.toIterable(${objVar});\nfor (const ${keyValue} of ${iterable}) {${keyVar.source}=${keyValue}[0];${valueVar.source}=${keyValue}[1];`
+            // time to add the substack
+            compiler.descendStack(node.stack, new (imports.Frame)(true, "vgscompiledvalues.iterateObject"));
+            compiler.yieldLoop();
+            compiler.source += "};\n"
+          },
+          iterateObjectTempVars: (node, compiler, imports) => {
+            const keyVar = compiler.descendInput(node.key);
+            const valueVar = compiler.descendInput(node.value);
+            const obj = compiler.descendInput(node.object);
+            // im stupid and dont know which variables are used so im just going to use a local variable
+            const objVar = compiler.localVariables.next();
+            const iterable = compiler.localVariables.next();
+            const keyValue = compiler.localVariables.next();
+            compiler.source += `const ${objVar} = ${obj.asUnknown()};\nconst ${iterable} = runtime.ext_vgscompiledvalues.toIterable(${objVar});\nfor (const ${keyValue} of ${iterable}) {tempVars[${keyVar.asString()}]=${keyValue}[0];tempVars[${valueVar.asString()}]=${keyValue}[1];`
             // time to add the substack
             compiler.descendStack(node.stack, new (imports.Frame)(true, "vgscompiledvalues.iterateObject"));
             compiler.yieldLoop();
@@ -1000,6 +1328,73 @@
           },
           nothingValue: (node, compiler, imports) => {
             return new (imports.TypedInput)(`runtime.ext_vgscompiledvalues.Nothing`, imports.TYPE_UNKNOWN);
+          },
+          anonymousClass: (node, compiler, imports) => {
+            const oldSrc = compiler.source;
+            compiler.descendStack(node.stack, new(imports.Frame)(false));
+            const stackSrc = compiler.source.substring(oldSrc.length);
+            compiler.source = oldSrc;
+            return new (imports.TypedInput)(`new (runtime.ext_vgscompiledvalues.Class)(class MORETYPESCLASS extends (runtime.ext_vgscompiledvalues.getClassToExtend("Object")) {\n
+              constructor() {super()}\n
+              *init(isSuper) {\n
+                try {\n
+                  ${stackSrc};\n
+                } finally {\n
+                  return this; 
+                }
+              }
+            })`, imports.TYPE_UNKNOWN)
+          },
+          anonymousClassExtends: (node, compiler, imports) => {
+            const oldSrc = compiler.source;
+            compiler.descendStack(node.stack, new(imports.Frame)(false));
+            const stackSrc = compiler.source.substring(oldSrc.length);
+            compiler.source = oldSrc;
+            const classToExtend = compiler.descendInput(node.extends).asUnknown();
+            return new (imports.TypedInput)(`new (runtime.ext_vgscompiledvalues.Class)(class MORETYPESCLASS extends (runtime.ext_vgscompiledvalues.getClassToExtend(${classToExtend})) {\n
+              constructor() {super()}\n
+              *init(isSuper) {\n
+                if (!isSuper) (yield* runtime.ext_vgscompiledvalues.trySuper(this));
+                try {\n
+                  ${stackSrc};\n
+                } finally {\n
+                  return this;
+                }
+              }
+            })`, imports.TYPE_UNKNOWN)
+          },
+          this: (node, compiler, imports) => {
+            return new (imports.TypedInput)(`(runtime.ext_vgscompiledvalues.isObject(this) ? this : runtime.ext_vgscompiledvalues.throwErr("Cannot access this outside of class constructor and methods"))`, imports.TYPE_UNKNOWN)
+          },
+          appendMethod: (node, compiler, imports) => {
+            const method = compiler.descendInput(node.method).asUnknown();
+            const name = compiler.descendInput(node.name).asUnknown();
+            const obj = compiler.descendInput(node.obj).asUnknown();
+            // runtime.ext_vgscompiledvalues.appendMethod(obj, name, method)
+            compiler.source += `runtime.ext_vgscompiledvalues.appendMethod(${obj}, ${name}, ${method});\n`;
+          },
+          callMethod: (node, compiler, imports) => {
+            // executeMethod(obj, name)
+            const obj = compiler.descendInput(node.obj).asUnknown();
+            const name = compiler.descendInput(node.name).asUnknown();
+            
+            compiler.source += `(yield* (runtime.ext_vgscompiledvalues.executeMethod(${obj}, ${name})));`
+          },
+          callMethodOutput: (node, compiler, imports) => {
+            // executeMethod(obj, name)
+            const obj = compiler.descendInput(node.obj).asUnknown();
+            const name = compiler.descendInput(node.name).asUnknown();
+            
+            return new (imports.TypedInput)(`(yield* (runtime.ext_vgscompiledvalues.executeMethod(${obj}, ${name})))`, imports.TYPE_UNKNOWN)
+          },
+          construct: (node, compiler, imports) => {
+            const constructor = compiler.descendInput(node.class).asUnknown();
+            return new (imports.TypedInput)(`(yield* (runtime.ext_vgscompiledvalues.constructFrom(${constructor})))`, imports.TYPE_UNKNOWN)
+          },
+          instanceof: (node, compiler, imports) => {
+            const constructor = compiler.descendInput(node.class).asUnknown();
+            const obj = compiler.descendInput(node.obj).asUnknown();
+            return new (imports.TypedInput)(`(${obj} instanceof runtime.ext_vgscompiledvalues.getClassToExtend(${constructor}, true))`, imports.TYPE_BOOLEAN)
           }
         }
       }
@@ -1033,7 +1428,7 @@
 		blockInfo.tooltip ? res.json.tooltip = blockInfo.tooltip : 0;
 		// Add argument tooltips.
 		/*const args0 = res.json.args0;
-		console.log(args0)
+		//console.log(args0)
 		
 		for (const input in (args0 || {})) {
 		  for (const argument in (blockInfo.arguments || {})) {
@@ -1042,7 +1437,7 @@
 		    }
 		  }
 		}
-		console.log(res.json)*/ // remove all this dev stuff, and argument tooltips prob not needed.
+		//console.log(res.json)*/ // remove all this dev stuff, and argument tooltips prob not needed.
 		return res;
 	}
 	

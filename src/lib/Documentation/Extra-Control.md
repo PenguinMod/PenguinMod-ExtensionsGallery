@@ -87,6 +87,13 @@ This Block will Break Out of the Loop (C-Block) it is in.
 ---
 
 ```scratch
+wait until (...:: #EC9C13) changes ::control
+```
+This Block will wait until the inputted Block changes its Value
+
+---
+
+```scratch
 simultaneously run {
 } {
 } ::control
@@ -117,7 +124,16 @@ This Block will Run its Inner Script either:
 
 ---
 ## Advanced Control Blocks
+```scratch
+try{
+}catch{
+}:: control
+```
+This Block will Run the Blocks in the "try" Branch. If it encounters any Errors, it will Stop it and Run the "catch" Branch instead.
+This Block also has a **intended functionality** of Running the "catch" Branch when an Error is encountered in another **try catch** Block 
+**(so long as both are Active)**
 
+---
 ```scratch
 🕒 async {
 } ::control
@@ -168,6 +184,11 @@ Additionally, you are allowed to put these Blocks in different **Scripts**, so l
 
 **Important:** These do **NOT** start new Threads.
 **Important:** The "else" Block will **NEVER** run until an "if" Block with the same ID is ran.
+
+```scratch
+<if with ID [my-block1] true? ::control>
+```
+Additionally, this block simply reports wether the Condition in the "if/else" Block with the same ID was true/false
 
 ---
 ## Inline Message Blocks

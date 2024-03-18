@@ -163,6 +163,14 @@ export default [
         isGitHub: true,
     },
     {
+        name: "PenguinHook",
+        description: "Send Webhook requests, that can be Discord or any type of webhook.",
+        code: "MubiLop/penguinhook.js",
+        banner: "MubiLop/penguinhook.png",
+        creator: "MubiLop",
+        isGitHub: false,
+    },
+    {
         name: "Tile Grids",
         description: "Place sprites on grids.",
         code: "SharkPool/Tile-Grids.js",

@@ -151,7 +151,7 @@
             this.embedProperties.name = Scratch.Cast.toString(args.NAME);
         }
 
-        sendWebhook(args) {
+        async sendWebhook(args) {
             const { NAME, IMAGEURL, MESSAGE, WEBHOOK } = args;
             const name = Scratch.Cast.toString(NAME);
             const imageUrl = Scratch.Cast.toString(IMAGEURL);
@@ -163,7 +163,7 @@
                 nameReq = name;
             }
 
-            if (!Scratch.canFetch(webhookUrl)) {
+            if (!(await Scratch.canFetch(webhookUrl))) {
                 return;
             }
 
@@ -173,29 +173,27 @@
                 content: message
             };
 
-            console.log(JSON.stringify(payload))
-
-            return fetch(webhookUrl, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify(payload)
-            })
-                .then(response => {
-                    if (!response.ok) {
-                        console.error('Webhook request failed:', response.statusText);
-                        return 'Webhook request failed';
-                    }
-                    return 'Webhook sent successfully';
-                })
-                .catch(error => {
-                    console.error('Error sending webhook:', error);
-                    return 'Error sending webhook';
+            try {
+                const response = await fetch(webhookUrl, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(payload)
                 });
+
+                if (!response.ok) {
+                    console.error('Webhook request failed:', response.statusText);
+                    return 'Webhook request failed';
+                }
+                return 'Webhook sent successfully';
+            } catch (error) {
+                console.error('Error sending webhook:', error);
+                return 'Error sending webhook';
+            }
         }
 
-        sendWebhookWithEmbed(args) {
+        async sendWebhookWithEmbed(args) {
             const embed = {};
             const name = {};
 
@@ -221,47 +219,47 @@
                 username: name.name,
             };
 
-            if (!Scratch.canFetch(webhookUrl)) {
+            if (!(await Scratch.canFetch(webhookUrl))) {
                 return;
             }
 
-            return fetch(webhookUrl, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify(payload)
-            })
-                .then(response => {
-                    if (!response.ok) {
-                        console.error('Webhook request with embeds failed:', response.statusText);
-                        return 'Webhook request with embeds failed';
-                    }
-                    return 'Webhook with embeds sent successfully';
-                })
-                .catch(error => {
-                    console.error('Error sending webhook with embeds:', error);
-                    return 'Error sending webhook with embeds';
+            try {
+                const response = await fetch(webhookUrl, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(payload)
                 });
+
+                if (!response.ok) {
+                    console.error('Webhook request with embeds failed:', response.statusText);
+                    return 'Webhook request with embeds failed';
+                }
+                return 'Webhook with embeds sent successfully';
+            } catch (error) {
+                console.error('Error sending webhook with embeds:', error);
+                return 'Error sending webhook with embeds';
+            }
         }
 
-        sendjson(args) {
+        async sendjson(args) {
             const webhookUrl = Scratch.Cast.toString(args.WEBHOOK);
-            if (!Scratch.canFetch(webhookUrl)) {
+            if (!(await Scratch.canFetch(webhookUrl))) {
                 return;
             }
             
             try {
-                return fetch(args.WEBHOOK, {
+                await fetch(webhookUrl, {
                     method: "POST",
                     headers: {
                         'Content-type': 'application/json'
                     },
                     body: Scratch.Cast.toString(args.JSON_DATA)
-                }).then(res => {
-                    console.log(res);
-                })
-            } catch (err) { }
+                });
+            } catch (err) {
+                return;
+            }
         }
     }
 

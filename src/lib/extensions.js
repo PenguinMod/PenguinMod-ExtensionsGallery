@@ -139,6 +139,14 @@ export default [
         isGitHub: true,
     },
     {
+        name: "PenguinGPT",
+        description: "Talk to ChatGPT! Use models like DALL-E 3, Midjourney, and GPT 4.",
+        code: "MubiLop/penguingpt.js",
+        banner: "MubiLop/penguingpt.png",
+        creator: "MubiLop",
+        isGitHub: false,
+    },
+    {
         name: "SoundCloud API",
         description: "Fetch Songs and Statistics from SoundCloud.",
         code: "SharkPool/SoundCloud-API.js",

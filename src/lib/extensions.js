@@ -202,13 +202,14 @@ export default [
     //     banner: "Gen1x/betterstorage.png",
     //     creator: "G1nX",
     // },
-    {
-        name: "Mouth Washer",
-        description: "Includes many utilities related to cleaning bad words, swearing and profanity. Thought of as an extra layer of security for filtering messages.\n\n(ft. violet and jwklong)",
-        code: "Gen1x/mouth_washer.js",
-        banner: "Gen1x/mw-placeholder.png",
-        creator: "G1nX",
-    },
+    // this extension is completely dead as of now
+    // {
+    //     name: "Mouth Washer",
+    //     description: "Includes many utilities related to cleaning bad words, swearing and profanity. Thought of as an extra layer of security for filtering messages.\n\n(ft. violet and jwklong)",
+    //     code: "Gen1x/mouth_washer.js",
+    //     banner: "Gen1x/mw-placeholder.png",
+    //     creator: "G1nX",
+    // },
     {
         name: "Mathematics",
         description: "Complicated maths extension for nerds.",

@@ -7,8 +7,10 @@
     export let creator = "";
     export let documentation = "";
     export let isGitHub = false;
+    export let sampleProject = "";
 
     const baseUrl = "https://studio.penguinmod.com/editor.html?extension=";
+    const projectUrl = "https://studio.penguinmod.com/editor.html?project_url=https://extensions.penguinmod.com/sampleProjects/";
 
     /**
      * The button to copy the URL
@@ -129,6 +131,12 @@
             <a href={baseUrl + url} target="_blank">
                 <button class="purple">View</button>
             </a>
+            {#if sampleProject}
+                <br/>
+                <a href={projectUrl + sampleProject} target="_blank">
+                    <button class="green">Sample Project</button>
+                </a>
+            {/if}
         </div>
     </div>
 </div>
@@ -217,5 +225,8 @@
     }
     .purple {
         background-color: #9d52ff;
+    }
+    .green {
+        background-color: #11aa11;
     }
 </style>

@@ -346,4 +346,12 @@ export default [
     //     creator: "mariocraft987",
     //     isGithub: true,
     // },
+    {
+    name: "Text To Speech: Redone",
+    description: "Generate better TTS! Made using TTS Tool API!", 
+    code: "PuzzlingGGG/ttsr.js", 
+    banner: "PuzzlingGGG/TTSR.png", 
+    creator: "puzzlingGGG", 
+    isGitHub: false, 
+},
 ];

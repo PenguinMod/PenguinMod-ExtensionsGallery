@@ -164,6 +164,7 @@
         border-radius: 6px;
         padding: 8px;
         margin: 4px;
+        max-width: calc(600px / 1.85);
         display: flex;
         flex-direction: column;
         justify-content: space-between;

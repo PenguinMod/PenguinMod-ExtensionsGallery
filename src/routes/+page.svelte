@@ -106,8 +106,8 @@
     }
 
     .main {
-        width: 60%;
-        margin-left: 20%;
+        width: 80%;
+        margin-left: 10%;
         display: flex;
         flex-direction: column;
     }

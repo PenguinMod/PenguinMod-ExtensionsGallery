@@ -27,7 +27,6 @@
 //  Did you want alerts? Notificationss that are easily customizable?
 //        This is the only and best notification extension!
 //           Created by MubiLop + 2digit (discord user)
-//             From Ruby Devs (https://rubyteam.tech/)
 
 (function (Scratch) {
   "use strict";

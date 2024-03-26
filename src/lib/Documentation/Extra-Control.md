@@ -94,6 +94,13 @@ This Block will wait until the inputted Block changes its Value
 ---
 
 ```scratch
+wait until (...:: #EC9C13) changes ::control
+```
+This Block will Run the **Green Flag** (Restarting the Project) and will continue the Script
+
+---
+
+```scratch
 simultaneously run {
 } {
 } ::control

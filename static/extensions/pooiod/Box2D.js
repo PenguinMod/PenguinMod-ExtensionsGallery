@@ -1,19 +1,23 @@
-/* Boxed Physics v1.6.2 by pooiod7
+// Name: Boxed Plysics
+// ID: P7BoxPhys
+// Description: Implements the Box2D physics engine, adding joints, springs, sliders, and more.
+// By: pooiod7 <https://scratch.mit.edu/users/pooiod7/>
+// Original: Griffpatch
 
-This extension was originally based off of the Box2D Physics extension
+/* This extension was originally based off of the Box2D Physics extension
 for ScratchX by Griffpatch, but has since deviated to have more features,
-while keeping general compatability. (made with box2D js es6) */ 
+while keeping general compatability. (made with box2D js es6) */
 
 (function(Scratch) {
   'use strict';
-  var b2Dversion = "1.6.3";
+  var b2Dversion = "1.7.3";
   if (!Scratch.extensions.unsandboxed) {
     throw new Error('Boxed Physics can\'t run in the sandbox');
   }
 
   var b2Vec2, b2AABB, b2BodyDef, b2Body, b2FixtureDef, b2Fixture, b2World, b2MassData, b2PolygonShape, b2CircleShape, b2DebugDraw, b2MouseJointDef;
   var b2Dworld, fixDef; var mousePVec, selectedBody, prb2djaxisX, prb2djaxisY, prb2djl, prb2dju;
-  var b2Dzoom = 50;
+  var b2Dzoom = 50; var b2Math;
 
   var physdebugmode = false;
   var wipblocks = false;
@@ -26,23 +30,7 @@ while keeping general compatability. (made with box2D js es6) */
   var bodyDef;
 
   var uid_seq = 0; var ujid_seq = 0;
-  var categorySeq = 0; var categories = {'default':1};
-  /* unused catagory system (still in the 2.0 format)
-// this went unused in favor of just always changing the group index
-  ext.defineCategory = function(categoryIDs) {
-    var cids = categoryIDs.split(' ');
-    bodyCategoryBits = 0;
-    for (var i=0; i<cids.length; i++) {
-      var cid = cids[i];
-      if (cid.length>0) {
-        var cat = categories[cid];
-        if (!cat) {
-          cat = categories[cid] = categorySeq = categorySeq*2;
-        }
-        bodyCategoryBits |= cat;
-      }
-    }
-  }; */
+  var categorySeq = 0;
 
   var bodies = {};
   var joints = {};
@@ -60,19 +48,23 @@ while keeping general compatability. (made with box2D js es6) */
   class BoxPhys {
     constructor() {
       this.vm = Scratch.vm;
+      this.runtime = this.vm.runtime
+      
+      this.docs = Scratch.extensions.isPenguinMod ? 'https://extensions.penguinmod.com/docs/BoxedPhysics' : 'https://pooiod7.neocities.org/markdown/#/projects/scratch/extensions/other/markdown/box2D';
 
+      // this is a penguinmod only thing
       this.squaretype = Scratch.extensions.isPenguinMod ? Scratch.BlockShape.SQUARE : '';
 
       vm.runtime.on('PROJECT_LOADED', () => {
-        this.physoptions({"CONPHYS":true, "WARMSTART":true, "POS":10, "VEL":10});
+        this.physoptions({ "CONPHYS": true, "WARMSTART": true, "POS": 10, "VEL": 10 });
       });
       this.vm.runtime.on('PROJECT_STOP', () => {
-        this.init({"SCALE": b2Dzoom, "GRAVITY": -10, "SCENE": "stage"});
+        this.init({ "SCALE": b2Dzoom, "GRAVITY": -10, "SCENE": "stage" });
       });
       vm.runtime.on('PROJECT_START', () => {
-        this.init({"SCALE": b2Dzoom, "GRAVITY": -10, "SCENE": "stage"});
+        this.init({ "SCALE": b2Dzoom, "GRAVITY": -10, "SCENE": "stage" });
       });
-      this.init({"SCALE": b2Dzoom, "GRAVITY": -10, "SCENE": "stage"});
+      this.init({ "SCALE": b2Dzoom, "GRAVITY": -10, "SCENE": "stage" });
     }
     getInfo() {
       return {
@@ -81,9 +73,9 @@ while keeping general compatability. (made with box2D js es6) */
         color1: "#2cb0c0",
         color2: '#4eb88a',
         menuIconURI: menuIconURI,
-        docsURI: 'https://pooiod7.neocities.org/markdown/#/projects/scratch/extensions/other/markdown/box2D',
+        docsURI: this.docs,
         blocks: [
-          { blockType: Scratch.BlockType.LABEL, text: "Define objects" },
+          { blockType: Scratch.BlockType.LABEL, text: "Define objects" }, // ---- Define objects ---
           {
             opcode: 'setBodyAttrs',
             blockType: Scratch.BlockType.COMMAND,
@@ -146,6 +138,12 @@ while keeping general compatability. (made with box2D js es6) */
             },
           },
           {
+            opcode: 'difineCostume',
+            blockType: Scratch.BlockType.COMMAND,
+            filter: [Scratch.TargetType.SPRITE],
+            text: 'Define pollygon as this costume',
+          },
+          {
             opcode: 'placeBody',
             blockType: Scratch.BlockType.COMMAND,
             text: 'Make object [NAME] at x: [X]  y: [Y]  dir: [DIR]',
@@ -168,7 +166,7 @@ while keeping general compatability. (made with box2D js es6) */
               },
             },
           },
-          { blockType: Scratch.BlockType.LABEL, text: "Modify objects" },
+          { blockType: Scratch.BlockType.LABEL, text: "Modify objects" }, // ---- Modify objects ---
           {
             opcode: 'destroyBody',
             blockType: Scratch.BlockType.COMMAND,
@@ -274,25 +272,6 @@ while keeping general compatability. (made with box2D js es6) */
             },
           },
           {
-            opcode: 'moveto',
-            blockType: Scratch.BlockType.COMMAND,
-            text: 'Move object [NAME] to x [X] y [Y]',
-            arguments: {
-              X: {
-                type: Scratch.ArgumentType.NUMBER,
-                defaultValue: 0,
-              },
-              Y: {
-                type: Scratch.ArgumentType.NUMBER,
-                defaultValue: 0,
-              },
-              NAME: {
-                type: Scratch.ArgumentType.STRING,
-                defaultValue: "Object",
-              },
-            },
-          },
-          {
             opcode: 'changevel',
             blockType: Scratch.BlockType.COMMAND,
             text: 'Set Velocity of [NAME] to x [X] y [Y] dir [DIR]',
@@ -306,6 +285,25 @@ while keeping general compatability. (made with box2D js es6) */
                 defaultValue: 0,
               },
               DIR: {
+                type: Scratch.ArgumentType.NUMBER,
+                defaultValue: 0,
+              },
+              NAME: {
+                type: Scratch.ArgumentType.STRING,
+                defaultValue: "Object",
+              },
+            },
+          },
+          {
+            opcode: 'moveto',
+            blockType: Scratch.BlockType.COMMAND,
+            text: 'Move object [NAME] to x [X] y [Y]',
+            arguments: {
+              X: {
+                type: Scratch.ArgumentType.NUMBER,
+                defaultValue: 0,
+              },
+              Y: {
                 type: Scratch.ArgumentType.NUMBER,
                 defaultValue: 0,
               },
@@ -359,7 +357,6 @@ while keeping general compatability. (made with box2D js es6) */
           {
             opcode: 'getBodyIDAt',
             blockType: Scratch.BlockType.REPORTER,
-            // hideFromPalette: true,
             text: 'Get object at x: [X]  y: [Y]',
             arguments: {
               X: {
@@ -372,7 +369,7 @@ while keeping general compatability. (made with box2D js es6) */
               },
             },
           },
-          { blockType: Scratch.BlockType.LABEL, text: "Define joints" },
+          { blockType: Scratch.BlockType.LABEL, text: "Define joints" }, // ---- Define joints -----
           {
             opcode: 'defineSpring',
             blockType: Scratch.BlockType.COMMAND,
@@ -418,7 +415,7 @@ while keeping general compatability. (made with box2D js es6) */
             arguments: {
               JOINTID: {
                 type: Scratch.ArgumentType.STRING,
-                defaultValue: 'Joint ID',
+                defaultValue: 'Joint',
               },
               JOINTTYPE: {
                 type: Scratch.ArgumentType.STRING,
@@ -451,7 +448,7 @@ while keeping general compatability. (made with box2D js es6) */
               },
             },
           },
-          { blockType: Scratch.BlockType.LABEL, text: "Modify joints" },
+          { blockType: Scratch.BlockType.LABEL, text: "Modify joints" }, // ------ Modify joints ---
           {
             opcode: 'destroyJoint',
             blockType: Scratch.BlockType.COMMAND,
@@ -466,7 +463,7 @@ while keeping general compatability. (made with box2D js es6) */
           {
             opcode: 'setJointAttr',
             blockType: Scratch.BlockType.COMMAND,
-            text: 'Set Joint [JOINTATTR] of joint [JOINTID] to [VALUE]',
+            text: 'Set [JOINTATTR] of joint [JOINTID] to [VALUE]',
             arguments: {
               JOINTATTR: {
                 type: Scratch.ArgumentType.STRING,
@@ -517,7 +514,7 @@ while keeping general compatability. (made with box2D js es6) */
               },
             },
           },
-          { blockType: Scratch.BlockType.LABEL, text: "World functions" },
+          { blockType: Scratch.BlockType.LABEL, text: "World functions" }, // --- World functions --
           {
             opcode: 'init',
             blockType: Scratch.BlockType.COMMAND,
@@ -582,9 +579,11 @@ while keeping general compatability. (made with box2D js es6) */
             blockType: Scratch.BlockType.COMMAND,
             text: 'Step Simulation',
           },
-          { hideFromPalette: !physdebugmode && !wipblocks,
-           blockType: Scratch.BlockType.LABEL,
-           text: "Upcoming blocks (can brake projects)" },
+          {
+            hideFromPalette: !physdebugmode && !wipblocks,
+            blockType: Scratch.BlockType.LABEL, // --------------------- Work in progress blocks ----
+            text: "Upcoming blocks (can brake projects)"
+          },
           {
             opcode: 'ignore',
             hideFromPalette: !physdebugmode && !wipblocks,
@@ -637,36 +636,24 @@ while keeping general compatability. (made with box2D js es6) */
       };
     }
 
-    js_debug(args) {
-      if (physdebugmode == true) {
-        var javascript = eval(args.JS);
-        try {
-          return JSON.stringify(javascript) || javascript;
-        } catch (error) {
-          return javascript;
-        }
-      } else {
-        if (window.confirm("Do you want to enable javascript debugging?")) {
-          physdebugmode = true;
-        }
-        return physdebugmode;
-      }
-    } 
-    ignore() {}
+    ignore() { }
     get_debug(args) {
-      try{args=args.VAL}catch(error){args=args;}
+      try { args = args.VAL } catch (error) { args = args; }
       if (args == "version") {
         return b2Dversion;
       } else if (args == "lib") {
         return "Box2D JS es6 (a port of Box2D flash)";
       } else if (args === "maker") {
         return "pooiod7";
+      } else if (args === "base") {
+        return "Box2D Physics by griffpatch for ScratchX (Scratch 2.0)";
       } else {
-        return '["version", "lib", "maker"]';
+        return '["version", "lib", "maker", "base"]';
       }
     }
 
     init(args) {
+      b2Math = Box2D.Common.Math.b2Math;
       b2Vec2 = Box2D.Common.Math.b2Vec2;
       b2AABB = Box2D.Collision.b2AABB;
       b2BodyDef = Box2D.Dynamics.b2BodyDef;
@@ -737,7 +724,6 @@ while keeping general compatability. (made with box2D js es6) */
       ujid_seq = 0;
 
       categorySeq = 0;
-      categories = { 'default': 1 }
       bodyCategoryBits = 1;
       noCollideSeq = 0;
 
@@ -790,43 +776,71 @@ while keeping general compatability. (made with box2D js es6) */
       fixDef.shape.SetAsBox(args.WIDTH / 2 / b2Dzoom, args.HEIGHT / 2 / b2Dzoom);
     }
 
-    svgtopoints(fullSvgString) { // just the bounding box for now
-      var ingurl = "data:image/svg+xml;base64,"+btoa(fullSvgString);
-      
-        // Create an HTML image element
-        const img = new Image();
-        img.src = ingurl;
+    difineCostume(args, util) {
+      const target = util.target;
+      if (target.isStage) {
+        return;
+      }
+      try {
+        const r = this.runtime.renderer;
+        const drawable = r._allDrawables[target.drawableID];
 
-        // Wait for the image to load
-        img.onload = () => {
-            // Get the image dimensions
-            const width = img.width;
-            const height = img.height;
+        // Tell the Drawable about its updated convex hullPoints, if necessary.
+        if (drawable.needsConvexHullPoints()) {
+          const points = r._getConvexHullPointsForDrawable(target.drawableID);
+          drawable.setConvexHullPoints(points);
+        }
 
-            const x1 = -width/2;
-            const y1 = -height/2;
-            const x2 = width/2;
-            const y2 = height/2;
+        const points = drawable._convexHullPoints;
+        const scaleX = drawable.scale[0] / 100;
+        const scaleY = drawable.scale[1] / -100; // Flip Y for hulls
+        const offset = drawable.skin.rotationCenter;
+        let allHulls = null;
 
-            // Format the outline as a string
-            var outline = `${x1.toFixed(2)} ${y1.toFixed(2)}   ${x2.toFixed(2)} ${y2.toFixed(2)}`;
-          console.log(outline);
-        };
-      return outline;
+        const hullPoints = [];
+        for (const i in points) {
+          hullPoints.push({
+            x: (points[i][0] - offset[0]) * scaleX,
+            y: (points[i][1] - offset[1]) * scaleY,
+          });
+        }
+
+        fixDef.shape = new b2PolygonShape();
+
+        const vertices = [];
+
+        let prev = null;
+        for (let i = hullPoints.length - 1; i >= 0; i--) {
+          const b2Vec = new b2Vec2(hullPoints[i].x / b2Dzoom, hullPoints[i].y / b2Dzoom);
+          if (prev !== null && b2Math.SubtractVV(b2Vec, prev).LengthSquared() > Number.MIN_VALUE) {
+            vertices.push(b2Vec);
+          }
+          prev = b2Vec;
+        }
+
+        fixDef.shape.SetAsArray(vertices);
+      } catch (error) {
+        console.warn(error);
+      }
+    }
+
+    svgtopoints(svg) {
+      console.error("no svg support yet");
+      return;
     }
 
     ispoly(args) {
       return this.definePoly(args);
     }
-    
+
     definePoly(args) {
       fixDef.shape = new b2PolygonShape;
       var points = args.POINTS;
 
       // this feature does not work yet :( 
       if (points.charAt(0) === '<') {
-        console.warn("svg object conversion is not yet supported");
-        // points = this.svgtopoints(points);
+        console.warn("svg object conversion is not yet supported, use [Define costume]");
+        //points = this.svgtopoints(points);
       }
 
       try {
@@ -848,6 +862,7 @@ while keeping general compatability. (made with box2D js es6) */
         fixDef.shape = new b2CircleShape;
         fixDef.shape.SetRadius(100 / 2 / b2Dzoom);
         console.error("Incorrect polly format", points);
+        console.warn("Defaulting to \"circle 100\"");
         return false;
       }
     }
@@ -978,7 +993,7 @@ while keeping general compatability. (made with box2D js es6) */
         case 'Yvel': return body.GetLinearVelocity().y;
         case 'Dvel': return body.GetAngularVelocity();
         case 'awake': return body.IsAwake() ? 1 : 0;
-          
+
         case 'Tension':
           // Assume that body is a b2Body object that represents the object
           var force = 0; // Initialize the force to 0
@@ -992,8 +1007,8 @@ while keeping general compatability. (made with box2D js es6) */
             contact = contact.next; // Move to the next contact
           }
           console.log("The force applied to the object by other objects is " + force + " N"); // Print the result
-        return force;
-          
+          return force;
+
         //case 'touching': return JSON.stringify(this.getTouchingObjectNames(body));
       }
       return '';
@@ -1240,13 +1255,13 @@ while keeping general compatability. (made with box2D js es6) */
             case 'Motor Torque': return joint.GetMotorTorque();
             case 'Reaction Torque': return joint.GetReactionTorque();
 
-            case 'Tension': 
+            case 'Tension':
               var force = joint.GetReactionForce(1);
               var tension = Math.sqrt(force.x * force.x + force.y * force.y);
               if (!joint.GetBodyA().IsAwake() && !joint.GetBodyB().IsAwake()) {
                 tension = 0;
               }
-            return Math.floor(tension*100)/10;
+              return Math.floor(tension * 100) / 10;
 
             // Sliders only
             case 'Lower Limit': return joint.GetLowerLimit();

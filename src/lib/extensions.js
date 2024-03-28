@@ -6,6 +6,14 @@
 */
 export default [
     {
+        name: "Toast Notifications",
+        description: "Did you want alerts? Notificationss that are easily customizable? This is the only and best notification extension!",
+        code: "MubiLop/toastnotifsjs",
+        banner: "MubiLop/toastnotifs.png",
+        creator: "MubiLop",
+        isGitHub: false,
+    },
+    {
         name: "CloudLink",
         description: "A powerful WebSocket extension for Scratch. Allows for online connectivity to servers for things like multiplayer.",
         code: "MikeDev101/cloudlink.js",

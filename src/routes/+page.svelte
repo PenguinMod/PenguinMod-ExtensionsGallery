@@ -67,6 +67,7 @@
                     relUrl={extension.code}
                     documentation={extension.documentation}
                     isGitHub={String(extension.isGitHub) === "true"}
+                    sampleProject={extension.sampleProject}
                 >
                     {extension.description}
                 </Extension>

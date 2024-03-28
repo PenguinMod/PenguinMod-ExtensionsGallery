@@ -65,6 +65,7 @@ export default [
         banner: "VeryGoodScratcher42/More-Types.png",
         creator: "VeryGoodScratcher42",
         isGitHub: false,
+        sampleProject: "VeryGoodScratcher42/More-Types.pmp",
     },
     {
         name: "Variables Expanded",

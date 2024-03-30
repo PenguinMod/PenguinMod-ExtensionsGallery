@@ -1034,11 +1034,9 @@ while keeping general compatability. (made with box2D js es6) */
 
 
     getBodyCB(fixture) {
-      if (fixture.GetBody().GetType() != b2Body.b2_staticBody) {
         if (fixture.GetShape().TestPoint(fixture.GetBody().GetTransform(), mousePVec)) {
           selectedBody = fixture.GetBody();
           return false;
-        }
       }
       return true;
     };

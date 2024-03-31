@@ -36,6 +36,14 @@ export default [
         isGitHub: true,
     },
     {
+        name: "PenguinScript",
+        description: "A Turing complete programming language built for PenguinMod.",
+        code: "VeryGoodScratcher42/PenguinScript.js",
+        banner: "VeryGoodScratcher42/PenguinScript.svg",
+        creator: "VeryGoodScratcher42",
+        isGitHub: false,
+    },
+    {
         name: "3D Math",
         description: "A handful of utilities for making your own sprite-based 3D engine.",
         code: "ObviousAlexC/3DMath.js",

@@ -18,6 +18,8 @@ import PageMoreTypes from "./More-Types.md?raw";
 // Boxed Physics
 import BoxedPhysics from "./BoxedPhysics.md?raw";
 
+import PagePenguinScript from "./PenguinScript.md?raw"
+
 export default {
     // the key is the path to the docs page
     // so you can do "sharkpool-particle-tools" for example
@@ -32,6 +34,7 @@ export default {
     "TurboWeather": PageTurboWeather,
 
     "more-types": PageMoreTypes,
+    "penguinscript": PagePenguinScript,
 
     // Boxed Physics
     "BoxedPhysics": BoxedPhysics,

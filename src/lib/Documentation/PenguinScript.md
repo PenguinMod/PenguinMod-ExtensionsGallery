@@ -42,7 +42,7 @@ Here are the escape sequences:
 | \\"        | A double quote character.                                                                                                                                         |
 | \\\\       | A backslash character                                                                                                                                             |
 
-You can also use true or false by typing in `true` or `false`.
+You can also use true or false (also called booleans) by typing in `true` or `false`.
 There is also a special value called `null`.
 
 ### Local Variables
@@ -137,4 +137,136 @@ Inline is for really complicated expressions.
 
 There is a special value called `target` and it contains the sprite that evaluated the code.
 
-It isn't really useful, but can be used with the global functions discussed below.
+It isn't really useful on its own, but can be used with the global functions discussed below.
+
+### Useful Globals
+
+#### Random globals
+
+You can use a global by typing `global`, hitting the space bar, and then typing in an identifier.
+
+The first three globals that are useful are functions (print, warn, error) and they display text to the developer console (don't type anything into the console though)
+
+Then, there are 5 really useful functions for casting between types (toString, toNumber, toBoolean, charFromCodePoint, charToCodePoint)
+
+The first three convert the values like how JavaScript does.
+
+The other two allow you to convert the first character of a string (first arg) into a unicode codepoint, and the second one allows you to convert a unicode codepoint back into a character.
+
+There is a typeof function that can be used to tell the type of different values.
+
+There is a function called getMath (takes in one arg), which returns something related to math.
+
+Notable ones include random, sin, cos, and tan.
+
+You can use the global join and concat functions to join two strings.
+
+There is also a global function called getSprite that returns null, or a non-clone sprite with the name passed as the first arg.
+
+There is also, also, a global function called isSprite that returns true if the value passed is a sprite, and false otherwise.
+
+#### Motion globals
+
+These globals allow you to move sprites around. (we're just going to do GLOBALNAME(argList) to speed things up since most of these functions are self-explanatory)
+
+getX(sprite)
+
+getY(sprite)
+
+getDirection(sprite)
+
+setX(sprite, x)
+
+setY(sprite, y)
+
+setXY(sprite, x, y)
+
+changeX(sprite, x)
+
+changeY(sprite, y)
+
+changeXY(sprite, x, y)
+
+moveSteps(sprite, steps, direction?) (? means optional)
+
+moveStepsBack(sprite, steps, direction?)
+
+moveUpSteps(sprite, steps, direction?)
+
+moveDownSteps(sprite, steps, direction?)
+
+turnLeft(sprite, direction)
+
+turnRight(sprite, direction)
+
+setDirection(sprite, direction)
+
+degToRad(degrees) (converts a scratch direction into radians)
+
+#### Looks globals
+
+setCostume(sprite, indexOrName)
+
+nextCostume(sprite)
+
+previousCostume(sprite)
+
+setBackdrop(indexOrName)
+
+nextBackdrop()
+
+previousBackdrop()
+
+say(sprite, msg)
+
+think(sprite, msg)
+
+setSize(sprite, size)
+
+setVisible(sprite, visible)
+
+getXStretch(sprite)
+
+getYStretch(sprite)
+
+setXStretch(sprite, x)
+
+setYStretch(sprite, y)
+
+setXYStretch(sprite, x, y)
+
+changeXStretch(sprite, x)
+
+changeYStretch(sprite, y)
+
+changeXYStretch(sprite, x, y)
+
+getSize(sprite)
+
+getVisible(sprite)
+
+#### Variable-related globals
+
+These globals allow you to interact with variables for a sprite or variables for all sprites
+
+getVariableForSprite(sprite, variableName)
+
+setVariableForSprite(sprite, variableName, newValue)
+
+getVariableForAllSprites(variableName)
+
+setVariableForAllSprites(variableName, newValue)
+
+### Broadcast-related globals
+
+broadcast(message)
+
+broadcastToSprite(message, sprite)
+
+#### User defined globals
+
+You can also define your own globals with `global GLOBALNAME = someValue;`
+
+## End
+
+Have fun using PenguinScript

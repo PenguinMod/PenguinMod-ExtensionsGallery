@@ -37,10 +37,11 @@ export default [
     },
     {
         name: "PenguinScript",
-        description: "A Turing complete programming language built for PenguinMod.",
+        description: "A Turing complete programming language built for PenguinMod. It allows you to dynamically execute code that can then be used alongside regular PenguinMod. ",
         code: "VeryGoodScratcher42/PenguinScript.js",
         banner: "VeryGoodScratcher42/PenguinScript.svg",
         creator: "VeryGoodScratcher42",
+        documentation: "penguinscript",
         isGitHub: false,
     },
     {

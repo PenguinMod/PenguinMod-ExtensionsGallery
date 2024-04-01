@@ -269,4 +269,6 @@ You can also define your own globals with `global GLOBALNAME = someValue;`
 
 ## End
 
-Have fun using PenguinScript
+Have fun using PenguinScript!
+
+If you would like to know how PenguinScript is made, please visit the [repo](https://github.com/lego7set/PenguinScript/)

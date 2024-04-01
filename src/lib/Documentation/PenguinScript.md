@@ -11,7 +11,7 @@ This section will cover the syntax of PenguinScript.
 You can use number digits to create a number.
 
 `1234567890.1234567890` is a valid number.
-`1e+10` is not (we will cover how to do this later).
+`1e+10` is not a valid number sadly, but can you use a workaround, factor * 10 ^ exponent.
 
 You can create "strings" (which are pieces of text) using string literals.
 String literals are pieces of text wrapped inside double quotes.

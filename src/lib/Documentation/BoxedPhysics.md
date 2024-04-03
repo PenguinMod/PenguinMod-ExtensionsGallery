@@ -6,7 +6,7 @@
 ## Startup & world options
 When using the Boxed Physics extension, you always need to initialise the environment when starting the project. to do this, you can use the `Init World, scale 1m: [SCALE]  gravity: [GRAVITY]  scene: [SCENE]` block.
 
-```scratch3
+```scratch
 Init World, scale 1m: [50]  gravity: [-10]  scene: [boxed stage] :: #2cb0c0
 ```
 
@@ -19,21 +19,21 @@ Scene is the type of containment to keep objects within the stage:
 
 You can move forward in time using the step simulation block. Run this in a loop to keep the physics going.
 
-```scratch3
+```scratch
 Step Simulation :: #2cb0c0
 ```
 
 This next block lets you set the physics options. You usually won't need to use this block.
-```scratch3
+```scratch
 Set physics Position Iterations: (10) Velocity Iterations: (10) Continuous Physics: <true :: #5EC15D> Warm Starting: <true :: #5EC15D> :: #2cb0c0
 ```
 
 You can also set the speed of the world with the set slow motion block.
-```scratch3
+```scratch
 Set slow motion to (30) :: #2cb0c0
 ```
 You can also get the slow motion value with the get slow motion block.
-```scratch3
+```scratch
 (Slow motion :: #2cb0c0)
 ```
 
@@ -41,14 +41,14 @@ You can also get the slow motion value with the get slow motion block.
 
 Making objects requires that you define an object first, so running this does nothing on its own.
 
-```scratch3
+```scratch
 Create Body [box] at x: (0)  y: (0)  dir: (90) :: #2cb0c0
 ```
 
 Define an object type first, then the object itself. Now, you can place it in the world. <br>
 You can do the steps in any order, just Create the object body last.
 
-```scratch3
+```scratch
 when green flag clicked
 Dеfine Type [Dynamic v]  Density (1)  Friction (0.5)  Bounce (0.2) :: #2cb0c0
 Dеfine Polygon, points: [0 50   40 -50   -40 -50] :: #2cb0c0
@@ -59,7 +59,7 @@ Create Body [box] at x: (0)y: (0)  dir: (90) :: #2cb0c0
 
 Types allow you to make objects with spesific properties.
 
-```scratch3
+```scratch
 Dеfine Type [Dynamic v]  Density (1)  Friction (0.5)  Bounce (0.2) :: #2cb0c0
 ```
 
@@ -67,7 +67,7 @@ Dеfine Type [Dynamic v]  Density (1)  Friction (0.5)  Bounce (0.2) :: #2cb0c0
 
 Making a box is simple, just define the box, then create the body.
 
-```scratch3
+```scratch
 Dеfine Box, width: (100) height: (100) :: #2cb0c0
 Create Body [box] at x: (0)  y: (0)  dir: (90) :: #2cb0c0
 ```
@@ -76,7 +76,7 @@ Create Body [box] at x: (0)  y: (0)  dir: (90) :: #2cb0c0
 
 Making a circle is just as simple, Use the code from the box, and replace it with the circle making block.
 
-```scratch3
+```scratch
 Dеfine Circle, redius: (100) :: #2cb0c0
 Create Body [box] at x: (0)  y: (0)  dir: (90) :: #2cb0c0
 ```
@@ -88,11 +88,11 @@ Thare are two ways of making a pollygon object. You can eather use the `Define p
 `Define pollygon as this costume` lets you use the costume of a sprite to make a pollygon, while
 `Define Polygon, points: [POINTS]` lets you defide a pollygon manually.
 
-```scratch3
+```scratch
 Dеfine pollygon as this costume :: #2cb0c0
 Create Body [box] at x: (0)  y: (0)  dir: (90) :: #2cb0c0
 ```
-```scratch3
+```scratch
 Dеfine Polygon, points: [0 50   40 -50   -40 -50] :: #2cb0c0
 Create Body [box] at x: (0)  y: (0)  dir: (90) :: #2cb0c0
 ```
@@ -103,7 +103,7 @@ Every point in a pollygon is seperated by 3 spaces. Every point has only one spa
 
 You can destroy an object by simply providing its name into the destroy block.
 
-```scratch3
+```scratch
 Destroy object [Object] :: #2cb0c0
 ```
 
@@ -112,13 +112,13 @@ Destroy object [Object] :: #2cb0c0
 You can make objects not collide with eachother using collision groups.
 
 The objects in here will be in their own no-collide group, and will collide with everything else.
-```scratch3
+```scratch
 Disable collision between [Object1 Object2] :: #2cb0c0 // this will take the object out of any existing no-collide groups
 ```
 
 You can also remove no-collide tags from objects
 
-```scratch3
+```scratch
 Reset collision of objects [Object1 Object2] :: #2cb0c0
 ```
 
@@ -126,7 +126,7 @@ Reset collision of objects [Object1 Object2] :: #2cb0c0
 
 You can set the damping or the rotational damping of an object.
 
-```scratch3
+```scratch
 Set [damping v] of object [Object] to (0.1) :: #2cb0c0
 ```
 
@@ -135,24 +135,24 @@ Set [damping v] of object [Object] to (0.1) :: #2cb0c0
 Thare are a two ways to move your objects. you can push them, or you can set their movement directly.
 
 You can push your objects using inpulses, or World Impulses.
-```scratch3
+```scratch
 Apply [Impulse v] to object [Object] at x: (0)  y: (0)  power: (500)  dir: (90) :: #2cb0c0
 Apply Angular Impulse to object [Object] power: (-70) :: #2cb0c0
 ```
 
 You can also set the velocity of an object directly, or remove it entirely.
-```scratch3
+```scratch
 Set Velocity of [Object] to x (-2) y (5) dir (-10) :: #2cb0c0
 ```
-```scratch3
+```scratch
 Clear velocity of object [Object] :: #2cb0c0
 ```
 
 While I'm at it, I might as well mention these blocks
-```scratch3
+```scratch
 Move object [Object] to x (0) y (0) :: #2cb0c0
 ```
-```scratch3
+```scratch
 Set rotation of object [Object] to (90) :: #2cb0c0
 ```
 
@@ -160,7 +160,7 @@ Set rotation of object [Object] to (90) :: #2cb0c0
 
 You can get the attributes of any object using the `(get [thing] from [object])` block.
 
-```scratch3
+```scratch
 (Get [Direction v] from [Object] :: #2cb0c0)
 ```
 
@@ -174,14 +174,14 @@ You can get the following from an object:
 - Is awake?
 
 You can also get the object at any position with this:
-```scratch3
+```scratch
 Get object at x: (0)  y: (0) :: #2cb0c0
 ```
 
 ## Making joints
 
 Joints are another thing built into Boxed Physics. Just like objects, they need to be defined before you can place them. 
-```scratch3
+```scratch
 Create Joint [Joint] of type [Rotating v] between [Object1] at (0) (0) and [Object2] at (0) (0) :: #2cb0c0
 ```
 Thare are Rotating, Spring, Weld, Slider, and Mouse jonts built into Boxed Physics, but more are on the way. <br>
@@ -190,21 +190,21 @@ Thare are only two joints that need extra info to define them, being springs and
 ## Making a spring
 
 Springs are made of three values: Length, Damping, and Frequency.
-```scratch3
+```scratch
 Dеfine Spring, Length: (100)  Damping: (0.7)  Freq: (5) :: #2cb0c0
 ```
 
 ## Making a slider
 
 Sliders are another type of joint is a slider joint. Sliders are made with a direction, lower stop, and an upper stop.
-```scratch3
+```scratch
 Dеfine Slider, Angle: (90) Lower stop: (-100) Upper stop: (100) :: #2cb0c0
 ```
 
 ## Editing joints
 
 You can edit joints using the `Set [attr] of [joint]` block to set attributes of joints. 
-```scratch3
+```scratch
 Set [Max Torque v] of joint [Joint] to (0) :: #2cb0c0
 ```
 You can set the following:
@@ -216,23 +216,23 @@ You can set the following:
  - Upper 
 
 Getting joint attributes is just as easy.
-```scratch3
+```scratch
 Get [Motor Speed v] of joint: [Joint] :: #2cb0c0
 ```
 
 You can also delete joints.
-```scratch3
+```scratch
 Destroy Joint [Joint] :: #2cb0c0
 ```
 
 If you made a mouse joint, you can edit the target position with this block.
-```scratch3
+```scratch
 Set Mouse Joint Target [Joint] to x: (0)  y: (0) :: #2cb0c0
 ```
 
 ## Example code
 
-```scratch3
+```scratch
 when green flag clicked
 Init World, scale 1m: [50]  gravity: [-10]  scene: [boxed stage] :: #2cb0c0
 Dеfine Type [Dynamic v]  Density (1)  Friction (0.5)  Bounce (0.2) :: #2cb0c0

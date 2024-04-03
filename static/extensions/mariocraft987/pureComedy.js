@@ -1,5 +1,6 @@
 /*
    Just some joke blocks 😅
+   MIT Licensed
 */
 
 (function (Scratch) {
@@ -13,8 +14,20 @@
         blocks: [
           {
             opcode: 'cool',
-            blockType: Scratch.BlockType.REPORTER,
+            blockType: Scratch.BlockType.BOOLEAN,
             text: '(⌐■_■)',
+            disableMonitor: true,
+          },
+          {
+            opcode: 'notcool',
+            blockType: Scratch.BlockType.BOOLEAN,
+            text: '( •_•)>⌐■-■',
+            disableMonitor: true,
+          },
+          {
+            opcode: 'heppy',
+            blockType: Scratch.BlockType.REPORTER,
+            text: '( ͡° ͜ʖ ͡°)',
             disableMonitor: true,
           },
           /*
@@ -36,8 +49,14 @@
       };
     }
     cool(args) {
-      return "cool";
+      return true;
     }    
+    notcool(args) {
+      return false;
+    }    
+    heppy(args) {
+       throw new Error("Glitch of some sort?!");
+    }
   }
   Scratch.extensions.register(new PureComedy())
 })(Scratch);

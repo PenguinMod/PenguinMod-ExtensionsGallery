@@ -211,6 +211,8 @@ Notable ones include random, sin, cos, and tan.
 
 You can use the global join and concat functions to join two strings.
 
+If you wish to exit your script early, you may use the global exit() function with an optional parameter, which is the actual return value of the script, if not provided, by default it will just be null.
+
 There is also a global function called getSprite that returns null, or a non-clone sprite with the name passed as the first arg.
 
 There is also, also, a global function called isSprite that returns true if the value passed is a sprite, and false otherwise.

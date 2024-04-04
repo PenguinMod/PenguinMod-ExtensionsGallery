@@ -52,17 +52,17 @@ You can define variables that are only accessible inside the the script using a 
 `let`, then followed by an identifier (a piece of text with only letters, numbers, and underscores, however, an identifier cannot start with a number to avoid confusion)
 then optionally followed by an equals sign and an expression (a fancy word for value).
 
+Note that any special word like if, forever, let and other reserved words or keywords cannot be used as a variable name.
+
 You can mutate this variable later on using identifier = value. 
 
-To prevent mutation, you can use const instead of let (note that the optional equals sign and expression becomes mandatory).
+To prevent mutation of the value stored inside the variable, you can use const instead of let (note that the optional equals sign and expression becomes mandatory).
 
-Defining a variable is a statement; it is like this:
-
-```scratch
-Statement
-```
+Defining a variable is a statement, and statements do not yield values.
 
 Note that all statements (except control flow and braces) require a semicolon at the end of them.
+
+Defining a variable inside a place that expects a statement except for at the top level will error.
 
 ### Operations
 
@@ -81,6 +81,7 @@ You can use some operators from PenguinMod in PenguinScript, along with some new
 | + - | `x + y` | Converts both operands into numbers, and does the arithmetic (addition + or subtraction -). | Left-right
 | * / % | `x * y` | Converts both operands into numbers, and does the arithmetic (multiplication *, division /, or mod %)|Left-right
 | ^ | `x ^ y` | Converts both operands into numbers, and raises the first operand to the second. | Right-Left
+| -> | x -> prop | x should be a struct, and prop can be an identifier or string (the value will be static). We will discuss this operator in detail later. | Left-Right
 | (arg1, arg2, arg3... argN) | `x(arg1, arg2, arg3... argN)` | Executes the function (we will discuss them later) on the left of the args list with the args list.|Left-Right
 
 ### Control flow
@@ -132,6 +133,55 @@ Inline allows you to execute statements from within an expression, kind of simil
 The syntax for inline is `inline`, then followed by a statement.
 
 Inline is for really complicated expressions.
+
+### Structs and chaining
+
+Structs are a nice way of storing multiple pieces of data in one variable. You can create a struct "constructor" which creates structs.
+
+Structs contain pieces of data called props (short for properties) that are effectively a variable contained in the struct. Like variables, props can be redefined (we will show how later).
+
+To create a struct constructor, you can do the following:
+
+`let structName = struct[prop1; prop2 = 5; "prop3" = fn(struct, value){struct.prop1 = value;}]`
+
+It follows the format: `struct[IdentifierOrStaticString = value;...]`
+
+The `= value` is optional, you do not need to include it, as all it does it create a default value when the struct is created. If you do not specify a default value, the default value will be null.
+
+Functions created in structs are given a special treatment; they are considered methods. Methods are passed the struct as the first argument, and the passed arguments as the rest of the arguments. This means that the method can access the struct itself, allowing you to create reusable self-contained code.
+
+To use the struct constructor, you can run it like any other function: `structName()` and it will create a struct.
+
+You can artificially create a method using `global createMethod(struct, func)`.
+
+
+To access a prop of a struct, you can use the chaining operator ->. Remember the IdentifierOrStaticString? That same "key" can be used to get the prop associated with that key.
+
+If you defined a struct constructor as `struct[prop;prop2 = 5;]`, and constructed a struct, you would do `constructedStruct -> prop` or `constructedStruct -> prop2`.
+
+You can reassign the value of any prop like this: `constructedStruct -> prop = something` and you can replace `something` with any value.
+
+### Objects and Arrays.
+
+There are two built-in struct constructors that provide functionality not possible using PenguinScript: `global Object` and `global Array`.
+
+The Object struct constructor creates structs which allow you to dynamically define props on a struct. (note: they are not directly on the struct itself, but rather linked to the struct)
+
+The Object struct defines special methods: get(key), set(key, value), has(key), delete(key), remove(key), and append(key, value).
+
+Get returns the value associated with the key (or null), set sets the prop associated with the key to a value, and returns that value, has returns whether or not the prop was created before, delete deletes a prop, making it inexistent and returns whether or not the operation was successful.
+
+Remove and append do the same as delete and set respectively but returns the struct itself, allowing you to do chaining like this: `global Object() -> append("someProp",5) -> append("someOtherProp", "some text")`
+
+The Array struct constructor allows you to create a list (similar to Scratch lists, but not quite).
+
+The Array struct defines special methods: get(key), set(key, value), has(key), delete(key), push(value), pop(), shift(), unshift(value) and a special prop: length.
+
+Get, set, has, delete behave exactly the same as the ones in the Object struct, but have one difference: The key has to be a number, and the first key is 0 (the second key is 1, the third key is 2, and so on).
+
+Push adds a value to the end of an Array. Pop deletes the value at the end of an Array, and returns it. Unshift and shift work like push and pop respectively but work with the first item in the listen.
+
+The length prop stores the amount of items in the list. It is reassignable too (not recommended).
 
 ### Target
 
@@ -217,6 +267,14 @@ nextBackdrop()
 
 previousBackdrop()
 
+getCostumeName(sprite)
+
+getCostumeNumber(sprite)
+
+getBackdropName()
+
+getBackdropNumber()
+
 say(sprite, msg)
 
 think(sprite, msg)
@@ -262,6 +320,30 @@ setVariableForAllSprites(variableName, newValue)
 broadcast(message)
 
 broadcastToSprite(message, sprite)
+
+### Clone-related globals
+
+createClone(sprite) (returns the clone as well)
+
+getCloneWithVar(mainSpriteOrMainSpriteName, variableName, expectedValue)
+
+### Sensing-related globals
+
+isTouchingSprite(sprite1, sprite2)
+
+isTouchingMouse(sprite)
+
+isTouchingEdge(sprite)
+
+isTouchingXY(sprite, x, y)
+
+isKeyDown(key)
+
+isKeyHit(key)
+
+and four global values (that are always updated)
+
+mouseDown, mouseClicked, mouseX, and mouseY.
 
 #### User defined globals
 

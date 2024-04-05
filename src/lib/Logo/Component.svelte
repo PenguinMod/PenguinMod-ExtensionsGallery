@@ -14,8 +14,8 @@
 <!-- svelte-ignore a11y-no-noninteractive-element-interactions -->
 <img
     bind:this={logoElement}
-    src="/favicon.ico"
-    alt="PenguinMod Logo"
+    src="/navicon.png"
+    alt="ElectraMod Logo"
     class="logo"
     on:click={click}
 />

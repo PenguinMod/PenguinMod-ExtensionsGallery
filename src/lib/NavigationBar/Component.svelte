@@ -34,7 +34,7 @@
 
 <div class="bar">
     <a class="logo" href="/">
-        <img class="logo-image" src="/navicon.png" alt="PenguinMod" />
+        <img class="logo-image" src="/navicon.png" alt="ElectraMod" />
     </a>
     <div style="margin-right: 12px;"></div>
     <BarPage style="padding:0.5rem" on:click={toggleTheme}>
@@ -76,7 +76,7 @@
     
     <BarButton
         highlighted="true"
-        link={"https://discord.gg/NZ9MBMYTZh"}
+        link={"https://discord.gg/9TSAK7jEED"}
         noredirect="true"
     >
         Join our Discord!
@@ -85,10 +85,10 @@
 
 <style>
     :root {
-        --penguinmod-color: #00c3ff;
+        --ElectraMod-color: #625e97;
     }
     :global(body.dark-mode) {
-        --penguinmod-color: #009ccc;
+        --ElectraMod-color: #2a293f;
     }
 
     .bar {
@@ -96,7 +96,7 @@
         width: 100%;
         left: 0px;
         top: 0px;
-        background: var(--penguinmod-color);
+        background: var(--ElectraMod-color);
         height: 3rem;
         color: white;
         display: flex;
@@ -183,7 +183,7 @@
         top: calc(3rem - 0.4rem);
         width: 100%;
         padding: 0 8px;
-        background: var(--penguinmod-color);
+        background: var(--ElectraMod-color);
         border: 1px solid #00000026;
         border-radius: 0;
         color: white;

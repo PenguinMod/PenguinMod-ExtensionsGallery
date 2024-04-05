@@ -8,7 +8,7 @@
     export let documentation = "";
     export let isGitHub = false;
 
-    const baseUrl = "https://studio.penguinmod.com/editor.html?extension=";
+    const baseUrl = "https://electramod.vercel.app/editor.html?extension=";
 
     /**
      * The button to copy the URL

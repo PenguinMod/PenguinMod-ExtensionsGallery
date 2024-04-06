@@ -1,5 +1,6 @@
 /*
    Just some joke blocks 😅
+   Happy Aprils Fools!
    MIT Licensed
 */
 
@@ -116,9 +117,9 @@
     }
      rating(args) {
         let w = args.STR.toLowerCase();
-        if (w.includes("murder")||w.includes("kill")||w.includes("sex")){ return "R" } else
-        if (w.includes("doll")||w.includes("creepy")||w.includes("love")){ return "PG-13" } else
-        if (w.includes("scary")||w.includes("hate")){ return "TV-MA" } else
+        if (w.includes("murder")||w.includes("kill")||w.includes("sex")||w.includes("fuck")){ return "R" } else
+        if (w.includes("doll")||w.includes("creepy")||w.includes("love")||w.includes("damn")){ return "PG-13" } else
+        if (w.includes("scary")||w.includes("hate")||w.includes("crap")||w.includes("shit")){ return "TV-MA" } else
         if (w.includes("fun")||w.includes("adventure")){ return "TV-Y7" } else
         { return "PG"}
      }

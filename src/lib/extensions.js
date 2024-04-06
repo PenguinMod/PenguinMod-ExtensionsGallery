@@ -6,6 +6,14 @@
 */
 export default [
     {
+        name: "Jul Mik Utilities",
+        description: "An Extension of Blocks Utilities by Jul Mik (V1 and V2 when named Jul Mik Blocks with Turbobuilder) and helped by Aness6040 (Actual v3)",
+        code: "julmik6478/julmik_utilities.js",
+        banner: "julmik6478/julmik_utilities.svg",
+        creator: "julmik6478",
+        isGitHub: false,
+    },
+    {
         name: "CloudLink",
         description: "A powerful WebSocket extension for Scratch. Allows for online connectivity to servers for things like multiplayer.",
         code: "MikeDev101/cloudlink.js",

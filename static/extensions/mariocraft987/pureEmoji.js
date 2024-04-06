@@ -55,6 +55,24 @@
               },
             }
           },
+          {
+            opcode: 'rating',
+            blockType: Scratch.BlockType.REPORTER,
+            text: 'Movie rating of word [STR]',
+            disableMonitor: true,
+            arguments: {
+              STR: {
+                type: Scratch.ArgumentType.STRING,
+                defaultValue: "Killer Sharks"
+              },
+            }
+          },
+           "---",
+          {
+            func: "dumb",
+            blockType: Scratch.BlockType.BUTTON,
+            text: "Useless button fr"
+          },
             
         ],
       };
@@ -66,7 +84,7 @@
       return false;
     }    
     heppy(args) {
-       throw new Error("Glitch of some sort?!");
+       throw new Error("Could not understand string: '( ͡° ͜ʖ ͡°)'");
     }
     decode(args) {
        let e = args.STR
@@ -96,6 +114,14 @@
        .replaceAll("😂", "lol")
        .replaceAll("🤣", "rofl")
     }
+     rating(args) {
+        let w = args.STR.toLowerCase();
+        if (w.includes("murder")||w.includes("kill")||w.includes("sex")){ return "R" } else
+        if (w.includes("doll")||w.includes("creepy")||w.includes("love")){ return "PG-13" } else
+        if (w.includes("scary")||w.includes("hate")){ return "TV-MA" } else
+        if (w.includes("fun")||w.includes("adventure")){ return "TV-Y7" } else
+        { return "PG"}
+     }
       
    }
   Scratch.extensions.register(new PureEmoji())

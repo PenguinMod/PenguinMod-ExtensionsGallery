@@ -53,6 +53,7 @@
         name: 'ScratchBlocks',
         color1: '#e1a91a',
         color2: '#c88330',
+        docsURI: 'https://en.scratch-wiki.info/wiki/Block_Plugin/Syntax';
         blocks: [
           {
             opcode: 'makestack',

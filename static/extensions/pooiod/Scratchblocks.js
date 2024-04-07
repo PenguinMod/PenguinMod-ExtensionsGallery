@@ -1,4 +1,4 @@
-// Scratchblocks v1.1.2 (by pooiod7) - Make Scratch blocks in scratch
+// Scratchblocks v1.3.4 (by pooiod7) - Make Scratch blocks in scratch
 
 (function(Scratch) {
   'use strict';
@@ -17,9 +17,28 @@
         docsURI: 'https://en.scratch-wiki.info/wiki/Block_Plugin/Syntax',
         blocks: [
           {
-            opcode: 'makestack',
+            opcode: 'makestackSVG',
             blockType: Scratch.BlockType.COMMAND,
-            text: 'Make stack [blocks] of type [type]',
+            text: 'Make svg stack [blocks] of type [type]',
+            arguments: {
+              blocks: {
+                type: Scratch.ArgumentType.STRING,
+                defaultValue: 'when green flag clicked \n say[Hello, World!]',
+              },
+              id: {
+                type: Scratch.ArgumentType.STRING,
+                defaultValue: 'Stack1',
+              },
+              type: {
+                type: Scratch.ArgumentType.STRING,
+                defaultValue: 'sb3',
+              },
+            },
+          },
+          {
+            opcode: 'makestackPNG',
+            blockType: Scratch.BlockType.COMMAND,
+            text: 'Make png stack [blocks] of type [type]',
             arguments: {
               blocks: {
                 type: Scratch.ArgumentType.STRING,
@@ -39,12 +58,14 @@
       };
     }
 
-    makestack(args, util) {
+    makestackSVG(args, util) {
       var style;
       if (args.type == "sb2") {
         style = "scratch2";
-      } else {
+      } else if (args.type == "sb3") {
           style = "scratch3";
+      } else {
+          style = "scratch3-high-contrast";
       }
       var sblocks = args.blocks.replace(/\\n/g, "\n");
 
@@ -52,7 +73,27 @@
       let docView = scratchblocks.module.newView(doc, { style: style });
       docView.render();
 
-      importSVG({"TEXT": docView.exportSVG(), "NAME": (args.id || "stack")}, util);
+      importSVG({"TEXT": docView.exportSVG(), "NAME": "stack1"}, util);
+    }
+
+    makestackPNG(args, util) {
+      var style;
+      if (args.type == "sb2") {
+        style = "scratch2";
+      } else if (args.type == "sb3") {
+          style = "scratch3";
+      } else {
+          style = "scratch3-high-contrast";
+      }
+      var sblocks = args.blocks.replace(/\\n/g, "\n");
+
+      let doc = scratchblocks.module.parse(sblocks, { lang: "en", style: style });
+      let docView = scratchblocks.module.newView(doc, { style: style });
+      docView.render();
+
+      svgToPng(docView.exportSVGString(), (imgData) => {
+        importPNG({"TEXT": imgData, "NAME": "stack1"}, util);
+      });
     }
 
   }
@@ -80,6 +121,57 @@
       });
   }
 
+  function svgToPng(svg, callback) {
+      const url = getSvgUrl(svg);
+      svgUrlToPng(url, (imgData) => {
+          callback(imgData);
+          URL.revokeObjectURL(url);
+      });
+  }
+
+  function getSvgUrl(svg) {
+      return URL.createObjectURL(new Blob([svg], { type: 'image/svg+xml' }));
+  }
+
+  function svgUrlToPng(svgUrl, callback) {
+      const svgImage = document.createElement('img');
+      document.body.appendChild(svgImage);
+      svgImage.onload = function () {
+          const canvas = document.createElement('canvas');
+          canvas.width = svgImage.clientWidth;
+          canvas.height = svgImage.clientHeight;
+          const canvasCtx = canvas.getContext('2d');
+          canvasCtx.drawImage(svgImage, 0, 0);
+          const imgData = canvas.toDataURL('image/png');
+          svgImage.parentNode.removeChild(svgImage);
+          callback(imgData);
+      };
+      svgImage.src = svgUrl;
+  }
+  
+  function importPNG({ TEXT, NAME },util) {
+    const targetId = util.target.id;
+    Scratch.fetch(TEXT)
+      .then((r) => r.arrayBuffer())
+      .then((arrayBuffer) => {
+          const storage = vm.runtime.storage;
+          const asset = new storage.Asset(
+              storage.AssetType.ImageBitmap,
+              null,
+              storage.DataFormat.PNG,
+              new Uint8Array(arrayBuffer),
+              true
+          );
+          const newCostumeObject = {
+              md5: asset.assetId + '.' + asset.dataFormat,
+              asset: asset,
+              name: NAME
+          };
+          vm.addCostume(newCostumeObject.md5, newCostumeObject, targetId);
+      });
+  }
+
+  // Scratchblocks
 
   let scratchblocks = {};
   scratchblocks.init = () => {
@@ -3897,7 +3989,7 @@
               return Filter;
           }();
 
-          var cssContent$1 = "\n.sb-label {\n  font-family: Lucida Grande, Verdana, Arial, DejaVu Sans, sans-serif;\n  font-weight: bold;\n  fill: #fff;\n  font-size: 10px;\n  word-spacing: +1px;\n}\n\n.sb-obsolete {\n  fill: #d42828;\n}\n.sb-motion {\n  fill: #4a6cd4;\n}\n.sb-looks {\n  fill: #8a55d7;\n}\n.sb-sound {\n  fill: #bb42c3;\n}\n.sb-pen {\n  fill: #0e9a6c;\n}\n.sb-events {\n  fill: #c88330;\n}\n.sb-control {\n  fill: #e1a91a;\n}\n.sb-sensing {\n  fill: #2ca5e2;\n}\n.sb-operators {\n  fill: #5cb712;\n}\n.sb-variables {\n  fill: #ee7d16;\n}\n.sb-list {\n  fill: #cc5b22;\n}\n.sb-custom {\n  fill: #632d99;\n}\n.sb-custom-arg {\n  fill: #5947b1;\n}\n.sb-extension {\n  fill: #4b4a60;\n}\n.sb-grey {\n  fill: #969696;\n}\n\n.sb-bevel {\n  filter: url(#bevelFilter);\n}\n\n.sb-input {\n  filter: url(#inputBevelFilter);\n}\n.sb-input-number,\n.sb-input-string,\n.sb-input-number-dropdown {\n  fill: #fff;\n}\n.sb-literal-number,\n.sb-literal-string,\n.sb-literal-number-dropdown,\n.sb-literal-dropdown {\n  font-weight: normal;\n  font-size: 9px;\n  word-spacing: 0;\n}\n.sb-literal-number,\n.sb-literal-string,\n.sb-literal-number-dropdown {\n  fill: #000;\n}\n\n.sb-darker {\n  filter: url(#inputDarkFilter);\n}\n\n.sb-outline {\n  stroke: #fff;\n  stroke-opacity: 0.2;\n  stroke-width: 2;\n  fill: none;\n}\n\n.sb-define-hat-cap {\n  stroke: #632d99;\n  stroke-width: 1;\n  fill: #8e2ec2;\n}\n\n.sb-comment {\n  fill: #ffffa5;\n  stroke: #d0d1d2;\n  stroke-width: 1;\n}\n.sb-comment-line {\n  fill: #ffff80;\n}\n.sb-comment-label {\n  font-family: Helvetica, Arial, DejaVu Sans, sans-serif;\n  font-weight: bold;\n  fill: #5c5d5f;\n  word-spacing: 0;\n  font-size: 12px;\n}\n\n.sb-diff {\n  fill: none;\n  stroke: #000;\n}\n.sb-diff-ins {\n  stroke-width: 2px;\n}\n.sb-diff-del {\n  stroke-width: 3px;\n}\n";
+          var cssContent$1 = "\n.sb-label {\n  font-family: Lucida Grande, Verdana, Arial, DejaVu Sans, sans-serif;\n  font-weight: bold;\n  fill: #fff;\n  font-size: 10px;\n  word-spacing: +1px;\n}\n\n.sb-obsolete {\n  fill: #d42828;\n}\n.sb-motion {\n  fill: #4a6cd4;\n}\n.sb-looks {\n  fill: #8a55d7;\n}\n.sb-sound {\n  fill: #bb42c3;\n}\n.sb-pen {\n  fill: #0e9a6c;\n}\n.sb-events {\n  fill: #c88330;\n}\n.sb-control {\n  fill: #e1a91a;\n}\n.sb-sensing {\n  fill: #2ca5e2;\n}\n.sb-operators {\n  fill: #5cb712;\n}\n.sb-variables {\n  fill: #ee7d16;\n}\n.sb-list {\n  fill: #cc5b22;\n}\n.sb-custom {\n  fill: #632d99;\n}\n.sb-custom-arg {\n  fill: #5947b1;\n}\n.sb-extension {\n  fill: #4b4a60;\n}\n.sb-grey {\n  fill: #969696;\n}\n\n.sb-bevel {\n  filter: url(#bevelFilter);\n}\n\n.sb-input {\n  filter: url(#inputBevelFilter);\n}\n.sb-input-number,\n.sb-input-string,\n.sb-input-number-dropdown {\n  fill: #fff;\n}\n.sb-literal-number,\n.sb-literal-string,\n.sb-literal-number-dropdown,\n.sb-literal-dropdown {\n  font-weight: normal;\n  font-size: 9px;\n  word-spacing: 0;\n}\n.sb-literal-number,\n.sb-literal-string,\n.sb-literal-number-dropdown {\n  fill: #000;\n}\n\n.sb-darker {\n  filter: url(#inputDarkFilter);\n}\n\n.sb-outline {\n  stroke: #fff;\n  stroke-opacity: 0.2;\n  stroke-width: 2;\n  fill: none;\n}\n\n.sb-define-hat-cap {\n  stroke: #632d99;\n  stroke-width: 1;\n  fill: #8e2ec2;\n}\n\n.sb-comment {\n  fill: #ffffa5;\n  stroke: #d0d1d2;\n  stroke-width: 1;\n}\n.sb-comment-line {\n  fill: #ffff80;\n}\n.sb-comment-label {\n  white-space: pre;\n  font-family: Helvetica, Arial, DejaVu Sans, sans-serif;\n  font-weight: bold;\n  fill: #5c5d5f;\n  word-spacing: 0;\n  font-size: 12px;\n}\n\n.sb-diff {\n  fill: none;\n  stroke: #000;\n}\n text{\n  white-space: pre;\n}\n.sb-diff-ins {\n  stroke-width: 2px;\n}\n.sb-diff-del {\n  stroke-width: 3px;\n}\n";
 
           var Style$1 = /*#__PURE__*/function () {
               function Style() { }
@@ -5191,7 +5283,7 @@
               return SVG;
           }();
 
-          var cssContent = "\n.sb3-label {\n  font: 500 12pt Helvetica Neue, Helvetica, sans-serif;\n  word-spacing: +1pt;\n}\n\n.sb3-literal-number,\n.sb3-literal-string,\n.sb3-literal-number-dropdown,\n.sb3-literal-dropdown {\n  word-spacing: 0;\n}\n\n/* Note: comment colors are different from Scratch. */\n\n.sb3-comment {\n  fill: #ffffa5;\n  stroke: #d0d1d2;\n  stroke-width: 1;\n}\n.sb3-comment-line {\n  fill: #ffff80;\n}\n.sb3-comment-label {\n  font: 400 12pt Helvetica Neue, Helvetica, sans-serif;\n  fill: #000;\n  word-spacing: 0;\n}\n\n.sb3-diff {\n  fill: none;\n  stroke: #000;\n}\n.sb3-diff-ins {\n  stroke-width: 2px;\n}\n.sb3-diff-del {\n  stroke-width: 3px;\n}\n\n\nsvg .sb3-motion {\n  fill: #4c97ff;\n  stroke: #3373cc;\n}\nsvg .sb3-motion-alt {\n  fill: #4280d7;\n}\nsvg .sb3-motion-dark {\n  fill: #3373cc;\n}\n\n\nsvg .sb3-looks {\n  fill: #9966ff;\n  stroke: #774dcb;\n}\nsvg .sb3-looks-alt {\n  fill: #855cd6;\n}\nsvg .sb3-looks-dark {\n  fill: #774dcb;\n}\n\n\nsvg .sb3-sound {\n  fill: #cf63cf;\n  stroke: #bd42bd;\n}\nsvg .sb3-sound-alt {\n  fill: #c94fc9;\n}\nsvg .sb3-sound-dark {\n  fill: #bd42bd;\n}\n\n\nsvg .sb3-control {\n  fill: #ffab19;\n  stroke: #cf8b17;\n}\nsvg .sb3-control-alt {\n  fill: #ec9c13;\n}\nsvg .sb3-control-dark {\n  fill: #cf8b17;\n}\n\n\nsvg .sb3-events {\n  fill: #ffbf00;\n  stroke: #cc9900;\n}\nsvg .sb3-events-alt {\n  fill: #e6ac00;\n}\nsvg .sb3-events-dark {\n  fill: #cc9900;\n}\n\n\nsvg .sb3-sensing {\n  fill: #5cb1d6;\n  stroke: #2e8eb8;\n}\nsvg .sb3-sensing-alt {\n  fill: #47a8d1;\n}\nsvg .sb3-sensing-dark {\n  fill: #2e8eb8;\n}\n\n\nsvg .sb3-operators {\n  fill: #59c059;\n  stroke: #389438;\n}\nsvg .sb3-operators-alt {\n  fill: #46b946;\n}\nsvg .sb3-operators-dark {\n  fill: #389438;\n}\n\n\nsvg .sb3-variables {\n  fill: #ff8c1a;\n  stroke: #db6e00;\n}\nsvg .sb3-variables-alt {\n  fill: #ff8000;\n}\nsvg .sb3-variables-dark {\n  fill: #db6e00;\n}\n\n\nsvg .sb3-list {\n  fill: #ff661a;\n  stroke: #e64d00;\n}\nsvg .sb3-list-alt {\n  fill: #ff5500;\n}\nsvg .sb3-list-dark {\n  fill: #e64d00;\n}\n\n\nsvg .sb3-custom {\n  fill: #ff6680;\n  stroke: #ff3355;\n}\nsvg .sb3-custom-alt {\n  fill: #ff4d6a;\n}\nsvg .sb3-custom-dark {\n  fill: #ff3355;\n}\n\n\nsvg .sb3-extension {\n  fill: #0fbd8c;\n  stroke: #0b8e69;\n}\nsvg .sb3-extension-alt {\n  fill: #0da57a;\n}\nsvg .sb3-extension-dark {\n  fill: #0b8e69;\n}\n\n\nsvg .sb3-obsolete {\n  fill: #ed4242;\n  stroke: #ca2b2b;\n}\nsvg .sb3-obsolete-alt {\n  fill: #db3333;\n}\nsvg .sb3-obsolete-dark {\n  fill: #ca2b2b;\n}\n\n\nsvg .sb3-grey {\n  fill: #bfbfbf;\n  stroke: #909090;\n}\nsvg .sb3-grey-alt {\n  fill: #b2b2b2;\n}\nsvg .sb3-grey-dark {\n  fill: #909090;\n}\n\n\nsvg .sb3-label {\n  fill: #fff;\n}\n\nsvg .sb3-input-color {\n  stroke: #fff;\n}\n\nsvg .sb3-input-number,\nsvg .sb3-input-string {\n  fill: #fff;\n}\nsvg .sb3-literal-number,\nsvg .sb3-literal-string {\n  fill: #575e75;\n}\n\n\nsvg.scratchblocks-style-scratch3-high-contrast .sb3-motion {\n  fill: #80b5ff;\n  stroke: #3373cc;\n}\nsvg.scratchblocks-style-scratch3-high-contrast .sb3-motion-alt {\n  fill: #b3d2ff;\n}\nsvg.scratchblocks-style-scratch3-high-contrast .sb3-motion-dark {\n  fill: #3373cc;\n}\n\n\nsvg.scratchblocks-style-scratch3-high-contrast .sb3-looks {\n  fill: #ccb3ff;\n  stroke: #774dcb;\n}\nsvg.scratchblocks-style-scratch3-high-contrast .sb3-looks-alt {\n  fill: #ddccff;\n}\nsvg.scratchblocks-style-scratch3-high-contrast .sb3-looks-dark {\n  fill: #774dcb;\n}\n\n\nsvg.scratchblocks-style-scratch3-high-contrast .sb3-sound {\n  fill: #e19de1;\n  stroke: #bd42bd;\n}\nsvg.scratchblocks-style-scratch3-high-contrast .sb3-sound-alt {\n  fill: #ffb3ff;\n}\nsvg.scratchblocks-style-scratch3-high-contrast .sb3-sound-dark {\n  fill: #bd42bd;\n}\n\n\nsvg.scratchblocks-style-scratch3-high-contrast .sb3-control {\n  fill: #ffbe4c;\n  stroke: #cf8b17;\n}\nsvg.scratchblocks-style-scratch3-high-contrast .sb3-control-alt {\n  fill: #ffda99;\n}\nsvg.scratchblocks-style-scratch3-high-contrast .sb3-control-dark {\n  fill: #cf8b17;\n}\n\n\nsvg.scratchblocks-style-scratch3-high-contrast .sb3-events {\n  fill: #ffd966;\n  stroke: #cc9900;\n}\nsvg.scratchblocks-style-scratch3-high-contrast .sb3-events-alt {\n  fill: #ffecb3;\n}\nsvg.scratchblocks-style-scratch3-high-contrast .sb3-events-dark {\n  fill: #cc9900;\n}\n\n\nsvg.scratchblocks-style-scratch3-high-contrast .sb3-sensing {\n  fill: #85c4e0;\n  stroke: #2e8eb8;\n}\nsvg.scratchblocks-style-scratch3-high-contrast .sb3-sensing-alt {\n  fill: #aed8ea;\n}\nsvg.scratchblocks-style-scratch3-high-contrast .sb3-sensing-dark {\n  fill: #2e8eb8;\n}\n\n\nsvg.scratchblocks-style-scratch3-high-contrast .sb3-operators {\n  fill: #7ece7e;\n  stroke: #389438;\n}\nsvg.scratchblocks-style-scratch3-high-contrast .sb3-operators-alt {\n  fill: #b5e3b5;\n}\nsvg.scratchblocks-style-scratch3-high-contrast .sb3-operators-dark {\n  fill: #389438;\n}\n\n\nsvg.scratchblocks-style-scratch3-high-contrast .sb3-variables {\n  fill: #ffa54c;\n  stroke: #db6e00;\n}\nsvg.scratchblocks-style-scratch3-high-contrast .sb3-variables-alt {\n  fill: #ffcc99;\n}\nsvg.scratchblocks-style-scratch3-high-contrast .sb3-variables-dark {\n  fill: #db6e00;\n}\n\n\nsvg.scratchblocks-style-scratch3-high-contrast .sb3-list {\n  fill: #ff9966;\n  stroke: #e64d00;\n}\nsvg.scratchblocks-style-scratch3-high-contrast .sb3-list-alt {\n  fill: #ffcab0;\n}\nsvg.scratchblocks-style-scratch3-high-contrast .sb3-list-dark {\n  fill: #e64d00;\n}\n\n\nsvg.scratchblocks-style-scratch3-high-contrast .sb3-custom {\n  fill: #ff99aa;\n  stroke: #e64d00;\n}\nsvg.scratchblocks-style-scratch3-high-contrast .sb3-custom-alt {\n  fill: #ffccd5;\n}\nsvg.scratchblocks-style-scratch3-high-contrast .sb3-custom-dark {\n  fill: #e64d00;\n}\n\n\nsvg.scratchblocks-style-scratch3-high-contrast .sb3-extension {\n  fill: #13ecaf;\n  stroke: #0b8e69;\n}\nsvg.scratchblocks-style-scratch3-high-contrast .sb3-extension-alt {\n  fill: #75f0cd;\n}\nsvg.scratchblocks-style-scratch3-high-contrast .sb3-extension-dark {\n  fill: #0b8e69;\n}\n\n\nsvg.scratchblocks-style-scratch3-high-contrast .sb3-obsolete {\n  fill: #fc6666;\n  stroke: #d32121;\n}\nsvg.scratchblocks-style-scratch3-high-contrast .sb3-obsolete-alt {\n  fill: #fcb0b0;\n}\nsvg.scratchblocks-style-scratch3-high-contrast .sb3-obsolete-dark {\n  fill: #d32121;\n}\n\n\nsvg.scratchblocks-style-scratch3-high-contrast .sb3-grey {\n  fill: #bfbfbf;\n  stroke: #959595;\n}\nsvg.scratchblocks-style-scratch3-high-contrast .sb3-grey-alt {\n  fill: #b2b2b2;\n}\nsvg.scratchblocks-style-scratch3-high-contrast .sb3-grey-dark {\n  fill: #959595;\n}\n\n\nsvg.scratchblocks-style-scratch3-high-contrast .sb3-label {\n  fill: #000;\n}\n\nsvg.scratchblocks-style-scratch3-high-contrast .sb3-input-color {\n  stroke: #fff;\n}\n\nsvg.scratchblocks-style-scratch3-high-contrast .sb3-input-number,\nsvg.scratchblocks-style-scratch3-high-contrast .sb3-input-string {\n  fill: #fff;\n}\nsvg.scratchblocks-style-scratch3-high-contrast .sb3-literal-number,\nsvg.scratchblocks-style-scratch3-high-contrast .sb3-literal-string {\n  fill: #000;\n}\n";
+          var cssContent = "\n.sb3-label {\n  white-space: pre;\n  font: 500 12pt Helvetica Neue, Helvetica, sans-serif;\n  word-spacing: +1pt;\n}\n\n.sb3-literal-number,\n.sb3-literal-string,\n.sb3-literal-number-dropdown,\n.sb3-literal-dropdown {\n  word-spacing: 0;\n}\n\n/* Note: comment colors are different from Scratch. */\n\n.sb3-comment {\n  fill: #ffffa5;\n  stroke: #d0d1d2;\n  stroke-width: 1;\n}\n.sb3-comment-line {\n  fill: #ffff80;\n}\n.sb3-comment-label {\n  font: 400 12pt Helvetica Neue, Helvetica, sans-serif;\n  fill: #000;\n  word-spacing: 0;\n}\n\n.sb3-diff {\n  fill: none;\n  stroke: #000;\n}\n.sb3-diff-ins {\n  stroke-width: 2px;\n}\n.sb3-diff-del {\n  stroke-width: 3px;\n}\n\n\nsvg .sb3-motion {\n  fill: #4c97ff;\n  stroke: #3373cc;\n}\nsvg .sb3-motion-alt {\n  fill: #4280d7;\n}\nsvg .sb3-motion-dark {\n  fill: #3373cc;\n}\n\n\nsvg .sb3-looks {\n  fill: #9966ff;\n  stroke: #774dcb;\n}\nsvg .sb3-looks-alt {\n  fill: #855cd6;\n}\nsvg .sb3-looks-dark {\n  fill: #774dcb;\n}\n\n\nsvg .sb3-sound {\n  fill: #cf63cf;\n  stroke: #bd42bd;\n}\nsvg .sb3-sound-alt {\n  fill: #c94fc9;\n}\nsvg .sb3-sound-dark {\n  fill: #bd42bd;\n}\n\n\nsvg .sb3-control {\n  fill: #ffab19;\n  stroke: #cf8b17;\n}\nsvg .sb3-control-alt {\n  fill: #ec9c13;\n}\nsvg .sb3-control-dark {\n  fill: #cf8b17;\n}\n\n\nsvg .sb3-events {\n  fill: #ffbf00;\n  stroke: #cc9900;\n}\nsvg .sb3-events-alt {\n  fill: #e6ac00;\n}\nsvg .sb3-events-dark {\n  fill: #cc9900;\n}\n\n\nsvg .sb3-sensing {\n  fill: #5cb1d6;\n  stroke: #2e8eb8;\n}\nsvg .sb3-sensing-alt {\n  fill: #47a8d1;\n}\nsvg .sb3-sensing-dark {\n  fill: #2e8eb8;\n}\n\n\nsvg .sb3-operators {\n  fill: #59c059;\n  stroke: #389438;\n}\nsvg .sb3-operators-alt {\n  fill: #46b946;\n}\nsvg .sb3-operators-dark {\n  fill: #389438;\n}\n\n\nsvg .sb3-variables {\n  fill: #ff8c1a;\n  stroke: #db6e00;\n}\nsvg .sb3-variables-alt {\n  fill: #ff8000;\n}\nsvg .sb3-variables-dark {\n  fill: #db6e00;\n}\n\n\nsvg .sb3-list {\n  fill: #ff661a;\n  stroke: #e64d00;\n}\nsvg .sb3-list-alt {\n  fill: #ff5500;\n}\nsvg .sb3-list-dark {\n  fill: #e64d00;\n}\n\n\nsvg .sb3-custom {\n  fill: #ff6680;\n  stroke: #ff3355;\n}\nsvg .sb3-custom-alt {\n  fill: #ff4d6a;\n}\nsvg .sb3-custom-dark {\n  fill: #ff3355;\n}\n\n\nsvg .sb3-extension {\n  fill: #0fbd8c;\n  stroke: #0b8e69;\n}\nsvg .sb3-extension-alt {\n  fill: #0da57a;\n}\nsvg .sb3-extension-dark {\n  fill: #0b8e69;\n}\n\n\nsvg .sb3-obsolete {\n  fill: #ed4242;\n  stroke: #ca2b2b;\n}\nsvg .sb3-obsolete-alt {\n  fill: #db3333;\n}\nsvg .sb3-obsolete-dark {\n  fill: #ca2b2b;\n}\n\n\nsvg .sb3-grey {\n  fill: #bfbfbf;\n  stroke: #909090;\n}\nsvg .sb3-grey-alt {\n  fill: #b2b2b2;\n}\nsvg .sb3-grey-dark {\n  fill: #909090;\n}\n\n\nsvg .sb3-label {\n  fill: #fff;\n}\n\nsvg .sb3-input-color {\n  stroke: #fff;\n}\n\nsvg .sb3-input-number,\nsvg .sb3-input-string {\n  fill: #fff;\n}\nsvg .sb3-literal-number,\nsvg .sb3-literal-string {\n  fill: #575e75;\n}\n\n\nsvg.scratchblocks-style-scratch3-high-contrast .sb3-motion {\n  fill: #80b5ff;\n  stroke: #3373cc;\n}\nsvg.scratchblocks-style-scratch3-high-contrast .sb3-motion-alt {\n  fill: #b3d2ff;\n}\nsvg.scratchblocks-style-scratch3-high-contrast .sb3-motion-dark {\n  fill: #3373cc;\n}\n\n\nsvg.scratchblocks-style-scratch3-high-contrast .sb3-looks {\n  fill: #ccb3ff;\n  stroke: #774dcb;\n}\nsvg.scratchblocks-style-scratch3-high-contrast .sb3-looks-alt {\n  fill: #ddccff;\n}\nsvg.scratchblocks-style-scratch3-high-contrast .sb3-looks-dark {\n  fill: #774dcb;\n}\n\n\nsvg.scratchblocks-style-scratch3-high-contrast .sb3-sound {\n  fill: #e19de1;\n  stroke: #bd42bd;\n}\nsvg.scratchblocks-style-scratch3-high-contrast .sb3-sound-alt {\n  fill: #ffb3ff;\n}\nsvg.scratchblocks-style-scratch3-high-contrast .sb3-sound-dark {\n  fill: #bd42bd;\n}\n\n\nsvg.scratchblocks-style-scratch3-high-contrast .sb3-control {\n  fill: #ffbe4c;\n  stroke: #cf8b17;\n}\nsvg.scratchblocks-style-scratch3-high-contrast .sb3-control-alt {\n  fill: #ffda99;\n}\nsvg.scratchblocks-style-scratch3-high-contrast .sb3-control-dark {\n  fill: #cf8b17;\n}\n\n\nsvg.scratchblocks-style-scratch3-high-contrast .sb3-events {\n  fill: #ffd966;\n  stroke: #cc9900;\n}\nsvg.scratchblocks-style-scratch3-high-contrast .sb3-events-alt {\n  fill: #ffecb3;\n}\nsvg.scratchblocks-style-scratch3-high-contrast .sb3-events-dark {\n  fill: #cc9900;\n}\n\n\nsvg.scratchblocks-style-scratch3-high-contrast .sb3-sensing {\n  fill: #85c4e0;\n  stroke: #2e8eb8;\n}\nsvg.scratchblocks-style-scratch3-high-contrast .sb3-sensing-alt {\n  fill: #aed8ea;\n}\nsvg.scratchblocks-style-scratch3-high-contrast .sb3-sensing-dark {\n  fill: #2e8eb8;\n}\n\n\nsvg.scratchblocks-style-scratch3-high-contrast .sb3-operators {\n  fill: #7ece7e;\n  stroke: #389438;\n}\nsvg.scratchblocks-style-scratch3-high-contrast .sb3-operators-alt {\n  fill: #b5e3b5;\n}\nsvg.scratchblocks-style-scratch3-high-contrast .sb3-operators-dark {\n  fill: #389438;\n}\n\n\nsvg.scratchblocks-style-scratch3-high-contrast .sb3-variables {\n  fill: #ffa54c;\n  stroke: #db6e00;\n}\nsvg.scratchblocks-style-scratch3-high-contrast .sb3-variables-alt {\n  fill: #ffcc99;\n}\nsvg.scratchblocks-style-scratch3-high-contrast .sb3-variables-dark {\n  fill: #db6e00;\n}\n\n\nsvg.scratchblocks-style-scratch3-high-contrast .sb3-list {\n  fill: #ff9966;\n  stroke: #e64d00;\n}\nsvg.scratchblocks-style-scratch3-high-contrast .sb3-list-alt {\n  fill: #ffcab0;\n}\nsvg.scratchblocks-style-scratch3-high-contrast .sb3-list-dark {\n  fill: #e64d00;\n}\n\n\nsvg.scratchblocks-style-scratch3-high-contrast .sb3-custom {\n  fill: #ff99aa;\n  stroke: #e64d00;\n}\nsvg.scratchblocks-style-scratch3-high-contrast .sb3-custom-alt {\n  fill: #ffccd5;\n}\nsvg.scratchblocks-style-scratch3-high-contrast .sb3-custom-dark {\n  fill: #e64d00;\n}\n\n\nsvg.scratchblocks-style-scratch3-high-contrast .sb3-extension {\n  fill: #13ecaf;\n  stroke: #0b8e69;\n}\nsvg.scratchblocks-style-scratch3-high-contrast .sb3-extension-alt {\n  fill: #75f0cd;\n}\nsvg.scratchblocks-style-scratch3-high-contrast .sb3-extension-dark {\n  fill: #0b8e69;\n}\n\n\nsvg.scratchblocks-style-scratch3-high-contrast .sb3-obsolete {\n  fill: #fc6666;\n  stroke: #d32121;\n}\nsvg.scratchblocks-style-scratch3-high-contrast .sb3-obsolete-alt {\n  fill: #fcb0b0;\n}\nsvg.scratchblocks-style-scratch3-high-contrast .sb3-obsolete-dark {\n  fill: #d32121;\n}\n\n\nsvg.scratchblocks-style-scratch3-high-contrast .sb3-grey {\n  fill: #bfbfbf;\n  stroke: #959595;\n}\nsvg.scratchblocks-style-scratch3-high-contrast .sb3-grey-alt {\n  fill: #b2b2b2;\n}\nsvg.scratchblocks-style-scratch3-high-contrast .sb3-grey-dark {\n  fill: #959595;\n}\n\n\nsvg.scratchblocks-style-scratch3-high-contrast .sb3-label {\n  fill: #000;\n}\n\nsvg.scratchblocks-style-scratch3-high-contrast .sb3-input-color {\n  stroke: #fff;\n}\n\nsvg.scratchblocks-style-scratch3-high-contrast .sb3-input-number,\nsvg.scratchblocks-style-scratch3-high-contrast .sb3-input-string {\n  fill: #fff;\n}\nsvg.scratchblocks-style-scratch3-high-contrast .sb3-literal-number,\nsvg.scratchblocks-style-scratch3-high-contrast .sb3-literal-string {\n  fill: #000;\n}\n";
 
           // Need to define here, as we cannot reference Style#makeNewIcons
           // during JS loading phase.

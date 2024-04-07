@@ -1,4 +1,4 @@
-// Scratchblocks v1.3.4 (by pooiod7) - Make Scratch blocks in scratch
+// Scratchblocks v1.4.0 (by pooiod7) - Make Scratch blocks in scratch
 
 (function(Scratch) {
   'use strict';
@@ -87,8 +87,8 @@
       }
       var sblocks = args.blocks.replace(/\\n/g, "\n");
 
-      let doc = scratchblocks.module.parse(sblocks, { lang: "en", style: style });
-      let docView = scratchblocks.module.newView(doc, { style: style });
+      let doc = scratchblocks.module.parse(sblocks, { lang: "en", style: style, scale: 2 });
+      let docView = scratchblocks.module.newView(doc, { style: style, scale: 2 });
       docView.render();
 
       svgToPng(docView.exportSVGString(), (imgData) => {
@@ -3989,7 +3989,7 @@
               return Filter;
           }();
 
-          var cssContent$1 = "\n.sb-label {\n  font-family: Lucida Grande, Verdana, Arial, DejaVu Sans, sans-serif;\n  font-weight: bold;\n  fill: #fff;\n  font-size: 10px;\n  word-spacing: +1px;\n}\n\n.sb-obsolete {\n  fill: #d42828;\n}\n.sb-motion {\n  fill: #4a6cd4;\n}\n.sb-looks {\n  fill: #8a55d7;\n}\n.sb-sound {\n  fill: #bb42c3;\n}\n.sb-pen {\n  fill: #0e9a6c;\n}\n.sb-events {\n  fill: #c88330;\n}\n.sb-control {\n  fill: #e1a91a;\n}\n.sb-sensing {\n  fill: #2ca5e2;\n}\n.sb-operators {\n  fill: #5cb712;\n}\n.sb-variables {\n  fill: #ee7d16;\n}\n.sb-list {\n  fill: #cc5b22;\n}\n.sb-custom {\n  fill: #632d99;\n}\n.sb-custom-arg {\n  fill: #5947b1;\n}\n.sb-extension {\n  fill: #4b4a60;\n}\n.sb-grey {\n  fill: #969696;\n}\n\n.sb-bevel {\n  filter: url(#bevelFilter);\n}\n\n.sb-input {\n  filter: url(#inputBevelFilter);\n}\n.sb-input-number,\n.sb-input-string,\n.sb-input-number-dropdown {\n  fill: #fff;\n}\n.sb-literal-number,\n.sb-literal-string,\n.sb-literal-number-dropdown,\n.sb-literal-dropdown {\n  font-weight: normal;\n  font-size: 9px;\n  word-spacing: 0;\n}\n.sb-literal-number,\n.sb-literal-string,\n.sb-literal-number-dropdown {\n  fill: #000;\n}\n\n.sb-darker {\n  filter: url(#inputDarkFilter);\n}\n\n.sb-outline {\n  stroke: #fff;\n  stroke-opacity: 0.2;\n  stroke-width: 2;\n  fill: none;\n}\n\n.sb-define-hat-cap {\n  stroke: #632d99;\n  stroke-width: 1;\n  fill: #8e2ec2;\n}\n\n.sb-comment {\n  fill: #ffffa5;\n  stroke: #d0d1d2;\n  stroke-width: 1;\n}\n.sb-comment-line {\n  fill: #ffff80;\n}\n.sb-comment-label {\n  white-space: pre;\n  font-family: Helvetica, Arial, DejaVu Sans, sans-serif;\n  font-weight: bold;\n  fill: #5c5d5f;\n  word-spacing: 0;\n  font-size: 12px;\n}\n\n.sb-diff {\n  fill: none;\n  stroke: #000;\n}\n text{\n  white-space: pre;\n}\n.sb-diff-ins {\n  stroke-width: 2px;\n}\n.sb-diff-del {\n  stroke-width: 3px;\n}\n";
+          var cssContent$1 = "\n.sb-label {\n  font-family: Lucida Grande, Verdana, Arial, DejaVu Sans, sans-serif;\n  font-weight: bold;\n  fill: #fff;\n  font-size: 10px;\n  word-spacing: +1px;\n}\n\n.sb-obsolete {\n  fill: #d42828;\n}\n.sb-motion {\n  fill: #4a6cd4;\n}\n.sb-looks {\n  fill: #8a55d7;\n}\n.sb-sound {\n  fill: #bb42c3;\n}\n.sb-pen {\n  fill: #0e9a6c;\n}\n.sb-events {\n  fill: #c88330;\n}\n.sb-control {\n  fill: #e1a91a;\n}\n.sb-sensing {\n  fill: #2ca5e2;\n}\n.sb-operators {\n  fill: #5cb712;\n}\n.sb-variables {\n  fill: #ee7d16;\n}\n.sb-list {\n  fill: #cc5b22;\n}\n.sb-custom {\n  fill: #632d99;\n}\n.sb-custom-arg {\n  fill: #5947b1;\n}\n.sb-extension {\n  fill: #4b4a60;\n}\n.sb-grey {\n  fill: #969696;\n}\n\n.sb-bevel {\n  filter: url(#bevelFilter);\n}\n\n.sb-input {\n  filter: url(#inputBevelFilter);\n}\n.sb-input-number,\n.sb-input-string,\n.sb-input-number-dropdown {\n  fill: #fff;\n}\n.sb-literal-number,\n.sb-literal-string,\n.sb-literal-number-dropdown,\n.sb-literal-dropdown {\n  font-weight: normal;\n  font-size: 9px;\n  word-spacing: 0;\n}\n.sb-literal-number,\n.sb-literal-string,\n.sb-literal-number-dropdown {\n  fill: #000;\n}\n\n.sb-darker {\n  filter: url(#inputDarkFilter);\n}\n\n.sb-outline {\n  stroke: #fff;\n  stroke-opacity: 0.2;\n  stroke-width: 2;\n  fill: none;\n}\n\n.sb-define-hat-cap {\n  stroke: #632d99;\n  stroke-width: 1;\n  fill: #8e2ec2;\n}\n\n.sb-comment {\n  fill: #ffffa5;\n  stroke: #d0d1d2;\n  stroke-width: 1;\n}\n.sb-comment-line {\n  fill: #ffff80;\n}\n.sb-comment-label {\n  font-family: Helvetica, Arial, DejaVu Sans, sans-serif;\n  font-weight: bold;\n  fill: #5c5d5f;\n  word-spacing: 0;\n  font-size: 12px;\n}\n\n.sb-diff {\n  fill: none;\n  stroke: #000;\n}\n text{\n  white-space: pre;\n}\n.sb-diff-ins {\n  stroke-width: 2px;\n}\n.sb-diff-del {\n  stroke-width: 3px;\n}\n";
 
           var Style$1 = /*#__PURE__*/function () {
               function Style() { }

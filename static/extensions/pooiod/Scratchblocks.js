@@ -8,22 +8,19 @@
   }
   
   class scratchblocksext {
-    constructor() {
-      this.stagewidth = Scratch.vm.runtime.stageWidth;
-      this.stageheight = Scratch.vm.runtime.stageHeight;
-    }
 
     getInfo() {
       return {
         id: 'scratchblocks',
-        name: 'Scratchblocks',
+        name: 'Scratch​Blocks',
         color1: '#e1a91a',
         color2: '#c88330',
+        docsURI: 'https://en.scratch-wiki.info/wiki/Block_Plugin/Syntax',
         blocks: [
           {
             opcode: 'makestack',
             blockType: Scratch.BlockType.COMMAND,
-            text: 'Make stack [blocks] of type [type] with id [id]',
+            text: 'Make stack [blocks] of type [type]',
             arguments: {
               blocks: {
                 type: Scratch.ArgumentType.STRING,
@@ -44,21 +41,23 @@
     }
 
     makestack(args, util) {
-      var _style;
+      var style;
       if (args.type == "sb2") {
-        _style = "scratch2";
+        style = "scratch2";
       } else {
-          _style = "scratch3";
+          style = "scratch3";
       }
       var sblocks = args.blocks.replace(/\\n/g, "\n");
 
-      let doc = scratchblocks.parse(sblocks, { lang: "en", style: _style });
-      let docView = scratchblocks.newView(doc, { style: _style });
+      let doc = scratchblocks.parse(sblocks, { lang: "en", style: style });
+      let docView = scratchblocks.newView(doc, { style: style });
       docView.render();
 
-      svgToPng(docView.exportSVGString(), (imgData) => {
-        importImage({"TEXT": imgData, "NAME": args.id}, util);
-      });
+      importSVG({"TEXT": docView.exportSVG(), "NAME": (args.id || "stack")}, util);
+
+      // svgToPng(docView.exportSVGString(), (imgData) => {
+      //   importPNG({"TEXT": imgData, "NAME": args.id}, util);
+      // });
     }
 
   }
@@ -94,7 +93,28 @@ function svgUrlToPng(svgUrl, callback) {
     svgImage.src = svgUrl;
 }
 
-function importImage({ TEXT, NAME }, util) {
+function importSVG({ TEXT, NAME }, util) {
+  const targetId = util.target.id;
+  Scratch.fetch(TEXT)
+    .then((r) => r.arrayBuffer())
+    .then((arrayBuffer) => {
+      const storage = vm.runtime.storage;
+      const asset = new storage.Asset(
+        storage.AssetType.ImageVector,
+        null,
+        storage.DataFormat.SVG,
+        new Uint8Array(arrayBuffer),
+        true
+      );
+      const newCostumeObject = {
+        md5: asset.assetId + '.' + asset.dataFormat,
+        asset: asset,
+        name: NAME
+      };
+      vm.addCostume(newCostumeObject.md5, newCostumeObject, targetId);
+    });
+}
+function importPNG({ TEXT, NAME }, util) {
   const targetId = util.target.id;
   Scratch.fetch(TEXT)
     .then((r) => r.arrayBuffer())

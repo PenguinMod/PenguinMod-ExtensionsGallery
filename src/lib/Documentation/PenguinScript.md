@@ -111,6 +111,16 @@ Note that you cannot declare a variable without braces (these -> {stmt1; stmt2; 
 
 You can also break out of loops using the `break` keyword, and go to the next iteration of the loop using the `continue` keyword.
 
+### Try/Catch/Finally
+
+Try/Catch/Finally allows you to deal with control flow and errors better.
+
+The syntax is `try stmt` followed by `catch errorVar stmt`, `finally stmt`, or both.
+
+If an error occurs in the `try stmt`, the error will be caught and the stmt in catch will be executed with `errorVar` set to the error object (we will discuss error objects later).
+
+Regardless of if the try or catch executed correctly, returned, broke or continued in a loop, if finally is present, the statement inside `finally stmt` will be executed.
+
 ### Braces
 
 Braces allow you to define a new scope, and also execute multiple statements where only one would be expected.

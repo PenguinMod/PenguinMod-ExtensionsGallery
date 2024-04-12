@@ -80,16 +80,19 @@ You can use some operators from PenguinMod in PenguinScript, along with some new
 |Operator(s)|Example Usage|Notes|Associativty
 |--------|-------------|-----|-----------|
 | = | `x = y` | Sets an assignable value (an identifier or global identifier (we will explore later)) to a different value|Right-Left
-| and | `x and y` | Returns the first operand that is falsy (null or false), and if none are, always return the second one.|Left-Right
+| If/Else | `if x y else z` | If x is not falsy (null or false), return y, otherwise, if z is there, return z, else, return null.|Left-Right
+| and | `x and y` | Returns the first operand that is falsy, and if none are, always return the second one.|Left-Right
 | xor | `x xor y` | If the both operands are falsy, return the second one, if only one is truthy (not null or false) return that operand, if both are truthy return false.|Left-Right
 | or | `x or y` | Returns the first operand that is truthy, and if both are false, always return the second one.|Left-Right
 | < > == <= >= | `x < y` | All of these operators (except for ==) convert their operands to numbers. < is less than, > is greater than, == is exactly equals to, <= is less than or equal to, >= is greater than or equal to.|Left-Right
-| not | `not x` | If the value is falsy, return true, otherwise, return false. | Right-Left
 | + - | `x + y` | Converts both operands into numbers, and does the arithmetic (addition + or subtraction -). | Left-right
 | * / % | `x * y` | Converts both operands into numbers, and does the arithmetic (multiplication *, division /, or mod %)|Left-right
 | ^ | `x ^ y` | Converts both operands into numbers, and raises the first operand to the second. | Right-Left
-| -> | x -> prop | x should be a struct, and prop can be an identifier or string (the value will be static). We will discuss this operator in detail later. | Left-Right
+| -> | `x -> prop` | x should be a struct, and prop can be an identifier or string (the value will be static). We will discuss this operator in detail later. | Left-Right
+| in | `prop in x` | x should be a struct, and prop can be an identifier or string (the value will be static). We will discuss this operator in detail later. | N/A (prop in prop in x is invalid since it doesn't make sense)
 | (arg1, arg2, arg3... argN) | `x(arg1, arg2, arg3... argN)` | Executes the function (we will discuss them later) on the left of the args list with the args list.|Left-Right
+| not | `not x` | If the value is falsy, return true, otherwise, return false. | Right-Left
+| - (unary version) | -x | Negates x. | Left-Right
 
 ### Control flow
 

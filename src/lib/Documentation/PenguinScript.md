@@ -8,10 +8,13 @@ This section will cover the syntax of PenguinScript.
 
 ### Basic values
 
-You can use number digits to create a number.
+#### Numbers
 
-`1234567890.1234567890` is a valid number.
-`1e+10` is not a valid number sadly, but can you use a workaround, factor * 10 ^ exponent.
+Any valid Scratch (or PenguinMod) number is a valid PenguinScript number.
+
+Additionally, you can use a 0 followed by an x (for hexadecimal), o (for octa) and b (for binary) and then the digits.
+
+#### Strings
 
 You can create "strings" (which are pieces of text) using string literals.
 String literals are pieces of text wrapped inside double quotes.
@@ -42,8 +45,12 @@ Here are the escape sequences:
 | \\"        | A double quote character.                                                                                                                                         |
 | \\\\       | A backslash character                                                                                                                                             |
 
+#### Booleans
+
 You can also use true or false (also called booleans) by typing in `true` or `false`.
-There is also a special value called `null`.
+
+#### Null
+There is also a special value called `null`. Null represents a lack of a value.
 
 ### Local Variables
 

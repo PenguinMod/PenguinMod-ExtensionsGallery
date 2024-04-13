@@ -8,7 +8,7 @@ export default [
     {
         name: "Toast Notifications",
         description: "Did you want alerts? Notificationss that are easily customizable? This is the only and best notification extension!",
-        code: "MubiLop/toastnotifsjs",
+        code: "MubiLop/toastnotifs.js",
         banner: "MubiLop/toastnotifs.png",
         creator: "MubiLop",
         isGitHub: false,
@@ -352,15 +352,6 @@ export default [
         creator: "WAYLIVES",
         isGitHub: false,
     },
-    // Does not follow the main guideline of "Your extension should be created for a specific purpose." Description is misleading.
-    // {
-    //     name: "Randomly Blocks",
-    //     description: "Utilities to have your project feel more like a website.",
-    //     code: "mariocraft987/randomlyBlocks.js",
-    //     banner: "mariocraft987/randomlyBlocks.svg",
-    //     creator: "mariocraft987",
-    //     isGithub: true,
-    // },
     {
     name: "Text To Speech: Redone",
     description: "Generate better TTS! Made using TTS Tool API!", 
@@ -368,5 +359,5 @@ export default [
     banner: "PuzzlingGGG/TTSR.png", 
     creator: "puzzlingGGG", 
     isGitHub: false, 
-},
+    },
 ];

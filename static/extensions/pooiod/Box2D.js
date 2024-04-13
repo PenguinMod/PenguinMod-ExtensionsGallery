@@ -898,13 +898,13 @@ while keeping general compatability. (made with box2D js es6) */
           var body = bodies[bid];
           if (body) {
             var fix = body.GetFixtureList();
-            console.log(body);
+            
             while (fix) {
               var fdata = fix.GetFilterData();
               fdata.groupIndex = noCollideSeq;
-              console.log(noCollideSeq)
+              
               fix.SetFilterData(fdata);
-              console.log(fix);
+              
               fix = fix.GetNext();
             }
           }
@@ -924,13 +924,13 @@ while keeping general compatability. (made with box2D js es6) */
           var body = bodies[bid];
           if (body) {
             var fix = body.GetFixtureList();
-            console.log(body);
+            
             while (fix) {
               var fdata = fix.GetFilterData();
               fdata.groupIndex = noCollideSeq;
-              console.log(noCollideSeq)
+              
               fix.SetFilterData(fdata);
-              console.log(fix);
+              
               fix = fix.GetNext();
             }
           }

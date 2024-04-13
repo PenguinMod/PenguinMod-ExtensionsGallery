@@ -28,6 +28,13 @@ export default [
         creator: "pooiod7",
     },
     {
+        name: "Scratchblocks",
+        description: "Generate blocks in the Scratch3, or Scratch2 format.",
+        code: "pooiod/Scratchblocks.js",
+        banner: "pooiod/Scratchblocks.svg",
+        creator: "pooiod7",
+    },
+    {
         name: "Object",
         description: "Handle large JSON files at an extreme speed.",
         code: "skyhigh173/object.js",

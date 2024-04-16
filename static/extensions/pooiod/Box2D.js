@@ -3,6 +3,7 @@
 // Description: Implements the Box2D physics engine, adding joints, springs, sliders, and more.
 // By: pooiod7 <https://scratch.mit.edu/users/pooiod7/>
 // Original: Griffpatch
+// License: zlib
 
 /* This extension was originally based off of the Box2D Physics extension
 for ScratchX by Griffpatch, but has since deviated to have more features,
@@ -10,7 +11,7 @@ while keeping general compatability. (made with box2D js es6) */
 
 (function(Scratch) {
   'use strict';
-  var b2Dversion = "1.7.3";
+  var b2Dversion = "1.7.9";
   if (!Scratch.extensions.unsandboxed) {
     throw new Error('Boxed Physics can\'t run in the sandbox');
   }
@@ -49,11 +50,13 @@ while keeping general compatability. (made with box2D js es6) */
     constructor() {
       this.vm = Scratch.vm;
       this.runtime = this.vm.runtime
-      
-      this.docs = Scratch.extensions.isPenguinMod ? 'https://extensions.penguinmod.com/docs/BoxedPhysics' : 'https://pooiod7.neocities.org/markdown/#/projects/scratch/extensions/other/markdown/box2D';
+
+      this.turbowarp = window.location.href.indexOf('turbowarp.') > -1;
+
+      this.docs = Scratch.extensions.isPenguinMod ? 'https://extensions.penguinmod.com/docs/BoxedPhysics' : false ? 'https://extensions.turbowarp.org/pooiod7/BoxedPhysics",' : 'https://pooiod7.neocities.org/markdown/#/projects/scratch/extensions/other/markdown/box2D';
 
       // this is a penguinmod only thing
-      this.squaretype = Scratch.extensions.isPenguinMod ? Scratch.BlockShape.SQUARE : '';
+      this.squaretype = Scratch.extensions.isPenguinMod ? Scratch.BlockShape.SQUARE : false;
 
       vm.runtime.on('PROJECT_LOADED', () => {
         this.physoptions({ "CONPHYS": true, "WARMSTART": true, "POS": 10, "VEL": 10 });
@@ -69,9 +72,9 @@ while keeping general compatability. (made with box2D js es6) */
     getInfo() {
       return {
         id: 'P7BoxPhys',
-        name: 'Boxed Physics',
-        color1: "#2cb0c0",
-        color2: '#4eb88a',
+        name: physdebugmode || wipblocks ? 'Boxed Physics (debug)' : 'Boxed Physics',
+        color1: physdebugmode || wipblocks ? "#4b4a60" : "#2cb0c0",
+        color2: physdebugmode || wipblocks ? "#383747" : "#4eb88a",
         menuIconURI: menuIconURI,
         docsURI: this.docs,
         blocks: [
@@ -177,6 +180,11 @@ while keeping general compatability. (made with box2D js es6) */
                 defaultValue: 'Object',
               },
             },
+          },
+          {
+            opcode: 'destroyBodys',
+            blockType: Scratch.BlockType.COMMAND,
+            text: 'Destroy every object',
           },
           {
             opcode: 'createNoCollideSet',
@@ -368,6 +376,12 @@ while keeping general compatability. (made with box2D js es6) */
                 defaultValue: 0,
               },
             },
+          },
+          {
+            opcode: 'getobjects',
+            disableMonitor: true,
+            blockType: Scratch.BlockType.REPORTER,
+            text: 'All objects',
           },
           { blockType: Scratch.BlockType.LABEL, text: "Define joints" }, // ---- Define joints -----
           {
@@ -642,13 +656,15 @@ while keeping general compatability. (made with box2D js es6) */
       if (args == "version") {
         return b2Dversion;
       } else if (args == "lib") {
-        return "Box2D JS es6 (a port of Box2D flash)";
+        return "Box2D JS es6 (Uli Hecht's port of Box2D flash)";
       } else if (args === "maker") {
         return "pooiod7";
       } else if (args === "base") {
         return "Box2D Physics by griffpatch for ScratchX (Scratch 2.0)";
+      } else if (args === "docs") {
+        return this.docs;
       } else {
-        return '["version", "lib", "maker", "base"]';
+        return '["version", "lib", "maker", "base", "docs"]';
       }
     }
 
@@ -898,13 +914,13 @@ while keeping general compatability. (made with box2D js es6) */
           var body = bodies[bid];
           if (body) {
             var fix = body.GetFixtureList();
-            
+            console.log(body);
             while (fix) {
               var fdata = fix.GetFilterData();
               fdata.groupIndex = noCollideSeq;
-              
+              console.log(noCollideSeq)
               fix.SetFilterData(fdata);
-              
+              console.log(fix);
               fix = fix.GetNext();
             }
           }
@@ -924,16 +940,38 @@ while keeping general compatability. (made with box2D js es6) */
           var body = bodies[bid];
           if (body) {
             var fix = body.GetFixtureList();
-            
+            console.log(body);
             while (fix) {
               var fdata = fix.GetFilterData();
               fdata.groupIndex = noCollideSeq;
-              
+              console.log(noCollideSeq)
               fix.SetFilterData(fdata);
-              
+              console.log(fix);
               fix = fix.GetNext();
             }
           }
+        }
+      }
+    }
+
+    getobjects() {
+      var bodynames = [];
+      for (var bodyName in bodies) {
+        if (bodies.hasOwnProperty(bodyName)) {
+          if (bodynames.length > 0) {
+            bodynames.push(" " + bodyName);
+          } else {
+            bodynames.push(bodyName);
+          }
+        }
+      }
+      return Scratch.Cast.toString(bodynames);
+    }
+
+    destroyBodys() {
+      for (var bodyName in bodies) {
+        if (bodies.hasOwnProperty(bodyName)) {
+          this.destroyBody({NAME:bodyName});
         }
       }
     }
@@ -1034,9 +1072,11 @@ while keeping general compatability. (made with box2D js es6) */
 
 
     getBodyCB(fixture) {
+      if (fixture.GetBody().GetType() != b2Body.b2_staticBody) {
         if (fixture.GetShape().TestPoint(fixture.GetBody().GetTransform(), mousePVec)) {
           selectedBody = fixture.GetBody();
           return false;
+        }
       }
       return true;
     };
@@ -12934,9 +12974,6 @@ while keeping general compatability. (made with box2D js es6) */
   }))();
   let i;
   for (i = 0; i < Box2D.postDefs.length; ++i) Box2D.postDefs[i]();
-
-  //module.exports = Box2D;
-
 
   Scratch.extensions.register(new BoxPhys());
 })(Scratch);

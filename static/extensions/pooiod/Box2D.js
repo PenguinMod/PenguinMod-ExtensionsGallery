@@ -11,7 +11,7 @@ while keeping general compatability. (made with box2D js es6) */
 
 (function(Scratch) {
   'use strict';
-  var b2Dversion = "1.7.9.3";
+  var b2Dversion = "1.7.9.4";
   if (!Scratch.extensions.unsandboxed) {
     throw new Error('Boxed Physics can\'t run in the sandbox');
   }
@@ -778,9 +778,9 @@ while keeping general compatability. (made with box2D js es6) */
       var sin = Math.sin(radians);
       var nx = (cos * args.X) - (sin * args.Y);
       var ny = (sin * args.X) + (cos * args.Y);
-      if (args.PART = "x") {
+      if (args.PART == "x") {
         return nx;
-      } else if (args.PART = "y") {
+      } else if (args.PART == "y") {
         return ny;
       } else {
         return '["'+nx+'", "'+ny+'"]';

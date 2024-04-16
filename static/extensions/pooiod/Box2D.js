@@ -11,7 +11,7 @@ while keeping general compatability. (made with box2D js es6) */
 
 (function(Scratch) {
   'use strict';
-  var b2Dversion = "1.7.9";
+  var b2Dversion = "1.7.9.3";
   if (!Scratch.extensions.unsandboxed) {
     throw new Error('Boxed Physics can\'t run in the sandbox');
   }
@@ -573,6 +573,30 @@ while keeping general compatability. (made with box2D js es6) */
             },
           },
           {
+            opcode: 'rotatePoint',
+            blockType: Scratch.BlockType.REPORTER,
+            text: 'Get [PART] from point x [X] y [Y] rotated by [ANGLE]',
+            arguments: {
+              X: {
+                type: Scratch.ArgumentType.NUMBER,
+                defaultValue: 0,
+              },
+              Y: {
+                type: Scratch.ArgumentType.NUMBER,
+                defaultValue: 0,
+              },
+              ANGLE: {
+                type: Scratch.ArgumentType.NUMBER,
+                defaultValue: 0,
+              },
+              PART: {
+                type: Scratch.ArgumentType.STRING,
+                menu: 'xy',
+                defaultValue: 'x',
+              },
+            },
+          },
+          {
             opcode: 'getsimspeed',
             blockType: Scratch.BlockType.REPORTER,
             text: 'Slow motion',
@@ -646,6 +670,8 @@ while keeping general compatability. (made with box2D js es6) */
           JointType: ['Rotating', 'Spring', 'Weld', 'Slider', 'Mouse'],
           JointAttr: ['Motor On', 'Motor Speed', 'Max Torque', 'Limits On', 'Lower Limit', 'Upper Limit'],
           JointAttrRead: ['Angle', 'Speed', 'Motor Torque', 'Reaction Torque', 'Tension'],
+          xyp: ['x', 'y', 'point'],
+          xy: ['x', 'y'],
         },
       };
     }
@@ -744,6 +770,21 @@ while keeping general compatability. (made with box2D js es6) */
       noCollideSeq = 0;
 
       bodyDef.type = b2Body.b2_dynamicBody;
+    }
+
+    rotatePoint(args) {
+      var radians = args.ANGLE * Math.PI / 180;
+      var cos = Math.cos(radians);
+      var sin = Math.sin(radians);
+      var nx = (cos * args.X) - (sin * args.Y);
+      var ny = (sin * args.X) + (cos * args.Y);
+      if (args.PART = "x") {
+        return nx;
+      } else if (args.PART = "y") {
+        return ny;
+      } else {
+        return '["'+nx+'", "'+ny+'"]';
+      }
     }
 
     setJointTarget(args) {

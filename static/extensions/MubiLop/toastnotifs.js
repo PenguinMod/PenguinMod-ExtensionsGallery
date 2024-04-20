@@ -26,7 +26,7 @@
 //                       -= Toast Notifs =-
 //  Did you want alerts? Notificationss that are easily customizable?
 //        This is the only and best notification extension!
-//           Created by MubiLop + 2digit (discord user)
+//                  Created by MubiLop + themeatly2
 
 (function (Scratch) {
   "use strict";
@@ -84,6 +84,11 @@
         blockIconURI: ico,
         color1: "#905c1b",
         blocks: [
+          {
+            opcode: "___LABEL",
+            text: "Made by themeatly2 and MubiLop",
+            blockType: Scratch.BlockType.LABEL
+          },
           {
             opcode: "showToast",
             text: "Show Toast with text [TEXT] with image [IMAGE] image rounded? [ROUNDED]",

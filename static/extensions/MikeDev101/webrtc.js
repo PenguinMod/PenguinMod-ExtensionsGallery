@@ -500,7 +500,6 @@ SOFTWARE.
         class ScratchWebRTC {
             constructor(Scratch2) {
                 this.vm = Scratch2.vm; // VM
-                this.runtime = Scratch2.vm.runtime; // Runtime
                 this.webrtc = new WebRTC();
                 this.offers = new Map();
                 this.answers = new Map();

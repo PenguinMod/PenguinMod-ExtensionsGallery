@@ -22,6 +22,22 @@ export default [
         isGitHub: true,
     },
     {
+        name: "E2EE",
+        description: "A general-purpose E2EE (End-to-End Encryption) extension for Scratch.",
+        code: "MikeDev101/e2ee.js",
+        banner: "MikeDev101/e2ee.svg",
+        creator: "MikeDev101",
+        isGitHub: true,
+    },
+    {
+        name: "WebRTC",
+        description: "A barebones WebRTC implementation.",
+        code: "MikeDev101/webrtc.js",
+        banner: "MikeDev101/webrtc.svg",
+        creator: "MikeDev101",
+        isGitHub: true,
+    },
+    {
         name: "Pen+",
         description: "Extended pen section! Adds blocks for drawing triangles using textures and tints, drawing images and editing their pixels, etc.",
         code: "ObviousAlexC/PenPlus.js",

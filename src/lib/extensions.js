@@ -6,14 +6,6 @@
 */
 export default [
     {
-        name: "Toast Notifications",
-        description: "Did you want alerts? Notificationss that are easily customizable? This is the only and best notification extension!",
-        code: "MubiLop/toastnotifs.js",
-        banner: "MubiLop/toastnotifs.png",
-        creator: "MubiLop",
-        isGitHub: false,
-    },
-    {
         name: "CloudLink",
         description: "A powerful WebSocket extension for Scratch. Allows for online connectivity to servers for things like multiplayer.",
         code: "MikeDev101/cloudlink.js",
@@ -33,13 +25,6 @@ export default [
         description: "Implements the Box2D physics engine into PenguinMod, adding joints, springs, etc. This is different from TurboWarp's implementation.",
         code: "pooiod/Box2D.js",
         banner: "pooiod/B2Dimg.svg",
-        creator: "pooiod7",
-    },
-    {
-        name: "Scratchblocks",
-        description: "Generate blocks in the Scratch3, or Scratch2 format.",
-        code: "pooiod/Scratchblocks.js",
-        banner: "pooiod/Scratchblocks.svg",
         creator: "pooiod7",
     },
     {
@@ -66,20 +51,20 @@ export default [
         isGitHub: true,
     },
     {
+        name: "PenguinGPT",
+        description: "Talk to ChatGPT! Use models like DALL-E 3, Midjourney, and GPT 4.",
+        code: "MubiLop/penguingpt.js",
+        banner: "MubiLop/penguingpt.png",
+        creator: "MubiLop",
+        isGitHub: false,
+    },
+    {
         name: "Scope Variable",
         description: "Manage your variables in a block-like structure.",
         code: "0znzw/ScopeVars.js",
         banner: "0znzw/ScopeVars.png",
         creator: "Ashimee",
         isGitHub: true,
-    },
-    {
-        name: "More Types",
-        description: "Adds more value types to PenguinMod, implementing Functions, Objects, Arrays, Sets, Maps, Symbols and Nothing.",
-        code: "VeryGoodScratcher42/More-Types.js",
-        banner: "VeryGoodScratcher42/More-Types.png",
-        creator: "VeryGoodScratcher42",
-        isGitHub: false,
     },
     {
         name: "Variables Expanded",
@@ -146,20 +131,27 @@ export default [
         isGitHub: true,
     },
     {
+        name: "More Types",
+        description: "Adds more value types to PenguinMod, implementing Functions, Objects, Arrays, Sets, Maps, Symbols and Nothing.",
+        code: "VeryGoodScratcher42/More-Types.js",
+        banner: "VeryGoodScratcher42/More-Types.png",
+        creator: "VeryGoodScratcher42",
+        isGitHub: false,
+    },
+    {
+        name: "Scratchblocks",
+        description: "Generate blocks in the Scratch3, or Scratch2 format.",
+        code: "pooiod/Scratchblocks.js",
+        banner: "pooiod/Scratchblocks.svg",
+        creator: "pooiod7",
+    },
+    {
         name: "Speech Bubbles",
         description: "Allows for futher customizable speech bubbles.",
         code: "SharkPool/Speech-Bubbles.js",
         banner: "SharkPool/Speech-Bubbles.svg",
         creator: "SharkPool-SP",
         isGitHub: true,
-    },
-    {
-        name: "PenguinGPT",
-        description: "Talk to ChatGPT! Use models like DALL-E 3, Midjourney, and GPT 4.",
-        code: "MubiLop/penguingpt.js",
-        banner: "MubiLop/penguingpt.png",
-        creator: "MubiLop",
-        isGitHub: false,
     },
     {
         name: "SoundCloud API",
@@ -183,6 +175,14 @@ export default [
         code: "MubiLop/penguinhook.js",
         banner: "MubiLop/penguinhook.png",
         creator: "MubiLop",
+        isGitHub: false,
+    },
+    {
+        name: "Toast Notifications",
+        description: "Did you want alerts? Notificationss that are easily customizable? This is the only and best notification extension!",
+        code: "MubiLop/toastnotifs.js",
+        banner: "MubiLop/toastnotifs.png",
+        creator: "MubiLop and themeatly2",
         isGitHub: false,
     },
     {

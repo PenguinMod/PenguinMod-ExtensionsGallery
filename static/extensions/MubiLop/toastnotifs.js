@@ -85,11 +85,6 @@
         color1: "#905c1b",
         blocks: [
           {
-            opcode: "___LABEL",
-            text: "Made by themeatly2 and MubiLop",
-            blockType: Scratch.BlockType.LABEL
-          },
-          {
             opcode: "showToast",
             text: "Show Toast with text [TEXT] with image [IMAGE] image rounded? [ROUNDED]",
             blockType: Scratch.BlockType.COMMAND,

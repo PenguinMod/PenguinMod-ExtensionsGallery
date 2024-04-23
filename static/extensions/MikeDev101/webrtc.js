@@ -1,5 +1,8 @@
 /*
 Barebones WebRTC extension for Scratch 3
+
+MIT License
+
 Copyright (C) 2024 Mike Renaker "MikeDEV".
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -19,12 +22,17 @@ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
+
+TODO 1: Remove CL Omega redundant code
+TODO 2: Audio support
+TODO 3: Audio panning support https://developer.mozilla.org/en-US/docs/Web/API/StereoPannerNode
 */
 
-// TODO 1: Remove CL Omega redundant code
-// TODO 2: Audio support
-// TODO 3: Audio panning support https://developer.mozilla.org/en-US/docs/Web/API/StereoPannerNode
-
+// WebRTC
+// ID: webrtc
+// Description: A barebones WebRTC implementation.
+// By: MikeDEV
+// License: MIT
 (() => {
     (function (Scratch2) {
 

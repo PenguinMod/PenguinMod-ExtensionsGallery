@@ -433,13 +433,8 @@
                     return response.json();
                 })
                 .then(data => {
-                    let botResponse
-                    if (requestedModel === "dalle-3") {
-                        botResponse = data.url;
-                    } else {
-                        botResponse = data.results
-                    }
-                    return botResponse;
+                    let targetUrl = data.data.url;
+                    return targetUrl;
                 })
                 .catch(error => {
                     console.error("Error sending prompt to Image Generator", error.message);
@@ -469,10 +464,7 @@
                     return response.json();
                 })
                 .then(data => {
-                    let targetUrl = data.url;
-                    if (requestedModel !== "dalle-3") {
-                        targetUrl = data.results;
-                    }
+                    let targetUrl = data.data.url;
                     fetch(targetUrl)
                         .then((r) => r.arrayBuffer())
                         .then((arrayBuffer) => {

@@ -436,7 +436,7 @@
                     return response.json();
                 })
                 .then(data => {
-                    let targetUrl = data.data.url;
+                    let targetUrl = data.data[0].url;
                     return targetUrl;
                 })
                 .catch(error => {
@@ -467,7 +467,7 @@
                     return response.json();
                 })
                 .then(data => {
-                    let targetUrl = data.data.url;
+                    let targetUrl = data.data[0].url;
                     fetch(targetUrl)
                         .then((r) => r.arrayBuffer())
                         .then((arrayBuffer) => {

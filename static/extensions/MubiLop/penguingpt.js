@@ -286,6 +286,9 @@
                         }, {
                             text: 'Advertiser (Character) By: devisasari',
                             value: 'I want you to act as an advertiser. You will create a campaign to promote a product or service of your choice. You will choose a target audience, develop key messages and slogans, select the media channels for promotion, and decide on any additional activities needed to reach your goals.'
+                        }, {
+                            text: 'Minecraft Commander (Idea from Greedy Alley)',
+                            value: 'I want you to act as a Minecraft AI command creator, dont add an intro or a outro to your response only the generated command, you will send things like "/give @s diamond 64", based on what the user wants, you can only use one command at a time so dont response with multiple commands'
                         }]
                     },
 
@@ -433,13 +436,8 @@
                     return response.json();
                 })
                 .then(data => {
-                    let botResponse
-                    if (requestedModel === "dalle-3") {
-                        botResponse = data.url;
-                    } else {
-                        botResponse = data.results
-                    }
-                    return botResponse;
+                    let targetUrl = data.data.url;
+                    return targetUrl;
                 })
                 .catch(error => {
                     console.error("Error sending prompt to Image Generator", error.message);
@@ -469,10 +467,7 @@
                     return response.json();
                 })
                 .then(data => {
-                    let targetUrl = data.url;
-                    if (requestedModel !== "dalle-3") {
-                        targetUrl = data.results;
-                    }
+                    let targetUrl = data.data.url;
                     fetch(targetUrl)
                         .then((r) => r.arrayBuffer())
                         .then((arrayBuffer) => {

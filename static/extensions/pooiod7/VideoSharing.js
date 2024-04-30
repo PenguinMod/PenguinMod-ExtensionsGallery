@@ -21,7 +21,7 @@
     return should;
   }
 
-  class ScreenSharing {
+  class VideoSharing {
     getInfo() {
       return {
         id: 'p7videosharing',
@@ -341,5 +341,5 @@
     }
   }
 
-  Scratch.extensions.register(new ScreenSharing());
+  Scratch.extensions.register(new VideoSharing());
 })(Scratch);

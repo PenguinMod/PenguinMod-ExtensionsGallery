@@ -237,7 +237,7 @@
                     },
                     {
                         opcode: 'generateImageAndImport',
-                        blockType: Scratch.BlockType.REPORTER,
+                        blockType: Scratch.BlockType.COMMAND,
                         text: 'Generate [PROMPT] from [MODEL] and import as costume with name [NAME]',
                         arguments: {
                             PROMPT: {
@@ -350,7 +350,7 @@
                         }, 
                         {
                             text: "GPT 4 Turbo",
-                            value": "gpt-4-turbo"
+                            value: "gpt-4-turbo"
                         },
                         {
                             text: "GPT 4 Turbo Updated",

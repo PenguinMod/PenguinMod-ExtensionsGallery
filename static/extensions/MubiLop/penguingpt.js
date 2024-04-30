@@ -300,21 +300,29 @@
                             value: "dalle-3"
                         }, 
                         {
-                            text: "Midjourney",
-                            value: "midjourney"
+                            text: "Dreamshaper 8",
+                            value: "dreamshaper-8"
                         },
                         {
                             text: "OpenJourney V4",
                             value: "openjourney-v4"
-                        }, 
+                        },
                         {
-                            text: "Dreamshaper 8",
-                            value: "dreamshaper-8"
-                        }, 
+                            text: "I can't believe it's not a photograph",
+                            value: "i-cant-believe-its-not-photography-seco"
+                        },
+                        {
+                            text: "Am i Real V4.1",
+                            value: "am-i-real-v4.1"
+                        },
+                        {
+                            text: "Pastel Mix Anime",
+                            value: "pastel-mix-anime"
+                        },
                         {
                             text: "Anything V5",
                             value: "anything-v5"
-                        }, 
+                        },
                         {
                             text: "Realistic Vision V5",
                             value: "realistic-vision-v5"
@@ -333,16 +341,20 @@
                             value: "gpt-4"
                         }, 
                         {
-                            text: "GPT 4 1066 Preview (Recent)",
+                            text: "GPT 4 1066 Preview",
                             value: "gpt-4-1106-preview"
                         }, 
                         {
-                            text: "GPT 4 0125 Preview (Turbo)",
+                            text: "GPT 4 0125 Preview",
                             value: "gpt-4-0125-preview"
                         }, 
                         {
-                            text: "Llama 2",
-                            value: "llama-2-7b"
+                            text: "GPT 4 Turbo",
+                            value": "gpt-4-turbo"
+                        },
+                        {
+                            text: "GPT 4 Turbo Updated",
+                            value: "gpt-4-turbo-2024-04-09"
                         }]
                     }
 

@@ -1,4 +1,4 @@
-// Video sharing (v2.0) by pooiod7
+// Video sharing (v2.2.3) by pooiod7
 
 (function(Scratch) {
   'use strict';
@@ -102,12 +102,34 @@
             text: 'Is sharing?',
           },
           {
+            opcode: 'canScreen',
+            blockType: Scratch.BlockType.BOOLEAN,
+            text: 'Can share screen?',
+          },
+          {
             opcode: 'getAspectRatio',
             blockType: Scratch.BlockType.REPORTER,
             text: 'Stream Size',
           },
         ],
       };
+    }
+
+    canScreen() {
+      try {
+        return navigator.mediaDevices && 'getDisplayMedia' in navigator.mediaDevices;
+      } catch (error) {
+        return false;
+      }
+    }
+    
+    stopSharing() {
+      if (mediaStream) {
+        mediaStream.getTracks().forEach((track) => {
+          track.stop();
+        });
+        videoElement.srcObject = null;
+      }
     }
 
     isSharing() {
@@ -132,6 +154,10 @@
         this.stopSharing();
       }
 
+      if (!this.canScreen()) {
+        return;
+      }
+
       if (shouldwarn()) {
         if (!this.warn("screen")) {
           return;
@@ -146,7 +172,7 @@
             videoElement.srcObject = stream;
             videoElement.play();
             stream.getVideoTracks()[0].onended = function () {
-              mediaStream.getTracks().forEach((track) => {
+              stream.getTracks().forEach((track) => {
                 track.stop();
               });
               videoElement.srcObject = null;

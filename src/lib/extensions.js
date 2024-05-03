@@ -384,4 +384,13 @@ export default [
         creator: "pooiod", 
         isGitHub: true, 
     },
+    {
+        name: "GPUBlocks",
+        description: "Share your screen or camera to your projects!", 
+        code: "PolyPenguin/GPUBlocks.js", 
+        banner: "PolyPenguin/GPUBlocks.png", 
+        documentation: "GPUBlocks",
+        creator: "PolyPenguin (using some code by zacoons)", 
+        isGitHub: true, 
+    },
 ];

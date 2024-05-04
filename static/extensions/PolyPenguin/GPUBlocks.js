@@ -15,7 +15,7 @@
     class GPUvars {
         getInfo() {
             return {
-                id: 'gpuvars',
+                id: 'polypenguingpublocksvariables',
                 name: 'GPU Variables',
                 blockIconURI: svgString,
                 menuIconURI: varsvg,
@@ -119,7 +119,7 @@
     class GPUcontrol {
         getInfo() {
             return {
-                id: 'gpucontrol',
+                id: 'polypenguingpublockscontrol',
                 name: 'GPU Control',
                 blockIconURI: svgString,
                 menuIconURI: controlsvg,
@@ -258,7 +258,7 @@
     class GPUoperators {
         getInfo() {
             return {
-                id: 'gpuoperators',
+                id: 'polypenguingpublocksoperators',
                 name: 'GPU Operators',
                 blockIconURI: svgString,
                 menuIconURI: operatorsvg,
@@ -565,7 +565,7 @@
         }
         getInfo() {
             return {
-                id: 'gpublocks',
+                id: 'polypenguingpublocks',
                 name: 'GPU Blocks',
                 menuIconURI: svgString,
                 blocks: [

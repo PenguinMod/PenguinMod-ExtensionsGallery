@@ -15,7 +15,7 @@
     class GPUvars {
         getInfo() {
             return {
-                id: 'polypenguingpublocksvariables',
+                id: 'gpuvars',
                 name: 'GPU Variables',
                 blockIconURI: svgString,
                 menuIconURI: varsvg,
@@ -88,9 +88,9 @@
             let str = ""
             for (let i =0; i<5; i++) {
                 if (Math.floor(Math.random()*2)>0) {
-                    str+=(letters[Math.floor(Math.random()*27)].toUpperCase())
+                    str+=(letters[Math.floor(Math.random()*26)].toUpperCase())
                 } else {
-                    str+=(letters[Math.floor(Math.random()*27)])
+                    str+=(letters[Math.floor(Math.random()*26)])
                 }
             }
             for (const [key, value] of Object.entries(vars)) {
@@ -119,7 +119,7 @@
     class GPUcontrol {
         getInfo() {
             return {
-                id: 'polypenguingpublockscontrol',
+                id: 'gpucontrol',
                 name: 'GPU Control',
                 blockIconURI: svgString,
                 menuIconURI: controlsvg,
@@ -258,7 +258,7 @@
     class GPUoperators {
         getInfo() {
             return {
-                id: 'polypenguingpublocksoperators',
+                id: 'gpuoperators',
                 name: 'GPU Operators',
                 blockIconURI: svgString,
                 menuIconURI: operatorsvg,
@@ -525,6 +525,8 @@
                 return "ceil(" + args.CONTENT + ")"
             } else if (args.OF == 'sin') {
                 return "sin(" + args.CONTENT + ")"
+            }  else if (args.OF == 'sqrt') {
+                return "sqrt(" + args.CONTENT + ")"
             } else if (args.OF == 'cos') {
                 return "cos(" + args.CONTENT + ")"
             } else if (args.OF == 'tan') {
@@ -563,7 +565,7 @@
         }
         getInfo() {
             return {
-                id: 'polypenguingpublocks',
+                id: 'gpublocks',
                 name: 'GPU Blocks',
                 menuIconURI: svgString,
                 blocks: [

@@ -5411,9 +5411,18 @@
           merged[key] = new Float32Array(merged[key]);
         });
 
-        this.listCache[refinedID] = { prev: listREF.value, dat: merged, keys: keys};
+        this.listCache[refinedID] = {
+          prev: listREF.value,
+          dat: merged,
+          keys: keys,
+        };
       }
-      return { triData: this.listCache[refinedID].dat, listLength: listOBJ.length, keys: this.listCache[refinedID].keys, successful: true };
+      return {
+        triData: this.listCache[refinedID].dat,
+        listLength: listOBJ.length,
+        keys: this.listCache[refinedID].keys,
+        successful: true,
+      };
     }
 
     //?List based rendering
@@ -5557,35 +5566,32 @@
     }
 
     renderShaderTrisFromList({ list, shader }, util) {
-      const { triData, listLength, successful, keys } = this._getTriDataFromList(
-        list,
-        util
-      );
+      const { triData, listLength, successful, keys } =
+        this._getTriDataFromList(list, util);
       if (!successful) return;
 
       // prettier-ignore
       if (!this.inDrawRegion) renderer.enterDrawRegion(this.penPlusDrawRegion);
 
-      if (!triData.a_position || !triData.a_color || !triData.a_texCoord)
-        return;
+      const buffer = this.programs[shader].buffer;
 
       if (!this.programs[shader]) return;
 
       //Make sure we have the triangle data updating accordingly
       this.trianglesDrawn += listLength;
-      bufferInfo.numElements = listLength * 3;
+      buffer.numElements = listLength * 3;
 
       // prettier-ignore
       keys.forEach(key => {
         //Check to see if the key exists here
-        if (!bufferInfo.attribs[key]) return;
+        if (!buffer.attribs[key]) return;
         //Then use the key in the shader
-        gl.bindBuffer(gl.ARRAY_BUFFER, bufferInfo.attribs[key].buffer);
+        gl.bindBuffer(gl.ARRAY_BUFFER, buffer.attribs[key].buffer);
         gl.bufferData(gl.ARRAY_BUFFER, triData[key], gl.DYNAMIC_DRAW);
       });
 
       //? Bind Positional Data
-      twgl.setBuffersAndAttributes(gl, this.programs[shader].info, bufferInfo);
+      twgl.setBuffersAndAttributes(gl, this.programs[shader].info, buffer);
 
       gl.blendFunc(gl.ONE, gl.ONE_MINUS_SRC_ALPHA);
 
@@ -5602,9 +5608,9 @@
         this.programs[shader].uniformDat
       );
 
-      twgl.drawBufferInfo(gl, bufferInfo);
+      twgl.drawBufferInfo(gl, buffer);
 
-      bufferInfo.numElements = 3;
+      buffer.numElements = 3;
     }
 
     editTriDef({ attribute, id, value, def }) {

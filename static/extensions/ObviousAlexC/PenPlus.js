@@ -40,6 +40,7 @@
       type: gl.UNSIGNED_BYTE,
       min: gl.LINEAR,
       wrap: gl.CLAMP_TO_EDGE,
+      premultiplyAlpha: true,
     },
     { format: gl.DEPTH_STENCIL },
   ];
@@ -227,7 +228,7 @@
                     void main()
                     {
                       gl_FragColor = texture2D(u_drawTex, v_texCoord);
-                      gl_FragColor.rgb *= gl_FragColor.a;
+                      gl_FragColor.rgb = clamp(gl_FragColor.rgb / (gl_FragColor.a + 1e-3), 0.0, 1.0);
                     }
                 `,
       },

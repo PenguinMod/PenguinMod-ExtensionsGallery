@@ -1,4 +1,4 @@
-// Scratchblocks v1.4.0 (by pooiod7) - Make Scratch blocks in scratch
+// Scratchblocks v1.8.2 (by pooiod7) - Make Scratch blocks in scratch
 
 (function(Scratch) {
   'use strict';
@@ -18,6 +18,7 @@
         blocks: [
           {
             opcode: 'makestackSVG',
+            hideFromPalette: true, /** Hidded because of bugs with the scratch render system */
             blockType: Scratch.BlockType.COMMAND,
             text: 'Make svg stack [blocks] of type [type]',
             arguments: {
@@ -53,7 +54,26 @@
                 defaultValue: 'sb3',
               },
             },
-          }
+          },
+          {
+            opcode: 'makestackSVGstring',
+            blockType: Scratch.BlockType.REPORTER,
+            text: 'Make svg stack [blocks] of type [type]',
+            arguments: {
+              blocks: {
+                type: Scratch.ArgumentType.STRING,
+                defaultValue: 'when green flag clicked \n say[Hello, World!]',
+              },
+              id: {
+                type: Scratch.ArgumentType.STRING,
+                defaultValue: 'Stack1',
+              },
+              type: {
+                type: Scratch.ArgumentType.STRING,
+                defaultValue: 'sb3',
+              },
+            },
+          },
         ]
       };
     }
@@ -74,6 +94,24 @@
       docView.render();
 
       importSVG({"TEXT": docView.exportSVG(), "NAME": "stack1"}, util);
+    }
+
+    makestackSVGstring(args) {
+      var style;
+      if (args.type == "sb2") {
+        style = "scratch2";
+      } else if (args.type == "sb3") {
+          style = "scratch3";
+      } else {
+          style = "scratch3-high-contrast";
+      }
+      var sblocks = args.blocks.replace(/\\n/g, "\n");
+
+      let doc = scratchblocks.module.parse(sblocks, { lang: "en", style: style });
+      let docView = scratchblocks.module.newView(doc, { style: style });
+      docView.render();
+
+      return docView.exportSVGString();
     }
 
     makestackPNG(args, util) {

@@ -1,4 +1,4 @@
-// Video sharing (v2.2.3) by pooiod7
+// Video sharing (v2.4.1) by pooiod7
 
 (function(Scratch) {
   'use strict';
@@ -7,6 +7,12 @@
     throw new Error('This extension must run unsandboxed');
   }
 
+  const runtime = Scratch.vm.runtime;
+  const renderer = runtime.renderer;
+  const Cast = Scratch.Cast;
+  
+  var createdSkins = [];
+
   const videoElement = document.createElement('video');
   videoElement.style.display = 'none';
   document.body.appendChild(videoElement);
@@ -14,11 +20,7 @@
 
   let haswarned;
   function shouldwarn(){
-    var should = typeof ScratchBlocks !== "undefined";
-    should = should || window.location.hostname == 'studio.penguinmod.com';
-    should = should || window.location.hostname == 'mirror.turbowarp.xyz';
-    should = should || window.location.hostname == 'turbowarp.org';
-    return should;
+    return Scratch.vm.runtime.isPackaged;
   }
 
   class VideoSharing {
@@ -97,6 +99,17 @@
             },
           },
           {
+            opcode: "showimage",
+            blockType: Scratch.BlockType.COMMAND,
+            text: "Show image [URL]",
+            arguments: {
+              URL: {
+                type: Scratch.ArgumentType.STRING,
+                defaultValue: "https://extensions.turbowarp.org/dango.png",
+              },
+            },
+          },
+          {
             opcode: 'isSharing',
             blockType: Scratch.BlockType.BOOLEAN,
             text: 'Is sharing?',
@@ -113,6 +126,87 @@
           },
         ],
       };
+    }
+
+    async _createURLSkin(URL) {
+      let imageData;
+      if (await Scratch.canFetch(URL)) {
+        imageData = await Scratch.fetch(URL);
+      } else {
+        return;
+      }
+
+      const contentType = imageData.headers.get("Content-Type");
+      if (
+        contentType === "image/png" ||
+        contentType === "image/jpeg" ||
+        contentType === "image/bmp" ||
+        contentType === "image/webp"
+      ) {
+        // eslint-disable-next-line no-restricted-syntax
+        const output = new Image();
+        output.src = URL;
+        output.crossOrigin = "anonymous";
+        await output.decode();
+        return renderer.createBitmapSkin(output);
+      }
+    }
+
+    _refreshTargetsFromID(skinId, reset, newId) {
+      const drawables = renderer._allDrawables;
+      const skins = renderer._allSkins;
+
+      for (const target of runtime.targets) {
+        const drawableID = target.drawableID;
+        const targetSkin = drawables[drawableID].skin.id;
+
+        if (targetSkin === skinId) {
+          target.updateAllDrawableProperties();
+          if (!reset)
+            drawables[drawableID].skin = newId ? skins[newId] : skins[skinId];
+        }
+      }
+    }
+
+    async showimage(args, util) {
+      const name = "vidshareskin";
+      const skinName = `lms-${Cast.toString(name)}`;
+      const url = Cast.toString(args.URL);
+
+      let oldSkinId = null;
+      if (createdSkins[skinName]) {
+        oldSkinId = createdSkins[skinName];
+      }
+
+      const skinId = await this._createURLSkin(url);
+      if (!skinId) return;
+      createdSkins[skinName] = skinId;
+
+      if (oldSkinId) {
+        this._refreshTargetsFromID(oldSkinId, false, skinId);
+        renderer.destroySkin(oldSkinId);
+      }
+
+      this.setSkin({NAME:name}, util)
+    }
+
+    setSkin(args, util) {
+      const skinName = `lms-${Cast.toString(args.NAME)}`;
+      if (!createdSkins[skinName]) return;
+
+      const targetName = Cast.toString(args.TARGET);
+      const target = util.target;
+      if (!target) return;
+      const drawableID = target.drawableID;
+
+      const skinId = createdSkins[skinName];
+      renderer._allDrawables[drawableID].skin = renderer._allSkins[skinId];
+    }
+
+    restoreSkin(args, util) {
+      const target = util.target;
+      if (!target) return;
+      target.updateAllDrawableProperties();
     }
 
     canScreen() {
@@ -138,7 +232,7 @@
 
     warn(thing) {
       if (haswarned != thing) {
-        if (window.confirm("Are you sure you want to share your " + thing + "?")) {
+        if (window.confirm("Do you want to share your " + thing + "?")) {
           haswarned = thing;
           return true;
         } else {

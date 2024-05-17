@@ -83,6 +83,13 @@ export default [
         isGitHub: true,
     },
     {
+        name: "Dictation",
+        description: "Convert your voice into text.",
+        code: "pooiod/Dictation.js",
+        banner: "pooiod/Dictation.svg",
+        creator: "pooiod7",
+    },
+    {
         name: "Variables Expanded",
         description: "New variable blocks and new display monitor types.\n(some contributions by DogeIsCut)",
         code: "SharkPool/Variables-Expanded.js",
@@ -381,7 +388,7 @@ export default [
         description: "Share your screen or camera to your projects!", 
         code: "pooiod/VideoSharing.js", 
         banner: "pooiod/VideoSharing.svg", 
-        creator: "pooiod", 
-        isGitHub: true, 
+        creator: "pooiod7", 
+        isGitHub: false, 
     },
 ];

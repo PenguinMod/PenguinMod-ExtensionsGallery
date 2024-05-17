@@ -1,4 +1,4 @@
-// Dictation v1 by pooiod7
+// Dictation v1.2 by pooiod7
 
 (function(Scratch) {
   'use strict';
@@ -17,8 +17,8 @@
       return {
         id: 'dictation',
         name: 'Dictation',
-        color1: '#aa00d9',
-        color2: '#9002b8',
+        color1: '#b969cf',
+        color2: '#9253a3',
         blocks: [
           {
             opcode: 'WaitAndrecognizeSpeech',
@@ -36,12 +36,21 @@
             text: 'Wait for recognized speach',
             disableMonitor: true,
           },
+          {
+            opcode: 'canuse',
+            blockType: Scratch.BlockType.BOOLEAN,
+            text: 'Can use dictation',
+          },
         ]
       };
     }
 
     WaitAndrecognizeSpeech() {
       return this.recognizeSpeech(false);
+    }
+
+    canuse() {
+      return window.webkitSpeechRecognition != undefined
     }
 
     getRecognizedSpeech() {

@@ -3,7 +3,7 @@
 // Description: Expansion of the "ask and wait" Blocks
 // By: SharkPool
 
-// Version V.4.0.2
+// Version V.4.1.0
 
 (function (Scratch) {
   "use strict";
@@ -32,6 +32,18 @@
     "Handwriting", "Marker", "Curly", "Pixel"
   ];  
 
+  const xmlEscape = function (unsafe) {
+    return Scratch.Cast.toString(unsafe).replace(/[<>&'"]/g, c => {
+      switch (c) {
+        case "<": return "&lt;";
+        case ">": return "&gt;";
+        case "&": return "&amp;";
+        case "'": return "&apos;";
+        case "\"": return "&quot;";
+      }
+    });
+  };
+
   class BetterInputSP {
     constructor() {
       this.activeOverlays = []; this.activeUI = []; this.askBoxPromises = [];
@@ -56,6 +68,7 @@
        // overlay + Image, input, dropdown button 
       this.mainUIinfo = {
         // Border Radius
+        dimensions: ["auto", "auto"],
         overlayRad: 5, 
         inputRad: 4,
         dropBtnRad: 5,
@@ -443,6 +456,16 @@
               N4: { type: Scratch.ArgumentType.NUMBER, defaultValue: 5 }
             },
           },
+          {
+            opcode: "setDimension",
+            blockType: Scratch.BlockType.COMMAND,
+            text: "set Textbox width [W] height [H]",
+            blockIconURI: colorIcon,
+            arguments: {
+              W: { type: Scratch.ArgumentType.NUMBER, defaultValue: 100 },
+              H: { type: Scratch.ArgumentType.NUMBER, defaultValue: 100 }
+            },
+          },
           { blockType: Scratch.BlockType.LABEL, text: "Effects" },
           {
             opcode: "resetEffect",
@@ -684,6 +707,8 @@
       overlay.style.fontFamily = this.fontFamily;
       overlay.style.textAlign = this.textAlign;
       overlay.style.borderRadius = `${this.mainUIinfo.overlayRad}px`;
+      overlay.style.width = this.mainUIinfo.dimensions[0];
+      overlay.style.height = this.mainUIinfo.dimensions[1];
       overlayImageContainer.style.borderRadius = `${this.mainUIinfo.overlayRad}px`;
       overlayImageContainer.style.background = "";
       this.setImageStyles(overlayImageContainer, this.overlayImage[0], this.imgScale[0]);
@@ -920,6 +945,14 @@
       this.activeOverlays.forEach(overlay => this.updateOverlay(overlay));
     }
 
+    setDimension(args) {
+      const w = `${Scratch.Cast.toNumber(args.W)}px`;
+      const h = `${Scratch.Cast.toNumber(args.H)}px`;
+      // Negative numbers result in auto-dimensions
+      this.mainUIinfo.dimensions = [w.includes("-") ? "auto" : w, h.includes("-") ? "auto" : h];
+      this.activeOverlays.forEach(overlay => this.updateOverlay(overlay));
+    }
+
     setDirection(args) {
       this.Rotation = Scratch.Cast.toNumber(args.ROTATE);
       this.activeOverlays.forEach((overlay) => { this.updateOverlay(overlay) });
@@ -1081,7 +1114,7 @@
           questionText.style.fontSize = this.fontSize;
           if (this.uiOrder[0] !== "question") questionText.style.marginTop = "10px";
           if (this.uiOrder[0] === "question") questionText.style.marginBottom = "10px";
-          questionText.textContent = question;
+          questionText.innerHTML = xmlEscape(question).replace(/\n/g, "<br>");
 
           const inputField = document.createElement("input");
           inputField.style.display = this.isInputEnabled ? "block" : "none";
@@ -1102,7 +1135,7 @@
               if (this.uiOrder[2] !== "buttons") button.style.marginBottom = "10px";
               button.style.marginRight = "5px";
               button.style.cursor = "pointer";
-              button.textContent = buttonInfo.name;
+              button.innerHTML = xmlEscape(buttonInfo.name).replace(/\n/g, "<br>");
               button.style.display = "inline-block";
               button.addEventListener("click", () => {
                 this.lastPressBtn = buttonInfo.name;
@@ -1118,7 +1151,7 @@
           dropdown.className = "dropdown";
           const dropdownButton = document.createElement("button");
           dropdownButton.className = "dropbtn";
-          dropdownButton.textContent = this.DropdownText;
+          dropdownButton.innerHTML = xmlEscape(this.DropdownText).replace(/\n/g, "<br>");
           const dropdownContent = document.createElement("div");
           dropdownContent.id = "myDropdown";
           dropdownContent.className = "dropdown-content";

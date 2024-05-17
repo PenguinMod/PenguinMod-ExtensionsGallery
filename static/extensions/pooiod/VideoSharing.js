@@ -1,4 +1,4 @@
-// Video sharing (v2.4.1) by pooiod7
+// Video sharing (v2.4.2) by pooiod7
 
 (function(Scratch) {
   'use strict';
@@ -20,7 +20,7 @@
 
   let haswarned;
   function shouldwarn(){
-    return Scratch.vm.runtime.isPackaged;
+    return !Scratch.vm.runtime.isPackaged;
   }
 
   class VideoSharing {

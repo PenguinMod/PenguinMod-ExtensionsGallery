@@ -10,7 +10,7 @@
   class dictation {
     constructor() {
       this.recognizedSpeech;
-      this.cando = Scratch.vm.runtime.isPackaged;
+      this.cando = !typeof scaffolding === "undefined";
     }
 
     getInfo() {

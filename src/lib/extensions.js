@@ -84,7 +84,7 @@ export default [
     },
     {
         name: "Dictation",
-        description: "Convert your voice into text.",
+        description: "Convert your voice into text. (only works with chrome)",
         code: "pooiod/Dictation.js",
         banner: "pooiod/Dictation.svg",
         creator: "pooiod7",

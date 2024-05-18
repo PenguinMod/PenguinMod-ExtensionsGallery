@@ -1,4 +1,4 @@
-// Dictation v1.2 by pooiod7
+// Dictation v1.3 by pooiod7
 
 (function(Scratch) {
   'use strict';
@@ -31,9 +31,9 @@
             text: 'Last recognized speech',
           },
           {
-            opcode: 'GetSpeach',
+            opcode: 'GetSpeech',
             blockType: Scratch.BlockType.REPORTER,
-            text: 'Wait for recognized speach',
+            text: 'Wait for recognized speech',
             disableMonitor: true,
           },
           {
@@ -57,7 +57,7 @@
       return this.recognizedSpeech;
     }
 
-    GetSpeach() {
+    GetSpeech() {
       return this.recognizeSpeech(true);
     }
 
@@ -79,7 +79,7 @@
           recognition.start();
         });
       } else {
-        this.cando = window.confirm("Do you want to share your speach as text?");
+        this.cando = window.confirm("Do you want to share your speech as text?");
       }
     }
 

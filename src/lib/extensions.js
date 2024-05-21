@@ -286,7 +286,15 @@ export default [
         description: "Login with discord to your projects. Identify users by ID and username in a secure and easy way!",
         code: "NotHouse/DiscordAuth.js",
         banner: "NotHouse/DiscordAuth-banner.png",
-        creator: "NotHouse",
+        creator: "enderhacker",
+        isGitHub: true,
+    },
+    {
+        name: "Online Captcha",
+        description: "Protect your project with simple, easy to use captcha implementation. Fully client-side, bypass-proof captcha solution!",
+        code: "NotHouse/OnlineCaptcha.js",
+        banner: "NotHouse/OnlineCaptcha-banner.png",
+        creator: "enderhacker",
         isGitHub: true,
     },
     {

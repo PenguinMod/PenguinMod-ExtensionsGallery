@@ -1,6 +1,6 @@
 // OnlineCaptcha, by NotHouse
 // Powered via "captcha.penguinmod.com", by NotHouse
-// 1.0, beta release
+// 1.0.1, beta release
 
 class onlinecaptcha {
   constructor() {
@@ -15,16 +15,16 @@ class onlinecaptcha {
         {
           opcode: 'openCaptchaPopup',
           blockType: Scratch.BlockType.REPORTER,
-          text: 'Open auth page'
+          text: 'Open captcha page and get the key'
         },
         {
           opcode: 'isCaptchaSolved',
           blockType: Scratch.BlockType.BOOLEAN,
-          text: 'Check captcha passed [KEY]',
+          text: 'Check captcha with key [KEY]',
           arguments: {
             KEY: {
               type: Scratch.ArgumentType.STRING,
-              defaultValue: 'Enter captcha key'
+              defaultValue: 'key'
             }
           }
         }

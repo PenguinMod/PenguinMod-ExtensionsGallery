@@ -114,6 +114,7 @@
         .bar {
             justify-content: center;
         }
+    
     }
 
     .logo {

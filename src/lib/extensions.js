@@ -392,4 +392,12 @@ export default [
         creator: "pooiod", 
         isGitHub: true, 
     },
+    {
+        name: "More Fields",
+        description: "Custom Field Types",
+        code: "Ashime/MoreFields.js",
+        banner: "0znzw/MoreFields.png",
+        creator: "Ashimee",
+        isGitHub: true,
+    },
 ];

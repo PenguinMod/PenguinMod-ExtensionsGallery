@@ -101,7 +101,6 @@
         color: white;
         display: flex;
         flex-direction: row;
-        justify-content: center;
         align-items: center;
         flex-wrap: nowrap;
         box-sizing: border-box;
@@ -110,6 +109,11 @@
         font-weight: bold;
         min-width: 1000px;
         z-index: 1000;
+    }
+    @media only screen and (min-width: 850px) {
+        .bar {
+            justify-content: center;
+        }
     }
 
     .logo {

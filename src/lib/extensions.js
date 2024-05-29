@@ -84,9 +84,16 @@ export default [
     },
     {
         name: "Dictation",
-        description: "Convert your voice into text. (mostly works with just chrome)",
+        description: "Convert your voice into text. (not supported in all browsers)",
         code: "pooiod/Dictation.js",
         banner: "pooiod/Dictation.svg",
+        creator: "pooiod7",
+    },
+    {
+        name: "WindowHasher",
+        description: "Interact with URL hash: the part of the URL after a hashtag",
+        code: "pooiod/WindowHasher.js",
+        banner: "pooiod/WindowHasher.png",
         creator: "pooiod7",
     },
     {

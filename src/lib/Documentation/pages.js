@@ -18,6 +18,9 @@ import PageMoreTypes from "./More-Types.md?raw";
 // Boxed Physics
 import BoxedPhysics from "./BoxedPhysics.md?raw";
 
+// HTML Canvas
+import HTMLcanvas from "./HTMLcanvas.md?raw";
+
 export default {
     // the key is the path to the docs page
     // so you can do "sharkpool-particle-tools" for example
@@ -35,4 +38,7 @@ export default {
 
     // Boxed Physics
     "BoxedPhysics": BoxedPhysics,
+
+    // HTML Canvas
+    "HTMLcanvas": HTMLcanvas,
 };

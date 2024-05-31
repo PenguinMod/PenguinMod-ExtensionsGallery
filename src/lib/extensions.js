@@ -113,6 +113,13 @@ export default [
         isGitHub: true,
     },
     {
+        name: "HTML Canvas",
+        description: "Use the power of html and css to create websites within your projects.",
+        code: "pooiod/htmlcanvas.js",
+        banner: "pooiod/htmlcanvas.svg",
+        creator: "pooiod7",
+    },
+    {
         name: "Display Text",
         description: "An extremely customizable text engine for your projects. Assign text elements to IDs and customize every little setting about them.",
         code: "SharkPool/Display-Text.js",

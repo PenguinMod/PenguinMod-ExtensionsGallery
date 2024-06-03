@@ -306,6 +306,14 @@ export default [
         isGitHub: false,
     },
     {
+        name: "Underspeech",
+        description: "Generate & show udnertale-style speech bubbles!",
+        code: "PuzzlingGGG/underspeech.js",
+        banner: "PuzzlingGGG/underspeech.png",
+        creator: "puzzlingGGG",
+        isGitHub: false,
+    },
+    {
         name: "TurboWeather",
         description: "Show weather and location data for any place in our world. Data that could be used for doxxing is deleted from results.",
         code: "RubyDevs/turboweather.js",

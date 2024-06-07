@@ -130,7 +130,7 @@
   };
 
   customFieldTypes[Scratch.ArgumentType.TEXTAREA] = {
-    output: 'String',
+    output: Scratch.ArgumentType.STRING,
     color1: '#9566d3',
     outputShape: 2,
     implementation: {
@@ -138,7 +138,7 @@
     }
   };
   customFieldTypes[Scratch.ArgumentType.INLINETEXTAREA] = {
-    output: 'String',
+    output: Scratch.ArgumentType.STRING,
     color1: '#9566d3',
     outputShape: 2,
     implementation: {
@@ -146,7 +146,7 @@
     }
   };
   customFieldTypes[Scratch.ArgumentType.SNAPBOOLEAN] = {
-    output: 'Boolean',
+    output: Scratch.ArgumentType.BOOLEAN,
     color1: '#9566d3',
     outputShape: 1,
     implementation: {
@@ -154,7 +154,7 @@
     }
   };
   customFieldTypes[Scratch.ArgumentType.INLINESLIDER] = {
-    output: 'Number',
+    output: Scratch.ArgumentType.NUMBER,
     color1: '#9566d3',
     outputShape: 3,
     implementation: {
@@ -162,7 +162,7 @@
     }
   };
   customFieldTypes[Scratch.ArgumentType.HIDDENSTRING] = {
-    output: 'String',
+    output: Scratch.ArgumentType.STRING,
     color1: '#9566d3',
     outputShape: 2,
     implementation: {
@@ -170,7 +170,7 @@
     }
   };
   customFieldTypes[Scratch.ArgumentType.INLINEDATE] = {
-    output: 'Number',
+    output: Scratch.ArgumentType.NUMBER,
     color1: '#9566d3',
     outputShape: 3,
     implementation: {

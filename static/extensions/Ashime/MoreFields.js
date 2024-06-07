@@ -1,5 +1,5 @@
 /*!
- * Created by 0znzw | v1.2
+ * Created by 0znzw | v1.3
  * Licensed Under MIT & LGPLv3 License.
  * DO NOT REMOVE THIS COMMENT
  */
@@ -12,6 +12,7 @@
 
   const vm = Scratch.vm;
   const runtime = vm.runtime;
+  const hasOwn = (object, property) => Object.prototype.hasOwnProperty.call(object, property);
 
   // Some checks
   const DOOMcheck = (vm.runtime.ioDevices.userData._username === 'DOOM1997');
@@ -92,6 +93,7 @@
       if (fi.color1) res.json.colour = fi.color1;
       if (fi.color2) res.json.colourSecondary = fi.color2;
       if (fi.color3) res.json.colourTertiary = fi.color3;
+      if (hasOwn(fi, 'output')) res.json.output = fi.output;
       fi = null;
     }
     return res;
@@ -144,7 +146,7 @@
     }
   };
   customFieldTypes[Scratch.ArgumentType.SNAPBOOLEAN] = {
-    output: 'Number',
+    output: 'Boolean',
     color1: '#9566d3',
     outputShape: 1,
     implementation: {
@@ -168,7 +170,7 @@
     }
   };
   customFieldTypes[Scratch.ArgumentType.INLINEDATE] = {
-    output: 'String',
+    output: 'Number',
     color1: '#9566d3',
     outputShape: 3,
     implementation: {
@@ -176,7 +178,7 @@
     }
   };
   customFieldTypes[Scratch.ArgumentType.FILE] = {
-    output: 'String',
+    output: null,
     color1: '#9566d3',
     outputShape: 3,
     implementation: {
@@ -184,7 +186,7 @@
     }
   };
   customFieldTypes['InlineDoom'] = {
-    output: 'String',
+    output: [],
     color1: '#9566d3',
     outputShape: 3,
     implementation: {

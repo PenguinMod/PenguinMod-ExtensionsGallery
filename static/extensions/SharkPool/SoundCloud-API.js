@@ -3,7 +3,7 @@
 // Description: Fetch Songs and Statistics from Soundcloud (Unofficial)
 // By: SharkPool
 
-// Version V.1.0.1
+// Version V.1.0.21
 
 /* !IMPORTANT!
   In this Extension, I use regulare fetch()
@@ -89,6 +89,13 @@
             opcode: "getClientID",
             blockType: Scratch.BlockType.REPORTER,
             text: "client ID"
+          },
+          { blockType: Scratch.BlockType.LABEL, text: "Must be True for Extension to Work" },
+          {
+            opcode: "testClient",
+            blockType: Scratch.BlockType.BOOLEAN,
+            disableMonitor: true,
+            text: "test client ID"
           },
           "---",
           {
@@ -227,6 +234,18 @@
 
     getClientID() { return clientID }
 
+    async testClient() {
+      try {
+        const url = `https://api-auth.soundcloud.com/oauth/session?client_id=${clientID}`;
+        if (!await Scratch.canFetch(url)) return false;
+        // eslint-disable-next-line
+        const response = await fetch(`${proxy}${url}`);
+        if (!response.ok) return false;
+        const responseData = await response.json();
+        return Object.keys(responseData).length > 0;
+      } catch { return false }
+    }
+
     async extractID(args) {
       try {
         let response;
@@ -353,8 +372,6 @@
     }
   }
 
-  // Block Gradient Maker
-  // If merged, you can remove it or keep it
   function addLinearGradientToBody() {
     var grad1 = document.createElement("div");
     grad1.innerHTML = `<svg><defs>
@@ -363,19 +380,24 @@
       </defs></svg>`;
     document.body.appendChild(grad1);
   }
-  if (typeof scaffolding === "undefined") addLinearGradientToBody();
-
-  function documentChangedCallback(mutationsList, observer) {
-    var pathElements = document.querySelectorAll("g[data-category=\"SoundCloud API\"] path");
-    pathElements.forEach(function(pathElement) {
-      var currentFill = pathElement.getAttribute("fill");
-      pathElement.setAttribute("fill", currentFill.replace(/#ff2200/g, "url(#SPsoundCloud-GRAD1)"));
-    });
-  }
-  if (typeof scaffolding === "undefined") {
-    var observer = new MutationObserver(documentChangedCallback);
-    observer.observe(document.documentElement, { childList: true, subtree: true });
-  }
+  if (Scratch.gui) Scratch.gui.getBlockly().then((ScratchBlocks) => {
+    addLinearGradientToBody();
+    if (!ScratchBlocks?.SPgradients?.patched) { // New Gradient Patch by Ashimee <3
+      ScratchBlocks.SPgradients = {gradientUrls: {}, patched: false};
+      const BSP = ScratchBlocks.BlockSvg.prototype, BSPR = BSP.render;
+      BSP.render = function(...args) {
+        const res = BSPR.apply(this, args);
+        let category;
+        if (this?.svgPath_ && (category = this.type.slice(0, this.type.indexOf("_"))) && ScratchBlocks.SPgradients.gradientUrls[category]) {
+          const urls = ScratchBlocks.SPgradients.gradientUrls[category];
+          if (urls) this.svgPath_.setAttribute("fill", urls[0]);
+        }
+        return res;
+      }
+      ScratchBlocks.SPgradients.patched = true;
+    }
+    ScratchBlocks.SPgradients.gradientUrls["SPsoundCloud"] = ["url(#SPsoundCloud-GRAD1)"];
+  });
 
   Scratch.extensions.register(new SPsoundCloud());
 })(Scratch);

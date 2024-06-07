@@ -1,6 +1,7 @@
 <script>
     import { createEventDispatcher } from "svelte";
     import { searchRecommendations } from '$lib/stores.js';
+    import {onMount} from 'svelte';
 
     // Components
     import BarPage from "./Page.svelte";
@@ -30,6 +31,11 @@
         if (!searchInput) return;
         searchInput.focus();
     });
+
+    onMount(() => {
+        searchInput.placeholder = (window.innerWidth<=850 ? "Extension search" : "Search for an extension...")
+    });
+
 </script>
 
 <div class="bar">
@@ -101,7 +107,6 @@
         color: white;
         display: flex;
         flex-direction: row;
-        justify-content: center;
         align-items: center;
         flex-wrap: nowrap;
         box-sizing: border-box;
@@ -110,6 +115,11 @@
         font-weight: bold;
         min-width: 1000px;
         z-index: 1000;
+    }
+    @media only screen and (min-width: 850px) {
+        .bar {
+            justify-content: center;
+        }
     }
 
     .logo {
@@ -141,6 +151,11 @@
         display: flex;
         flex-direction: row;
         align-items: center;
+    }
+    @media only screen and (max-width: 850px) {
+        .search{
+            width:16%;
+        }
     }
     .search-button {
         cursor: pointer;

@@ -4,12 +4,12 @@
     zh: {
       "Big Number": "高精度运算",
 
-      '🗂️Setting': '🗂️设置',
+      '🗂️Settings': '🗂️设置',
       "📏Arithmetic": "📏运算",
       "🔎Logic": "🔎逻辑",
       "🧪Math": "🧪数学",
 
-      "set max precision is [NUM]": '设置最大精度为 [NUM]',
+      "set max precision to [NUM]": '设置最大精度为 [NUM]',
 
       "round [NUM] to [NUM2] decimal places": '四舍五入 [NUM] 到第 [NUM2] 位小数',
       "[OPER] of [NUM]": '[OPER] ( [NUM] )',
@@ -216,12 +216,12 @@
         blocks: [
           {
             blockType: "label",
-            text: this.formatMessage("🗂️Setting"),
+            text: this.formatMessage("🗂️Settings"),
           },
           {
             opcode: "setPrecision",
             blockType: Scratch.BlockType.COMMAND,
-            text: this.formatMessage("set max precision is [NUM]"),
+            text: this.formatMessage("set max precision to [NUM]"),
             arguments: {
               NUM: {
                 type: Scratch.ArgumentType.STRING,

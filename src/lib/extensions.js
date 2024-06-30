@@ -400,4 +400,12 @@ export default [
         creator: "Ashimee",
         isGitHub: true,
     },
+        {
+        name: "Big Number",
+        description: "High precision operations",
+        code: "qxsck/big-number.js",
+        banner: "qxsck/placeholder-big-number.png",
+        creator: "qxsck",
+        isGitHub: true,
+    },
 ];

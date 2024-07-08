@@ -1,4 +1,4 @@
-/* 
+/*
     note to contributors & developers that can read JSON:
         the extra commas are added at the end of each thing
         to help copy & pasting work better
@@ -378,19 +378,19 @@ export default [
     },
     {
         name: "Text To Speech: Redone",
-        description: "Generate better TTS! Made using TTS Tool API!", 
-        code: "PuzzlingGGG/ttsr.js", 
-        banner: "PuzzlingGGG/TTSR.png", 
-        creator: "puzzlingGGG", 
-        isGitHub: false, 
+        description: "Generate better TTS! Made using TTS Tool API!",
+        code: "PuzzlingGGG/ttsr.js",
+        banner: "PuzzlingGGG/TTSR.png",
+        creator: "puzzlingGGG",
+        isGitHub: false,
     },
     {
         name: "Video Sharing",
-        description: "Share your screen or camera to your projects!", 
-        code: "pooiod/VideoSharing.js", 
-        banner: "pooiod/VideoSharing.svg", 
-        creator: "pooiod", 
-        isGitHub: true, 
+        description: "Share your screen or camera to your projects!",
+        code: "pooiod/VideoSharing.js",
+        banner: "pooiod/VideoSharing.svg",
+        creator: "pooiod",
+        isGitHub: true,
     },
     {
         name: "More Fields",
@@ -402,7 +402,7 @@ export default [
     },
         {
         name: "Big Number",
-        description: "High precision operations",
+        description: "High precision operations. (Support decimals)",
         code: "qxsck/big-number.js",
         banner: "qxsck/placeholder-big-number.png",
         creator: "qxsck",

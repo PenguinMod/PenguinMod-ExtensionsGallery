@@ -401,10 +401,10 @@ export default [
         isGitHub: true,
     },
         {
-        name: "Big Number",
+        name: "Big Decimal",
         description: "High precision operations. (Support decimals)",
-        code: "qxsck/big-number.js",
-        banner: "qxsck/placeholder-big-number.png",
+        code: "qxsck/big-decimal.js",
+        banner: "qxsck/big-decimal.svg",
         creator: "qxsck",
         isGitHub: true,
     },

@@ -2,7 +2,7 @@
   "use strict";
   Scratch.translate.setup({
     zh: {
-      "Big Number": "高精度运算",
+      "Big Decimal": "高精度运算",
 
       '🗂️Settings': '🗂️设置',
       "📏Arithmetic": "📏运算",
@@ -211,7 +211,7 @@
     getInfo() {
       return {
         id: "qxsckbignumber",
-        name: this.formatMessage("Big Number"),
+        name: this.formatMessage("Big Decimal"),
         color1: "#ff8c3b",
         blocks: [
           {

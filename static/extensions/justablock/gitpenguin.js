@@ -1,3 +1,4 @@
+(function(Scratch) {
 class GitPenguin {
     getInfo() {
         return {
@@ -121,13 +122,13 @@ class GitPenguin {
 
     async getFileContents({ FILE, REPO, NAME }) {
         const apiUrl = `https://api.github.com/repos/${NAME}/${REPO}/contents/${FILE}`;
-        const response = await fetch(apiUrl);
+        const response = await Scratch.fetch(apiUrl);
         const data = await response.json();
         if (response.ok) {
             const content = atob(data.content); // Decode base64 content
             return content;
         } else {
-            throw new Error(`Failed to fetch file: ${data.message}`);
+            return '';
         }
     }
 
@@ -139,7 +140,7 @@ class GitPenguin {
             content: encodedContent
         });
 
-        const response = await fetch(apiUrl, {
+        const response = await Scratch.fetch(apiUrl, {
             method: 'PUT',
             headers: {
                 'Content-Type': 'application/json',
@@ -150,14 +151,14 @@ class GitPenguin {
 
         if (!response.ok) {
             const errorData = await response.json();
-            throw new Error(`Failed to create file: ${errorData.message}`);
+            return '';
         }
     }
 
     async editFileContent({ FILE, CONTENT, REPO, NAME, TOKEN }) {
         const apiUrl = `https://api.github.com/repos/${NAME}/${REPO}/contents/${FILE}`;
         const encodedContent = btoa(CONTENT); // Encode content to base64
-        const response = await fetch(apiUrl, {
+        const response = await Scratch.fetch(apiUrl, {
             method: 'PUT',
             headers: {
                 'Content-Type': 'application/json',
@@ -172,13 +173,13 @@ class GitPenguin {
 
         if (!response.ok) {
             const errorData = await response.json();
-            throw new Error(`Failed to edit file: ${errorData.message}`);
+            return '';
         }
     }
 
     async deleteFile({ FILE, REPO, NAME, TOKEN }) {
         const apiUrl = `https://api.github.com/repos/${NAME}/${REPO}/contents/${FILE}`;
-        const response = await fetch(apiUrl, {
+        const response = await Scratch.fetch(apiUrl, {
             method: 'DELETE',
             headers: {
                 'Content-Type': 'application/json',
@@ -192,9 +193,10 @@ class GitPenguin {
 
         if (!response.ok) {
             const errorData = await response.json();
-            throw new Error(`Failed to delete file: ${errorData.message}`);
+            return '';
         }
     }
 }
 
 Scratch.extensions.register(new GitPenguin());
+})(Scratch);

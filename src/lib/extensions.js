@@ -408,4 +408,12 @@ export default [
         creator: "qxsck",
         isGitHub: true,
     },
+    {
+    name: "Git Penguin",
+    description: "Make requests and control the files for your GitHub repository.",
+    code: "justablock/gitpenguin.js",
+    banner: "justablock/gitpenguin.png",
+    creator: "justablock",
+    isGitHub: false, 
+},
 ];

@@ -3,7 +3,7 @@
 // Description: Expansion of the "ask and wait" Blocks
 // By: SharkPool
 
-// Version V.4.0.0
+// Version V.4.1.1
 
 (function (Scratch) {
   "use strict";
@@ -32,6 +32,18 @@
     "Handwriting", "Marker", "Curly", "Pixel"
   ];  
 
+  const xmlEscape = function (unsafe) {
+    return Scratch.Cast.toString(unsafe).replace(/[<>&'"]/g, c => {
+      switch (c) {
+        case "<": return "&lt;";
+        case ">": return "&gt;";
+        case "&": return "&amp;";
+        case "'": return "&apos;";
+        case "\"": return "&quot;";
+      }
+    });
+  };
+
   class BetterInputSP {
     constructor() {
       this.activeOverlays = []; this.activeUI = []; this.askBoxPromises = [];
@@ -54,12 +66,29 @@
       this.textAlign = "left";
       this.fontFamily = "Sans Serif";
        // overlay + Image, input, dropdown button 
-      this.mainUIinfo = [
-        5, 4, 5,
-        "1px none #000000", "1px solid #000000", "1px none #000000",
-        "15px", "5px", "5px 10px",
-        "none", "none", "none", ["", 0], ["", 0], ["", 0]
-      ];
+      this.mainUIinfo = {
+        // Border Radius
+        dimensions: ["auto", "auto"],
+        overlayRad: 5, 
+        inputRad: 4,
+        dropBtnRad: 5,
+        // Border Information
+        overlayBord: "1px none #000000",
+        inputBord: "1px solid #000000",
+        dropBtnBord: "1px none #000000",
+        // Text Padding
+        overlayPad: "15px",
+        inputPad: "5px",
+        dropBtnPad: "5px 10px",
+        // Text Shadow
+        overlayTxtShad: "none",
+        inputTxtShad: "none",
+        dropBtnTxtShad: "none",
+        // Outline: Color + Thickness
+        overlayOutline: ["", 0],
+        inputOutline: ["", 0],
+        dropBtnOutline: ["", 0]
+      };
       this.lastPressBtn = "";
       this.buttonJSON = {
         "Submit": {
@@ -132,6 +161,10 @@
           {
             opcode: "removeAskBoxes", blockType: Scratch.BlockType.COMMAND,
             text: "remove all ask boxes"
+          },
+          {
+            opcode: "resetInput", blockType: Scratch.BlockType.COMMAND,
+            text: "reset user input"
           },
           { blockType: Scratch.BlockType.LABEL, text: "Formatting" },
           {
@@ -427,6 +460,16 @@
               N4: { type: Scratch.ArgumentType.NUMBER, defaultValue: 5 }
             },
           },
+          {
+            opcode: "setDimension",
+            blockType: Scratch.BlockType.COMMAND,
+            text: "set Textbox width [W] height [H]",
+            blockIconURI: colorIcon,
+            arguments: {
+              W: { type: Scratch.ArgumentType.NUMBER, defaultValue: 100 },
+              H: { type: Scratch.ArgumentType.NUMBER, defaultValue: 100 }
+            },
+          },
           { blockType: Scratch.BlockType.LABEL, text: "Effects" },
           {
             opcode: "resetEffect",
@@ -663,12 +706,14 @@
         contrast(${this.Contrast}%)
       `;
       overlay.style.opacity = newOpacity;
-      overlay.style.border = this.mainUIinfo[3];
-      overlay.style.padding = this.mainUIinfo[6];
+      overlay.style.border = this.mainUIinfo.overlayBord;
+      overlay.style.padding = this.mainUIinfo.overlayPad;
       overlay.style.fontFamily = this.fontFamily;
       overlay.style.textAlign = this.textAlign;
-      overlay.style.borderRadius = `${this.mainUIinfo[0]}px`;
-      overlayImageContainer.style.borderRadius = `${this.mainUIinfo[0]}px`;
+      overlay.style.borderRadius = `${this.mainUIinfo.overlayRad}px`;
+      overlay.style.width = this.mainUIinfo.dimensions[0];
+      overlay.style.height = this.mainUIinfo.dimensions[1];
+      overlayImageContainer.style.borderRadius = `${this.mainUIinfo.overlayRad}px`;
       overlayImageContainer.style.background = "";
       this.setImageStyles(overlayImageContainer, this.overlayImage[0], this.imgScale[0]);
       this.updateButtonImages(overlay);
@@ -677,8 +722,8 @@
       let text = overlay.querySelector(".question");
       if (text) {
         text.style.color = this.questionColor;
-        text.style.textShadow = this.mainUIinfo[9];
-        this.tryOutline(text, this.mainUIinfo[12][0], this.mainUIinfo[12][1]);
+        text.style.textShadow = this.mainUIinfo.overlayTxtShad;
+        this.tryOutline(text, this.mainUIinfo.overlayOutline[0], this.mainUIinfo.overlayOutline[1]);
       }
       const inputField = overlay.querySelector("input");
       if (inputField) {
@@ -687,11 +732,11 @@
         inputField.style.fontFamily = this.fontFamily;
         inputField.style[this.inputFieldColor.includes("gradient") ? "backgroundImage" : "backgroundColor"] = this.inputFieldColor;
         inputField.style.color = this.inputColor;
-        inputField.style.textShadow = this.mainUIinfo[10];
-        this.tryOutline(inputField, this.mainUIinfo[13][0], this.mainUIinfo[13][1]);
-        inputField.style.border = this.mainUIinfo[4];
-        inputField.style.borderRadius = `${this.mainUIinfo[1]}px`;
-        inputField.style.padding = this.mainUIinfo[7];
+        inputField.style.textShadow = this.mainUIinfo.inputTxtShad;
+        this.tryOutline(inputField, this.mainUIinfo.inputOutline[0], this.mainUIinfo.inputOutline[1]);
+        inputField.style.border = this.mainUIinfo.inputBord;
+        inputField.style.borderRadius = `${this.mainUIinfo.inputRad}px`;
+        inputField.style.padding = this.mainUIinfo.inputPad;
         this.setImageStyles(inputField, this.overlayImage[1], this.imgScale[1]);
       }
 
@@ -700,11 +745,11 @@
         dropBtn.style.backgroundImage = "";
         dropBtn.style.fontFamily = this.fontFamily;
         dropBtn.style.color = this.dropdownButtonColor[1];
-        dropBtn.style.borderRadius = `${this.mainUIinfo[2]}px`;
-        dropBtn.style.border = this.mainUIinfo[5];
-        dropBtn.style.padding = this.mainUIinfo[8];
-        dropBtn.style.textShadow = this.mainUIinfo[11];
-        this.tryOutline(dropBtn, this.mainUIinfo[14][0], this.mainUIinfo[14][1]);
+        dropBtn.style.borderRadius = `${this.mainUIinfo.dropBtnRad}px`;
+        dropBtn.style.border = this.mainUIinfo.dropBtnBord;
+        dropBtn.style.padding = this.mainUIinfo.dropBtnPad;
+        dropBtn.style.textShadow = this.mainUIinfo.dropBtnTxtShad;
+        this.tryOutline(dropBtn, this.mainUIinfo.dropBtnOutline[0], this.mainUIinfo.dropBtnOutline[1]);
         dropBtn.style[this.dropdownButtonColor[0].includes("gradient") ? "backgroundImage" : "backgroundColor"] = this.dropdownButtonColor[0];
         this.setImageStyles(dropBtn, this.overlayImage[2], this.imgScale[2]);
       }
@@ -827,8 +872,8 @@
     }
 
     callStyling(element, value, type, elements) {
-      const elementIndex = elements[element];
-      if (elementIndex !== undefined) this.mainUIinfo[elementIndex] = value;
+      const elementID = elements[element];
+      if (elementID !== undefined) this.mainUIinfo[elementID] = value;
       else if (this.buttonJSON[element]) this.buttonJSON[element][type] = value;
       this.activeOverlays.forEach(overlay => this.updateOverlay(overlay));
     }
@@ -838,14 +883,14 @@
       const string = `${width}px ${args.TYPE} ${args.COLOR}`;
       this.callStyling(
         args.ELEMENT, string, "border",
-        { Textbox: 3, "Input Box": 4, "Dropdown Button": 5 }
+        { Textbox: "overlayBord", "Input Box": "inputBord", "Dropdown Button": "dropBtnBord" }
       );
     }
 
     setBorderRadius(args) {
       this.callStyling(
         args.ELEMENT, Math.max(args.VALUE, 0), "borderRadius",
-        { Textbox: 0, "Input Box": 1, "Dropdown Button": 2 }
+        { Textbox: "overlayRad", "Input Box": "inputRad", "Dropdown Button": "dropBtnRad" }
       );
     }
 
@@ -857,7 +902,7 @@
       let pad = `${casted[0]}px ${casted[1]}px ${casted[2]}px ${casted[3]}px`;
       this.callStyling(
         args.ELEMENT, pad, "padding",
-        { Textbox: 6, "Input Box": 7, "Dropdown Button": 8 }
+        { Textbox: "overlayPad", "Input Box": "inputPad", "Dropdown Button": "dropBtnPad" }
       );
     }
 
@@ -869,7 +914,7 @@
       let shadow = args.z === 0 ? "none" : `${casted[0]}px ${casted[1] * -1}px ${casted[2]}px ${args.COLOR}`;
       this.callStyling(
         args.ELEMENT.slice(0, -5), shadow, "dropShadow",
-        { "Question": 9, "Input": 10, "Dropdown": 11 }
+        { "Question": "overlayTxtShad", "Input": "inputTxtShad", "Dropdown": "dropBtnTxtShad" }
       );
     }
 
@@ -877,7 +922,7 @@
       const thick = Scratch.Cast.toNumber(args.THICK);
       this.callStyling(
         args.ELEMENT.slice(0, -5), [args.COLOR, thick], "outline",
-        { "Question": 12, "Input": 13, "Dropdown": 14 }
+        { "Question": "overlayOutline", "Input": "inputOutline", "Dropdown": "dropBtnOutline" }
       );
     }
 
@@ -901,6 +946,14 @@
       const elementIndex = elementMap[args.ELEMENT];
       if (elementIndex !== undefined) this.imgScale[elementIndex] = args.SCALE;
       else if (this.buttonJSON[args.ELEMENT]) this.buttonJSON[args.ELEMENT].imgScale = args.SCALE;
+      this.activeOverlays.forEach(overlay => this.updateOverlay(overlay));
+    }
+
+    setDimension(args) {
+      const w = `${Scratch.Cast.toNumber(args.W)}px`;
+      const h = `${Scratch.Cast.toNumber(args.H)}px`;
+      // Negative numbers result in auto-dimensions
+      this.mainUIinfo.dimensions = [w.includes("-") ? "auto" : w, h.includes("-") ? "auto" : h];
       this.activeOverlays.forEach(overlay => this.updateOverlay(overlay));
     }
 
@@ -995,10 +1048,13 @@
       this.activeOverlays = this.activeOverlays.filter((overlay) => !overlaysToRemove.includes(overlay));
       this.activeUI = [];
       this.askBoxInfo[0] = 0;
+      this.isDropdownOpen = false;
       // Remove "Bugged" Boxes, bugged boxes is a intentional feature, ask for more info
       const bugged = document.querySelectorAll(`[class^="SP-ask-box"]`);
       bugged.forEach((box) => { box.parentNode.removeChild(box) });
     }
+
+    resetInput() { this.userInput = this.askBoxInfo[1] > 1 ? [] : "" }
 
     askAndWaitForInput(args) {
       if (this.askBoxInfo[0] < this.askBoxInfo[1] ) {
@@ -1009,6 +1065,8 @@
     askAndWait(args) {
       if (this.askBoxInfo[0] < this.askBoxInfo[1]) {
         const question = args.question;
+        let hasDecreased = false; // for the box counter
+        const index = this.askBoxInfo[0];
         this.isWaitingForInput = true;
         this.lastPressBtn = "";
         this.askBoxInfo[0]++;
@@ -1043,8 +1101,14 @@
             const overlayInput = this.forceInput === "Enter Key" ? "Enter" : this.forceInput === "Shift + Enter Key" ? "ShiftEnter" : this.forceInput;
             const handleKeydown = (event) => {
               if ((overlayInput === "ShiftEnter" && event.shiftKey && event.key === "Enter") || event.key === overlayInput) {
-                this.userInput = inputField.value;
-                this.closeOverlay(overlay);
+                if (this.askBoxInfo[1] == 1) this.userInput = inputField.value;
+                else {
+                  const newInput = [...this.userInput];
+                  newInput[index] = inputField.value;
+                  this.userInput = newInput;
+                }
+                this.closeOverlay(overlay, hasDecreased);
+                hasDecreased = true;
                 resolve();
               }
             };
@@ -1065,14 +1129,21 @@
           questionText.style.fontSize = this.fontSize;
           if (this.uiOrder[0] !== "question") questionText.style.marginTop = "10px";
           if (this.uiOrder[0] === "question") questionText.style.marginBottom = "10px";
-          questionText.textContent = question;
+          questionText.innerHTML = xmlEscape(question).replace(/\n/g, "<br>");
 
           const inputField = document.createElement("input");
           inputField.style.display = this.isInputEnabled ? "block" : "none";
           inputField.style.fontSize = this.fontSize;
           inputField.style.margin = "0 auto";
           inputField.type = this.isInputEnabled.toLowerCase();
-          inputField.addEventListener("input", () => { this.userInput = inputField.value });
+          inputField.addEventListener("input", () => {
+            if (this.askBoxInfo[1] == 1) this.userInput = inputField.value;
+            else {
+              const newInput = [...this.userInput];
+              newInput[index] = inputField.value;
+              this.userInput = newInput;
+            }
+          });
           const buttonContainer = document.createElement("div");
           buttonContainer.classList.add("button-container");
           for (const buttonName in this.buttonJSON) {
@@ -1086,12 +1157,18 @@
               if (this.uiOrder[2] !== "buttons") button.style.marginBottom = "10px";
               button.style.marginRight = "5px";
               button.style.cursor = "pointer";
-              button.textContent = buttonInfo.name;
+              button.innerHTML = xmlEscape(buttonInfo.name).replace(/\n/g, "<br>");
               button.style.display = "inline-block";
               button.addEventListener("click", () => {
                 this.lastPressBtn = buttonInfo.name;
-                this.userInput = this.isInputEnabled === "Disabled" ? buttonInfo.name : inputField.value;
-                this.closeOverlay(overlay);
+                if (this.askBoxInfo[1] == 1) this.userInput = this.isInputEnabled === "Disabled" ? buttonInfo.name : inputField.value;
+                else {
+                  const newInput = [...this.userInput];
+                  newInput[index] = this.isInputEnabled === "Disabled" ? buttonInfo.name : inputField.value;
+                  this.userInput = newInput;
+                }
+                this.closeOverlay(overlay, hasDecreased);
+                hasDecreased = true;
                 resolve();
               });
               buttonContainer.appendChild(button);
@@ -1102,7 +1179,7 @@
           dropdown.className = "dropdown";
           const dropdownButton = document.createElement("button");
           dropdownButton.className = "dropbtn";
-          dropdownButton.textContent = this.DropdownText;
+          dropdownButton.innerHTML = xmlEscape(this.DropdownText).replace(/\n/g, "<br>");
           const dropdownContent = document.createElement("div");
           dropdownContent.id = "myDropdown";
           dropdownContent.className = "dropdown-content";
@@ -1125,7 +1202,12 @@
                 } else { selectedOptions.push(label) }
                 inputField.value = selectedOptions.length > 0 ? JSON.stringify(selectedOptions) : "";
               } else { inputField.value = label }
-              this.userInput = inputField.value;
+              if (this.askBoxInfo[1] == 1) this.userInput = inputField.value;
+              else {
+                const newInput = [...this.userInput];
+                newInput[index] = inputField.value;
+                this.userInput = newInput;
+              }
             });
             optionLabel.appendChild(optionRadio);
             optionLabel.appendChild(document.createTextNode(" " + label));
@@ -1159,7 +1241,13 @@
           valueDisplay.textContent = slider.value;
           slider.addEventListener("input", () => {
             valueDisplay.textContent = slider.value;
-            this.userInput = valueDisplay.textContent;
+            inputField.value = slider.value;
+            if (this.askBoxInfo[1] == 1) this.userInput = valueDisplay.textContent;
+            else {
+              const newInput = [...this.userInput];
+              newInput[index] = valueDisplay.textContent;
+              this.userInput = newInput;
+            }
           });
           for (const item of this.uiOrder) {
             switch (item) {
@@ -1224,27 +1312,29 @@
         });
       }
     }
-    closeOverlay(overlay) {
+    closeOverlay(overlay, doneBefore) {
       if (this.askBoxInfo[0] < 2) this.isWaitingForInput = false;
       this.isDropdownOpen = false;
-      this.askBoxInfo[0]--;
-      let usedBG = document.querySelectorAll(".SP-ask-boxBG");
-      usedBG = usedBG[usedBG.length - 1];
-      // ^ Prioritizes Textboxes on Window
-      const index = this.activeOverlays.indexOf(overlay);
-      setTimeout(() => {
-        if (index !== -1) {
-          this.activeOverlays.splice(index, 1);
-          this.askBoxPromises.splice(index, 1);
-        }
-        delete this.activeUI[overlay];
-        if (this.appendTarget[0] === "window") document.body.removeChild(overlay);
-        else vm.renderer.removeOverlay(overlay);
-        if (usedBG) {
-          if (usedBG.id === "window") document.body.removeChild(usedBG);
-          else vm.renderer.removeOverlay(usedBG);
-        }
-      }, this.Timeout * 1000);
+      if (!doneBefore) {
+        this.askBoxInfo[0]--;
+        let usedBG = document.querySelectorAll(".SP-ask-boxBG");
+        usedBG = usedBG[usedBG.length - 1];
+        // ^ Prioritizes Textboxes on Window
+        const index = this.activeOverlays.indexOf(overlay);
+        setTimeout(() => {
+          if (index !== -1) {
+            this.activeOverlays.splice(index, 1);
+            this.askBoxPromises.splice(index, 1);
+          }
+          delete this.activeUI[overlay];
+          if (this.appendTarget[0] === "window") document.body.removeChild(overlay);
+          else vm.renderer.removeOverlay(overlay);
+          if (usedBG) {
+            if (usedBG.id === "window") document.body.removeChild(usedBG);
+            else vm.renderer.removeOverlay(usedBG);
+          }
+        }, this.Timeout * 1000);
+      }
     }
 
     setButton(args) {
@@ -1271,16 +1361,19 @@
 
     isDropdown() { return this.isDropdownOpen }
 
-    setMaxBoxCount(args) { this.askBoxInfo[1] = args.MAX }
-
-    setTimeout(args) {
-      this.Timeout = args.TIME;
-      this.Condition = args.CONDITION;
+    setMaxBoxCount(args) {
+      this.askBoxInfo[1] = Scratch.Cast.toNumber(args.MAX);
+      if (this.askBoxInfo[1] > 1 && !Array.isArray(this.userInput)) this.userInput = [this.userInput];
     }
+
+    setTimeout(args) { this.Timeout = Scratch.Cast.toNumber(args.TIME) }
 
     reportTimeout() { return this.Timeout }
 
-    getUserInput() { return this.userInput === null ? "" : this.userInput }
+    getUserInput() {
+      if (this.askBoxInfo[1] > 1) return this.userInput === null ? "[]" : JSON.stringify(this.userInput);
+      else return this.userInput === null ? "" : this.userInput;
+    }
 
     getBoxInfo(args) {
       if (args.INFO.includes("button")) {

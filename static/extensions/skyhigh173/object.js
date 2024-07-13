@@ -53,8 +53,13 @@
     // used in 'set' related functions
     fromMapOrString(value) {
       if (value instanceof Map) return structuredClone(value);
+      if (typeof value === 'number') return value;
+      if (typeof value === 'boolean') return value;
       try {
-        return new Map(Object.entries(JSON.parse(value)));
+        // ! we can get strings representing unrelated types (i.e. number and boolean)
+        const parsed = JSON.parse(value);
+        if (typeof parsed !== 'object') return parsed;
+        return new Map(Object.entries(parsed));
       } catch {
         return value;
       }

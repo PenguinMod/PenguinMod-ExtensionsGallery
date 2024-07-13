@@ -26,6 +26,31 @@ class Mathematics {
           }
         },
         {
+          opcode: 'sign',
+          blockType: Scratch.BlockType.REPORTER,
+          text: 'sign of [NUM]',
+          disableMonitor: true,
+          arguments: {
+            NUM: {
+              type: Scratch.ArgumentType.NUMBER
+            }
+          }
+        },
+        /*{
+          opcode: 'tetrate',
+          blockType: Scratch.BlockType.REPORTER,
+          text: '[X] ↑↑ [Y]',
+          disableMonitor: true,
+          arguments: {
+            X: {
+              type: Scratch.ArgumentType.NUMBER
+            },
+            Y: {
+              type: Scratch.ArgumentType.NUMBER
+            }
+          }
+        },*/
+        {
           blockType: Scratch.BlockType.LABEL,
           text: "Boolean Operations",
         },
@@ -113,7 +138,7 @@ class Mathematics {
         {
           opcode: 'divComplex',
           blockType: Scratch.BlockType.REPORTER,
-          text: 'complex [X] / [Y]',
+          text: 'complex [X] / [Y] (a bit broken)',
           disableMonitor: true,
           arguments: {
             X: {},
@@ -159,6 +184,10 @@ class Mathematics {
             { 
               text: 'e',
               value: 'e'
+            },
+            {
+              text: 'γ',
+              value: 'eul'
             }
           ]
         }
@@ -168,12 +197,17 @@ class Mathematics {
 
   constant(args) {
     switch (args.CONSTANT) {
-      case "pi": return 3.141592653589793238462643383279502884197; break
-      case "tau": return 3.141592653589793238462643383279502884197 * 2; break
-      case "e": return 2.718281828459045235360287471352662497757; break
-      case "phi": return 1.618033988749894848204586834365638117720; break
-      default: return 0; break
+      case "pi": return 3.141592653589793238462643383279502884197;
+      case "tau": return 3.141592653589793238462643383279502884197 * 2;
+      case "e": return 2.718281828459045235360287471352662497757;
+      case "phi": return 1.618033988749894848204586834365638117720;
+      case "eul": return 0.577215664901532860606512090082402431042;
+      default: return 0;
     }
+  }
+
+  sign(args) {
+    return Math.sign(args.NUM)
   }
 
   _matConditional(x, y) {

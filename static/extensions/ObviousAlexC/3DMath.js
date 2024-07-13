@@ -2,7 +2,6 @@
   "use strict";
   const vm = Scratch.vm;
 
-
   //3dMath variables
   const spriteData = {};
   let fov = 300;
@@ -10,28 +9,32 @@
   const camera = {
     position: [0, 0, 0],
     rotation: [0, 0, 0],
-    sinAndCos: [
-      0,
-      1,
-      0,
-      1,
-      0,
-      1,
-    ],
+    sinAndCos: [0, 1, 0, 1, 0, 1],
   };
 
   //I'm going to write a whole library for pen+ interaction in the future.
-  let penPLoaded = false;let penPModule = null;
-  let penPIcon = "data:image/svg+xml;base64,PHN2ZyB2ZXJzaW9uPSIxLjEiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyIgeG1sbnM6eGxpbms9Imh0dHA6Ly93d3cudzMub3JnLzE5OTkveGxpbmsiIHdpZHRoPSI2My45NDMyMiIgaGVpZ2h0PSI2My45NDMyMiIgdmlld0JveD0iMCwwLDYzLjk0MzIyLDYzLjk0MzIyIj48ZyB0cmFuc2Zvcm09InRyYW5zbGF0ZSgtMjA4LjAyODM3LC0xNDguMDI4MzkpIj48ZyBkYXRhLXBhcGVyLWRhdGE9InsmcXVvdDtpc1BhaW50aW5nTGF5ZXImcXVvdDs6dHJ1ZX0iIHN0cm9rZS1taXRlcmxpbWl0PSIxMCIgc3Ryb2tlLWRhc2hhcnJheT0iIiBzdHJva2UtZGFzaG9mZnNldD0iMCIgc3R5bGU9Im1peC1ibGVuZC1tb2RlOiBub3JtYWwiPjxwYXRoIGQ9Ik0yMTIuNTU4NCwyMDcuMTgyNjJ2LTM3Ljg4NDU3aDM3Ljc1NzQ0djM3Ljg4NDU3eiIgZmlsbD0iI2FkYzIxMyIgZmlsbC1ydWxlPSJub256ZXJvIiBzdHJva2U9IiNmZmZmZmYiIHN0cm9rZS13aWR0aD0iMCIgc3Ryb2tlLWxpbmVjYXA9ImJ1dHQiIHN0cm9rZS1saW5lam9pbj0ibWl0ZXIiLz48cGF0aCBkPSJNMjEzLjk1NjgzLDE2OS42Nzk0NWwxNi4zOTk2OSwtMTcuNTQzODZsMzUuODUwNSwwLjUwODUybC0xNS41MDk3OSwxNi42NTM5NXoiIGZpbGw9IiNhZGMyMTMiIGZpbGwtcnVsZT0ibm9uemVybyIgc3Ryb2tlPSJub25lIiBzdHJva2Utd2lkdGg9IjAiIHN0cm9rZS1saW5lY2FwPSJidXR0IiBzdHJva2UtbGluZWpvaW49Im1pdGVyIi8+PHBhdGggZD0iTTI1MC45NTE0OSwyMDYuNTQ2OTh2LTUzLjAxMjk3aDE2LjkwODIxbC0wLjYzNTY1LDM2LjQ4NjE0eiIgZmlsbD0iI2FkYzIxMyIgZmlsbC1ydWxlPSJub256ZXJvIiBzdHJva2U9IiNmZmZmZmYiIHN0cm9rZS13aWR0aD0iMCIgc3Ryb2tlLWxpbmVjYXA9ImJ1dHQiIHN0cm9rZS1saW5lam9pbj0ibWl0ZXIiLz48cGF0aCBkPSJNMjY4LjgzMDA0LDE1Mi4zNzEyNHYzOC40NDAwMmMwLDAuMDY5NzEgLTAuMDI4ODMsMC4xMzIyMSAtMC4wNDA4OCwwLjE5OTQ1Yy0wLjAxNDQyLDAuMDg4ODYgLTAuMDE5MTQsMC4xNzUzNSAtMC4wNTI4MiwwLjI1OTQ3Yy0wLjA2MDAyLDAuMTQ2NTIgLTAuMTQ4OTksMC4yODEwOSAtMC4yNTk0NywwLjM5MTU3bC0xNi44MTc0OSwxNi44MTc0OWMtMC4wMDk2OSwwLjAwOTU3IC0wLjAyNDEsMC4wMTIwNSAtMC4wMzM2NywwLjAyMTYyYy0wLjEwNTY0LDAuMDk2MTggLTAuMjIwOTUsMC4xODAxOSAtMC4zNTU1MywwLjIzNTQ4Yy0wLjE0NjYzLDAuMDYyNSAtMC4zMDI3MiwwLjA5MzcgLTAuNDU4OTIsMC4wOTM3aC0zOC40NDAwMmMtMC42NjMwOSwwIC0xLjIwMTI5LC0wLjUzODIgLTEuMjAxMjksLTEuMjAxMTh2LTM4LjQzNTI5YzAsLTAuMTU4NTcgMC4wMzEyLC0wLjMxNDc3IDAuMDkxMzMsLTAuNDY2MTJjMC4wNTUzLC0wLjEzMjEgMC4xMzk0MiwtMC4yNDk5IDAuMjM1NDgsLTAuMzUzMTdjMC4wMTE5NCwtMC4wMDk2OSAwLjAxNDQyLC0wLjAyNDEgMC4wMjM5OSwtMC4wMzM2N2wxNi44MTczOCwtMTYuODE3NDljMC4xMTI5NiwtMC4xMTI4NCAwLjI0NTA2LC0wLjE5OTMzIDAuMzk0MDUsLTAuMjYxODRjMC4wODE3NiwtMC4wMzM2NyAwLjE3MDYyLC0wLjAzNjA0IDAuMjU3MTEsLTAuMDUwNDVjMC4wNjczNSwtMC4wMTIwNSAwLjEyOTc0LC0wLjA0MDg4IDAuMTk5NDUsLTAuMDQwODhoMzguNDQwMDJjMC4wOTEzMywwIDAuMTcyOTgsMC4wMzM2NyAwLjI1NDc0LDAuMDUwNDVjMC4wNjcyMywwLjAxNjg5IDAuMTM0NDcsMC4wMTQ0MiAwLjE5Njk3LDAuMDQwODhjMC4yOTc4NywwLjEyMjUzIDAuNTMzMzYsMC4zNTgwMSAwLjY1NTg4LDAuNjU1ODhjMC4wMjY0NywwLjA2MjM5IDAuMDI2NDcsMC4xMzIxIDAuMDQwODgsMC4xOTY5N2MwLjAxOTE0LDAuMDg0MTIgMC4wNTI4MiwwLjE2NTc3IDAuMDUyODIsMC4yNTcxMXpNMjQ5LjYwOTk3LDE3MC4zOTAwMmgtMzYuMDM3NTZ2MzYuMDM3NTZoMzYuMDM3NTZ6TTI2NC43Mjg5NSwxNTMuNTcyNDJoLTM1LjA0MjkybC0xNC40MTUwMiwxNC40MTUwMmgzNS4wNDI5MnpNMjY2LjQyNzU3LDE1NS4yNzEwM2wtMTQuNDE1MDIsMTQuNDE1MDJ2MzUuMDQyOTJsMTQuNDE1MDIsLTE0LjQxNTAyeiIgZmlsbD0iIzdlOGQwYiIgZmlsbC1ydWxlPSJub256ZXJvIiBzdHJva2U9IiM3ZThkMGIiIHN0cm9rZS13aWR0aD0iNiIgc3Ryb2tlLWxpbmVjYXA9ImJ1dHQiIHN0cm9rZS1saW5lam9pbj0ibWl0ZXIiLz48cGF0aCBkPSJNMjIyLjUyNzU2LDE5OC45ODA5NmwtMy4yMjM0NywxLjM1MDA2bDEuMzUyMzQsLTMuMjEzNjFjMC45MjM4MSwtMi4xOTM0OCAyLjIwNDg1LC00LjExMzE1IDMuODE1MDcsLTUuNzE3M2wxNC45Nzk2NSwtMTQuOTI0MjhjMC42NDE2NiwtMC42Mzg2MyAyLjAwOTkzLC0wLjMxMDk3IDMuMDU4MTIsMC43MzM0M2MxLjA0NjY4LDEuMDQyODkgMS4zNzczNywyLjQwNjYgMC43MzU3MSwzLjA0NTIzbC0xNC45Nzk2NSwxNC45MjUwNGMtMS42MTAyMiwxLjYwNDkxIC0zLjUzNzQ3LDIuODgyMTYgLTUuNzM3NzcsMy44MDE0MiIgZmlsbD0iI2I3YzI2NiIgZmlsbC1ydWxlPSJldmVub2RkIiBzdHJva2U9IiM3ZThkMGIiIHN0cm9rZS13aWR0aD0iMSIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIi8+PHBhdGggZD0iTTIyOC42NzQ5LDE4Mi45MjEyNmMwLDAgMS45ODQxNCwxLjY4Mzc5IDMuMjk5MzEsLTEuMTcyNThjMi44NDU3NSwtNi4xODE0NyA2LjIyMDkxLC00LjM3Nzg1IDYuMjIwOTEsLTQuMzc3ODUiIGZpbGw9Im5vbmUiIGZpbGwtcnVsZT0iZXZlbm9kZCIgc3Ryb2tlPSIjN2U4ZDBiIiBzdHJva2Utd2lkdGg9IjEiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIvPjxwYXRoIGQ9Ik0yNDMuNTExOTYsMTc5LjQzMDA2YzAsMC4zNTExNyAtMC4xMDYxOCwwLjY2MjE0IC0wLjMyNzY2LDAuODgyODVsLTcuMDgwMjUsNy4wNTM3MWMwLjIxMzg5LC0wLjIxOTk1IDAuMzEwOTcsLTAuNTA2NjUgMC4zMTA5NywtMC44NDk0OGMwLC0wLjY2MjkgLTAuMzg0NTQsLTEuNDg4ODYgLTEuMDY2NCwtMi4xNzUyN2MtMS4wMzMwMywtMS4wMjk5OSAtMi4zODY4OCwtMS4zNjUyMyAtMy4wMzUzNywtMC43NTA4OGw3LjA4MDI1LC03LjA1NDQ3YzAuNjQwMTQsLTAuNjM3MTEgMi4wMDk5MywtMC4zMTA5NyAzLjA2MDQsMC43MjgxMmMwLjY4MTEsMC42ODU2NSAxLjA1ODgxLDEuNTAzMjcgMS4wNTg4MSwyLjE2NTQxTTIyMy44NjM5NywxOTguMzUyOTZjLTAuNDM0NiwwLjIyOTA2IC0wLjg3NzU0LDAuNDMyMzIgLTEuMzM3OTMsMC42Mjk1MmwtMy4yMjQyMywxLjM0ODU1bDEuMzU0NjIsLTMuMjEyMDljMC4xOTU2OCwtMC40NTgxMSAwLjQwMTk5LC0wLjg5OTU0IDAuNjMxOCwtMS4zMzI2MmMwLjUyMzM0LDAuMTM4OCAxLjA5ODI1LDAuNDc0MDQgMS41OTg4NCwwLjk3MjM1YzAuNTAwNTksMC40OTkwNyAwLjgzNTgzLDEuMDcwOTUgMC45NzYxNCwxLjU5NDI5IiBmaWxsPSIjYWRjMjEzIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiIHN0cm9rZT0iIzdlOGQwYiIgc3Ryb2tlLXdpZHRoPSIxIiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiLz48cGF0aCBkPSJNMjQzLjU3MTEyLDE3OS4zNzE2NmMwLDAuMzUxOTMgLTAuMTA2MTgsMC42NjI5IC0wLjMyODQxLDAuODgzNjFsLTE0Ljk3MzU4LDE0LjkyNjU2Yy0xLjYxNTUzLDEuNjAwMzYgLTMuNTQ0MywyLjg3Njg1IC01Ljc0MzA4LDMuNzk5OWwtMy4yMjQyMywxLjM0Nzc5bDAuNzM4NzQsLTEuNzU2NmwxLjQ2MDA0LC0wLjYxMjg0YzIuMTk4MDMsLTAuOTIzODEgNC4xMjYwNCwtMi4xOTk1NCA1Ljc0MTU3LC0zLjc5OTlsMTQuOTc0MzQsLTE0LjkyNjU2YzAuMjIxNDcsLTAuMjIxNDcgMC4zMjc2NiwtMC41MzI0NCAwLjMyNzY2LC0wLjg4MzYxYzAsLTAuNDg5OTcgLTAuMjA0NzksLTEuMDYxODUgLTAuNTkxNiwtMS42MDk0NmMwLjE4OTYyLDAuMTMwNDYgMC4zNzkyMywwLjI4NTk0IDAuNTU4OTksMC40NjU3YzAuNjgxMSwwLjY4NjQxIDEuMDU4ODEsMS41MDQwMyAxLjA1ODgxLDIuMTY2MTciIGZpbGw9IiM1NzVlNzUiIGZpbGwtcnVsZT0iZXZlbm9kZCIgc3Ryb2tlPSIjNTc1ZTc1IiBzdHJva2Utd2lkdGg9IjEiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIgb3BhY2l0eT0iMC4xNSIvPjxwYXRoIGQ9Ik0yMjkuODgyMzgsMTgyLjQ2NzdjMCwwLjM3OTIzIC0wLjMwNjQyLDAuNjg2NDEgLTAuNjg1NjUsMC42ODY0MWMtMC4zNzkyMywwIC0wLjY4NjQxLC0wLjMwNzE4IC0wLjY4NjQxLC0wLjY4NTY1YzAsLTAuMzc5MjMgMC4zMDg2OSwtMC42ODQ4OSAwLjY4NzE3LC0wLjY4NDg5YzAuMzc5MjMsMCAwLjY4NTY1LDAuMzA2NDIgMC42ODU2NSwwLjY4NTY1eiIgZmlsbD0iIzdlOGQwYiIgZmlsbC1ydWxlPSJldmVub2RkIiBzdHJva2U9IiM3ZThkMGIiIHN0cm9rZS13aWR0aD0iMSIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIi8+PHBhdGggZD0iTTIzNC44NDg4NSwxOTMuMjU1MzFoNy4yMTg3OSIgZmlsbD0ibm9uZSIgZmlsbC1ydWxlPSJub256ZXJvIiBzdHJva2U9IiNiN2MyNjYiIHN0cm9rZS13aWR0aD0iMS41IiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0ibWl0ZXIiLz48cGF0aCBkPSJNMjM4LjQ1ODI0LDE5Ni44NjQ3di03LjIxODc5IiBmaWxsPSJub25lIiBmaWxsLXJ1bGU9Im5vbnplcm8iIHN0cm9rZT0iI2I3YzI2NiIgc3Ryb2tlLXdpZHRoPSIxLjUiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgc3Ryb2tlLWxpbmVqb2luPSJtaXRlciIvPjwvZz48L2c+PC9zdmc+PCEtLXJvdGF0aW9uQ2VudGVyOjMxLjk3MTYzMDY4NzExOTI3MzozMS45NzE2MDU2ODcxMTkzMDgtLT4=";
+  let penPLoaded = false;
+  let penPModule = null;
+  let penPIcon =
+    "data:image/svg+xml;base64,PHN2ZyB2ZXJzaW9uPSIxLjEiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyIgeG1sbnM6eGxpbms9Imh0dHA6Ly93d3cudzMub3JnLzE5OTkveGxpbmsiIHdpZHRoPSI2My45NDMyMiIgaGVpZ2h0PSI2My45NDMyMiIgdmlld0JveD0iMCwwLDYzLjk0MzIyLDYzLjk0MzIyIj48ZyB0cmFuc2Zvcm09InRyYW5zbGF0ZSgtMjA4LjAyODM3LC0xNDguMDI4MzkpIj48ZyBkYXRhLXBhcGVyLWRhdGE9InsmcXVvdDtpc1BhaW50aW5nTGF5ZXImcXVvdDs6dHJ1ZX0iIHN0cm9rZS1taXRlcmxpbWl0PSIxMCIgc3Ryb2tlLWRhc2hhcnJheT0iIiBzdHJva2UtZGFzaG9mZnNldD0iMCIgc3R5bGU9Im1peC1ibGVuZC1tb2RlOiBub3JtYWwiPjxwYXRoIGQ9Ik0yMTIuNTU4NCwyMDcuMTgyNjJ2LTM3Ljg4NDU3aDM3Ljc1NzQ0djM3Ljg4NDU3eiIgZmlsbD0iI2FkYzIxMyIgZmlsbC1ydWxlPSJub256ZXJvIiBzdHJva2U9IiNmZmZmZmYiIHN0cm9rZS13aWR0aD0iMCIgc3Ryb2tlLWxpbmVjYXA9ImJ1dHQiIHN0cm9rZS1saW5lam9pbj0ibWl0ZXIiLz48cGF0aCBkPSJNMjEzLjk1NjgzLDE2OS42Nzk0NWwxNi4zOTk2OSwtMTcuNTQzODZsMzUuODUwNSwwLjUwODUybC0xNS41MDk3OSwxNi42NTM5NXoiIGZpbGw9IiNhZGMyMTMiIGZpbGwtcnVsZT0ibm9uemVybyIgc3Ryb2tlPSJub25lIiBzdHJva2Utd2lkdGg9IjAiIHN0cm9rZS1saW5lY2FwPSJidXR0IiBzdHJva2UtbGluZWpvaW49Im1pdGVyIi8+PHBhdGggZD0iTTI1MC45NTE0OSwyMDYuNTQ2OTh2LTUzLjAxMjk3aDE2LjkwODIxbC0wLjYzNTY1LDM2LjQ4NjE0eiIgZmlsbD0iI2FkYzIxMyIgZmlsbC1ydWxlPSJub256ZXJvIiBzdHJva2U9IiNmZmZmZmYiIHN0cm9rZS13aWR0aD0iMCIgc3Ryb2tlLWxpbmVjYXA9ImJ1dHQiIHN0cm9rZS1saW5lam9pbj0ibWl0ZXIiLz48cGF0aCBkPSJNMjY4LjgzMDA0LDE1Mi4zNzEyNHYzOC40NDAwMmMwLDAuMDY5NzEgLTAuMDI4ODMsMC4xMzIyMSAtMC4wNDA4OCwwLjE5OTQ1Yy0wLjAxNDQyLDAuMDg4ODYgLTAuMDE5MTQsMC4xNzUzNSAtMC4wNTI4MiwwLjI1OTQ3Yy0wLjA2MDAyLDAuMTQ2NTIgLTAuMTQ4OTksMC4yODEwOSAtMC4yNTk0NywwLjM5MTU3bC0xNi44MTc0OSwxNi44MTc0OWMtMC4wMDk2OSwwLjAwOTU3IC0wLjAyNDEsMC4wMTIwNSAtMC4wMzM2NywwLjAyMTYyYy0wLjEwNTY0LDAuMDk2MTggLTAuMjIwOTUsMC4xODAxOSAtMC4zNTU1MywwLjIzNTQ4Yy0wLjE0NjYzLDAuMDYyNSAtMC4zMDI3MiwwLjA5MzcgLTAuNDU4OTIsMC4wOTM3aC0zOC40NDAwMmMtMC42NjMwOSwwIC0xLjIwMTI5LC0wLjUzODIgLTEuMjAxMjksLTEuMjAxMTh2LTM4LjQzNTI5YzAsLTAuMTU4NTcgMC4wMzEyLC0wLjMxNDc3IDAuMDkxMzMsLTAuNDY2MTJjMC4wNTUzLC0wLjEzMjEgMC4xMzk0MiwtMC4yNDk5IDAuMjM1NDgsLTAuMzUzMTdjMC4wMTE5NCwtMC4wMDk2OSAwLjAxNDQyLC0wLjAyNDEgMC4wMjM5OSwtMC4wMzM2N2wxNi44MTczOCwtMTYuODE3NDljMC4xMTI5NiwtMC4xMTI4NCAwLjI0NTA2LC0wLjE5OTMzIDAuMzk0MDUsLTAuMjYxODRjMC4wODE3NiwtMC4wMzM2NyAwLjE3MDYyLC0wLjAzNjA0IDAuMjU3MTEsLTAuMDUwNDVjMC4wNjczNSwtMC4wMTIwNSAwLjEyOTc0LC0wLjA0MDg4IDAuMTk5NDUsLTAuMDQwODhoMzguNDQwMDJjMC4wOTEzMywwIDAuMTcyOTgsMC4wMzM2NyAwLjI1NDc0LDAuMDUwNDVjMC4wNjcyMywwLjAxNjg5IDAuMTM0NDcsMC4wMTQ0MiAwLjE5Njk3LDAuMDQwODhjMC4yOTc4NywwLjEyMjUzIDAuNTMzMzYsMC4zNTgwMSAwLjY1NTg4LDAuNjU1ODhjMC4wMjY0NywwLjA2MjM5IDAuMDI2NDcsMC4xMzIxIDAuMDQwODgsMC4xOTY5N2MwLjAxOTE0LDAuMDg0MTIgMC4wNTI4MiwwLjE2NTc3IDAuMDUyODIsMC4yNTcxMXpNMjQ5LjYwOTk3LDE3MC4zOTAwMmgtMzYuMDM3NTZ2MzYuMDM3NTZoMzYuMDM3NTZ6TTI2NC43Mjg5NSwxNTMuNTcyNDJoLTM1LjA0MjkybC0xNC40MTUwMiwxNC40MTUwMmgzNS4wNDI5MnpNMjY2LjQyNzU3LDE1NS4yNzEwM2wtMTQuNDE1MDIsMTQuNDE1MDJ2MzUuMDQyOTJsMTQuNDE1MDIsLTE0LjQxNTAyeiIgZmlsbD0iIzdlOGQwYiIgZmlsbC1ydWxlPSJub256ZXJvIiBzdHJva2U9IiM3ZThkMGIiIHN0cm9rZS13aWR0aD0iNiIgc3Ryb2tlLWxpbmVjYXA9ImJ1dHQiIHN0cm9rZS1saW5lam9pbj0ibWl0ZXIiLz48cGF0aCBkPSJNMjIyLjUyNzU2LDE5OC45ODA5NmwtMy4yMjM0NywxLjM1MDA2bDEuMzUyMzQsLTMuMjEzNjFjMC45MjM4MSwtMi4xOTM0OCAyLjIwNDg1LC00LjExMzE1IDMuODE1MDcsLTUuNzE3M2wxNC45Nzk2NSwtMTQuOTI0MjhjMC42NDE2NiwtMC42Mzg2MyAyLjAwOTkzLC0wLjMxMDk3IDMuMDU4MTIsMC43MzM0M2MxLjA0NjY4LDEuMDQyODkgMS4zNzczNywyLjQwNjYgMC43MzU3MSwzLjA0NTIzbC0xNC45Nzk2NSwxNC45MjUwNGMtMS42MTAyMiwxLjYwNDkxIC0zLjUzNzQ3LDIuODgyMTYgLTUuNzM3NzcsMy44MDE0MiIgZmlsbD0iI2I3YzI2NiIgZmlsbC1ydWxlPSJldmVub2RkIiBzdHJva2U9IiM3ZThkMGIiIHN0cm9rZS13aWR0aD0iMSIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIi8+PHBhdGggZD0iTTIyOC42NzQ5LDE4Mi45MjEyNmMwLDAgMS45ODQxNCwxLjY4Mzc5IDMuMjk5MzEsLTEuMTcyNThjMi44NDU3NSwtNi4xODE0NyA2LjIyMDkxLC00LjM3Nzg1IDYuMjIwOTEsLTQuMzc3ODUiIGZpbGw9Im5vbmUiIGZpbGwtcnVsZT0iZXZlbm9kZCIgc3Ryb2tlPSIjN2U4ZDBiIiBzdHJva2Utd2lkdGg9IjEiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIvPjxwYXRoIGQ9Ik0yNDMuNTExOTYsMTc5LjQzMDA2YzAsMC4zNTExNyAtMC4xMDYxOCwwLjY2MjE0IC0wLjMyNzY2LDAuODgyODVsLTcuMDgwMjUsNy4wNTM3MWMwLjIxMzg5LC0wLjIxOTk1IDAuMzEwOTcsLTAuNTA2NjUgMC4zMTA5NywtMC44NDk0OGMwLC0wLjY2MjkgLTAuMzg0NTQsLTEuNDg4ODYgLTEuMDY2NCwtMi4xNzUyN2MtMS4wMzMwMywtMS4wMjk5OSAtMi4zODY4OCwtMS4zNjUyMyAtMy4wMzUzNywtMC43NTA4OGw3LjA4MDI1LC03LjA1NDQ3YzAuNjQwMTQsLTAuNjM3MTEgMi4wMDk5MywtMC4zMTA5NyAzLjA2MDQsMC43MjgxMmMwLjY4MTEsMC42ODU2NSAxLjA1ODgxLDEuNTAzMjcgMS4wNTg4MSwyLjE2NTQxTTIyMy44NjM5NywxOTguMzUyOTZjLTAuNDM0NiwwLjIyOTA2IC0wLjg3NzU0LDAuNDMyMzIgLTEuMzM3OTMsMC42Mjk1MmwtMy4yMjQyMywxLjM0ODU1bDEuMzU0NjIsLTMuMjEyMDljMC4xOTU2OCwtMC40NTgxMSAwLjQwMTk5LC0wLjg5OTU0IDAuNjMxOCwtMS4zMzI2MmMwLjUyMzM0LDAuMTM4OCAxLjA5ODI1LDAuNDc0MDQgMS41OTg4NCwwLjk3MjM1YzAuNTAwNTksMC40OTkwNyAwLjgzNTgzLDEuMDcwOTUgMC45NzYxNCwxLjU5NDI5IiBmaWxsPSIjYWRjMjEzIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiIHN0cm9rZT0iIzdlOGQwYiIgc3Ryb2tlLXdpZHRoPSIxIiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiLz48cGF0aCBkPSJNMjQzLjU3MTEyLDE3OS4zNzE2NmMwLDAuMzUxOTMgLTAuMTA2MTgsMC42NjI5IC0wLjMyODQxLDAuODgzNjFsLTE0Ljk3MzU4LDE0LjkyNjU2Yy0xLjYxNTUzLDEuNjAwMzYgLTMuNTQ0MywyLjg3Njg1IC01Ljc0MzA4LDMuNzk5OWwtMy4yMjQyMywxLjM0Nzc5bDAuNzM4NzQsLTEuNzU2NmwxLjQ2MDA0LC0wLjYxMjg0YzIuMTk4MDMsLTAuOTIzODEgNC4xMjYwNCwtMi4xOTk1NCA1Ljc0MTU3LC0zLjc5OTlsMTQuOTc0MzQsLTE0LjkyNjU2YzAuMjIxNDcsLTAuMjIxNDcgMC4zMjc2NiwtMC41MzI0NCAwLjMyNzY2LC0wLjg4MzYxYzAsLTAuNDg5OTcgLTAuMjA0NzksLTEuMDYxODUgLTAuNTkxNiwtMS42MDk0NmMwLjE4OTYyLDAuMTMwNDYgMC4zNzkyMywwLjI4NTk0IDAuNTU4OTksMC40NjU3YzAuNjgxMSwwLjY4NjQxIDEuMDU4ODEsMS41MDQwMyAxLjA1ODgxLDIuMTY2MTciIGZpbGw9IiM1NzVlNzUiIGZpbGwtcnVsZT0iZXZlbm9kZCIgc3Ryb2tlPSIjNTc1ZTc1IiBzdHJva2Utd2lkdGg9IjEiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIgb3BhY2l0eT0iMC4xNSIvPjxwYXRoIGQ9Ik0yMjkuODgyMzgsMTgyLjQ2NzdjMCwwLjM3OTIzIC0wLjMwNjQyLDAuNjg2NDEgLTAuNjg1NjUsMC42ODY0MWMtMC4zNzkyMywwIC0wLjY4NjQxLC0wLjMwNzE4IC0wLjY4NjQxLC0wLjY4NTY1YzAsLTAuMzc5MjMgMC4zMDg2OSwtMC42ODQ4OSAwLjY4NzE3LC0wLjY4NDg5YzAuMzc5MjMsMCAwLjY4NTY1LDAuMzA2NDIgMC42ODU2NSwwLjY4NTY1eiIgZmlsbD0iIzdlOGQwYiIgZmlsbC1ydWxlPSJldmVub2RkIiBzdHJva2U9IiM3ZThkMGIiIHN0cm9rZS13aWR0aD0iMSIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIi8+PHBhdGggZD0iTTIzNC44NDg4NSwxOTMuMjU1MzFoNy4yMTg3OSIgZmlsbD0ibm9uZSIgZmlsbC1ydWxlPSJub256ZXJvIiBzdHJva2U9IiNiN2MyNjYiIHN0cm9rZS13aWR0aD0iMS41IiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0ibWl0ZXIiLz48cGF0aCBkPSJNMjM4LjQ1ODI0LDE5Ni44NjQ3di03LjIxODc5IiBmaWxsPSJub25lIiBmaWxsLXJ1bGU9Im5vbnplcm8iIHN0cm9rZT0iI2I3YzI2NiIgc3Ryb2tlLXdpZHRoPSIxLjUiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgc3Ryb2tlLWxpbmVqb2luPSJtaXRlciIvPjwvZz48L2c+PC9zdmc+PCEtLXJvdGF0aW9uQ2VudGVyOjMxLjk3MTYzMDY4NzExOTI3MzozMS45NzE2MDU2ODcxMTkzMDgtLT4=";
   const penPCheck = () => {
-    if (penPLoaded) {return;} // Return if pen+ integration is loaded
-    if (vm.runtime.ext_penP) {penPLoaded = true;}
+    if (penPLoaded) {
+      return;
+    } // Return if pen+ integration is loaded
+    if (vm.runtime.ext_penP) {
+      penPLoaded = true;
+    }
     penPModule = vm.runtime.ext_penP;
 
-    if (penPModule) {penPModule.turnAdvancedSettingOff({Setting:"wValueUnderFlow",onOrOff:"on"});}
+    if (penPModule) {
+      penPModule.turnAdvancedSettingOff({
+        Setting: "wValueUnderFlow",
+        onOrOff: "on",
+      });
+    }
 
     vm.runtime.extensionManager.refreshBlocks();
-  }
+  };
   penPCheck();
   vm.runtime.on("EXTENSION_ADDED", penPCheck);
 
@@ -237,6 +240,18 @@
           },
           {
             disableMonitor: true,
+            opcode: "project2DBehindCam",
+            blockType: Scratch.BlockType.BOOLEAN,
+            text: "is [a] behind camera?",
+            arguments: {
+              a: {
+                type: Scratch.ArgumentType.STRING,
+                defaultValue: "[0,0,100]",
+              },
+            },
+          },
+          {
+            disableMonitor: true,
             opcode: "project2DFromPos",
             blockType: Scratch.BlockType.REPORTER,
             text: "get projected [a] to 2D from [b] yaw:[yaw] pitch:[pitch] roll:[roll]",
@@ -386,7 +401,11 @@
             text: "change camera [axis] by [a]",
             arguments: {
               a: { type: Scratch.ArgumentType.NUMBER, defaultValue: "15" },
-              axis: { type: Scratch.ArgumentType.STRING, defaultValue: "0", menu: "axisMenu2"},
+              axis: {
+                type: Scratch.ArgumentType.STRING,
+                defaultValue: "0",
+                menu: "axisMenu2",
+              },
             },
           },
           {
@@ -412,7 +431,10 @@
             blockType: Scratch.BlockType.COMMAND,
             text: "change camera rotation by [a]",
             arguments: {
-              a: { type: Scratch.ArgumentType.STRING, defaultValue: "[15,0,0]" },
+              a: {
+                type: Scratch.ArgumentType.STRING,
+                defaultValue: "[15,0,0]",
+              },
             },
           },
           {
@@ -422,7 +444,11 @@
             text: "change camera [rotator] by [a]",
             arguments: {
               a: { type: Scratch.ArgumentType.NUMBER, defaultValue: "15" },
-              rotator: { type: Scratch.ArgumentType.STRING, defaultValue: "0", menu: "angleMenu"},
+              rotator: {
+                type: Scratch.ArgumentType.STRING,
+                defaultValue: "0",
+                menu: "angleMenu",
+              },
             },
           },
           {
@@ -478,7 +504,11 @@
             blockType: Scratch.BlockType.COMMAND,
             text: "set my [component] to [a]",
             arguments: {
-              component: { type: Scratch.ArgumentType.STRING, defaultValue: "0", menu: "axisMenu2"},
+              component: {
+                type: Scratch.ArgumentType.STRING,
+                defaultValue: "0",
+                menu: "axisMenu2",
+              },
               a: { type: Scratch.ArgumentType.NUMBER, defaultValue: 0 },
             },
             filter: "sprite",
@@ -499,7 +529,11 @@
             blockType: Scratch.BlockType.COMMAND,
             text: "change my [component] by [a]",
             arguments: {
-              component: { type: Scratch.ArgumentType.STRING, defaultValue: "0", menu: "axisMenu2"},
+              component: {
+                type: Scratch.ArgumentType.STRING,
+                defaultValue: "0",
+                menu: "axisMenu2",
+              },
               a: { type: Scratch.ArgumentType.NUMBER, defaultValue: 5 },
             },
             filter: "sprite",
@@ -518,7 +552,11 @@
             blockType: Scratch.BlockType.REPORTER,
             text: "my [component] position",
             arguments: {
-              component: { type: Scratch.ArgumentType.STRING, defaultValue: "0", menu: "axisMenu2"},
+              component: {
+                type: Scratch.ArgumentType.STRING,
+                defaultValue: "0",
+                menu: "axisMenu2",
+              },
             },
             filter: "sprite",
           },
@@ -561,35 +599,53 @@
 
           //#Pen+ Integration #
           {
-            hideFromPalette:(!penPLoaded),
+            hideFromPalette: !penPLoaded,
             blockType: Scratch.BlockType.LABEL,
             text: "Pen+ 3D",
           },
           {
             disableMonitor: true,
-            hideFromPalette:(!penPLoaded),
+            hideFromPalette: !penPLoaded,
             opcode: "draw3dTri",
             blockType: Scratch.BlockType.COMMAND,
             text: "draw 3d triangle between [point1], [point2], [point3]",
             arguments: {
-                point1: { type: Scratch.ArgumentType.STRING, defaultValue: "[0,0,100]"},
-                point2: { type: Scratch.ArgumentType.STRING, defaultValue: "[10,0,100]"},
-                point3: { type: Scratch.ArgumentType.STRING, defaultValue: "[10,10,100]"},
+              point1: {
+                type: Scratch.ArgumentType.STRING,
+                defaultValue: "[0,0,100]",
+              },
+              point2: {
+                type: Scratch.ArgumentType.STRING,
+                defaultValue: "[10,0,100]",
+              },
+              point3: {
+                type: Scratch.ArgumentType.STRING,
+                defaultValue: "[10,10,100]",
+              },
             },
             blockIconURI: penPIcon,
             filter: "sprite",
           },
           {
             disableMonitor: true,
-            hideFromPalette:(!penPLoaded),
+            hideFromPalette: !penPLoaded,
             opcode: "draw3dTexTri",
             blockType: Scratch.BlockType.COMMAND,
             text: "draw 3d triangle between [point1], [point2], [point3] with the image [texture]",
             arguments: {
-                point1: { type: Scratch.ArgumentType.STRING, defaultValue: "[0,0,100]"},
-                point2: { type: Scratch.ArgumentType.STRING, defaultValue: "[10,0,100]"},
-                point3: { type: Scratch.ArgumentType.STRING, defaultValue: "[10,10,100]"},
-                texture: { menu: "tdMathPPCosMen"}
+              point1: {
+                type: Scratch.ArgumentType.STRING,
+                defaultValue: "[0,0,100]",
+              },
+              point2: {
+                type: Scratch.ArgumentType.STRING,
+                defaultValue: "[10,0,100]",
+              },
+              point3: {
+                type: Scratch.ArgumentType.STRING,
+                defaultValue: "[10,10,100]",
+              },
+              texture: { menu: "tdMathPPCosMen" },
             },
             blockIconURI: penPIcon,
             filter: "sprite",
@@ -628,7 +684,8 @@
             acceptReporters: true,
           },
           tdMathPPCosMen: {
-            items: "tdMathPPCosMen", acceptReporters: true
+            items: "tdMathPPCosMen",
+            acceptReporters: true,
           },
         },
         name: "3D Math",
@@ -642,129 +699,250 @@
         color3: "#697700",
       };
     }
-    
-    draw3dTri({ point1, point2, point3 },util) {
+
+    draw3dTri({ point1, point2, point3 }, util) {
       if (!penPModule) throw "Pen+ module not found";
-      point1 = JSON.parse(point1);point2 = JSON.parse(point2);point3 = JSON.parse(point3);
+      point1 = JSON.parse(point1);
+      point2 = JSON.parse(point2);
+      point3 = JSON.parse(point3);
       //Check if points are valid
-      if (!(point1.length >= 3 && point2.length >=3 && point3.length >= 3)) throw "All points are not Vector3s!";
+      if (!(point1.length >= 3 && point2.length >= 3 && point3.length >= 3))
+        throw "All points are not Vector3s!";
       //cast points to number
 
       const target = util.target;
-      
+
       this.checkFor3dPositionData(target.id);
       const sprX = spriteData[target.id].position[0] - camera.position[0];
       const sprY = spriteData[target.id].position[1] - camera.position[1];
       const sprZ = spriteData[target.id].position[2] - camera.position[2];
 
-      point1[0] = Scratch.Cast.toNumber(point1[0]) + sprX;point1[1] = Scratch.Cast.toNumber(point1[1]) + sprY;point1[2] = Scratch.Cast.toNumber(point1[2]) + sprZ;
-      point2[0] = Scratch.Cast.toNumber(point2[0]) + sprX;point2[1] = Scratch.Cast.toNumber(point2[1]) + sprY;point2[2] = Scratch.Cast.toNumber(point2[2]) + sprZ;
-      point3[0] = Scratch.Cast.toNumber(point3[0]) + sprX;point3[1] = Scratch.Cast.toNumber(point3[1]) + sprY;point3[2] = Scratch.Cast.toNumber(point3[2]) + sprZ;
+      point1[0] = Scratch.Cast.toNumber(point1[0]) + sprX;
+      point1[1] = Scratch.Cast.toNumber(point1[1]) + sprY;
+      point1[2] = Scratch.Cast.toNumber(point1[2]) + sprZ;
+      point2[0] = Scratch.Cast.toNumber(point2[0]) + sprX;
+      point2[1] = Scratch.Cast.toNumber(point2[1]) + sprY;
+      point2[2] = Scratch.Cast.toNumber(point2[2]) + sprZ;
+      point3[0] = Scratch.Cast.toNumber(point3[0]) + sprX;
+      point3[1] = Scratch.Cast.toNumber(point3[1]) + sprY;
+      point3[2] = Scratch.Cast.toNumber(point3[2]) + sprZ;
 
       //Rotate points around camera
       let temp = point1[0];
-      point1[0] = point1[2] * camera.sinAndCos[0] + point1[0] * camera.sinAndCos[1];point1[2] = point1[2] * camera.sinAndCos[1] - temp * camera.sinAndCos[0];
+      point1[0] =
+        point1[2] * camera.sinAndCos[0] + point1[0] * camera.sinAndCos[1];
+      point1[2] = point1[2] * camera.sinAndCos[1] - temp * camera.sinAndCos[0];
       temp = point1[1];
-      point1[1] = point1[2] * camera.sinAndCos[2] + point1[1] * camera.sinAndCos[3];point1[2] = point1[2] * camera.sinAndCos[3] - temp * camera.sinAndCos[2];
+      point1[1] =
+        point1[2] * camera.sinAndCos[2] + point1[1] * camera.sinAndCos[3];
+      point1[2] = point1[2] * camera.sinAndCos[3] - temp * camera.sinAndCos[2];
       temp = point1[0];
-      point1[0] = point1[1] * camera.sinAndCos[4] + point1[0] * camera.sinAndCos[5];point1[1] = point1[1] * camera.sinAndCos[5] - temp * camera.sinAndCos[4];
+      point1[0] =
+        point1[1] * camera.sinAndCos[4] + point1[0] * camera.sinAndCos[5];
+      point1[1] = point1[1] * camera.sinAndCos[5] - temp * camera.sinAndCos[4];
 
       temp = point2[0];
-      point2[0] = point2[2] * camera.sinAndCos[0] + point2[0] * camera.sinAndCos[1];point2[2] = point2[2] * camera.sinAndCos[1] - temp * camera.sinAndCos[0];
+      point2[0] =
+        point2[2] * camera.sinAndCos[0] + point2[0] * camera.sinAndCos[1];
+      point2[2] = point2[2] * camera.sinAndCos[1] - temp * camera.sinAndCos[0];
       temp = point2[1];
-      point2[1] = point2[2] * camera.sinAndCos[2] + point2[1] * camera.sinAndCos[3];point2[2] = point2[2] * camera.sinAndCos[3] - temp * camera.sinAndCos[2];
+      point2[1] =
+        point2[2] * camera.sinAndCos[2] + point2[1] * camera.sinAndCos[3];
+      point2[2] = point2[2] * camera.sinAndCos[3] - temp * camera.sinAndCos[2];
       temp = point2[0];
-      point2[0] = point2[1] * camera.sinAndCos[4] + point2[0] * camera.sinAndCos[5];point2[1] = point2[1] * camera.sinAndCos[5] - temp * camera.sinAndCos[4];
+      point2[0] =
+        point2[1] * camera.sinAndCos[4] + point2[0] * camera.sinAndCos[5];
+      point2[1] = point2[1] * camera.sinAndCos[5] - temp * camera.sinAndCos[4];
 
       temp = point3[0];
-      point3[0] = point3[2] * camera.sinAndCos[0] + point3[0] * camera.sinAndCos[1];point3[2] = point3[2] * camera.sinAndCos[1] - temp * camera.sinAndCos[0];
+      point3[0] =
+        point3[2] * camera.sinAndCos[0] + point3[0] * camera.sinAndCos[1];
+      point3[2] = point3[2] * camera.sinAndCos[1] - temp * camera.sinAndCos[0];
       temp = point3[1];
-      point3[1] = point3[2] * camera.sinAndCos[2] + point3[1] * camera.sinAndCos[3];point3[2] = point3[2] * camera.sinAndCos[3] - temp * camera.sinAndCos[2];
+      point3[1] =
+        point3[2] * camera.sinAndCos[2] + point3[1] * camera.sinAndCos[3];
+      point3[2] = point3[2] * camera.sinAndCos[3] - temp * camera.sinAndCos[2];
       temp = point3[0];
-      point3[0] = point3[1] * camera.sinAndCos[4] + point3[0] * camera.sinAndCos[5];point3[1] = point3[1] * camera.sinAndCos[5] - temp * camera.sinAndCos[4];
-      
-      if (point1[2] < 1 && point2[2] < 1 && point3[2] < 1) {return;}
+      point3[0] =
+        point3[1] * camera.sinAndCos[4] + point3[0] * camera.sinAndCos[5];
+      point3[1] = point3[1] * camera.sinAndCos[5] - temp * camera.sinAndCos[4];
+
+      if (point1[2] < 1 && point2[2] < 1 && point3[2] < 1) {
+        return;
+      }
 
       //Get projection points
       let project1 = fov / point1[2];
       let project2 = fov / point2[2];
       let project3 = fov / point3[2];
 
-      point1[0] = point1[0] * project1;point1[1] = point1[1] * project1;
-      point2[0] = point2[0] * project2;point2[1] = point2[1] * project2;
-      point3[0] = point3[0] * project3;point3[1] = point3[1] * project3;
+      point1[0] = point1[0] * project1;
+      point1[1] = point1[1] * project1;
+      point2[0] = point2[0] * project2;
+      point2[1] = point2[1] * project2;
+      point3[0] = point3[0] * project3;
+      point3[1] = point3[1] * project3;
 
       //Corner Pinch
-      penPModule.setTrianglePointAttribute({ point:1, attribute:6, value:point1[2] }, util);
-      penPModule.setTrianglePointAttribute({ point:2, attribute:6, value:point2[2] }, util);
-      penPModule.setTrianglePointAttribute({ point:3, attribute:6, value:point3[2] }, util);
+      penPModule.setTrianglePointAttribute(
+        { point: 1, attribute: 6, value: point1[2] },
+        util
+      );
+      penPModule.setTrianglePointAttribute(
+        { point: 2, attribute: 6, value: point2[2] },
+        util
+      );
+      penPModule.setTrianglePointAttribute(
+        { point: 3, attribute: 6, value: point3[2] },
+        util
+      );
       //Depth Buffer Value
-      penPModule.setTrianglePointAttribute({ point:1, attribute:5, value:point1[2] }, util);
-      penPModule.setTrianglePointAttribute({ point:2, attribute:5, value:point2[2] }, util);
-      penPModule.setTrianglePointAttribute({ point:3, attribute:5, value:point3[2] }, util);
+      penPModule.setTrianglePointAttribute(
+        { point: 1, attribute: 5, value: point1[2] },
+        util
+      );
+      penPModule.setTrianglePointAttribute(
+        { point: 2, attribute: 5, value: point2[2] },
+        util
+      );
+      penPModule.setTrianglePointAttribute(
+        { point: 3, attribute: 5, value: point3[2] },
+        util
+      );
 
-      penPModule.drawSolidTri({ x1:point1[0], y1:point1[1], x2:point2[0], y2:point2[1], x3:point3[0], y3:point3[1] },util);
+      penPModule.drawSolidTri(
+        {
+          x1: point1[0],
+          y1: point1[1],
+          x2: point2[0],
+          y2: point2[1],
+          x3: point3[0],
+          y3: point3[1],
+        },
+        util
+      );
     }
-    draw3dTexTri({ point1, point2, point3, texture },util) {
+    draw3dTexTri({ point1, point2, point3, texture }, util) {
       if (!penPModule) throw "Pen+ module not found";
-      point1 = JSON.parse(point1);point2 = JSON.parse(point2);point3 = JSON.parse(point3);
+      point1 = JSON.parse(point1);
+      point2 = JSON.parse(point2);
+      point3 = JSON.parse(point3);
       //Check if we have all needed points
-      if (!(point1.length >= 3 && point2.length >=3 && point3.length >= 3)) throw "All points are not Vector3s!";
+      if (!(point1.length >= 3 && point2.length >= 3 && point3.length >= 3))
+        throw "All points are not Vector3s!";
       //cast points to number
-      
+
       const target = util.target;
-      
+
       this.checkFor3dPositionData(target.id);
       const sprX = spriteData[target.id].position[0] - camera.position[0];
       const sprY = spriteData[target.id].position[1] - camera.position[1];
       const sprZ = spriteData[target.id].position[2] - camera.position[2];
 
-      point1[0] = Scratch.Cast.toNumber(point1[0]) + sprX;point1[1] = Scratch.Cast.toNumber(point1[1]) + sprY;point1[2] = Scratch.Cast.toNumber(point1[2]) + sprZ;
-      point2[0] = Scratch.Cast.toNumber(point2[0]) + sprX;point2[1] = Scratch.Cast.toNumber(point2[1]) + sprY;point2[2] = Scratch.Cast.toNumber(point2[2]) + sprZ;
-      point3[0] = Scratch.Cast.toNumber(point3[0]) + sprX;point3[1] = Scratch.Cast.toNumber(point3[1]) + sprY;point3[2] = Scratch.Cast.toNumber(point3[2]) + sprZ;
+      point1[0] = Scratch.Cast.toNumber(point1[0]) + sprX;
+      point1[1] = Scratch.Cast.toNumber(point1[1]) + sprY;
+      point1[2] = Scratch.Cast.toNumber(point1[2]) + sprZ;
+      point2[0] = Scratch.Cast.toNumber(point2[0]) + sprX;
+      point2[1] = Scratch.Cast.toNumber(point2[1]) + sprY;
+      point2[2] = Scratch.Cast.toNumber(point2[2]) + sprZ;
+      point3[0] = Scratch.Cast.toNumber(point3[0]) + sprX;
+      point3[1] = Scratch.Cast.toNumber(point3[1]) + sprY;
+      point3[2] = Scratch.Cast.toNumber(point3[2]) + sprZ;
       //Rotate points around camera
       let temp = point1[0];
-      point1[0] = point1[2] * camera.sinAndCos[0] + point1[0] * camera.sinAndCos[1];point1[2] = point1[2] * camera.sinAndCos[1] - temp * camera.sinAndCos[0];
+      point1[0] =
+        point1[2] * camera.sinAndCos[0] + point1[0] * camera.sinAndCos[1];
+      point1[2] = point1[2] * camera.sinAndCos[1] - temp * camera.sinAndCos[0];
       temp = point1[1];
-      point1[1] = point1[2] * camera.sinAndCos[2] + point1[1] * camera.sinAndCos[3];point1[2] = point1[2] * camera.sinAndCos[3] - temp * camera.sinAndCos[2];
+      point1[1] =
+        point1[2] * camera.sinAndCos[2] + point1[1] * camera.sinAndCos[3];
+      point1[2] = point1[2] * camera.sinAndCos[3] - temp * camera.sinAndCos[2];
       temp = point1[0];
-      point1[0] = point1[1] * camera.sinAndCos[4] + point1[0] * camera.sinAndCos[5];point1[1] = point1[1] * camera.sinAndCos[5] - temp * camera.sinAndCos[4];
+      point1[0] =
+        point1[1] * camera.sinAndCos[4] + point1[0] * camera.sinAndCos[5];
+      point1[1] = point1[1] * camera.sinAndCos[5] - temp * camera.sinAndCos[4];
 
       temp = point2[0];
-      point2[0] = point2[2] * camera.sinAndCos[0] + point2[0] * camera.sinAndCos[1];point2[2] = point2[2] * camera.sinAndCos[1] - temp * camera.sinAndCos[0];
+      point2[0] =
+        point2[2] * camera.sinAndCos[0] + point2[0] * camera.sinAndCos[1];
+      point2[2] = point2[2] * camera.sinAndCos[1] - temp * camera.sinAndCos[0];
       temp = point2[1];
-      point2[1] = point2[2] * camera.sinAndCos[2] + point2[1] * camera.sinAndCos[3];point2[2] = point2[2] * camera.sinAndCos[3] - temp * camera.sinAndCos[2];
+      point2[1] =
+        point2[2] * camera.sinAndCos[2] + point2[1] * camera.sinAndCos[3];
+      point2[2] = point2[2] * camera.sinAndCos[3] - temp * camera.sinAndCos[2];
       temp = point2[0];
-      point2[0] = point2[1] * camera.sinAndCos[4] + point2[0] * camera.sinAndCos[5];point2[1] = point2[1] * camera.sinAndCos[5] - temp * camera.sinAndCos[4];
+      point2[0] =
+        point2[1] * camera.sinAndCos[4] + point2[0] * camera.sinAndCos[5];
+      point2[1] = point2[1] * camera.sinAndCos[5] - temp * camera.sinAndCos[4];
 
       temp = point3[0];
-      point3[0] = point3[2] * camera.sinAndCos[0] + point3[0] * camera.sinAndCos[1];point3[2] = point3[2] * camera.sinAndCos[1] - temp * camera.sinAndCos[0];
+      point3[0] =
+        point3[2] * camera.sinAndCos[0] + point3[0] * camera.sinAndCos[1];
+      point3[2] = point3[2] * camera.sinAndCos[1] - temp * camera.sinAndCos[0];
       temp = point3[1];
-      point3[1] = point3[2] * camera.sinAndCos[2] + point3[1] * camera.sinAndCos[3];point3[2] = point3[2] * camera.sinAndCos[3] - temp * camera.sinAndCos[2];
+      point3[1] =
+        point3[2] * camera.sinAndCos[2] + point3[1] * camera.sinAndCos[3];
+      point3[2] = point3[2] * camera.sinAndCos[3] - temp * camera.sinAndCos[2];
       temp = point3[0];
-      point3[0] = point3[1] * camera.sinAndCos[4] + point3[0] * camera.sinAndCos[5];point3[1] = point3[1] * camera.sinAndCos[5] - temp * camera.sinAndCos[4];
-      
-      if (point1[2] < 1 && point2[2] < 1 && point3[2] < 1) {return;}
+      point3[0] =
+        point3[1] * camera.sinAndCos[4] + point3[0] * camera.sinAndCos[5];
+      point3[1] = point3[1] * camera.sinAndCos[5] - temp * camera.sinAndCos[4];
+
+      if (point1[2] < 1 && point2[2] < 1 && point3[2] < 1) {
+        return;
+      }
 
       //Get projection points
       let project1 = fov / point1[2];
       let project2 = fov / point2[2];
       let project3 = fov / point3[2];
 
-      point1[0] = point1[0] * project1;point1[1] = point1[1] * project1;
-      point2[0] = point2[0] * project2;point2[1] = point2[1] * project2;
-      point3[0] = point3[0] * project3;point3[1] = point3[1] * project3;
+      point1[0] = point1[0] * project1;
+      point1[1] = point1[1] * project1;
+      point2[0] = point2[0] * project2;
+      point2[1] = point2[1] * project2;
+      point3[0] = point3[0] * project3;
+      point3[1] = point3[1] * project3;
 
       //Corner Pinch
-      penPModule.setTrianglePointAttribute({ point:1, attribute:6, value:point1[2] }, util);
-      penPModule.setTrianglePointAttribute({ point:2, attribute:6, value:point2[2] }, util);
-      penPModule.setTrianglePointAttribute({ point:3, attribute:6, value:point3[2] }, util);
+      penPModule.setTrianglePointAttribute(
+        { point: 1, attribute: 6, value: point1[2] },
+        util
+      );
+      penPModule.setTrianglePointAttribute(
+        { point: 2, attribute: 6, value: point2[2] },
+        util
+      );
+      penPModule.setTrianglePointAttribute(
+        { point: 3, attribute: 6, value: point3[2] },
+        util
+      );
       //Depth Buffer Value
-      penPModule.setTrianglePointAttribute({ point:1, attribute:5, value:point1[2] }, util);
-      penPModule.setTrianglePointAttribute({ point:2, attribute:5, value:point2[2] }, util);
-      penPModule.setTrianglePointAttribute({ point:3, attribute:5, value:point3[2] }, util);
+      penPModule.setTrianglePointAttribute(
+        { point: 1, attribute: 5, value: point1[2] },
+        util
+      );
+      penPModule.setTrianglePointAttribute(
+        { point: 2, attribute: 5, value: point2[2] },
+        util
+      );
+      penPModule.setTrianglePointAttribute(
+        { point: 3, attribute: 5, value: point3[2] },
+        util
+      );
 
-      penPModule.drawTexTri({ x1:point1[0], y1:point1[1], x2:point2[0], y2:point2[1], x3:point3[0], y3:point3[1], tex:texture },util);
+      penPModule.drawTexTri(
+        {
+          x1: point1[0],
+          y1: point1[1],
+          x2: point2[0],
+          y2: point2[1],
+          x3: point3[0],
+          y3: point3[1],
+          tex: texture,
+        },
+        util
+      );
     }
     tdMathPPCosMen() {
       if (!penPModule) throw "Pen+ module not found";
@@ -1013,6 +1191,37 @@
       }
       return "[0,0]";
     }
+    project2DBehindCam({ a }) {
+      a = JSON.parse(a);
+
+      if (a) {
+        a[0] -= camera.position[0];
+        a[1] -= camera.position[1];
+        a[2] -= camera.position[2];
+
+        let temp = a[0];
+
+        a[0] = a[2] * camera.sinAndCos[0] + a[0] * camera.sinAndCos[1];
+        a[2] = a[2] * camera.sinAndCos[1] - temp * camera.sinAndCos[0];
+
+        temp = a[1];
+
+        a[1] = a[2] * camera.sinAndCos[2] + a[1] * camera.sinAndCos[3];
+        a[2] = a[2] * camera.sinAndCos[3] - temp * camera.sinAndCos[2];
+
+        temp = a[0];
+
+        a[0] = a[1] * camera.sinAndCos[4] + a[0] * camera.sinAndCos[5];
+        a[1] = a[1] * camera.sinAndCos[5] - temp * camera.sinAndCos[4];
+
+        let project = fov / a[2];
+
+        if (a[2] < 1) {
+          return true;
+        }
+      }
+      return false;
+    }
     project2DFromPos({ a, b, yaw, pitch, roll }) {
       a = JSON.parse(a);
       b = JSON.parse(b);
@@ -1177,7 +1386,7 @@
         camera.position[2] += a[2];
       }
     }
-    cam3DchangePositionOnAxis({ a, axis}) {
+    cam3DchangePositionOnAxis({ a, axis }) {
       a = Scratch.Cast.toNumber(a);
       axis = Scratch.Cast.toNumber(axis);
 
@@ -1221,7 +1430,7 @@
         ];
       }
     }
-    cam3DchangeRotationOnAxis({ a, rotator}) {
+    cam3DchangeRotationOnAxis({ a, rotator }) {
       a = Scratch.Cast.toNumber(a);
       rotator = Scratch.Cast.toNumber(rotator);
 
@@ -1251,7 +1460,7 @@
     }
     checkFor3dPositionData(targetID) {
       if (!spriteData[targetID]) {
-        spriteData[targetID] = {position:[0, 0, fov], size:100};
+        spriteData[targetID] = { position: [0, 0, fov], size: 100 };
       }
     }
     spr3DsetPosition({ a }, util) {
@@ -1265,7 +1474,7 @@
         spriteData[target.id].position[2] = a[2];
       }
     }
-    spr3DsetPositionComponent({ a, component }, util){
+    spr3DsetPositionComponent({ a, component }, util) {
       const target = util.target;
       this.checkFor3dPositionData(target.id);
 
@@ -1273,7 +1482,8 @@
 
       if (a) {
         //String literal for the funnies!
-        if (spriteData[target.id].position[component] == undefined) throw `Component ${component} doesn't exist`;
+        if (spriteData[target.id].position[component] == undefined)
+          throw `Component ${component} doesn't exist`;
         spriteData[target.id].position[component] = a;
       }
     }
@@ -1289,18 +1499,20 @@
         spriteData[target.id].position[2] += a[2];
       }
     }
-    spr3DchangePositionComponent({ a, component }, util){
+    spr3DchangePositionComponent({ a, component }, util) {
       const target = util.target;
       this.checkFor3dPositionData(target.id);
       //String literal for the funnies!
-      if (spriteData[target.id].position[component] == undefined) throw `Component ${component} doesn't exist`;
+      if (spriteData[target.id].position[component] == undefined)
+        throw `Component ${component} doesn't exist`;
       spriteData[target.id].position[component] += a;
     }
-    spr3DgetPositionComponent({component}, util) {
+    spr3DgetPositionComponent({ component }, util) {
       const target = util.target;
       this.checkFor3dPositionData(target.id);
       //String literal for the funnies!
-      if ((spriteData[target.id].position[component] == undefined)) throw `Component ${component} doesn't exist`;
+      if (spriteData[target.id].position[component] == undefined)
+        throw `Component ${component} doesn't exist`;
       return spriteData[target.id].position[component];
     }
     spr3DgetPosition(args, util) {
@@ -1334,18 +1546,27 @@
 
       let temp = myData.position[0];
 
-      myData.position[0] = myData.position[2] * camera.sinAndCos[0] + myData.position[0] * camera.sinAndCos[1];
-      myData.position[2] = myData.position[2] * camera.sinAndCos[1] - temp * camera.sinAndCos[0];
+      myData.position[0] =
+        myData.position[2] * camera.sinAndCos[0] +
+        myData.position[0] * camera.sinAndCos[1];
+      myData.position[2] =
+        myData.position[2] * camera.sinAndCos[1] - temp * camera.sinAndCos[0];
 
       temp = myData.position[1];
 
-      myData.position[1] = myData.position[2] * camera.sinAndCos[2] + myData.position[1] * camera.sinAndCos[3];
-      myData.position[2] = myData.position[2] * camera.sinAndCos[3] - temp * camera.sinAndCos[2];
+      myData.position[1] =
+        myData.position[2] * camera.sinAndCos[2] +
+        myData.position[1] * camera.sinAndCos[3];
+      myData.position[2] =
+        myData.position[2] * camera.sinAndCos[3] - temp * camera.sinAndCos[2];
 
       temp = myData.position[0];
 
-      myData.position[0] = myData.position[1] * camera.sinAndCos[4] + myData.position[0] * camera.sinAndCos[5];
-      myData.position[1] = myData.position[1] * camera.sinAndCos[5] - temp * camera.sinAndCos[4];
+      myData.position[0] =
+        myData.position[1] * camera.sinAndCos[4] +
+        myData.position[0] * camera.sinAndCos[5];
+      myData.position[1] =
+        myData.position[1] * camera.sinAndCos[5] - temp * camera.sinAndCos[4];
 
       let project = fov / myData.position[2];
 
@@ -1354,7 +1575,10 @@
       } else {
         target.setVisible(true);
         target.setSize(myData.size * project);
-        target.setXY(myData.position[0] * project, myData.position[1] * project);
+        target.setXY(
+          myData.position[0] * project,
+          myData.position[1] * project
+        );
       }
     }
   }

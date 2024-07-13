@@ -1,5 +1,6 @@
 <script>
     import DocsPages from "$lib/Documentation/pages.js";
+    
     const pages = Object.keys(DocsPages);
     const amount = pages.length;
 </script>

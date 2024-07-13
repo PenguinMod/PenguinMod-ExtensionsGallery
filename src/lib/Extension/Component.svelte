@@ -1,4 +1,6 @@
 <script>
+    import { selectedRecommendedExt, searchRecommendations } from '$lib/stores.js';
+
     export let name = "Test";
     export let image = "/images/example.png";
     export let url = "";
@@ -19,15 +21,24 @@
      */
     let copyPrompt;
 
-    function copiedToClipboard() {
-        const scrollAmount = document.documentElement.scrollTop;
-        const rectButton = copyButton.getBoundingClientRect();
-        const rectPrompt = copyPrompt.getBoundingClientRect();
-        const x = rectButton.left + rectButton.width / 2 - rectPrompt.width / 2;
+    // used for search
+    export let relUrl = "";
+
+    const displayCopiedToClipboard = (x, y) => {
+        if (!(copyButton && copyPrompt)) return;
+        if ((typeof x !== 'number' || typeof y !== 'number')) {
+            const scrollAmount = document.documentElement.scrollTop;
+            const rectButton = copyButton.getBoundingClientRect();
+            const rectPrompt = copyPrompt.getBoundingClientRect();
+            if (typeof x !== 'number') {
+                x = rectButton.left + rectButton.width / 2 - rectPrompt.width / 2;
+            }
+            if (typeof y !== 'number') {
+                y = rectButton.top + scrollAmount - (rectPrompt.height + 10);
+            }
+        }
         copyPrompt.style.left = `${x}px`;
-        copyPrompt.style.top = `${
-            rectButton.top + scrollAmount - (rectPrompt.height + 10)
-        }px`;
+        copyPrompt.style.top = `${y}px`;
 
         const animationDuration = 80;
         copyPrompt.animate(
@@ -61,7 +72,20 @@
                 }
             );
         }, 1500);
-    }
+    };
+    const copyToClipboard = (url, ...args) => {
+        navigator.clipboard.writeText(url).then(() => {
+            displayCopiedToClipboard(...args);
+        });
+    };
+
+    selectedRecommendedExt.subscribe((subUrl) => {
+        if (!subUrl) return;
+        if (subUrl === relUrl) {
+            copyToClipboard(url);
+            $searchRecommendations = [];
+        }
+    });
 </script>
 
 <div bind:this={copyPrompt} class="copied" style="opacity: 0;">
@@ -96,11 +120,7 @@
     <div class="block-buttons">
         <div>
             <button
-                on:click={() => {
-                    navigator.clipboard.writeText(url).then(() => {
-                        copiedToClipboard();
-                    });
-                }}
+                on:click={() => copyToClipboard(url)}
                 bind:this={copyButton}
                 class="blue"
             >
@@ -144,6 +164,7 @@
         border-radius: 6px;
         padding: 8px;
         margin: 4px;
+        max-width: calc(600px / 1.85);
         display: flex;
         flex-direction: column;
         justify-content: space-between;
@@ -159,7 +180,6 @@
 
     .image {
         width: calc(600px / 1.85);
-        height: calc(300px / 1.85);
         object-fit: cover;
         border-radius: 4px;
     }

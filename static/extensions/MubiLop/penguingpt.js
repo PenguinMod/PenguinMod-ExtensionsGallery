@@ -11,6 +11,7 @@
 // (YOU DO NOT NEED TO LOAD UNSANDBOXED)
 // By LOLEMO, Forked by Anonymous_cat1 and then forked by MubiLop
 // Only tested on Penguinmod.com
+// IDs are not changed from PenguinGPT to PenguinAI for compability
 
 (function(Scratch) {
     'use strict';
@@ -20,7 +21,7 @@
     // Initialize the api_url variable with a default value
     let api_url = 'https://reverse.mubi.tech/v1';
     const vm = Scratch.vm;
-    class PenguinAI {
+    class PenguinGPT {
         constructor() { // thank u Ashime for helping me here!!!
             this.chatHistories = {};
             this.model = "gpt-4o";
@@ -33,7 +34,7 @@
 
         getInfo() {
             return {
-                id: "penguinAI",
+                id: "penguinGPT",
                 name: "PenguinAI",
                 menuIconURI: extIcon,
                 blockIconURI: gptIcon,
@@ -729,5 +730,5 @@
          }
 
     }
-    Scratch.extensions.register(new PenguinAI());
+    Scratch.extensions.register(new PenguinGPT());
 })(Scratch);

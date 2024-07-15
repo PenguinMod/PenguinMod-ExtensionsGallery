@@ -67,8 +67,8 @@ export default [
         isGitHub: true,
     },
     {
-        name: "PenguinGPT",
-        description: "Talk to ChatGPT! Use models like DALL-E 3, Midjourney, and GPT 4.",
+        name: "PenguinAI",
+        description: "Talk to AI! Use Models like DALL-E-3, GPT, LLama, Claude, and more!",
         code: "MubiLop/penguingpt.js",
         banner: "MubiLop/penguingpt.png",
         creator: "MubiLop",

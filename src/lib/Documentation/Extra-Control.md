@@ -69,6 +69,8 @@ set [my variable v] to (loop index ::control)
 }@loopArrow ::control // The Variable will be Set to the Amount of Times the Loop Repeats Before "space" is Pressed
 ```
 
+---
+
 ```scratch
 repeat (10) or until <> {
 } ::control

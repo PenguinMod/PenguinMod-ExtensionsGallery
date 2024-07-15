@@ -318,7 +318,7 @@
                         items: [
                         {
                             text: "DALL-E 3",
-                            value: "dalle-3"
+                            value: "dall-e-3"
                         }, 
                         {
                             text: "Dreamshaper 8",

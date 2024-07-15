@@ -55,6 +55,21 @@ This Block Resets all Keybinds
 ## Basic Control Blocks
 
 ```scratch
+(loop index ::control)
+```
+This Block returns the amount of Times it is Looped Through in a Script, For Example:
+```scratch
+repeat(5) {
+add (loop index ::control) to [my list v]
+}@loopArrow ::control // The List will have the items: 1, 2, 3, 4, 5
+
+repeat until <key (space v) pressed? > {
+set [my variable v] to (loop index ::control)
+...
+}@loopArrow ::control // The Variable will be Set to the Amount of Times the Loop Repeats Before "space" is Pressed
+```
+
+```scratch
 repeat (10) or until <> {
 } ::control
 ```

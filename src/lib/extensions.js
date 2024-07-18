@@ -400,7 +400,7 @@ export default [
         creator: "Ashimee",
         isGitHub: true,
     },
-        {
+    {
         name: "Big Decimal",
         description: "High precision operations. (Support decimals)",
         code: "qxsck/big-decimal.js",
@@ -409,12 +409,12 @@ export default [
         isGitHub: true,
     },
     {
-    name: "Git Penguin",
-    description: "Make requests and control the files for your GitHub repository.",
-    code: "justablock/gitpenguin.js",
-    banner: "justablock/gitpenguin.png",
-    creator: "justablock",
-    isGitHub: false, 
+        name: "Git Penguin",
+        description: "Make requests and control the files for your GitHub repository.",
+        code: "justablock/gitpenguin.js",
+        banner: "justablock/gitpenguin.png",
+        creator: "justablock",
+        isGitHub: false, 
     },
     {
         name: "Beepbox Player",
@@ -423,5 +423,5 @@ export default [
         banner: "DogeisCut/BeepBoxPlayer.svg",
         creator: "DogeisCut",
         isGitHub: true, 
-},
+    },
 ];

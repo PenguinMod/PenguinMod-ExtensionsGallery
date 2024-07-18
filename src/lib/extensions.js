@@ -415,5 +415,13 @@ export default [
     banner: "justablock/gitpenguin.png",
     creator: "justablock",
     isGitHub: false, 
+    },
+    {
+        name: "Beepbox Player",
+        description: "Play, edit, and read songs from any BeepBox mod directly from the URL or JSON!",
+        code: "DogeisCut/BeepBoxPlayer.js",
+        banner: "DogeisCut/BeepBoxPlayer.svg",
+        creator: "DogeisCut",
+        isGitHub: true, 
 },
 ];

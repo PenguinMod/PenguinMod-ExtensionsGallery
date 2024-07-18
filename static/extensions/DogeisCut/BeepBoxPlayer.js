@@ -400,17 +400,16 @@
       }
     }
 
-    playSongWait(args) {
-      synth.activateAudio();
-      synth.play();
-      return new Promise((resolve, reject) => {
-        const checkIsPlaying = () => {
-          if (synth.isPlayingSong) setTimeout(checkIsPlaying, 100);
-          else resolve();
-        };
-
-        checkIsPlaying();
-      });
+    playSongWait(args, util) {
+      if (synth.waitBlockNotPlay == false || synth.waitBlockNotPlay == null) {
+        this.playSong(args)
+        synth.waitBlockNotPlay = true
+      }
+      if (synth.isPlayingSong) {
+        util.yield();
+      } else {
+        synth.waitBlockNotPlay = false
+      }
     }
 
     pauseSong(args) {

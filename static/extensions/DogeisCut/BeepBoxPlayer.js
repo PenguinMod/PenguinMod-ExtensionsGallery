@@ -221,6 +221,29 @@
           },
           "---",
           {
+            opcode: "muteChannel",
+            blockType: Scratch.BlockType.COMMAND,
+            text: "mute channel [CHANNEL]",
+            arguments: {
+              CHANNEL: {
+                type: Scratch.ArgumentType.NUMBER,
+                menu: "CHANNELS_MENU",
+              },
+            },
+          },
+          {
+            opcode: "unmuteChannel",
+            blockType: Scratch.BlockType.COMMAND,
+            text: "unmute channel [CHANNEL]",
+            arguments: {
+              CHANNEL: {
+                type: Scratch.ArgumentType.NUMBER,
+                menu: "CHANNELS_MENU",
+              },
+            },
+          },
+          "---",
+          {
             opcode: "enableLooping",
             blockType: Scratch.BlockType.COMMAND,
             text: "enable looping",
@@ -288,7 +311,7 @@
           },
           SONG_MENU: {
             acceptReporters: false,
-            items: ["tempo", "channels", "volume", "title"],
+            items: ["tempo", "channels", "volume", "title", "json", "url"],
           },
           CURRENT_MENU_LIMITED: {
             acceptReporters: false,
@@ -301,6 +324,10 @@
           SYNTHS_MENU: {
             acceptReporters: true,
             items: "getSynths",
+          },
+          CHANNELS_MENU: {
+            acceptReporters: true,
+            items: "getChannels",
           },
         },
       };
@@ -316,6 +343,18 @@
         });
       }
       return gettingSynths;
+    }
+
+    getChannels() {
+      const gettingChannels = [];
+      for (let i in synth.song.channels) {
+        let javascriptMoment = Scratch.Cast.toNumber(i) + 1;
+        gettingChannels.push({
+          text: Scratch.Cast.toString(javascriptMoment),
+          value: Scratch.Cast.toString(javascriptMoment),
+        });
+      }
+      return gettingChannels;
     }
 
     current(args) {
@@ -357,11 +396,15 @@
         case "tempo":
           return synth.song.tempo;
         case "channels":
-          return synth.song.channels.length;
+          return synth.song.getChannelCount();
         case "volume":
           return synth.volume * 100;
         case "title":
           return synth.song.title;
+        case "json":
+          return JSON.stringify(synth.song.toJsonObject());
+        case "url":
+          return synth.song.toBase64String();
       }
     }
     setSongValue(args) {
@@ -431,6 +474,17 @@
     changeSongVolume(args) {
       synth.volume += args.VOLUME / 100;
       synth.volume = Math.max(Math.min(synth.volume * 100, 200), 0) / 100;
+    }
+
+    muteChannel(args) {
+      var targetChannel = Scratch.Cast.toNumber(args.CHANNEL)-1
+      targetChannel = Math.min(Math.max(targetChannel, 0), synth.song.getChannelCount()-1)
+      synth.song.channels[targetChannel].muted = true
+    }
+    unmuteChannel(args) {
+      var targetChannel = Scratch.Cast.toNumber(args.CHANNEL)-1
+      targetChannel = Math.min(Math.max(targetChannel, 0), synth.song.getChannelCount()-1)
+      synth.song.channels[targetChannel].muted = false
     }
 
     disableLooping(args) {

@@ -31,7 +31,7 @@
             if (scalar !== 0) {
                 return new Vector2(this.x / scalar, this.y / scalar);
             } else {
-                throw new Vector2(this.x == 0 ? NaN : Infinity * Math.sign(this.x), this.y == 0 ? NaN : Infinity * Math.sign(this.y));
+                return new Vector2(this.x == 0 ? NaN : Infinity * Math.sign(this.x), this.y == 0 ? NaN : Infinity * Math.sign(this.y));
             }
         }
     

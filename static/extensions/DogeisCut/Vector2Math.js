@@ -26,13 +26,13 @@
         subtract(v) {
             return new Vector2(this.x - v.x, this.y - v.y);
         }
+
+        multiply(scalar) {
+            return new Vector2(this.x * scalar, this.y * scalar);
+        }
     
         divide(scalar) {
-            if (scalar !== 0) {
-                return new Vector2(this.x / scalar, this.y / scalar);
-            } else {
-                return new Vector2(this.x == 0 ? NaN : Infinity * Math.sign(this.x), this.y == 0 ? NaN : Infinity * Math.sign(this.y));
-            }
+            return new Vector2(this.x / scalar, this.y / scalar);
         }
     
         dot(v) {

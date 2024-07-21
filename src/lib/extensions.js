@@ -424,4 +424,12 @@ export default [
         creator: "DogeisCut",
         isGitHub: true, 
     },
+    {
+        name: "Vector2 Math",
+        description: "Adds a completley new Vector2 data type with it's associated math functions!",
+        code: "DogeisCut/Vector2Math.js",
+        banner: "DogeisCut/Vector2Math.svg",
+        creator: "DogeisCut",
+        isGitHub: true, 
+    },
 ];

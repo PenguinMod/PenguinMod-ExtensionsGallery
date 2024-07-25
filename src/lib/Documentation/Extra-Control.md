@@ -95,11 +95,16 @@ The Loop will stop when a Second Condition is **false**
 ---
 
 ```scratch
+run next cycle      @loopArrow  ::control cap
+```
+This Block will Move to the Next Iteration (top of the loop script) in the Loop it is in.
+
+---
+
+```scratch
 break out loop @turnRight  ::control cap
 ```
-This Block will Break Out of the Loop (C-Block) it is in.
-**If the Compiler is turned Off**, the Block will Break Out of **ALL** Loops it is in.
-(This is a Development Issue that cannot be solved at the moment :( )
+This Block will Break Out of the Loop it is in.
 
 ---
 

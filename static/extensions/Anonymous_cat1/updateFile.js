@@ -1,233 +1,187 @@
-// --Update File (Direct Access)--
-// Edit/Read files dynamically without prompting to reselect it.
-// REQUIRES TO BE RAN UNSANDBOXED.
-// Created by Anonymous_cat1, revised by GPT-4o-mini model.
+// Name: Update File (Direct Access)
+// ID: ACatUpdateFile
+// Description: Edit/Read files dynamically without prompting to reselect it.
+// By: Anonymous_cat1
+
+//  Version 1.0.0
 
 (function (Scratch) {
-	'use strict';
+  "use strict";
+  if (!Scratch.extensions.unsandboxed) throw new Error("Update File was loaded sandboxed. Update File must run unsandboxed");
 
-	// If running in a sandbox, kill the extension
-	if (!Scratch.extensions.unsandboxed) {
-		throw new Error('Update File was loaded sandboxed. Update File requires to be loaded unsandboxed to save changes to files.');
-		return;
-	}
+  const menuIconURI =
+    "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIzNS40NzgiIGhlaWdodD0iMzUuNDc4IiB2aWV3Qm94PSIwIDAgMzUuNDc4IDM1LjQ3OCI+PGcgc3Ryb2tlLXdpZHRoPSIwIiBzdHJva2UtbWl0ZXJsaW1pdD0iMTAiPjxwYXRoIGQ9Ik0wIDE3LjczOUMwIDcuOTQyIDcuOTQyIDAgMTcuNzM5IDBzMTcuNzM5IDcuOTQyIDE3LjczOSAxNy43MzktNy45NDIgMTcuNzM5LTE3LjczOSAxNy43MzlTMCAyNy41MzYgMCAxNy43MzkiIGZpbGw9IiNlOGFiMWMiLz48cGF0aCBkPSJNMTYuMjg1IDI3Ljc3MWMtLjQ2OSAwLS44NDktLjQxLS44NDktLjkxNFYxMi40MzJjMC0uNTA0LjM4LS45MTQuODQ5LS45MTRoMy42NzF2NC4yMDZsLTIuODcuMDEzIDQuNDY3IDUuNDYzIDQuMTQ0LTUuNDc0LTIuNzU3LS4wMDJ2LTQuMjA2aDMuNzg4Yy40NjggMCAuODQ4LjQxLjg0OC45MTR2MTQuNDI1YzAgLjUwNS0uMzguOTE0LS44NDguOTE0eiIgZmlsbD0iI2ZhZmFmYSIvPjxwYXRoIGQ9Ik04Ljc1IDIzLjk1OWMtLjQ2OCAwLS44NDgtLjQwOS0uODQ4LS45MTNWOC42MjFjMC0uNTA1LjM4LS45MTQuODQ4LS45MTRoMTAuNDQzYy40NjkgMCAuODQ5LjQxLjg0OS45MTR2Mi4wOTNoLTQuNTA2Yy0uNDY4IDAtLjg0OC40MDktLjg0OC45MTRWMjMuOTZ6IiBmaWxsPSIjZmFmYWZhIi8+PC9nPjwvc3ZnPg==";
+  const blockIconURI =
+    "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyMy4xOTYiIGhlaWdodD0iMjMuNjU2IiB2aWV3Qm94PSIwIDAgMjMuMTk2IDIzLjY1NiI+PGcgZmlsbD0iI2ZhZmFmYSIgc3Ryb2tlLXdpZHRoPSIwIiBzdHJva2UtbWl0ZXJsaW1pdD0iMTAiPjxwYXRoIGQ9Ik05Ljg4MyAyMy42NTZjLS41NTIgMC0xLS40ODMtMS0xLjA3OFY1LjU3MWMwLS41OTUuNDQ4LTEuMDc3IDEtMS4wNzdoNC4zMjl2NC45NThsLTMuMzgzLjAxNiA1LjI2NSA2LjQ0IDQuODg3LTYuNDU0LTMuMjUyLS4wMDJWNC40OTRoNC40NjdjLjU1MiAwIDEgLjQ4MiAxIDEuMDc3djE3LjAwN2MwIC41OTUtLjQ0OCAxLjA3OC0xIDEuMDc4eiIvPjxwYXRoIGQ9Ik0xIDE5LjE2MmMtLjU1MiAwLTEtLjQ4Mi0xLTEuMDc3VjEuMDc4QzAgLjQ4My40NDggMCAxIDBoMTIuMzEyYy41NTMgMCAxIC40ODMgMSAxLjA3OHYyLjQ2N0g5LjAwMWMtLjU1MyAwLTEgLjQ4Mi0xIDEuMDc4djE0LjU0eiIvPjwvZz48L3N2Zz4=";
 
-	class UpdateFile {
-		constructor() {
-			this.fileHandle = null;
-		}
+  class ACatUpdateFile {
+    constructor() {
+      this.fileHandle = null;
+    }
+    getInfo() {
+      return {
+        id: "ACatUpdateFile",
+        name: "Update File (Direct Access)",
+        color1: "#e8ab1c",
+        menuIconURI,
+        blockIconURI,
+        blocks: [
+          { blockType: Scratch.BlockType.LABEL, text: "File Management" },
+          {
+            opcode: "setFile",
+            blockType: Scratch.BlockType.COMMAND,
+            text: "Set file"
+          },
+          {
+            opcode: "closeFile",
+            blockType: Scratch.BlockType.COMMAND,
+            text: "Close file"
+          },
+          {
+            opcode: "isFileOpen",
+            blockType: Scratch.BlockType.BOOLEAN,
+            text: "Is file open?",
+            disableMonitor: true
+          },
+          {
+            opcode: "checkFileSystemAPI",
+            blockType: Scratch.BlockType.BOOLEAN,
+            text: "Browser supports Direct Access?",
+            disableMonitor: true,
+          },
+          { blockType: Scratch.BlockType.LABEL, text: "File reading" },
+          {
+            opcode: "getFileContent",
+            blockType: Scratch.BlockType.REPORTER,
+            text: "Get file content as [FORMAT]",
+            disableMonitor: true,
+            arguments: {
+              FORMAT: {
+                type: Scratch.ArgumentType.STRING,
+                menu: "readFormatMenu"
+              }
+            }
+          },
+          {
+            opcode: "getFileMetadata",
+            blockType: Scratch.BlockType.REPORTER,
+            text: "Get file metadata as JSON",
+            disableMonitor: true
+          },
+          { blockType: Scratch.BlockType.LABEL, text: "File writing (Dangerous!)" },
+          {
+            opcode: "updateFile",
+            blockType: Scratch.BlockType.COMMAND,
+            text: "Write content to file from [FORMAT] [CONTENT]",
+            arguments: {
+              FORMAT: {
+                type: Scratch.ArgumentType.STRING,
+                menu: "writeFormatMenu"
+              },
+              CONTENT: {
+                type: Scratch.ArgumentType.STRING,
+                defaultValue: "Foo, Bar, Baz"
+              }
+            }
+          }
+        ],
+        menus: {
+          readFormatMenu: ["Text", "URI", "Hex (as array)"],
+          writeFormatMenu: ["Text", "URI/URL"]
+        }
+      };
+    }
 
-		getInfo() {
-			return {
-				id: 'updatefile',
-				name: 'Update File (Direct Access)',
-				color1: '#e8ab1c',
-				menuIconURI: 'data:image/svg+xml;base64,PHN2ZyB2ZXJzaW9uPSIxLjEiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyIgeG1sbnM6eGxpbms9Imh0dHA6Ly93d3cudzMub3JnLzE5OTkveGxpbmsiIHdpZHRoPSIzNS40Nzc3NCIgaGVpZ2h0PSIzNS40Nzc3NCIgdmlld0JveD0iMCwwLDM1LjQ3Nzc0LDM1LjQ3Nzc0Ij48ZyB0cmFuc2Zvcm09InRyYW5zbGF0ZSgtMjIyLjI2MTEzLC0xNjIuMjYxMTMpIj48ZyBkYXRhLXBhcGVyLWRhdGE9InsmcXVvdDtpc1BhaW50aW5nTGF5ZXImcXVvdDs6dHJ1ZX0iIGZpbGwtcnVsZT0ibm9uemVybyIgc3Ryb2tlPSJub25lIiBzdHJva2Utd2lkdGg9IjAiIHN0cm9rZS1saW5lY2FwPSJidXR0IiBzdHJva2UtbGluZWpvaW49Im1pdGVyIiBzdHJva2UtbWl0ZXJsaW1pdD0iMTAiIHN0cm9rZS1kYXNoYXJyYXk9IiIgc3Ryb2tlLWRhc2hvZmZzZXQ9IjAiIHN0eWxlPSJtaXgtYmxlbmQtbW9kZTogbm9ybWFsIj48cGF0aCBkPSJNMjIyLjI2MTEzLDE4MGMwLC05Ljc5NjkxIDcuOTQxOTYsLTE3LjczODg3IDE3LjczODg3LC0xNy43Mzg4N2M5Ljc5NjkxLDAgMTcuNzM4ODcsNy45NDE5NiAxNy43Mzg4NywxNy43Mzg4N2MwLDkuNzk2OTEgLTcuOTQxOTcsMTcuNzM4ODcgLTE3LjczODg3LDE3LjczODg3Yy05Ljc5NjkxLDAgLTE3LjczODg3LC03Ljk0MTk2IC0xNy43Mzg4NywtMTcuNzM4ODd6IiBmaWxsPSIjZThhYjFjIi8+PHBhdGggZD0iTTIzOC41NDU2NCwxOTAuMDMxODNjLTAuNDY4NDMsMCAtMC44NDgxNiwtMC40MDkxOSAtMC44NDgxNiwtMC45MTM5NnYtMTQuNDI0NDJjMCwtMC41MDQ3NiAwLjM3OTczLC0wLjkxMzk2IDAuODQ4MTYsLTAuOTEzOTZoMy42NzE2MXY0LjIwNTE4bC0yLjg2OTM3LDAuMDEzNzdsNC40NjU3LDUuNDYyNjFsNC4xNDQ3OCwtNS40NzQzOGwtMi43NTc3NiwtMC4wMDIwMXYtNC4yMDUxOGgzLjc4ODEyYzAuNDY4NDMsMCAwLjg0ODE2LDAuNDA5MTkgMC44NDgxNiwwLjkxMzk2djE0LjQyNDQyYzAsMC41MDQ3NiAtMC4zNzk3MywwLjkxMzk2IC0wLjg0ODE2LDAuOTEzOTZ6IiBmaWxsPSIjZmFmYWZhIi8+PHBhdGggZD0iTTIzMS4wMTEyOCwxODYuMjIwNWMtMC40Njg0MywwIC0wLjg0ODE2LC0wLjQwOTE5IC0wLjg0ODE2LC0wLjkxMzk1di0xNC40MjQ0MmMwLC0wLjUwNDc2IDAuMzc5NzMsLTAuOTEzOTYgMC44NDgxNiwtMC45MTM5NmgxMC40NDMwOWMwLjQ2ODQzLDAgMC44NDgxNiwwLjQwOTE5IDAuODQ4MTYsMC45MTM5NnYyLjA5MjUzaC00LjUwNTIxYy0wLjQ2ODQzLDAgLTAuODQ4MTYsMC40MDkxOSAtMC44NDgxNiwwLjkxMzk2djEyLjMzMTg5eiIgZmlsbD0iI2ZhZmFmYSIvPjwvZz48L2c+PC9zdmc+',
-				blockIconURI: 'data:image/svg+xml;base64,PHN2ZyB2ZXJzaW9uPSIxLjEiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyIgeG1sbnM6eGxpbms9Imh0dHA6Ly93d3cudzMub3JnLzE5OTkveGxpbmsiIHdpZHRoPSIyMy4xOTU4NCIgaGVpZ2h0PSIyMy42NTU1NCIgdmlld0JveD0iMCwwLDIzLjE5NTg0LDIzLjY1NTU0Ij48ZyB0cmFuc2Zvcm09InRyYW5zbGF0ZSgtMjI4LjY3NjgsLTE2OC4xOTAyNCkiPjxnIGRhdGEtcGFwZXItZGF0YT0ieyZxdW90O2lzUGFpbnRpbmdMYXllciZxdW90Ozp0cnVlfSIgZmlsbD0iI2ZhZmFmYSIgZmlsbC1ydWxlPSJub256ZXJvIiBzdHJva2U9Im5vbmUiIHN0cm9rZS13aWR0aD0iMCIgc3Ryb2tlLWxpbmVjYXA9ImJ1dHQiIHN0cm9rZS1saW5lam9pbj0ibWl0ZXIiIHN0cm9rZS1taXRlcmxpbWl0PSIxMCIgc3Ryb2tlLWRhc2hhcnJheT0iIiBzdHJva2UtZGFzaG9mZnNldD0iMCIgc3R5bGU9Im1peC1ibGVuZC1tb2RlOiBub3JtYWwiPjxwYXRoIGQ9Ik0yMzguNTYsMTkxLjg0NTc4Yy0wLjU1MjI5LDAgLTEsLTAuNDgyNDUgLTEsLTEuMDc3NTh2LTE3LjAwNjc0YzAsLTAuNTk1MTMgMC40NDc3MSwtMS4wNzc1OCAxLC0xLjA3NzU4aDQuMzI4OTJ2NC45NTgwMWwtMy4zODMwNiwwLjAxNjI0bDUuMjY1MTcsNi40NDA1NWw0Ljg4NjgsLTYuNDU0NDJsLTMuMjUxNDcsLTAuMDAyMzd2LTQuOTU4MDFoNC40NjYyOGMwLjU1MjI5LDAgMSwwLjQ4MjQ1IDEsMS4wNzc1OHYxNy4wMDY3NGMwLDAuNTk1MTMgLTAuNDQ3NzEsMS4wNzc1OCAtMSwxLjA3NzU4eiIvPjxwYXRoIGQ9Ik0yMjkuNjc2OCwxODcuMzUyMTNjLTAuNTUyMjksMCAtMSwtMC40ODI0NCAtMSwtMS4wNzc1N3YtMTcuMDA2NzRjMCwtMC41OTUxMyAwLjQ0NzcxLC0xLjA3NzU4IDEsLTEuMDc3NThoMTIuMzEyNjVjMC41NTIyOSwwIDEsMC40ODI0NSAxLDEuMDc3NTh2Mi40NjcxNGgtNS4zMTE3NWMtMC41NTIyOSwwIC0xLDAuNDgyNDUgLTEsMS4wNzc1OHYxNC41Mzk1OXoiLz48L2c+PC9nPjwvc3ZnPg==',
-				blocks: [{
-					opcode: 'noUseOPcode',
-					blockType: Scratch.BlockType.LABEL,
-					text: 'File Management',
-				},
-				{
-					opcode: 'setFile',
-					blockType: Scratch.BlockType.COMMAND,
-					text: 'Set file',
-				},
-				{
-					opcode: 'closeFile',
-					blockType: Scratch.BlockType.COMMAND,
-					text: 'Close file',
-				},
-				{
-					opcode: 'isFileOpen',
-					blockType: Scratch.BlockType.BOOLEAN,
-					text: 'Is file open?',
-					disableMonitor: true
-				},				
-				{
-					opcode: 'checkFileSystemAPI',
-					blockType: Scratch.BlockType.BOOLEAN,
-					text: 'Browser supports Direct Access?',
-					disableMonitor: true,
-				},
-				{
-					opcode: 'noUseOPcode',
-					blockType: Scratch.BlockType.LABEL,
-					text: 'File reading',
-				},
-				{
-					opcode: 'getFileContent',
-					blockType: Scratch.BlockType.REPORTER,
-					text: 'Get file content as [FORMAT]',
-					arguments: {
-						FORMAT: {
-							type: Scratch.ArgumentType.STRING,
-							menu: 'readFormatMenu',
-							defaultValue: 'Text'
-						}
-					},
-					disableMonitor: true
-				},
-				{
-					opcode: 'getFileMetadata',
-					blockType: Scratch.BlockType.REPORTER,
-					text: 'Get file metadata as JSON',
-					disableMonitor: true
-				},
-				{
-					opcode: 'noUseOPcode',
-					blockType: Scratch.BlockType.LABEL,
-					text: 'File writing (Dangerous!)',
-				},
-				{
-					opcode: 'updateFile',
-					blockType: Scratch.BlockType.COMMAND,
-					text: 'Write content to file from [FORMAT] [CONTENT]',
-					arguments: {
-						FORMAT: {
-							type: Scratch.ArgumentType.STRING,
-							menu: 'writeFormatMenu',
-							defaultValue: 'Text'
-						},
-						CONTENT: {
-							type: Scratch.ArgumentType.STRING,
-							defaultValue: 'Foo, Bar, Baz',
-						}
-					}
-				}
-				],
-				menus: {
-					readFormatMenu: {
-						items: ['Text', 'URI', 'Hex (as array)']
-					},
-					writeFormatMenu: {
-						items: ['Text', 'URI/URL']
-					}
-				}
-			};
-		}
+    async checkFileSystemAPI() {
+      return "showOpenFilePicker" in window;
+    }
 
-		async checkFileSystemAPI() {
-			return 'showOpenFilePicker' in window;
-		}
+    async isFileOpen() {
+      return this.fileHandle !== null;
+    }
 
-        async isFileOpen() {
-			return this.fileHandle !== null;
-		}
+    async closeFile() {
+      if (!this.fileHandle) return;
+      this.fileHandle = null;
+    }
 
-		async closeFile() {
-			if (!this.fileHandle) {
-				console.warn('Attempted to close no file');
-				return;
-			}
-			this.fileHandle = null;
-		}
+    async setFile() {
+      if (!this.checkFileSystemAPI()) return;
+      try {
+        [this.fileHandle] = await window.showOpenFilePicker();
+      } catch (error) {
+        this.fileHandle = null; // Close previous file incase uses wanted to get rid of the last file
+        if (error.name === "AbortError") console.warn("File selection was aborted by the user");
+        else console.error("Unexpected error:", error.message);
+      }
+    }
 
-		async setFile() {
-			try {
-				[this.fileHandle] = await window.showOpenFilePicker();
-			} catch (error) {
-				if (error.name === 'AbortError') {
-                    // Close previous file incase uses wanted to get rid of the last file
-                    this.fileHandle = null;
-					console.warn('File selection was aborted by the user');
-				} else if (error.message.includes('File System Access')) {
-					throw new Error('File System Access API is not supported or not available');
-				} else {
-                    this.fileHandle = null;
-					console.error('Unexpected error:', error.message);
-				}
-			}
-		}
+    async updateFile(args) {
+      if (!this.checkFileSystemAPI() || !this.fileHandle) return;
+      const data = Scratch.Cast.toString(args.CONTENT);
+      try {
+        const writable = await this.fileHandle.createWritable();
+        if (args.FORMAT === "URI/URL") {
+          if (data.startsWith("data:")) {
+            const [meta, base64Content] = data.split(",");
+            const content = decodeURIComponent(escape(atob(base64Content)));
+            await writable.write(content);
+          } else {
+            const response = await fetch(data);
+            if (!response.ok) throw new Error("Failed to fetch content");
+            const content = await response.text();
+            await writable.write(content);
+          }
+        } else {
+          await writable.write(data);
+        }
+        await writable.close();
+      } catch (error) {
+        console.error("Error writing content to file:", error.message);
+      }
+    }
 
-		async updateFile({ FORMAT, CONTENT }) {
-			if (!this.fileHandle) {
-				console.warn('Attempted to write to no file');
-				return;
-			}
+    async getFileContent(args) {
+      if (!this.checkFileSystemAPI() || !this.fileHandle) return;
+      const file = await this.fileHandle.getFile();
+      const text = await file.text();
+      if (args.FORMAT === "URI") {
+        const base64Content = btoa(unescape(encodeURIComponent(text)));
+        return `data:${file.type};charset=utf-8;base64,${base64Content}`;
+      } else if (args.FORMAT === "Hex (as array)") {
+        const file = await this.fileHandle.getFile();
+        const arrayBuffer = await file.arrayBuffer();
+        const byteArray = new Uint8Array(arrayBuffer);
+        const hexArray = Array.from(byteArray).map(byte => `"${byte.toString(16).padStart(2, "0")}"`);
+        return `[${hexArray}]`;
+      } else {
+        return text;
+      }
+    }
 
-			try {
-				const writable = await this.fileHandle.createWritable();
+    async getFileMetadata() {
+      if (!this.checkFileSystemAPI() || !this.fileHandle) return;
+      const file = await this.fileHandle.getFile();
 
-				if (FORMAT === 'URI/URL') {
-					if (CONTENT.startsWith('data:')) {
-						const [meta, base64Content] = CONTENT.split(',');
-						const content = decodeURIComponent(escape(atob(base64Content)));
-						await writable.write(content);
-					} else {
-						const response = await fetch(CONTENT);
-						if (!response.ok) throw new Error('Failed to fetch content');
-						const content = await response.text();
-						await writable.write(content);
-					}
-				} else {
-					await writable.write(CONTENT);
-				}
+      const modifyDate = new Date(file.lastModified);
+      const year = modifyDate.getFullYear();
+      const month = String(modifyDate.getMonth() + 1).padStart(2, "0");
+      const day = String(modifyDate.getDate()).padStart(2, "0");
+      const formattedDate = `${year}-${month}-${day}`;
 
-				await writable.close();
-			} catch (error) {
-				console.error('Error writing content to file:', error.message);
-			}
-		}
+      const hours = String(modifyDate.getHours()).padStart(2, "0");
+      const minutes = String(modifyDate.getMinutes()).padStart(2, "0");
+      const seconds = String(modifyDate.getSeconds()).padStart(2, "0");
+      const formattedTime = `${hours}:${minutes}.${seconds}`;
 
-
-		async getFileContent({ FORMAT }) {
-			if (!this.fileHandle) {
-				console.warn('Attempted to read no file');
-				return;
-			}
-
-			const file = await this.fileHandle.getFile();
-			const text = await file.text();
-
-			if (FORMAT === 'URI') {
-				const base64Content = btoa(unescape(encodeURIComponent(text)));
-				return `data:${file.type};charset=utf-8;base64,${base64Content}`;
-
-			} else if (FORMAT === 'Hex (as array)') {
-				const file = await this.fileHandle.getFile();
-				const arrayBuffer = await file.arrayBuffer();
-				const byteArray = new Uint8Array(arrayBuffer);
-				const hexArray = Array.from(byteArray).map(byte => `"${byte.toString(16).padStart(2, '0')}"`);
-
-				return `[${hexArray}]`;
-			} else {
-				return text;
-			}
-		}
-
-		async getFileMetadata() {
-			if (!this.fileHandle) {
-				console.warn('Attempted to read metadata from no file');
-				return;
-			}
-
-			const file = await this.fileHandle.getFile();
-			const sizeInBytes = file.size;
-
-			const lastModifiedDate = new Date(file.lastModified);
-			const year = lastModifiedDate.getFullYear();
-			const month = String(lastModifiedDate.getMonth() + 1).padStart(2, '0');
-			const day = String(lastModifiedDate.getDate()).padStart(2, '0');
-			const formattedDate = `${year}-${month}-${day}`;
-
-			const hours = String(lastModifiedDate.getHours()).padStart(2, '0');
-			const minutes = String(lastModifiedDate.getMinutes()).padStart(2, '0');
-			const seconds = String(lastModifiedDate.getSeconds()).padStart(2, '0');
-			const formattedTime = `${hours}:${minutes}.${seconds}`;
-
-			const metadata = {
-				name: file.name,
-				bytes: `${sizeInBytes}`,
-				type: file.type,
-				lastModifiedTime: formattedTime,
-				lastModifiedDate: formattedDate
-			};
-
-			return JSON.stringify(metadata);
-		}
-	}
-
-	Scratch.extensions.register(new UpdateFile());
+      return JSON.stringify({
+        name: file.name,
+        bytes: Scratch.Cast.toString(file.size),
+        type: file.type,
+        lastModifiedTime: formattedTime,
+        lastModifiedDate: formattedDate
+      });
+    }
+  }
+  Scratch.extensions.register(new ACatUpdateFile());
 })(Scratch);

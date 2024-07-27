@@ -5,6 +5,14 @@
         pleas dont remove them :)
 */
 export default [
+     {
+        name: "Update File (Direct Access)",
+        description: "A simple extension that uses the File System Access API to update files dynamically.",
+        code: "Anonymous_cat1/updateFile.js",
+        banner: "Anonymous_cat1/updateFile.svg",
+        creator: "Anonymous-cat1",
+        isGitHub: true,
+    },
     {
         name: "CloudLink",
         description: "A powerful WebSocket extension for Scratch. Allows for online connectivity to servers for things like multiplayer.",

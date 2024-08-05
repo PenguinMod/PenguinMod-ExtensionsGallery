@@ -232,6 +232,19 @@ call [message 1] to run and wait ::control
 These Blocks work in the same way as "messages", the **Key Differences** are that these Blocks can be placed **Inside Scripts/By Itself** and there is no **menu**
 
 ---
+## Thread Functions
+
+```scratch
+define thread func [my-function] (data ::control) {
+return [value] ::control cap
+}::control
+
+run func [my-function] with data [123]::control
+(run func [my-function] with data [123]::control)
+```
+These Blocks work in a similar way as "Custom Blocks", the **Key Difference** is that the "run func" Blocks *only* work in the thread the function is defined in
+
+---
 ## Sprite and Clone Control Blocks
 
 ```scratch

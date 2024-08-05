@@ -172,7 +172,7 @@ This Block will Each Inner Block **Individually** and will wait for Each to **Co
 ---
 
 ```scratch
-start new thread with (argument ::control) set to [data] {
+new thread with (data ::control) [123] {
 } @loopArrow ::control
 ```
 This Block Run the Inner Script in a **new Thread** without Waiting for it to Finish

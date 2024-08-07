@@ -1,9 +1,12 @@
-class Cockatiel {
+(function (Scratch) {
+    "use strict";
+
+class Locate {
   getInfo() {
     return {
       id: 'cockatiel', // This type of bird is so underrated, so why not use it?
-      name: 'Cockatiel',
-      color1: '#FFA500', // Yellow
+      name: 'Location',
+      color1: '#FFA500', // Yellow - Cockatiel reference!!! :))
       color2: '#FFD700', // Another yellow ._.
       blocks: [
         {
@@ -95,7 +98,7 @@ class Cockatiel {
       url = 'https://api64.ipify.org?format=json'; // For IPv6
     }
     try {
-      const response = await fetch(url);
+      const response = await Scratch.fetch(url);
       const data = await response.json();
       return data.ip;
     } catch (error) {
@@ -105,7 +108,7 @@ class Cockatiel {
 
   async longitude() {
     try {
-      const response = await fetch('https://ipwhois.app/json/');
+      const response = await Scratch.fetch('https://ipwhois.app/json/');
       const data = await response.json();
       return data.longitude || 'Not available';
     } catch (error) {
@@ -115,7 +118,7 @@ class Cockatiel {
 
   async latitude() {
     try {
-      const response = await fetch('https://ipwhois.app/json/');
+      const response = await Scratch.fetch('https://ipwhois.app/json/');
       const data = await response.json();
       return data.latitude || 'Not available';
     } catch (error) {
@@ -126,7 +129,7 @@ class Cockatiel {
   async myInfo(args) {
     const info = args.info;
     try {
-      const response = await fetch('https://ipwhois.app/json/');
+      const response = await Scratch.fetch('https://ipwhois.app/json/');
       const data = await response.json();
       switch (info) {
         case 'country':
@@ -147,7 +150,7 @@ class Cockatiel {
 
   async isUsingVPN() {
     try {
-      const response = await fetch('https://ipwhois.app/json/');
+      const response = await Scratch.fetch('https://ipwhois.app/json/');
       const data = await response.json();
       return data.is_vpn || false; // Adjust based on the service's actual response
     } catch (error) {
@@ -157,7 +160,7 @@ class Cockatiel {
 
   async publicIP() {
     try {
-      const response = await fetch('https://api.ipify.org?format=json'); // Always fetch IPv4
+      const response = await Scratch.fetch('https://api.ipify.org?format=json'); // Always fetch IPv4
       const data = await response.json();
       return data.ip;
     } catch (error) {
@@ -167,7 +170,7 @@ class Cockatiel {
 
   async myTimezone() {
     try {
-      const response = await fetch('https://ipwhois.app/json/');
+      const response = await Scratch.fetch('https://ipwhois.app/json/');
       const data = await response.json();
       return data.timezone || 'Not available';
     } catch (error) {
@@ -183,13 +186,13 @@ class Cockatiel {
     if (location1.latitude && location1.longitude && location2.latitude && location2.longitude) {
       return this.haversineDistance(location1.latitude, location1.longitude, location2.latitude, location2.longitude);
     } else {
-      return 'Error fetching locations';
+      return 'No results found ';
     }
   }
 
   async fetchLocation(ip) {
     try {
-      const response = await fetch(`https://ipwhois.app/json/${ip}`);
+      const response = await Scratch.fetch(`https://ipwhois.app/json/${ip}`);
       const data = await response.json();
       return {
         latitude: data.latitude,
@@ -225,7 +228,7 @@ class Cockatiel {
       localStorage.setItem('currentIP', ip);
       return 'IP stored successfully';
     } catch (error) {
-      return 'Error storing IP';
+      return 'Error storing IP'; // Thể's an error. :((
     }
   }
 
@@ -234,9 +237,10 @@ class Cockatiel {
     if (ip) {
       return ip;
     } else {
-      return 'No IP stored';
+      return 'No IP stored'; // Fuck you IP address storer
     }
   }
 }
 
-Scratch.extensions.register(new Cockatiel());
+Scratch.extensions.register(new Locate());
+})(Scratch); // Fuck myself, SharkPool told me to fix this in one day

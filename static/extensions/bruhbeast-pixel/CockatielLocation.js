@@ -48,6 +48,7 @@
           {
             opcode: "isUsingVPN",
             blockType: Scratch.BlockType.BOOLEAN,
+            disableMonitor: true,
             text: "is using VPN?"
           },
           {

@@ -147,10 +147,10 @@ export default [
     },
     {
         name: "Cockatiel Location",
-        description: "Fetch Users' IP Addresses and Location. Originally by bruhbeast-pixel.",
+        description: "Fetch Users' IP Addresses and Location.",
         code: "bruhbeast-pixel/CockatielLocation.js",
-        banner: "bruhbeast-pixel/CockatielLocation.png",
-        creator: "SharkPool-SP",
+        banner: "bruhbeast-pixel/CockatielLocation.svg",
+        creator: "bruhbeast-pixel",
         isGitHub: true,
     },
     {

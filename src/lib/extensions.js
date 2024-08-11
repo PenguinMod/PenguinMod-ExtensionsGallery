@@ -440,4 +440,12 @@ export default [
         creator: "pooiod",
         isGitHub: true,
     },
+    {
+        name: "File Upload",
+        description: "Upload files to the Network, can also used with Files extension.",
+        code: "Codefoxy/cfupload.js",
+        banner: "Codefoxy/cfupload.svg",
+        creator: "Codefoxy",
+        isGitHub: false,
+    },
 ];

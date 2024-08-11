@@ -1,4 +1,6 @@
 (function (Scratch) {
+  let encodeMode = true;
+
   class GitPenguin {
     getInfo() {
       return {
@@ -106,8 +108,22 @@
                 defaultValue: "YOUR_GITHUB_TOKEN"
               }
             }
-          }
-        ]
+          },
+          {
+            opcode: "toggleEncode",
+            blockType: Scratch.BlockType.COMMAND,
+            text: "toggle file encoding [TYPE]",
+            arguments: {
+              TYPE: {
+                type: Scratch.ArgumentType.STRING,
+                menu: "TOGGLE"
+              }
+            }
+          },
+        ],
+        menus: {
+          TOGGLE: ["on", "off"]
+        }
       };
     }
 
@@ -121,10 +137,9 @@
 
     async createFile({ FILE, CONTENT, REPO, NAME, TOKEN }) {
       const apiUrl = `https://api.github.com/repos/${NAME}/${REPO}/contents/${FILE}`;
-      const encodedContent = btoa(CONTENT);
       const requestBody = JSON.stringify({
         message: `Create ${FILE}`,
-        content: encodedContent
+        content: encodeMode ? btoa(CONTENT) : CONTENT
       });
       const response = await Scratch.fetch(apiUrl, {
         method: 'PUT',
@@ -146,7 +161,6 @@
       });
       if (!getResponse.ok) return;
       const fileData = await getResponse.json();
-      const encodedContent = btoa(CONTENT);
       const putResponse = await Scratch.fetch(apiUrl, {
         method: 'PUT',
         headers: {
@@ -155,7 +169,7 @@
         },
         body: JSON.stringify({
           message: `Edit ${FILE}`,
-          content: encodedContent,
+          content: encodeMode ? btoa(CONTENT) : CONTENT,
           sha: fileData.sha
         })
       });
@@ -184,6 +198,8 @@
       });
       if (!deleteResponse.ok) return;
     }
+
+    toggleEncode(args) { encodeMode = args.TYPE === "on" }
   }
   Scratch.extensions.register(new GitPenguin());
 })(Scratch);

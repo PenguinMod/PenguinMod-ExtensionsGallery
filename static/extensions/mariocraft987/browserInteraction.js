@@ -93,6 +93,13 @@ Created by AtomicBolts {scratch.mit.edu/users/mariocraft987}
             hideFromPalette: true,
           },
           {
+            opcode: 'notExist',
+            blockType: Scratch.BlockType.BOOLEAN,
+            text: 'Do Dinosaurs exist?',
+            disableMonitor: true,
+            hideFromPalette: true,
+          },
+          {
             opcode: 'randomBoolean',
             blockType: Scratch.BlockType.BOOLEAN,
             text: 'Random output',

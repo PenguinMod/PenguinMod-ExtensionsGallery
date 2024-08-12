@@ -441,19 +441,19 @@ export default [
         isGitHub: true,
     },
     {
-        name: "File Upload",
-        description: "Upload files to the Network, can also used with Files extension.",
-        code: "Codefoxy/cfupload.js",
-        banner: "Codefoxy/cfupload.svg",
-        creator: "Codefoxy",
-        isGitHub: false,
-    },
-    {
         name: "Browser Interaction",
         description: "Interact with your tab using blocks!",
         code: "mariocraft987/browserInteraction.js",
         banner: "mariocraft987/BrowserInteraction.png",
         creator: "mariocraft987",
         isGithub: false
+    },
+    {
+        name: "File Upload",
+        description: "Upload files to the Network, can also used with Files extension.",
+        code: "Codefoxy/cfupload.js",
+        banner: "Codefoxy/cfupload.svg",
+        creator: "Codefoxy",
+        isGitHub: false,
     }
 ];

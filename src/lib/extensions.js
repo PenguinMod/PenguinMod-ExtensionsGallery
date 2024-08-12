@@ -448,4 +448,12 @@ export default [
         creator: "Codefoxy",
         isGitHub: false,
     },
+    {
+        name: "Browser Interaction",
+        description: "Interact with your tab using blocks!",
+        code: "mariocraft987/browserInteraction.js",
+        banner: "mariocraft987/BrowserInteraction.png",
+        creator: "mariocraft987",
+        isGithub: false
+    },
 ];

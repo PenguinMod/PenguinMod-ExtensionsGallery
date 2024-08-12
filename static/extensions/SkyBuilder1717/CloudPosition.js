@@ -1,6 +1,6 @@
 // name: Cloud Position
 // credit: SkyBuilder1717
-// description: Gets info about users location, through Cloud Servers.
+// description: Gets advanced info about users location, through Cloud Servers.
 
 
 // Created in Visual Studio Code

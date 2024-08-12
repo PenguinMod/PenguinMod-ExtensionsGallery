@@ -455,5 +455,5 @@ export default [
         banner: "mariocraft987/BrowserInteraction.png",
         creator: "mariocraft987",
         isGithub: false
-    },
+    }
 ];

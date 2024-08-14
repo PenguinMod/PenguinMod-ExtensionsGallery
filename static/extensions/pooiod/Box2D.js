@@ -11,7 +11,7 @@ while keeping general compatability. (made with box2D js es6) */
 
 (function(Scratch) {
   'use strict';
-  var b2Dversion = "1.7.9.4";
+  var b2Dversion = "1.8.1";
   if (!Scratch.extensions.unsandboxed) {
     throw new Error('Boxed Physics can\'t run in the sandbox');
   }
@@ -365,8 +365,13 @@ while keeping general compatability. (made with box2D js es6) */
           {
             opcode: 'getBodyIDAt',
             blockType: Scratch.BlockType.REPORTER,
-            text: 'Get object at x: [X]  y: [Y]',
+            text: 'Get body of type [type] at x: [X]  y: [Y]',
             arguments: {
+              type: {
+                type: Scratch.ArgumentType.STRING,
+                menu: 'BodyTypePK2',
+                defaultValue: 'any',
+              },
               X: {
                 type: Scratch.ArgumentType.NUMBER,
                 defaultValue: 0,
@@ -573,6 +578,28 @@ while keeping general compatability. (made with box2D js es6) */
             },
           },
           {
+            opcode: 'getsimspeed',
+            blockType: Scratch.BlockType.REPORTER,
+            text: 'Slow motion',
+          },
+          {
+            opcode: 'setsimspeed',
+            blockType: Scratch.BlockType.COMMAND,
+            text: 'Set slow motion to [VALUE]',
+            arguments: {
+              VALUE: {
+                type: Scratch.ArgumentType.NUMBER,
+                defaultValue: 30,
+              },
+            },
+          },
+          {
+            opcode: 'stepSimulation',
+            blockType: Scratch.BlockType.COMMAND,
+            text: 'Step Simulation',
+          },
+          { blockType: Scratch.BlockType.LABEL, text: "Math functions" }, // ---- Math functions -----
+          {
             opcode: 'rotatePoint',
             blockType: Scratch.BlockType.REPORTER,
             text: 'Get [PART] from point x [X] y [Y] rotated by [ANGLE]',
@@ -597,26 +624,68 @@ while keeping general compatability. (made with box2D js es6) */
             },
           },
           {
-            opcode: 'getsimspeed',
+            opcode: 'rotationFromPoint',
             blockType: Scratch.BlockType.REPORTER,
-            text: 'Slow motion',
-          },
-          {
-            opcode: 'setsimspeed',
-            blockType: Scratch.BlockType.COMMAND,
-            text: 'Set slow motion to [VALUE]',
+            text: 'Get rotation from x [x1] y [y1] to x [x2] y [y2]',
             arguments: {
-              VALUE: {
+              x1: {
                 type: Scratch.ArgumentType.NUMBER,
-                defaultValue: 30,
+                defaultValue: 0,
+              },
+              y1: {
+                type: Scratch.ArgumentType.NUMBER,
+                defaultValue: 0,
+              },
+              x2: {
+                type: Scratch.ArgumentType.NUMBER,
+                defaultValue: 0,
+              },
+              y2: {
+                type: Scratch.ArgumentType.NUMBER,
+                defaultValue: 0,
               },
             },
           },
           {
-            opcode: 'stepSimulation',
-            blockType: Scratch.BlockType.COMMAND,
-            text: 'Step Simulation',
+            opcode: "magnitudeOfPoint",
+            blockType: Scratch.BlockType.REPORTER,
+            text: "Magnitude of x [a1] y [a2]",
+            arguments: {
+              a1: { 
+                type: Scratch.ArgumentType.STRING, 
+                defaultValue: "0" 
+              },
+              a2: { 
+                type: Scratch.ArgumentType.STRING, 
+                defaultValue: "0" 
+              },
+            },
           },
+          {
+            opcode: "distanceOfPoint",
+            blockType: Scratch.BlockType.REPORTER,
+            text: "Distance between x [a1] y [a2] and x [b1] y [b2]",
+            arguments: {
+              a1: { 
+                type: Scratch.ArgumentType.STRING, 
+                defaultValue: "0" 
+              },
+              a2: { 
+                type: Scratch.ArgumentType.STRING, 
+                defaultValue: "0" 
+              },
+              b1: { 
+                type: Scratch.ArgumentType.STRING, 
+                defaultValue: "0" 
+              },
+              b2: { 
+                type: Scratch.ArgumentType.STRING, 
+                defaultValue: "0" 
+              },
+            },
+          },
+
+          
           {
             hideFromPalette: !physdebugmode && !wipblocks,
             blockType: Scratch.BlockType.LABEL, // --------------------- Work in progress blocks ----
@@ -663,6 +732,7 @@ while keeping general compatability. (made with box2D js es6) */
         menus: {
           sceneType: ['boxed stage', 'closed stage', 'opened stage', 'nothing'],
           BodyTypePK: ['dynamic', 'static'],
+          BodyTypePK2: ['dynamic', 'static', 'any'],
           bodyAttr: ['damping', 'rotational damping'],
           bodyAttrRead: ['x', 'y', 'Xvel', 'Yvel', 'Dvel', 'direction', 'awake'],
           ForceType: ['Impulse', 'World Impulse'],
@@ -787,6 +857,30 @@ while keeping general compatability. (made with box2D js es6) */
       }
     }
 
+    magnitudeOfPoint(args) {
+      if (args) {
+        return Math.sqrt(Math.pow(args.a1, 2) + Math.pow(args.a2, 2));
+      }
+      return 0;
+    }
+    
+    distanceOfPoint(args) {
+      if (args.a1 && args.a2 && args.b1 && args.b2) {
+        return Math.sqrt(Math.pow(args.a1 - args.b1, 2) + Math.pow(args.a2 - args.b2, 2));
+      }
+      return 0;
+    }
+
+    rotationFromPoint({ x1, x2, y1, y2}) {
+      let angleRad = Math.atan2(y2 - y1, x2 - x1);
+      let angleDeg = angleRad * (180 / Math.PI);
+      let Angle = 90 - angleDeg;
+      if (Angle > 180) {
+        Angle -= 360;
+      }
+      return Angle;
+    }
+
     setJointTarget(args) {
       var joint = joints[args.JOINTID];
       if (joint) {
@@ -833,12 +927,13 @@ while keeping general compatability. (made with box2D js es6) */
       fixDef.shape.SetAsBox(args.WIDTH / 2 / b2Dzoom, args.HEIGHT / 2 / b2Dzoom);
     }
 
-    difineCostume(args, util) {
-      const target = util.target;
-      if (target.isStage) {
-        return;
-      }
-      try {
+    difineCostume(_, util) {
+      try { // does not work with hidden sprites
+        const target = util.target;
+        if (target.isStage) {
+          return;
+        }
+        
         const r = this.runtime.renderer;
         const drawable = r._allDrawables[target.drawableID];
 
@@ -1123,6 +1218,42 @@ while keeping general compatability. (made with box2D js es6) */
     };
 
     getBodyIDAt(args) {
+      if (args.type == "static") {
+        return getBodyIDAtstatic(args);
+      } else if (args.type == "dynamic") {
+        return getBodyIDAtdynamic(args);
+      } else {
+        return getBodyIDAtany(args);
+      }
+    }
+
+    getBodyIDAtany(args) {
+      var x = args.X;
+      var y = args.Y;
+
+      var mousePVec = new b2Vec2(x / b2Dzoom, y / b2Dzoom);
+      var aabb = new b2AABB();
+      aabb.lowerBound.Set(mousePVec.x - 0.001, mousePVec.y - 0.001);
+      aabb.upperBound.Set(mousePVec.x + 0.001, mousePVec.y + 0.001);
+
+      selectedBody = null;
+
+      // Define the callback to check fixtures within the AABB
+      var getStaticBodyCB = function(fixture) {
+        var body = fixture.GetBody();
+        if (fixture.TestPoint(mousePVec)) {  // Check if the point is within the fixture
+          selectedBody = body;
+          return false; // Stop querying once a hit is found
+        }
+        return true; // Continue querying other fixtures
+      };
+
+      b2Dworld.QueryAABB(getStaticBodyCB, aabb);
+
+      return selectedBody ? selectedBody.uid : '';
+    }
+
+    getBodyIDAtdynamic(args) {
       var x = args.X;
       var y = args.Y;
 
@@ -1134,6 +1265,33 @@ while keeping general compatability. (made with box2D js es6) */
       // Query the b2Dworld for overlapping shapes.
       selectedBody = null;
       b2Dworld.QueryAABB(this.getBodyCB, aabb);
+
+      return selectedBody ? selectedBody.uid : '';
+    }
+
+    getBodyIDAtstatic(args) {
+      var x = args.X;
+      var y = args.Y;
+
+      var mousePVec = new b2Vec2(x / b2Dzoom, y / b2Dzoom);
+      var aabb = new b2AABB();
+      aabb.lowerBound.Set(mousePVec.x - 0.001, mousePVec.y - 0.001);
+      aabb.upperBound.Set(mousePVec.x + 0.001, mousePVec.y + 0.001);
+
+      selectedBody = null;
+
+      var getStaticBodyCB = function(fixture) {
+        var body = fixture.GetBody();
+        if (body.GetType() === b2Body.b2_staticBody) {
+          if (fixture.TestPoint(mousePVec)) {
+            selectedBody = body;
+            return false;
+          }
+        }
+        return true;
+      };
+
+      b2Dworld.QueryAABB(getStaticBodyCB, aabb);
 
       return selectedBody ? selectedBody.uid : '';
     }

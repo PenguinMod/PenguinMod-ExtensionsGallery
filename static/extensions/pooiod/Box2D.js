@@ -1219,11 +1219,11 @@ while keeping general compatability. (made with box2D js es6) */
 
     getBodyIDAt(args) {
       if (args.type == "static") {
-        return getBodyIDAtstatic(args);
+        return this.getBodyIDAtstatic(args);
       } else if (args.type == "dynamic") {
-        return getBodyIDAtdynamic(args);
+        return this.getBodyIDAtdynamic(args);
       } else {
-        return getBodyIDAtany(args);
+        return this.getBodyIDAtany(args);
       }
     }
 

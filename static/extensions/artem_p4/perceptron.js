@@ -12,7 +12,7 @@
   * artem_p4 (main coder) discord: artem_p4 tg: https://t.me/nine_tailed_fox_01 github: engineering-wrench
   * ChopaChops (support coder) tg: https://t.me/chi4achops
   * open source github - https://github.com/BrainJS/brain.js
-  * version: 0.5 
+  * version: 0.6
   * 
   */
 
@@ -29015,155 +29015,153 @@ class NvPerceptron {
     return {
       id: "Perceptron",
       name: "Perceptron",
-      docsURI: 'https://github.com/engineering-wrench/scratch-ai/wiki',
+      // docsURI: 'https://github.com/engineering-wrench/scratch-ai/wiki',
       color1: "#8687f7",
       color2: "#7469c9",
       color3: "#634d99",
       blocks: [
         {
 
-
-  opcode: "newBrain",
-  blockType: Scratch.BlockType.COMMAND,
-  text: "create brain - brain name: [brainName]",
-  arguments: {
-      "brainName": {
-      type: Scratch.ArgumentType.STRING,
-      defaultValue: `network`
-    },
-  },
-  disableMonitor: false
-
-        },
-        '---',
-        {
-
-  opcode: "deleteAllBrains",
-  blockType: Scratch.BlockType.COMMAND,
-  text: "delete all brains",
-  arguments: {},
-  disableMonitor: false
-
-        },
-        {
-
-  opcode: "deleteBrain",
-  blockType: Scratch.BlockType.COMMAND,
-  text: "delete brain with name: [name]",
-  arguments: {
-      "name": {
-      type: Scratch.ArgumentType.STRING,
-      defaultValue: `network`
-    },
-  },
-  disableMonitor: false
+          opcode: "newBrain",
+          blockType: Scratch.BlockType.COMMAND,
+          text: "create brain - brain name: [brainName]",
+          arguments: {
+              "brainName": {
+              type: Scratch.ArgumentType.STRING,
+              defaultValue: `network`
+            },
+          },
+          disableMonitor: false
 
         },
         '---',
         {
 
-  opcode: "addTrainingData",
-  blockType: Scratch.BlockType.COMMAND,
-  text: "add training data - brain name: [brainName] inputs: [inputs] outputs: [outputs]",
-  arguments: {
-      "brainName": {
-      type: Scratch.ArgumentType.STRING,
-      defaultValue: `network`
-    },
-    "inputs": {
-      type: Scratch.ArgumentType.STRING,
-      defaultValue: `[1, 2, 3]`
-    },
-    "outputs": {
-      type: Scratch.ArgumentType.STRING,
-      defaultValue: `[1]`
-    },
-  },
-  disableMonitor: false
+          opcode: "deleteAllBrains",
+          blockType: Scratch.BlockType.COMMAND,
+          text: "delete all brains",
+          arguments: {},
+          disableMonitor: false
 
         },
         {
 
-  opcode: "train",
-  blockType: Scratch.BlockType.COMMAND,
-  text: "train brain - brain name: [networkName]",
-  arguments: {
-      "networkName": {
-      type: Scratch.ArgumentType.STRING,
-      defaultValue: `network`
-    },
-  },
-  disableMonitor: false
-
-        },
-        {
-
-  opcode: "cleandata",
-  blockType: Scratch.BlockType.COMMAND,
-  text: "clean training data [brainName]",
-  arguments: {
-    "brainName": {
-      type: Scratch.ArgumentType.STRING,
-      defaultValue: `network`
-    },
-  },
-  disableMonitor: false
+          opcode: "deleteBrain",
+          blockType: Scratch.BlockType.COMMAND,
+          text: "delete brain with name: [name]",
+          arguments: {
+              "name": {
+              type: Scratch.ArgumentType.STRING,
+              defaultValue: `network`
+            },
+          },
+          disableMonitor: false
 
         },
         '---',
         {
 
-  opcode: "data",
-  blockType: Scratch.BlockType.REPORTER,
-  text: "get data - brain name: [networkName] input: [dataInput]",
-  arguments: {
-    "networkName": {
-    type: Scratch.ArgumentType.STRING,
-    defaultValue: `network`
-    },
-    
-    "dataInput": {
-      type: Scratch.ArgumentType.STRING,
-      defaultValue: `["1","2","3"]`
-    },
-  },
-  disableMonitor: false
+          opcode: "addTrainingData",
+          blockType: Scratch.BlockType.COMMAND,
+          text: "add training data - brain name: [brainName] inputs: [inputs] outputs: [outputs]",
+          arguments: {
+              "brainName": {
+              type: Scratch.ArgumentType.STRING,
+              defaultValue: `network`
+            },
+            "inputs": {
+              type: Scratch.ArgumentType.STRING,
+              defaultValue: `[1, 2, 3]`
+            },
+            "outputs": {
+              type: Scratch.ArgumentType.STRING,
+              defaultValue: `[1]`
+            },
+          },
+          disableMonitor: false
+
+        },
+        {
+
+          opcode: "train",
+          blockType: Scratch.BlockType.COMMAND,
+          text: "train brain - brain name: [networkName]",
+          arguments: {
+              "networkName": {
+              type: Scratch.ArgumentType.STRING,
+              defaultValue: `network`
+            },
+          },
+          disableMonitor: false
+
+        },
+        {
+
+          opcode: "cleandata",
+          blockType: Scratch.BlockType.COMMAND,
+          text: "clean training data [brainName]",
+          arguments: {
+            "brainName": {
+              type: Scratch.ArgumentType.STRING,
+              defaultValue: `network`
+            },
+          },
+          disableMonitor: false
 
         },
         '---',
         {
 
-  opcode: "importBrain",
-  blockType: Scratch.BlockType.COMMAND,
-  text: "import brain - brain name: [brainName] date: [date]",
-  arguments: {
-    "brainName": {
-      type: Scratch.ArgumentType.STRING,
-      defaultValue: `network`
-    },
-    "date": {
-      type: Scratch.ArgumentType.DATE,
-      defaultValue: `new Date()`
-    },
-  },
-  disableMonitor: false
+          opcode: "data",
+          blockType: Scratch.BlockType.REPORTER,
+          text: "get data - brain name: [networkName] input: [dataInput]",
+          arguments: {
+            "networkName": {
+            type: Scratch.ArgumentType.STRING,
+            defaultValue: `network`
+            },
+            
+            "dataInput": {
+              type: Scratch.ArgumentType.STRING,
+              defaultValue: `["1","2","3"]`
+            },
+          },
+          disableMonitor: false
+
+        },
+        '---',
+        {
+
+          opcode: "importBrain",
+          blockType: Scratch.BlockType.COMMAND,
+          text: "import brain - brain name: [brainName] date: [date]",
+          arguments: {
+            "brainName": {
+              type: Scratch.ArgumentType.STRING,
+              defaultValue: `network`
+            },
+            "date": {
+              type: Scratch.ArgumentType.DATE,
+              defaultValue: `new Date()`
+            },
+          },
+          disableMonitor: false
 
         },
         {
 
-  opcode: "exportBrain",
-  blockType: Scratch.BlockType.REPORTER,
-  text: "export brain - brain name: [brainName]",
-  arguments: {
-    "brainName": {
-      type: Scratch.ArgumentType.STRING,
-      defaultValue: `network`
-    },
-  },
-  disableMonitor: false
+          opcode: "exportBrain",
+          blockType: Scratch.BlockType.REPORTER,
+          text: "export brain - brain name: [brainName]",
+          arguments: {
+            "brainName": {
+              type: Scratch.ArgumentType.STRING,
+              defaultValue: `network`
+            },
+          },
+          disableMonitor: false
 
-
-}
+        }
 
         ]
       }
@@ -29172,6 +29170,9 @@ class NvPerceptron {
 
   exportBrain(args, util) {
     const brainName = args.brainName;
+    if (!this.brains[brainName]) {
+      throw new Error(`Brain '${brainName}' does not exist.`);
+    }
     return JSON.stringify(this.brains[brainName]);
   };
 
@@ -29195,55 +29196,60 @@ class NvPerceptron {
 
   data(args, util) {
     if (!this.brains[args.networkName]) {
-      return `Error: Brain '${args.networkName}' does not exist.`;
+      throw new Error(`Brain '${args.networkName}' does not exist.`);
     }
     const result = this.brains[args.networkName].run(JSON.parse(args.dataInput));
     return result;
   };
 
   newBrain(args, util) {
-  this.brains[args.brainName] = new brain.NeuralNetwork();
-  this.trainingData[args.brainName] = [];
+    if (this.brains[args.brainName]) {
+      throw new Error(`Brain '${args.brainName}' already exists.`);
+    }
+    this.brains[args.brainName] = new brain.NeuralNetwork();
+    this.trainingData[args.brainName] = [];
   };
 
   cleandata(args, util) {
-  const brainName = args.brainName;
-  this.trainingData[brainName] = [];
+    const brainName = args.brainName;
+    if (!this.brains[brainName]) {
+      throw new Error(`Brain '${brainName}' does not exist.`);
+    }
+    this.trainingData[brainName] = [];
   };
 
   train(args, util) {
-  if (!this.brains[args.networkName]) {
-    return `Error: Brain '${args.networkName}' does not exist.`;
-  }
-  this.brains[args.networkName].train(this.trainingData[args.networkName]);
-  return 'Training completed';
+    if (!this.brains[args.networkName]) {
+      throw new Error(`Brain '${args.networkName}' does not exist.`);
+    }
+    if (this.trainingData[args.networkName].length === 0) {
+      throw new Error(`No training data for brain '${args.networkName}'.`);
+    }
+    this.brains[args.networkName].train(this.trainingData[args.networkName]);
   };
 
   addTrainingData(args, util) {
-  if (!this.brains[args.brainName]) {
-    return `Error: Brain '${args.brainName}' does not exist.`;
-  }
-  const newTrainingData = {
-    input: JSON.parse(args.inputs),
-    output: JSON.parse(args.outputs)
-  };
-  this.trainingData[args.brainName].push(newTrainingData);
-  return 'Training data added';
+    if (!this.brains[args.brainName]) {
+      throw new Error(`Brain '${args.brainName}' does not exist.`);
+    }
+    const newTrainingData = {
+      input: JSON.parse(args.inputs),
+      output: JSON.parse(args.outputs)
+    };
+    this.trainingData[args.brainName].push(newTrainingData);
   };
 
   deleteBrain(args, util) {
-  if (!this.brains[args.name]) {
-    return `Error: Brain '${args.name}' does not exist.`;
-  }
-  delete this.brains[args.name];
-  delete this.trainingData[args.name];
-  return 'Brain deleted';
+    if (!this.brains[args.name]) {
+      throw new Error(`Brain '${args.name}' does not exist.`);
+    }
+    delete this.brains[args.name];
+    delete this.trainingData[args.name];
   };
 
   deleteAllBrains(args, util) {
-  this.brains = {};
-  this.trainingData = {};
-  return 'All brains deleted';
+    this.brains = {};
+    this.trainingData = {};
   }
 }
 

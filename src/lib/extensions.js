@@ -171,6 +171,14 @@ export default [
         isGitHub: false,
     },
     {
+        name: "Perceptron",
+        description: "A simple ai engine! orignal made by samllea1.",
+        code: "artem_p4/perceptron.js",
+        banner: "artem_p4/perceptron.png",
+        creator: "artem_p4",
+        isGitHub: false,
+    },
+    {
         name: "PenguinHook",
         description: "Send Webhook requests, that can be Discord or any type of webhook.",
         code: "MubiLop/penguinhook.js",

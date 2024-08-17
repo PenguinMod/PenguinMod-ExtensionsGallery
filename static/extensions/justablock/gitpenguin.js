@@ -1,5 +1,5 @@
 (function (Scratch) {
-  let encodeMode = true;
+  let lastStatus = "", encodeMode = true;
 
   class GitPenguin {
     getInfo() {
@@ -85,6 +85,11 @@
               }
             }
           },
+          {
+            opcode: "getStatus",
+            blockType: Scratch.BlockType.REPORTER,
+            text: "recent file status"
+          },
           { blockType: Scratch.BlockType.LABEL, text: "DANGEROUS" },
           {
             opcode: "deleteFile",
@@ -131,6 +136,7 @@
       const apiUrl = `https://api.github.com/repos/${NAME}/${REPO}/contents/${FILE}`;
       const response = await Scratch.fetch(apiUrl);
       const data = await response.json();
+      lastStatus = response.status;
       if (response.ok) return atob(data.content);
       else return '';
     }
@@ -149,6 +155,7 @@
         },
         body: requestBody
       });
+      lastStatus = response.status;
       if (!response.ok) return;
     }
 
@@ -159,6 +166,7 @@
           'Authorization': `token ${TOKEN}`
         }
       });
+      lastStatus = getResponse.status;
       if (!getResponse.ok) return;
       const fileData = await getResponse.json();
       const putResponse = await Scratch.fetch(apiUrl, {
@@ -173,6 +181,7 @@
           sha: fileData.sha
         })
       });
+      lastStatus = putResponse.status;
       if (!putResponse.ok) return;
     }
 
@@ -196,10 +205,12 @@
           sha: fileData.sha
         })
       });
+      lastStatus = deleteResponse.status;
       if (!deleteResponse.ok) return;
     }
 
     toggleEncode(args) { encodeMode = args.TYPE === "on" }
+    getStatus() { return lastStatus }
   }
   Scratch.extensions.register(new GitPenguin());
 })(Scratch);

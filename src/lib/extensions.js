@@ -450,8 +450,8 @@ export default [
     },
     {
         name: "Browser Interaction",
-        description: "Interact with your tab using blocks!",
-        code: "mariocraft987/browserInteraction.js",
+        description: "Interact with the Browser Tab!",
+        code: "mariocraft987/randomlyBlocks.js",
         banner: "mariocraft987/BrowserInteraction.png",
         creator: "mariocraft987",
         isGithub: false
@@ -463,5 +463,5 @@ export default [
         banner: "Codefoxy/cfupload.svg",
         creator: "Codefoxy",
         isGitHub: false,
-    }
+    },
 ];

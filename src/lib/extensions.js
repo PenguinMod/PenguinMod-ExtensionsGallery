@@ -456,4 +456,12 @@ export default [
         creator: "Codefoxy",
         isGitHub: false,
     },
+    {
+        name: "oneko",
+        description: "Cute cat that follows you on the block area.",
+        code: "TheShovel/oneko.js",
+        banner: "TheShovel/thumbnail-oneko.png",
+        creator: "TheShovel",
+        isGitHub: true,
+    },
 ];

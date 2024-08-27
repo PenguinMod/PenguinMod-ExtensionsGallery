@@ -2,24 +2,26 @@
 
 (function(Scratch) {
   'use strict';
+  if (!Scratch.extensions.unsandboxed) throw new Error('Dictation Must Run Unsandboxed!');
 
-  if (!Scratch.extensions.unsandboxed) {
-    throw new Error('Your microphone can\'t be accessed in the sandbox');
-  }
-
-  class dictation {
+  class pooiod7Dictation {
     constructor() {
-      this.recognizedSpeech;
+      this.recognizedSpeech = "";
       this.cando = !typeof scaffolding === "undefined";
     }
 
     getInfo() {
       return {
-        id: 'dictation',
+        id: 'pooiod7Dictation',
         name: 'Dictation',
         color1: '#b969cf',
         color2: '#9253a3',
         blocks: [
+          {
+            opcode: 'canUse',
+            blockType: Scratch.BlockType.BOOLEAN,
+            text: 'Can use dictation',
+          },
           {
             opcode: 'WaitAndrecognizeSpeech',
             blockType: Scratch.BlockType.COMMAND,
@@ -35,12 +37,7 @@
             blockType: Scratch.BlockType.REPORTER,
             text: 'Wait for recognized speech',
             disableMonitor: true,
-          },
-          {
-            opcode: 'canUse',
-            blockType: Scratch.BlockType.BOOLEAN,
-            text: 'Can use dictation',
-          },
+          }
         ]
       };
     }
@@ -54,7 +51,7 @@
     }
 
     getRecognizedSpeech() {
-      return this.recognizedSpeech;
+      return this.recognizedSpeech ?? "";
     }
 
     GetSpeech() {
@@ -62,27 +59,23 @@
     }
 
     recognizeSpeech(show) {
+      if (!this.cando) this.cando = window.confirm("Do you want to share your speech as text?");
       if (this.cando) {
         return new Promise(resolve => {
-          this.recognizedSpeech = '';
+          this.recognizedSpeech = "";
           const recognition = new webkitSpeechRecognition();
           recognition.onresult = event => {
             if (event.results.length > 0) {
               this.recognizedSpeech = event.results[0][0].transcript;
-              if (show) {
-                resolve(this.recognizedSpeech);
-              } else {
-                resolve();
-              }
+              if (show) resolve(this.recognizedSpeech);
+              else resolve("");
             }
           };
           recognition.start();
         });
-      } else {
-        this.cando = window.confirm("Do you want to share your speech as text?");
       }
     }
 
   }
-  Scratch.extensions.register(new dictation());
+  Scratch.extensions.register(new pooiod7Dictation());
 })(Scratch);

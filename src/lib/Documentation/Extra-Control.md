@@ -55,6 +55,23 @@ This Block Resets all Keybinds
 ## Basic Control Blocks
 
 ```scratch
+(loop index ::control)
+```
+This Block returns the amount of Times it is Looped Through in a Script, For Example:
+```scratch
+repeat(5) {
+add (loop index ::control) to [my list v]
+}@loopArrow ::control // The List will have the items: 1, 2, 3, 4, 5
+
+repeat until <key (space v) pressed? > {
+set [my variable v] to (loop index ::control)
+...
+}@loopArrow ::control // The Variable will be Set to the Amount of Times the Loop Repeats Before "space" is Pressed
+```
+
+---
+
+```scratch
 repeat (10) or until <> {
 } ::control
 ```
@@ -78,11 +95,16 @@ The Loop will stop when a Second Condition is **false**
 ---
 
 ```scratch
+run next cycle      @loopArrow  ::control cap
+```
+This Block will Move to the Next Iteration (top of the loop script) in the Loop it is in.
+
+---
+
+```scratch
 break out loop @turnRight  ::control cap
 ```
-This Block will Break Out of the Loop (C-Block) it is in.
-**If the Compiler is turned Off**, the Block will Break Out of **ALL** Loops it is in.
-(This is a Development Issue that cannot be solved at the moment :( )
+This Block will Break Out of the Loop it is in.
 
 ---
 
@@ -150,7 +172,7 @@ This Block will Each Inner Block **Individually** and will wait for Each to **Co
 ---
 
 ```scratch
-start new thread with (argument ::control) set to [data] {
+new thread with (data ::control) [123] {
 } @loopArrow ::control
 ```
 This Block Run the Inner Script in a **new Thread** without Waiting for it to Finish
@@ -208,6 +230,19 @@ call [message 1] to run ::control
 call [message 1] to run and wait ::control
 ```
 These Blocks work in the same way as "messages", the **Key Differences** are that these Blocks can be placed **Inside Scripts/By Itself** and there is no **menu**
+
+---
+## Thread Functions
+
+```scratch
+define thread func [my-function] (data ::control) {
+return [value] ::control cap
+}::control
+
+run func [my-function] with data [123]::control
+(run func [my-function] with data [123]::control)
+```
+These Blocks work in a similar way as "Custom Blocks", the **Key Difference** is that the "run func" Blocks *only* work in the thread the function is defined in
 
 ---
 ## Sprite and Clone Control Blocks

@@ -30,6 +30,7 @@
         menuIconURI,
         blockIconURI,
         blocks: [
+          { blockType: Scratch.BlockType.LABEL, text: 'API Key Must Be Valid to Work' },
           {
             opcode: 'setApiKey',
             blockType: Scratch.BlockType.COMMAND,

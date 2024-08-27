@@ -37,7 +37,7 @@
             disableMonitor: true,
           },
           {
-            opcode: 'canuse',
+            opcode: 'canUse',
             blockType: Scratch.BlockType.BOOLEAN,
             text: 'Can use dictation',
           },
@@ -49,7 +49,7 @@
       return this.recognizeSpeech(false);
     }
 
-    canuse() {
+    canUse() {
       return window.webkitSpeechRecognition != undefined
     }
 

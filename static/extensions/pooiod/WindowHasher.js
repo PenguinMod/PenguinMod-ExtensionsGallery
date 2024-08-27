@@ -9,7 +9,7 @@
 
   class windowhash {
     constructor() {
-      window.addEventListener("hashchange", function() {
+      window.addEventListener("hashchange", () => {
         Scratch.vm.runtime.startHats("p7windowhash_onhashchange");
       });
     }
@@ -47,9 +47,8 @@
 
     Sethash(args) {
       window.location.hash = args.HASH;
-      if (args.HASH == "") {
-        history.replaceState(null, document.title, location.pathname + location.search);
-      } else if (args.HASH == "/") {
+      if (args.HASH == "") history.replaceState(null, document.title, location.pathname + location.search);
+      else if (args.HASH == "/") {
         if (!window.location.pathname.endsWith('/') && !window.location.pathname.endsWith('html')) {
           window.history.replaceState({}, '', window.location.pathname + '/');
         }

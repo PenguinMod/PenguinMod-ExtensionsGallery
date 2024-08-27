@@ -297,13 +297,6 @@ export default [
         isGitHub: false, 
     },
     {
-        name: "WindowHasher",
-        description: "Interact with URL hash: the part of the URL after a hashtag",
-        code: "pooiod/WindowHasher.js",
-        banner: "pooiod/WindowHasher.png",
-        creator: "pooiod7",
-    },
-    {
         name: "Pang API",
         description: "Fetch information from the PenguinMod API.",
         code: "SammerLOL/pangapi.js",
@@ -334,13 +327,6 @@ export default [
         banner: "bop_tw/Twitch.png",
         creator: "bop_tw",
         isGitHub: false,
-    },
-    {
-        name: "Scratchblocks",
-        description: "Generate blocks in the Scratch3, or Scratch2 format.",
-        code: "pooiod/Scratchblocks.js",
-        banner: "pooiod/Scratchblocks.svg",
-        creator: "pooiod7",
     },
     {
         name: "Speech Bubbles",
@@ -422,6 +408,28 @@ export default [
         isGitHub: true, 
     },
     {
+        name: "File Upload",
+        description: "Upload files to the Network, can also used with Files extension.",
+        code: "Codefoxy/cfupload.js",
+        banner: "Codefoxy/cfupload.svg",
+        creator: "Codefoxy",
+        isGitHub: false,
+    },
+    {
+        name: "WindowHasher",
+        description: "Interact with URL hash: the part of the URL after a hashtag",
+        code: "pooiod/WindowHasher.js",
+        banner: "pooiod/WindowHasher.png",
+        creator: "pooiod7",
+    },
+    {
+        name: "Scratchblocks",
+        description: "Generate blocks in the Scratch3, or Scratch2 format.",
+        code: "pooiod/Scratchblocks.js",
+        banner: "pooiod/Scratchblocks.svg",
+        creator: "pooiod7",
+    },
+    {
         name: "CATS",
         description: "Blocks related to cats.",
         code: "Gen1x/CATS.js",
@@ -468,14 +476,6 @@ export default [
         banner: "pooiod/VideoSharing.svg",
         creator: "pooiod",
         isGitHub: true,
-    },
-    {
-        name: "File Upload",
-        description: "Upload files to the Network, can also used with Files extension.",
-        code: "Codefoxy/cfupload.js",
-        banner: "Codefoxy/cfupload.svg",
-        creator: "Codefoxy",
-        isGitHub: false,
     },
     {
         name: "oneko",

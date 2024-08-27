@@ -7,7 +7,7 @@
     throw new Error('This extension must run unsandboxed');
   }
 
-  class windowhash {
+  class p7windowhash {
     constructor() {
       window.addEventListener("hashchange", () => {
         Scratch.vm.runtime.startHats("p7windowhash_onhashchange");
@@ -60,5 +60,5 @@
     }
 
   }
-  Scratch.extensions.register(new windowhash());
+  Scratch.extensions.register(new p7windowhash());
 })(Scratch);

@@ -161,7 +161,7 @@
           break;
         case "ddownload.com":
           apiurl = "https://api-v2.ddownload.com/api/upload/server?key=" + ddownloadkey;
-          fetch('apiurl') // api for the get request
+          fetch(apiurl) // api for the get request
           .then(response => response.json())
           sess = response["sess_id"]
           apiurl = "https://api-v2.ddownload.com/api/upload/server?utype=prem&sess_id=" + sess;

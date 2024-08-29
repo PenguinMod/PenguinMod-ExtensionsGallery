@@ -69,7 +69,7 @@
       return {
         id: "cfupload",
         name: "Upload",
-        color1: "#ffe9b5",
+        color1: "#a69776",
         blocks: [
           {
             opcode: "addFormData",

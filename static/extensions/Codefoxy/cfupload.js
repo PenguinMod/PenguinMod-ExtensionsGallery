@@ -15,7 +15,8 @@
   const formDataEntries = {};
   let StatusCode = 0; // Variable to hold status code
   let RawRespond = ""; // Variable to hold raw Respond or Scratch will crash
-
+  let sess = "";
+  let ddownloadkey = "40636951n1q2ake339061r"; //ummm...
   /**
    * Upload a file to a specified link.
    * @param {string} data - Data to upload.
@@ -133,7 +134,7 @@
         menus: {
           Apis: {
             acceptReporters: true,
-            items: ["Catbox.moe", "file.io"],
+            items: ["Catbox.moe", "file.io", "ddownload.com"],
           },
         },
       };
@@ -156,6 +157,14 @@
           break;
         case "file.io":
           apiurl = "https://file.io/?title=" + args.name;
+          apiformname = "file";
+          break;
+        case "ddownload.com":
+          apiurl = "https://api-v2.ddownload.com/api/upload/server?key=" + ddownloadkey;
+          fetch('apiurl') // api for the get request
+          .then(response => response.json())
+          sess = response["sess_id"]
+          apiurl = "https://api-v2.ddownload.com/api/upload/server?utype=prem&sess_id=" + sess;
           apiformname = "file";
           break;
       }

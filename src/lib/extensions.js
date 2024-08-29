@@ -140,8 +140,8 @@ export default [
     {
         name: "Background Remover",
         description: "Removes background from images.",
-        code: "/dumzdev/removebg.js",
-        banner: "/dumzdev/removebgbanner.svg",
+        code: "dumzdev/removebg.js",
+        banner: "dumzdev/removebgbanner.svg",
         creator: "dumzdev",
     },
     {

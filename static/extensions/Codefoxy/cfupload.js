@@ -126,7 +126,7 @@ let process = "";
               },
               mimeType: {
                 type: Scratch.ArgumentType.STRING,
-                meun: "MimeTypes",
+                menu: "MimeTypes",
                 defaultValue: "text/plain",
               },
               base64: {

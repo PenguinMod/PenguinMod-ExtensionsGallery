@@ -104,7 +104,7 @@ let process = "";
             },
           },
           {
-            opcode: "uploadFileToLink",
+            opcode: "uploadFileToLinkblock",
             blockType: Scratch.BlockType.REPORTER,
             text: "upload [data] as [filename] to [link] as [formName] MIME type [mimeType] is Base64 [base64]",
             arguments: {
@@ -126,6 +126,7 @@ let process = "";
               },
               mimeType: {
                 type: Scratch.ArgumentType.STRING,
+                meun: MimeTypes,
                 defaultValue: "text/plain",
               },
               base64: {
@@ -228,7 +229,7 @@ let process = "";
         },
       };
     }
-
+    
     callapi(args) {
       switch (args.Apis) {
         case "catbox.moe":
@@ -295,9 +296,9 @@ let process = "";
       );
       switch (args.Apis) {
         case "pinata.cloud":
-          return "https://fuchsia-total-spider-341.mypinata.cloud/ipfs/" + JSON.parse(process).IpfsHash;
+          return "https://fuchsia-total-spider-341.mypinata.cloud/ipfs/" + JSON.parse(rawResponse).IpfsHash;
         case "file.io":
-          return JSON.parse(process).link;
+          return JSON.parse(rawResponse).link;
         case "catbox.moe":
         case "0x0.st":
           return process;
@@ -326,7 +327,15 @@ let process = "";
     getFormData() {
       return JSON.stringify(formDataEntries);
     }
+    uploadFileToLinkblock(args) {
+      return uploadFileToLink(
+        args.data,
+        args.name,
+        args.link,
+        args.formName,
+        args.mimeType,
+        args.base64)
+    }
   }
-
   Scratch.extensions.register(new Upload());
 })(Scratch);

@@ -156,6 +156,7 @@ let process = "";
               mimeType: {
                 type: Scratch.ArgumentType.STRING,
                 menu: "MimeTypes",
+                defaultValue: "text/plain",
               },
               base64: {
                 type: Scratch.ArgumentType.STRING,
@@ -339,3 +340,4 @@ let process = "";
   }
   Scratch.extensions.register(new Upload());
 })(Scratch);
+

@@ -12,7 +12,7 @@
   let rawResponse = "";
   const pastebinKey = "zvRcx16j8TYvEDimPAgdYisrSbZqWMPo";
   const pinataJWT = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySW5mb3JtYXRpb24iOnsiaWQiOiI1NjIxMjYzOS1hMDUwLTQ3ZWMtYTlkNC0xOTQ1ODNjNmE5ODMiLCJlbWFpbCI6InBpbmF0YUBjb2RlZm94eS5saW5rIiwiZW1haWxfdmVyaWZpZWQiOnRydWUsInBpbl9wb2xpY3kiOnsicmVnaW9ucyI6W3siaWQiOiJGUkExIiwiZGVzaXJlZFJlcGxpY2F0aW9uQ291bnQiOjF9LHsiaWQiOiJOWUMxIiwiZGVzaXJlZFJlcGxpY2F0aW9uQ291bnQiOjF9XSwidmVyc2lvbiI6MX0sIm1mYV9lbmFibGVkIjpmYWxzZSwic3RhdHVzIjoiQUNUSVZFIn0sImF1dGhlbnRpY2F0aW9uVHlwZSI6InNjb3BlZEtleSIsInNjb3BlZEtleUtleSI6IjU2ZTVjYThlZTBhOGM1OGEzMWUwIiwic2NvcGVkS2V5U2VjcmV0IjoiMWRmNjkwNGI4NTkwMTFmNmE3MDg5OGUxNmY2OTcyY2I5YjY5NjdkZTRkOTg4ZWIwYmNkYzUxMjM5ZTExNmM2NCIsImlhdCI6MTcyNTAxNjAyOX0.SCmIf8VXW7jfgE87x6Ing7Y10wniN_j1aZRBFjUAUh4";
-
+let process = ""; 
   let headersEntries = {};
 
   const isBase64 = (value) =>
@@ -273,7 +273,7 @@
           })
             .then((response) => response.text())
             .then((text) => {
-              return text;
+              return text.replace("pastebin.com/", "pastebin.com/raw/");;
             })
             .catch((error) => {
               return error;
@@ -285,7 +285,7 @@
           break;
       }
 
-      return uploadFileToLink(
+      process =  uploadFileToLink(
         args.data,
         args.name,
         apiurl,
@@ -293,6 +293,14 @@
         args.mimeType,
         args.base64
       );
+      switch (args.Apis) {
+        case "pinata.cloud":
+          return "https://fuchsia-total-spider-341.mypinata.cloud/ipfs/" + JSON.parse(process).IpfsHash;
+        case "file.io":
+          return JSON.parse(process).link;
+        case "catbox.moe":
+        case "0x0.st":
+          return process;
     }
 
     addFormData(args) {
@@ -312,11 +320,11 @@
     }
 
     getHeaders() {
-      return headersEntries;
+      return JSON.stringify(headersEntries);
     }
 
     getFormData() {
-      return formDataEntries;
+      return JSON.stringify(formDataEntries);
     }
   }
 

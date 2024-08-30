@@ -301,7 +301,7 @@ let process = "";
         case "catbox.moe":
         case "0x0.st":
           return process;
-    }
+    }}
 
     addFormData(args) {
       formDataEntries[args.key] = args.value;

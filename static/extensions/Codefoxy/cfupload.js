@@ -1,3 +1,7 @@
+// Name: Upload
+// ID: cfupload
+// Description: Upload files to the Network, can also used with Files extension.
+// By: Codefoxy <https://scratch.mit.edu/users/odavido123Daptoper/>
 (function (Scratch) {
   "use strict";
 

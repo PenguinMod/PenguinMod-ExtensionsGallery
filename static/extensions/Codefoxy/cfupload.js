@@ -2,6 +2,7 @@
 // ID: cfupload
 // Description: Upload files to the Network, can also used with Files extension.
 // By: Codefoxy <https://scratch.mit.edu/users/odavido123Daptoper/>
+// License: MIT AND MPL-2.0
 (function (Scratch) {
   "use strict";
 

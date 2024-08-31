@@ -18,7 +18,7 @@ let process = "";
   const isBase64 = (value) =>
     /^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=|[A-Za-z0-9+/]{4})$/.test(value);
 
-  const uploadFileToLink = (
+  const uploadFileToLinkFunc = (
     data,
     filename,
     link,
@@ -104,7 +104,7 @@ let process = "";
             },
           },
           {
-            opcode: "uploadFileToLinkblock",
+            opcode: "uploadFileToLink",
             blockType: Scratch.BlockType.REPORTER,
             text: "upload [data] as [filename] to [link] as [formName] MIME type [mimeType] is Base64 [base64]",
             arguments: {
@@ -287,7 +287,7 @@ let process = "";
           break;
       }
 
-      process =  uploadFileToLink(
+      process =  uploadFileToLinkFunc(
         args.data,
         args.name,
         apiurl,
@@ -328,8 +328,8 @@ let process = "";
     getFormData() {
       return JSON.stringify(formDataEntries);
     }
-    uploadFileToLinkblock(args) {
-      return uploadFileToLink(
+    uploadFileToLink(args) {
+      return uploadFileToLinkFunc(
         args.data,
         args.name,
         args.link,

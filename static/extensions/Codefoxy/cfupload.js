@@ -245,7 +245,7 @@ const delay = ms => new Promise(res => setTimeout(res, ms));
       };
     }
 
-    callapi(args) {
+    async callapi(args) {
       switch (args.Apis) {
         case "catbox.moe":
           apiurl = "https://catbox.moe/user/api.php";
@@ -301,7 +301,7 @@ const delay = ms => new Promise(res => setTimeout(res, ms));
           break;
       }
 
-      process = uploadFileToLinkFunc(
+      process = await uploadFileToLinkFunc(
   args.data,
   args.name,
   apiurl,

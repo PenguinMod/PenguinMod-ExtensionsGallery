@@ -25,7 +25,7 @@
     /^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=|[A-Za-z0-9+/]{4})$/.test(
       value
     );
-
+const delay = ms => new Promise(res => setTimeout(res, ms));
   const uploadFileToLinkFunc = (
     data,
     filename,
@@ -245,7 +245,7 @@
       };
     }
 
-    callapi(args) {
+    async callapi(args) {
       switch (args.Apis) {
         case "catbox.moe":
           apiurl = "https://catbox.moe/user/api.php";
@@ -301,14 +301,15 @@
           break;
       }
 
-      process = uploadFileToLinkFunc(
-        args.data,
-        args.name,
-        apiurl,
-        apiformname,
-        args.mimeType,
-        args.base64
-      );
+      process = await uploadFileToLinkFunc(
+  args.data,
+  args.name,
+  apiurl,
+  apiformname,
+  args.mimeType,
+  args.base64
+);
+      delay(100) // needed js is too SLOW
       switch (args.Apis) {
         case "pinata.cloud":
           return (

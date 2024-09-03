@@ -16,8 +16,7 @@
   let statusCode = 0;
   let rawResponse = "";
   const pastebinKey = "zvRcx16j8TYvEDimPAgdYisrSbZqWMPo";
-  const pinataJWT =
-    "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySW5mb3JtYXRpb24iOnsiaWQiOiI1NjIxMjYzOS1hMDUwLTQ3ZWMtYTlkNC0xOTQ1ODNjNmE5ODMiLCJlbWFpbCI6InBpbmF0YUBjb2RlZm94eS5saW5rIiwiZW1haWxfdmVyaWZpZWQiOnRydWUsInBpbl9wb2xpY3kiOnsicmVnaW9ucyI6W3siaWQiOiJGUkExIiwiZGVzaXJlZFJlcGxpY2F0aW9uQ291bnQiOjF9LHsiaWQiOiJOWUMxIiwiZGVzaXJlZFJlcGxpY2F0aW9uQ291bnQiOjF9XSwidmVyc2lvbiI6MX0sIm1mYV9lbmFibGVkIjpmYWxzZSwic3RhdHVzIjoiQUNUSVZFIn0sImF1dGhlbnRpY2F0aW9uVHlwZSI6InNjb3BlZEtleSIsInNjb3BlZEtleUtleSI6IjU2ZTVjYThlZTBhOGM1OGEzMWUwIiwic2NvcGVkS2V5U2VjcmV0IjoiMWRmNjkwNGI4NTkwMTFmNmE3MDg5OGUxNmY2OTcyY2I5YjY5NjdkZTRkOTg4ZWIwYmNkYzUxMjM5ZTExNmM2NCIsImlhdCI6MTcyNTAxNjAyOX0.SCmIf8VXW7jfgE87x6Ing7Y10wniN_j1aZRBFjUAUh4";
+  const pinataJWT = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySW5mb3JtYXRpb24iOnsiaWQiOiI1NjIxMjYzOS1hMDUwLTQ3ZWMtYTlkNC0xOTQ1ODNjNmE5ODMiLCJlbWFpbCI6InBpbmF0YUBjb2RlZm94eS5saW5rIiwiZW1haWxfdmVyaWZpZWQiOnRydWUsInBpbl9wb2xpY3kiOnsicmVnaW9ucyI6W3siZGVzaXJlZFJlcGxpY2F0aW9uQ291bnQiOjEsImlkIjoiRlJBMSJ9LHsiZGVzaXJlZFJlcGxpY2F0aW9uQ291bnQiOjEsImlkIjoiTllDMSJ9XSwidmVyc2lvbiI6MX0sIm1mYV9lbmFibGVkIjpmYWxzZSwic3RhdHVzIjoiQUNUSVZFIn0sImF1dGhlbnRpY2F0aW9uVHlwZSI6InNjb3BlZEtleSIsInNjb3BlZEtleUtleSI6IjVhMWJmNzZhY2EyMzQxNTM0ZTNhIiwic2NvcGVkS2V5U2VjcmV0IjoiMTdhYzVlYmVjMzczNmI2Mjc3YTVhNTM4MWIwZDBlNmZhYTQ1YmFmZGY1MDcwNjQwZDhkMmY2OWY0NWYwZTg1OSIsImV4cCI6MTc1NjcwODU4M30.AQB7-9izw5P8vH0ppMArSn4EsX2PxFxg32rLVrZGcE4";
   let process = "";
   let headersEntries = {};
 
@@ -25,7 +24,7 @@
     /^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=|[A-Za-z0-9+/]{4})$/.test(
       value
     );
-
+const delay = ms => new Promise(res => setTimeout(res, ms));
   const uploadFileToLinkFunc = (
     data,
     filename,
@@ -245,7 +244,7 @@
       };
     }
 
-    callapi(args) {
+    async callapi(args) {
       switch (args.Apis) {
         case "catbox.moe":
           apiurl = "https://catbox.moe/user/api.php";
@@ -301,14 +300,15 @@
           break;
       }
 
-      process = uploadFileToLinkFunc(
-        args.data,
-        args.name,
-        apiurl,
-        apiformname,
-        args.mimeType,
-        args.base64
-      );
+      process = await uploadFileToLinkFunc(
+  args.data,
+  args.name,
+  apiurl,
+  apiformname,
+  args.mimeType,
+  args.base64
+);
+      delay(100) // needed js is too SLOW
       switch (args.Apis) {
         case "pinata.cloud":
           return (

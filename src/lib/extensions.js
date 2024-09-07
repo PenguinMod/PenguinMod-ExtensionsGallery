@@ -5,14 +5,6 @@
         pleas dont remove them :)
 */
 export default [
-     {
-        name: "Update File (Direct Access)",
-        description: "A simple extension that uses the File System Access API to update files dynamically.",
-        code: "Anonymous_cat1/updateFile.js",
-        banner: "Anonymous_cat1/updateFile.svg",
-        creator: "Anonymous-cat1",
-        isGitHub: true,
-    },
     {
         name: "CloudLink",
         description: "A powerful WebSocket extension for Scratch. Allows for online connectivity to servers for things like multiplayer.",
@@ -44,6 +36,14 @@ export default [
         isGitHub: true,
     },
     {
+        name: "Update File (Direct Access)",
+        description: "A simple extension that uses the File System Access API to update files dynamically.",
+        code: "Anonymous_cat1/updateFile.js",
+        banner: "Anonymous_cat1/updateFile.svg",
+        creator: "Anonymous-cat1",
+        isGitHub: true,
+    },
+    {
         name: "3D Math",
         description: "A handful of utilities for making your own sprite-based 3D engine.",
         code: "ObviousAlexC/3DMath.js",
@@ -57,14 +57,6 @@ export default [
         banner: "SharkPool/Sprite-Effects.svg",
         creator: "SharkPool-SP",
         isGitHub: true,
-    },
-    {
-        name: "PenguinAI",
-        description: "Talk to AI! Use Models like DALL-E-3, GPT, LLama, Claude, and more!",
-        code: "MubiLop/penguingpt.js",
-        banner: "MubiLop/penguingpt.png",
-        creator: "MubiLop",
-        isGitHub: false,
     },
     {
         name: "Scope Variable",
@@ -201,6 +193,16 @@ export default [
         isGitHub: false,
     },
     {
+        name: "PenguinAI",
+        description: "Talk to AI! Use Models like DALL-E-3, GPT, LLama, Claude, and more!",
+        code: "MubiLop/penguingpt.js",
+        banner: "MubiLop/penguingpt.png",
+        creator: "MubiLop",
+        isGitHub: false,
+        unstable: true,
+        unstableReason: "AI models can generate unintended or inappropriate output.\nSome AI models may also become temporarily inaccessible.\n\nUse at your own risk.",
+    },
+    {
         name: "PenguinHook",
         description: "Send Webhook requests, that can be Discord or any type of webhook.",
         code: "MubiLop/penguinhook.js",
@@ -208,14 +210,15 @@ export default [
         creator: "MubiLop",
         isGitHub: false,
     },
-    {
-        name: "Toast Notifications",
-        description: "Did you want alerts? Notificationss that are easily customizable? This is the only and best notification extension!",
-        code: "MubiLop/toastnotifs.js",
-        banner: "MubiLop/toastnotifs.png",
-        creator: "MubiLop and themeatly2",
-        isGitHub: false,
-    },
+    // Temporary Delist
+    // {
+    //     name: "Toast Notifications",
+    //     description: "Did you want alerts? Notificationss that are easily customizable? This is the only and best notification extension!",
+    //     code: "MubiLop/toastnotifs.js",
+    //     banner: "MubiLop/toastnotifs.png",
+    //     creator: "MubiLop and themeatly2",
+    //     isGitHub: false,
+    // },
     {
         name: "Tile Grids",
         description: "Place sprites on grids.",

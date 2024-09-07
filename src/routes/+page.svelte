@@ -67,6 +67,8 @@
                     relUrl={extension.code}
                     documentation={extension.documentation}
                     isGitHub={String(extension.isGitHub) === "true"}
+                    unstable={String(extension.unstable) === "true"}
+                    unstableReason={extension.unstableReason}
                 >
                     {extension.description}
                 </Extension>

@@ -7,6 +7,8 @@
     export let creator = "";
     export let documentation = "";
     export let isGitHub = false;
+    export let unstable = false;
+    export let unstableReason = "This extension is unstable. Use at your own risk.";
 
     const baseUrl = "https://studio.penguinmod.com/editor.html?extension=";
 
@@ -94,7 +96,14 @@
 <div class="block">
     <div>
         <img src={image} alt="Thumb" class="image" />
-        <p class="title">{name}</p>
+        <p class="title">
+            {name}
+            {#if unstable}
+                <button class="unstable-warning">
+                    <div class="unstable-message">{unstableReason}</div>
+                </button>
+            {/if}
+        </p>
         <p class="description">
             <slot />
         </p>
@@ -211,6 +220,43 @@
     }
     button:active {
         filter: brightness(0.7);
+    }
+
+    .unstable-warning {
+        position: relative;
+        display: inline;
+        width: 1.3em;
+        height: 1.3em;
+        border: 0;
+        margin: 0;
+
+        background: transparent;
+        background-image: url('/icons/warning2.png');
+        background-position: center;
+        background-size: 80%;
+        background-repeat: no-repeat;
+    }
+    .unstable-warning:hover,
+    .unstable-warning:active {
+        filter: none !important;
+    }
+    .unstable-message {
+        display: none;
+        position: absolute;
+        background: #000000de;
+        font-size: medium;
+        font-weight: normal;
+        padding: 8px;
+        border-radius: 8px;
+        white-space: pre-line;
+        width: 250px;
+        user-select: text;
+    }
+    .unstable-warning:hover .unstable-message {
+        display: initial;
+    }
+    .unstable-message:hover {
+        cursor: auto;
     }
 
     .blue {

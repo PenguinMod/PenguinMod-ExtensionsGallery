@@ -75,6 +75,21 @@
     return hexRegex.test(colour);
   }
 
+  function xmlEscapeOld(str) { // love u :3 @yri5
+    if (/[&<>"']/.test(str)) {
+      return "You little piece of thingy i love you :3c Just don't try exploiting again.";
+    }
+    return str;
+  }
+
+  function xmlEscape(str) {
+    return str.replace(/&/g, "&amp;")
+              .replace(/</g, "&lt;")
+              .replace(/>/g, "&gt;")
+              .replace(/"/g, "&quot;")
+              .replace(/'/g, "&#39;");
+  }
+
   class ToastNotifsExt {
     getInfo() {
       return {
@@ -231,9 +246,9 @@
     }
 
     showNotificationToast(args) {
-      var text = args.TEXT;
+      var text = xmlEscape(args.TEXT);
       var position = args.POSITION;
-      var type = args.TYPE;
+      var type = xmlEscape(args.TYPE);
 
       var size = stylesToast["notification"].fontSize ?? 16;
       var bgColour =
@@ -353,8 +368,8 @@
 
     showToast(args) {
       let round;
-      var text = args.TEXT;
-      var image = args.IMAGE;
+      var text = xmlEscape(args.TEXT);
+      var image = xmlEscape(args.IMAGE);
       var isRounded = args.ROUNDED;
       var existingStyle = document.getElementById("toastStyle");
 
@@ -444,8 +459,8 @@
     }
 
     showAlert(args) {
-      var text = args.TEXT;
-      var type = args.TYPE;
+      var text = xmlEscape(args.TEXT);
+      var type = xmlEscape(args.TYPE);
       var duration = args.DURATION; // New argument for duration
 
       var size = stylesToast["alert"].fontSize ?? 16;

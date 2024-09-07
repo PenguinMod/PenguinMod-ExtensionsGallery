@@ -210,15 +210,14 @@ export default [
         creator: "MubiLop",
         isGitHub: false,
     },
-    // Temporary Delist
-    // {
-    //     name: "Toast Notifications",
-    //     description: "Did you want alerts? Notificationss that are easily customizable? This is the only and best notification extension!",
-    //     code: "MubiLop/toastnotifs.js",
-    //     banner: "MubiLop/toastnotifs.png",
-    //     creator: "MubiLop and themeatly2",
-    //     isGitHub: false,
-    // },
+    {
+        name: "Toast Notifications",
+        description: "Did you want alerts? Notifications that are easily customizable? This is the only and best notification extension!",
+        code: "MubiLop/toastnotifs.js",
+        banner: "MubiLop/toastnotifs.png",
+        creator: "MubiLop and themeatly2",
+        isGitHub: false,
+    },
     {
         name: "Tile Grids",
         description: "Place sprites on grids.",

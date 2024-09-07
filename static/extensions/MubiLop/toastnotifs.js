@@ -75,13 +75,6 @@
     return hexRegex.test(colour);
   }
 
-  function xmlEscapeOld(str) { // love u :3 @yri5
-    if (/[&<>"']/.test(str)) {
-      return "You little piece of thingy i love you :3c Just don't try exploiting again.";
-    }
-    return str;
-  }
-
   function xmlEscape(str) {
     return str.replace(/&/g, "&amp;")
               .replace(/</g, "&lt;")

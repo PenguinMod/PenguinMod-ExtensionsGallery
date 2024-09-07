@@ -128,7 +128,15 @@ simultaneously run {
 } ::control
 ```
 This Block will Run Both Inner Scripts Simultaneously
-Warning: This is not **PERFECTLY** Simultaneous (off by a few milliseconds). Scratch is unfortunately not good at that.
+
+```scratch
+if <> then {
+} while running {
+} then {
+} @loopArrow::control
+```
+If the condition is true, this Block will Run the **First** Inner Script, while it Runs, the **Second** Inner Script will also Run.
+Once both Scripts Finish, the **Third** Inner Script will Run.
 
 ---
 

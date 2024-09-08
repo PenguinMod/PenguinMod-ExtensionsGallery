@@ -203,8 +203,16 @@ Each extension is incased in `{}` brackets. Look below on how to copy it.
     description: "Blocks to return the result of an expression.", // The description for the extension.
     code: "Username/extension.js", // The folder and file name for the code of the extension.
     banner: "Username/Extension.png", // The folder and file name for the banner of the extension.
-    documentation: "page-name", // Only applies if you created a documentation page. This is the page name for that documentation.
     creator: "Username", // Your username. Adds a link to your profile.
+    
+    // Only applies if you created a documentation page.
+    documentation: "page-name", // This is the page name for the documentation you created.
+
+    // These next ones are optional. You can choose not to include them.
+    creatorAlias: "Joe", // Optional. This will not change the creator link, but change the name that links to it.
+    notes: "Additional help by someguy", // Optional. Allows you to note anyone else who helped you or any small info.
+    unstable: false, // Optional. Will add a warning message that your extension is unstable.
+    unstableReason: "May break sometimes, Use at your own risk.", // Optional. Will change the reason that your extension is unstable.
     isGitHub: false, // Optional. false means this is your Scratch username, true means this is your GitHub username.
 },
 ```

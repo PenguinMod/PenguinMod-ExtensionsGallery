@@ -63,8 +63,10 @@
                     name={extension.name}
                     image={`/images/${extension.banner}`}
                     creator={extension.creator}
+                    creatorAlias={extension.creatorAlias}
                     url={createExtUrl(extension.code)}
                     relUrl={extension.code}
+                    notes={extension.notes}
                     documentation={extension.documentation}
                     isGitHub={String(extension.isGitHub) === "true"}
                     unstable={String(extension.unstable) === "true"}

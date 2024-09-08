@@ -4,7 +4,9 @@
     export let name = "Test";
     export let image = "/images/example.png";
     export let url = "";
+    export let notes = "";
     export let creator = "";
+    export let creatorAlias;
     export let documentation = "";
     export let isGitHub = false;
     export let unstable = false;
@@ -116,13 +118,16 @@
                         : `https://github.com/${creator}/`}
                     target="_blank"
                 >
-                    {creator}.
+                    {creatorAlias || creator}.
                 </a>
             </p>
         {/if}
+        {#if notes && notes !== ""}
+            <p class="notes">{notes}</p>
+        {/if}
         {#if documentation}
             <p>
-                <a href={`/docs/${documentation}`}> Extension Documentation </a>
+                <a href={`/docs/${documentation}`}>Extension Documentation</a>
             </p>
         {/if}
     </div>
@@ -203,6 +208,9 @@
         margin-block: 6px;
         white-space: pre-wrap;
     }
+    .notes {
+        white-space: pre-wrap;
+    }
 
     button {
         cursor: pointer;
@@ -248,7 +256,7 @@
         font-weight: normal;
         padding: 8px;
         border-radius: 8px;
-        white-space: pre-line;
+        white-space: pre-wrap;
         width: 250px;
         user-select: text;
     }

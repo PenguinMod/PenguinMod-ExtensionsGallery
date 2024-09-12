@@ -1,9 +1,10 @@
 /**!
  * Extension Exposer
  * @author 0znzw https://scratch.mit.edu/users/0znzw/
+ * @author TheShovel https://github.com/TheShovel/
  * @version 1.2.1
  * @copyright MIT & LGPLv3 License
- * @comment  Thanks to JodieTheShovel for the original concept:
+ * @comment  Thanks to TheShovel for the original concept:
  * @original https://extensions.penguinmod.com/extensions/TheShovel/extexp.js
  * Do not remove this comment
  */

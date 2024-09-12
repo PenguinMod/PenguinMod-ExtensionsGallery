@@ -1,7 +1,7 @@
 /**!
  * Extension Exposer
  * @author 0znzw https://scratch.mit.edu/users/0znzw/
- * @version 1.0
+ * @version 1.1
  * @copyright MIT & LGPLv3 License
  * @comment  Thanks to JodieTheShovel for the original concept:
  * @original https://extensions.penguinmod.com/extensions/TheShovel/extexp.js
@@ -11,29 +11,29 @@
   if (!Scratch.extensions.unsandboxed) {
     throw new Error(`"Extension Exposer" must be ran unsandboxed.`);
   }
-  const { Cast, BlockType, ArgumentType, vm } = Scratch, { runtime } = vm;
+  const extId = '0znzwExtensionExposerPrims', { Cast, BlockType, ArgumentType, vm } = Scratch, { runtime } = vm;
   class extension {
     getInfo() {
       return {
-        id: '0znzwExtensionExposerPrims',
+        id: extId,
         name: 'Extension Exposer',
         blocks: [{
           opcode: 'command',
           blockType: BlockType.COMMAND,
           text: 'run function [OPCODE] from [EXT] with args [ARGS]',
           arguments: {
-            OPCODE: { type: ArgumentType.STRING, defaultValue: 'opcode' },
-            EXT: { type: ArgumentType.STRING, menu: 'exts', defaultValue: '' },
-            ARGS: { type: ArgumentType.STRING, defaultValue: '{"input1":"yep"}' },
+            OPCODE: { type: ArgumentType.STRING, defaultValue: 'exampleA' },
+            EXT: { type: ArgumentType.STRING, menu: 'exts', defaultValue: extId },
+            ARGS: { type: ArgumentType.STRING, defaultValue: '{"TEXT":"AAAAHH"}' },
           },
         }, {
           opcode: 'inline',
           blockType: BlockType.REPORTER,
           text: 'run function [OPCODE] from [EXT] with args [ARGS]',
           arguments: {
-            OPCODE: { type: ArgumentType.STRING, defaultValue: 'opcode' },
-            EXT: { type: ArgumentType.STRING, menu: 'exts', defaultValue: '' },
-            ARGS: { type: ArgumentType.STRING, defaultValue: '{"input1":"yep"}' },
+            OPCODE: { type: ArgumentType.STRING, defaultValue: 'exampleB' },
+            EXT: { type: ArgumentType.STRING, menu: 'exts', defaultValue: extId },
+            ARGS: { type: ArgumentType.STRING, defaultValue: '{"PERSON":"Joe"}' },
           },
           allowDropAnywhere: true,
         }],
@@ -62,6 +62,12 @@
       const arr = Array.from(vm.extensionManager._loadedExtensions.keys());
       if (typeof arr[0] !== 'string') arr.push('');
       return arr;
+    }
+    exampleA(args) {
+      alert(Cast.toString(args.TEXT || ''));
+    }
+    exampleB(args) {
+      return `Hello, ${Cast.toString(args.PERSON || '')}`;
     }
     command({ EXT, OPCODE, ARGS }, util, blockJSON) {
       if (EXT = Cast.toString(EXT), (!this._extensions().includes(EXT) || EXT === '')) return '';

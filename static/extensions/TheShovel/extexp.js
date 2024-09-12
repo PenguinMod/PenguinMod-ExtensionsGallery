@@ -11,13 +11,14 @@
   if (!Scratch.extensions.unsandboxed) {
     throw new Error(`"Extension Exposer" must be ran unsandboxed.`);
   }
-  const extId = 'jodieextexp', runText = 'run function [FUNCNAME] from [EXTLIST] with inputs [INPUT]',
-        defaultArguments: {
+  const { Cast, BlockType, ArgumentType, vm } = Scratch, { runtime } = vm,
+        extId = 'jodieextexp', runText = 'run function [FUNCNAME] from [EXTLIST] with inputs [INPUT]',
+        defaultArguments = {
           FUNCNAME: { type: ArgumentType.STRING, defaultValue: 'test' },
           EXTLIST: { type: ArgumentType.STRING, menu: 'EXTLIST', defaultValue: extId },
           INPUT: { type: ArgumentType.STRING, defaultValue: '{"INPUT":"Hello World!"}' },
-        }, { Cast, BlockType, ArgumentType, vm } = Scratch, { runtime } = vm;
-  class extension {
+        };
+  class jodieextexp {
     getInfo() {
       return {
         id: extId,
@@ -70,10 +71,10 @@
       return arr;
     }
     test(args) {
-      return Cast.toString(args.INPUT || ''));
+      return Cast.toString(args.INPUT || '');
     }
     run({ FUNCNAME, EXTLIST, INPUT }, util, blockJSON) {
-      XTLIST = Cast.toString(EXTLIST);
+      EXTLIST = Cast.toString(EXTLIST);
       FUNCNAME = Cast.toString(FUNCNAME);
       // If the function does not exist then it is not referenced as a real block, or the extension is not global (fallback)
       return (runtime._primitives[`${EXTLIST}_${FUNCNAME}`] || runtime[`ext_${EXTLIST}`][FUNCNAME])(this._parseJSON(Cast.toString(INPUT)), util, blockJSON);
@@ -82,5 +83,5 @@
     runreporter() {}
     runboolean() {}
   }
-  Scratch.extensions.register(runtime[`ext_${extId}`] = new extension());
+  Scratch.extensions.register(runtime[`ext_${extId}`] = new jodieextexp());
 })(Scratch);

@@ -63,8 +63,10 @@ export default [
         description: "Manage your variables in a block-like structure.",
         code: "0znzw/ScopeVars.js",
         banner: "0znzw/ScopeVars.png",
-        creator: "Ashimee",
+        creator: "yuri-kiss",
         isGitHub: true,
+        unstable: true,
+        unstableReason: "This extension uses unstable technuiqes that may not always work.",
     },
     {
         name: "Variables Expanded",
@@ -272,11 +274,12 @@ export default [
     },
     {
         name: "Font Manager",
-        description: "Manage, create, and delete fonts.\n(Some contributions by Ashimee)",
+        description: "Manage, create, and delete fonts.",
         code: "SharkPool/Font-Manager.js",
         banner: "SharkPool/Font-Manager.svg",
         creator: "SharkPool-SP",
         isGitHub: true,
+        notes: "Some contributions by yuri-kiss",
     },
     {
         name: "Sound Waves",
@@ -376,10 +379,11 @@ export default [
     {
         name: "Extension Exposer",
         description: "Access the raw functions from other extensions.",
-        code: "TheShovel/extexp.js",
-        banner: "TheShovel/placeholder-extexp.png",
-        creator: "TheShovel",
+        code: "0znzw/ExtensionExposer.js",
+        banner: "0znzw/ExtensionExposer.png",
+        creator: "yuri-kiss",
         isGitHub: true,
+        note: "Original created by TheShovel",
     },
     {
         name: "Project Page",
@@ -402,7 +406,7 @@ export default [
         description: "Custom Field Types",
         code: "Ashime/MoreFields.js",
         banner: "0znzw/MoreFields.png",
-        creator: "Ashimee",
+        creator: "yuri-kiss",
         isGitHub: true,
     },
     {

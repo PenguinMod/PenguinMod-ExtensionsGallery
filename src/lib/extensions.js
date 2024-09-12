@@ -379,11 +379,11 @@ export default [
     {
         name: "Extension Exposer",
         description: "Access the raw functions from other extensions.",
-        code: "0znzw/ExtensionExposer.js",
-        banner: "0znzw/ExtensionExposer.png",
-        creator: "yuri-kiss",
+        code: "TheShovel/extexp.js",
+        banner: "TheShovel/placeholder-extexp.png",
+        creator: "TheShovel",
         isGitHub: true,
-        note: "Original created by TheShovel",
+        note: "Some contributions by yuri-kiss :P",
     },
     {
         name: "Project Page",

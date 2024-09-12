@@ -1,7 +1,7 @@
 /**!
  * Extension Exposer
  * @author 0znzw https://scratch.mit.edu/users/0znzw/
- * @version 1.2
+ * @version 1.2.1
  * @copyright MIT & LGPLv3 License
  * @comment  Thanks to JodieTheShovel for the original concept:
  * @original https://extensions.penguinmod.com/extensions/TheShovel/extexp.js
@@ -73,16 +73,12 @@
       if (EXT = Cast.toString(EXT), (!this._extensions().includes(EXT) || EXT === '')) return '';
       OPCODE = Cast.toString(OPCODE);
       // If the function does not exist then it is not referenced as a real block, or the extension is not global (fallback)
-      const fn = runtime._primitives[`${EXT}_${OPCODE}`] || runtime[`ext_${EXT}`][OPCODE];
-      if (!fn) return '';
-      return fn(this._parseJSON(ARGS), util, blockJSON);
+      return (runtime._primitives[`${EXT}_${OPCODE}`] || runtime[`ext_${EXT}`][OPCODE])(this._parseJSON(ARGS), util, blockJSON);
     }
     inline({ EXT, OPCODE, ARGS }, util, blockJSON) {
       if (EXT = Cast.toString(EXT), (!this._extensions().includes(EXT) || EXT === '')) return '';
       OPCODE = Cast.toString(OPCODE);
-      const fn = runtime._primitives[`${EXT}_${OPCODE}`] || runtime[`ext_${EXT}`][OPCODE];
-      if (!fn) return '';
-      return fn(this._parseJSON(ARGS), util, blockJSON);
+      return (runtime._primitives[`${EXT}_${OPCODE}`] || runtime[`ext_${EXT}`][OPCODE])(this._parseJSON(ARGS), util, blockJSON);
     }
   }
   Scratch.extensions.register(runtime[`ext_${extId}`] = new extension());

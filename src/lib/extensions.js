@@ -484,6 +484,18 @@ export default [
         isGitHub: true,
     },
     {
+        name: "Lua", // The name of the extension.
+        description: "Execute lua in Penguinmod!.",
+        code: "Drago-Cuven/DragonianLua.js",
+        banner: "Drago-Cuven/lua.svg",
+        creator: "Drago-Cuven", 
+        creatorAlias: "Drago Cuven",
+        notes: "Additional help by FurryR, Yri, and ObviousAlexC",
+        unstable: true, 
+        unstableReason: "Wip, More commands being added later.",
+        isGitHub: true,
+    },
+    {
         name: "oneko",
         description: "Cute cat that follows you on the block area.",
         code: "TheShovel/oneko.js",

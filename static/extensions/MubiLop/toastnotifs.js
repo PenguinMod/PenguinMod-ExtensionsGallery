@@ -457,8 +457,7 @@
 
     showAlert(args) {
       var text = xmlEscape(args.TEXT);
-      var type = xmlEscape(args.TYPE);
-      var duration = args.DURATION; // New argument for duration
+      var duration = xmlEscape(args.DURATION); // New argument for duration
 
       var size = stylesToast["alert"].fontSize ?? 16;
       var bgColour = stylesToast["alert"].backgroundColour ?? "#2196F3";

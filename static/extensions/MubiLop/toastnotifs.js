@@ -504,7 +504,7 @@
       document.head.appendChild(alertStyle);
 
       var alert = document.createElement("div");
-      alert.className = `alert ${type}`;
+      alert.className = `alert`;
       alert.textContent = text;
       document.body.appendChild(alert);
 

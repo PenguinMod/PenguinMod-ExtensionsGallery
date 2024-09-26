@@ -225,6 +225,16 @@ export default [
         isGitHub: true,
     },
     {
+        name: "Mouth Washer: Remade",
+        description: "Includes many utilities related to cleaning bad words, swearing and profanity. Thought of as an extra layer of security for filtering messages.",
+        code: "MubiLop/mouthwasher.js",
+        banner: "MubiLop/mouthwasher.png",
+        creator: "cicerorph",
+        creatorAlias: "MubiLop",
+        notes: "Graphics made by warptimerhater (a_pc), original extension by Gen1x",
+        isGitHub: true,
+    },
+    {
         name: "Tile Grids",
         description: "Place sprites on grids.",
         code: "SharkPool/Tile-Grids.js",

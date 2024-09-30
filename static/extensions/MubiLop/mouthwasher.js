@@ -78,7 +78,8 @@
             
             for (const word of badWordsList) {
                 const regex = new RegExp(`\\b${word}\\b`, 'i');
-                if (inputStr.match(regex) || input.match(regex)) {
+                const result = inputStr.match(regex) || input.match(regex);
+                if (result && result[0] !== "") {
                     return true;
                 }
             }
@@ -96,7 +97,8 @@
     
         for (const word of badWordsList) {
             const regex = new RegExp(`\\b${word}\\b`, 'i');
-            if (inputStr.match(regex) || input.match(regex)) {
+            const result = inputStr.match(regex) || input.match(regex)
+            if (result && result[0] !== "") {
                 return true;
             }
         }

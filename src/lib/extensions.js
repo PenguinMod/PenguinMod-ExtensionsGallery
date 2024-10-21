@@ -465,10 +465,11 @@ export default [
         isGitHub: true,
     },
     {
-    name: "PenguinLlama",
-    description: "A Scratch extension that allows users to ask an AI for responses based on their input using Llama.",
-    code: "Gamma7113131/penguinLlama.js",
-    banner: "https://titanicsearch.neocities.org/PenguinLLama.png",
-    creator: "Gamma7113131",
+        name: "PenguinLlama",
+        description: "A Scratch extension that allows users to ask an AI for responses based on their input using Llama.",
+        code: "Gamma7113131/penguinLlama.js",
+        banner: "https://titanicsearch.neocities.org/PenguinLLama.png",
+        creator: "Gamma7113131",
+        isGitHub: true,
     },
 ];

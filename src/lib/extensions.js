@@ -464,4 +464,11 @@ export default [
         creator: "TheShovel",
         isGitHub: true,
     },
+    {
+    name: "PenguinLlama", // The name of your extension.
+    description: "A Scratch extension that allows users to ask an AI for responses based on their input using Llama.", // Description.
+    code: "Gamma7113131/penguinLlama.js", // Path to your code.
+    banner: "Gamma7113131/penguinLlama.png", // Path to your banner.
+    creator: "Gamma7113131", // Your GitHub username.
+    },
 ];

@@ -495,4 +495,12 @@ export default [
         creator: "TheShovel",
         isGitHub: true,
     },
+    {
+    name: "Unit converter",
+    description: "convert units of measurement types without difficulty using this extension!",
+    code: "Lucas4177/extension.js",
+    banner: "Lucas4177/UnitConverter.png",
+    creator: "Lucas4177",
+    isGitHub: true,
+    notes: "Depending on your date (probably only in 2024) the number of conversions may be very few.",
 ];

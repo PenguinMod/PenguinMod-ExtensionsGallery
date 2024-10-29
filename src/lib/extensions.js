@@ -232,6 +232,7 @@ export default [
         creator: "cicerorph",
         creatorAlias: "MubiLop",
         notes: "Art made by hazel",
+        documentation: "NumberUtilities",
         isGitHub: true,
     },
     {

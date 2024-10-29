@@ -283,7 +283,7 @@
         const locale = args.LOCALE === 'system' ? this.systemLocale : args.LOCALE;
         return Number(args.NUMBER).toLocaleString(locale);
       } catch (e) {
-        return 'Error: Invalid number or locale';
+        throw new Error('Error: Invalid number or locale');
       }
     }
 
@@ -291,7 +291,7 @@
       try {
         return Number(args.NUMBER).toFixed(args.DECIMALS);
       } catch (e) {
-        return 'Error: Invalid input';
+        throw new Error('Error: Invalid input');
       }
     }
 
@@ -299,7 +299,7 @@
       try {
         return Number(args.NUMBER).toPrecision(args.PRECISION);
       } catch (e) {
-        return 'Error: Invalid input';
+        throw new Error('Error: Invalid input');
       }
     }
 
@@ -307,7 +307,7 @@
       try {
         return Number(args.NUMBER).toExponential(args.DECIMALS);
       } catch (e) {
-        return 'Error: Invalid input';
+        throw new Error('Error: Invalid input');
       }
     }
 
@@ -318,7 +318,7 @@
           currency: args.CURRENCY
         });
       } catch (e) {
-        return 'Error: Invalid input';
+        throw new Error('Error: Invalid input');
       }
     }
 
@@ -327,7 +327,7 @@
         const number = Number(args.NUMBER);
         return `${(number * 100).toFixed(args.DECIMALS)}%`;
       } catch (e) {
-        return 'Error: Invalid input';
+        throw new Error('Error: Invalid input');
       }
     }
 
@@ -336,7 +336,7 @@
         const multiple = Number(args.MULTIPLE);
         return Math.round(args.NUMBER / multiple) * multiple;
       } catch (e) {
-        return 'Error: Invalid input';
+        throw new Error('Error: Invalid input');
       }
     }
 
@@ -357,7 +357,7 @@
         const parsed = parseFloat(args.TEXT);
         return Number.isNaN(parsed) ? 'Error: Invalid number' : parsed;
       } catch (e) {
-        return 'Error: Invalid input';
+        throw new Error('Error: Invalid input');
       }
     }
 
@@ -368,7 +368,7 @@
         const max = Number(args.MAX);
         return Math.min(Math.max(num, min), max);
       } catch (e) {
-        return 'Error: Invalid input';
+        throw new Error('Error: Invalid input');
       }
     }
   }

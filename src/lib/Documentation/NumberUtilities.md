@@ -6,7 +6,7 @@ The Number Utilities extension adds useful number formatting and manipulation ca
 
 ### Format Number with Locale
 ```scratch
-format number [10000] with locale [English (US)]
+(format number [10000] with locale [English (US) v])
 ```
 Formats a number according to the specified locale's conventions. This affects how decimal points, thousands separators, and other formatting elements appear.
 
@@ -19,7 +19,7 @@ Available locales include system default and many country-specific options like 
 
 ### Format with Decimal Places
 ```scratch
-format [3.14159] with [2] decimal places
+(format [3.14159] with [2] decimal places)
 ```
 Formats a number with a specific number of decimal places.
 
@@ -30,7 +30,7 @@ Examples:
 
 ### Format with Significant Figures
 ```scratch
-format [3.14159] with [3] significant figures
+(format [3.14159] with [3] significant figures)
 ```
 Formats a number to show a specific number of significant digits.
 
@@ -43,7 +43,7 @@ Examples:
 
 ### Format as Currency
 ```scratch
-format [123.45] as currency in [USD]
+(format [123.45] as currency in [USD v])
 ```
 Formats a number as currency in the specified currency code.
 
@@ -56,7 +56,7 @@ Supports many currency codes including USD, EUR, GBP, JPY, CNY, and more.
 
 ### Format as Percentage
 ```scratch
-format [0.8547] as percentage with [1] decimals
+(format [0.8547] as percentage with [1] decimals)
 ```
 Converts a decimal number to a percentage with the specified number of decimal places.
 
@@ -69,7 +69,7 @@ Examples:
 
 ### Convert to Exponential Notation
 ```scratch
-convert [1234.5678] to exponential notation with [2] decimals
+(convert [1234.5678] to exponential notation with [2] decimals)
 ```
 Converts a number to scientific notation with the specified number of decimal places.
 
@@ -82,7 +82,7 @@ Examples:
 
 ### Check if Integer
 ```scratch
-is [5] an integer?
+<is [5] an integer?>
 ```
 Returns true if the number is an integer (whole number), false otherwise.
 
@@ -93,7 +93,7 @@ Examples:
 
 ### Check if Finite
 ```scratch
-is [42] finite?
+<is [42] finite?>
 ```
 Returns true if the number is finite (not infinity or -infinity), false otherwise.
 
@@ -104,7 +104,7 @@ Examples:
 
 ### Check if NaN
 ```scratch
-is [number] NaN?
+<is [number] NaN?>
 ```
 Returns true if the value is NaN (Not a Number), false otherwise.
 
@@ -117,7 +117,7 @@ Examples:
 
 ### Round to Multiple
 ```scratch
-round [127] to nearest [10]
+(round [127] to nearest [10])
 ```
 Rounds a number to the nearest multiple of the specified value.
 
@@ -128,7 +128,7 @@ Examples:
 
 ### Parse Number from Text
 ```scratch
-parse number from text [123.45]
+(parse number from text [123.45])
 ```
 Converts a text string to a number. Returns an error message if the text cannot be converted.
 
@@ -139,7 +139,7 @@ Examples:
 
 ### Clamp Number
 ```scratch
-clamp [50] between [0] and [100]
+(clamp [50] between [0] and [100])
 ```
 Restricts a number to stay within the specified minimum and maximum values.
 

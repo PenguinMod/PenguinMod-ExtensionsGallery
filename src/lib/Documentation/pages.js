@@ -13,6 +13,9 @@ import PageFreeServers from "./FreeServers.md?raw";
 // TurboWeather
 import PageTurboWeather from "./TurboWeather.md?raw";
 
+// Number Utilities
+import PageNumberUtilities from "./NumberUtilities.md?raw";
+
 import PageMoreTypes from "./More-Types.md?raw";
 
 // Boxed Physics
@@ -30,6 +33,9 @@ export default {
 
     //TurboWeather
     "TurboWeather": PageTurboWeather,
+
+    // Number Utilities
+    "NumberUtilities": PageNumberUtilities,
 
     "more-types": PageMoreTypes,
 

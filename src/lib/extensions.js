@@ -225,6 +225,17 @@ export default [
         isGitHub: true,
     },
     {
+        name: "Number Utilities",
+        description: "Adds blocks for number formatting and manipulation.",
+        code: "MubiLop/numutils.js",
+        banner: "MubiLop/numutils.png",
+        creator: "cicerorph",
+        creatorAlias: "MubiLop",
+        notes: "Art made by hazel",
+        documentation: "NumberUtilities",
+        isGitHub: true,
+    },
+    {
         name: "Tile Grids",
         description: "Place sprites on grids.",
         code: "SharkPool/Tile-Grids.js",

@@ -257,7 +257,8 @@
     }
 
     toLocaleString(args) {
-      const locale = Object.values(LANGUAGE_CODES).find(v => v == args.LOCALE && v != 'system') || this.systemLocale;
+      const locale = Object.keys(LANGUAGE_CODES)
+        .find(v => v == args.LOCALE && v != 'system') || this.systemLocale;
       return Cast.toNumber(args.NUMBER).toLocaleString(locale);
     }
 

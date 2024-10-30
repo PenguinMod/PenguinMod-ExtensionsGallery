@@ -149,11 +149,7 @@ Examples:
 - `-10` between `0` and `100` → `0`
 
 ## Error Handling
-
-All blocks in this extension include error handling to prevent crashes:
-- Invalid numbers return appropriate error messages
-- Invalid locale or currency codes fall back to defaults
-- Out-of-range values are handled gracefully
+It will mostly just go back to the default if something is invalid or doesn't seem to be right.
 
 ## Additional Notes
 

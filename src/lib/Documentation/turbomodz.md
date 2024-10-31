@@ -2,7 +2,8 @@
 in this documentation, you will learn how to use Turbomodz and Create your Own Mods
 ## Create Your Own Mod
 ### Create New Mod Called ()
-``` scratch
+
+```scratch
 create new mod called [foobar mod] :: #e84cff
 ```
 Creates a New Mod. 
@@ -28,7 +29,8 @@ here is the default data for the newly created mod:
 }
 ```
 ### Get Mod Called () as [JSON]
-``` scratch
+
+```scratch
 get mod called (foobar mod v) as [JSON v] :: #e84cff reporter
 ```
 Reports the data of the mod in three formats:
@@ -36,32 +38,38 @@ Reports the data of the mod in three formats:
   - Stringified JSON (text)
   - Raw Array
 if you don't want to use external extensions to read this data, use these blocks instead:
-``` scratch
+
+```scratch
 get (key v) of mod called (foobar mod v) :: #e84cff reporter
 
 get runtime value of (value v) of mod called (foobar mod v):: #e84cff reporter
 ```
 ## Project Modding
 ### Add Sprite \(url\) to Mod:()
-``` scratch
+
+```scratch
 add sprite [https://example.com/Sprite1.sprite3] to mod:(foobar mod v) :: #e84cff
 ```
 Adds a Sprite using an Url or Data:URI (Recommended)
 ### Add Image \[URL\] to Sprite:\[SPRITE\] in Mod:\[MOD\]
-``` scratch
+
+```scratch
 add image [URL] to sprite:(myself v) in mod:(foobar mod v) :: #e84cff
 ```
 adds an image as a costume for the chosen sprite in the mod. same for the block below except it uses actual costumes:
-``` scratch
+
+```scratch
 add costume (costume 1 v) to sprite:(myself v) in mod:(foobar mod v) :: #e84cff
 ```
 
 ### Add Sound URL () to sprite:() in mod:()
-``` scratch
+
+```scratch
 add sound url [https://extensions.turbowarp.org/srpelo.mp3] to sprite:(SPRITE v) in mod:(foobar mod v) :: #e84cff
 ```
 adds a sound using it's URL for the chosen sprite in the mod. same for the block below except it doesn't use URLs:
-``` scratch
+
+```scratch
 add sound (sr pelo.mp3 v) to sprite:(myself v) in mod:(foobar mod v) :: #e84cff
 ```
 ## Mods & Runtime Values
@@ -88,7 +96,8 @@ set stage size to width:[640] height:[420] in mod:(foobar mod v):: #e84cff
 if you know how to use runtime values, skip this section.
 ## Loading Mods
 ### load [MOD] mod in project
-``` scratch
+
+```scratch
 load (foobar mod v) mod in project:: #e84cff
 ```
 Loads The Mod in The Project.
@@ -97,29 +106,34 @@ Loads The Mod in The Project.
 - It Can Also Break the Entire Project.
 - USE AT YOUR OWN RISK!
 ### unload all mods in project
-``` scratch
+
+```scratch
 unload all mods in project:: #e84cff
 ```
 does the opposite of the upper block.
 ### is project loading a mod? & is project modded?
-``` scratch
+
+```scratch
 s project loading a mod?:: #e84cff boolean
 
 is project modded?:: #e84cff boolean
 ```
 adds checks to if the project is loading a mod and if it's modded.
+
 ## Mod-Packs(W-I-P)
 they will come soon...
+
 ## Extras
+extra blocks. duh.
 ### Import & export Mods
-``` scratch
+```scratch
 export mod (foobar mod v) as [.twmod]:: #e84cff // default format is ".pmmod" in PenguinMod
 
 import new mod to project as [.twmod]:: #e84cff
 ```
 import or export your mods using the default format or your own unique custom format for your game!
 ### CSS in Mod (W-I-P)
-``` scratch
+```scratch
 add CSS [css] to mod:(foobar mod v):: #e84cff // i have no idea if it's possible in PenguinMod
 ```
 self explanatory. only works on packaged projects.

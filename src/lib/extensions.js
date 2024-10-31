@@ -504,7 +504,7 @@ export default [
     code: "Hammouda101010/turbomodz.js",
     banner: "Hammouda101010/turbomodz.png", 
     creator: "hammouda101010", 
-    documentation: "PageTurboModz", 
+    documentation: "TurboModz", 
     creatorAlias: "Hammouda101010",
     notes: " Inspired by Asset Manager and Other Extensions.",
     unstable: true,

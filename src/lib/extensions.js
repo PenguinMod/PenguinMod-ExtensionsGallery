@@ -499,6 +499,22 @@ export default [
         isGitHub: true,
     },
     {
+    name: "TurboModz",
+    description: "Implement Mods into Your Projects.",
+    code: "Hammouda101010/turbomodz.js", // The folder and file name for the code of the extension.
+    banner: "Hammouda101010/Turbomodz.png", // The folder and file name for the banner of the extension.
+    creator: "hammouda101010", // Your username. Adds a link to your profile.
+    
+    // Only applies if you created a documentation page.
+    documentation: "page-name", // This is the page name for the documentation you created.
+
+    creatorAlias: "Hammouda101010",
+    notes: " Inspired by Asset Manager and Other Extensions.",
+    unstable: true,
+    unstableReason: "This Extension is New and May Have Unexpected Bugs to Happen. Use at Your Own Risk!", // Optional. Will change the reason that your extension is unstable.
+    isGitHub: true, // Optional. false means this is your Scratch username, true means this is your GitHub username.
+},
+    {
         name: "oneko",
         description: "Cute cat that follows you on the block area.",
         code: "TheShovel/oneko.js",

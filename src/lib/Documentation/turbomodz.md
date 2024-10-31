@@ -98,14 +98,28 @@ Loads The Mod in The Project.
 - USE AT YOUR OWN RISK!
 ### unload all mods in project
 ``` scratch
-is project loading a mod?:: #e84cff boolean
-
-is project modded?:: #e84cff boolean
+unload all mods in project:: #e84cff
 ```
 does the opposite of the upper block.
 ### is project loading a mod? & is project modded?
 ``` scratch
+s project loading a mod?:: #e84cff boolean
 
+is project modded?:: #e84cff boolean
 ```
-adds checks to if the project is loading a mod and if it's modded
+adds checks to if the project is loading a mod and if it's modded.
+## Mod-Packs(W-I-P)
+they will come soon...
+## Extras
+### Import & export Mods
+``` scratch
+export mod (foobar mod v) as [.twmod]:: #e84cff // default format is ".pmmod" in PenguinMod
 
+import new mod to project as [.twmod]:: #e84cff
+```
+import or export your mods using the default format or your own unique custom format for your game!
+### CSS in Mod (W-I-P)
+``` scratch
+add CSS [css] to mod:(foobar mod v):: #e84cff // i have no idea if it's possible in PenguinMod
+```
+self explanatory. only works on packaged projects.

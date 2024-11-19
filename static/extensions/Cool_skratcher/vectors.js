@@ -1,5 +1,5 @@
 // Name: Vectors!
-// ID: vectors
+// ID: vectorscoolskratcher
 // Description: Adds a set of blocks for vector operations in 2D and 3D space.
 // By: cool_skratcher <https://scratch.mit.edu/users/cool_skratcher/>
 // License: MIT
@@ -14,7 +14,7 @@
 
     getInfo() {
       return {
-        id: 'vectors',
+        id: 'vectorscoolskratcher',
         name: 'Vectors',
         color1: "#57a3e5",
         color2: "#0063ba",

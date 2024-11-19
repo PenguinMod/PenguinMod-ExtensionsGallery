@@ -1,5 +1,5 @@
 // Name: Vectors!
-// ID: vectorscoolskratcher
+// ID: vectors
 // Description: Adds a set of blocks for vector operations in 2D and 3D space.
 // By: cool_skratcher <https://scratch.mit.edu/users/cool_skratcher/>
 // License: MIT
@@ -7,14 +7,14 @@
 (function(Scratch) {
   'use strict';
 
-  class VecMath3D {
+  class VecMath {
     constructor() {
       this.camera = { pos: { x: 0, y: 0, z: 0 }, rot: { yaw: 0, pitch: 0, roll: 0 }, fov: 100 };
     }
 
     getInfo() {
       return {
-        id: 'vectorscoolskratcher',
+        id: 'vectors',
         name: 'Vectors',
         color1: "#57a3e5",
         color2: "#0063ba",
@@ -98,7 +98,7 @@
 
     rotateVec3(args) {
       const [x, y, z] = args.v.split(',').map(Number);
-      return this._rotate3D({ x, y, z }, args.rx, args.ry, args.rz);
+      return this._rotate3D({ x, y, z }, this._toRadians(args.rx), this._toRadians(args.ry), this._toRadians(args.rz));
     }
 
     // Camera Controls
@@ -145,9 +145,9 @@
     rotateAroundOrigin(args) {
       const [vx, vy, vz] = args.v.split(',').map(Number);
       const [ox, oy, oz] = args.origin.split(',').map(Number);
-      const rx = (Math.PI / 180) * args.rx;
-      const ry = (Math.PI / 180) * args.ry;
-      const rz = (Math.PI / 180) * args.rz;
+      const rx = this._toRadians(args.rx);
+      const ry = this._toRadians(args.ry);
+      const rz = this._toRadians(args.rz);
     
       // Translate vector to origin
       let x = vx - ox;
@@ -299,7 +299,12 @@
       const bounds = Scratch.vm.renderer.getBounds(util.target.drawableID)
       return `${Math.ceil(bounds.width)},${Math.ceil(bounds.height)}`;
     }
+
+    // New utility function to convert degrees to radians
+    _toRadians(degrees) {
+      return degrees * (Math.PI / 180);
+    }
   }
 
-  Scratch.extensions.register(new VecMath3D());
+  Scratch.extensions.register(new VecMath());
 })(Scratch);

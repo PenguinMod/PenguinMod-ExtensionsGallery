@@ -1,5 +1,5 @@
 // Name: Vectors!
-// ID: vectors
+// ID: cooldevvectors
 // Description: Adds a set of blocks for vector operations in 2D and 3D space.
 // By: cool_skratcher <https://scratch.mit.edu/users/cool_skratcher/>
 // License: MIT
@@ -30,16 +30,19 @@
     }
   };
   penPCheck();
-  vm.runtime.on("EXTENSION_ADDED", penPCheck);
 
   class VecMath {
     constructor() {
       this.camera = { pos: { x: 0, y: 0, z: 0 }, rot: { yaw: 0, pitch: 0, roll: 0 }, fov: 100 };
+      Scratch.vm.runtime.on("EXTENSION_ADDED", () => {
+        penPCheck();
+        console.log(vm.runtime.ext_penP)
+      });
     }
 
     getInfo() {
       return {
-        id: 'vectors',
+        id: 'cooldevvectors',
         name: 'Vectors',
         color1: "#57a3e5",
         color2: "#0063ba",

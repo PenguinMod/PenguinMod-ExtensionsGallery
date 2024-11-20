@@ -14,6 +14,14 @@ export default [
         isGitHub: true,
     },
     {
+        name: "Vectors",
+        description: "Adds a set of blocks for vector operations in 2D and 3D space.",
+        code: "Cool_skratcher/vectors.js",
+        banner: "Cool_skratcher/vectors.svg",
+        creator: "cool_dev",
+        isGitHub: true,
+    },
+    {
         name: "Pen+",
         description: "Extended pen section! Adds blocks for drawing triangles using textures and tints, drawing images and editing their pixels, etc.",
         code: "ObviousAlexC/PenPlus.js",

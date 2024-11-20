@@ -6,6 +6,30 @@
 
 (function(Scratch) {
   'use strict';
+  const vm = Scratch.vm;
+
+  let penPLoaded = false;
+  let penPModule = null;
+  const penPCheck = () => {
+    if (penPLoaded) {
+      return;
+    } // Return if pen+ integration is loaded
+    if (vm.runtime.ext_penP) {
+      penPLoaded = true;
+    }
+    penPModule = vm.runtime.ext_penP;
+
+    if (penPModule) {
+      penPModule.turnAdvancedSettingOff({
+        Setting: "wValueUnderFlow",
+        onOrOff: "on",
+      });
+    }
+
+    vm.runtime.extensionManager.refreshBlocks();
+  };
+  penPCheck();
+  vm.runtime.on("EXTENSION_ADDED", penPCheck);
 
   class VecMath {
     constructor() {
@@ -61,6 +85,9 @@
           { opcode: 'goToVec2', blockType: Scratch.BlockType.COMMAND, text: 'go to vec2 [v]', arguments: { v: { type: Scratch.ArgumentType.STRING, defaultValue: '0,0' }}},
           { opcode: 'getPosVec2', blockType: Scratch.BlockType.REPORTER, text: 'get position as vec2' },
           { opcode: 'getSizeVec2', blockType: Scratch.BlockType.REPORTER, text: 'get size as vec2' },
+          "---",
+          { hideFromPalette: !penPLoaded, text: 'Pen+', blockType: Scratch.BlockType.LABEL },
+          { hideFromPalette: !penPLoaded, opcode: 'drawTriangle', blockType: Scratch.BlockType.COMMAND, text: 'triangle between [v1] [v2] [v3]', arguments: { v1: { type: Scratch.ArgumentType.STRING, defaultValue: '0,0' }, v2: { type: Scratch.ArgumentType.STRING, defaultValue: '1,0' }, v3: { type: Scratch.ArgumentType.STRING, defaultValue: '0,1' }}},
         ],
         menus: {
           components: { items: ['x', 'y', 'z'] },
@@ -122,19 +149,19 @@
       const cam = this.camera;
       const dx = x - cam.pos.x, dy = y - cam.pos.y, dz = z - cam.pos.z;
 
-      // Apply yaw rotation
-      const camZ = dz * Math.cos(cam.rot.yaw) + dx * Math.sin(cam.rot.yaw);
-      const camX = dx * Math.cos(cam.rot.yaw) - dz * Math.sin(cam.rot.yaw);
+      // Apply yaw rotation (now in degrees)
+      const camZ = dz * Math.cos(this._toRadians(cam.rot.yaw)) + dx * Math.sin(this._toRadians(cam.rot.yaw));
+      const camX = dx * Math.cos(this._toRadians(cam.rot.yaw)) - dz * Math.sin(this._toRadians(cam.rot.yaw));
 
-      // Apply pitch rotation
-      const tempY = dy * Math.cos(cam.rot.pitch) - camZ * Math.sin(cam.rot.pitch);
-      const tempZ = dy * Math.sin(cam.rot.pitch) + camZ * Math.cos(cam.rot.pitch);
+      // Apply pitch rotation (now in degrees)
+      const tempY = dy * Math.cos(this._toRadians(cam.rot.pitch)) - camZ * Math.sin(this._toRadians(cam.rot.pitch));
+      const tempZ = dy * Math.sin(this._toRadians(cam.rot.pitch)) + camZ * Math.cos(this._toRadians(cam.rot.pitch));
       const finalZ = tempZ; // This is now the new Z after pitch rotation
       const finalY = tempY; // This is now the new Y after pitch rotation
 
-      // Apply roll rotation
-      const finalX = finalY * Math.sin(cam.rot.roll) + camX * Math.cos(cam.rot.roll);
-      const adjustedY = finalY * Math.cos(cam.rot.roll) - camX * Math.sin(cam.rot.roll);
+      // Apply roll rotation (now in degrees)
+      const finalX = finalY * Math.sin(this._toRadians(cam.rot.roll)) + camX * Math.cos(this._toRadians(cam.rot.roll));
+      const adjustedY = finalY * Math.cos(this._toRadians(cam.rot.roll)) - camX * Math.sin(this._toRadians(cam.rot.roll));
 
       // Calculate screen coordinates
       const screenX = (finalX / finalZ) * cam.fov;
@@ -265,8 +292,19 @@
 
     _setVec(target, v) { const [x, y, z] = v.split(',').map(Number); target.x = x; target.y = y; target.z = z; }
     _addVec(target, v) { const [x, y, z] = v.split(',').map(Number); target.x += x; target.y += y; target.z += z; }
-    _setRot(target, v) { const [x, y, z] = v.split(',').map(Number); target.yaw = x; target.pitch = y; target.roll = z; }
-    _addRot(target, v) { const [x, y, z] = v.split(',').map(Number); target.yaw += x; target.pitch += y; target.roll += z; }
+    _setRot(target, v) { 
+      const [yaw, pitch, roll] = v.split(',').map(Number); 
+      target.yaw = yaw; 
+      target.pitch = pitch; 
+      target.roll = roll; 
+    }
+
+    _addRot(target, v) { 
+      const [yaw, pitch, roll] = v.split(',').map(Number); 
+      target.yaw += yaw; 
+      target.pitch += pitch; 
+      target.roll += roll; 
+    }
 
     _rotate3D(v, rx, ry, rz) {
       const cos = Math.cos, sin = Math.sin;
@@ -298,6 +336,24 @@
     getSizeVec2(args, util) {
       const bounds = Scratch.vm.renderer.getBounds(util.target.drawableID)
       return `${Math.ceil(bounds.width)},${Math.ceil(bounds.height)}`;
+    }
+
+    drawTriangle(args, util) {
+      const [x1, y1] = args.v1.split(',').map(Number);
+      const [x2, y2] = args.v2.split(',').map(Number);
+      const [x3, y3] = args.v3.split(',').map(Number);
+      
+      penPModule.drawSolidTri(
+        {
+          x1: x1,
+          y1: y1,
+          x2: x2,
+          y2: y2,
+          x3: x3,
+          y3: y3,
+        },
+        util
+      );
     }
 
     // New utility function to convert degrees to radians

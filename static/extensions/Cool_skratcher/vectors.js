@@ -7,26 +7,27 @@
 (function(Scratch) {
   'use strict';
   const vm = Scratch.vm;
+  const mouse = vm.runtime.ioDevices.mouse;
 
   let penPLoaded = false;
   let penPModule = null;
   const penPCheck = () => {
     if (penPLoaded) {
       return;
-    } // Return if pen+ integration is loaded
+    }
     if (vm.runtime.ext_penP) {
       penPLoaded = true;
-    }
-    penPModule = vm.runtime.ext_penP;
+      penPModule = vm.runtime.ext_penP;
 
-    if (penPModule) {
-      penPModule.turnAdvancedSettingOff({
-        Setting: "wValueUnderFlow",
-        onOrOff: "on",
-      });
-    }
+      if (penPModule) {
+        penPModule.turnAdvancedSettingOff({
+          Setting: "wValueUnderFlow",
+          onOrOff: "on",
+        });
+      }
 
-    vm.runtime.extensionManager.refreshBlocks();
+      vm.runtime.extensionManager.refreshBlocks();
+    }
   };
   penPCheck();
   vm.runtime.on("EXTENSION_ADDED", penPCheck);
@@ -83,8 +84,10 @@
           { text: 'Sprite Movement', blockType: Scratch.BlockType.LABEL },
           { opcode: 'moveByVec2', blockType: Scratch.BlockType.COMMAND, text: 'change pos by vec2 [v]', arguments: { v: { type: Scratch.ArgumentType.STRING, defaultValue: '0,0' }}},
           { opcode: 'goToVec2', blockType: Scratch.BlockType.COMMAND, text: 'go to vec2 [v]', arguments: { v: { type: Scratch.ArgumentType.STRING, defaultValue: '0,0' }}},
+          { opcode: 'pointTo', blockType: Scratch.BlockType.COMMAND, text: 'point to vec2 [v]', arguments: { v: { type: Scratch.ArgumentType.STRING, defaultValue: '0,0' }}},
           { opcode: 'getPosVec2', blockType: Scratch.BlockType.REPORTER, text: 'get position as vec2' },
           { opcode: 'getSizeVec2', blockType: Scratch.BlockType.REPORTER, text: 'get size as vec2' },
+          { opcode: 'getMousePosVec2', blockType: Scratch.BlockType.REPORTER, text: 'mouse pos vec2' },
           "---",
           { hideFromPalette: !penPLoaded, text: 'Pen+', blockType: Scratch.BlockType.LABEL },
           { hideFromPalette: !penPLoaded, opcode: 'drawTriangle', blockType: Scratch.BlockType.COMMAND, text: 'triangle between [v1] [v2] [v3]', arguments: { v1: { type: Scratch.ArgumentType.STRING, defaultValue: '0,0' }, v2: { type: Scratch.ArgumentType.STRING, defaultValue: '1,0' }, v3: { type: Scratch.ArgumentType.STRING, defaultValue: '0,1' }}},
@@ -97,8 +100,18 @@
     }
 
     // Vector creation
-    vec2(args) { return `${args.x},${args.y},0`; }
-    vec3(args) { return `${args.x},${args.y},${args.z}`; }
+    vec2(args) {
+      const x = Scratch.Cast.toNumber(args.x) || 0;
+      const y = Scratch.Cast.toNumber(args.y) || 0;
+      return `${x},${y}`;
+    }
+
+    vec3(args) {
+      const x = Scratch.Cast.toNumber(args.x) || 0;
+      const y = Scratch.Cast.toNumber(args.y) || 0;
+      const z = Scratch.Cast.toNumber(args.z) || 0;
+      return `${x},${y},${z}`;
+    }
 
     // Vector component access
     getComponent(args) {
@@ -107,25 +120,54 @@
     }
 
     // Basic vector math
-    add(args) { return this._vectorOp(args.v1, args.v2, (a, b) => a + b); }
-    sub(args) { return this._vectorOp(args.v1, args.v2, (a, b) => a - b); }
-    mul(args) { return this._scalarOp(args.v, args.scalar, (a, b) => a * b); }
-    div(args) { return this._scalarOp(args.v, args.scalar, (a, b) => a / b); }
-    mag(args) { return Math.hypot(...args.v.split(',').map(Number)); }
+    add(args) {
+      return this._vectorOp(args.v1, args.v2, (a, b) => (a || 0) + (b || 0));
+    }
+
+    sub(args) {
+      return this._vectorOp(args.v1, args.v2, (a, b) => (a || 0) - (b || 0));
+    }
+
+    mul(args) {
+      const scalar = Scratch.Cast.toNumber(args.scalar) || 0;
+      return this._scalarOp(args.v, scalar, (a, b) => (a || 0) * b);
+    }
+
+    div(args) {
+      const scalar = Scratch.Cast.toNumber(args.scalar) || 1;
+      return this._scalarOp(args.v, scalar, (a, b) => b !== 0 ? (a || 0) / b : 0);
+    }
+
+    mag(args) {
+      const components = args.v.split(',').map(n => Scratch.Cast.toNumber(n) || 0);
+      return Math.hypot(...components);
+    }
+
+    // Fixed dot product with validation
     dot(args) {
-      const [x1, y1, z1] = args.v1.split(',').map(Number);
-      const [x2, y2, z2] = args.v2.split(',').map(Number);
+      const v1 = args.v1.split(',').map(n => Scratch.Cast.toNumber(n) || 0);
+      const v2 = args.v2.split(',').map(n => Scratch.Cast.toNumber(n) || 0);
+      const [x1 = 0, y1 = 0, z1 = 0] = v1;
+      const [x2 = 0, y2 = 0, z2 = 0] = v2;
       return x1 * x2 + y1 * y2 + z1 * z2;
     }
+
+    // Improved cross product
     cross(args) {
-      const [x1, y1, z1] = args.v1.split(',').map(Number);
-      const [x2, y2, z2] = args.v2.split(',').map(Number);
+      const v1 = args.v1.split(',').map(n => Scratch.Cast.toNumber(n) || 0);
+      const v2 = args.v2.split(',').map(n => Scratch.Cast.toNumber(n) || 0);
+      const [x1 = 0, y1 = 0, z1 = 0] = v1;
+      const [x2 = 0, y2 = 0, z2 = 0] = v2;
       return `${y1 * z2 - z1 * y2},${z1 * x2 - x1 * z2},${x1 * y2 - y1 * x2}`;
     }
 
+    // Fixed rotation functions
     rotateVec3(args) {
-      const [x, y, z] = args.v.split(',').map(Number);
-      return this._rotate3D({ x, y, z }, this._toRadians(args.rx), this._toRadians(args.ry), this._toRadians(args.rz));
+      const [x = 0, y = 0, z = 0] = args.v.split(',').map(n => Scratch.Cast.toNumber(n) || 0);
+      const rx = this._toRadians(Scratch.Cast.toNumber(args.rx) || 0);
+      const ry = this._toRadians(Scratch.Cast.toNumber(args.ry) || 0);
+      const rz = this._toRadians(Scratch.Cast.toNumber(args.rz) || 0);
+      return this._rotate3D({ x, y, z }, rx, ry, rz);
     }
 
     // Camera Controls
@@ -145,27 +187,43 @@
 
     // Projection
     project(args) {
-      const [x, y, z] = args.v.split(',').map(Number);
+      const [x = 0, y = 0, z = 0] = args.v.split(',').map(n => Scratch.Cast.toNumber(n) || 0);
       const cam = this.camera;
-      const dx = x - cam.pos.x, dy = y - cam.pos.y, dz = z - cam.pos.z;
+      
+      // Apply transformations in correct order
+      const dx = x - cam.pos.x;
+      const dy = y - cam.pos.y;
+      const dz = z - cam.pos.z;
 
-      // Apply yaw rotation (now in degrees)
-      const camZ = dz * Math.cos(this._toRadians(cam.rot.yaw)) + dx * Math.sin(this._toRadians(cam.rot.yaw));
-      const camX = dx * Math.cos(this._toRadians(cam.rot.yaw)) - dz * Math.sin(this._toRadians(cam.rot.yaw));
+      // Convert angles to radians for consistency
+      const yawRad = this._toRadians(cam.rot.yaw);
+      const pitchRad = this._toRadians(cam.rot.pitch);
+      const rollRad = this._toRadians(cam.rot.roll);
 
-      // Apply pitch rotation (now in degrees)
-      const tempY = dy * Math.cos(this._toRadians(cam.rot.pitch)) - camZ * Math.sin(this._toRadians(cam.rot.pitch));
-      const tempZ = dy * Math.sin(this._toRadians(cam.rot.pitch)) + camZ * Math.cos(this._toRadians(cam.rot.pitch));
-      const finalZ = tempZ; // This is now the new Z after pitch rotation
-      const finalY = tempY; // This is now the new Y after pitch rotation
+      // Apply rotations in correct order: yaw -> pitch -> roll
+      // First yaw (around Y axis)
+      let cx = dx * Math.cos(yawRad) - dz * Math.sin(yawRad);
+      let cz = dx * Math.sin(yawRad) + dz * Math.cos(yawRad);
+      let cy = dy;
 
-      // Apply roll rotation (now in degrees)
-      const finalX = finalY * Math.sin(this._toRadians(cam.rot.roll)) + camX * Math.cos(this._toRadians(cam.rot.roll));
-      const adjustedY = finalY * Math.cos(this._toRadians(cam.rot.roll)) - camX * Math.sin(this._toRadians(cam.rot.roll));
+      // Then pitch (around X axis)
+      const tempZ = cz * Math.cos(pitchRad) - cy * Math.sin(pitchRad);
+      cy = cz * Math.sin(pitchRad) + cy * Math.cos(pitchRad);
+      cz = tempZ;
 
-      // Calculate screen coordinates
-      const screenX = (finalX / finalZ) * cam.fov;
-      const screenY = (adjustedY / finalZ) * cam.fov;
+      // Finally roll (around Z axis)
+      const finalX = cx * Math.cos(rollRad) - cy * Math.sin(rollRad);
+      const finalY = cx * Math.sin(rollRad) + cy * Math.cos(rollRad);
+
+      // Prevent division by zero
+      if (Math.abs(cz) < 0.0001) {
+        return '0,0';
+      }
+
+      // Calculate screen coordinates with FOV
+      const screenX = (finalX / cz) * cam.fov;
+      const screenY = (finalY / cz) * cam.fov;
+
       return `${screenX},${screenY}`;
     }
 
@@ -228,32 +286,45 @@
     }
     
     frustumCull(args) {
-      const [x, y, z] = args.v.split(',').map(Number);
+      const [x = 0, y = 0, z = 0] = args.v.split(',').map(n => Scratch.Cast.toNumber(n) || 0);
       const { pos, rot, fov } = this.camera;
-      const near = args.near, far = args.far;
-    
-      // Translate point relative to camera
+      const near = Math.max(0.1, Scratch.Cast.toNumber(args.near) || 0.1);
+      const far = Math.max(near + 0.1, Scratch.Cast.toNumber(args.far) || 100);
+      
+      // Transform point to camera space
       const dx = x - pos.x;
       const dy = y - pos.y;
       const dz = z - pos.z;
-    
-      // Rotate point relative to camera
-      const cx = dx * Math.cos(rot.yaw) - dz * Math.sin(rot.yaw);
-      const cz = dx * Math.sin(rot.yaw) + dz * Math.cos(rot.yaw);
-      const cy = dy;
-    
-      // Check depth (near and far planes)
+      
+      // Convert angles to radians
+      const yawRad = this._toRadians(rot.yaw);
+      const pitchRad = this._toRadians(rot.pitch);
+      
+      // Apply rotations (yaw then pitch)
+      let cx = dx * Math.cos(yawRad) - dz * Math.sin(yawRad);
+      let cz = dx * Math.sin(yawRad) + dz * Math.cos(yawRad);
+      let cy = dy;
+      
+      // Apply pitch
+      const temp_z = cz * Math.cos(pitchRad) - cy * Math.sin(pitchRad);
+      cy = cz * Math.sin(pitchRad) + cy * Math.cos(pitchRad);
+      cz = temp_z;
+      
+      // Early exit if behind camera
+      if (cz <= 0) return true;
+      
+      // Check against near/far planes
       if (cz < near || cz > far) return true;
-    
-      // Check horizontal FOV
-      const hHalf = Math.tan((fov / 2) * (Math.PI / 180)) * cz;
-      if (cx < -hHalf || cx > hHalf) return true;
-    
-      // Check vertical FOV
-      const vHalf = hHalf * (3 / 4); // Assuming aspect ratio of 4:3
-      if (cy < -vHalf || cy > vHalf) return true;
-    
-      return false;
+      
+      // Calculate FOV bounds with correct aspect ratio (4:3)
+      const hFovRad = this._toRadians(fov);
+      const vFovRad = 2 * Math.atan(Math.tan(hFovRad / 2) * (3/4));
+      
+      // Check against frustum planes
+      const hHalf = Math.abs(Math.tan(hFovRad / 2) * cz);
+      const vHalf = Math.abs(Math.tan(vFovRad / 2) * cz);
+      
+      return Math.abs(cx) > hHalf || Math.abs(cy) > vHalf;
     }
     
     backFaceCull(args) {
@@ -280,8 +351,10 @@
 
     // Utility Functions
     _vectorOp(v1, v2, op) {
-      const [x1, y1, z1] = v1.split(',').map(Number);
-      const [x2, y2, z2] = v2.split(',').map(Number);
+      const vec1 = v1.split(',').map(n => Scratch.Cast.toNumber(n) || 0);
+      const vec2 = v2.split(',').map(n => Scratch.Cast.toNumber(n) || 0);
+      const [x1 = 0, y1 = 0, z1 = 0] = vec1;
+      const [x2 = 0, y2 = 0, z2 = 0] = vec2;
       return `${op(x1, x2)},${op(y1, y2)},${op(z1, z2)}`;
     }
 
@@ -307,11 +380,26 @@
     }
 
     _rotate3D(v, rx, ry, rz) {
-      const cos = Math.cos, sin = Math.sin;
+      const cos = Math.cos;
+      const sin = Math.sin;
       let { x, y, z } = v;
-      [y, z] = [y * cos(rx) - z * sin(rx), y * sin(rx) + z * cos(rx)];
-      [x, z] = [x * cos(ry) + z * sin(ry), -x * sin(ry) + z * cos(ry)];
-      [x, y] = [x * cos(rz) - y * sin(rz), x * sin(rz) + y * cos(rz)];
+      
+      // Apply rotations in order: X -> Y -> Z
+      // X rotation
+      let temp = y;
+      y = y * cos(rx) - z * sin(rx);
+      z = temp * sin(rx) + z * cos(rx);
+      
+      // Y rotation
+      temp = x;
+      x = x * cos(ry) + z * sin(ry);
+      z = -temp * sin(ry) + z * cos(ry);
+      
+      // Z rotation
+      temp = x;
+      x = x * cos(rz) - y * sin(rz);
+      y = temp * sin(rz) + y * cos(rz);
+      
       return `${x},${y},${z}`;
     }
 
@@ -322,6 +410,23 @@
       util.target.setXY(util.target.x + x, util.target.y + y);
     }
 
+    pointTo(args, util) {
+      const [dx, dy] = args.v.split(',').map(Number);
+      const x = Scratch.Cast.toNumber(dx);
+      const y = Scratch.Cast.toNumber(dy);
+      if (util.target.y > y) {
+        util.target.setDirection(
+          (180 / Math.PI) *
+            Math.atan((x - util.target.x) / (y - util.target.y)) +
+            180
+        );
+      } else {
+        util.target.setDirection(
+          (180 / Math.PI) * Math.atan((x - util.target.x) / (y - util.target.y))
+        );
+      }
+    }
+
     goToVec2(args, util) {
       const [dx, dy] = args.v.split(',').map(Number);
       const x = Scratch.Cast.toNumber(dx);
@@ -329,13 +434,16 @@
       util.target.setXY(x, y);
     }
 
-    getPosVec2(args, util) {
+    getPosVec2(util) {
       return `${util.target.x},${util.target.y}`;
     }
 
-    getSizeVec2(args, util) {
+    getSizeVec2(util) {
       const bounds = Scratch.vm.renderer.getBounds(util.target.drawableID)
       return `${Math.ceil(bounds.width)},${Math.ceil(bounds.height)}`;
+    }
+    getMousePosVec2() {
+      return `${Math.round(mouse._scratchX)},${Math.round(mouse._scratchY)}`;
     }
 
     drawTriangle(args, util) {
@@ -358,7 +466,7 @@
 
     // New utility function to convert degrees to radians
     _toRadians(degrees) {
-      return degrees * (Math.PI / 180);
+      return (degrees || 0) * (Math.PI / 180);
     }
   }
 

@@ -498,4 +498,15 @@ export default [
         creator: "TheShovel",
         isGitHub: true,
     },
+    {
+        name: "GPU.sb3",
+        description: "Use WebGPU compute shaders to accelerate your projects.",
+        code: "derpygamer2142/gpusb3.js",
+        banner: "derpygamer2142/gpusb3.svg",
+        creator: "insanetaco2000",
+        creatorAlias: "derpygamer2142",
+        isGitHub: false,
+        unstable: true,
+        unstableReason: "WebGPU is still experimental and not supported by all browsers. Check compatibility at webgpu.io."
+    },
 ];

@@ -130,7 +130,7 @@ but has since deviated to be its own thing. (made with box2D js es6) */
           {
             opcode: 'definePoly',
             blockType: Scratch.BlockType.COMMAND,
-            text: 'Define Polygon, points: [POINTS]',
+            text: 'Define , points: [POINTS]',
             arguments: {
               POINTS: {
                 type: Scratch.ArgumentType.STRING,
@@ -142,7 +142,7 @@ but has since deviated to be its own thing. (made with box2D js es6) */
             opcode: 'difineCostume',
             blockType: Scratch.BlockType.COMMAND,
             filter: [Scratch.TargetType.SPRITE],
-            text: 'Define pollygon as this costume',
+            text: 'Define polygon as this costume', // https://github.com/PenguinMod/PenguinMod-ExtensionsGallery/issues/237
           },
           {
             opcode: 'placeBody',

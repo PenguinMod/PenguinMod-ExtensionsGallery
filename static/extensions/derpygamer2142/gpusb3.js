@@ -2,11 +2,14 @@
 // ID: gpusb3
 // Description: Use WebGPU compute shaders to accelerate your projects.
 // By: derpygamer2142 <https://scratch.mit.edu/users/insanetaco2000/>
-// License: MPL-2.0
+// License: MIT
+
+/**
+ * This project is dual licensed under MPL-2.0 and MIT.
+ */
 
 (function (Scratch) {
   "use strict";
-
 
   const vm = Scratch.vm;
   if (!Scratch.extensions.unsandboxed) {
@@ -3245,12 +3248,12 @@ ${blocks[i + 2].length > 0 ? this.genWGSL(util, blocks[i + 2], recursionDepth + 
 
             this.device.pushErrorScope("internal");
             this.device.pushErrorScope("validation");
-            
+
             const shaderModule = this.device.createShaderModule({
               label: `Shader "${funcname}"`,
               code: compiled,
             });
-            let errored = false
+            let errored = false;
 
             this.device.popErrorScope().then((error) => {
               if (error) {
@@ -3266,13 +3269,13 @@ ${blocks[i + 2].length > 0 ? this.genWGSL(util, blocks[i + 2], recursionDepth + 
             });
             this.device.popErrorScope().then((error) => {
               if (error) {
-                  this.throwError(
+                this.throwError(
                   "ShaderCreationError",
                   error.message,
                   "ShaderModuleCreation",
                   error,
                   util
-                ); 
+                );
                 errored = true;
               }
             });
@@ -3316,7 +3319,7 @@ ${blocks[i + 2].length > 0 ? this.genWGSL(util, blocks[i + 2], recursionDepth + 
                   "ComputePipelineCreation",
                   error,
                   util
-                ); 
+                );
                 errored = true;
               }
             });
@@ -3334,7 +3337,7 @@ ${blocks[i + 2].length > 0 ? this.genWGSL(util, blocks[i + 2], recursionDepth + 
             });
 
             // if (errored) delete shaders[funcname]
-            console.log(errored)
+            console.log(errored);
           }
         });
 
@@ -4341,7 +4344,7 @@ ${blocks[i + 2].length > 0 ? this.genWGSL(util, blocks[i + 2], recursionDepth + 
       );
       if (i !== -1) {
         // not using the properties that are causing stupid errors so who cares
-        
+
         textureData = this.skinToArray(
           // @ts-ignore
           vm.renderer._allSkins[util.target.sprite.costumes[i].skinId]

@@ -250,4 +250,4 @@ forever
 end
 ```
 
-Want more scripting examples? Go [here](https://p7scratchextensions.pages.dev/BoxedPhysics/examples).
+Want more scripting examples? Go [here](https://p7scratchextensions.pages.dev/ext/BoxedPhysics/examples).

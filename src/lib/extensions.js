@@ -507,6 +507,6 @@ export default [
         creatorAlias: "derpygamer2142",
         isGitHub: false,
         unstable: true,
-        unstableReason: "WebGPU is still experimental and not supported by all browsers. Check compatibility at webgpu.io."
+        unstableReason: "WebGPU is still experimental and not supported by all browsers and does not work when packaged to electron. Check compatibility at webgpu.io."
     },
 ];

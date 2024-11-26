@@ -1,21 +1,20 @@
 # Boxed Physics
 
-> Boxed Physics is an extension for Scratch 3 that allows you to add 2D physics simulations to your Scratch projects. 
-> This documentation will guide you through the process of using Boxed Physics.
+Boxed Physics is an extension that allows you to use 2D physics simulations in your projects. 
+This documentation will guide you through the process of using Boxed Physics.
 
 ## Startup & world options
 When using the Boxed Physics extension, you always need to initialise the environment when starting the project. to do this, you can use the `Init World, scale 1m: [SCALE]  gravity: [GRAVITY]  scene: [SCENE]` block.
 
 ```scratch
-Init World, scale 1m: [50]  gravity: [-10]  scene: [boxed stage] :: #2cb0c0
+Init World, scale 1m: [50]  gravity: [-10]  scene: [semi-closed stage v] :: #2cb0c0
 ```
 
 Scene is the type of containment to keep objects within the stage:
- - boxed stage: Keeps sprites from going off the bottom and sides.
+ - semi-closed stage: Keeps sprites from going off the bottom and sides. (allows for indefinite up movement)
  - closed stage: Keeps sprites from going off the bottom, sides, or top.
  - opened stage: Keeps sprites from going off the bottom.
  - nothing: Removes all walls so objects can go wherever they want.
- - stage: a depricated option that is the same as boxed stage.
 
 You can move forward in time using the step simulation block. Run this in a loop to keep the physics going.
 
@@ -47,6 +46,7 @@ Create Body [box] at x: (0)  y: (0)  dir: (90) :: #2cb0c0
 
 Define an object type first, then the object itself. Now, you can place it in the world. <br>
 You can do the steps in any order, just Create the object body last.
+> Remember to run the [Create body] block **after** defining the object
 
 ```scratch
 when green flag clicked
@@ -109,17 +109,21 @@ Destroy object [Object] :: #2cb0c0
 
 ## Updating collision
 
-You can make objects not collide with eachother using collision groups.
+You can make objects not collide with eachother using collision layers.
 
-The objects in here will be in their own no-collide group, and will collide with everything else.
+Using the `Set object [NAME] to be on collision layer [LAYERS]` block, you can st objects to be on any layer you want.
+Each layer is like a diferent world. Objects on that layer will collide with eachother, but not collide with other layers.
+
+> Note: Only objects on layer 1 will collide with the scene edges.
+
 ```scratch
-Disable collision between [Object1 Object2] :: #2cb0c0 // this will take the object out of any existing no-collide groups
+Set object [Object] to be on collision layer [1] :: #2cb0c0
 ```
 
-You can also remove no-collide tags from objects
+You can also allow objects to be on more than one layer at once by seperating layers with a space.
 
 ```scratch
-Reset collision of objects [Object1 Object2] :: #2cb0c0
+Set object [Object] to be on collision layer [1 2] :: #2cb0c0
 ```
 
 ## Damping
@@ -173,9 +177,9 @@ You can get the following from an object:
 - Directional velocity
 - Is awake?
 
-You can also get the object at any position with this:
+You can also get an object under any position with this:
 ```scratch
-Get object at x: (0)  y: (0) :: #2cb0c0
+Get body of type [any] at x: (0)  y: (0) :: #2cb0c0
 ```
 
 ## Making joints
@@ -230,11 +234,11 @@ If you made a mouse joint, you can edit the target position with this block.
 Set Mouse Joint Target [Joint] to x: (0)  y: (0) :: #2cb0c0
 ```
 
-## Example code
+## Simple scripting example
 
 ```scratch
 when green flag clicked
-Init World, scale 1m: [50]  gravity: [-10]  scene: [boxed stage] :: #2cb0c0
+Init World, scale 1m: [50]  gravity: [-10]  scene: [boxed stage v] :: #2cb0c0
 Dеfine Type [Dynamic v]  Density (1)  Friction (0.5)  Bounce (0.2) :: #2cb0c0
 Dеfine Polygon, points: [0 50   40 -50   -40 -50] :: #2cb0c0
 Create Body [tri] at x: (0)y: (0)  dir: (90) :: #2cb0c0
@@ -245,3 +249,5 @@ forever
   point in direction (Get [Direction v] from [tri] :: #2cb0c0)
 end
 ```
+
+Want more scripting examples? Go [here](https://p7scratchextensions.pages.dev/BoxedPhysics/examples).

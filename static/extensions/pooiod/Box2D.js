@@ -130,7 +130,7 @@ but has since deviated to be its own thing. (made with box2D js es6) */
           {
             opcode: 'definePoly',
             blockType: Scratch.BlockType.COMMAND,
-            text: 'Define , points: [POINTS]',
+            text: 'Define polygon, points: [POINTS]',
             arguments: {
               POINTS: {
                 type: Scratch.ArgumentType.STRING,

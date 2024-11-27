@@ -2,7 +2,7 @@
 // ID: gpusb3
 // Description: Use WebGPU compute shaders to accelerate your projects.
 // By: derpygamer2142 <https://scratch.mit.edu/users/insanetaco2000/>
-// License: MIT
+// License: MIT + MPL2.0
 
 /**
  * This project is dual licensed under MPL-2.0 and MIT.

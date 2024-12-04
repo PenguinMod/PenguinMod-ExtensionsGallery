@@ -40,7 +40,8 @@ export default [
         description: "Blocks for dealing, with and using large, or small integers",
         code: "_FN10_/Integers.js",
         banner: "_FN10_/Integers.png",
-        creator: "_FN10_ (Xplate on scratch)"
+        creator: "_FN10_",
+        isGitHub: true,
     },
     {
         name: "Update File (Direct Access)",

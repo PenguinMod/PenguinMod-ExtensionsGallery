@@ -15,7 +15,8 @@ class PMAPI {
               type: Scratch.ArgumentType.STRING,
               defaultValue: "Anonymoose547",
             },
-          }
+          },
+          hideFromPalette: true
         },
         {
           opcode: 'viewable',
@@ -65,16 +66,21 @@ class PMAPI {
         {
           opcode: 'follows',
           blockType: Scratch.BlockType.REPORTER,
-          text: 'followers of [user]',
+          text: 'followers of [user], page [page]',
           arguments: {
             user: {
               type: Scratch.ArgumentType.STRING,
               defaultValue: "SammerLOL",
             },
+            page: {
+              type: Scratch.ArgumentType.NUMBER,
+              defaultValue: 1,
+            },
           },
         },
         {
           opcode: 'projectcount',
+          hideFromPalette: true,
           blockType: Scratch.BlockType.REPORTER,
           text: 'project amount of [user]',
           arguments: {
@@ -157,7 +163,7 @@ class PMAPI {
     const username = args.user;
 
     try {
-      const response = await fetch(`https://projects.penguinmod.com/api/users/profile?username=${encodeURIComponent(username)}`);
+      const response = await fetch(`https://projects.penguinmod.com/api/v1/users/profile?username=${encodeURIComponent(username)}`);
 
       if (!response.ok) {
         throw new Error('Failed to fetch badges information');
@@ -178,7 +184,7 @@ class PMAPI {
     const username = args.user;
 
     try {
-      const response = await fetch(`https://projects.penguinmod.com/api/users/profile?username=${encodeURIComponent(username)}`);
+      const response = await fetch(`https://projects.penguinmod.com/api/v1/users/profile?username=${encodeURIComponent(username)}`);
 
       if (!response.ok) {
         throw new Error('Failed to fetch rank information');
@@ -197,7 +203,7 @@ class PMAPI {
 
   async rnd() {
     try {
-      const response = await fetch(`https://projects.penguinmod.com/api/projects/search?random=true`);
+      const response = await fetch(`https://projects.penguinmod.com/api/v1/projects/getrandomproject`);
 
       if (!response.ok) {
         throw new Error('Failed to fetch random project ID');
@@ -216,19 +222,20 @@ class PMAPI {
 
   async tb(args) {
     const id = args.id;
-    return "https://projects.penguinmod.com/api/pmWrapper/iconUrl?id=" + id;
+    return `https://projects.penguinmod.com/api/v1/projects/getproject?projectID=${id}&requestType=thumbnail`;
   }
 
   async pfp(args) {
     const user = args.user;
-    return "https://trampoline.turbowarp.org/avatars/by-username/" + user;
+    return "https://projects.penguinmod.com/api/v1/users/getpfp?username=" + user;
   }
 
   async follows(args) {
     const username = args.user;
+    const page = (args.page + 1) || 0;
 
     try {
-      const response = await fetch(`https://projects.penguinmod.com/api/users/profile?username=${encodeURIComponent(username)}`);
+      const response = await fetch(`https://projects.penguinmod.com/api/v1/users/meta/getfollowers?username=${username}&page=${page}`);
 
       if (!response.ok) {
         throw new Error('Failed to fetch followers');
@@ -236,9 +243,7 @@ class PMAPI {
 
       const data = await response.json();
 
-      const flws = data.followers;
-
-      return JSON.stringify(flws);
+      return JSON.stringify(data);
     } catch (error) {
       console.error('Error fetching followers: ' + error);
       return '';
@@ -249,7 +254,7 @@ class PMAPI {
     const username = args.user;
 
     try {
-      const response = await fetch(`https://projects.penguinmod.com/api/users/profile?username=${encodeURIComponent(username)}`);
+      const response = await fetch(`https://projects.penguinmod.com/api/v1/users/profile?username=${username}`);
 
       if (!response.ok) {
         throw new Error('Failed to fetch viewability');
@@ -257,7 +262,7 @@ class PMAPI {
 
       const data = await response.json();
 
-      const vw = data.viewable;
+      const vw = !data.privateProfile;
 
       return JSON.stringify(vw);
     } catch (error) {
@@ -270,7 +275,7 @@ class PMAPI {
     const username = args.user;
 
     try {
-      const response = await fetch(`https://projects.penguinmod.com/api/users/profile?username=${encodeURIComponent(username)}`);
+      const response = await fetch(`https://projects.penguinmod.com/api/v1/users/profile?username=${username}`);
 
       if (!response.ok) {
         throw new Error('Failed to fetch rank up permission');
@@ -288,6 +293,8 @@ class PMAPI {
   }
 
   async projectcount(args) {
+    throw new Error("This block is temporarily disabled - theres not yet a way to get the project count of a user. This will be fixed soon.");
+
     const username = args.user;
 
     try {
@@ -312,7 +319,7 @@ class PMAPI {
     const username = args.user;
 
     try {
-      const response = await fetch(`https://projects.penguinmod.com/api/users/profile?username=${encodeURIComponent(username)}`);
+      const response = await fetch(`https://projects.penguinmod.com/api/v1/users/profile?username=${username}`);
 
       if (!response.ok) {
         throw new Error('Failed to check if donated');
@@ -329,32 +336,15 @@ class PMAPI {
     }
   }
 
-  async banned(args) {
-    const username = args.user;
-
-    try {
-      const response = await fetch(`https://projects.penguinmod.com/api/users/profile?username=${encodeURIComponent(username)}`);
-
-      if (!response.ok) {
-        throw new Error('Failed to fetch ban');
-      }
-
-      const data = await response.json();
-
-      const ban = data.banned;
-
-      return JSON.stringify(ban);
-    } catch (error) {
-      console.error('Error fetching ban: ' + error);
-      return '';
-    }
+  async banned() {
+    throw new Error('This block is currently disabled as you can no longer check if a user is banned without being a moderator');
   }
 
   async projects(args) {
     const username = args.user;
 
     try {
-      const response = await fetch(`https://projects.penguinmod.com/api/projects/search?page=undefined&user=${encodeURIComponent(username)}`);
+      const response = await fetch(`https://projects.penguinmod.com/api/v1/projects/getprojectsbyauthor?authorUsername=${username}`);
 
       if (!response.ok) {
         throw new Error('Failed to fetch projects');
@@ -362,7 +352,7 @@ class PMAPI {
 
       const data = await response.json();
 
-      return JSON.stringify(data.projects);
+      return JSON.stringify(data);
     } catch (error) {
       console.error('Error fetching projects: ' + error);
       return '';
@@ -371,7 +361,7 @@ class PMAPI {
 
   async latest() {
     try {
-      const response = await fetch(`https://projects.penguinmod.com/api/projects/search?page=undefined&featured=exclude`);
+      const response = await fetch(`https://projects.penguinmod.com/api/v1/projects/getprojects`);
 
       if (!response.ok) {
         throw new Error('Failed to fetch projects');
@@ -380,9 +370,9 @@ class PMAPI {
       const data = await response.json();
 
       // Check if there are projects in the array
-      if (data.projects && data.projects.length > 0) {
+      if (data && data.length > 0) {
         // Return the first project
-        return JSON.stringify(data.projects[0]);
+        return JSON.stringify(data[0]);
       } else {
         return 'No projects found';
       }

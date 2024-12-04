@@ -109,7 +109,7 @@ class PMAPI {
           arguments: {
             id: {
               type: Scratch.ArgumentType.STRING,
-              defaultValue: "1099000118505",
+              defaultValue: "6293864331",
             },
           }
         },
@@ -155,7 +155,46 @@ class PMAPI {
           text: 'latest project',
           disableMonitor: true,
         },
-      ]
+        {
+          opcode: 'getstats',
+          blockType: Scratch.BlockType.REPORTER,
+          text: 'get [stat] of project [id]',
+          disableMonitor: true,
+          arguments: {
+            stat: {
+              type: Scratch.ArgumentType.STRING,
+              menu: 'stats',
+              defaultValue: 'hearts',
+            },
+            id: {
+              type: Scratch.ArgumentType.STRING,
+              defaultValue: "6293864331",
+            },
+          }
+        },
+        {
+          opcode: 'getMetadata',
+          blockType: Scratch.BlockType.REPORTER,
+          text: 'metadata of project [id]',
+          disableMonitor: true,
+          arguments: {
+            id: {
+              type: Scratch.ArgumentType.STRING,
+              defaultValue: "6293864331",
+            },
+          }
+        }
+      ],
+      menus: {
+        stats: {
+          acceptReporters: true,
+          items: [
+            "hearts",
+            "votes",
+            "views",
+          ],
+        },
+      }
     };
   }
 
@@ -394,6 +433,54 @@ class PMAPI {
       return JSON.stringify(data);
     } catch (error) {
       console.error('Error fetching projects: ' + error)
+      return '';
+    }
+  }
+
+  async getstats(args) {
+    const stat = args.stat;
+    const id = args.id;
+
+    try {
+      const response = await fetch(`https://projects.penguinmod.com/api/v1/projects/getproject?projectID=${id}`);
+
+      if (!response.ok) {
+        throw new Error('Failed to fetch project stats');
+      }
+
+      const data = await response.json();
+
+      switch (stat) {
+        case 'hearts':
+          return data.heartCount;
+        case 'votes':
+          return data.votes;
+        case 'views':
+          return data.views;
+        default:
+          return '';
+      }
+    } catch (error) {
+      console.error('Error fetching project stats: ' + error);
+      return '';
+    }
+  }
+
+  async getMetadata(args) {
+    const id = args.id;
+
+    try {
+      const response = await fetch(`https://projects.penguinmod.com/api/v1/projects/getproject?projectID=${id}`);
+
+      if (!response.ok) {
+        throw new Error('Failed to fetch project metadata');
+      }
+
+      const data = await response.json();
+
+      return JSON.stringify(data);
+    } catch (error) {
+      console.error('Error fetching project metadata: ' + error);
       return '';
     }
   }

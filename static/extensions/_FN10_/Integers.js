@@ -9,7 +9,7 @@
     class Integers {
         getInfo() {
             return {
-                id: "integers",
+                id: "FN10_integers",
                 name: "Integers",
                 color1: "#03b300",
                 color2: "#114d00",

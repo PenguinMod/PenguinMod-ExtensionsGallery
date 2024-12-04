@@ -66,7 +66,7 @@ class PMAPI {
         {
           opcode: 'follows',
           blockType: Scratch.BlockType.REPORTER,
-          text: 'followers of [user], page [page]',
+          text: 'followers of [user]',
           arguments: {
             user: {
               type: Scratch.ArgumentType.STRING,
@@ -163,7 +163,7 @@ class PMAPI {
     const username = args.user;
 
     try {
-      const response = await fetch(`https://projects.penguinmod.com/api/v1/users/profile?username=${encodeURIComponent(username)}`);
+      const response = await fetch(`https://projects.penguinmod.com/api/v1/users/profile?target=${username}`);
 
       if (!response.ok) {
         throw new Error('Failed to fetch badges information');
@@ -184,7 +184,7 @@ class PMAPI {
     const username = args.user;
 
     try {
-      const response = await fetch(`https://projects.penguinmod.com/api/v1/users/profile?username=${encodeURIComponent(username)}`);
+      const response = await fetch(`https://projects.penguinmod.com/api/v1/users/profile?target=${username}`);
 
       if (!response.ok) {
         throw new Error('Failed to fetch rank information');
@@ -213,7 +213,7 @@ class PMAPI {
 
       const id = data.id;
 
-      return JSON.stringify(id);
+      return id;
     } catch (error) {
       console.error('Error fetching project ID: ' + error);
       return '';
@@ -232,10 +232,9 @@ class PMAPI {
 
   async follows(args) {
     const username = args.user;
-    const page = (args.page + 1) || 0;
 
     try {
-      const response = await fetch(`https://projects.penguinmod.com/api/v1/users/meta/getfollowers?username=${username}&page=${page}`);
+      const response = await fetch(`https://projects.penguinmod.com/api/v1/users/profile?target=${username}`);
 
       if (!response.ok) {
         throw new Error('Failed to fetch followers');
@@ -243,7 +242,7 @@ class PMAPI {
 
       const data = await response.json();
 
-      return JSON.stringify(data);
+      return data.followers;
     } catch (error) {
       console.error('Error fetching followers: ' + error);
       return '';
@@ -254,7 +253,7 @@ class PMAPI {
     const username = args.user;
 
     try {
-      const response = await fetch(`https://projects.penguinmod.com/api/v1/users/profile?username=${username}`);
+      const response = await fetch(`https://projects.penguinmod.com/api/v1/users/profile?target=${username}`);
 
       if (!response.ok) {
         throw new Error('Failed to fetch viewability');
@@ -275,10 +274,10 @@ class PMAPI {
     const username = args.user;
 
     try {
-      const response = await fetch(`https://projects.penguinmod.com/api/v1/users/profile?username=${username}`);
+      const response = await fetch(`https://projects.penguinmod.com/api/v1/users/profile?target=${username}`);
 
       if (!response.ok) {
-        throw new Error('Failed to fetch rank up permission');
+        throw new Error('Failed to fetch rank up permission,', response.statusText);
       }
 
       const data = await response.json();
@@ -298,7 +297,7 @@ class PMAPI {
     const username = args.user;
 
     try {
-      const response = await fetch(`https://projects.penguinmod.com/api/users/profile?username=${encodeURIComponent(username)}`);
+      const response = await fetch(`https://projects.penguinmod.com/api/users/profile?target=${username}`);
 
       if (!response.ok) {
         throw new Error('Failed to fetch projects');
@@ -319,7 +318,7 @@ class PMAPI {
     const username = args.user;
 
     try {
-      const response = await fetch(`https://projects.penguinmod.com/api/v1/users/profile?username=${username}`);
+      const response = await fetch(`https://projects.penguinmod.com/api/v1/users/profile?target=${username}`);
 
       if (!response.ok) {
         throw new Error('Failed to check if donated');
@@ -384,7 +383,7 @@ class PMAPI {
 
   async frontpage() {
     try {
-      const response = await fetch(`https://projects.penguinmod.com/api/projects/frontPage`);
+      const response = await fetch(`https://projects.penguinmod.com/api/v1/projects/frontPage`);
 
       if (!response.ok) {
         throw new Error('Failed to fetch projects');

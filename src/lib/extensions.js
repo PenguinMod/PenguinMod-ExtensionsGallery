@@ -66,7 +66,7 @@ export default [
         creator: "yuri-kiss",
         isGitHub: true,
         unstable: true,
-        unstableReason: "This extension uses unstable technuiqes that may not always work.",
+        unstableReason: "This extension uses unstable techniques that may not always work.",
     },
     {
         name: "Variables Expanded",

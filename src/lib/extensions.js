@@ -514,7 +514,7 @@ export default [
         description: "An extension that displays a popup message (Chrome).",
         code: "TheYali1/Alert Extension.js",
         banner: "TheYali1/Alert Extension.png",
-        creator: "The Yali",
+        creator: "TheYali1",
         isGitHub: true,
     },
 ];

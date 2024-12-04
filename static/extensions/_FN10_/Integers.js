@@ -1,5 +1,5 @@
 // Name: Integers
-// ID: integers
+// ID: FN10integers
 // Description: Blocks for dealing, with and using large, or small integers.
 // By: _FN10_ (Xplate) <https://scratch.mit.edu/users/Xplate/>
 // License: MPL-2.0
@@ -9,7 +9,7 @@
     class Integers {
         getInfo() {
             return {
-                id: "FN10_integers",
+                id: "FN10integers",
                 name: "Integers",
                 color1: "#03b300",
                 color2: "#114d00",

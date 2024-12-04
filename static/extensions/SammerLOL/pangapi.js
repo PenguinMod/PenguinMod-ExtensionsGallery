@@ -442,7 +442,7 @@ class PMAPI {
     const id = args.id;
 
     try {
-      const response = await fetch(`https://projects.penguinmod.com/api/v1/projects/getproject?projectID=${id}`);
+      const response = await fetch(`https://projects.penguinmod.com/api/v1/projects/getproject?projectID=${id}&requestType=metadata`);
 
       if (!response.ok) {
         throw new Error('Failed to fetch project stats');
@@ -452,7 +452,7 @@ class PMAPI {
 
       switch (stat) {
         case 'hearts':
-          return data.heartCount;
+          return data.hearts;
         case 'votes':
           return data.votes;
         case 'views':
@@ -470,7 +470,7 @@ class PMAPI {
     const id = args.id;
 
     try {
-      const response = await fetch(`https://projects.penguinmod.com/api/v1/projects/getproject?projectID=${id}`);
+      const response = await fetch(`https://projects.penguinmod.com/api/v1/projects/getproject?projectID=${id}&requestType=metadata`);
 
       if (!response.ok) {
         throw new Error('Failed to fetch project metadata');

@@ -516,5 +516,7 @@ export default [
         banner: "TheYali1/Alert Extension.png",
         creator: "TheYali1",
         isGitHub: true,
+        unstable: true,
+        unstableReason: "Not work in sandbox, only without sandbox!"
     },
 ];

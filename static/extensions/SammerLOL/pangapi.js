@@ -452,7 +452,7 @@ class PMAPI {
 
       switch (stat) {
         case 'hearts':
-          return data.hearts;
+          return data.loves;
         case 'votes':
           return data.votes;
         case 'views':

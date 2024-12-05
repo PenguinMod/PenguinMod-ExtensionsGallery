@@ -3,7 +3,7 @@
 // Description: Powerful blocks for working with prime numbers
 // By: Mister  <https://scratch.mit.edu/users/Jupiter12786/>
 
-// Version V.0.0.5
+// Version V.0.0.6
 //MIT licensed
 
 function Prime(num) {
@@ -261,7 +261,7 @@ function Prime(num) {
       DivisorSet(args) {
         const num = Math.abs(Scratch.Cast.toNumber(args.NUM));
         const divisors = [];
-    
+      
         for (let i = 1; i <= num; i++) {
             if (num % i === 0) {
                 divisors.push(i);

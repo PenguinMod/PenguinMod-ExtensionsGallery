@@ -509,4 +509,12 @@ export default [
         unstable: true,
         unstableReason: "WebGPU is still experimental and not supported by all browsers and does not work when packaged to electron. Check compatibility at webgpu.io."
     },
+    {
+        name: "Images",
+        description: "Manipulate images on the spot!",
+        code: "AlphaTechNinja/images.js",
+        banner: "AlphaTechNinja/images.svg",
+        creator: "AlphaTechNinja",
+        isGitHub: true,
+    },
 ];

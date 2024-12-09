@@ -18,7 +18,7 @@
 // Description:
 // Vector math tools so you'll never need to compute an arctangent ever again.
 
-// Version 4.1 --- 36 blocks
+// Version 4 --- 36 blocks
 // Part of the Soup Utils pack, which contains
 // Soup Utils, Soup Objects, Soup Arrays, and Soup Vectors
 
@@ -205,7 +205,7 @@
   function var_id_from_name(variable_name,util) { // copied from SharkPool
     //support for all variable types (Cloud, Sprite-Only, Global)
     variable_name = Scratch.Cast.toString(variable_name);
-    const cloudID = runtime.getTargetForStage().lookupVariableByNameAndType(Scratch.Cast.toString("ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Â¹Ãƒâ€šÃ…â€œÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â " + variable_name), "");
+    const cloudID = runtime.getTargetForStage().lookupVariableByNameAndType(Scratch.Cast.toString("ÃƒÂ¢Ã‹ÂœÃ‚Â " + variable_name), "");
     if (cloudID) return cloudID.id;
     let varFind = "";
     for (const name of Object.getOwnPropertyNames(util.target.variables)) {
@@ -222,12 +222,12 @@
   function get_var(variable_name,util) {
     if (!var_name_exists(variable_name,util)) { return 'undefined'; }
     let variable = util.target.lookupOrCreateVariable(variable_name,variable_name);
-   	return variable.value;
+    return variable.value;
   }
   function set_var(variable_name,value,util) {
     if (!var_name_exists(variable_name,util)) { return; }
     let variable = util.target.lookupOrCreateVariable(variable_name,variable_name);
-   	variable.value = value;
+    variable.value = value;
     if (variable.isCloud) { // added from TurboWarp's Scratch 3 code
       util.ioQuery('cloud', 'requestUpdateVariable', [variable.name, value]);
     }
@@ -357,7 +357,7 @@
   function get_abbreviated_illion(n) {
     let abbreviated_illions = ['k','m','b','t','qa','qi','sx','sp','o','n','d','ud','dd','td','qad','qid','sxd','spd','od','nd','v','uv','dv','tv','qav','qiv','sxv','spv','ov','nv','tg','utg','dtg','ttg','qatg','qitg','sxtg','sptg','otg','ntg','qag','uqag','dqag','tqag','qaqag','qiqag','sxqag','spqag','oqag','nqag','qig'];
     if (n >= abbreviated_illions.length) {
-      return 'Ãƒâ€”10^' + (3 * n + 3);
+      return '×10^' + (3 * n + 3);
     }
     return abbreviated_illions[n];
   }

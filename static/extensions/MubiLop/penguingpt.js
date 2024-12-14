@@ -24,8 +24,7 @@ if (!Scratch.extensions.unsandboxed) {
     throw new Error('"PenguinAI" cannot run unsandboxed.');
 }
 
-// Initialize the api_url variable with a default value
-let api_url = 'https://penguinai.abby.is-a.dev/v1'; // Default before fetching
+let api_url = 'https://penguinai.abby.is-a.dev/v1';
 
 fetch('https://mubilop.tech/proxy')
     .then(response => {
@@ -35,12 +34,11 @@ fetch('https://mubilop.tech/proxy')
         return response.text();
     })
     .then(data => {
-        api_url = data.trim(); // Update api_url if fetching is successful
+        api_url = data.trim();
         console.log('API URL successfully fetched:', api_url);
     })
     .catch(error => {
         console.error('Error setting api_url, using default:', error);
-        // api_url remains the default since fetching failed
     });
 
 const vm = Scratch.vm;
@@ -82,7 +80,7 @@ class PenguinGPT {
                     arguments: {
                         URL: {
                             type: Scratch.ArgumentType.STRING,
-                            defaultValue: api_url // Use the dynamically set api_url
+                            defaultValue: api_url
                         }
                         },
                     },

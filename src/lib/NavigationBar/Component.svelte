@@ -79,14 +79,6 @@
             {/each}
         </div>
     {/if}
-    
-    <BarButton
-        highlighted="true"
-        link={"https://discord.gg/NZ9MBMYTZh"}
-        noredirect="true"
-    >
-        Join our Discord!
-    </BarButton>
 </div>
 
 <style>

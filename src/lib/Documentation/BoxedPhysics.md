@@ -15,7 +15,7 @@ When using the Boxed Physics extension, you must initialize the physics environm
 ### Scene Types
 The scene type determines the containment type for your physics world:
 - **Semi-closed stage:** Prevents objects from leaving the bottom and sides of the stage but allows infinite upward movement.
-- **Closed stage:** Fully contains objects within the stage, preventing them from leaving the top, bottom, or sides.
+- **Boxed stage:** Fully contains objects within the stage, preventing them from leaving the top, bottom, or sides.
 - **Opened stage:** Only prevents objects from falling off the bottom.
 - **Nothing:** Removes all walls, allowing objects to move freely.
 

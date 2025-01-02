@@ -5,13 +5,13 @@
 // Original: Griffpatch
 // License: zlib
 
-// Report issues with this extension at p7scratchextensions.pages.dev/reportissue or github.com/PenguinMod/PenguinMod-ExtensionsGallery/issues
+// Report issues with this extension at https://p7scratchextensions.pages.dev/reportissue
 /* This extension was originally a port of the Box2D Physics extension for ScratchX by Griffpatch, 
 but has since deviated to be its own thing. (made with box2D js es6) */
 
 (function(Scratch) {
   'use strict';
-  var b2Dupdated = "12/10/2024";
+  var b2Dupdated = "01/02/2025";
   var publishedUpdateIndex = 17;
   if (!Scratch.extensions.unsandboxed) {
     throw new Error('Boxed Physics can\'t run in the sandbox');
@@ -56,8 +56,9 @@ but has since deviated to be its own thing. (made with box2D js es6) */
       this.isFromPenguinMod = true;
       this.onPenguinMod = Scratch.extensions.isPenguinMod;
 
-      this.docs = this.isFromPenguinMod && this.onPenguinMod ? 'https://extensions.penguinmod.com/docs/BoxedPhysics':'https://p7scratchextensions.pages.dev/docs/#/BoxedPhysics';
       this.origin = "https://p7scratchextensions.pages.dev/#BoxedPhysics";
+      this.docs = this.isFromPenguinMod && this.onPenguinMod ? 'https://extensions.penguinmod.com/docs/BoxedPhysics':
+      'https://p7scratchextensions.pages.dev/docs/#/BoxedPhysics';
       
       this.vm.runtime.on('PROJECT_LOADED', () => {
         this.physoptions({ "CONPHYS": true, "WARMSTART": true, "POS": 10, "VEL": 10 });
@@ -745,13 +746,26 @@ but has since deviated to be its own thing. (made with box2D js es6) */
             hideFromPalette: !physdebugmode,
             blockType: Scratch.BlockType.LABEL, // --------------------- Debug blocks ----
             text: "Debug blocks (can brake projects)"
-          }, // the ids on any of the following can change, so it's YOUR fault if you use them and your project brakes
+          }, // the ids on any of the following can change or be removed, so it's YOUR fault if you use them and your project brakes
+          {
+            opcode: 'ignore',
+            hideFromPalette: !wipblocks && !physdebugmode,
+            blockType: Scratch.BlockType.COMMAND,
+            text: 'the ids on any of the following blocks can change or be removed, so it\'s YOUR fault if you use them and your project brakes [VALUE]',
+            arguments: {
+              VALUE: {
+                type: Scratch.ArgumentType.STRING,
+                defaultValue: "",
+              },
+            },
+          },
+          
           {
             opcode: 'get_debug',
             hideFromPalette: !physdebugmode,
             blockType: Scratch.BlockType.REPORTER,
             text: 'Get debug [VAL]',
-            arguments: { // this is the only debug block I don't plan on changing
+            arguments: {
               VAL: {
                 type: Scratch.ArgumentType.STRING,
                 defaultValue: "version",
@@ -778,7 +792,7 @@ but has since deviated to be its own thing. (made with box2D js es6) */
           },
         ],
         menus: {
-          sceneType: ['semi-closed stage', 'closed stage', 'opened stage', 'nothing'],
+          sceneType: ['semi-closed stage', 'boxed stage', 'opened stage', 'nothing'],
           BodyTypePK: ['dynamic', 'static'],
           BodyTypePK2: ['dynamic', 'static', 'any'],
           bodyAttr: ['damping', 'rotational damping'],
@@ -794,24 +808,24 @@ but has since deviated to be its own thing. (made with box2D js es6) */
       };
     }
 
-    // this is not a commonly used fucntion, but it is nice to have.
-    get_debug(args) {
-      try { args = args.VAL } catch (error) { args = args; }
-      if (args == "version") {
+    ignore() { alert(`do not use this block`); }
+    get_debug(input) {
+      try { input = input.VAL } catch (error) { input = input; }
+      if (input == "version") {
         return publishedUpdateIndex;
-      } else if (args == "lib") {
+      } else if (input == "lib") {
         return "Box2D JS es6 (Uli Hecht's port of Box2D flash)";
-      } else if (args === "maker") {
+      } else if (input === "maker") {
         return "pooiod7";
-      } else if (args === "base") {
+      } else if (input === "base") {
         return "Box2D Physics by griffpatch for ScratchX (Scratch 2.0)";
-      } else if (args === "docs") {
+      } else if (input === "docs") {
         return this.docs;
-      } else if (args = "lastupdated") {
+      } else if (input = "lastupdated") {
         return b2Dupdated;
-      } else if (args = "fromPenguinMod") {
+      } else if (input = "fromPenguinMod") {
         return this.isFromPenguinMod;
-      } else if (args = "origin") {
+      } else if (input = "origin") {
         return this.origin;
       } else {
         return '["version", "lib", "maker", "base", "docs", "lastupdated", "fromPenguinMod", "origin"]';
@@ -1058,12 +1072,6 @@ but has since deviated to be its own thing. (made with box2D js es6) */
     definePoly(args) {
       fixDef.shape = new b2PolygonShape;
       var points = args.POINTS;
-
-      // this feature does not work yet :( 
-      if (points.charAt(0) === '<') {
-        console.warn("svg object conversion is not yet supported, use [Define costume]");
-        //points = this.svgtopoints(points);
-      }
 
       try {
         var pts = points.split(' ');

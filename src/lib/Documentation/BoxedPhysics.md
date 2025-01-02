@@ -82,6 +82,9 @@ Dеfine polygon, Points: [0 50   40 -50   -40 -50] :: #2cb0c0 // Triangle
 Make object [Object3] at X: [0] y: [0] Dir: [90] :: #2cb0c0
 ```
 
+<!-- this is meant to be a player embed, but I don't think I'm allowed to do that here -->
+> Point-based objects simply take an array of "x y" values seperated by 3 spaces. You can visualise any point-based polygon in [this demo](https://studio.penguinmod.com/fullscreen.html?project_url=https://p7scratchextensions.pages.dev/ext/BoxedPhysics/examples/BoxedPhysics point render system.pmp).
+
 ### Defining Base Attributes
 Customize objects with the `Define base` block:
 - **Type** Determines if the object is static or dynamic.
@@ -153,7 +156,7 @@ Dеfine Spring, Length: [100] Damping: [0.7] Freq: [5] :: #2cb0c0
 Create Joint [Spring1] of type [Spring v] between [Object1] at [0] [0] and [Object2] at [0] [0] :: #2cb0c0
 ```
 
-<!-- This is meant to be an embed but I don't think I can do that here -->
+<!-- This is also meant to be an embed-->
 > Experiment with all the joint types in [this demo](https://studio.penguinmod.com/fullscreen.html?project_url=https://p7scratchextensions.pages.dev/ext/BoxedPhysics/examples/Joints.pmp) to see what they do.
 
 ### Joint Properties

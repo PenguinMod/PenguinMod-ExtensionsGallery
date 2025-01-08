@@ -3,7 +3,7 @@
 // Description: Vector math tools so you'll never need to compute an arctangent ever again.
 // ID: souputilsvectors
 
-// Version 4.2 --- 36 blocks
+// Version 5 --- 46 blocks
 // Part of the Soup Utils pack, which contains
 // Soup Utils, Soup Objects, Soup Arrays, and Soup Vectors
 
@@ -481,7 +481,24 @@
             opcode: 'zofvector',
             blockType: Scratch.BlockType.REPORTER,
             text: 'z of [VECTOR]',
+            hideFromPalette: true,
             arguments: {
+              VECTOR: {
+                type: Scratch.ArgumentType.STRING,
+                defaultValue: '[0,0,0]'
+              }
+            }
+          },
+          {
+            opcode: 'coordfromvector',
+            blockType: Scratch.BlockType.REPORTER,
+            text: '[COORD] of [VECTOR]',
+            arguments: {
+              COORD: {
+                type: Scratch.ArgumentType.STRING,
+                menu: 'COORDS_MENU',
+                defaultValue: 'z'
+              },
               VECTOR: {
                 type: Scratch.ArgumentType.STRING,
                 defaultValue: '[0,0,0]'
@@ -820,7 +837,24 @@
             opcode: 'zofvectorvar',
             blockType: Scratch.BlockType.REPORTER,
             text: 'z of var [VARIABLE]',
+            hideFromPalette: true,
             arguments: {
+              VARIABLE: {
+                type: Scratch.ArgumentType.STRING,
+                menu: 'VARIABLES_MENU'
+              }
+            }
+          },
+          {
+            opcode: 'coordfromvectorvar',
+            blockType: Scratch.BlockType.REPORTER,
+            text: '[COORD] of var [VARIABLE]',
+            arguments: {
+              COORD: {
+                type: Scratch.ArgumentType.STRING,
+                menu: 'COORDS_MENU',
+                defaultValue: 'z'
+              },
               VARIABLE: {
                 type: Scratch.ArgumentType.STRING,
                 menu: 'VARIABLES_MENU'
@@ -941,6 +975,342 @@
                 menu: 'VARIABLES_MENU'
               }
             }
+          },
+
+          { blockType: Scratch.BlockType.LABEL, text: "Soup Vectors - Higher Dimensions" },
+
+          {
+            opcode: 'fourvectorfromcoords',
+            blockType: Scratch.BlockType.REPORTER,
+            text: 'vector [X], [Y], [Z], [W]',
+            arguments: {
+              X: {
+                type: Scratch.ArgumentType.NUMBER,
+                defaultValue: '0'
+              },
+              Y: {
+                type: Scratch.ArgumentType.NUMBER,
+                defaultValue: '0'
+              },
+              Z: {
+                type: Scratch.ArgumentType.NUMBER,
+                defaultValue: '0'
+              },
+              W: {
+                type: Scratch.ArgumentType.NUMBER,
+                defaultValue: '0'
+              }
+            }
+          },
+          {
+            opcode: 'fivevectorfromcoords',
+            blockType: Scratch.BlockType.REPORTER,
+            text: 'vector [X], [Y], [Z], [W], [V]',
+            arguments: {
+              X: {
+                type: Scratch.ArgumentType.NUMBER,
+                defaultValue: '0'
+              },
+              Y: {
+                type: Scratch.ArgumentType.NUMBER,
+                defaultValue: '0'
+              },
+              Z: {
+                type: Scratch.ArgumentType.NUMBER,
+                defaultValue: '0'
+              },
+              W: {
+                type: Scratch.ArgumentType.NUMBER,
+                defaultValue: '0'
+              },
+              V: {
+                type: Scratch.ArgumentType.NUMBER,
+                defaultValue: '0'
+              }
+            }
+          },
+          {
+            opcode: 'sixvectorfromcoords',
+            blockType: Scratch.BlockType.REPORTER,
+            text: 'vector [X], [Y], [Z], [W], [V], [U]',
+            arguments: {
+              X: {
+                type: Scratch.ArgumentType.NUMBER,
+                defaultValue: '0'
+              },
+              Y: {
+                type: Scratch.ArgumentType.NUMBER,
+                defaultValue: '0'
+              },
+              Z: {
+                type: Scratch.ArgumentType.NUMBER,
+                defaultValue: '0'
+              },
+              W: {
+                type: Scratch.ArgumentType.NUMBER,
+                defaultValue: '0'
+              },
+              V: {
+                type: Scratch.ArgumentType.NUMBER,
+                defaultValue: '0'
+              },
+              U: {
+                type: Scratch.ArgumentType.NUMBER,
+                defaultValue: '0'
+              }
+            }
+          },
+          {
+            opcode: 'sevenvectorfromcoords',
+            blockType: Scratch.BlockType.REPORTER,
+            text: 'vector [X], [Y], [Z], [W], [V], [U], [T]',
+            arguments: {
+              X: {
+                type: Scratch.ArgumentType.NUMBER,
+                defaultValue: '0'
+              },
+              Y: {
+                type: Scratch.ArgumentType.NUMBER,
+                defaultValue: '0'
+              },
+              Z: {
+                type: Scratch.ArgumentType.NUMBER,
+                defaultValue: '0'
+              },
+              W: {
+                type: Scratch.ArgumentType.NUMBER,
+                defaultValue: '0'
+              },
+              V: {
+                type: Scratch.ArgumentType.NUMBER,
+                defaultValue: '0'
+              },
+              U: {
+                type: Scratch.ArgumentType.NUMBER,
+                defaultValue: '0'
+              },
+              T: {
+                type: Scratch.ArgumentType.NUMBER,
+                defaultValue: '0'
+              }
+            }
+          },
+          {
+            opcode: 'eightvectorfromcoords',
+            blockType: Scratch.BlockType.REPORTER,
+            text: 'vector [X], [Y], [Z], [W], [V], [U], [T], [S]',
+            arguments: {
+              X: {
+                type: Scratch.ArgumentType.NUMBER,
+                defaultValue: '0'
+              },
+              Y: {
+                type: Scratch.ArgumentType.NUMBER,
+                defaultValue: '0'
+              },
+              Z: {
+                type: Scratch.ArgumentType.NUMBER,
+                defaultValue: '0'
+              },
+              W: {
+                type: Scratch.ArgumentType.NUMBER,
+                defaultValue: '0'
+              },
+              V: {
+                type: Scratch.ArgumentType.NUMBER,
+                defaultValue: '0'
+              },
+              U: {
+                type: Scratch.ArgumentType.NUMBER,
+                defaultValue: '0'
+              },
+              T: {
+                type: Scratch.ArgumentType.NUMBER,
+                defaultValue: '0'
+              },
+              S: {
+                type: Scratch.ArgumentType.NUMBER,
+                defaultValue: '0'
+              }
+            }
+          },
+
+          '---',
+
+          {
+            opcode: 'fourvectorvarfromcoords',
+            blockType: Scratch.BlockType.COMMAND,
+            text: 'set [VARIABLE] to vector [X], [Y], [Z], [W]',
+            arguments: {
+              X: {
+                type: Scratch.ArgumentType.NUMBER,
+                defaultValue: '0'
+              },
+              Y: {
+                type: Scratch.ArgumentType.NUMBER,
+                defaultValue: '0'
+              },
+              Z: {
+                type: Scratch.ArgumentType.NUMBER,
+                defaultValue: '0'
+              },
+              W: {
+                type: Scratch.ArgumentType.NUMBER,
+                defaultValue: '0'
+              },
+              VARIABLE: {
+                type:Scratch.ArgumentType.STRING,
+                menu: 'VARIABLES_MENU'
+              }
+            }
+          },
+          {
+            opcode: 'fivevectorvarfromcoords',
+            blockType: Scratch.BlockType.COMMAND,
+            text: 'set [VARIABLE] to vector [X], [Y], [Z], [W], [V]',
+            arguments: {
+              X: {
+                type: Scratch.ArgumentType.NUMBER,
+                defaultValue: '0'
+              },
+              Y: {
+                type: Scratch.ArgumentType.NUMBER,
+                defaultValue: '0'
+              },
+              Z: {
+                type: Scratch.ArgumentType.NUMBER,
+                defaultValue: '0'
+              },
+              W: {
+                type: Scratch.ArgumentType.NUMBER,
+                defaultValue: '0'
+              },
+              V: {
+                type: Scratch.ArgumentType.NUMBER,
+                defaultValue: '0'
+              },
+              VARIABLE: {
+                type:Scratch.ArgumentType.STRING,
+                menu: 'VARIABLES_MENU'
+              }
+            }
+          },
+          {
+            opcode: 'sixvectorvarfromcoords',
+            blockType: Scratch.BlockType.COMMAND,
+            text: 'set [VARIABLE] to vector [X], [Y], [Z], [W], [V], [U]',
+            arguments: {
+              X: {
+                type: Scratch.ArgumentType.NUMBER,
+                defaultValue: '0'
+              },
+              Y: {
+                type: Scratch.ArgumentType.NUMBER,
+                defaultValue: '0'
+              },
+              Z: {
+                type: Scratch.ArgumentType.NUMBER,
+                defaultValue: '0'
+              },
+              W: {
+                type: Scratch.ArgumentType.NUMBER,
+                defaultValue: '0'
+              },
+              V: {
+                type: Scratch.ArgumentType.NUMBER,
+                defaultValue: '0'
+              },
+              U: {
+                type: Scratch.ArgumentType.NUMBER,
+                defaultValue: '0'
+              },
+              VARIABLE: {
+                type:Scratch.ArgumentType.STRING,
+                menu: 'VARIABLES_MENU'
+              }
+            }
+          },
+          {
+            opcode: 'sevenvectorvarfromcoords',
+            blockType: Scratch.BlockType.COMMAND,
+            text: 'set [VARIABLE] to vector [X], [Y], [Z], [W], [V], [U], [T]',
+            arguments: {
+              X: {
+                type: Scratch.ArgumentType.NUMBER,
+                defaultValue: '0'
+              },
+              Y: {
+                type: Scratch.ArgumentType.NUMBER,
+                defaultValue: '0'
+              },
+              Z: {
+                type: Scratch.ArgumentType.NUMBER,
+                defaultValue: '0'
+              },
+              W: {
+                type: Scratch.ArgumentType.NUMBER,
+                defaultValue: '0'
+              },
+              V: {
+                type: Scratch.ArgumentType.NUMBER,
+                defaultValue: '0'
+              },
+              U: {
+                type: Scratch.ArgumentType.NUMBER,
+                defaultValue: '0'
+              },
+              T: {
+                type: Scratch.ArgumentType.NUMBER,
+                defaultValue: '0'
+              },
+              VARIABLE: {
+                type:Scratch.ArgumentType.STRING,
+                menu: 'VARIABLES_MENU'
+              }
+            }
+          },
+          {
+            opcode: 'eightvectorvarfromcoords',
+            blockType: Scratch.BlockType.COMMAND,
+            text: 'set [VARIABLE] to vector [X], [Y], [Z], [W], [V], [U], [T], [S]',
+            arguments: {
+              X: {
+                type: Scratch.ArgumentType.NUMBER,
+                defaultValue: '0'
+              },
+              Y: {
+                type: Scratch.ArgumentType.NUMBER,
+                defaultValue: '0'
+              },
+              Z: {
+                type: Scratch.ArgumentType.NUMBER,
+                defaultValue: '0'
+              },
+              W: {
+                type: Scratch.ArgumentType.NUMBER,
+                defaultValue: '0'
+              },
+              V: {
+                type: Scratch.ArgumentType.NUMBER,
+                defaultValue: '0'
+              },
+              U: {
+                type: Scratch.ArgumentType.NUMBER,
+                defaultValue: '0'
+              },
+              T: {
+                type: Scratch.ArgumentType.NUMBER,
+                defaultValue: '0'
+              },
+              S: {
+                type: Scratch.ArgumentType.NUMBER,
+                defaultValue: '0'
+              },
+              VARIABLE: {
+                type:Scratch.ArgumentType.STRING,
+                menu: 'VARIABLES_MENU'
+              }
+            }
           }
         ],
         menus: {
@@ -962,7 +1332,7 @@
           },
           VECTOR_OPERATIONS_MENU: {
             acceptReporters: true,
-            items: ['add','subtract','multiply','divide','add Scratch rotation of','subtract Scratch rotation of','add trig rotation of','subtract trig rotation of','add magnitude of','subtract magnitude of']
+            items: ['add','subtract','dot product of','cross product of','multiply','divide','add Scratch rotation of','subtract Scratch rotation of','add trig rotation of','subtract trig rotation of','add magnitude of','subtract magnitude of']
           },
           VARIABLES_MENU: {
             acceptReporters: true,
@@ -971,6 +1341,10 @@
           STAGE_SIZE_MODES_MENU: {
             acceptReporters: true,
             items: ['size','width','height']
+          },
+          COORDS_MENU: {
+            acceptReporters: true,
+            items: ['x', 'y', 'z', 'w', 'v', 'u', 't', 's']
           }
         }
       };
@@ -1049,6 +1423,36 @@
       return vector[2];
     }
     zofvectorvar(args,util) { return this.run_against_var(this.zofvector,args,util); }
+    coordfromvector(args) {
+      let number = Scratch.Cast.toNumber(args.COORD);
+      if (args.COORD == 'x') {
+        number = 1;
+      } else if (args.COORD == 'y') {
+        number = 2;
+      } else if (args.COORD == 'z') {
+        number = 3;
+      } else if (args.COORD == 'w') {
+        number = 4;
+      } else if (args.COORD == 'v') {
+        number = 5;
+      } else if (args.COORD == 'u') {
+        number = 6;
+      } else if (args.COORD == 't') {
+        number = 7;
+      } else if (args.COORD == 's') {
+        number = 8;
+      }
+      number = Math.round(number);
+      if (number < 1) {
+        return 0;
+      }
+      let vector = cast_to_vector(args.VECTOR);
+      if (vector.length < number) {
+        return 0;
+      }
+      return vector[number-1];
+    }
+    coordfromvectorvar(args,util) { return this.run_against_var(this.coordfromvector,args,util); }
     currentposvector(args,util) {
       let vector = [util.target.x,util.target.y];
       return stringify(convert_coordinate_units(vector,'Scratch coords',args.UNIT));
@@ -1082,6 +1486,18 @@
         for (let i = 0; i < vector1.length; i++) { vector.push(vector1[i] * vector2[i]); }
       } else if (operation == 'divide') {
         for (let i = 0; i < vector1.length; i++) { vector.push(vector1[i] / vector2[i]); }
+      } else if (operation == 'dot product of') {
+        let sum = 0;
+        for (let i = 0; i < vector1.length; i++) { sum += vector1[i] * vector2[i]; }
+        return sum;
+      } else if (operation == 'cross product of') {
+        vector1 = cast_to_vector(args.VECTORA, 3);
+        vector2 = cast_to_vector(args.VECTORB, 3);
+        vector.push(
+            vector1[1] * vector2[2] - vector1[2] * vector2[1],
+            vector1[2] * vector2[0] - vector1[0] * vector2[2],
+            vector1[0] * vector2[1] - vector1[1] * vector2[0]
+        );
       } else if (operation == 'add Scratch rotation of' || operation == 'subtract Scratch rotation of' || operation == 'add trig rotation of' || operation == 'subtract trig rotation of') {
         vector1 = cast_to_vector(args.VECTORA,2); // require both to be 2D vectors
         vector2 = cast_to_vector(args.VECTORB,2);
@@ -1199,6 +1615,71 @@
       } else {
         return 0;
       }
+    }
+    fourvectorfromcoords(args) {
+      let vector = [];
+      vector.push(Scratch.Cast.toNumber(args.X));
+      vector.push(Scratch.Cast.toNumber(args.Y));
+      vector.push(Scratch.Cast.toNumber(args.Z));
+      vector.push(Scratch.Cast.toNumber(args.W));
+      return stringify(vector);
+    }
+    fourvectorvarfromcoords(args,util) {
+      set_var(args.VARIABLE, this.fourvectorfromcoords(args), util);
+    }
+    fivevectorfromcoords(args) {
+      let vector = [];
+      vector.push(Scratch.Cast.toNumber(args.X));
+      vector.push(Scratch.Cast.toNumber(args.Y));
+      vector.push(Scratch.Cast.toNumber(args.Z));
+      vector.push(Scratch.Cast.toNumber(args.W));
+      vector.push(Scratch.Cast.toNumber(args.V));
+      return stringify(vector);
+    }
+    fivevectorvarfromcoords(args,util) {
+      set_var(args.VARIABLE, this.fivevectorfromcoords(args), util);
+    }
+    sixvectorfromcoords(args) {
+      let vector = [];
+      vector.push(Scratch.Cast.toNumber(args.X));
+      vector.push(Scratch.Cast.toNumber(args.Y));
+      vector.push(Scratch.Cast.toNumber(args.Z));
+      vector.push(Scratch.Cast.toNumber(args.W));
+      vector.push(Scratch.Cast.toNumber(args.V));
+      vector.push(Scratch.Cast.toNumber(args.U));
+      return stringify(vector);
+    }
+    sixvectorvarfromcoords(args,util) {
+      set_var(args.VARIABLE, this.sixvectorfromcoords(args), util);
+    }
+    sevenvectorfromcoords(args) {
+      let vector = [];
+      vector.push(Scratch.Cast.toNumber(args.X));
+      vector.push(Scratch.Cast.toNumber(args.Y));
+      vector.push(Scratch.Cast.toNumber(args.Z));
+      vector.push(Scratch.Cast.toNumber(args.W));
+      vector.push(Scratch.Cast.toNumber(args.V));
+      vector.push(Scratch.Cast.toNumber(args.U));
+      vector.push(Scratch.Cast.toNumber(args.T));
+      return stringify(vector);
+    }
+    sevenvectorvarfromcoords(args,util) {
+      set_var(args.VARIABLE, this.sevenvectorfromcoords(args), util);
+    }
+    eightvectorfromcoords(args) {
+      let vector = [];
+      vector.push(Scratch.Cast.toNumber(args.X));
+      vector.push(Scratch.Cast.toNumber(args.Y));
+      vector.push(Scratch.Cast.toNumber(args.Z));
+      vector.push(Scratch.Cast.toNumber(args.W));
+      vector.push(Scratch.Cast.toNumber(args.V));
+      vector.push(Scratch.Cast.toNumber(args.U));
+      vector.push(Scratch.Cast.toNumber(args.T));
+      vector.push(Scratch.Cast.toNumber(args.S));
+      return stringify(vector);
+    }
+    eightvectorvarfromcoords(args,util) {
+      set_var(args.VARIABLE, this.eightvectorfromcoords(args), util);
     }
   }
 

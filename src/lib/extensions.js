@@ -509,4 +509,12 @@ export default [
         unstable: true,
         unstableReason: "WebGPU is still experimental and not supported by all browsers and does not work when packaged to electron. Check compatibility at webgpu.io."
     },
+    {
+        name: "Soup Vectors",
+        description: "Vector math tools so you'll never need to compute an arctangent ever again.",
+        code: "the-can-of-soup/soup_vectors.js",
+        banner: "the-can-of-soup/soup_vectors_thumbnail.svg",
+        creator: "soup",
+        isGitHub: false,
+    },
 ];

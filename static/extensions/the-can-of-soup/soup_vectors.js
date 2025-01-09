@@ -1,6 +1,6 @@
 // Name: Soup Vectors
 // Author: soup
-// Description: Vector math tools so you'll never need to compute an arctangent ever again.
+// Description: Vector math tools so you'll never need to do an arctangent ever again.
 // ID: souputilsvectors
 
 // Version 5.1 --- 60 blocks

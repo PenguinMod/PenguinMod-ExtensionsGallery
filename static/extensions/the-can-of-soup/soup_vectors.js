@@ -3,7 +3,7 @@
 // Description: Vector math tools so you'll never need to compute an arctangent ever again.
 // ID: souputilsvectors
 
-// Version 5 --- 46 blocks
+// Version 5.1 --- 60 blocks
 // Part of the Soup Utils pack, which contains
 // Soup Utils, Soup Objects, Soup Arrays, and Soup Vectors
 
@@ -418,6 +418,9 @@
               }
             }
           },
+
+          '---',
+
           {
             opcode: 'twovectorfromangle',
             blockType: Scratch.BlockType.REPORTER,
@@ -436,7 +439,7 @@
           {
             opcode: 'twovectorfromangleandmagnitude',
             blockType: Scratch.BlockType.REPORTER,
-            text: 'vector with magnitude [MAGNITUDE] and angle [ANGLE] [UNIT]',
+            text: 'vector with angle [ANGLE] [UNIT] and magnitude [MAGNITUDE]',
             arguments: {
               UNIT: {
                 type: Scratch.ArgumentType.STRING,
@@ -445,6 +448,32 @@
               ANGLE: {
                 type: Scratch.ArgumentType.NUMBER,
                 defaultValue: '90'
+              },
+              MAGNITUDE: {
+                type: Scratch.ArgumentType.NUMBER,
+                defaultValue: '1'
+              }
+            }
+          },
+          {
+            opcode: 'twovectorfromslope',
+            blockType: Scratch.BlockType.REPORTER,
+            text: 'unit vector with slope [SLOPE]',
+            arguments: {
+              SLOPE: {
+                type: Scratch.ArgumentType.NUMBER,
+                defaultValue: '1'
+              }
+            }
+          },
+          {
+            opcode: 'twovectorfromslopeandmagnitude',
+            blockType: Scratch.BlockType.REPORTER,
+            text: 'vector with slope [SLOPE] and magnitude [MAGNITUDE]',
+            arguments: {
+              SLOPE: {
+                type: Scratch.ArgumentType.NUMBER,
+                defaultValue: '1'
               },
               MAGNITUDE: {
                 type: Scratch.ArgumentType.NUMBER,
@@ -502,6 +531,114 @@
               VECTOR: {
                 type: Scratch.ArgumentType.STRING,
                 defaultValue: '[0,0,0]'
+              }
+            }
+          },
+          {
+            opcode: 'dirofvector',
+            blockType: Scratch.BlockType.REPORTER,
+            text: 'direction in [UNIT] of [VECTOR]',
+            arguments: {
+              VECTOR: {
+                type: Scratch.ArgumentType.STRING,
+                defaultValue: '[1,0]'
+              },
+              UNIT: {
+                type: Scratch.ArgumentType.STRING,
+                menu: 'ANGLE_UNITS_MENU'
+              }
+            }
+          },
+          {
+            opcode: 'magnitudeofvector',
+            blockType: Scratch.BlockType.REPORTER,
+            text: 'magnitude of [VECTOR]',
+            arguments: {
+              VECTOR: {
+                type: Scratch.ArgumentType.STRING,
+                defaultValue: '[1,0]'
+              }
+            }
+          },
+          {
+            opcode: 'slopeofvector',
+            blockType: Scratch.BlockType.REPORTER,
+            text: 'slope of [VECTOR]',
+            arguments: {
+              VECTOR: {
+                type: Scratch.ArgumentType.STRING,
+                defaultValue: '[1,2]'
+              }
+            }
+          },
+
+          '---',
+
+          {
+            opcode: 'setcoordofvector',
+            blockType: Scratch.BlockType.REPORTER,
+            text: 'set [COORD] of vector [VECTOR] to [VALUE]',
+            arguments: {
+              COORD: {
+                type: Scratch.ArgumentType.STRING,
+                menu: 'COORDS_MENU'
+              },
+              VALUE: {
+                type: Scratch.ArgumentType.NUMBER,
+                defaultValue: '1'
+              },
+              VECTOR: {
+                type: Scratch.ArgumentType.STRING,
+                defaultValue: '[0,0]'
+              }
+            }
+          },
+          {
+            opcode: 'setdirofvector',
+            blockType: Scratch.BlockType.REPORTER,
+            text: 'set direction of vector [VECTOR] to [ANGLE] [UNIT]',
+            arguments: {
+              ANGLE: {
+                type: Scratch.ArgumentType.NUMBER,
+                defaultValue: '90'
+              },
+              UNIT: {
+                type: Scratch.ArgumentType.STRING,
+                menu: 'ANGLE_UNITS_MENU'
+              },
+              VECTOR: {
+                type: Scratch.ArgumentType.STRING,
+                defaultValue: '[1,1]'
+              }
+            }
+          },
+          {
+            opcode: 'setmagnitudeofvector',
+            blockType: Scratch.BlockType.REPORTER,
+            text: 'set magnitude of vector [VECTOR] to [MAGNITUDE]',
+            arguments: {
+              MAGNITUDE: {
+                type: Scratch.ArgumentType.NUMBER,
+                defaultValue: '1'
+              },
+              VECTOR: {
+                type: Scratch.ArgumentType.STRING,
+                defaultValue: '[1,1]'
+              }
+            }
+          },
+          {
+            opcode: 'setslopeofvector',
+            blockType: Scratch.BlockType.REPORTER,
+            text: 'set slope of vector [VECTOR] to [SLOPE]',
+            arguments: {
+              SLOPE: {
+                type: Scratch.ArgumentType.NUMBER,
+                defaultValue: '1'
+              },
+              VECTOR: {
+                type: Scratch.ArgumentType.STRING,
+                defaultValue: '[1,0]'
               }
             }
           },
@@ -595,32 +732,6 @@
           '---',
 
           {
-            opcode: 'dirofvector',
-            blockType: Scratch.BlockType.REPORTER,
-            text: 'direction in [UNIT] of [VECTOR]',
-            arguments: {
-              VECTOR: {
-                type: Scratch.ArgumentType.STRING,
-                defaultValue: '[1,0]'
-              },
-              UNIT: {
-                type: Scratch.ArgumentType.STRING,
-                menu: 'ANGLE_UNITS_MENU'
-              }
-            }
-          },
-          {
-            opcode: 'magnitudeofvector',
-            blockType: Scratch.BlockType.REPORTER,
-            text: 'magnitude of [VECTOR]',
-            arguments: {
-              VECTOR: {
-                type: Scratch.ArgumentType.STRING,
-                defaultValue: '[1,0]'
-              }
-            }
-          },
-          {
             opcode: 'rotatevector',
             blockType: Scratch.BlockType.REPORTER,
             text: 'rotate vector [VECTOR] by [ANGLE] [UNIT]',
@@ -683,7 +794,8 @@
               },
               TOUNIT: {
                 type: Scratch.ArgumentType.STRING,
-                menu: 'ANGLE_UNITS_MENU_2'
+                menu: 'ANGLE_UNITS_MENU',
+                defaultValue: 'trig radians'
               }
             }
           },
@@ -702,7 +814,8 @@
               },
               TOUNIT: {
                 type: Scratch.ArgumentType.STRING,
-                menu: 'COORDINATE_UNITS_MENU_2'
+                menu: 'COORDINATE_UNITS_MENU',
+                defaultValue: 'JS coords'
               }
             }
           },
@@ -766,6 +879,9 @@
               }
             }
           },
+
+          '---',
+
           {
             opcode: 'twovectorvarfromangle',
             blockType: Scratch.BlockType.COMMAND,
@@ -788,7 +904,7 @@
           {
             opcode: 'twovectorvarfromangleandmagnitude',
             blockType: Scratch.BlockType.COMMAND,
-            text: 'set [VARIABLE] to vector with magnitude [MAGNITUDE] and angle [ANGLE] [UNIT]',
+            text: 'set [VARIABLE] to vector with angle [ANGLE] [UNIT] and magnitude [MAGNITUDE]',
             arguments: {
               UNIT: {
                 type: Scratch.ArgumentType.STRING,
@@ -797,6 +913,40 @@
               ANGLE: {
                 type: Scratch.ArgumentType.NUMBER,
                 defaultValue: '90'
+              },
+              MAGNITUDE: {
+                type: Scratch.ArgumentType.NUMBER,
+                defaultValue: '1'
+              },
+              VARIABLE: {
+                type:Scratch.ArgumentType.STRING,
+                menu: 'VARIABLES_MENU'
+              }
+            }
+          },
+          {
+            opcode: 'twovectorvarfromslope',
+            blockType: Scratch.BlockType.COMMAND,
+            text: 'set [VARIABLE] to unit vector with slope [SLOPE]',
+            arguments: {
+              SLOPE: {
+                type: Scratch.ArgumentType.NUMBER,
+                defaultValue: '1'
+              },
+              VARIABLE: {
+                type:Scratch.ArgumentType.STRING,
+                menu: 'VARIABLES_MENU'
+              }
+            }
+          },
+          {
+            opcode: 'twovectorvarfromslopeandmagnitude',
+            blockType: Scratch.BlockType.COMMAND,
+            text: 'set [VARIABLE] to vector with slope [SLOPE] and magnitude [MAGNITUDE]',
+            arguments: {
+              SLOPE: {
+                type: Scratch.ArgumentType.NUMBER,
+                defaultValue: '1'
               },
               MAGNITUDE: {
                 type: Scratch.ArgumentType.NUMBER,
@@ -861,6 +1011,114 @@
               }
             }
           },
+          {
+            opcode: 'dirofvectorvar',
+            blockType: Scratch.BlockType.REPORTER,
+            text: 'direction in [UNIT] of var [VARIABLE]',
+            arguments: {
+              VARIABLE: {
+                type: Scratch.ArgumentType.STRING,
+                menu: 'VARIABLES_MENU'
+              },
+              UNIT: {
+                type: Scratch.ArgumentType.STRING,
+                menu: 'ANGLE_UNITS_MENU'
+              }
+            }
+          },
+          {
+            opcode: 'magnitudeofvectorvar',
+            blockType: Scratch.BlockType.REPORTER,
+            text: 'magnitude of var [VARIABLE]',
+            arguments: {
+              VARIABLE: {
+                type: Scratch.ArgumentType.STRING,
+                menu: 'VARIABLES_MENU'
+              }
+            }
+          },
+          {
+            opcode: 'slopeofvectorvar',
+            blockType: Scratch.BlockType.REPORTER,
+            text: 'slope of var [VARIABLE]',
+            arguments: {
+              VARIABLE: {
+                type: Scratch.ArgumentType.STRING,
+                menu: 'VARIABLES_MENU'
+              }
+            }
+          },
+
+          '---',
+
+          {
+            opcode: 'setcoordofvectorvar',
+            blockType: Scratch.BlockType.COMMAND,
+            text: 'set [COORD] of vector var [VARIABLE] to [VALUE]',
+            arguments: {
+              COORD: {
+                type: Scratch.ArgumentType.STRING,
+                menu: 'COORDS_MENU'
+              },
+              VALUE: {
+                type: Scratch.ArgumentType.NUMBER,
+                defaultValue: '1'
+              },
+              VARIABLE: {
+                type: Scratch.ArgumentType.STRING,
+                menu: 'VARIABLES_MENU'
+              }
+            }
+          },
+          {
+            opcode: 'setdirofvectorvar',
+            blockType: Scratch.BlockType.COMMAND,
+            text: 'set direction of vector var [VARIABLE] to [ANGLE] [UNIT]',
+            arguments: {
+              ANGLE: {
+                type: Scratch.ArgumentType.NUMBER,
+                defaultValue: '90'
+              },
+              UNIT: {
+                type: Scratch.ArgumentType.STRING,
+                menu: 'ANGLE_UNITS_MENU'
+              },
+              VARIABLE: {
+                type: Scratch.ArgumentType.STRING,
+                menu: 'VARIABLES_MENU'
+              }
+            }
+          },
+          {
+            opcode: 'setmagnitudeofvectorvar',
+            blockType: Scratch.BlockType.COMMAND,
+            text: 'set magnitude of vector var [VARIABLE] to [VALUE]',
+            arguments: {
+              VALUE: {
+                type: Scratch.ArgumentType.NUMBER,
+                defaultValue: '1'
+              },
+              VARIABLE: {
+                type: Scratch.ArgumentType.STRING,
+                menu: 'VARIABLES_MENU'
+              }
+            }
+          },
+          {
+            opcode: 'setslopeofvectorvar',
+            blockType: Scratch.BlockType.REPORTER,
+            text: 'set slope of vector var [VARIABLE] to [SLOPE]',
+            arguments: {
+              SLOPE: {
+                type: Scratch.ArgumentType.NUMBER,
+                defaultValue: '1'
+              },
+              VARIABLE: {
+                type: Scratch.ArgumentType.STRING,
+                menu: 'VARIABLES_MENU'
+              }
+            }
+          },
 
           '---',
 
@@ -906,32 +1164,6 @@
           '---',
 
           {
-            opcode: 'dirofvectorvar',
-            blockType: Scratch.BlockType.REPORTER,
-            text: 'direction in [UNIT] of var [VARIABLE]',
-            arguments: {
-              VARIABLE: {
-                type: Scratch.ArgumentType.STRING,
-                menu: 'VARIABLES_MENU'
-              },
-              UNIT: {
-                type: Scratch.ArgumentType.STRING,
-                menu: 'ANGLE_UNITS_MENU'
-              }
-            }
-          },
-          {
-            opcode: 'magnitudeofvectorvar',
-            blockType: Scratch.BlockType.REPORTER,
-            text: 'magnitude of var [VARIABLE]',
-            arguments: {
-              VARIABLE: {
-                type: Scratch.ArgumentType.STRING,
-                menu: 'VARIABLES_MENU'
-              }
-            }
-          },
-          {
             opcode: 'rotatevectorvar',
             blockType: Scratch.BlockType.COMMAND,
             text: 'rotate vector var [VARIABLE] by [ANGLE] [UNIT]',
@@ -946,7 +1178,7 @@
               },
               ANGLE: {
                 type: Scratch.ArgumentType.NUMBER,
-                defaultValue: '90'
+                defaultValue: '45'
               }
             }
           },
@@ -1318,17 +1550,9 @@
             acceptReporters: true,
             items: ['Scratch degrees','Scratch radians','Scratch full circle','trig degrees','trig radians','trig full circle']
           },
-          ANGLE_UNITS_MENU_2: {
-            acceptReporters: true,
-            items: ['trig radians','trig degrees','trig full circle','Scratch radians','Scratch degrees','Scratch full circle']
-          },
           COORDINATE_UNITS_MENU: {
             acceptReporters: true,
             items: ['Scratch coords','JS coords']
-          },
-          COORDINATE_UNITS_MENU_2: {
-            acceptReporters: true,
-            items: ['JS coords','Scratch coords']
           },
           VECTOR_OPERATIONS_MENU: {
             acceptReporters: true,
@@ -1408,6 +1632,25 @@
     twovectorvarfromangleandmagnitude(args,util) {
       set_var(args.VARIABLE, this.twovectorfromangleandmagnitude(args), util);
     }
+    twovectorfromslope(args) {
+      let slope = Scratch.Cast.toNumber(args.SLOPE);
+      let normalization_factor = Math.sqrt(slope*slope+1);
+      let vector = [1/normalization_factor,slope/normalization_factor];
+      return stringify(vector);
+    }
+    twovectorvarfromslope(args,util) {
+      set_var(args.VARIABLE, this.twovectorfromslope(args), util);
+    }
+    twovectorfromslopeandmagnitude(args) {
+      let slope = Scratch.Cast.toNumber(args.SLOPE);
+      let magnitude = Scratch.Cast.toNumber(args.MAGNITUDE);
+      let normalization_factor = Math.sqrt(slope*slope+1);
+      let vector = [magnitude/normalization_factor,(magnitude*slope)/normalization_factor];
+      return stringify(vector);
+    }
+    twovectorvarfromslopeandmagnitude(args,util) {
+      set_var(args.VARIABLE, this.twovectorfromslopeandmagnitude(args), util);
+    }
     xofvector(args) {
       let vector = cast_to_vector(args.VECTOR,1);
       return vector[0];
@@ -1424,35 +1667,109 @@
     }
     zofvectorvar(args,util) { return this.run_against_var(this.zofvector,args,util); }
     coordfromvector(args) {
-      let number = Scratch.Cast.toNumber(args.COORD);
+      let index = Scratch.Cast.toNumber(args.COORD);
       if (args.COORD == 'x') {
-        number = 1;
+        index = 1;
       } else if (args.COORD == 'y') {
-        number = 2;
+        index = 2;
       } else if (args.COORD == 'z') {
-        number = 3;
+        index = 3;
       } else if (args.COORD == 'w') {
-        number = 4;
+        index = 4;
       } else if (args.COORD == 'v') {
-        number = 5;
+        index = 5;
       } else if (args.COORD == 'u') {
-        number = 6;
+        index = 6;
       } else if (args.COORD == 't') {
-        number = 7;
+        index = 7;
       } else if (args.COORD == 's') {
-        number = 8;
+        index = 8;
       }
-      number = Math.round(number);
-      if (number < 1) {
+      index = Math.round(index);
+      if (index < 1) {
         return 0;
       }
       let vector = cast_to_vector(args.VECTOR);
-      if (vector.length < number) {
+      if (vector.length < index) {
         return 0;
       }
-      return vector[number-1];
+      return vector[index-1];
     }
     coordfromvectorvar(args,util) { return this.run_against_var(this.coordfromvector,args,util); }
+    setcoordofvector(args) {
+      let vector = cast_to_vector(args.VECTOR);
+      let value = Scratch.Cast.toNumber(args.VALUE);
+      let index = Scratch.Cast.toNumber(args.COORD);
+      if (args.COORD == 'x') {
+        index = 1;
+      } else if (args.COORD == 'y') {
+        index = 2;
+      } else if (args.COORD == 'z') {
+        index = 3;
+      } else if (args.COORD == 'w') {
+        index = 4;
+      } else if (args.COORD == 'v') {
+        index = 5;
+      } else if (args.COORD == 'u') {
+        index = 6;
+      } else if (args.COORD == 't') {
+        index = 7;
+      } else if (args.COORD == 's') {
+        index = 8;
+      }
+      index = Math.round(index);
+      if (index < 1) {
+        return stringify(vector);
+      }
+      if (vector.length < index) {
+        return stringify(vector);
+      }
+      vector[index-1] = value;
+      return stringify(vector);
+    }
+    setcoordofvectorvar(args,util) { this.run_in_place(this.setcoordofvector,args,util); }
+    setdirofvector(args) {
+      let vector = cast_to_vector(args.VECTOR,2);
+      let angle = Scratch.Cast.toNumber(args.ANGLE);
+      angle = convert_angle_units(angle,args.UNIT,'trig radians');
+      let magnitude = Math.sqrt((vector[0] * vector[0]) + (vector[1] * vector[1]));
+      let new_vector = [magnitude*Math.cos(angle),magnitude*Math.sin(angle)];
+      return stringify(new_vector);
+    }
+    setdirofvectorvar(args,util) { this.run_in_place(this.setdirofvector,args,util); }
+    setmagnitudeofvector(args) {
+      let vector = cast_to_vector(args.VECTOR);
+      let new_magnitude = Scratch.Cast.toNumber(args.MAGNITUDE);
+      let magnitude = 0;
+      for (let i = 0; i < vector.length; i++) {
+        magnitude += vector[i] * vector[i];
+      }
+      magnitude = Math.sqrt(magnitude);
+      if (magnitude == 0) {
+        if (vector.length > 0) {
+          vector[0] = new_magnitude;
+          for (let i = 1; i < vector.length; i++) {
+            vector[i] = 0;
+          }
+        }
+      } else { 
+        for (let i = 0; i < vector.length; i++) {
+          vector[i] /= magnitude;
+          vector[i] *= new_magnitude;
+        }
+      }
+      return stringify(vector);
+    }
+    setmagnitudeofvectorvar(args,util) { this.run_in_place(this.setmagnitudeofvector,args,util); }
+    setslopeofvector(args) {
+      let vector = cast_to_vector(args.VECTOR,2);
+      let slope = Scratch.Cast.toNumber(args.SLOPE);
+      let magnitude = Math.sqrt((vector[0] * vector[0]) + (vector[1] * vector[1]));
+      let normalization_factor = Math.sqrt(slope*slope+1);
+      let new_vector = [magnitude/normalization_factor,(magnitude*slope)/normalization_factor];
+      return stringify(new_vector);
+    }
+    setslopeofvectorvar(args,util) { this.run_in_place(this.setslopeofvector,args,util); }
     currentposvector(args,util) {
       let vector = [util.target.x,util.target.y];
       return stringify(convert_coordinate_units(vector,'Scratch coords',args.UNIT));
@@ -1558,6 +1875,14 @@
       return Math.sqrt(sum);
     }
     magnitudeofvectorvar(args,util) { return this.run_against_var(this.magnitudeofvector,args,util); }
+    slopeofvector(args) {
+      let vector = cast_to_vector(args.VECTOR,2);
+      if (vector[0] == 0 && vector[1] == 0) {
+        return 0;
+      }
+      return vector[1] / vector[0];
+    }
+    slopeofvectorvar(args,util) { return this.run_against_var(this.slopeofvector,args,util); }
     rotatevector(args) {
       let vector = cast_to_vector(args.VECTOR,2);
       let angle = Scratch.Cast.toNumber(args.ANGLE);

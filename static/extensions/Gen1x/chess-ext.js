@@ -8,6 +8,7 @@
             this.runtime = runtime;
             this.chess = null;
             this.board = null;
+			this.loaded = false;
             this.settings = {
                 position: 'center',
                 size: 'large',
@@ -131,6 +132,7 @@
 
         async initializeBoard() {
             try {
+				this.loaded = false;
                 await this._loadLibraries();
 
                 if (!this.wrapperElement) {
@@ -163,6 +165,7 @@
                     this.toggleBoardInteractivity({
                         INTERACTIVE: this.settings.interactive ? 'true' : 'false'
                     });
+					this.loaded = true;
                 }, 100);
 
                 const checkInFullscreen = () => !ReduxStore.getState().scratchGui.mode.isFullScreen;
@@ -269,6 +272,11 @@
                         opcode: 'hideBoard',
                         blockType: 'command',
                         text: 'hide chess board'
+                    },
+					{
+                        opcode: 'initializeDetector',
+                        blockType: 'Boolean',
+                        text: 'has the board loaded yet?',
                     },
                     '---',
                     {
@@ -515,6 +523,10 @@
                 }
             };
         }
+		
+		initializeDetector() {
+            return this.loaded;			
+		}
 
         getPGN() {
             if (!this.chess) return '';
@@ -870,14 +882,6 @@
             }
             if (this.chess) {
                 this.chess = null;
-            }
-            if (this.chessWorker) {
-                this.chessWorker.terminate();
-                this.chessWorker = null;
-            }
-            if (this.workerUrl) {
-                URL.revokeObjectURL(this.workerUrl);
-                this.workerUrl = null;
             }
         }
 

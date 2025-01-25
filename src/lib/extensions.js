@@ -10,7 +10,7 @@ export default [
         description: "A powerful extension about Chess. It allows to create a Chessboard, manage chess games, and use Stockfish 17 in your projects.",
         code: "Gen1x/chess-ext.js",
         banner: "Gen1x/chess-ext.png",
-        creator: "Gen1x",
+        creator: "G1nX",
         isGitHub: false,
     },
     {

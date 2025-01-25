@@ -250,6 +250,7 @@
 				id: 'chessG1nX',
 				name: 'Chess Extension',
 				color1: '#B58863',
+				docsURI: "https://hackmd.io/@vBTXv9pwQ3GoeueFKGElEw/chess-ext-docs",
 				blocks: [{
 						opcode: 'initializeBoard',
 						blockType: 'command',

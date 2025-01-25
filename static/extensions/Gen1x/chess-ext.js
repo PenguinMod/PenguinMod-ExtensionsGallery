@@ -575,7 +575,6 @@
 			MAX_THINKING_TIME = 50,
 			SEARCH_MOVES = ''
 		}) {
-
 			let positionToAnalyze = FEN;
 
 			if (FEN === 'current') {
@@ -586,7 +585,6 @@
 						showHeaders: true
 					});
 				} else {
-
 					positionToAnalyze = '';
 				}
 			}
@@ -597,9 +595,9 @@
 						"Content-Type": "application/json",
 					},
 					"body": JSON.stringify({
-						variants: Math.max(1, Math.min(5, VARIANTS)),
-						depth: Math.max(1, Math.min(18, DEPTH)),
-						maxThinkingTime: Math.max(10, Math.min(100, MAX_THINKING_TIME)),
+						variants: Math.max(1, Math.min(5, Scratch.Cast.toNumber(VARIANTS))),
+						depth: Math.max(1, Math.min(18, Scratch.Cast.toNumber(DEPTH))),
+						maxThinkingTime: Math.max(10, Math.min(100, Scratch.Cast.toNumber(MAX_THINKING_TIME))),
 						searchmoves: SEARCH_MOVES,
 						input: positionToAnalyze || '<div></div>'
 					}),

@@ -6,6 +6,14 @@
 */
 export default [
     {
+        name: "Chess",
+        description: "A powerful extension about Chess. It allows to create a Chessboard, manage chess games, and use Stockfish 17 in your projects.",
+        code: "Gen1x/chess-ext.js",
+        banner: "Gen1x/chess-ext.png",
+        creator: "G1nX",
+        isGitHub: false,
+    },
+    {
         name: "CloudLink",
         description: "A powerful WebSocket extension for Scratch. Allows for online connectivity to servers for things like multiplayer.",
         code: "MikeDev101/cloudlink.js",

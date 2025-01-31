@@ -517,4 +517,14 @@ export default [
         unstable: true,
         unstableReason: "WebGPU is still experimental and not supported by all browsers and does not work when packaged to electron. Check compatibility at webgpu.io."
     },
+        {
+        name: "Alert Extension",
+        description: "An extension that displays a popup message (Chrome).",
+        code: "TheYali1/Alert Extension.js",
+        banner: "TheYali1/Alert Extension.png",
+        creator: "TheYali1",
+        isGitHub: true,
+        unstable: true,
+        unstableReason: "Not work in sandbox, only without sandbox!"
+    },
 ];

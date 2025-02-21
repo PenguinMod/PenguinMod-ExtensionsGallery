@@ -26,21 +26,6 @@ if (!Scratch.extensions.unsandboxed) {
 
 let api_url = 'https://api.penguinai.tech/v1';
 
-fetch('https://mubilop.tech/proxy')
-    .then(response => {
-        if (!response.ok) {
-            throw new Error(`Failed to fetch proxy URL: ${response.status} ${response.statusText}`);
-        }
-        return response.text();
-    })
-    .then(data => {
-        api_url = data.trim();
-        console.log('API URL successfully fetched:', api_url);
-    })
-    .catch(error => {
-        console.error('Error setting api_url, using default:', error);
-    });
-
 const vm = Scratch.vm;
 
 class PenguinGPT {

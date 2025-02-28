@@ -1,4 +1,3 @@
-// License: MPL-2.0
 // Name: Streamer
 // ID: Streamer
 // Description: OBSChat support for Scratch.
@@ -41,7 +40,7 @@
   };
 
   const ImageSettings = {
-    image: "https://extensions.turbowarp.org/favicon.ico", // turbowarp icon
+    image: "https://extensions.penguinmod.com/favicon.ico", // Penguinmod icon
     width: 10,
     height: 10,
     position: "static",
@@ -94,7 +93,7 @@
         menuIconURI: icon,
         blockIconURI: icon,
         docsURI:
-          "https://github.com/TurboWarp/extensions/blob/master/docs/liablelua/Streamer.md",
+          "https://github.com/liablelua/liables-extensions/blob/main/Streamer.md",
         blocks: [
           {
             blockType: Scratch.BlockType.LABEL,
@@ -297,7 +296,7 @@
             arguments: {
               image: {
                 type: Scratch.ArgumentType.STRING,
-                defaultValue: "https://extensions.turbowarp.org/favicon.ico",
+                defaultValue: "https://extensions.penguinmod.com/favicon.ico",
               },
             },
           },

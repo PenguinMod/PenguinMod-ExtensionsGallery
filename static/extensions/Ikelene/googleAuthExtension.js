@@ -103,7 +103,7 @@ class GoogleAuthExtension {
     }
 
     isLoginWindowOpen() {
-        return this.authWindow && !this.authWindow.closed;
+    return !!(this.authWindow && !this.authWindow.closed);
     }
 
     getAccountName() {

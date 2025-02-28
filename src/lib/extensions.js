@@ -342,12 +342,12 @@ export default [
         isGitHub: true,
     },
     {
-        name: "Twitch",
-        description: "Communicate with your Twitch Chat on PenguinMod!\n\nPenguinMod is not affiliated with Twitch.",
-        code: "bop_tw/Twitch.js",
-        banner: "bop_tw/Twitch.png",
-        creator: "bop_tw",
-        isGitHub: false,
+        name: "Streamer",
+        description: "OBSChat for Scratch projects.",
+        code: "liablelua/Streamer.js",
+        banner: "liablelua/Streamer.png",
+        creator: "liablelua",
+        isGitHub: true,
     },
     {
         name: "Chess",

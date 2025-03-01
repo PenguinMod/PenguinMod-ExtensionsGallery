@@ -257,7 +257,7 @@ export default [
         description: "Like PenguinMod's Storage Extension, but with a couple more features, and faster servers.",
         code: "Gen1x/better_storage.js",
         banner: "Gen1x/betterstorage.png",
-        reator: "G1nX",
+        creator: "G1nX",
     }, */
     /* this extension is completely dead as of now
     {

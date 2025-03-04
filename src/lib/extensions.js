@@ -493,11 +493,11 @@ export default [
     },
     {
         name: "Text To Speech: Redone",
-        description: "Generate better TTS! Made using TTS Tool API!",
+        description: "A better alternitive to the base text to speech extension. Powered by the TTStool API",
         code: "PuzzlingGGG/ttsr.js",
         banner: "PuzzlingGGG/TTSR.png",
-        creator: "puzzlingGGG",
-        isGitHub: false,
+        creator: "PuzzlingGGG",
+        isGitHub: true,
     },
     {
         name: "Video Sharing",

@@ -251,22 +251,22 @@ export default [
         creator: "SharkPool-SP",
         isGitHub: true,
     },
-    // this extension is completely dead as of now
-    // {
-    //     name: "Better Storage",
-    //     description: "Like PenguinMod's Storage Extension, but with a couple more features, and faster servers.",
-    //     code: "Gen1x/better_storage.js",
-    //     banner: "Gen1x/betterstorage.png",
-    //     creator: "G1nX",
-    // },
-    // this extension is completely dead as of now
-    // {
-    //     name: "Mouth Washer",
-    //     description: "Includes many utilities related to cleaning bad words, swearing and profanity. Thought of as an extra layer of security for filtering messages.\n\n(ft. violet and jwklong)",
-    //     code: "Gen1x/mouth_washer.js",
-    //     banner: "Gen1x/mw-placeholder.png",
-    //     creator: "G1nX",
-    // },
+    /* this extension is completely dead as of now
+    {
+        name: "Better Storage",
+        description: "Like PenguinMod's Storage Extension, but with a couple more features, and faster servers.",
+        code: "Gen1x/better_storage.js",
+        banner: "Gen1x/betterstorage.png",
+        creator: "G1nX",
+    }, */
+    /* this extension is completely dead as of now
+    {
+        name: "Mouth Washer",
+        description: "Includes many utilities related to cleaning bad words, swearing and profanity. Thought of as an extra layer of security for filtering messages.\n\n(ft. violet and jwklong)",
+        code: "Gen1x/mouth_washer.js",
+        banner: "Gen1x/mw-placeholder.png",
+        creator: "G1nX",
+    }, */
     {
         name: "Mathematics",
         description: "Complicated maths extension for nerds.",
@@ -333,6 +333,7 @@ export default [
         creator: "enderhacker",
         isGitHub: true,
     },
+    /* this extension is completely dead as of now
     {
         name: "Online Captcha",
         description: "Protect your project with simple, easy to use captcha implementation. Fully client-side, bypass-proof captcha solution!",
@@ -340,7 +341,7 @@ export default [
         banner: "NotHouse/OnlineCaptcha-banner.png",
         creator: "enderhacker",
         isGitHub: true,
-    },
+    }, */
     {
         name: "Twitch",
         description: "Communicate with your Twitch Chat on PenguinMod!\n\nPenguinMod is not affiliated with Twitch.",

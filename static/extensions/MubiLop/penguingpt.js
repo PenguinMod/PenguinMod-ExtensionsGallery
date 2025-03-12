@@ -381,7 +381,7 @@ class PenguinGPT {
         }
         
         fetchAndGetReqModels() {
-            return fetch(api_url + '/models')
+            return Scratch.fetch(api_url + '/models')
                 .then(response => {
                     if (!response.ok) {
                         this.reqModelsErrored = true;
@@ -411,7 +411,7 @@ class PenguinGPT {
         }
         
         fetchAndGetImgModels() {
-            return fetch(api_url + '/models')
+            return Scratch.fetch(api_url + '/models')
                 .then(response => {
                     if (!response.ok) {
                         this.imgModelsErrored = true;

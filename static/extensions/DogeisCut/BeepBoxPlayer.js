@@ -315,15 +315,15 @@
           },
 
           {
-              opcode: 'deleteSynth',
-              blockType: Scratch.BlockType.COMMAND,
-              text: 'delete synth [SYNTH]',
-              arguments: {
-                  SYNTH: {
-                    type: Scratch.ArgumentType.NUMBER,
-                    menu: 'SYNTHS_MENU',
-                  },
+            opcode: "deleteSynth",
+            blockType: Scratch.BlockType.COMMAND,
+            text: "delete synth [SYNTH]",
+            arguments: {
+              SYNTH: {
+                type: Scratch.ArgumentType.NUMBER,
+                menu: "SYNTHS_MENU",
               },
+            },
           },
 
           {
@@ -362,7 +362,13 @@
     }
 
     caluclateSongCompletionPercentage() {
-      return (synth.bar * 24 * synth.beatsPerBar + synth.beat * 24 + synth.part + synth.tick / 2) / (synth.beatsPerBar * 24 * synth.barCount);
+      return (
+        (synth.bar * 24 * synth.beatsPerBar +
+          synth.beat * 24 +
+          synth.part +
+          synth.tick / 2) /
+        (synth.beatsPerBar * 24 * synth.barCount)
+      );
     }
 
     samplesToTime(samples) {
@@ -370,7 +376,12 @@
       const rawSecondsUnrounded = samples / synth.samplesPerSecond;
       const seconds = rawSeconds % 60;
       const minutes = Math.floor(rawSeconds / 60);
-      return {'rawSeconds': rawSeconds, 'rawSecondsUnrounded': rawSecondsUnrounded, 'minutes': minutes, 'fullTimeString': (minutes + ":" + (seconds < 10 ? "0" : "") + seconds)};
+      return {
+        rawSeconds: rawSeconds,
+        rawSecondsUnrounded: rawSecondsUnrounded,
+        minutes: minutes,
+        fullTimeString: minutes + ":" + (seconds < 10 ? "0" : "") + seconds,
+      };
     }
 
     /*menus*/
@@ -396,7 +407,7 @@
           value: Scratch.Cast.toString(javascriptMoment),
         });
       }
-      gettingChannels.push({text: "all", value: "0"});
+      gettingChannels.push({ text: "all", value: "0" });
       return gettingChannels;
     }
 
@@ -415,7 +426,11 @@
         case "progress ratio":
           return this.caluclateSongCompletionPercentage();
         case "progress seconds":
-          return this.samplesToTime(synth.getTotalSamples(true, true, 0))["rawSecondsUnrounded"] * this.caluclateSongCompletionPercentage();
+          return (
+            this.samplesToTime(synth.getTotalSamples(true, true, 0))[
+              "rawSecondsUnrounded"
+            ] * this.caluclateSongCompletionPercentage()
+          );
       }
     }
     setCurrentValue(args) {
@@ -456,7 +471,9 @@
         case "samples ()":
           return synth.getTotalSamples;
         case "length":
-          return this.samplesToTime(synth.getTotalSamples(true, true, 0))["rawSecondsUnrounded"];
+          return this.samplesToTime(synth.getTotalSamples(true, true, 0))[
+            "rawSecondsUnrounded"
+          ];
       }
     }
     setSongValue(args) {
@@ -474,7 +491,10 @@
 
     whenCurrentChanges(args) {
       let changed = false;
-      const synthIndex = Math.max(0, Math.min(Scratch.Cast.toNumber(args.SYNTH) - 1, synths.length - 1));
+      const synthIndex = Math.max(
+        0,
+        Math.min(Scratch.Cast.toNumber(args.SYNTH) - 1, synths.length - 1)
+      );
       const currentSynth = synths[synthIndex];
 
       switch (args.WHAT) {
@@ -493,31 +513,37 @@
         case "part":
           changed = currentSynth.part != this.lastPart;
           this.lastPart = currentSynth.part;
-          break; 
+          break;
         case "tick":
           changed = currentSynth.tick != this.lastTick;
           this.lastTick = currentSynth.tick;
           break;
-        case "progress ratio":
-          changed = this.caluclateSongCompletionPercentage() != this.lastProgressRatio;
+        case "progress ratio": {
+          changed =
+            this.caluclateSongCompletionPercentage() != this.lastProgressRatio;
           this.lastProgressRatio = this.caluclateSongCompletionPercentage();
           break;
-        case "progress seconds":
-          const currentProgressSeconds = this.samplesToTime(currentSynth.getTotalSamples(true, true, 0))["rawSecondsUnrounded"] * this.caluclateSongCompletionPercentage();
+        }
+        case "progress seconds": {
+          const currentProgressSeconds =
+            this.samplesToTime(currentSynth.getTotalSamples(true, true, 0))[
+              "rawSecondsUnrounded"
+            ] * this.caluclateSongCompletionPercentage();
           changed = currentProgressSeconds != this.lastProgressSeconds;
           this.lastProgressSeconds = currentProgressSeconds;
           break;
+        }
       }
 
       // Trigger when synth first starts playing
       if (currentSynth.isPlayingSong && !this.wasPlaying) {
-      changed = true;
+        changed = true;
       }
       this.wasPlaying = currentSynth.isPlayingSong;
 
       return changed;
     }
-    
+
     /*blocks*/
 
     playingSong(args) {
@@ -532,7 +558,10 @@
         url = song;
         synth.setSong(song);
       } catch (error) {
-        console.error(error + ", if you have placed a tinyURL link, they are not supported and can not be. Please use the full link or JSON.");
+        console.error(
+          error +
+            ", if you have placed a tinyURL link, they are not supported and can not be. Please use the full link or JSON."
+        );
       }
     }
 
@@ -575,7 +604,8 @@
     }
     changeSongVolume(args) {
       synth.extensionVolume += args.VOLUME / 100;
-      synth.extensionVolume = Math.max(Math.min(synth.extensionVolume * 100, 200), 0) / 100;
+      synth.extensionVolume =
+        Math.max(Math.min(synth.extensionVolume * 100, 200), 0) / 100;
     }
 
     muteChannel(args) {
@@ -650,15 +680,18 @@
     }
 
     deleteSynth(args) {
-        let length = synths.length - 1;
-        let index = Math.max(0, Math.min(Scratch.Cast.toNumber(args.SYNTH) - 1, length));
-        if (index >= 0 && index <= length) {
-            synths[index].deactivateAudio();
-            synths.splice(index, 1);
-            if (targetSynth >= synths.length) {
-                targetSynth = synths.length - 1;
-            }
-            synth = synths[targetSynth];
+      let length = synths.length - 1;
+      let index = Math.max(
+        0,
+        Math.min(Scratch.Cast.toNumber(args.SYNTH) - 1, length)
+      );
+      if (index >= 0 && index <= length) {
+        synths[index].deactivateAudio();
+        synths.splice(index, 1);
+        if (targetSynth >= synths.length) {
+          targetSynth = synths.length - 1;
+        }
+        synth = synths[targetSynth];
       }
       if (synths.length == 0) {
         //@ts-ignore
@@ -688,16 +721,17 @@
       i.deactivateAudio();
     }
   });
-  
+
   runtime.on("RUNTIME_UNPAUSED", () => {
     for (let i of synths) {
       i.activateAudio();
     }
   });
 
-  Scratch.vm.runtime.on('BEFORE_EXECUTE', () => {
+  Scratch.vm.runtime.on("BEFORE_EXECUTE", () => {
     for (let i of synths) {
-      i.volume = i.extensionVolume * Scratch.vm.runtime.audioEngine.inputNode.gain.value;
+      i.volume =
+        i.extensionVolume * Scratch.vm.runtime.audioEngine.inputNode.gain.value;
     }
   });
 

@@ -527,4 +527,12 @@ export default [
         unstable: true,
         unstableReason: "WebGPU is still experimental and not supported by all browsers and does not work when packaged to electron. Check compatibility at webgpu.io."
     },
+    {
+        name: "Enumerations",
+        description: "Create and use enumerations in your project.",
+        code: "DogeisCut/Enumerations.js",
+        banner: "DogeisCut/Enumerations.svg",
+        creator: "DogeisCut",
+        isGitHub: true, 
+    }
 ];

@@ -531,7 +531,7 @@ export default [
         name: "Format Numbers",
         description: "Format large numbers into AD Standard, Fixed Decimal, Comma Separated, or Scientific Notation.",
         code: "DogeisCut/FormatNumbers.js",
-        banner: "DogeisCut/FormatNumbers.svg",
+        banner: "DogeisCut/FormatNumbers.png",
         creator: "DogeisCut",
         isGitHub: true, 
         notes: "Gallery banner by Dillon",

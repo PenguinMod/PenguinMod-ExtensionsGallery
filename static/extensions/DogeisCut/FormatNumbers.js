@@ -7,6 +7,10 @@
 
 // Version V.2.0.1
 
+// TODO:
+// - Editor Icon
+// - BigInt Support
+
 (function (Scratch) {
   'use strict';
 

@@ -4,6 +4,17 @@
 // By: DogeisCut <https://scratch.mit.edu/users/DogeisCut/>
 // License: MIT
 
+// Version V.1.0.0
+
+// TODO:
+// - Use dynamic blocks instead of this opcode fuckery
+// "being real" "you shouldnt create blocks using an opcode like that" "the better way is to just use dynamic blocks"
+// "pretty simple" "you define it" "then" "when you make the block (using xml) you can set its blockInfo" "so"
+// "you can change the text to literally anything" "and" "it still has the same opcode and everything"
+// - Figure out more useful blocks to add
+//      - keys of [ENUM]
+//      - labels of [ENUM]
+
 (function(Scratch) {
     'use strict';
 

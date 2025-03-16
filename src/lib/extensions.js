@@ -534,5 +534,5 @@ export default [
         banner: "DogeisCut/Enumerations.svg",
         creator: "DogeisCut",
         isGitHub: true, 
-    }
+    },
 ];

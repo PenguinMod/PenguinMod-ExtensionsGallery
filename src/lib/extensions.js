@@ -527,4 +527,15 @@ export default [
         unstable: true,
         unstableReason: "WebGPU is still experimental and not supported by all browsers and does not work when packaged to electron. Check compatibility at webgpu.io."
     },
+    {
+        name: "Format Numbers",
+        description: "Format large numbers into AD Standard, Fixed Decimal, Comma Separated, or Scientific Notation.",
+        code: "DogeisCut/FormatNumbers.js",
+        banner: "DogeisCut/FormatNumbers.svg",
+        creator: "DogeisCut",
+        isGitHub: true, 
+        notes: "Gallery banner by Dillon",
+    },
+
+    
 ];

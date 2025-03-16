@@ -529,7 +529,7 @@ export default [
     },
     {
         name: "Format Numbers",
-        description: "Format large numbers into AD Standard, Fixed Decimal, Comma Separated, or Scientific Notation.",
+        description: "Format large numbers into AD standard, fixed decimal, comma separated, or scientific notation.",
         code: "DogeisCut/FormatNumbers.js",
         banner: "DogeisCut/FormatNumbers.png",
         creator: "DogeisCut",

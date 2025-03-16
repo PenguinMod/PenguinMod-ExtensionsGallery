@@ -536,6 +536,4 @@ export default [
         isGitHub: true, 
         notes: "Gallery banner by Dillon",
     },
-
-    
 ];

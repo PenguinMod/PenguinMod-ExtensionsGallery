@@ -551,14 +551,6 @@ export default [
         unstableReason: "WebGPU is still experimental and not supported by all browsers and does not work when packaged to electron. Check compatibility at webgpu.io."
     },
     {
-        name: "Enumerations",
-        description: "Create and use enumerations in your project.",
-        code: "DogeisCut/Enumerations.js",
-        banner: "DogeisCut/Enumerations.svg",
-        creator: "DogeisCut",
-        isGitHub: true, 
-    },
-    {
         name: "Format Numbers",
         description: "Format large numbers into AD standard, fixed decimal, comma separated, or scientific notation.",
         code: "DogeisCut/FormatNumbers.js",
@@ -567,4 +559,12 @@ export default [
         isGitHub: true, 
         notes: "Gallery banner by Dillon",
     },
-];
+    {
+        name: "Enumerations",
+        description: "Create and use enumerations in your project.",
+        code: "DogeisCut/Enumerations.js",
+        banner: "DogeisCut/Enumerations.svg",
+        creator: "DogeisCut",
+        isGitHub: true, 
+    },
+]; 

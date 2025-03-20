@@ -561,7 +561,7 @@ export default [
     },
     {
         name: "Enumerations",
-        description: "Create and use enumerations in your project.",
+        description: "Create and use enumerations in your project. Enums allow you to assign meaningful labels to arbitrary numbers, and even change them later without issue.",
         code: "DogeisCut/Enumerations.js",
         banner: "DogeisCut/Enumerations.svg",
         creator: "DogeisCut",

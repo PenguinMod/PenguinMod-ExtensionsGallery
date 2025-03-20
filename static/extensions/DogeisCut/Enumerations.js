@@ -1,6 +1,6 @@
 // Name: Enumerations
 // ID: dogeiscutenumerations
-// Description: No description provided.
+// Description: Create and use enumerations in your project. Enums allow you to assign meaningful labels to arbitrary numbers, and even change them later without issue.
 // By: DogeisCut <https://scratch.mit.edu/users/DogeisCut/>
 // License: MIT
 
@@ -25,15 +25,20 @@
     const vm = Scratch.vm;
     const runtime = vm.runtime;
 
-    let enumBlocks = [];
-    const defaultEnumBlock = {
-        opcode: "enum...", text: "...",
-        blockType: Scratch.BlockType.REPORTER
-    };
-
     let hideEnumBlocks = true;
 
     let enums = {};
+
+    function createNewEnum(name, target, scope) {
+        const newUid = uid();
+        const clones = target.sprite.clones;
+
+        for (const clone of clones) {
+            if (!clone) {
+                
+            }
+        }
+    }
 
     // tiny patch for events to update the dropdown
     if (Scratch.gui) Scratch.gui.getBlockly().then(SB => {
@@ -179,12 +184,20 @@
                         text: "Remove an Enum"
                     },
                     '---',
-                    ...enumBlocks,
+                    {
+                        opcode: "getEunm",
+                        blockType: Scratch.BlockType.REPORTER,
+                        text: "MyEnum",
+                        isDynamic: true,
+                        hideFromPalette: true,
+                        arguments: {
+                            DICTIONARY: {
+                                type: Scratch.ArgumentType.STRING,
+                                defaultValue: "",
+                            },
+                        },
+                    },
                     '---',
-                    /*
-                    ...enumDropdownBlocks,
-                    '---',
-                    */
                     {
                         opcode: "keyOfEnum",
                         text: "[KEY] of enum [ENUM]",
@@ -350,18 +363,11 @@
             openModal("New enum name:", "New Enum", true, ((value, enumData) => {
                 if (!value) return;
                 if (Object.keys(enumData).length === 0) return;
-                const newBlock = {
-                    ...defaultEnumBlock,
-                    opcode: "enum_" + value, text: value
-                };
-                this.addBlock(newBlock.opcode);
+                const editingTarget = runtime.getEditingTarget();
+                const stage = runtime.getTargetForStage();
 
-                const block = enumBlocks.find((i) => { return i.text == value });
-                if (block) block.hideFromPalette = false;
-                else enumBlocks.push(newBlock);
                 
                 hideEnumBlocks = false;
-
                 vm.extensionManager.refreshBlocks("dogeiscutenumerations");
                 this.serialize();
                 enums[value] = enumData

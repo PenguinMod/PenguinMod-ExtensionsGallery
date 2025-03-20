@@ -57,6 +57,8 @@ export default [
         banner: "SharkPool/Sprite-Effects.svg",
         creator: "SharkPool-SP",
         isGitHub: true,
+        unstable: true,
+        unstableReason: "No longer maintained by SharkPool, use the version in his gallery.",
     },
     {
         name: "Scope Variable",
@@ -75,6 +77,8 @@ export default [
         banner: "SharkPool/Variables-Expanded.svg",
         creator: "SharkPool-SP",
         isGitHub: true,
+        unstable: true,
+        unstableReason: "No longer maintained by SharkPool, use the version in his gallery.",
     },
     {
         name: "Sty-Lists",
@@ -83,6 +87,8 @@ export default [
         banner: "SharkPool/Sty-Lists.svg",
         creator: "SharkPool-SP",
         isGitHub: true,
+        unstable: true,
+        unstableReason: "No longer maintained by SharkPool, use the version in his gallery.",
     },
     {
         name: "Display Text",
@@ -91,6 +97,8 @@ export default [
         banner: "SharkPool/Display-Text.svg",
         creator: "SharkPool-SP",
         isGitHub: true,
+        unstable: true,
+        unstableReason: "No longer maintained by SharkPool, use the version in his gallery.",
     },
     {
         name: "Sprite Parenting",
@@ -99,6 +107,8 @@ export default [
         banner: "SharkPool/Sprite-Linking.svg",
         creator: "SharkPool-SP",
         isGitHub: true,
+        unstable: true,
+        unstableReason: "No longer maintained by SharkPool, use the version in his gallery.",
     },
     {
         name: "Pause Utilities",
@@ -107,6 +117,8 @@ export default [
         banner: "SharkPool/Pause-Utilities.svg",
         creator: "SharkPool-SP",
         isGitHub: true,
+        unstable: true,
+        unstableReason: "No longer maintained by SharkPool, use the version in his gallery.",
     },
     {
         name: "Better Input",
@@ -115,6 +127,8 @@ export default [
         banner: "SharkPool/BetterInput.svg",
         creator: "SharkPool-SP",
         isGitHub: true,
+        unstable: true,
+        unstableReason: "No longer maintained by SharkPool, use the version in his gallery.",
     },
     {
         name: "Recording",
@@ -123,6 +137,8 @@ export default [
         banner: "SharkPool/Recording.svg",
         creator: "SharkPool-SP",
         isGitHub: true,
+        unstable: true,
+        unstableReason: "No longer maintained by SharkPool, use the version in his gallery.",
     },
     {
         name: "Dictation",
@@ -167,15 +183,6 @@ export default [
         code: "bruhbeast-pixel/CockatielLocation.js",
         banner: "bruhbeast-pixel/CockatielLocation.svg",
         creator: "bruhbeast-pixel",
-        isGitHub: true,
-    },
-    {
-        name: "Particle Tools",
-        description: "Tools for making particle engines easier.",
-        documentation: "particle-tools",
-        code: "SharkPool/Particle-Tools.js",
-        banner: "SharkPool/Particle-Tools.svg",
-        creator: "SharkPool-SP",
         isGitHub: true,
     },
     {
@@ -234,6 +241,8 @@ export default [
         banner: "SharkPool/Tile-Grids.svg",
         creator: "SharkPool-SP",
         isGitHub: true,
+        unstable: true,
+        unstableReason: "No longer maintained by SharkPool, use the version in his gallery.",
     },
     {
         name: "Animations",
@@ -242,6 +251,8 @@ export default [
         banner: "SharkPool/Animations.svg",
         creator: "SharkPool-SP",
         isGitHub: true,
+        unstable: true,
+        unstableReason: "No longer maintained by SharkPool, use the version in his gallery.",
     },
     {
         name: "Time Calculations",
@@ -250,6 +261,8 @@ export default [
         banner: "SharkPool/Time-Calculations.svg",
         creator: "SharkPool-SP",
         isGitHub: true,
+        unstable: true,
+        unstableReason: "No longer maintained by SharkPool, use the version in his gallery.",
     },
     /* this extension is completely dead as of now
     {
@@ -283,6 +296,8 @@ export default [
         creator: "SharkPool-SP",
         isGitHub: true,
         notes: "Some contributions by yuri-kiss",
+        unstable: true,
+        unstableReason: "No longer maintained by SharkPool, use the version in his gallery.",
     },
     {
         name: "Sound Waves",
@@ -291,6 +306,8 @@ export default [
         banner: "SharkPool/Sound-Waves.svg",
         creator: "SharkPool-SP",
         isGitHub: true,
+        unstable: true,
+        unstableReason: "No longer maintained by SharkPool, use the version in his gallery.",
     },
     {
         name: "Big Decimal",
@@ -365,6 +382,8 @@ export default [
         banner: "SharkPool/Speech-Bubbles.svg",
         creator: "SharkPool-SP",
         isGitHub: true,
+        unstable: true,
+        unstableReason: "No longer maintained by SharkPool, use the version in his gallery.",
     },
     {
         name: "SoundCloud API",
@@ -373,6 +392,8 @@ export default [
         banner: "SharkPool/SoundCloud-API.svg",
         creator: "SharkPool-SP",
         isGitHub: true,
+        unstable: true,
+        unstableReason: "No longer maintained by SharkPool, use the version in his gallery.",
     },
     {
         name: "Spotify API",
@@ -381,6 +402,8 @@ export default [
         banner: "SharkPool/Spotify.svg",
         creator: "SharkPool-SP",
         isGitHub: true,
+        unstable: true,
+        unstableReason: "No longer maintained by SharkPool, use the version in his gallery.",
     },
     {
         name: "TurboWeather",

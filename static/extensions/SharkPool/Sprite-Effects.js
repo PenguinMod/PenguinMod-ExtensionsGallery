@@ -4,7 +4,7 @@
 // By: SharkPool
 // License: MIT
 
-// Version V.1.7.21
+// Version V.1.7.4
 
 (function (Scratch) {
   "use strict";
@@ -111,6 +111,11 @@
         menuIconURI,
         blocks: [
           {
+            func: "applierTutorial",
+            blockType: Scratch.BlockType.BUTTON,
+            text: "How to Apply Effects"
+          },
+          {
             func: "sourceSwitch",
             blockType: Scratch.BlockType.BUTTON,
             text: "Switch Effect Targets"
@@ -171,6 +176,17 @@
               EFFECT: { type: Scratch.ArgumentType.STRING, menu: "SPLITTING" },
               X: { type: Scratch.ArgumentType.NUMBER, defaultValue: 15 },
               Y: { type: Scratch.ArgumentType.NUMBER, defaultValue: 0 }
+            },
+          }),
+          ...genDualBlock({
+            opcode: "setSpriteVintage",
+            blockType: Scratch.BlockType.REPORTER,
+            text: "apply vintage blur to [SPRITE] at x [X] y [Y]",
+            hideFromPalette: !sprite,
+            arguments: {
+              SPRITE: { type: Scratch.ArgumentType.STRING, menu: "TARGETS" },
+              X: { type: Scratch.ArgumentType.NUMBER, defaultValue: 2 },
+              Y: { type: Scratch.ArgumentType.NUMBER, defaultValue: 50 }
             },
           }),
           ...genDualBlock({
@@ -539,6 +555,12 @@
     }
 
     // Helper Funcs
+    applierTutorial() {
+      alert(`With this extension, you can apply effects and filters to sprites and the canvas!
+        \nTo apply effects to sprites, you need to use the "skins" extension by LilyMakesThings or some alternative for displaying SVGs
+        \nTo apply effects to the canvas, use the "apply filter to canvas" block in this extension. Always use the "canvas" option in a block, if provided.`);
+    }
+
     canvasWarn() {
       alert(`Canvas Effects, created by TheShovel, was coded to not work with extensions like Sprite Effects,
         \nToggling Compatibility "off" will cause Sprite Effects Canvas Filters to not Work with Canvas Effects
@@ -763,6 +785,21 @@
       if (svg) {
         const filter = `<filter id="blend-${args.BLEND}"><feBlend in="SourceGraphic" in2="SourceGraphic" mode="${args.BLEND}" /></filter>`;
         return this.filterApplier(svg, filter, `blend-${args.BLEND}`);
+      }
+      return svg;
+    }
+
+    setSpriteVintage(args, util) { return this.vintageBlur(args, false, util) }
+    async setImageVintage(args) { return await this.vintageBlur(args, true) }
+    async vintageBlur(args, isImage, util) {
+      let svg;
+      if (args.SPRITE === "_myself_") svg = await this.findAsset(util);
+      else svg = isImage ? await this.getImage(args.SPRITE) : await this.getSVG(args.SPRITE);
+      if (svg) {
+        const x = cast.toNumber(args.X);
+        const y = cast.toNumber(args.Y);
+        const filter = `<filter id="vintageBlur" color-interpolation-filters="linearRGB"><feGaussianBlur stdDeviation="${x} ${y}" in="SourceGraphic" result="blur"/><feBlend mode="color-dodge" in="SourceGraphic" in2="colormatrix" result="blend"/><feColorMatrix values="1.6 0 0 0 0 0 1.8 0 0 0 0 0 1.85 0 0 0 0 0 1 01" in="blur2" result="colormatrix"/><feMerge result="merge1"><feMergeNode in="SourceGraphic"/><feMergeNode in="colormatrix"/></feMerge><feGaussianBlur stdDeviation="1 1" in="colormatrix" result="blur1"/><feGaussianBlur stdDeviation="32 32" in="blur1" result="blur2"/><feBlend mode="saturation" in="blur2" in2="blur1" result="blend2"/></filter>`;
+        return this.filterApplier(svg, filter, "vintageBlur");
       }
       return svg;
     }
@@ -1091,14 +1128,14 @@
       return svg;
     }
 
-    setXY(args, util) { return this.setATT(args, false, 0, util) }
-    async setXY2(args) { return await this.setATT(args, true, 0) }
-    setDIR(args, util) { return this.setATT(args, false, 1, util) }
-    async setDIR2(args) { return await this.setATT(args, true, 1) }
-    setSCALE(args, util) { return this.setATT(args, false, 2, util) }
-    async setSCALE2(args) { return await this.setATT(args, true, 2) }
-    setSKEW(args, util) { return this.setATT(args, false, 3, util) }
-    async setSKEW2(args) { return await this.setATT(args, true, 3) }
+    setXY(args, util) { return this.setATT(args, false, "XY", util) }
+    async setXY2(args) { return await this.setATT(args, true, "XY") }
+    setDIR(args, util) { return this.setATT(args, false, "DIR", util) }
+    async setDIR2(args) { return await this.setATT(args, true, "DIR") }
+    setSCALE(args, util) { return this.setATT(args, false, "SZ", util) }
+    async setSCALE2(args) { return await this.setATT(args, true, "SZ") }
+    setSKEW(args, util) { return this.setATT(args, false, "SKEW", util) }
+    async setSKEW2(args) { return await this.setATT(args, true, "SKEW") }
     async setATT(args, isImage, type, util) {
       let svg, transform;
       if (args.SPRITE === "_myself_") svg = await this.findAsset(util);
@@ -1115,11 +1152,11 @@
         const x = cast.toNumber(args.x ? args.x : 0) / 100;
         const y = cast.toNumber(args.y ? args.y : 0) / 100;
         let con = svg.includes("style=\"transform-origin: center; transform:");
-        if (type === 0) return svg.replace(/translate\([^)]*\)/, `translate(${currentX + (x * 100)},${currentY + (y * -100)})`);
-        else if (type === 1) {
+        if (type === "XY") return svg.replace(/translate\([^)]*\)/, `translate(${currentX + (x * 100)},${currentY + (y * -100)})`);
+        else if (type === "DIR") {
           if (con) svg = svg.replace(/(style="[^"]*transform:[^"]*)/, `$1 rotate(${cast.toNumber(args.DIR) - 90}deg)`);
           else svg = svg.replace(`width="${width}" height="${height}"`, `width="${width}" height="${height}" style="transform-origin: center; transform: rotate(${cast.toNumber(args.DIR) - 90}deg)"`);
-        } else if (type === 2) {
+        } else if (type === "SZ") {
           let vals = "";
           const viewboxMatch = svg.match(/viewBox="([^"]+)"/);
           if (viewboxMatch) vals = viewboxMatch[1].split(/\s*,\s*/);
@@ -1133,6 +1170,7 @@
         } else {
           if (con) svg = svg.replace(/(style="[^"]*transform:[^"]*)/, `$1 skew(${args.x}deg, ${args.y}deg)`);
           else svg = svg.replace(`width="${width}" height="${height}"`, `width="${width}" height="${height}" style="transform-origin: center; transform: skew(${args.x}deg, ${args.y}deg)"`);
+          return svg;
         }
         let curTransform = /transform="([^"]*)"/.exec(svg);
         curTransform = curTransform ? curTransform[1] : "";

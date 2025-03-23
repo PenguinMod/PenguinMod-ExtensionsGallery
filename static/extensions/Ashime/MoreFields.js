@@ -1,7 +1,9 @@
-/*!
- * Created by 0znzw | v1.3
- * Licensed Under MIT & LGPLv3 License.
- * DO NOT REMOVE THIS COMMENT
+/**!
+ * More Fields
+ * @author 0znzw https://scratch.mit.edu/users/0znzw/
+ * @version 1.4
+ * @copyright MIT & LGPLv3 License
+ * Do not remove this comment
  */
 (async function (Scratch) {
   'use strict';
@@ -10,23 +12,30 @@
     throw new Error(`"More Fields" must be ran unsandboxed.`);
   }
 
-  const vm = Scratch.vm;
-  const runtime = vm.runtime;
+  const extId = '0znzwMoreFields';
+  const { BlockType, ArgumentType, vm } = Scratch, runtime = vm.runtime;
   const hasOwn = (object, property) => Object.prototype.hasOwnProperty.call(object, property);
 
   // Some checks
   const DOOMcheck = (vm.runtime.ioDevices.userData._username === 'DOOM1997');
-  // IDK maybe they are not on web or smth (or webkit cause yeah).
-  const _URLSearchParams = (window.URLSearchParams ?? class {
-    has() {return(false)}
-    get() {return('')};
-  });
-  const searchParams = new _URLSearchParams(window.location.search);
+  const searchParams = new URLSearchParams(window.location.search);
   const hideInlineTextarea = !searchParams.has('MoreFields_InlineTextarea');
 
   // "Constants"
+  const padding = JSON.parse(localStorage['tw:addons'] || JSON.stringify(window.scratchAddons ? scratchAddons.globalState.addonSettings : {'custom-block-shape': { cornerSize: 100, notchSize: 100, paddingSize: 100 }}))['custom-block-shape'] || { cornerSize: 100, notchSize: 100, paddingSize: 100 };
+  console.log(padding);
   const customFieldTypes = {};
   let Blockly = null; // Blockly is used cause Its easier than ScratchBlocks imo, it does not make a difference.
+
+  // https://stackoverflow.com/questions/5560248/programmatically-lighten-or-darken-a-hex-color-or-rgb-and-blend-colors
+  const _LDC = function _LightenDarkenColor(col, amt) {
+    const num = parseInt(col.replace('#', ''), 16);
+    const r = (num >> 16) + amt;
+    const b = ((num >> 8) & 0x00FF) + amt;
+    const g = (num & 0x0000FF) + amt;
+    const newColour = g | (b << 8) | (r << 16);
+    return (col.at(0) === '#' ? '#' : '') + newColour.toString(16);
+  };
 
   // Me being lazy
   function _setCssNattr(node, attr, value) {
@@ -39,9 +48,8 @@
   }
 
   // These should NEVER be called without ScratchBlocks existing
-  function _fixColours(doText, col1, textColor) {
+  function _fixColours(doText, col1, textColour) {
     const LDA = -10;
-    const LDC = Blockly._LightenDarkenColor;
     const self = this.sourceBlock_;
     const parent = self?.parentBlock_;
     if (!parent) return;
@@ -49,50 +57,41 @@
     const argumentSvg = path?.parentNode;
     const textNode = argumentSvg.querySelector('g.blocklyEditableText text');
     const oldFirstColour = parent.colour_;
-    self.colour_ = (col1 ?? LDC(parent.colour_, LDA));
-    self.colourSecondary_ = LDC(parent.colourSecondary_, LDA);
-    self.colourTertiary_ = LDC(parent.colourTertiary_, LDA);
-    self.colourQuaternary_ = LDC(parent?.colourQuaternary_ ?? oldFirstColour, LDA);
+    self.colour_ = (col1 ?? _LDC(parent.colour_, LDA));
+    self.colourSecondary_ = _LDC(parent.colourSecondary_, LDA);
+    self.colourTertiary_ = _LDC(parent.colourTertiary_, LDA);
+    self.colourQuaternary_ = _LDC(parent?.colourQuaternary_ ?? oldFirstColour, LDA);
     _setCssNattr(path, 'fill', self.colour_);
     _setCssNattr(path, 'stroke', self.colourTertiary_);
-    if (doText && textNode) _setCssNattr(textNode, 'fill', textColor ?? '#FFFFFF');
+    if (doText && textNode) _setCssNattr(textNode, 'fill', textColour ?? '#FFFFFF');
   }
   function _moveDropdown(toArgument) {
-    toArgument = toArgument ?? false;
+    toArgument ??= false;
     Blockly.DropDownDiv.showPositionedByBlock(this, (toArgument ? this.sourceBlock_ : this.sourceBlock_.parentBlock_));
   }
-  function _disableReporters() {
-    const block = this?.sourceBlock_?.parentBlock_;
-    if (!block) return;
-    // "i" is the index in block.inputList of the current rendered connection
-    // todo: fix the index cause its always the last input :skull:
-    let i = -1, found = false;
-    block.inputList.find(input => {
-      if (found) return false;
-      found = (input.connection == this || input == this.sourceBlock_);
-      i++;
-      return found;
-    });
-    const connection = block.inputList?.[i]?.connection;
-    if (i < 0 || !connection) return;
-    // Lmao your wrong.
-    connection.check_ = [];
-  }
+
+  const _cbfsb = runtime._convertBlockForScratchBlocks.bind(runtime);
+  runtime._convertBlockForScratchBlocks = function(blockInfo, categoryInfo, ...args) {
+    const res = _cbfsb(blockInfo, categoryInfo, ...args);
+    if (hasOwn(blockInfo, 'blockShape')) res.json.outputShape = blockInfo.blockShape;
+    return res;
+  };
 
   // https://github.com/Xeltalliv/extensions/blob/examples/examples/custom-field-types.js
   const bcfi = runtime._buildCustomFieldInfo.bind(runtime);
   const bcftfsb = runtime._buildCustomFieldTypeForScratchBlocks.bind(runtime);
   let fi = null;
-  runtime._buildCustomFieldInfo = function (fieldName, fieldInfo, extensionId, categoryInfo) {
+  runtime._buildCustomFieldInfo = function(fieldName, fieldInfo, extensionId, categoryInfo, ...args) {
     fi = fieldInfo;
-    return bcfi(fieldName, fieldInfo, extensionId, categoryInfo);
+    return bcfi(fieldName, fieldInfo, extensionId, categoryInfo, ...args);
   };
-  runtime._buildCustomFieldTypeForScratchBlocks = function (fieldName, output, outputShape, categoryInfo) {
-    let res = bcftfsb(fieldName, output, outputShape, categoryInfo);
+  runtime._buildCustomFieldTypeForScratchBlocks = function(fieldName, output, outputShape, categoryInfo, ...args) {
+    let res = bcftfsb(fieldName, output, outputShape, categoryInfo, ...args);
     if (fi) {
       if (fi.color1) res.json.colour = fi.color1;
       if (fi.color2) res.json.colourSecondary = fi.color2;
       if (fi.color3) res.json.colourTertiary = fi.color3;
+      if (fi.color4) res.json.colourQuaternary = fi.color4;
       if (hasOwn(fi, 'output')) res.json.output = fi.output;
       fi = null;
     }
@@ -104,21 +103,19 @@
   // https://github.com/LLK/scratch-vm/blob/f405e59d01a8f9c0e3e986fb5276667a8a3c7d40/test/unit/extension_conversion.js#L85-L124
   // https://github.com/LLK/scratch-vm/commit/ceaa3c7857b79459ccd1b14d548528e4511209e7
   vm.addListener('EXTENSION_FIELD_ADDED', (fieldInfo) => {
-    console.log('EXTENSION_FIELD_ADDED', fieldInfo, Blockly);
     if (Blockly) Blockly.Field.register(fieldInfo.name, fieldInfo.implementation);
     else toRegisterOnBlocklyGot.push([fieldInfo.name, fieldInfo.implementation]);
   });
 
   // ArgumentType additions
-  Scratch.ArgumentType.TEXTAREA = 'TextareaInput';
-  Scratch.ArgumentType.INLINETEXTAREA = 'TextareaInputInline';
-  Scratch.ArgumentType.SNAPBOOLEAN = 'SnapBoolean';
-  Scratch.ArgumentType.INLINESLIDER = 'SliderInline';
-  Scratch.ArgumentType.HIDDENSTRING = 'StringHidden';
-  Scratch.ArgumentType.INLINEDATE = 'DateInline';
-  Scratch.ArgumentType.FILE = 'FileInput';
+  ArgumentType.TEXTAREA = 'TextareaInput';
+  ArgumentType.INLINETEXTAREA = 'TextareaInputInline';
+  ArgumentType.SNAPBOOLEAN = 'SnapBoolean';
+  ArgumentType.INLINESLIDER = 'SliderInline';
+  ArgumentType.HIDDENSTRING = 'StringHidden';
+  ArgumentType.INLINEDATE = 'DateInline';
+  ArgumentType.FILE = 'FileInput';
 
- 
   let implementations = {
     FieldTextarea: null,
     FieldInlineTextarea: null,
@@ -129,55 +126,55 @@
     FieldInlineDoom: null,
   };
 
-  customFieldTypes[Scratch.ArgumentType.TEXTAREA] = {
-    output: Scratch.ArgumentType.STRING,
+  customFieldTypes[ArgumentType.TEXTAREA] = {
+    output: ArgumentType.STRING,
     color1: '#9566d3',
     outputShape: 2,
     implementation: {
       fromJson: () => new implementations.FieldTextarea()
     }
   };
-  customFieldTypes[Scratch.ArgumentType.INLINETEXTAREA] = {
-    output: Scratch.ArgumentType.STRING,
+  customFieldTypes[ArgumentType.INLINETEXTAREA] = {
+    output: ArgumentType.STRING,
     color1: '#9566d3',
-    outputShape: 2,
+    outputShape: 3,
     implementation: {
       fromJson: () => new implementations.FieldInlineTextarea()
     }
   };
-  customFieldTypes[Scratch.ArgumentType.SNAPBOOLEAN] = {
-    output: Scratch.ArgumentType.BOOLEAN,
+  customFieldTypes[ArgumentType.SNAPBOOLEAN] = {
+    output: ArgumentType.BOOLEAN,
     color1: '#9566d3',
     outputShape: 1,
     implementation: {
       fromJson: () => new implementations.FieldSnapBoolean()
     }
   };
-  customFieldTypes[Scratch.ArgumentType.INLINESLIDER] = {
-    output: Scratch.ArgumentType.NUMBER,
+  customFieldTypes[ArgumentType.INLINESLIDER] = {
+    output: ArgumentType.NUMBER,
     color1: '#9566d3',
     outputShape: 3,
     implementation: {
       fromJson: () => new implementations.FieldInlineSlider()
     }
   };
-  customFieldTypes[Scratch.ArgumentType.HIDDENSTRING] = {
-    output: Scratch.ArgumentType.STRING,
+  customFieldTypes[ArgumentType.HIDDENSTRING] = {
+    output: ArgumentType.STRING,
     color1: '#9566d3',
     outputShape: 2,
     implementation: {
       fromJson: () => new implementations.FieldHiddenTextInput()
     }
   };
-  customFieldTypes[Scratch.ArgumentType.INLINEDATE] = {
-    output: Scratch.ArgumentType.NUMBER,
+  customFieldTypes[ArgumentType.INLINEDATE] = {
+    output: ArgumentType.NUMBER,
     color1: '#9566d3',
     outputShape: 3,
     implementation: {
       fromJson: () => new implementations.FieldInlineDate()
     }
   };
-  customFieldTypes[Scratch.ArgumentType.FILE] = {
+  customFieldTypes[ArgumentType.FILE] = {
     output: null,
     color1: '#9566d3',
     outputShape: 3,
@@ -196,37 +193,40 @@
 
   // Main try thing
   function tryUseScratchBlocks(_sb) {
-    console.log('Got ScratchBlocks', _sb);
-
     Blockly = _sb;
-    // https://stackoverflow.com/questions/5560248/programmatically-lighten-or-darken-a-hex-color-or-rgb-and-blend-colors
-    Blockly._LightenDarkenColor = function(col, amt) {
-      const num = parseInt(col.replace('#', ''), 16);
-      const r = (num >> 16) + amt;
-      const b = ((num >> 8) & 0x00FF) + amt;
-      const g = (num & 0x0000FF) + amt;
-      const newColor = g | (b << 8) | (r << 16);
-      return (col.at(0) === '#' ? '#' : '') + newColor.toString(16);
-    }
+    const BlockSvg = Blockly.BlockSvg;
+
+    // Temporary fix for the annoying error:
+    // '<text> attribute x: Expected length, "NaN".'
+    const _setAttribute = SVGTextElement.prototype.setAttribute;
+    SVGTextElement.prototype.setAttribute = function(attr, val, ...args) {
+      if (String(val) === 'NaN' && (attr === 'x' || attr === 'y') && this.getAttribute('class') === 'blocklyText') {
+        const nattr = `MoreFieldsAttrErr${attr.toUpperCase()}`;
+        _setAttribute.call(this, nattr, `Attempted an illegal set on this text node. ${attr.toUpperCase()} was set to NaN.`);
+        return _setAttribute.call(this, attr, '0', ...args);
+      }
+      return _setAttribute.call(this, attr, val, ...args);
+    };
 
     // Patch for a bug in size_.height
     const _endBlockDrag = Blockly.BlockDragger.prototype.endBlockDrag
     Blockly.BlockDragger.prototype.endBlockDrag = function (...a) {
-      _endBlockDrag.call(this, ...a);
+      const res = _endBlockDrag.apply(this, a);
       for (const childBlock of this.draggingBlock_.childBlocks_) {
         const inputList = childBlock.inputList;
         if (inputList.length === 1 && inputList[0].fieldRow.length === 1 && !!inputList[0].fieldRow[0]?.inlineDblRender) childBlock.render();
       }
+      return res;
     }
 
     // Fields
     const textInputs_trueToOriginal = true;
     implementations.FieldTextarea = class FieldTextarea extends Blockly.FieldTextInput {
       constructor(opt_value) {
-        opt_value = Scratch.ArgumentType.TEXTAREA;
+        opt_value = ArgumentType.TEXTAREA;
         super(opt_value);
         this.addArgType('String');
-        this.addArgType(Scratch.ArgumentType.TEXTAREA);
+        this.addArgType(ArgumentType.TEXTAREA);
       }
       showEditor_() {
         Blockly.DropDownDiv.clearContent();
@@ -242,7 +242,8 @@
       }
       init(...initArgs) {
         Blockly.Field.prototype.init.call(this, ...initArgs);
-        this.sourceBlock_.outputConnection.check_ = [];
+        this.sourceBlock_.allowFieldConnection_ = true;
+        this.sourceBlock_.isMoreFields_ = true;
         _fixColours.call(this, !textInputs_trueToOriginal, (textInputs_trueToOriginal ? '#FFFFFF' : undefined), '#FFFFFF');
       }
       _onInput() {
@@ -252,31 +253,42 @@
     }
     implementations.FieldInlineTextarea = class FieldInlineTextarea extends Blockly.Field {
       constructor(opt_value) {
-        opt_value = Scratch.ArgumentType.INLINETEXTAREA;
+        opt_value = ArgumentType.INLINETEXTAREA;
         super(opt_value);
         this.addArgType('String');
-        this.addArgType(Scratch.ArgumentType.INLINETEXTAREA);
+        this.addArgType(ArgumentType.INLINETEXTAREA);
       }
       updateWidth() {
-        this.size_.width = this._FakeWidth;
-        this.size_.height = this._FakeHeight;
+        if (this._textarea) {
+          const width = this._textarea.offsetWidth + 1, height = this._textarea.offsetHeight + 1;
+          this._textareaHolder.setAttribute('width', String(width + 3));
+          this._textareaHolder.setAttribute('height', String(height + 3));
+          this.size_.width = width - BlockSvg.NOTCH_START_PADDING + 2 * BlockSvg.NOTCH_START_PADDING / 3;
+          this.size_.height = height + BlockSvg.NOTCH_HEIGHT + 1.5 + BlockSvg.NOTCH_START_PADDING / 3;
+        } else {
+          this.size_.width = this._FakeWidth || 40;
+          this.size_.height = this._FakeHeight || 24;
+        }
+      }
+      dispose() {
+        super.dispose();
       }
       init(...initArgs) {
         this.inlineDblRender = true;
         Blockly.Field.prototype.init.call(this, ...initArgs);
-        _disableReporters.call(this);
         this.textNode__ = this.sourceBlock_.svgPath_.parentNode.querySelector('g.blocklyEditableText text');
-        if (!!this.textNode__) {
+        if (!!this.textNode__ && this.sourceBlock_.parentBlock_) {
           this.textNode__.style.display = 'none';
           _fixColours.call(this, false, this.sourceBlock_.parentBlock_.colour_);
         }
-        this._FakeWidth = this._FakeWidth ?? 40;
-        this._FakeHeight = this._FakeHeight ?? 20;
+        this._FakeWidth ??= 40;
+        this._FakeHeight ??= 24;
         const textareaHolder = document.createElementNS('http://www.w3.org/2000/svg', 'foreignObject');
-        textareaHolder.setAttribute('x', '16');
-        textareaHolder.setAttribute('y', '8');
+        textareaHolder.setAttribute('x', '6');
+        textareaHolder.setAttribute('y', String(BlockSvg.NOTCH_START_PADDING / 2 - 0.375));
         textareaHolder.addEventListener('mousedown', (e) => e.stopPropagation());
         const textarea = document.createElement('textarea');
+        textarea.value = this.getValue() ?? '';
         textarea.addEventListener('input', () => this._onInput());
         textarea.addEventListener('mouseup', (e) => this._resizeHolder());
         if (this.fieldGroup_) {
@@ -288,16 +300,11 @@
             textarea.disabled = true;
             textarea.style.resize = 'none';
           }
-          this._resizeHolder();
           new ResizeObserver(() => this._resizeHolder()).observe(this._textarea);
         }
+        this._resizeHolder();
       }
       _resizeHolder() {
-        const width = this._textarea.offsetWidth + 1, height = this._textarea.offsetHeight + 1;
-        this._textareaHolder.setAttribute('width', String(width + 3));
-        this._textareaHolder.setAttribute('height', String(height + 3));
-        this._FakeWidth = width + 8;
-        this._FakeHeight = height + 16;
         this.updateWidth();
         const ov = this.getValue();
         this.setValue(ov + '~');
@@ -315,34 +322,47 @@
         opt_value = Number(opt_value);
         super(opt_value);
         this.addArgType('Boolean');
-        this.addArgType(Scratch.ArgumentType.SNAPBOOLEAN);
+        this.addArgType(ArgumentType.SNAPBOOLEAN);
         this.checkSymbol = String.fromCodePoint('10003');
         this.slap = `${this.checkSymbol}\u00A0\u00A0\u00A0x`;
       }
       // Initial DOM building.
+      dispose(...a) {
+        Blockly.Field.prototype.dispose.call(this, ...a);
+        delete this.sliderCircle_;
+      }
       init(...a) {
         Blockly.Field.prototype.init.call(this, ...a);
-        _disableReporters.call(this);
         const sliderCircle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
         sliderCircle.setAttribute('cx', '0');
         sliderCircle.setAttribute('cy', '0');
-        sliderCircle.setAttribute('r', '10');
+        sliderCircle.setAttribute('r', String(Math.min(this.size_.height - 7.5, 10)));
         sliderCircle.setAttribute('fill', 'white');
-        sliderCircle.setAttribute('transform', 'translate(16, 16)');
         this.sliderCircle_ = sliderCircle;
         if (this.fieldGroup_) this.fieldGroup_.insertAdjacentElement('afterend', sliderCircle);
+        this.rerender();
       }
-      // Colors <3
+      updateCircle_() {
+        if (!this.sliderCircle_) return;
+        if (this.textElement_) {
+          this.sliderCircle_.setAttribute('transform', `translate(${Number(this.textElement_.getAttribute('x')) - 1.5}, ${(Number(this.textElement_.getAttribute('y')) || 24) - 2})`);
+        } else {
+          this.sliderCircle_.setAttribute('transform', `translate(16, 16`);
+        }
+      }
+      // Colours <3
       rerender() {
+        this.updateCircle_();
         const fg_ = this.fieldGroup_;
         if (!fg_) return;
         const path = fg_?.previousElementSibling;
         if (path?.nodeName !== 'path') return;
         const circle = this.sliderCircle_;
+        if (!circle) return;
         if (Number(this.getValue())) {
           path.setAttribute('stroke', '#21DD21');
           path.setAttribute('fill', '#21DD21');
-          if (circle) circle.setAttribute('cx', '24');
+          if (circle) circle.setAttribute('cx', '20');
         } else {
           path.setAttribute('stroke', '#FF3333');
           path.setAttribute('fill', '#FF3333');
@@ -410,21 +430,27 @@
     }
     implementations.FieldInlineSlider = class FieldInlineSlider extends Blockly.FieldNumber {
       constructor(opt_value) {
-        opt_value = Scratch.ArgumentType.INLINESLIDER;
+        opt_value = ArgumentType.INLINESLIDER;
         super(opt_value);
         this.addArgType('Number');
-        this.addArgType(Scratch.ArgumentType.INLINESLIDER);
+        this.addArgType(ArgumentType.INLINESLIDER);
       }
       updateWidth() {
         this.size_.width = 139;
       }
+      dispose(...a) {
+        Blockly.FieldNumber.prototype.dispose.call(this, ...a);
+        if (this._slider) this._slider.remove();
+        if (this._sliderHolder) this._sliderHolder.remove();
+        delete this._slider;
+        delete this._sliderHolder;
+      }
       init(...initArgs) {
         Blockly.FieldNumber.prototype.init.call(this, ...initArgs);
-        _disableReporters.call(this);
         this.textNode__ = this.sourceBlock_.svgPath_.parentNode.querySelector('g.blocklyEditableText text');
-        if (!!this.textNode__) {
+        if (this.textNode__) {
           this.textNode__.style.display = 'none';
-          _fixColours.call(this, false, this.sourceBlock_.parentBlock_.colour_);
+          if (this.sourceBlock_.parentBlock) _fixColours.call(this, false, this.sourceBlock_.parentBlock_.colour_);
         }
         if (!String(this.getValue()).includes(',')) this.setValue(`${this.getValue()},${Number(this.getValue())-Number(this.getValue())/2},${Number(this.getValue())+Number(this.getValue())/2}`);
         const vals = this.getValue().split(',');
@@ -497,16 +523,15 @@
     }
     implementations.FieldHiddenTextInput = class FieldHiddenTextInput extends Blockly.FieldTextInput {
       constructor(opt_value) {
-        opt_value = Scratch.ArgumentType.HIDDENSTRING;
+        opt_value = ArgumentType.HIDDENSTRING;
         super(opt_value);
         this.addArgType('String');
-        this.addArgType(Scratch.ArgumentType.HIDDENSTRING);
+        this.addArgType(ArgumentType.HIDDENSTRING);
       }
       init(...initArgs) {
         Blockly.FieldTextInput.prototype.init.call(this, ...initArgs);
-        _disableReporters.call(this);
         this.textNode__ = this.sourceBlock_.svgPath_.parentNode.querySelector('g.blocklyEditableText text');
-        if (!!this.textNode__) _fixColours.call(this, true, this.sourceBlock_.parentBlock_.colour_, this.sourceBlock_.parentBlock_.colour_);
+        if (!!this.textNode__ && this.sourceBlock_.parentBlock_) _fixColours.call(this, true, this.sourceBlock_.parentBlock_.colour_, this.sourceBlock_.parentBlock_.colour_);
       }
       showEditor_(...showArgs) {
         if (!!this.textNode__) _delCssNattr(this.textNode__, 'fill');
@@ -519,21 +544,40 @@
       // https://stackoverflow.com/questions/847185/convert-a-unix-timestamp-to-time-in-javascript
       // https://stackoverflow.com/questions/7556591/is-the-javascript-date-object-always-one-day-off
       constructor(opt_value) {
-        opt_value = Scratch.ArgumentType.INLINEDATE;
+        opt_value = ArgumentType.INLINEDATE;
         super(opt_value);
         this.addArgType('Number');
-        this.addArgType(Scratch.ArgumentType.INLINEDATE);
+        this.addArgType(ArgumentType.INLINEDATE);
       }
       updateWidth() {
-        this.size_.width = 136;
+        if (this._date) {
+          const rect = this._date.getBoundingClientRect();
+          this.size_.width = rect.width;
+          this.size_.height = rect.height;
+          this._dateHolder.setAttribute('width', String(rect.width));
+          this._dateHolder.setAttribute('height', String(rect.height * 2));
+        } else {
+          if (this._dateHolder) {
+            this._dateHolder.setAttribute('width', '136');
+            this._dateHolder.setAttribute('height', '22');
+          }
+          this.size_.width = 136;
+          this.size_.height = 22;
+        }
+      }
+      dispose(...a) {
+        Blockly.FieldNumber.prototype.dispose.call(this, ...a);
+        if (this._date) this._date.remove();
+        if (this._dateHolder) this._dateHolder.remove();
+        delete this._date;
+        delete this._dateHolder;
       }
       init(...initArgs) {
         Blockly.FieldNumber.prototype.init.call(this, ...initArgs);
-        _disableReporters.call(this);
         this.textNode__ = this.sourceBlock_.svgPath_.parentNode.querySelector('g.blocklyEditableText text');
         if (!!this.textNode__) {
           this.textNode__.style.display = 'none';
-          _fixColours.call(this, false, this.sourceBlock_.parentBlock_.colour_);
+          if (this.sourceBlock_.parentBlock_) _fixColours.call(this, false, this.sourceBlock_.parentBlock_.colour_);
         }
         const validDateFormat = (/(\d{4}(\-|\/)\d{2}(\-|\/)\d{2})/i.test(this.getValue()));
         if (!validDateFormat) this.setValue('2001-01-01');
@@ -543,15 +587,11 @@
         const input = document.createElement('input');
         input.type = 'date';
         this._fixDate(input);
-        input.width = 136;
-        input.height = 22;
         input.addEventListener('input', () => this._onInput());
         input.addEventListener('change', () => this._onInput());
         const dateHolder = document.createElementNS('http://www.w3.org/2000/svg', 'foreignObject');
         dateHolder.setAttribute('x', '8');
         dateHolder.setAttribute('y', '5');
-        dateHolder.setAttribute('width', '136');
-        dateHolder.setAttribute('height', '22');
         dateHolder.addEventListener('mousedown', (e) => e.stopPropagation());
         if (this.fieldGroup_) this.fieldGroup_.insertAdjacentElement('afterend', dateHolder);
         dateHolder.appendChild(input);
@@ -581,29 +621,35 @@
     }
 
     // icons from: https://fonts.google.com/icons
-    const _fileIconColor = `style="fill:#FFFFFF;stroke:#FFFFFF;" fill="#FFFFFF" stroke="#FFFFFF"`;
-    const settingsIcon = `data:image/svg+xml;base64,${btoa(`<svg ${_fileIconColor} xmlns="http://www.w3.org/2000/svg" height="24" viewBox="0 -960 960 960" width="24"><path d="m370-80-16-128q-13-5-24.5-12T307-235l-119 50L78-375l103-78q-1-7-1-13.5v-27q0-6.5 1-13.5L78-585l110-190 119 50q11-8 23-15t24-12l16-128h220l16 128q13 5 24.5 12t22.5 15l119-50 110 190-103 78q1 7 1 13.5v27q0 6.5-2 13.5l103 78-110 190-118-50q-11 8-23 15t-24 12L590-80H370Zm70-80h79l14-106q31-8 57.5-23.5T639-327l99 41 39-68-86-65q5-14 7-29.5t2-31.5q0-16-2-31.5t-7-29.5l86-65-39-68-99 42q-22-23-48.5-38.5T533-694l-13-106h-79l-14 106q-31 8-57.5 23.5T321-633l-99-41-39 68 86 64q-5 15-7 30t-2 32q0 16 2 31t7 30l-86 65 39 68 99-42q22 23 48.5 38.5T427-266l13 106Zm42-180q58 0 99-41t41-99q0-58-41-99t-99-41q-59 0-99.5 41T342-480q0 58 40.5 99t99.5 41Zm-2-140Z"/></svg>`)}`;
-    const uploadIcon = `data:image/svg+xml;base64,${btoa(`<svg ${_fileIconColor} xmlns="http://www.w3.org/2000/svg" height="24" viewBox="0 -960 960 960" width="24"><path d="M440-200h80v-167l64 64 56-57-160-160-160 160 57 56 63-63v167ZM240-80q-33 0-56.5-23.5T160-160v-640q0-33 23.5-56.5T240-880h320l240 240v480q0 33-23.5 56.5T720-80H240Zm280-520v-200H240v640h480v-440H520ZM240-800v200-200 640-640Z"/></svg>`)}`;
+    const _fileIconColour = `style="fill:#FFFFFF;stroke:#FFFFFF;" fill="#FFFFFF" stroke="#FFFFFF"`;
+    const settingsIcon = `data:image/svg+xml;base64,${btoa(`<svg ${_fileIconColour} xmlns="http://www.w3.org/2000/svg" height="24" viewBox="0 -960 960 960" width="24"><path d="m370-80-16-128q-13-5-24.5-12T307-235l-119 50L78-375l103-78q-1-7-1-13.5v-27q0-6.5 1-13.5L78-585l110-190 119 50q11-8 23-15t24-12l16-128h220l16 128q13 5 24.5 12t22.5 15l119-50 110 190-103 78q1 7 1 13.5v27q0 6.5-2 13.5l103 78-110 190-118-50q-11 8-23 15t-24 12L590-80H370Zm70-80h79l14-106q31-8 57.5-23.5T639-327l99 41 39-68-86-65q5-14 7-29.5t2-31.5q0-16-2-31.5t-7-29.5l86-65-39-68-99 42q-22-23-48.5-38.5T533-694l-13-106h-79l-14 106q-31 8-57.5 23.5T321-633l-99-41-39 68 86 64q-5 15-7 30t-2 32q0 16 2 31t7 30l-86 65 39 68 99-42q22 23 48.5 38.5T427-266l13 106Zm42-180q58 0 99-41t41-99q0-58-41-99t-99-41q-59 0-99.5 41T342-480q0 58 40.5 99t99.5 41Zm-2-140Z"/></svg>`)}`;
+    const uploadIcon = `data:image/svg+xml;base64,${btoa(`<svg ${_fileIconColour} xmlns="http://www.w3.org/2000/svg" height="24" viewBox="0 -960 960 960" width="24"><path d="M440-200h80v-167l64 64 56-57-160-160-160 160 57 56 63-63v167ZM240-80q-33 0-56.5-23.5T160-160v-640q0-33 23.5-56.5T240-880h320l240 240v480q0 33-23.5 56.5T720-80H240Zm280-520v-200H240v640h480v-440H520ZM240-800v200-200 640-640Z"/></svg>`)}`;
     implementations.FieldFileInput = class FieldFileInput extends Blockly.Field {
       constructor(opt_value) {
-        opt_value = Scratch.ArgumentType.FILE;
+        opt_value = ArgumentType.FILE;
         super(opt_value);
         this.addArgType('String');
-        this.addArgType(Scratch.ArgumentType.FILE);
+        this.addArgType(ArgumentType.FILE);
       }
       updateWidth() {
         this.size_.width = 40;
       }
+      dispose(...a) {
+        Blockly.FieldTextInput.prototype.dispose.call(this, ...a);
+        if (this._settingsButton) this._settingsButton.remove();
+        if (this._uploadButton) this._uploadButton.remove();
+        delete this._settingsButton;
+        delete this._uploadButton;
+      }
       init(...initArgs) {
         this._delim = '\n';
         Blockly.FieldTextInput.prototype.init.call(this, ...initArgs);
-        _disableReporters.call(this);
         this.textNode__ = this.sourceBlock_.svgPath_.parentNode.querySelector('g.blocklyEditableText text');
         if (!!this.textNode__) {
           this.textNode__.style.display = 'none';
-          _fixColours.call(this, false, this.sourceBlock_.parentBlock_.colour_);
+          if (this.sourceBlock_.parentBlock_) _fixColours.call(this, false, this.sourceBlock_.parentBlock_.colour_);
         }
-        this._fileData = null;
+        this._fileData = this.getValue() ?? null;
         const fg_ = this.fieldGroup_;
         if (!fg_) return;
         const path = fg_?.previousElementSibling;
@@ -732,6 +778,7 @@
         if (!Boolean(forceShow ?? false)) return;
         Blockly.DropDownDiv.clearContent();
         const div = Blockly.DropDownDiv.getContentDiv();
+        if (!div) return;
         const outputOptions_temp = this._optDropdown('dataURL', 'dataURL', 'text');
         const outputOptions = outputOptions_temp.select;
         outputOptions.addEventListener('input', () => this._onInput());
@@ -758,8 +805,10 @@
         div.appendChild(document.createElement('br'));
         this._outputOptions = outputOptions;
         this._fileLimiter = fileLimiter;
-        Blockly.DropDownDiv.setColour(this.sourceBlock_.parentBlock_.getColour(), this.sourceBlock_.parentBlock_.getColourTertiary());
-        Blockly.DropDownDiv.setCategory(this.sourceBlock_.parentBlock_.getCategory());
+        if (this.sourceBlock_.parentBlock) {
+          Blockly.DropDownDiv.setColour(this.sourceBlock_.parentBlock_.getColour(), this.sourceBlock_.parentBlock_.getColourTertiary());
+          Blockly.DropDownDiv.setCategory(this.sourceBlock_.parentBlock_.getCategory());
+        }
         _moveDropdown.call(this, true);
         this._loadData(2);
         this._loadData(3);
@@ -779,14 +828,18 @@
         this.size_.width = 650;
         this.size_.height = 410;
       }
+      dispose(...a) {
+        Blockly.Field.prototype.dispose.call(this, ...a);
+        if (this._fObj) this._fObj.remove();
+        delete this._fObj;
+      }
       init(...initArgs) {
         this.inlineDblRender = true;
         Blockly.Field.prototype.init.call(this, ...initArgs);
-        _disableReporters.call(this);
         this.textNode__ = this.sourceBlock_.svgPath_.parentNode.querySelector('g.blocklyEditableText text');
         if (!!this.textNode__) {
           this.textNode__.style.display = 'none';
-          _fixColours.call(this, false, this.sourceBlock_.parentBlock_.colour_);
+          if (this.sourceBlock_.parentBlock_) _fixColours.call(this, false, this.sourceBlock_.parentBlock_.colour_);
         }
         const fg_ = this.fieldGroup_;
         if (!fg_) return;
@@ -828,9 +881,7 @@
     const eventsOriginallyEnabled = Blockly.Events.isEnabled(), workspace = Blockly.getMainWorkspace();
     Blockly.Events.disable();
     if (workspace) {
-      if (vm.editingTarget) {
-        vm.emitWorkspaceUpdate();
-      }
+      if (vm.editingTarget) vm.emitWorkspaceUpdate();
       const flyout = workspace.getFlyout();
       if (flyout) {
         const flyoutWorkspace = flyout.getWorkspace();
@@ -843,16 +894,6 @@
       }
     }
     if (eventsOriginallyEnabled) Blockly.Events.enable();
-
-    // Exposing fields
-    // This does not affect anything its just me doing debugging stuff.
-    // Blockly.FieldTextarea = FieldTextarea;
-    // Blockly.FieldSnapBoolean = FieldSnapBoolean;
-    // Blockly.FieldHiddenTextInput = FieldHiddenTextInput;
-    // Blockly.FieldInlineSlider = FieldInlineSlider;
-    // Blockly.FieldInlineDate = FieldInlineDate;
-    // Blockly.FieldFileInput = FieldFileInput;
-    // Skip DOOM cause its my funny field.
   }
 
   // Passes "Blockly" to tryUseScratchBlocks if Scratch.gui is a object.
@@ -860,10 +901,12 @@
 
   // Actual "extension" part
   class extension {
-    constructor() {}
+    static get customFieldTypes() {
+      return customFieldTypes;
+    }
     getInfo() {
       const getInfo = ({
-        id: '0znzwMoreFields',
+        id: extId,
         name: 'More Fields',
         color1: '#9566d3',
         color2: '#9566d3',
@@ -873,110 +916,126 @@
           {
             hideFromPalette: true,
             opcode: 'multifieldTest',
-            blockType: Scratch.BlockType.REPORTER,
+            blockType: BlockType.REPORTER,
             text: 'file [FILE] snap bool [BOOL] slider [NUM]',
             arguments: {
               FILE: {
-                type: Scratch.ArgumentType.FILE,
+                type: ArgumentType.FILE,
                 defaultValue: 'dataURL\n*/*\n',
               },
               BOOL: {
-                type: Scratch.ArgumentType.SNAPBOOLEAN,
+                type: ArgumentType.SNAPBOOLEAN,
                 defaultValue: 0,
               },
               NUM: {
-                type: Scratch.ArgumentType.INLINESLIDER,
+                type: ArgumentType.INLINESLIDER,
                 defaultValue: '10,0,20',
               },
             },
+            allowDropAnywhere: true,
+            blockShape: 3,
           },
           {
             opcode: 'textarea',
-            blockType: Scratch.BlockType.REPORTER,
+            blockType: BlockType.REPORTER,
             text: 'textarea [TEXT]',
             arguments: {
               TEXT: {
-                type: Scratch.ArgumentType.TEXTAREA,
+                type: ArgumentType.TEXTAREA,
                 defaultValue: ':D',
               },
             },
+            allowDropAnywhere: true,
+            blockShape: 2,
           },
           {
-            hideFromPalette: hideInlineTextarea,
+            // hideFromPalette: hideInlineTextarea,
             opcode: 'textareaInline',
-            blockType: Scratch.BlockType.REPORTER,
+            blockType: BlockType.REPORTER,
             text: 'textarea [TEXT]',
             arguments: {
               TEXT: {
-                type: Scratch.ArgumentType.INLINETEXTAREA,
+                type: ArgumentType.INLINETEXTAREA,
                 defaultValue: ':D',
               },
             },
+            allowDropAnywhere: true,
+            blockShape: 3,
           },
           {
-            hideFromPalette: hideInlineTextarea,
-            blockType: Scratch.BlockType.XML,
-            xml: '<sep gap="16"/>',
+            // hideFromPalette: hideInlineTextarea,
+            blockType: BlockType.XML,
+            xml: '<sep gap="46" />',
           },
           {
             opcode: 'snapBool',
-            blockType: Scratch.BlockType.BOOLEAN,
+            blockType: BlockType.BOOLEAN,
             text: '[BOOL]',
             arguments: {
               BOOL: {
-                type: Scratch.ArgumentType.SNAPBOOLEAN,
+                type: ArgumentType.SNAPBOOLEAN,
                 defaultValue: 0,
               },
             },
+            allowDropAnywhere: true,
+            blockShape: 1,
           },
           {
             opcode: 'sliderInline',
-            blockType: Scratch.BlockType.REPORTER,
+            blockType: BlockType.REPORTER,
             text: 'slider: [NUM]',
             arguments: {
               NUM: {
-                type: Scratch.ArgumentType.INLINESLIDER,
+                type: ArgumentType.INLINESLIDER,
                 defaultValue: '10,0,20',
               }
-            }
+            },
+            allowDropAnywhere: true,
+            blockShape: 3,
           },
           {
             opcode: 'hiddenString',
-            blockType: Scratch.BlockType.REPORTER,
+            blockType: BlockType.REPORTER,
             text: '"secret" [TEXT]',
             arguments: {
               TEXT: {
-                type: Scratch.ArgumentType.HIDDENSTRING,
+                type: ArgumentType.HIDDENSTRING,
                 defaultValue: 'oo a secret ;)',
               },
             },
+            allowDropAnywhere: true,
+            blockShape: 2,
           },
           {
             opcode: 'date',
-            blockType: Scratch.BlockType.REPORTER,
+            blockType: BlockType.REPORTER,
             text: 'date [DATE]',
             arguments: {
               DATE: {
-                type: Scratch.ArgumentType.INLINEDATE,
+                type: ArgumentType.INLINEDATE,
                 defaultValue: '2024-03-14',
               },
             },
+            allowDropAnywhere: true,
+            blockShape: 3,
           },
           {
             opcode: 'file',
-            blockType: Scratch.BlockType.REPORTER,
+            blockType: BlockType.REPORTER,
             text: 'file [FILE]',
             arguments: {
               FILE: {
-                type: Scratch.ArgumentType.FILE,
+                type: ArgumentType.FILE,
                 defaultValue: 'dataURL\n*/*\n',
               },
             },
+            allowDropAnywhere: true,
+            blockShape: 3,
           },
           {
             hideFromPalette: !DOOMcheck,
             opcode: 'DOOM',
-            blockType: Scratch.BlockType.COMMAND,
+            blockType: BlockType.COMMAND,
             text: 'DOOM [_a]',
             arguments: {
               _a: {
@@ -1001,23 +1060,36 @@
       return Scratch.Cast.toBoolean(args.BOOL);
     }
     sliderInline(args) {
-      return Scratch.Cast.toNumber(args.NUM.split(',')[0]);
+      try {
+        return Scratch.Cast.toNumber(args.NUM.split(',')[0]);
+      } catch {
+        return '';
+      }
     }
     hiddenString(args) {
       return args.TEXT;
     }
     date(args) {
-      let date = new Date(args.DATE.replaceAll('-', '/'));
-      return (date.getTime());
+      try {
+        let date = new Date(Scratch.Cast.toString(args.DATE).replaceAll('-', '/'));
+        return (date.getTime());
+      } catch {
+        return '';
+      }
     }
     file(args) {
-      const cr1 = args.FILE.indexOf('\n');
-      const cr2 = args.FILE.indexOf('\n', cr1 + 1);
-      return args.FILE.substr(cr2 + 1);
+      args.FILE = Scratch.Cast.toString(args.FILE);
+      try {
+        const cr1 = args.FILE.indexOf('\n');
+        const cr2 = args.FILE.indexOf('\n', cr1 + 1);
+        return args.FILE.substr(cr2 + 1);
+      } catch {
+        return '';
+      }
     }
     DOOM(args) {
       return '';
     }
   }
-  Scratch.extensions.register(new extension());
+  Scratch.extensions.register(runtime[`ext_${extId}`] = new extension());
 })(Scratch);

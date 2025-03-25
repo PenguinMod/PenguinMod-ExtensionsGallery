@@ -205,6 +205,15 @@ export default [
         unstableReason: "AI models can generate unintended or inappropriate output.\nSome AI models may also become temporarily inaccessible.\n\nUse at your own risk.",
     },
     {
+        name: "Spritesheeter",
+        description: "Load and manipulate spritesheets with customizable frames and XML support",
+        code: "MubiLop/spritesheeter.js",
+        banner: "MubiLop/spritesheeter.png",
+        creator: "cicerorph",
+        creatorAlias: "MubiLop",
+        isGitHub: true
+    },
+    {
         name: "PenguinHook",
         description: "Send Webhook requests, that can be Discord or any type of webhook.",
         code: "MubiLop/penguinhook.js",

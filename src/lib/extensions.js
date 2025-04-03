@@ -43,7 +43,7 @@ export default [
         creator: "Anonymous-cat1",
         isGitHub: true,
         unstable: true,
-        unstableReason: "File System Access is not supported by all browsers. Projects can maliciously edit files that you open.",
+        unstableReason: "File System Access is not supported by all browsers.\nProjects can maliciously edit files that you open.",
     },
     {
         name: "3D Math",

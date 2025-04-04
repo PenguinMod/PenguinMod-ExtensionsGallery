@@ -94,7 +94,7 @@ class DiscordAuthExtension {
 
   async openPopupAndWait() {
     const callbackUrlBase64 = btoa("https://studio.penguinmod.com");
-    this.popup = await window.open(`https://discordauth.penguinmod.com/verify?callback=${callbackUrlBase64}`, 'PopupWindow', 'width=450,height=700');
+    this.popup = await window.open(`https://discordauth.mubilop.tech/verify?callback=${callbackUrlBase64}`, 'PopupWindow', 'width=450,height=700');
     const startTime = Date.now();
     const pollInterval = setInterval(async () => {
         if (!this.popup || this.popup.closed) {

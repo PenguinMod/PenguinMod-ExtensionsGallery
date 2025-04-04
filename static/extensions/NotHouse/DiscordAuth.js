@@ -127,7 +127,7 @@ class DiscordAuthExtension {
   
   async isLoggedIn() {
 	if(!this.privateCode) return false;
-    const apiUrl = `https://discordauth.penguinmod.com/user?privatecode=${this.privateCode}`;
+    const apiUrl = `https://discordauth.mubilop.tech/user?privatecode=${this.privateCode}`;
     try {
         const response = await fetch(apiUrl);
         if (response.status === 200) {
@@ -146,7 +146,7 @@ class DiscordAuthExtension {
   }
   
   async isApiWorking() {
-    const apiUrl = `https://discordauth.penguinmod.com/`;
+    const apiUrl = `https://discordauth.mubilop.tech/`;
     try {
         const response = await fetch(apiUrl);
         if (response.status === 200) {
@@ -164,7 +164,7 @@ class DiscordAuthExtension {
         return "null"
       }
 
-      const apiUrl = `https://discordauth.penguinmod.com/user?privatecode=${args.PRIVATECODE}`;
+      const apiUrl = `https://discordauth.mubilop.tech/user?privatecode=${args.PRIVATECODE}`;
       try {
           const response = await fetch(apiUrl);
           if (response.status === 200) {
@@ -183,7 +183,7 @@ class DiscordAuthExtension {
       return "null"
     }
 
-    const apiUrl = `https://discordauth.penguinmod.com/user?privatecode=${args.PRIVATECODE}`;
+    const apiUrl = `https://discordauth.mubilop.tech/user?privatecode=${args.PRIVATECODE}`;
     try {
         const response = await fetch(apiUrl);
         if (response.status === 200) {
@@ -204,7 +204,7 @@ class DiscordAuthExtension {
       return "null"
     }
 
-    const apiUrl = `https://discordauth.penguinmod.com/user?privatecode=${args.PRIVATECODE}`;
+    const apiUrl = `https://discordauth.mubilop.tech/user?privatecode=${args.PRIVATECODE}`;
     try {
         const response = await fetch(apiUrl);
         if (response.status === 200) {
@@ -224,7 +224,7 @@ class DiscordAuthExtension {
       return "null"
     }
 
-    const apiUrl = `https://discordauth.penguinmod.com/user?privatecode=${args.PRIVATECODE}`;
+    const apiUrl = `https://discordauth.mubilop.tech/user?privatecode=${args.PRIVATECODE}`;
     try {
         const response = await fetch(apiUrl);
         if (response.status === 200) {
@@ -244,7 +244,7 @@ class DiscordAuthExtension {
       return "null"
     }
 
-    const apiUrl = `https://discordauth.penguinmod.com/user?privatecode=${args.PRIVATECODE}`;
+    const apiUrl = `https://discordauth.mubilop.tech/user?privatecode=${args.PRIVATECODE}`;
     try {
         const response = await fetch(apiUrl);
         if (response.status === 200) {

@@ -1,0 +1,348 @@
+// Created by CKYA
+//Everything you need
+
+(function(Scratch) {
+  'use strict';
+
+  const inputs = new Map();
+  let runtime;
+
+  class EnhancedInput {
+    constructor() {
+      this.input = document.createElement('input');
+      this.input.style.position = 'absolute';
+      this.input.style.padding = '5px';
+      this.input.style.border = '1px solid black';
+      this.input.style.borderRadius = '4px';
+      this.input.style.zIndex = '9999';
+      this.visible = false;
+      this.isFocused = false;
+      this.isTyping = false;
+      this.typingTimeout = null;
+
+      // Event listeners
+      this.input.addEventListener('focus', () => {
+        this.isFocused = true;
+      });
+
+      this.input.addEventListener('blur', () => {
+        this.isFocused = false;
+      });
+
+      this.input.addEventListener('input', () => {
+        this.isTyping = true;
+        clearTimeout(this.typingTimeout);
+        this.typingTimeout = setTimeout(() => {
+          this.isTyping = false;
+        }, 1000);
+      });
+    }
+
+    show(x, y) {
+      if (!this.visible) {
+        document.body.appendChild(this.input);
+        this.visible = true;
+      }
+      this.input.style.left = x + 'px';
+      this.input.style.top = y + 'px';
+    }
+
+    hide() {
+      if (this.visible) {
+        document.body.removeChild(this.input);
+        this.visible = false;
+      }
+    }
+
+    setType(type) {
+      this.input.type = type;
+    }
+
+    setStyle(styles) {
+      Object.assign(this.input.style, styles);
+    }
+  }
+
+  class EnhancedTextInputExtension {
+    constructor(runtime) {
+      this.runtime = runtime;
+    }
+
+    getInfo() {
+      return {
+        id: 'enhancedinput',
+        name: 'Text Input+',
+        color1: '#9966FF',
+        color2: '#774DCB',
+        blocks: [
+          {
+            opcode: 'createInput',
+            blockType: Scratch.BlockType.COMMAND,
+            text: 'create [TYPE] input [ID] with placeholder [PLACEHOLDER]',
+            arguments: {
+              ID: {
+                type: Scratch.ArgumentType.STRING,
+                defaultValue: '1'
+              },
+              TYPE: {
+                type: Scratch.ArgumentType.STRING,
+                menu: 'inputTypes'
+              },
+              PLACEHOLDER: {
+                type: Scratch.ArgumentType.STRING,
+                defaultValue: 'Enter text here...'
+              }
+            }
+          },
+          {
+            opcode: 'showInput',
+            blockType: Scratch.BlockType.COMMAND,
+            text: 'show input [ID] at x: [X] y: [Y]',
+            arguments: {
+              ID: {
+                type: Scratch.ArgumentType.STRING,
+                defaultValue: '1'
+              },
+              X: {
+                type: Scratch.ArgumentType.NUMBER,
+                defaultValue: 0
+              },
+              Y: {
+                type: Scratch.ArgumentType.NUMBER,
+                defaultValue: 0
+              }
+            }
+          },
+          {
+            opcode: 'hideInput',
+            blockType: Scratch.BlockType.COMMAND,
+            text: 'hide input [ID]',
+            arguments: {
+              ID: {
+                type: Scratch.ArgumentType.STRING,
+                defaultValue: '1'
+              }
+            }
+          },
+          {
+            opcode: 'getValue',
+            blockType: Scratch.BlockType.REPORTER,
+            text: 'value of input [ID]',
+            arguments: {
+              ID: {
+                type: Scratch.ArgumentType.STRING,
+                defaultValue: '1'
+              }
+            }
+          },
+          {
+            opcode: 'setValue',
+            blockType: Scratch.BlockType.COMMAND,
+            text: 'set input [ID] value to [TEXT]',
+            arguments: {
+              ID: {
+                type: Scratch.ArgumentType.STRING,
+                defaultValue: '1'
+              },
+              TEXT: {
+                type: Scratch.ArgumentType.STRING,
+                defaultValue: 'Hello!'
+              }
+            }
+          },
+          {
+            opcode: 'setInputStyle',
+            blockType: Scratch.BlockType.COMMAND,
+            text: 'set input [ID] [STYLE] to [VALUE]',
+            arguments: {
+              ID: {
+                type: Scratch.ArgumentType.STRING,
+                defaultValue: '1'
+              },
+              STYLE: {
+                type: Scratch.ArgumentType.STRING,
+                menu: 'styleOptions'
+              },
+              VALUE: {
+                type: Scratch.ArgumentType.STRING,
+                defaultValue: ''
+              }
+            }
+          },
+          {
+            opcode: 'isInputFocused',
+            blockType: Scratch.BlockType.BOOLEAN,
+            text: 'is input [ID] focused?',
+            arguments: {
+              ID: {
+                type: Scratch.ArgumentType.STRING,
+                defaultValue: '1'
+              }
+            }
+          },
+          {
+            opcode: 'isInputVisible',
+            blockType: Scratch.BlockType.BOOLEAN,
+            text: 'is input [ID] visible?',
+            arguments: {
+              ID: {
+                type: Scratch.ArgumentType.STRING,
+                defaultValue: '1'
+              }
+            }
+          },
+          {
+            opcode: 'isTyping',
+            blockType: Scratch.BlockType.BOOLEAN,
+            text: 'is typing in input [ID]?',
+            arguments: {
+              ID: {
+                type: Scratch.ArgumentType.STRING,
+                defaultValue: '1'
+              }
+            }
+          },
+          {
+            opcode: 'setFocus',
+            blockType: Scratch.BlockType.COMMAND,
+            text: 'set focus to input [ID]',
+            arguments: {
+              ID: {
+                type: Scratch.ArgumentType.STRING,
+                defaultValue: '1'
+              }
+            }
+          },
+          {
+            opcode: 'clearInput',
+            blockType: Scratch.BlockType.COMMAND,
+            text: 'clear input [ID]',
+            arguments: {
+              ID: {
+                type: Scratch.ArgumentType.STRING,
+                defaultValue: '1'
+              }
+            }
+          }
+        ],
+        menus: {
+          inputTypes: {
+            items: ['text', 'password', 'number', 'email', 'tel', 'search']
+          },
+          styleOptions: {
+            items: [
+              'width',
+              'height',
+              'text color',
+              'background color',
+              'font size',
+              'border color',
+              'border radius'
+            ]
+          }
+        }
+      };
+    }
+
+    createInput(args) {
+      const id = args.ID.toString();
+      
+      if (inputs.has(id)) {
+        const oldInput = inputs.get(id);
+        oldInput.hide();
+      }
+
+      const input = new EnhancedInput();
+      input.setType(args.TYPE);
+      input.input.placeholder = args.PLACEHOLDER;
+      inputs.set(id, input);
+    }
+
+    showInput(args) {
+      const input = inputs.get(args.ID.toString());
+      if (input) {
+        const rect = this.runtime.renderer.canvas.getBoundingClientRect();
+        const canvasWidth = rect.width;
+        const canvasHeight = rect.height;
+        const x = (args.X + 240) * (canvasWidth / 480);
+        const y = (180 - args.Y) * (canvasHeight / 360);
+        input.show(rect.left + x, rect.top + y);
+      }
+    }
+
+    hideInput(args) {
+      const input = inputs.get(args.ID.toString());
+      if (input) input.hide();
+    }
+
+    getValue(args) {
+      const input = inputs.get(args.ID.toString());
+      return input ? input.input.value : '';
+    }
+
+    setValue(args) {
+      const input = inputs.get(args.ID.toString());
+      if (input) input.input.value = args.TEXT;
+    }
+
+    setInputStyle(args) {
+      const input = inputs.get(args.ID.toString());
+      if (!input) return;
+
+      const styles = {};
+      switch (args.STYLE) {
+        case 'width':
+          styles.width = args.VALUE + 'px';
+          break;
+        case 'height':
+          styles.height = args.VALUE + 'px';
+          break;
+        case 'text color':
+          styles.color = args.VALUE;
+          break;
+        case 'background color':
+          styles.backgroundColor = args.VALUE;
+          break;
+        case 'font size':
+          styles.fontSize = args.VALUE + 'px';
+          break;
+        case 'border color':
+          styles.borderColor = args.VALUE;
+          break;
+        case 'border radius':
+          styles.borderRadius = args.VALUE + 'px';
+          break;
+      }
+      input.setStyle(styles);
+    }
+
+    isInputFocused(args) {
+      const input = inputs.get(args.ID.toString());
+      return input ? input.isFocused : false;
+    }
+
+    isInputVisible(args) {
+      const input = inputs.get(args.ID.toString());
+      return input ? input.visible : false;
+    }
+
+    isTyping(args) {
+      const input = inputs.get(args.ID.toString());
+      return input ? input.isTyping : false;
+    }
+
+    setFocus(args) {
+      const input = inputs.get(args.ID.toString());
+      if (input && input.visible) {
+        input.input.focus();
+      }
+    }
+
+    clearInput(args) {
+      const input = inputs.get(args.ID.toString());
+      if (input) input.input.value = '';
+    }
+  }
+
+  Scratch.extensions.register(new EnhancedTextInputExtension(Scratch.vm.runtime));
+})(Scratch);

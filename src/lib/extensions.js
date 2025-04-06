@@ -42,6 +42,8 @@ export default [
         banner: "Anonymous_cat1/updateFile.svg",
         creator: "Anonymous-cat1",
         isGitHub: true,
+        unstable: true,
+        unstableReason: "File System Access is not supported by all browsers.\nProjects can maliciously edit files that you open.",
     },
     {
         name: "3D Math",

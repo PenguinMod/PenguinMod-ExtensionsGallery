@@ -231,7 +231,7 @@ export default [
         banner: "MubiLop/toastnotifs.png",
         creator: "cicerorph",
         creatorAlias: "MubiLop",
-        notes: "Additional code by themeatly2",
+        notes: "Additional code by themeatly2 and ddededodediamante",
         isGitHub: true,
     },
     {

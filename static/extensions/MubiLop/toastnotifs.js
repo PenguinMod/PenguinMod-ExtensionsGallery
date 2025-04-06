@@ -504,8 +504,8 @@
        showToastNew(args) {
           this._createToast({
              type: 'origin',
-             text: xmlEscape(Cast.toString(args.TEXT)),
-             imageRounded: Cast.toString(args.ROUNDED) === 'yes',
+             text: xmlEscape(Cast.toString(args.TITLE)),
+             message: xmlEscape(Cast.toString(args.MESSAGE)),
              position: 'bottom-right'
           });
        }

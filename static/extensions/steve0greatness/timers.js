@@ -7,13 +7,13 @@
 class Timer {
   constructor() {
     /**
-     * @type {Date}
+     * @type {number}
      */
     this.startTime = Date.now();
 
     /**
      * Indicates if the timer
-     * @type {(null|Date)}
+     * @type {(null|number)}
      */
     this.pausedTime = null;
 
@@ -24,39 +24,48 @@ class Timer {
     this.tempPaused = false;
   }
 
+  /**
+   * @returns {number}
+   */
   get elapsed() {
     return !this.isPaused 
-      ? Date.now() - this.startTime // If not paused, return the time since the start
-      : this.pausedTime - this.startTime; // If paused, return time since being paused
+        ? Date.now() - this.startTime       // If not paused, return time since starting
+        : this.pausedTime - this.startTime; // If paused, return time since being paused
   }
 
   restart() {
     this.startTime = Date.now();
 
     if (this.isPaused)
-      this.pausedTime = this.startTime();
+      this.pausedTime = this.startTime;
   }
 
   /**
    * @param {number} seconds Time to be added in seconds.
    */
   add(seconds) {
-    this.startTime = this.startTime - seconds
+    this.startTime = this.startTime - seconds * 1000;
   }
 
   /* Pausing */
 
+  /**
+   * @returns {boolean}
+   */
   get isPaused() {
     return this.pausedTime !== null;
   }
 
   pause() {
     this.tempPaused = false;
-    this.pause();
+    this.pausedTime = Date.now();
   }
   unpause() {
+    if (!this.isPaused)
+      return;
     this.tempPaused = false;
-    this.startTime -= Date.now() - this.pausedTime;
+    this.startTime += Date.now() - this.pausedTime;
+    this.pausedTime = null;
   }
 
   tempPause() {
@@ -99,6 +108,33 @@ class SteveZeroGreatnessExtraTimersExt {
           text: "create timer"
         },
         {
+          func: "removeTimerModal",
+          blockType: Scratch.BlockType.BUTTON,
+          text: "remove timer"
+        },
+        {
+          opcode: "pause",
+          blockType: Scratch.BlockType.COMMAND,
+          text: "pause [TIMER]",
+          arguments: {
+            TIMER: {
+              type: Scratch.ArgumentType.STRING,
+              menu: "TIMERS"
+            }
+          }
+        },
+        {
+          opcode: "unpause",
+          blockType: Scratch.BlockType.COMMAND,
+          text: "unpause [TIMER]",
+          arguments: {
+            TIMER: {
+              type: Scratch.ArgumentType.STRING,
+              menu: "TIMERS"
+            }
+          }
+        },
+        {
           opcode: "addSeconds",
           blockType: Scratch.BlockType.COMMAND,
           text: "add [SECONDS] secs to [TIMER]",
@@ -111,10 +147,55 @@ class SteveZeroGreatnessExtraTimersExt {
               menu: "TIMERS"
             }
           }
-        }
+        },
+        {
+          opcode: "isPaused",
+          blockType: Scratch.BlockType.BOOLEAN,
+          text: "is [TIMER] paused?",
+          arguments: {
+            TIMER: {
+              type: Scratch.ArgumentType.STRING,
+              menu: "TIMERS"
+            }
+          }
+        },
+        {
+          opcode: "elapsed",
+          blockType: Scratch.BlockType.REPORTER,
+          text: "time elapsed for [TIMER] in [UNITS]",
+          arguments: {
+            TIMER: {
+              type: Scratch.ArgumentType.STRING,
+              menu: "TIMERS"
+            },
+            UNITS: {
+              type: Scratch.ArgumentType.STRING,
+              menu: "UNITS"
+            }
+          }
+        },
+        {
+          opcode: "restart",
+          blockType: Scratch.BlockType.COMMAND,
+          text: "restart [TIMER]",
+          arguments: {
+            TIMER: {
+              type: Scratch.ArgumentType.STRING,
+              menu: "TIMERS"
+            }
+          }
+        },
       ],
       menus: {
-        TIMERS: { acceptReporters: true, items: "timersMenu" }
+        TIMERS: { acceptReporters: true, items: "timersMenu" },
+        UNITS: {
+          acceptReporters: false,
+          items: [
+            "seconds",
+            "milliseconds",
+            "minutes"
+          ]
+        }
       }
     }
   }
@@ -160,6 +241,55 @@ class SteveZeroGreatnessExtraTimersExt {
     if (!this._exists(Scratch.Cast.toString(args.TIMER)))
       return;
     this.timers[Scratch.Cast.toString(args.TIMER)].add(Scratch.Cast.toNumber(args.SECONDS));
+  }
+
+  pause(args) {
+    if (!this._exists(Scratch.Cast.toString(args.TIMER)))
+      return;
+    this.timers[Scratch.Cast.toString(args.TIMER)].pause();
+  }
+
+  unpause(args) {
+    if (!this._exists(Scratch.Cast.toString(args.TIMER)))
+      return;
+    this.timers[Scratch.Cast.toString(args.TIMER)].unpause();
+  }
+
+  isPaused(args) {
+    if (!this._exists(Scratch.Cast.toString(args.TIMER)))
+      return;
+    return this.timers[Scratch.Cast.toString(args.TIMER)].isPaused;
+  }
+
+  elapsed(args) {
+    if (!this._exists(Scratch.Cast.toString(args.TIMER)))
+      return;
+    let multiplier = 1;
+    switch (Scratch.Cast.toString(args.UNITS)) {
+      case "seconds":
+        multiplier = 0.001;
+        break;
+      case "minutes":
+        multiplier = 0.06;
+        break;
+      default:
+        multiplier = 1;
+        break;
+    }
+    return this.timers[Scratch.Cast.toString(args.TIMER)].elapsed * multiplier;
+  }
+
+  restart(args) {
+    if (!this._exists(Scratch.Cast.toString(args.TIMER)))
+      return;
+    return this.timers[Scratch.Cast.toString(args.TIMER)].restart();
+  }
+
+  listTimers() {
+    let timers = Object.keys(this.timers);
+    return timers.length > 0
+      ? "[\"" + timers.join("\",\"") + "\"]"
+      : "[]";
   }
 }
 

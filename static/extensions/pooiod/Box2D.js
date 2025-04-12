@@ -1448,7 +1448,7 @@ but has since deviated to be its own thing. (made with box2D js es6) */
     }
 
     definePrismatic(args) {
-      var directionRadians = args.DIR - 90 * Math.PI / 180;
+      var directionRadians = (90 - args.DIR) * toRad;
       prb2djaxisX = Math.cos(directionRadians);
       prb2djaxisY = Math.sin(directionRadians);
       prb2dju = args.HIGH;

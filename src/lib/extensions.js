@@ -36,6 +36,14 @@ export default [
         isGitHub: true,
     },
     {
+        name: "Objects",
+        description: "Store data efficiently in multi-purpose objects.",
+        code: "DogeisCut/dogeiscutObject.js",
+        banner: "DogeisCut/dogeiscutObject.svg",
+        creator: "DogeisCut",
+        isGitHub: true, 
+    },
+    {
         name: "Update File (Direct Access)",
         description: "A simple extension that uses the File System Access API to update files dynamically.",
         code: "Anonymous_cat1/updateFile.js",
@@ -74,7 +82,7 @@ export default [
     },
     {
         name: "Variables Expanded",
-        description: "New variable blocks and new display monitor types.\n(some contributions by DogeIsCut)",
+        description: "New variable blocks and new display monitor types.\n(some contributions by DogeisCut)",
         code: "SharkPool/Variables-Expanded.js",
         banner: "SharkPool/Variables-Expanded.svg",
         creator: "SharkPool-SP",

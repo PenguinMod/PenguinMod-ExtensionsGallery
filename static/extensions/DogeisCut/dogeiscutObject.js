@@ -10,7 +10,7 @@
 //          - When seralising, every object is given an id, nested objects/arrays are replaced with the ID, there's a master table that holds all the objects/arrays and their ids. I'd have to be careful to make sure whatever format I decide to do with this doesn't conflict with anything the user can do.
 //          - SJON format/string (see below for SJSON class)
 // - Handle displaying circular structures (tables containing themselves directly and indirectly.)
-
+// - fix setting the value of a key to another object not properly preserving the object reference (bug introduced when i made the convertIfNeeded functions recursive) 
 (function(Scratch) {
     'use strict';
 

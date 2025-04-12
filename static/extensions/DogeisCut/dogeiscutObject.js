@@ -91,6 +91,12 @@
             return x;
         }
 
+        static unconvertIfNeeded(x) {
+            if (x instanceof dogeiscutObject.Type) x = x.object;
+            if (x instanceof jwArray.Type) x = x.array;
+            return x;
+        }
+
         dogeiscutObjectHandler() {
             return `Object`
         }
@@ -415,10 +421,7 @@
         set({ OBJECT, KEY, VALUE }) {
             OBJECT = dogeiscutObject.Type.toObject(OBJECT);
 
-            if (VALUE instanceof jwArray.Type) VALUE = VALUE.array
-            if (VALUE instanceof dogeiscutObject.Type) VALUE = VALUE.object
-
-            OBJECT.object[KEY] = VALUE;
+            OBJECT.object[KEY] = dogeiscutObject.Type.unconvertIfNeeded(VALUE);
             return OBJECT;
         }
 
@@ -506,7 +509,7 @@
 
         castkeyvalue({ KEY, VALUE }) {
             const obj = {};
-            obj[KEY] = dogeiscutObject.Type.convertIfNeeded(VALUE);
+            obj[KEY] = dogeiscutObject.Type.unconvertIfNeeded(VALUE);
             return new dogeiscutObject.Type(obj);
         }
     }

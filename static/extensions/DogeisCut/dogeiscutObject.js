@@ -7,6 +7,7 @@
 // - A better Object reporter bubble, something much more akin to this: https://jsonformatter.org/json-viewer
 // - Fix serializing to preserve shared references.
 // - Fix arrays containing objects inside objects. 
+// - Handle displaying circular structures (tables containing themselves directly and indirectly.)
 
 (function(Scratch) {
     'use strict';

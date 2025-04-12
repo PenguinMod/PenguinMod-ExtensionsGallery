@@ -108,9 +108,8 @@
 
         toReporterContent() {
             let root = document.createElement('div')
-            root.style.display = 'flex'
-            root.style.flexDirection = 'column'
-            root.style.justifyContent = 'center'
+            root.style.display = 'inline-block'
+            root.style.textAlign = 'center'
 
             // Placeholder until I can figure out a better table formation.
             root.appendChild(paragraph(JSON.stringify(this.object, null, 2)));

@@ -6,6 +6,7 @@
 // TODO:
 // - A better Object reporter bubble, something much more akin to this: https://jsonformatter.org/json-viewer
 // - Fix serializing to preserve shared references.
+//      - Ideas to solve this: When seralising, every object is given an id, nested objects/arrays are replaced with the ID, there's a master table that holds all the objects/arrays and their ids. I'd have to be careful to make sure whatever format I decide to do with this doesn't conflict with anything the user can do.
 // - Fix arrays containing objects inside objects. 
 // - Handle displaying circular structures (tables containing themselves directly and indirectly.)
 
@@ -53,6 +54,7 @@
             if (x === "" || x === null || x === undefined) return new ObjectType()
             try {
                 let parsed = JSON.parse(x)
+                if (parsed instanceof Array) return new ObjectType({ array: parsed })
                 if (parsed instanceof Object) return new ObjectType(parsed)
             } catch { }
             return new ObjectType({ value: x })
@@ -342,6 +344,36 @@
                             }
                         }
                     },
+                    "---",
+                    {
+                        opcode: 'cast',
+                        text: '[VALUE]',
+                        ...dogeiscutObject.Block,
+                        arguments: {
+                            VALUE: {
+                                type: Scratch.ArgumentType.STRING,
+                                defaultValue: "{\"foo\": \"bar\"}",
+                                exemptFromNormalization: true
+                            }
+                        }
+                    },
+                    {
+                        opcode: 'castkeyvalue',
+                        text: '[KEY]: [VALUE]',
+                        ...dogeiscutObject.Block,
+                        arguments: {
+                            KEY: {
+                                type: Scratch.ArgumentType.STRING,
+                                defaultValue: "foo",
+                                exemptFromNormalization: true
+                            },
+                            VALUE: {
+                                type: Scratch.ArgumentType.STRING,
+                                defaultValue: "bar",
+                                exemptFromNormalization: true
+                            }
+                        }
+                    },
                 ]
             }
         }
@@ -466,6 +498,16 @@
             util.thread.stackFrames[0].dogeiscutObject = entries[0];
             }
             util.startBranch(1, true);
+        }
+
+        cast({ VALUE }) {
+            return dogeiscutObject.Type.toObject(VALUE);
+        }
+
+        castkeyvalue({ KEY, VALUE }) {
+            const obj = {};
+            obj[KEY] = dogeiscutObject.Type.convertIfNeeded(VALUE);
+            return new dogeiscutObject.Type(obj);
         }
     }
 

@@ -19,6 +19,19 @@
         throw new Error('\'Objects\' must run unsandboxed!');
     }
 
+    const getCircularReplacer = () => {
+        const seen = new WeakSet();
+        return (key, value) => {
+          if (typeof value === "object" && value !== null) {
+            if (seen.has(value)) {
+              return;
+            }
+            seen.add(value);
+          }
+          return value;
+        };
+      };
+
     // SJSON is a variant of JSON that can handle circular references and shared references. Hence the name SJSON for SharedJSON
     // Ideally, resulting strings should look like this.
     /*
@@ -134,7 +147,30 @@
         }
 
         toString() {
-            return "sorry i am still figuring this out";
+            const stringify = (obj) => {
+            if (obj instanceof jwArray.Type) {
+                return `[${obj.array.map(item => stringify(item)).join(",")}]`;
+            }
+            if (obj instanceof dogeiscutObject.Type) {
+                return obj.toString();
+            }
+            if (obj === null) return "null";
+            if (typeof obj === "string") return JSON.stringify(obj);
+            if (typeof obj === "number" || typeof obj === "boolean") return obj.toString();
+            if (Array.isArray(obj)) {
+                return `[${obj.map(stringify).join(",")}]`;
+            }
+            if (typeof obj === "object") {
+                const entries = Object.entries(obj)
+                .map(([key, value]) => `"${key.replace(/\\/g, "\\\\").replace(/"/g, '\\"')}":${stringify(value)}`)
+                .join(",");
+                return `{${entries}}`;
+            }
+
+            return "null"; // Fallback for unsupported types
+            };
+
+            return stringify(this.object);
         }
         toMonitorContent = () => span(this.toString())
 
@@ -395,6 +431,8 @@
                         hideFromPalette: true, // this block was meant to be used with custom block arguments but i really dont want it to be used with more than that
                         arguments: {
                             VALUE: {
+                                type: Scratch.ArgumentType.STRING,
+                                defaultValue: "{\"foo\": \"bar\"}",
                                 exemptFromNormalization: true
                             }
                         }

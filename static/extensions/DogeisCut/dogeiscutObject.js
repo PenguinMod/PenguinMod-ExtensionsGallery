@@ -9,7 +9,6 @@
 //      - Ideas to solve this:
 //          - When seralising, every object is given an id, nested objects/arrays are replaced with the ID, there's a master table that holds all the objects/arrays and their ids. I'd have to be careful to make sure whatever format I decide to do with this doesn't conflict with anything the user can do.
 //          - SJON format/string (see below for SJSON class)
-// - Fix arrays containing objects inside objects. 
 // - Handle displaying circular structures (tables containing themselves directly and indirectly.)
 
 (function(Scratch) {
@@ -124,14 +123,30 @@
         }
 
         static convertIfNeeded(x) {
-            if (x instanceof Object) x = dogeiscutObject.Type.toObject(x);
-            if (x instanceof Array) x = jwArray.Type.toArray(x);
+            if (x instanceof Object) {
+            x = dogeiscutObject.Type.toObject(x);
+            for (const key in x.object) {
+                x.object[key] = dogeiscutObject.Type.convertIfNeeded(x.object[key]);
+            }
+            }
+            if (x instanceof Array) {
+            x = jwArray.Type.toArray(x);
+            x.array = x.array.map(item => dogeiscutObject.Type.convertIfNeeded(item));
+            }
             return x;
         }
 
         static unconvertIfNeeded(x) {
-            if (x instanceof dogeiscutObject.Type) x = x.object;
-            if (x instanceof jwArray.Type) x = x.array;
+            if (x instanceof dogeiscutObject.Type) {
+            const obj = {};
+            for (const key in x.object) {
+                obj[key] = dogeiscutObject.Type.unconvertIfNeeded(x.object[key]);
+            }
+            x = obj;
+            }
+            if (x instanceof jwArray.Type) {
+            x = x.array.map(item => dogeiscutObject.Type.unconvertIfNeeded(item));
+            }
             return x;
         }
 

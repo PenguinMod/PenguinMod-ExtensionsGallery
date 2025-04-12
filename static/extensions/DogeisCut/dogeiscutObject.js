@@ -17,6 +17,42 @@
         throw new Error('\'Objects\' must run unsandboxed!');
     }
 
+    // SJSON is a variant of JSON that can handle circular references and shared references. Hence the name SJSON for SharedJSON
+    // Ideally, resulting strings should look like this.
+    /*
+    <1>{
+        "MyCoolObject": <object 1>,
+        "MyCoolerObject": <2>{
+            <3>{"swag": true},
+            "MyCoolObject": <object 1>,
+            "myself": <object 2>
+        },
+        "ISureHopeThisArrayDoesntContain30CopiesOfItself": <1>[<array 1>, <array 1>, <array 1>, <array 1>, <array 1>, <array 1>, <array 1>, <array 1>, <array 1>, <array 1>, <array 1>, <array 1>, <array 1>, <array 1>, <array 1>, <array 1>, <array 1>, <array 1>, <array 1>, <array 1>, <array 1>, <array 1>, <array 1>, <array 1>, <array 1>, <array 1>, <array 1>, <array 1>, <array 1>, <array 1>]
+    }
+    */
+    class SJSON {
+        /**
+         * Parses a SJSON string into an object.
+         * @param {string} text - The SJSON string to parse.
+         * @param {function} [reviver] - A function to transform the results.
+         * @returns {*} The parsed object.
+         */
+        static parse(text, reviver = undefined) {
+            return null
+        }
+
+        /**
+         * Converts a JavaScript value to a JSON string.
+         * @param {*} value - The value to convert.
+         * @param {function|array} [replacer] - A function or array to transform the results.
+         * @param {string|number} [space] - Adds indentation, white space, or line break.
+         * @returns {string} The JSON string representation of the value.
+         */
+        static stringify(value, replacer = undefined, space = undefined) {
+            return ""
+        }
+    }
+
     const vm = Scratch.vm
     const Cast = Scratch.Cast
 

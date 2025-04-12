@@ -416,7 +416,7 @@
                         }
                     },
                     {
-                        opcode: 'castkeyvalue',
+                        opcode: 'object',
                         text: '[KEY]: [VALUE]',
                         ...dogeiscutObject.Block,
                         arguments: {
@@ -559,7 +559,7 @@
             return dogeiscutObject.Type.toObject(VALUE);
         }
 
-        castkeyvalue({ KEY, VALUE }) {
+        object({ KEY, VALUE }) {
             const obj = {};
             obj[KEY] = dogeiscutObject.Type.unconvertIfNeeded(VALUE);
             return new dogeiscutObject.Type(obj);

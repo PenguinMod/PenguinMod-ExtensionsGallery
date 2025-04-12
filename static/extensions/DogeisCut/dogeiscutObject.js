@@ -11,7 +11,7 @@
 //          - SJON format/string (see below for SJSON class)
 // - Fix arrays containing objects inside objects. 
 // - Handle displaying circular structures (tables containing themselves directly and indirectly.)
-// - fix setting the value of a key to another object not properly preserving the object reference (bug introduced when i made the convertIfNeeded functions recursive) 
+
 (function(Scratch) {
     'use strict';
 
@@ -126,12 +126,6 @@
         static convertIfNeeded(x) {
             if (x instanceof Object) x = dogeiscutObject.Type.toObject(x);
             if (x instanceof Array) x = jwArray.Type.toArray(x);
-            return x;
-        }
-
-        static unconvertIfNeeded(x) {
-            if (x instanceof dogeiscutObject.Type) x = x.object;
-            if (x instanceof jwArray.Type) x = x.array;
             return x;
         }
 
@@ -458,7 +452,7 @@
         set({ OBJECT, KEY, VALUE }) {
             OBJECT = dogeiscutObject.Type.toObject(OBJECT);
 
-            OBJECT.object[KEY] = dogeiscutObject.Type.unconvertIfNeeded(VALUE);
+            OBJECT.object[KEY] = VALUE;
             return OBJECT;
         }
 
@@ -546,7 +540,7 @@
 
         object({ KEY, VALUE }) {
             const obj = {};
-            obj[KEY] = dogeiscutObject.Type.unconvertIfNeeded(VALUE);
+            obj[KEY] = VALUE;
             return new dogeiscutObject.Type(obj);
         }
     }

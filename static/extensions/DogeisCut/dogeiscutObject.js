@@ -3,6 +3,11 @@
 // Description: Store data efficiently in multi-purpose objects.
 // By: dogeiscut <https://scratch.mit.edu/users/dogeiscut/>
 
+// TODO:
+// - A better Object reporter bubble, something much more akin to this: https://jsonformatter.org/json-viewer
+// - Fix serializing to preserve shared references.
+// - Fix arrays containing objects inside objects. 
+
 (function(Scratch) {
     'use strict';
 
@@ -21,6 +26,15 @@
         el.style.width = '100%'
         el.style.textAlign = 'center'
         return el
+    }
+
+    function paragraph(text) {
+        let el = document.createElement('p');
+        el.textContent = text;
+        el.style.margin = '0';
+        el.style.padding = '0';
+        el.style.textAlign = 'left';
+        return el;
     }
 
     class ObjectType {
@@ -88,6 +102,9 @@
             root.style.display = 'flex'
             root.style.flexDirection = 'column'
             root.style.justifyContent = 'center'
+
+            // Placeholder until I can figure out a better table formation.
+            root.appendChild(paragraph(JSON.stringify(this.object, null, 2)));
     
             return root
         }    

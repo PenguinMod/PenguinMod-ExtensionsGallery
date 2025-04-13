@@ -217,13 +217,9 @@
 
             vm.runtime.registerSerializer(
                 "dogeiscutObject",
-                //While everything almost seralises as expected, shared references are still and issue and are not preserved properly.
                 v => {
                     if (v instanceof dogeiscutObject.Type) {
-                        const id = generateUID();
-                        referenceMap.set(id, v);
                         return {
-                            id,
                             entries: Object.entries(v.object).map(([key, value]) => {
                                 if (typeof value === "object" && value !== null && value.customId) {
                                     return {
@@ -241,18 +237,13 @@
                 },
                 v => {
                     try {
-                        if (referenceMap.has(v.id)) {
-                            return referenceMap.get(v.id);
-                        }
                         const parsed = v.entries.map(entry => {
                             if (entry.customType) {
                                 return [entry.key, vm.runtime.serializers[entry.typeId].deserialize(entry.serialized)];
                             }
                             return [entry.key, entry.value];
                         });
-                        const deserializedObject = new dogeiscutObject.Type(Object.fromEntries(parsed));
-                        referenceMap.set(v.id, deserializedObject);
-                        return deserializedObject;
+                        return new dogeiscutObject.Type(Object.fromEntries(parsed));
                     } catch {
                         return null;
                     }

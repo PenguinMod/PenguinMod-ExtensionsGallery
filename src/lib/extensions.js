@@ -37,7 +37,7 @@ export default [
     },
     {
         name: "Objects",
-        description: "Store data efficiently in multi-purpose objects.",
+        description: "Store data efficiently in multi-purpose objects which support shared and circular references.",
         code: "DogeisCut/dogeiscutObject.js",
         banner: "DogeisCut/dogeiscutObject.svg",
         creator: "DogeisCut",

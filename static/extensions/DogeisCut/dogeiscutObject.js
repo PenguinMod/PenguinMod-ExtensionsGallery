@@ -281,6 +281,35 @@
                         text: 'empty object',
                         ...dogeiscutObject.Block
                     },
+                    {
+                        opcode: 'cast',
+                        text: 'from JSON [VALUE]',
+                        ...dogeiscutObject.Block,
+                        arguments: {
+                            VALUE: {
+                                type: Scratch.ArgumentType.STRING,
+                                defaultValue: "{\"foo\": \"bar\"}",
+                                exemptFromNormalization: true
+                            }
+                        }
+                    },
+                    {
+                        opcode: 'object',
+                        text: 'key [KEY] value [VALUE]',
+                        ...dogeiscutObject.Block,
+                        arguments: {
+                            KEY: {
+                                type: Scratch.ArgumentType.STRING,
+                                defaultValue: "foo",
+                                exemptFromNormalization: true
+                            },
+                            VALUE: {
+                                type: Scratch.ArgumentType.STRING,
+                                defaultValue: "bar",
+                                exemptFromNormalization: true
+                            }
+                        }
+                    },
                     '---',
                     {
                         opcode: 'get',
@@ -423,37 +452,6 @@
                             }
                         }
                     },
-                    "---",
-                    {
-                        opcode: 'cast',
-                        text: '[VALUE]',
-                        ...dogeiscutObject.Block,
-                        hideFromPalette: true, // this block was meant to be used with custom block arguments but i really dont want it to be used with more than that
-                        arguments: {
-                            VALUE: {
-                                type: Scratch.ArgumentType.STRING,
-                                defaultValue: "{\"foo\": \"bar\"}",
-                                exemptFromNormalization: true
-                            }
-                        }
-                    },
-                    {
-                        opcode: 'object',
-                        text: 'key [KEY] value [VALUE]',
-                        ...dogeiscutObject.Block,
-                        arguments: {
-                            KEY: {
-                                type: Scratch.ArgumentType.STRING,
-                                defaultValue: "foo",
-                                exemptFromNormalization: true
-                            },
-                            VALUE: {
-                                type: Scratch.ArgumentType.STRING,
-                                defaultValue: "bar",
-                                exemptFromNormalization: true
-                            }
-                        }
-                    },
                 ]
             }
         }
@@ -461,13 +459,42 @@
         /* Buttons */
 
         warning() {
-            alert("At the moment, shared references and recursion are not preserved when saving.\nVariables containing references to other tables will need to be reset to retain relationships.")
+            alert("At the moment, shared references and recursion are not preserved when saving.\nVariables containing references to other tables will need to be reset to retain relationships.\n\nAlso Arrays do not support recursion or shared references, blame jw...")
         }
 
         /* Blocks */
 
         empty() {
             return new dogeiscutObject.Type()
+        }
+
+        cast({ VALUE }) {
+            try {
+            const parsed = JSON.parse(VALUE, (key, value) => {
+                if (Array.isArray(value)) {
+                return new jwArray.Type(value.map(item => {
+                    if (typeof item === 'object' && item !== null) {
+                    return dogeiscutObject.Type.toObject(item);
+                    }
+                    return item;
+                }));
+                } else if (typeof value === 'object' && value !== null) {
+                return new dogeiscutObject.Type(Object.fromEntries(
+                    Object.entries(value).map(([k, v]) => [k, typeof v === 'object' && v !== null ? dogeiscutObject.Type.toObject(v) : v])
+                ));
+                }
+                return value;
+            });
+            return dogeiscutObject.Type.toObject(parsed);
+            } catch {
+            return dogeiscutObject.Type.toObject(VALUE);
+            }
+        }
+
+        object({ KEY, VALUE }) {
+            const obj = {};
+            obj[KEY] = VALUE;
+            return new dogeiscutObject.Type(obj);
         }
 
         get({ OBJECT, KEY }) {
@@ -581,16 +608,6 @@
             util.thread.stackFrames[0].dogeiscutObject = entries[0];
             }
             util.startBranch(1, true);
-        }
-
-        cast({ VALUE }) {
-            return dogeiscutObject.Type.toObject(VALUE);
-        }
-
-        object({ KEY, VALUE }) {
-            const obj = {};
-            obj[KEY] = VALUE;
-            return new dogeiscutObject.Type(obj);
         }
     }
 

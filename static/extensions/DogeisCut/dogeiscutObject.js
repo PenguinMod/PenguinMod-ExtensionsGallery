@@ -147,27 +147,28 @@
         }
 
         toString() {
+            // Any stack size error caused by this function is intentional. Recursive tables do not support stringification into JSON.
             const stringify = (obj) => {
-            if (obj instanceof jwArray.Type) {
-                return `[${obj.array.map(item => stringify(item)).join(",")}]`;
-            }
-            if (obj instanceof dogeiscutObject.Type) {
-                return obj.toString();
-            }
-            if (obj === null) return "null";
-            if (typeof obj === "string") return JSON.stringify(obj);
-            if (typeof obj === "number" || typeof obj === "boolean") return obj.toString();
-            if (Array.isArray(obj)) {
-                return `[${obj.map(stringify).join(",")}]`;
-            }
-            if (typeof obj === "object") {
-                const entries = Object.entries(obj)
-                .map(([key, value]) => `"${key.replace(/\\/g, "\\\\").replace(/"/g, '\\"')}":${stringify(value)}`)
-                .join(",");
-                return `{${entries}}`;
-            }
+                if (obj instanceof jwArray.Type) {
+                    return `[${obj.array.map(item => stringify(item)).join(",")}]`;
+                }
+                if (obj instanceof dogeiscutObject.Type) {
+                    return obj.toString();
+                }
+                if (obj === null) return "null";
+                if (typeof obj === "string") return JSON.stringify(obj);
+                if (typeof obj === "number" || typeof obj === "boolean") return obj.toString();
+                if (Array.isArray(obj)) {
+                    return `[${obj.map(stringify).join(",")}]`;
+                }
+                if (typeof obj === "object") {
+                    const entries = Object.entries(obj)
+                        .map(([key, value]) => `"${key.replace(/\\/g, "\\\\").replace(/"/g, '\\"')}":${stringify(value)}`)
+                        .join(",");
+                    return `{${entries}}`;
+                }
 
-            return "null"; // Fallback for unsupported types
+                return "null"; // Fallback for unsupported types
             };
 
             return stringify(this.object);
@@ -179,7 +180,7 @@
             root.style.display = 'inline-block'
             root.style.textAlign = 'center'
             
-            // Placeholder until I can figure out a better table formation.
+            // Placeholder until I can make an object tree renderer thingy.
             root.appendChild(paragraph(this.toString()));
     
             return root
@@ -218,6 +219,7 @@
             vm.runtime.registerSerializer(
                 "dogeiscutObject",
                 v => {
+                    const masterMap = new Map();
                     if (v instanceof dogeiscutObject.Type) {
                         return {
                             entries: Object.entries(v.object).map(([key, value]) => {
@@ -450,7 +452,7 @@
         /* Buttons */
 
         warning() {
-            alert("At the moment, shared references and recursion are not preserved when saving.\nVariables containing references to other tables will need to be reset to retain relationships.\n\nAlso Arrays do not support recursion or shared references, blame jw...")
+            alert("At the moment, shared references and recursion are not preserved when saving.\nVariables containing references to other tables will need to be reset to retain relationships.\n\nThis may change in the future.\n\nAlso Arrays do not support recursion or shared references, blame jw...")
         }
 
         /* Blocks */

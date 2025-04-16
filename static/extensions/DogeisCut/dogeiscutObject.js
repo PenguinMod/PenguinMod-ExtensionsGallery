@@ -31,7 +31,7 @@
           return value;
         };
       };
-
+ 
     // SJSON is a variant of JSON that can handle circular references and shared references. Hence the name SJSON for SharedJSON
     // Ideally, resulting strings should look like this.
     /*

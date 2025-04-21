@@ -7,7 +7,7 @@
   const blocks = [];
   let operatorsplus_result, operatorsplus_patience, operatorsplus_decimals;
   const wait = m => new Promise(r => setTimeout(r, m));
-  const textCount = (h, n) => n.length ? h.split(n).length - 1 : h.length + 1;
+  const textCount = (haystack, needle) => (needle === "" ? haystack.length + 1 : haystack.split(needle).length - 1);
   const mathRandomInt = (a, b) => { const [min, max] = a > b ? [b, a] : [a, b]; return Math.floor(Math.random() * (max - min + 1)) + min; };
   const textReplace = (h, n, r) => h.replace(new RegExp(n.replace(/([-()\[\]{}+?*.$^|,:#<!\\])/g, '\\$1').replace(/\x08/g, '\\x08'), 'g'), r);
 
@@ -52,7 +52,14 @@
     percentOf({ 1: p, 2: w }) { return (p / w) * 100; }
     get operatorsplus_Block_percentOf2() { return this.percentOf; }
 
-    randomDropdownReporter({ 1: t }) { switch (t) { case 'decimal': return Math.random(); case 'FPS': return mathRandomInt(0, 250); default: return mathRandomInt(-179, 180); } }
+    randomDropdownReporter({ 1: t }) {
+      switch (t) {
+        case 'decimal': return Math.random();
+        case 'direction': return mathRandomInt(-179, 180);
+        case 'FPS': return mathRandomInt(0, 250);
+        default: return Math.random();
+      }
+    }
     get operatorsplus_Block_randomDropdownReporter() { return this.randomDropdownReporter; }
 
     replaceWith({ 1: n, 2: r, 3: h }) { return textReplace(h, n, r); }
@@ -97,4 +104,4 @@
   blocks.push({ opcode: 'operatorsplus_Block_waitBoolean', blockType: Scratch.BlockType.BOOLEAN, text: 'wait and return [1]', arguments: { '1': { type: Scratch.ArgumentType.STRING, menu: 'operatorsplus_menu_3' } }, disableMonitor: true });
 
   Scratch.extensions.register(ext);
-})(Scratch)
+})(Scratch);

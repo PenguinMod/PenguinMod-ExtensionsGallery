@@ -52,7 +52,7 @@
     percentOf({ 1: p, 2: w }) { return (p / w) * 100; }
     get operatorsplus_Block_percentOf2() { return this.percentOf; }
 
-    randomDropdownReporter({ 1: t }) { switch (t) { case 'decimal': return Math.random(); case 'FPS': return mathRandomInt(-179, 180); default: return mathRandomInt(0, 250); } }
+    randomDropdownReporter({ 1: t }) { switch (t) { case 'decimal': return Math.random(); case 'FPS': return mathRandomInt(0, 250); default: return mathRandomInt(-179, 180); } }
     get operatorsplus_Block_randomDropdownReporter() { return this.randomDropdownReporter; }
 
     replaceWith({ 1: n, 2: r, 3: h }) { return textReplace(h, n, r); }

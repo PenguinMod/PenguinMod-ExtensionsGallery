@@ -104,4 +104,4 @@
   blocks.push({ opcode: 'operatorsplus_Block_waitBoolean', blockType: Scratch.BlockType.BOOLEAN, text: 'wait and return [1]', arguments: { '1': { type: Scratch.ArgumentType.STRING, menu: 'operatorsplus_menu_3' } }, disableMonitor: true });
 
   Scratch.extensions.register(ext);
-})(Scratch);
+})(Scratch)

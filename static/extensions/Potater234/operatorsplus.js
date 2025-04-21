@@ -7,7 +7,6 @@
   const blocks = [];
   let operatorsplus_result, operatorsplus_patience, operatorsplus_decimals;
   const wait = m => new Promise(r => setTimeout(r, m));
-  const textCount = (haystack, needle) => (needle === "" ? haystack.length + 1 : haystack.split(needle).length - 1);
   const mathRandomInt = (a, b) => { const [min, max] = a > b ? [b, a] : [a, b]; return Math.floor(Math.random() * (max - min + 1)) + min; };
   const textReplace = (h, n, r) => h.replace(new RegExp(n.replace(/([-()\[\]{}+?*.$^|,:#<!\\])/g, '\\$1').replace(/\x08/g, '\\x08'), 'g'), r);
 
@@ -35,7 +34,18 @@
     atan2({ x, y }) { return Math.atan2(y, x) * 180 / Math.PI; }
     get operatorsplus_Block_atan2() { return this.atan2; }
 
-    countIn({ 1: n, 2: h }) { return textCount(h, n); }
+    countIn({ 1: needle, 2: haystack }) {
+      if (needle === "") {
+        return haystack.length + 1;
+      }
+      let count = 0;
+      for (let i = 0; i <= haystack.length - needle.length; i++) {
+        if (haystack.substring(i, i + needle.length) === needle) {
+          count++;
+        }
+      }
+      return count;
+    }
     get operatorsplus_Block_countIn() { return this.countIn; }
 
     fenceDirection({ dir }) {

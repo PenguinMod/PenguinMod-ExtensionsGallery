@@ -570,4 +570,12 @@ export default [
         isGitHub: true, 
         notes: "Gallery banner by Dillon",
     },
+    {
+        name: "Extra Timers",
+        description: "Allows for the creation and management of additional timer blocks.",
+        code: "steve0greatness/timers.js",
+        banner: "steve0greatness/timers.svg",
+        creator: "Steve0Greatness",
+        isGitHub: true, 
+    },
 ];

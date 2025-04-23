@@ -21,7 +21,7 @@ class Timer {
     this.startTime = Date.now();
 
     /**
-     * Indicates if the timer
+     * Indicates if, and when, the timer was paused
      * @type {(null|number)}
      */
     this.pausedTime = null;

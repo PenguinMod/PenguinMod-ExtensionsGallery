@@ -1,12 +1,21 @@
-// == Extra Timers ==
-// By Steve0Greatness
-// License: MIT
+/**
+ * @overview
+ *
+ * Defines the "Extra Timers" extension for TurboWarp.
+ *
+ * @license MIT
+ * @author  Steve0Greatness
+ * @version 1.0.0
+ */
 
 (function(Scratch) {
+
+const selfid = "steve0greatnesstimers";
 
 class Timer {
   constructor() {
     /**
+     * The start time of the timer.
      * @type {number}
      */
     this.startTime = Date.now();
@@ -25,6 +34,8 @@ class Timer {
   }
 
   /**
+   * Returns the time since the start time, or the time between the start time and the paused time.
+   * Time is returned in milliseconds.
    * @returns {number}
    */
   get elapsed() {
@@ -33,6 +44,9 @@ class Timer {
         : this.pausedTime - this.startTime; // If paused, return time since being paused
   }
 
+  /**
+   * Starts over a timer, also resets the pause time if it's not null.
+   */
   restart() {
     this.startTime = Date.now();
 
@@ -40,9 +54,6 @@ class Timer {
       this.pausedTime = this.startTime;
   }
 
-  /**
-   * @param {number} seconds Time to be added in seconds.
-   */
   add(seconds) {
     this.startTime = this.startTime - seconds * 1000;
   }
@@ -50,6 +61,7 @@ class Timer {
   /* Pausing */
 
   /**
+   * Checks if the timer is paused.
    * @returns {boolean}
    */
   get isPaused() {
@@ -68,13 +80,21 @@ class Timer {
     this.pausedTime = null;
   }
 
-  tempPause() {
+  /* Internal! Do not use outside of internal usage. */
+
+  /**
+   * @priv
+   */
+  _tempPause() {
     if (this.isPaused)
       return;
     this.pause();
     this.tempPaused = true;
   }
-  unpauseFromTemp() {
+  /**
+   * @priv
+   */
+  _unpauseFromTemp() {
     if (!this.tempPaused)
       return;
     this.unpause();
@@ -88,18 +108,22 @@ class SteveZeroGreatnessExtraTimersExt {
     /**
      * @type {Object.<string, Timer>}
      */
-    this.timers = {};
+    this.timers = {
+      "timer": new Timer(),
+    };
 
     this.runtime.addListener("RUNTIME_PAUSED", () => {
-      Object.values(this.timers).forEach(timer => timer.tempPause());
+      Object.values(this.timers).forEach(timer => timer._tempPause());
     });
     this.runtime.addListener("RUNTIME_UNPAUSED", () => {
-      Object.values(this.timers).forEach(timer => timer.unpauseFromTemp());
+      Object.values(this.timers).forEach(timer => timer._unpauseFromTemp());
     });
+
+    this.runtime.registerSerializer(selfid, () => this.serialize(), (data) => this.deserialize(data));
   }
   getInfo() {
     return {
-      id: "steve0greatnesstimers",
+      id: selfid,
       name: "Extra Timers",
       blocks: [
         {
@@ -110,48 +134,17 @@ class SteveZeroGreatnessExtraTimersExt {
         {
           func: "removeTimerModal",
           blockType: Scratch.BlockType.BUTTON,
-          text: "remove timer"
+          text: "remove timer",
         },
         {
-          opcode: "pause",
-          blockType: Scratch.BlockType.COMMAND,
-          text: "pause [TIMER]",
-          arguments: {
-            TIMER: {
-              type: Scratch.ArgumentType.STRING,
-              menu: "TIMERS"
-            }
-          }
+          opcode: "listTimers",
+          blockType: Scratch.BlockType.REPORTER,
+          text: "timers in existance",
         },
         {
           opcode: "unpause",
           blockType: Scratch.BlockType.COMMAND,
-          text: "unpause [TIMER]",
-          arguments: {
-            TIMER: {
-              type: Scratch.ArgumentType.STRING,
-              menu: "TIMERS"
-            }
-          }
-        },
-        {
-          opcode: "addSeconds",
-          blockType: Scratch.BlockType.COMMAND,
-          text: "add [SECONDS] secs to [TIMER]",
-          arguments: {
-            SECONDS: {
-              type: Scratch.ArgumentType.NUMBER
-            },
-            TIMER: {
-              type: Scratch.ArgumentType.STRING,
-              menu: "TIMERS"
-            }
-          }
-        },
-        {
-          opcode: "isPaused",
-          blockType: Scratch.BlockType.BOOLEAN,
-          text: "is [TIMER] paused?",
+          text: "start [TIMER]",
           arguments: {
             TIMER: {
               type: Scratch.ArgumentType.STRING,
@@ -175,6 +168,28 @@ class SteveZeroGreatnessExtraTimersExt {
           }
         },
         {
+          opcode: "pause",
+          blockType: Scratch.BlockType.COMMAND,
+          text: "pause [TIMER]",
+          arguments: {
+            TIMER: {
+              type: Scratch.ArgumentType.STRING,
+              menu: "TIMERS"
+            }
+          }
+        },
+        {
+          opcode: "isPaused",
+          blockType: Scratch.BlockType.BOOLEAN,
+          text: "is [TIMER] paused?",
+          arguments: {
+            TIMER: {
+              type: Scratch.ArgumentType.STRING,
+              menu: "TIMERS"
+            }
+          }
+        },
+        {
           opcode: "restart",
           blockType: Scratch.BlockType.COMMAND,
           text: "restart [TIMER]",
@@ -185,6 +200,31 @@ class SteveZeroGreatnessExtraTimersExt {
             }
           }
         },
+        {
+          opcode: "stop",
+          blockType: Scratch.BlockType.COMMAND,
+          text: "stop [TIMER]",
+          arguments: {
+            TIMER: {
+              type: Scratch.ArgumentType.STRING,
+              menu: "TIMERS"
+            }
+          }
+        },
+        {
+          opcode: "addSeconds",
+          blockType: Scratch.BlockType.COMMAND,
+          text: "add [SECONDS] secs to [TIMER]",
+          arguments: {
+            SECONDS: {
+              type: Scratch.ArgumentType.NUMBER,
+            },
+            TIMER: {
+              type: Scratch.ArgumentType.STRING,
+              menu: "TIMERS"
+            }
+          }
+        }
       ],
       menus: {
         TIMERS: { acceptReporters: true, items: "timersMenu" },
@@ -205,6 +245,32 @@ class SteveZeroGreatnessExtraTimersExt {
     return Object.keys(this.timers).includes(timer);
   }
 
+  deserialize(data) {
+    if (data[selfid] === undefined)
+      return;
+    for (let timer in data[selfid].timers) {
+      this._newTimer(timer);
+    }
+  }
+  serialize() {
+    return {
+      [selfid]: {
+        timers: Object.keys(this.timers)
+      }
+    };
+  }
+
+  _newTimer(name) {
+    this.timers[name] = new Timer();
+  }
+  _delTimer(name) {
+    delete this.timers[name];
+  }
+
+  get _hasTimers() {
+    return Object.keys(this.timers).length == 0;
+  }
+
   // Menus
   timersMenu() {
     let timers = Object.keys(this.timers);
@@ -217,7 +283,7 @@ class SteveZeroGreatnessExtraTimersExt {
       "Timer name",
       "",
       (name) => {
-        this.timers[name] = new Timer();
+        this._newTimer(name)
       },
       "Create a Timer",
       "broadcast_msg"
@@ -228,7 +294,7 @@ class SteveZeroGreatnessExtraTimersExt {
       "Timer name",
       "",
       (name) => {
-        delete this.timers[name];
+        this._delTimer(name)
       },
       "Delete a Timer",
       "broadcast_msg"
@@ -282,7 +348,14 @@ class SteveZeroGreatnessExtraTimersExt {
   restart(args) {
     if (!this._exists(Scratch.Cast.toString(args.TIMER)))
       return;
-    return this.timers[Scratch.Cast.toString(args.TIMER)].restart();
+    this.timers[Scratch.Cast.toString(args.TIMER)].restart();
+  }
+
+  stop(args) {
+    if (!this._exists(Scratch.Cast.toString(args.TIMER)))
+      return;
+    this.timers[Scratch.Cast.toString(args.TIMER)].pause();
+    this.timers[Scratch.Cast.toString(args.TIMER)].restart();
   }
 
   listTimers() {

@@ -1,7 +1,7 @@
 /**
  * @overview
  *
- * Defines the "Extra Timers" extension for TurboWarp.
+ * Defines the "Extra Timers" extension for PenguinMod.
  *
  * @license MIT
  * @author  Steve0Greatness

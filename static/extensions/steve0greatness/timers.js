@@ -321,9 +321,11 @@ class SteveZeroGreatnessExtraTimersExt {
 
   _newTimer(name) {
     this.timers[name] = new Timer();
+    Scratch.vm.extensionManager.refreshBlocks();
   }
   _delTimer(name) {
     delete this.timers[name];
+    Scratch.vm.extensionManager.refreshBlocks();
   }
 
   get _hasTimers() {
@@ -354,12 +356,11 @@ class SteveZeroGreatnessExtraTimersExt {
       "",
       (name) => {
         this._delTimer(name);
-        Scratch.vm.extensionManager.refreshBlocks();
       },
       "Delete a Timer",
       "broadcast_msg"
     );
-  }
+  }/
 
 
   // Blocks

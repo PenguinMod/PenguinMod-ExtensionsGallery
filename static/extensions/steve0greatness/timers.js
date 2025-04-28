@@ -5,7 +5,7 @@
  *
  * @license MIT
  * @author  Steve0Greatness
- * @version 1.0.0
+ * @version 1.0.1
  */
 
 (function(Scratch) {
@@ -13,7 +13,7 @@
 const selfid = "steve0greatnesstimers";
 
 class Timer {
-  constructor() {
+  constructor(name) {
     /**
      * The start time of the timer.
      * @type {number}
@@ -135,6 +135,7 @@ class SteveZeroGreatnessExtraTimersExt {
           func: "removeTimerModal",
           blockType: Scratch.BlockType.BUTTON,
           text: "remove timer",
+          hideFromPalette: !this._has_timers()
         },
         {
           opcode: "listTimers",
@@ -150,8 +151,24 @@ class SteveZeroGreatnessExtraTimersExt {
               type: Scratch.ArgumentType.STRING,
               menu: "TIMERS"
             }
-          }
+          },
+          hideFromPalette: !this._has_timers()
         },
+        /*{ // Temp. disabled
+          blockType: Scratch.BlockType.XML,
+          xml: this._compute_sb_xml()
+        },
+        {
+          opcode: "get",
+          blockType: Scratch.BlockType.REPORTER,
+          text: "[TIMER]",
+          arguments: {
+            TIMER: {
+              type: Scratch.ArgumentType.STRING
+            }
+          },
+          hideFromPalette: true
+        },*/
         {
           opcode: "elapsed",
           blockType: Scratch.BlockType.REPORTER,
@@ -165,7 +182,8 @@ class SteveZeroGreatnessExtraTimersExt {
               type: Scratch.ArgumentType.STRING,
               menu: "UNITS"
             }
-          }
+          },
+          hideFromPalette: !this._has_timers()
         },
         {
           opcode: "pause",
@@ -176,7 +194,8 @@ class SteveZeroGreatnessExtraTimersExt {
               type: Scratch.ArgumentType.STRING,
               menu: "TIMERS"
             }
-          }
+          },
+          hideFromPalette: !this._has_timers()
         },
         {
           opcode: "isPaused",
@@ -187,7 +206,8 @@ class SteveZeroGreatnessExtraTimersExt {
               type: Scratch.ArgumentType.STRING,
               menu: "TIMERS"
             }
-          }
+          },
+          hideFromPalette: !this._has_timers()
         },
         {
           opcode: "restart",
@@ -198,7 +218,8 @@ class SteveZeroGreatnessExtraTimersExt {
               type: Scratch.ArgumentType.STRING,
               menu: "TIMERS"
             }
-          }
+          },
+          hideFromPalette: !this._has_timers()
         },
         {
           opcode: "stop",
@@ -209,7 +230,8 @@ class SteveZeroGreatnessExtraTimersExt {
               type: Scratch.ArgumentType.STRING,
               menu: "TIMERS"
             }
-          }
+          },
+          hideFromPalette: !this._has_timers()
         },
         {
           opcode: "addSeconds",
@@ -218,12 +240,32 @@ class SteveZeroGreatnessExtraTimersExt {
           arguments: {
             SECONDS: {
               type: Scratch.ArgumentType.NUMBER,
+              defaultValue: 1
             },
             TIMER: {
               type: Scratch.ArgumentType.STRING,
               menu: "TIMERS"
             }
-          }
+          },
+          hideFromPalette: !this._has_timers()
+        },
+        {
+          opcode: "whengt",
+          blockType: Scratch.BlockType.HAT,
+          text: "when [TIMER] > [SECONDS] seconds",
+          isEdgeActivated: true,
+          restartExistingThreads: false,
+          arguments: {
+            TIMER: {
+              type: Scratch.ArgumentType.STRING,
+              menu: "TIMERS"
+            },
+            SECONDS: {
+              type: Scratch.ArgumentType.NUMBER,
+              defaultValue: 1
+            }
+          },
+          hideFromPalette: !this._has_timers()
         }
       ],
       menus: {
@@ -243,6 +285,23 @@ class SteveZeroGreatnessExtraTimersExt {
   // Util
   _exists(timer) {
     return Object.keys(this.timers).includes(timer);
+  }
+
+  _has_timers() {
+    return Object.keys(this.timers).length > 0
+  }
+
+  _compute_sb_xml() {
+    let XML = Object.keys(this.timers).map(timer => {
+      return `<block type="${selfid}_get">
+                <value name="TIMER">
+                  <shadow type="text">
+                    <field name="TEXT">${timer}</field>
+                  </shadow>
+                </value>
+              </block>`
+    }).join("");
+    return XML
   }
 
   deserialize(data) {
@@ -283,7 +342,7 @@ class SteveZeroGreatnessExtraTimersExt {
       "Timer name",
       "",
       (name) => {
-        this._newTimer(name)
+        this._newTimer(name); 
       },
       "Create a Timer",
       "broadcast_msg"
@@ -294,7 +353,8 @@ class SteveZeroGreatnessExtraTimersExt {
       "Timer name",
       "",
       (name) => {
-        this._delTimer(name)
+        this._delTimer(name);
+        Scratch.vm.extensionManager.refreshBlocks();
       },
       "Delete a Timer",
       "broadcast_msg"
@@ -325,6 +385,12 @@ class SteveZeroGreatnessExtraTimersExt {
     if (!this._exists(Scratch.Cast.toString(args.TIMER)))
       return;
     return this.timers[Scratch.Cast.toString(args.TIMER)].isPaused;
+  }
+
+  get(args) {
+    if (!this._exists(Scratch.Cast.toString(args.TIMER)))
+      return 0;
+    return this.timers[Scratch.Cast.toString(args.TIMER)].elapsed * 0.001;
   }
 
   elapsed(args) {
@@ -363,6 +429,15 @@ class SteveZeroGreatnessExtraTimersExt {
     return timers.length > 0
       ? "[\"" + timers.join("\",\"") + "\"]"
       : "[]";
+  }
+
+  whengt(args) {
+    if (!this._exists(Scratch.Cast.toString(args.TIMER)))
+      return false;
+    let seconds = Scratch.Cast.toNumber(args.SECONDS);
+    let elapsed_seconds = this.timers[Scratch.Cast.toString(args.TIMER)].elapsed * 0.001;
+    console.log(elapsed_seconds, seconds, elapsed_seconds > seconds);
+    return elapsed_seconds > seconds;
   }
 }
 

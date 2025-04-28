@@ -13,7 +13,7 @@
 const selfid = "steve0greatnesstimers";
 
 class Timer {
-  constructor(name) {
+  constructor() {
     /**
      * The start time of the timer.
      * @type {number}

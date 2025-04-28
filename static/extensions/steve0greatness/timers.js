@@ -360,7 +360,7 @@ class SteveZeroGreatnessExtraTimersExt {
       "Delete a Timer",
       "broadcast_msg"
     );
-  }/
+  }
 
 
   // Blocks

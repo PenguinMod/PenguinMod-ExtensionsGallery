@@ -5,7 +5,7 @@
  *
  * @license MIT
  * @author  Steve0Greatness
- * @version 1.1.0
+ * @version 1.1.1
  */
 
 (function(Scratch) {
@@ -189,10 +189,10 @@ class SteveZeroGreatnessExtraTimersExt {
       }
     );
 
-    const updateVariables = type => {
-        if (type === Timer.customId) {
-            this.runtime.vm.emitWorkspaceUpdate();
-        }
+    const updateVariables = (type) => {
+      if (type === Timer.customId) {
+        this.runtime.vm.extensionManager.refreshDynamicCategorys()
+      }
     };
     this.runtime.on("variableCreate", updateVariables);
     this.runtime.on("variableChange", updateVariables);
@@ -263,6 +263,7 @@ class SteveZeroGreatnessExtraTimersExt {
           opcode: "elapsed",
           blockType: Scratch.BlockType.REPORTER,
           text: "time elapsed for [TIMER] in [UNITS]",
+          disableMonitor: true,
           arguments: {
             TIMER: {
               type: Scratch.ArgumentType.STRING,
@@ -300,6 +301,7 @@ class SteveZeroGreatnessExtraTimersExt {
           opcode: "is_paused",
           blockType: Scratch.BlockType.BOOLEAN,
           text: "is [TIMER] paused?",
+          disableMonitor: true,
           arguments: {
             TIMER: {
               type: Scratch.ArgumentType.STRING,

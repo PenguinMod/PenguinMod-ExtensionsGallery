@@ -5,7 +5,7 @@
  *
  * @license MIT
  * @author  Steve0Greatness
- * @version 1.1.2
+ * @version 1.1.3
  */
 
 (function(Scratch) {
@@ -94,7 +94,6 @@ class Timer {
   }
 
   toToolboxDefault(field_name) {
-    console.log(this)
     return `<field name="${field_name}" id="${this.id}" variabletype="${this.type}">${xml_escape(this.name)}</field>`;
   }
 

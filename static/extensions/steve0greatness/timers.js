@@ -1,11 +1,11 @@
 /**
  * @overview
  *
- * Defines the "Extra Timers" extension for PenguinMod.
+ * Allows for the creation and management of additional timers in PenguinMod.
  *
  * @license MIT
  * @author  Steve0Greatness
- * @version 1.1.3
+ * @version 1.1.4
  */
 
 (function(Scratch) {
@@ -16,11 +16,12 @@ const selfid = "steve0greatnesstimers";
 function uid_clone() {
   const soup = "!#%()*+,-./:;=?@[]^_`{|}~ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
   const length = 20;
+
+  const max = num => (num & 127) >= soup.length ? (num & 127) - soup.length : (num & 127);
   
-  return Array.from(
-    { length },
-    _ => soup.charAt(Math.random() * soup.length)
-  ).join("");
+  return [...crypto.getRandomValues(new Uint8Array(length))]
+    .map((e) => soup.charAt(max(e)))
+    .join("");
 }
 
 function xml_escape(unsafe) {

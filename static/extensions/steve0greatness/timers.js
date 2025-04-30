@@ -10,6 +10,8 @@
 
 (function(Scratch) {
 
+Scratch.translate.setup({});
+
 const selfid = "steve0greatnesstimers";
 
   
@@ -44,6 +46,8 @@ class Timer {
 
     this.id   = id ?? uid_clone();
     this.name = name;
+
+    this.attached_getter_id = uid_clone();
 
     this.customId = Timer.customId;
     this.type = Timer.customId;
@@ -189,14 +193,22 @@ class SteveZeroGreatnessExtraTimersExt {
       }
     );
 
-    const updateVariables = (type) => {
-      if (type === Timer.customId) {
-        this.runtime.vm.extensionManager.refreshDynamicCategorys()
-      }
-    };
-    this.runtime.on("variableCreate", updateVariables);
-    this.runtime.on("variableChange", updateVariables);
-    this.runtime.on("variableDelete", updateVariables);
+    this.runtime.on("variableCreate", (type, id) => {
+      if (type !== Timer.customId) return;
+
+      this.runtime.vm.extensionManager.refreshDynamicCategorys();
+    });
+    this.runtime.on("variableChange", (type, adf) => {
+      if (type !== Timer.customId) return;
+
+      this.runtime.vm.extensionManager.refreshDynamicCategorys();
+    });
+    this.runtime.on("variableDelete", (type, adf) => {
+      if (type !== Timer.customId) return;
+
+      this.runtime.vm.extensionManager.refreshDynamicCategorys();
+      //this.runtime.monitorBlocks
+    });
   }
 
   order_blocks(blocks) {
@@ -209,12 +221,13 @@ class SteveZeroGreatnessExtraTimersExt {
     const filterTimers = ({variables}) => {
       return Object.values(variables)
                .filter(vari => vari.type === Timer.customId)
-               .map(vari => vari.toToolboxDefault("TIMER"))
-               .map(xml => getter.replace("></block>", `>${xml}</block>`))
+               .map(vari => [vari.toToolboxDefault("TIMER"), vari.attached_getter_id])
+               .map(([xml, g_id]) => getter.replace(
+                  "></block>",
+                  ` id="${xml_escape(g_id)}">${xml}</block>`
+                ))
     };
 
-
-    
     const stage_target = this.runtime.getTargetForStage();
     const local_target = this.runtime.vm.editingTarget;
     const is_sprite    = local_target.id !== stage_target.id;
@@ -222,11 +235,11 @@ class SteveZeroGreatnessExtraTimersExt {
     const local        = filterTimers(local_target);
     
     if (stage.length) {
-      output.push(`<label text="Timers for all sprites"></label>`);
+      output.push(`<label text="${Scratch.translate("Timers for all sprites")}"></label>`);
       output.push(...stage);
     }
     if (local.length && is_sprite) {
-      output.push(`<label text="Timers for this sprite"></label>`);
+      output.push(`<label text="${Scratch.translate("Timers for this sprites")}"></label>`);
       output.push(...local);
     }
     if (stage.length || local.length) {
@@ -246,14 +259,14 @@ class SteveZeroGreatnessExtraTimersExt {
         {
           opcode: "createTimerModal",
           blockType: Scratch.BlockType.BUTTON,
-          text: "create timer"
+          text: Scratch.translate("create timer")
         },
         {
           opcode: "getter",
           blockType: Scratch.BlockType.REPORTER,
           text: "[TIMER]",
           arguments: {
-            TIMER: {
+            "TIMER": {
               type: Scratch.ArgumentType.STRING,
               menu: "TIMERS"
             }
@@ -262,7 +275,7 @@ class SteveZeroGreatnessExtraTimersExt {
         {
           opcode: "elapsed",
           blockType: Scratch.BlockType.REPORTER,
-          text: "time elapsed for [TIMER] in [UNITS]",
+          text: Scratch.translate("time elapsed for [TIMER] in [UNITS]"),
           disableMonitor: true,
           arguments: {
             TIMER: {
@@ -278,7 +291,18 @@ class SteveZeroGreatnessExtraTimersExt {
         {
           opcode: "pause",
           blockType: Scratch.BlockType.COMMAND,
-          text: "pause [TIMER]",
+          text: Scratch.translate("pause [TIMER]"),
+          arguments: {
+            TIMER: {
+              type: Scratch.ArgumentType.STRING,
+              menu: "TIMERS"
+            }
+          },
+        },
+        {
+          opcode: "toggle",
+          blockType: Scratch.BlockType.COMMAND,
+          text: Scratch.translate("toggle [TIMER]"),
           arguments: {
             TIMER: {
               type: Scratch.ArgumentType.STRING,
@@ -289,7 +313,7 @@ class SteveZeroGreatnessExtraTimersExt {
         {
           opcode: "unpause",
           blockType: Scratch.BlockType.COMMAND,
-          text: "start [TIMER]",
+          text: Scratch.translate("start [TIMER]"),
           arguments: {
             TIMER: {
               type: Scratch.ArgumentType.STRING,
@@ -300,7 +324,7 @@ class SteveZeroGreatnessExtraTimersExt {
         {
           opcode: "is_paused",
           blockType: Scratch.BlockType.BOOLEAN,
-          text: "is [TIMER] paused?",
+          text: Scratch.translate("is [TIMER] paused?"),
           disableMonitor: true,
           arguments: {
             TIMER: {
@@ -312,7 +336,7 @@ class SteveZeroGreatnessExtraTimersExt {
         {
           opcode: "restart",
           blockType: Scratch.BlockType.COMMAND,
-          text: "restart [TIMER]",
+          text: Scratch.translate("restart [TIMER]"),
           arguments: {
             TIMER: {
               type: Scratch.ArgumentType.STRING,
@@ -323,7 +347,7 @@ class SteveZeroGreatnessExtraTimersExt {
         {
           opcode: "stop",
           blockType: Scratch.BlockType.COMMAND,
-          text: "stop [TIMER]",
+          text: Scratch.translate("stop [TIMER]"),
           arguments: {
             TIMER: {
               type: Scratch.ArgumentType.STRING,
@@ -334,7 +358,7 @@ class SteveZeroGreatnessExtraTimersExt {
         {
           opcode: "add",
           blockType: Scratch.BlockType.COMMAND,
-          text: "add [TIME] [UNITS] to [TIMER]",
+          text: Scratch.translate("add [TIME] [UNITS] to [TIMER]"),
           arguments: {
             TIME: {
               type: Scratch.ArgumentType.NUMBER,
@@ -353,7 +377,7 @@ class SteveZeroGreatnessExtraTimersExt {
         {
           opcode: "whengt",
           blockType: Scratch.BlockType.HAT,
-          text: "when [TIMER] > [TIME] [UNITS]",
+          text: Scratch.translate("when [TIMER] > [TIME] [UNITS]"),
           isEdgeActivated: true,
           restartExistingThreads: false,
           arguments: {
@@ -379,17 +403,33 @@ class SteveZeroGreatnessExtraTimersExt {
         UNITS: {
           acceptReporters: false,
           items: [
-            { text: "seconds", value: "0.001" },
-            { text: "milliseconds", value: "1" },
-            { text: "minutes", value: "0.000016666666666666667" },
+            {
+              text: Scratch.translate("seconds"),
+              value: "0.001"
+            },
+            {
+              text: Scratch.translate("milliseconds"),
+              value: "1"
+            },
+            {
+              text: Scratch.translate("minutes"),
+              value: "0.000016666666666666667"
+            },
           ]
         },
         UNITS2: {
           acceptReporters: false,
           items: [
-            { text: "seconds", value: "1000" },
-            { text: "milliseconds", value: "1" },
-            { text: "minutes", value: "60000" },
+            { text: Scratch.translate("seconds"),
+              value: "1000" },
+            {
+              text: Scratch.translate("milliseconds"),
+              value: "1"
+            },
+            {
+              text: Scratch.translate("minutes"),
+              value: "60000"
+            },
           ]
         }
       }
@@ -397,18 +437,6 @@ class SteveZeroGreatnessExtraTimersExt {
   }
 
   // Util
- 
-  get timers() {
-    const filterTimers = ({variables}) =>
-      Object.values(variables)
-        .filter(scalvar => scalvar.type === Timer.customId)
-        .map(scalvar => [scalvar.id, scalvar.name]);
-
-    const stage = filterTimers(this.runtime.getTargetForStage());
-    const local = filterTimers(this.runtime.vm.editingTarget);
-
-    return { stage, local }
-  }
 
   get_or_create(target, id, name) {
     const stage    = this.runtime.getTargetForStage();
@@ -422,19 +450,6 @@ class SteveZeroGreatnessExtraTimersExt {
     }
     
     return variable;
-  }
-
-  _has_timers(scope = "any") {
-    const timers = this.timers;
-    switch (scope) {
-      case "any":
-        return (timers.stage.length + timers.local.length) != 0;
-      case "local":
-        return timers.local.length != 0;
-      case "stage":
-        return timers.stage.length != 0;
-    }
-    
   }
 
   // Buttons
@@ -476,6 +491,14 @@ class SteveZeroGreatnessExtraTimersExt {
 
   unpause({ TIMER: timer }, util) {
     this.get_or_create(util.target, timer.id, timer.name).unpause();
+  }
+
+  toggle({ TIMER: timer }, util) {
+    const timer_var = this.get_or_create(util.target, timer.id, timer.name);
+    if (timer_var.is_paused)
+      timer_var.unpause();
+    else
+      timer_var.pause();
   }
 
   is_paused({ TIMER: timer }, util) {

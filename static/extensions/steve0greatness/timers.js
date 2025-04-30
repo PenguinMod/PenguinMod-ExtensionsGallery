@@ -5,7 +5,7 @@
  *
  * @license MIT
  * @author  Steve0Greatness
- * @version 1.1.1
+ * @version 1.1.2
  */
 
 (function(Scratch) {
@@ -234,7 +234,7 @@ class SteveZeroGreatnessExtraTimersExt {
     }
 
     return output;
-}
+  }
 
   getInfo() {
     return {
@@ -447,13 +447,12 @@ class SteveZeroGreatnessExtraTimersExt {
           false, Timer.customId, "\"%1\" already exists."
         );
         if (!name) return;
-
-        const target = scope
+        
+        const target = scope === "global"
           ? this.runtime.getTargetForStage() // Global
           : this.runtime.vm.editingTarget;   // Local
         target.createVariable(uid_clone(), name, Timer.customId);
         this.runtime.vm.emitWorkspaceUpdate();
-        //    Scratch.vm.extensionManager.refreshBlocks();
       },
       "New Timer",
       Timer.customId

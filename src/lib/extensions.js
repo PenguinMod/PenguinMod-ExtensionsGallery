@@ -570,4 +570,12 @@ export default [
         isGitHub: true, 
         notes: "Gallery banner by Dillon",
     },
+    {
+        name: "Ultimate DB",
+        description: "Store data online with two methods",
+        code: "Somroti/UltimateDB.js",
+        banner: "Somroti/UltimateDB.png",
+        creator: "Somroti and Logise",
+        isGitHub: true, 
+    },
 ];

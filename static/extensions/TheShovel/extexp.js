@@ -2,9 +2,9 @@
  * Extension Exposer
  * @author TheShovel https://github.com/TheShovel/
  * @author 0znzw https://scratch.mit.edu/users/0znzw/
- * @version 1.3
+ * @author Faunksys https://github.com/faunks 
+ * @version 1.4
  * @copyright MIT & LGPLv3 License
- * @comment Thanks to TheShovel for the original code, I just updated some internals :3
  * Do not remove this comment
  */
 (function(Scratch) {
@@ -13,17 +13,27 @@
   }
   const { Cast, BlockType, ArgumentType, vm } = Scratch, { runtime } = vm,
         extId = 'jodieextexp', runText = 'run function [FUNCNAME] from [EXTLIST] with inputs [INPUT]',
+        getFunctionsText = 'get blocks from [EXTLIST]'
         defaultArguments = {
           FUNCNAME: { type: ArgumentType.STRING, defaultValue: 'test' },
           EXTLIST: { type: ArgumentType.STRING, menu: 'EXTLIST', defaultValue: extId },
           INPUT: { type: ArgumentType.STRING, defaultValue: '{"INPUT":"Hello World!"}' },
         };
+        getBlocksArgument = {
+          EXTLIST: { type: ArgumentType.STRING, menu: 'EXTLIST', defaultValue: extId },
+        }
   class jodieextexp {
     getInfo() {
       return {
         id: extId,
         name: 'Extension Exposer',
         blocks: [{
+          func: 'getBlocks',
+          opcode: 'getfunctions',
+          blockType: BlockType.REPORTER,
+          text: getFunctionsText,
+          arguments: getBlocksArgument,
+        },  {
           func: 'run',
           opcode: 'runcommand',
           blockType: BlockType.COMMAND,
@@ -79,9 +89,24 @@
       // If the function does not exist then it is not referenced as a real block, or the extension is not global (fallback)
       return (runtime._primitives[`${EXTLIST}_${FUNCNAME}`] || runtime[`ext_${EXTLIST}`][FUNCNAME])(this._parseJSON(Cast.toString(INPUT)), util, blockJSON);
     }
+    getBlocks({EXTLIST}, util, blockJSON) {
+      const ext = runtime[`ext_${EXTLIST}`]
+      let addonBlocks = new Array;
+      if (ext.getPrimitives == undefined){ // If it's a none scratch formated ext
+        const info = ext.getInfo().blocks
+        for (let index = 0; index < info.length; index++) {
+          const element = info[index];
+          addonBlocks[addonBlocks.length] = element.opcode
+        }
+      }
+      return addonBlocks
+    }
     runcommand() {}
     runreporter() {}
     runboolean() {}
+
+    getfunctions() {}
+    
   }
   Scratch.extensions.register(runtime[`ext_${extId}`] = new jodieextexp());
 })(Scratch);

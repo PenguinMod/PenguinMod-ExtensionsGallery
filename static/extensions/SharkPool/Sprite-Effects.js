@@ -4,7 +4,7 @@
 // By: SharkPool
 // License: MIT
 
-// Version V.1.7.22
+// Version V.1.7.4
 
 (function (Scratch) {
   "use strict";
@@ -111,6 +111,11 @@
         menuIconURI,
         blocks: [
           {
+            func: "applierTutorial",
+            blockType: Scratch.BlockType.BUTTON,
+            text: "How to Apply Effects"
+          },
+          {
             func: "sourceSwitch",
             blockType: Scratch.BlockType.BUTTON,
             text: "Switch Effect Targets"
@@ -171,6 +176,17 @@
               EFFECT: { type: Scratch.ArgumentType.STRING, menu: "SPLITTING" },
               X: { type: Scratch.ArgumentType.NUMBER, defaultValue: 15 },
               Y: { type: Scratch.ArgumentType.NUMBER, defaultValue: 0 }
+            },
+          }),
+          ...genDualBlock({
+            opcode: "setSpriteVintage",
+            blockType: Scratch.BlockType.REPORTER,
+            text: "apply vintage blur to [SPRITE] at x [X] y [Y]",
+            hideFromPalette: !sprite,
+            arguments: {
+              SPRITE: { type: Scratch.ArgumentType.STRING, menu: "TARGETS" },
+              X: { type: Scratch.ArgumentType.NUMBER, defaultValue: 2 },
+              Y: { type: Scratch.ArgumentType.NUMBER, defaultValue: 50 }
             },
           }),
           ...genDualBlock({
@@ -539,6 +555,12 @@
     }
 
     // Helper Funcs
+    applierTutorial() {
+      alert(`With this extension, you can apply effects and filters to sprites and the canvas!
+        \nTo apply effects to sprites, you need to use the "skins" extension by LilyMakesThings or some alternative for displaying SVGs
+        \nTo apply effects to the canvas, use the "apply filter to canvas" block in this extension. Always use the "canvas" option in a block, if provided.`);
+    }
+
     canvasWarn() {
       alert(`Canvas Effects, created by TheShovel, was coded to not work with extensions like Sprite Effects,
         \nToggling Compatibility "off" will cause Sprite Effects Canvas Filters to not Work with Canvas Effects
@@ -763,6 +785,21 @@
       if (svg) {
         const filter = `<filter id="blend-${args.BLEND}"><feBlend in="SourceGraphic" in2="SourceGraphic" mode="${args.BLEND}" /></filter>`;
         return this.filterApplier(svg, filter, `blend-${args.BLEND}`);
+      }
+      return svg;
+    }
+
+    setSpriteVintage(args, util) { return this.vintageBlur(args, false, util) }
+    async setImageVintage(args) { return await this.vintageBlur(args, true) }
+    async vintageBlur(args, isImage, util) {
+      let svg;
+      if (args.SPRITE === "_myself_") svg = await this.findAsset(util);
+      else svg = isImage ? await this.getImage(args.SPRITE) : await this.getSVG(args.SPRITE);
+      if (svg) {
+        const x = cast.toNumber(args.X);
+        const y = cast.toNumber(args.Y);
+        const filter = `<filter id="vintageBlur" color-interpolation-filters="linearRGB"><feGaussianBlur stdDeviation="${x} ${y}" in="SourceGraphic" result="blur"/><feBlend mode="color-dodge" in="SourceGraphic" in2="colormatrix" result="blend"/><feColorMatrix values="1.6 0 0 0 0 0 1.8 0 0 0 0 0 1.85 0 0 0 0 0 1 01" in="blur2" result="colormatrix"/><feMerge result="merge1"><feMergeNode in="SourceGraphic"/><feMergeNode in="colormatrix"/></feMerge><feGaussianBlur stdDeviation="1 1" in="colormatrix" result="blur1"/><feGaussianBlur stdDeviation="32 32" in="blur1" result="blur2"/><feBlend mode="saturation" in="blur2" in2="blur1" result="blend2"/></filter>`;
+        return this.filterApplier(svg, filter, "vintageBlur");
       }
       return svg;
     }

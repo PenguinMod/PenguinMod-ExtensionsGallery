@@ -42,6 +42,8 @@ export default [
         banner: "Anonymous_cat1/updateFile.svg",
         creator: "Anonymous-cat1",
         isGitHub: true,
+        unstable: true,
+        unstableReason: "File System Access is not supported by all browsers.\nProjects can maliciously edit files that you open.",
     },
     {
         name: "3D Math",
@@ -57,6 +59,8 @@ export default [
         banner: "SharkPool/Sprite-Effects.svg",
         creator: "SharkPool-SP",
         isGitHub: true,
+        unstable: true,
+        unstableReason: "No longer maintained by SharkPool, use the version in his gallery.",
     },
     {
         name: "Scope Variable",
@@ -75,6 +79,8 @@ export default [
         banner: "SharkPool/Variables-Expanded.svg",
         creator: "SharkPool-SP",
         isGitHub: true,
+        unstable: true,
+        unstableReason: "No longer maintained by SharkPool, use the version in his gallery.",
     },
     {
         name: "Sty-Lists",
@@ -83,6 +89,8 @@ export default [
         banner: "SharkPool/Sty-Lists.svg",
         creator: "SharkPool-SP",
         isGitHub: true,
+        unstable: true,
+        unstableReason: "No longer maintained by SharkPool, use the version in his gallery.",
     },
     {
         name: "Display Text",
@@ -91,6 +99,8 @@ export default [
         banner: "SharkPool/Display-Text.svg",
         creator: "SharkPool-SP",
         isGitHub: true,
+        unstable: true,
+        unstableReason: "No longer maintained by SharkPool, use the version in his gallery.",
     },
     {
         name: "Sprite Parenting",
@@ -99,6 +109,8 @@ export default [
         banner: "SharkPool/Sprite-Linking.svg",
         creator: "SharkPool-SP",
         isGitHub: true,
+        unstable: true,
+        unstableReason: "No longer maintained by SharkPool, use the version in his gallery.",
     },
     {
         name: "Pause Utilities",
@@ -107,6 +119,8 @@ export default [
         banner: "SharkPool/Pause-Utilities.svg",
         creator: "SharkPool-SP",
         isGitHub: true,
+        unstable: true,
+        unstableReason: "No longer maintained by SharkPool, use the version in his gallery.",
     },
     {
         name: "Better Input",
@@ -115,6 +129,8 @@ export default [
         banner: "SharkPool/BetterInput.svg",
         creator: "SharkPool-SP",
         isGitHub: true,
+        unstable: true,
+        unstableReason: "No longer maintained by SharkPool, use the version in his gallery.",
     },
     {
         name: "Recording",
@@ -123,6 +139,8 @@ export default [
         banner: "SharkPool/Recording.svg",
         creator: "SharkPool-SP",
         isGitHub: true,
+        unstable: true,
+        unstableReason: "No longer maintained by SharkPool, use the version in his gallery.",
     },
     {
         name: "Dictation",
@@ -170,15 +188,6 @@ export default [
         isGitHub: true,
     },
     {
-        name: "Particle Tools",
-        description: "Tools for making particle engines easier.",
-        documentation: "particle-tools",
-        code: "SharkPool/Particle-Tools.js",
-        banner: "SharkPool/Particle-Tools.svg",
-        creator: "SharkPool-SP",
-        isGitHub: true,
-    },
-    {
         name: "More Types",
         description: "Adds more value types to PenguinMod, implementing Functions, Objects, Arrays, Sets, Maps, Symbols and Nothing.",
         code: "VeryGoodScratcher42/More-Types.js",
@@ -198,6 +207,15 @@ export default [
         unstableReason: "AI models can generate unintended or inappropriate output.\nSome AI models may also become temporarily inaccessible.\n\nUse at your own risk.",
     },
     {
+        name: "Spritesheeter",
+        description: "Load and manipulate spritesheets with customizable frames and XML support",
+        code: "MubiLop/spritesheeter.js",
+        banner: "MubiLop/spritesheeter.png",
+        creator: "cicerorph",
+        creatorAlias: "MubiLop",
+        isGitHub: true
+    },
+    {
         name: "PenguinHook",
         description: "Send Webhook requests, that can be Discord or any type of webhook.",
         code: "MubiLop/penguinhook.js",
@@ -213,7 +231,7 @@ export default [
         banner: "MubiLop/toastnotifs.png",
         creator: "cicerorph",
         creatorAlias: "MubiLop",
-        notes: "Additional code by themeatly2",
+        notes: "Additional code by themeatly2 and ddededodediamante",
         isGitHub: true,
     },
     {
@@ -234,6 +252,8 @@ export default [
         banner: "SharkPool/Tile-Grids.svg",
         creator: "SharkPool-SP",
         isGitHub: true,
+        unstable: true,
+        unstableReason: "No longer maintained by SharkPool, use the version in his gallery.",
     },
     {
         name: "Animations",
@@ -242,6 +262,8 @@ export default [
         banner: "SharkPool/Animations.svg",
         creator: "SharkPool-SP",
         isGitHub: true,
+        unstable: true,
+        unstableReason: "No longer maintained by SharkPool, use the version in his gallery.",
     },
     {
         name: "Time Calculations",
@@ -250,23 +272,25 @@ export default [
         banner: "SharkPool/Time-Calculations.svg",
         creator: "SharkPool-SP",
         isGitHub: true,
+        unstable: true,
+        unstableReason: "No longer maintained by SharkPool, use the version in his gallery.",
     },
-    // this extension is completely dead as of now
-    // {
-    //     name: "Better Storage",
-    //     description: "Like PenguinMod's Storage Extension, but with a couple more features, and faster servers.",
-    //     code: "Gen1x/better_storage.js",
-    //     banner: "Gen1x/betterstorage.png",
-    //     creator: "G1nX",
-    // },
-    // this extension is completely dead as of now
-    // {
-    //     name: "Mouth Washer",
-    //     description: "Includes many utilities related to cleaning bad words, swearing and profanity. Thought of as an extra layer of security for filtering messages.\n\n(ft. violet and jwklong)",
-    //     code: "Gen1x/mouth_washer.js",
-    //     banner: "Gen1x/mw-placeholder.png",
-    //     creator: "G1nX",
-    // },
+    /* this extension is completely dead as of now
+    {
+        name: "Better Storage",
+        description: "Like PenguinMod's Storage Extension, but with a couple more features, and faster servers.",
+        code: "Gen1x/better_storage.js",
+        banner: "Gen1x/betterstorage.png",
+        creator: "G1nX",
+    }, */
+    /* this extension is completely dead as of now
+    {
+        name: "Mouth Washer",
+        description: "Includes many utilities related to cleaning bad words, swearing and profanity. Thought of as an extra layer of security for filtering messages.\n\n(ft. violet and jwklong)",
+        code: "Gen1x/mouth_washer.js",
+        banner: "Gen1x/mw-placeholder.png",
+        creator: "G1nX",
+    }, */
     {
         name: "Mathematics",
         description: "Complicated maths extension for nerds.",
@@ -283,6 +307,8 @@ export default [
         creator: "SharkPool-SP",
         isGitHub: true,
         notes: "Some contributions by yuri-kiss",
+        unstable: true,
+        unstableReason: "No longer maintained by SharkPool, use the version in his gallery.",
     },
     {
         name: "Sound Waves",
@@ -291,6 +317,8 @@ export default [
         banner: "SharkPool/Sound-Waves.svg",
         creator: "SharkPool-SP",
         isGitHub: true,
+        unstable: true,
+        unstableReason: "No longer maintained by SharkPool, use the version in his gallery.",
     },
     {
         name: "Big Decimal",
@@ -309,6 +337,15 @@ export default [
         isGitHub: false, 
     },
     {
+        name: "Google Auth",
+        description: "Login with Google to your projects. Allows getting a name, profile picture and email from the google account.",
+        code: "Ikelene/googleAuthExtension.js",
+        banner: "Ikelene/ExtensionBanner.png",
+        creator: "ikelene",
+        creatorAlias: "Ikelene",
+        isGitHub: true,
+    },
+    {
         name: "Pang API",
         description: "Fetch information from the PenguinMod API.",
         code: "SammerLOL/pangapi.js",
@@ -324,6 +361,7 @@ export default [
         creator: "enderhacker",
         isGitHub: true,
     },
+    /* this extension is completely dead as of now
     {
         name: "Online Captcha",
         description: "Protect your project with simple, easy to use captcha implementation. Fully client-side, bypass-proof captcha solution!",
@@ -331,7 +369,7 @@ export default [
         banner: "NotHouse/OnlineCaptcha-banner.png",
         creator: "enderhacker",
         isGitHub: true,
-    },
+    }, */
     {
         name: "Twitch",
         description: "Communicate with your Twitch Chat on PenguinMod!\n\nPenguinMod is not affiliated with Twitch.",
@@ -355,6 +393,8 @@ export default [
         banner: "SharkPool/Speech-Bubbles.svg",
         creator: "SharkPool-SP",
         isGitHub: true,
+        unstable: true,
+        unstableReason: "No longer maintained by SharkPool, use the version in his gallery.",
     },
     {
         name: "SoundCloud API",
@@ -363,6 +403,8 @@ export default [
         banner: "SharkPool/SoundCloud-API.svg",
         creator: "SharkPool-SP",
         isGitHub: true,
+        unstable: true,
+        unstableReason: "No longer maintained by SharkPool, use the version in his gallery.",
     },
     {
         name: "Spotify API",
@@ -371,6 +413,8 @@ export default [
         banner: "SharkPool/Spotify.svg",
         creator: "SharkPool-SP",
         isGitHub: true,
+        unstable: true,
+        unstableReason: "No longer maintained by SharkPool, use the version in his gallery.",
     },
     {
         name: "TurboWeather",
@@ -484,11 +528,11 @@ export default [
     },
     {
         name: "Text To Speech: Redone",
-        description: "Generate better TTS! Made using TTS Tool API!",
+        description: "A better alternitive to the base text to speech extension. Powered by the TTStool API",
         code: "PuzzlingGGG/ttsr.js",
         banner: "PuzzlingGGG/TTSR.png",
-        creator: "puzzlingGGG",
-        isGitHub: false,
+        creator: "PuzzlingGGG",
+        isGitHub: true,
     },
     {
         name: "Video Sharing",
@@ -516,5 +560,14 @@ export default [
         isGitHub: false,
         unstable: true,
         unstableReason: "WebGPU is still experimental and not supported by all browsers and does not work when packaged to electron. Check compatibility at webgpu.io."
+    },
+    {
+        name: "Format Numbers",
+        description: "Format large numbers into AD standard, fixed decimal, comma separated, or scientific notation.",
+        code: "DogeisCut/FormatNumbers.js",
+        banner: "DogeisCut/FormatNumbers.png",
+        creator: "DogeisCut",
+        isGitHub: true, 
+        notes: "Gallery banner by Dillon",
     },
 ];

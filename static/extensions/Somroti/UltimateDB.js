@@ -1,12 +1,10 @@
 (function(Scratch) {
     'use strict';
     if (!Scratch.extensions.unsandboxed) throw new Error("UltimateDB must be used without sandbox.");
-
+    // This extension is made in collaboration with Logise
     const menuIconURI = "data:image/octet-stream;base64,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"
 
-    // Special thanks to Logise
-
-    class UltimateDB {
+    class SomrotiUltimateDB {
         constructor() {
             this.somrotiAPI = "https://bdd.somroti-yt.workers.dev";
             this.firebaseAPI = "https://guessthepin-2fe64-default-rtdb.europe-west1.firebasedatabase.app";
@@ -14,7 +12,7 @@
 
         getInfo() {
             return {
-                id: "UltimateDB",
+                id: "SomrotiUltimateDB",
                 name: "Ultimate DB",
                 color1: "#7b3ff2",
                 menuIconURI: menuIconURI,
@@ -316,5 +314,5 @@
         }
     }
 
-    Scratch.extensions.register(new UltimateDB());
+    Scratch.extensions.register(new SomrotiUltimateDB());
 })(Scratch);

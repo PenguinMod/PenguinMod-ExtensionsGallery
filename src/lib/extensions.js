@@ -577,7 +577,7 @@ export default [
         banner: "Somroti/UltimateDB.png",
         creator: "Somroti and Logise",
         cratorAlias: "Somroti",
-        isGitHub: "false",
+        isGitHub: false,
         notes: "The banner was made by Logise"
     },
 ];

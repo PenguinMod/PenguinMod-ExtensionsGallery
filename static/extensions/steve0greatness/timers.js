@@ -255,6 +255,7 @@ class SteveZeroGreatnessExtraTimersExt {
       name: "Extra Timers",
       isDynamic: true,
       orderBlocks: this.order_blocks.bind(this),
+      color1: "#1166CC",
       blocks: [
         {
           opcode: "createTimerModal",

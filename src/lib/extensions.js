@@ -576,6 +576,8 @@ export default [
         code: "Somroti/UltimateDB.js",
         banner: "Somroti/UltimateDB.png",
         creator: "Somroti and Logise",
-        isGitHub: true, 
+        cratorAlias: "Somroti",
+        isGitHub: "false",
+        notes: "The banner was made by Logise"
     },
 ];

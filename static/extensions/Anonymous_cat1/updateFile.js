@@ -101,11 +101,28 @@
                                 defaultValue: 'Foo, Bar, Baz'
                             }
                         }
+                    },
+                    {
+                        opcode: "updateFile",
+                        blockType: Scratch.BlockType.COMMAND,
+                        text: "Write content to file from [FORMAT] [CONTENT]",
+                        arguments: {
+                            FORMAT: {
+                                type: Scratch.ArgumentType.STRING,
+                                menu: "writeFormatMenu"
+                            },
+                            CONTENT: {
+                                type: Scratch.ArgumentType.STRING,
+                                defaultValue: "Foo, Bar, Baz"
+                            }
+                        },
+                        hideFromPalette: true,
                     }
                 ],
                 menus: {
                     FormatMenu: {
-                        items: ['Text', 'URI', 'Hex (as array)']
+                        items: ['Text', 'URI', 'Hex (as array)'],
+                        writeFormatMenu: ["Text", "URI/URL"]
                     }
                 }
             };
@@ -159,6 +176,14 @@ Do you wish to continue?`);
                     console.error('Unexpected error:', error.message);
                 }
             }
+        }
+
+        async updateFile({ FORMAT, CONTENT }) {
+            if (FORMAT == "URI/URL") {
+                FORMAT = "URI";
+            }
+
+            await ACatUpdateFile({ FORMAT, CONTENT });
         }
 
         async ACatUpdateFile({ FORMAT, CONTENT }) {

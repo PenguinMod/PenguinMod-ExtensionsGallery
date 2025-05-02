@@ -570,4 +570,12 @@ export default [
         isGitHub: true, 
         notes: "Gallery banner by Dillon",
     },
+    {
+        name: "FirebaseDB",
+        description: "Extension for secure, online, password-protected data storage.",
+        code: "logise/FirebaseDB.js",
+        banner: "logise/banner.png",
+        creator: "Logise",
+        isGitHub: false, 
+    },
 ];

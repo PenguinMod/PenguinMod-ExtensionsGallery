@@ -3,7 +3,7 @@
 // Description: Edit/Read files dynamically without prompting to reselect it.
 // By: Anonymous_cat1
 
-//  Version 1.1.0
+//  Version 1.2.0
 
 (function (Scratch) {
     'use strict';

@@ -414,6 +414,9 @@
                 },
              ],
              menus: {
+                configs: [
+                    { text: "play sound when alert", value: "soundWhenAlertEnabled" },
+                ],
                 positions: {
                    acceptReporters: true,
                    items: [

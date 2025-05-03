@@ -14,7 +14,17 @@ Scratch.translate.setup({});
 
 const selfid = "steve0greatnesstimers";
 
-  
+const color1 = "#1166CC";
+
+const stylesheet = document.createElement("style");
+stylesheet.textContent = `
+div[data-opcode^="${selfid}_"] :is(div[class^="monitor_value_"], div[class^="monitor_large-value_"]) {
+  background-color: ${color1} !important;
+}
+`;
+document.head.appendChild(stylesheet);
+
+
 function uid_clone() {
   const soup = "!#%()*+,-./:;=?@[]^_`{|}~ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
   const length = 20;
@@ -255,7 +265,7 @@ class SteveZeroGreatnessExtraTimersExt {
       name: "Extra Timers",
       isDynamic: true,
       orderBlocks: this.order_blocks.bind(this),
-      color1: "#1166CC",
+      color1,
       menuIconURI: menu_icon(),
       blocks: [
         {

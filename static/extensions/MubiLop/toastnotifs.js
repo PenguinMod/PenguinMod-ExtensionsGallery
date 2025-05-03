@@ -400,6 +400,7 @@
                     opcode: "setConfig",
                     text: "Set config [CONFIG] to [VALUE]",
                     blockType: BlockType.COMMAND,
+                    hideFromPalette: true,
                     arguments: {
                       CONFIG: {
                         type: ArgumentType.STRING,

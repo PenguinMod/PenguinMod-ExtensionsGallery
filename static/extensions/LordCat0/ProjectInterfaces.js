@@ -94,12 +94,6 @@
             text: "Create html element [htmltag] with ID [id]",
             blockType: Scratch.BlockType.COMMAND,
             arguments: {id: {type: Scratch.ArgumentType.STRING, defaultValue: 'My element'}, htmltag: {type: Scratch.ArgumentType.STRING, defaultValue: 'h1'}}
-            },{
-            opcode: "HtmlAttribute",
-            text: "Set html attribute [attribute] of [id] to [attributevalue]",
-            blockType: Scratch.BlockType.COMMAND,
-            arguments: {id: {type: Scratch.ArgumentType.STRING, defaultValue: 'My element'}, attribute: {type: Scratch.ArgumentType.STRING, defaultValue: "readonly"}, attributevalue: {type: Scratch.ArgumentType.STRING, defaultValue: "true"}},
-            hideFromPalette: true //Hidden for now due to xss vulnerabilities
             },"---",{
             opcode: "WhenClicked",
             text: "When ID [id] is clicked",
@@ -303,12 +297,6 @@
         element.addEventListener("mouseover", () => metadata[args.id].hovered = true)
         element.addEventListener("mouseout", () => metadata[args.id].hovered = false)
         element.addEventListener("click", () => metadata[args.id].clicked = true)
-    }
-    HtmlAttribute(args){
-        const element = elements[args.id]
-        if(!element) return
-        if(args.attributevalue === 'false' || args.attributevalue === ''){element.removeAttribute(args.attribute); return}
-        element.setAttribute(args.attribute, args.attributevalue)
     }
     Attribute(args){
         const element = elements[args.id]

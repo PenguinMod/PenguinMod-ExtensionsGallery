@@ -4,8 +4,8 @@
 // By: LordCat0
 // Licence: MIT
 (function(Scratch){
-    console.log("Lordcat project interfaces")
     if(!Scratch.extensions.unsandboxed){alert("This extension must run unsandboxed!"); return}
+    const lookup = {Label: "span", Video: "video", Image: "img", Input: "input", Box: "div"}
     const extIcon = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAgAAAAIAAQMAAADOtka5AAAAAXNSR0IB2cksfwAAAAlwSFlzAAE69gABOvYBOrFXOgAAAAZQTFRFAAAAcH7/bShqagAAAAJ0Uk5TAP9bkSK1AAACUUlEQVR4nO3dW04DMQyF4Q4gwRvsAHYCO6PdGewEdkDfQALKOJnpBahofCx5VP5I5Yl8VImTqRAcdzNxdAAAAAAAAAAAAAAAAP8AuH5qmre8+gacvzb+5Me7XeB+3gh8nO0AzW9g/RYG4PahGXi72AK6z+b566kxgGMJxkWoQGMR1FFLoQIrx/zZ6mQNuJZgnGtfXEswLEIM4FrDYRUL0HwQ6ijHoQCuTRi2wYDTdx9QJtvr8sUJPN8EAc5NqNtggOMyqMOuBAOcu1j30QDnLtZ97IRdnM0WcwOcJ8FGfxoiAHcZlEKIANx1VCqpE+qoVFIn1FGppCkAzju9jn66UslWywGAUMlWywGAUMlWywGAcBTsMAQAwlmy09QplWy1HAC4L3Ubq5MJANJp7s/zMQDSfdLfKBMApAupv5IAekC6U/tbFWASgPRgmgKwBABoBsbfn219QAcAAAAAAAAAAAAAAIgBfhkAAAAAAAAAAAAAAAAAAAAAAAAAOcBivuf79v4JIQAAAAAAAAAAAAAAwIFA+wAAAAAAAJg08PPZ+Nc/oQIAAAAAAAAAAAAAABwItA8AgBAgIA8lPxMGIADIT2g6AiA/K0wG8hPb8oH85D4dyM9PlCMgpUdTSIplfpJnfpppfqKrHEqbn6urA3I4sXAYajxyfsJzfsq1HNQtR4XrYeVyXLq7ksbA9vzMefeVMsbmy8H9eusA5zZsmhfk919wHqdNCwm5iYXeRkNu5JHfi0Rup6I3dJFbyuhNbeS2Ou4BAAAAAAAAAAAAAABwxMAXm3stnfulMqUAAAAASUVORK5CYII='
     const textIcon = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAgAAAAIAAQMAAADOtka5AAAAAXNSR0IB2cksfwAAAAlwSFlzAAALEwAACxMBAJqcGAAAAAZQTFRFAAAA////pdmf3QAAAAJ0Uk5TAP9bkSK1AAADbElEQVR4nO3dQW7bMBCFYbkp0O7aG0S7HKMFcrDEN0tuEt0g2TVAHVeQ6THJkYaiJw6D4tfGBi18kjgkTW/8Nl1+XP09vL5+jxqvnw6vj7/z0zcK+PHcqZOPaPfyswz8eghvdl+l7e5ety0Ce3kntyA3MHO+bniTt9ILxx4Yj+19lx4KiK4mH8oTzPSiAr79Ob0PZ8fm0JcAKUInfT7TZADR8x77XOrSZaOjCIRP91FLGYgvd+iEuAv0QLCB6YnjLlgBRCULN5w81P5LFTCdrltMYK8+1i0VwNiLSR9WA0OfDM16YCxDUoRqYKxaUtdqYOz0pAjVwPi5aqgDttu3tKEWeLxNq1gNDDdpFauBl+u0itXA682TD9jdPviAfb6OF4Fs3Ci/bj1oAmRzJz8qF9VzgGQJ1Uf5eyFbP/Kj/NWWrWD5MfQXB7JFOD/K+4N8LJfO14A5ktQ4mgHMOqoqzgBmLw59GTA7QZ8+A8zeiL50CUgnhd6hloHkFhZvwACSvlg+zQCiZ1h+AguI5qXe5a8Bolmhf2esAaJ9u9qjrwJOs0LPgHXA3G+XKkCmlZ5C6wApg1EEE5AyGEW4LCB1NKpoAjIbzKtYQBgI1jCwgTAQrGFgA2EgWMPgwkAYSdY4ujAQlsWhPxcIQ9EaiB8DWCPZBsJkaAiE2WRf5JMD03w2Z/P/D0xLkrkgAQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAB8NqD9v1y3B9r/27kXaP+f8+6/zW//z//u8IL2+QvtMyimBamwJJmAO8jDGyXiDjNpn8fijpRxh9qEYWAPBAvwBvu4o4Xc4UbueCXpQ7MXDcAbMeUOuYqewHqGRcAR9OWNGnOHnbnj1tyBb97IOXfoXfvcPnf0oDv8MJkC+lCT4v2B9hmWbsAdBPreUaTuMFR3HKs7ENYdSesOxfXG8rqDgXfeaGJ3OPLgjWd2B0Rv8pYPCMl2x3QnVTsnKDwBzokqd4elF+Lay99M7sB4d2R9dLaULCpteX8Q7dGlw6J+Uft2a4sjVzvd1Zo90tzvFOO3iwakz6PHlVvQ+/6ZrWfohGTIHHtB/3T5Bx4eQT0z7Oa2AAAAAElFTkSuQmCC'
     const imageIcon = 'data:image/png;base64,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'
@@ -98,7 +98,8 @@
             opcode: "HtmlAttribute",
             text: "Set html attribute [attribute] of [id] to [attributevalue]",
             blockType: Scratch.BlockType.COMMAND,
-            arguments: {id: {type: Scratch.ArgumentType.STRING, defaultValue: 'My element'}, attribute: {type: Scratch.ArgumentType.STRING, defaultValue: "readonly"}, attributevalue: {type: Scratch.ArgumentType.STRING, defaultValue: "true"}}
+            arguments: {id: {type: Scratch.ArgumentType.STRING, defaultValue: 'My element'}, attribute: {type: Scratch.ArgumentType.STRING, defaultValue: "readonly"}, attributevalue: {type: Scratch.ArgumentType.STRING, defaultValue: "true"}},
+            hideFromPalette: true //Hidden for now due to xss vulnerabilities
             },"---",{
             opcode: "WhenClicked",
             text: "When ID [id] is clicked",
@@ -204,7 +205,7 @@
     }}
     FixPos(elementid){
         setTimeout(() => {
-            if(!elements[elementid]){console.warn(`FixPos exception: ${elementid}`); return}
+            if(!elements[elementid]){return}
             this.Position({id: elementid, x: metadata[elementid].x, y: metadata[elementid].y})
         }, 1) // Timeout needed because for some reason it wont run otherwise..
     }
@@ -215,7 +216,6 @@
     }
     Create(args){
         if(elements[args.id]) return
-        const lookup = {Label: "span", Video: "video", Image: "img", Input: "input", Box: "div"}
         const element = document.createElement(lookup[args.type])
         const boundingRect = element.getBoundingClientRect()
         element.dataset.id = args.id
@@ -264,7 +264,6 @@
     Cursor(args){
         if(!elements[args.id]){return}
         const element = elements[args.id]
-        console.log(args.cursor)
         element.style.cursor = args.cursor
     }
     Color(args){
@@ -362,11 +361,8 @@
     ImageCostume(args, util){
         if(!elements[args.id] || elements[args.id].tagName != "IMG"){return}
         const target = util.target
-        console.log(target)
         const costumeIndex = target.getCostumeIndexByName("costume1")//Scratch.Cast.toString(args.COSTUME))
-        console.log(costumeIndex)
         const costume = target.sprite.costumes[costumeIndex]
-        console.log(costume)
         elements[args.id].src = costume.asset.encodeDataURI()
         this.FixPos(args.id)
     }

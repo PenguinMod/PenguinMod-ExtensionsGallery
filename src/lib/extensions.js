@@ -570,4 +570,14 @@ export default [
         isGitHub: true, 
         notes: "Gallery banner by Dillon",
     },
+    {
+    name: "Project Interfaces",
+    description: "Blocks to return the result of an expression.",
+    code: "LordCat0/ProjectInterfaces.js",
+    banner: "LordCat0/ProjectInterfaces.png",
+    creator: "LordCat0",
+    creatorAlias: "Lord cat",
+    notes: "Gallery banner by Dillon",
+    isGitHub: true,
+},
 ];

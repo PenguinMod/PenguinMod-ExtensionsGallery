@@ -572,7 +572,7 @@ export default [
     },
     {
     name: "Project Interfaces",
-    description: "Blocks to return the result of an expression.",
+    description: "Effortlessly create intuitive graphical user interfaces in your projects.",
     code: "LordCat0/ProjectInterfaces.js",
     banner: "LordCat0/ProjectInterfaces.png",
     creator: "LordCat0",

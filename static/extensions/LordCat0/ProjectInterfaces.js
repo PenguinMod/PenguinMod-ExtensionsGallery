@@ -61,7 +61,7 @@
             arguments: {id: {type: Scratch.ArgumentType.STRING, defaultValue: 'My element'}, dir: {type: Scratch.ArgumentType.NUMBER, defaultValue: 90}}
             },{
             opcode: "Scale",
-            text: "Set scale of ID [id] to wdith: [width]px height: [height]px",
+            text: "Set scale of ID [id] to width: [width]px height: [height]px",
             blockType: Scratch.BlockType.COMMAND,
             arguments: {id: {type: Scratch.ArgumentType.STRING, defaultValue: 'My element'}, width: {type: Scratch.ArgumentType.NUMBER, defaultValue: 100}, height: {type: Scratch.ArgumentType.NUMBER, defaultValue: 100}}
             },{

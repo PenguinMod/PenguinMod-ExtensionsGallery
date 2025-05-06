@@ -29,7 +29,7 @@ function uid_clone() {
   const soup = "!#%()*+,-./:;=?@[]^_`{|}~ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
   const length = 20;
 
-  const max = num => (num & 127) >= soup.length ? (num & 127) - soup.length : (num & 127);
+  const max = num => (num * soup.length) >> 8;
   
   return [...crypto.getRandomValues(new Uint8Array(length))]
     .map((e) => soup.charAt(max(e)))
@@ -282,7 +282,7 @@ class SteveZeroGreatnessExtraTimersExt {
               type: Scratch.ArgumentType.STRING,
               menu: "TIMERS"
             }
-          },
+          }
         },
         {
           opcode: "elapsed",

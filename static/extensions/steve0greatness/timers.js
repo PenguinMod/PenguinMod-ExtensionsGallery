@@ -296,7 +296,7 @@ class SteveZeroGreatnessExtraTimersExt {
             },
             UNITS: {
               type: Scratch.ArgumentType.NUMBER,
-              menu: "UNITS"
+              menu: "UNITS_GET"
             }
           },
         },
@@ -378,7 +378,7 @@ class SteveZeroGreatnessExtraTimersExt {
             },
             UNITS: {
               type: Scratch.ArgumentType.NUMBER,
-              menu: "UNITS2"
+              menu: "UNITS_SET"
             },
             TIMER: {
               type: Scratch.ArgumentType.STRING,
@@ -403,7 +403,7 @@ class SteveZeroGreatnessExtraTimersExt {
             },
             UNITS: {
               type: Scratch.ArgumentType.NUMBER,
-              menu: "UNITS"
+              menu: "UNITS_GET"
             }
           },
         }
@@ -412,7 +412,7 @@ class SteveZeroGreatnessExtraTimersExt {
         TIMERS: {
           variableType: Timer.customId
         },
-        UNITS: {
+        UNITS_GET: {
           acceptReporters: false,
           items: [
             {
@@ -429,11 +429,13 @@ class SteveZeroGreatnessExtraTimersExt {
             },
           ]
         },
-        UNITS2: {
+        UNITS_SET: {
           acceptReporters: false,
           items: [
-            { text: Scratch.translate("seconds"),
-              value: "1000" },
+            {
+              text: Scratch.translate("seconds"),
+              value: "1000"
+            },
             {
               text: Scratch.translate("milliseconds"),
               value: "1"

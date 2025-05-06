@@ -570,4 +570,14 @@ export default [
         isGitHub: true, 
         notes: "Gallery banner by Dillon",
     },
+    {
+    name: "Project Interfaces",
+    description: "Effortlessly create intuitive graphical user interfaces in your projects.",
+    code: "LordCat0/ProjectInterfaces.js",
+    banner: "LordCat0/ProjectInterfaces.png",
+    creator: "LordCat0",
+    creatorAlias: "Lord cat",
+    notes: "Gallery banner by Dillon",
+    isGitHub: true,
+},
 ];

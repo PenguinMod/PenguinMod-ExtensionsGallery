@@ -37,6 +37,17 @@ function uid_clone() {
 }
 
 function xml_escape(unsafe) {
+    if (typeof unsafe !== 'string') {
+        if (Array.isArray(unsafe)) {
+            // This happens when we have hacked blocks from 2.0
+            // See #1030
+            unsafe = String(unsafe);
+        } else {
+            console.log.error(`Unexptected type ${typeof unsafe} in xmlEscape at: ${new Error().stack}`);
+            return unsafe;
+        }
+    }
+
   return unsafe.replace(/[<>&'"]/g, c => {
     switch (c) {
       case '<': return '&lt;';

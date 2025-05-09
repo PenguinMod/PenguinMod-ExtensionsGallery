@@ -253,7 +253,7 @@ class SteveZeroGreatnessExtraTimersExt {
       output.push(...stage);
     }
     if (local.length && is_sprite) {
-      output.push(`<label text="${Scratch.translate("Timers for this sprites")}"></label>`);
+      output.push(`<label text="${Scratch.translate("Timers for this sprite")}"></label>`);
       output.push(...local);
     }
     if (stage.length || local.length) {

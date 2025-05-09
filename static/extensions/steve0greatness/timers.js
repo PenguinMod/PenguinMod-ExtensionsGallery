@@ -150,12 +150,16 @@ class Timer {
   }
 
   pause() {
+    if (this.is_paused)
+      return;
+
     this.tempPaused = false;
     this.pausedTime = Date.now();
   }
   unpause() {
     if (!this.is_paused)
       return;
+
     this.tempPaused = false;
     this.startTime += Date.now() - this.pausedTime;
     this.pausedTime = null;

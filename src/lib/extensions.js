@@ -591,4 +591,13 @@ export default [
     unstable: true,
     unstableReason: "The AI model can generate inaccurate output and broken syntax!",
 },
+    {
+        name: "Device Motion",
+        description: "Use Device Motion API to get rotation or movement of the device. Works best on mobile devices.",
+        code: "gaimerI17/DeviceMotion.js",
+        banner: "gaimerI17/DeviceMotion.svg",
+        creator: "gaimerI",
+        isGitHub: true,
+        creatorAlias: "gaimerI17",
+    },
 ];

@@ -223,6 +223,25 @@
         });
         return groups;
       }
+
+      cleanup() {
+        // Clear image data
+        if (this.sheet) {
+          this.sheet.src = '';
+          this.sheet.onload = null;
+          this.sheet.onerror = null;
+          this.sheet = null;
+        }
+        
+        // Clear frames data
+        this.frames = [];
+        this.frameNames = [];
+        this.totalFrames = 0;
+        this.currentFrame = 0;
+        
+        // Clear XML data
+        this.xmlData = null;
+      }
     }
     
     const spritesheetsMap = {};
@@ -824,8 +843,9 @@
       
       deleteSheet(args) {
         const name = Cast.toString(args.NAME);
-        
+          
         if (spritesheetsMap.hasOwnProperty(name)) {
+          spritesheetsMap[name].cleanup(); // Probable fix to Memory leak (reported by gomigg on Discord) by cleaning up the map before deleting the map
           delete spritesheetsMap[name];
         }
       }

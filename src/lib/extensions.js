@@ -590,5 +590,13 @@ export default [
     isGitHub: true,
     unstable: true,
     unstableReason: "The AI model can generate inaccurate output and broken syntax!",
-},
+    },
+        {
+    name: "Paint Utils",
+    description: "A colour extension that lets you mix colours.",
+    code: "Fruits555000/PaintUtils.js",
+    banner: "Fruits555000/PaintUtils.svg",
+    creator: "Fruits555000",
+    isGitHub: true,
+    },
 ];

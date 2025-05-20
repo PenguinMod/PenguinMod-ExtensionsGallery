@@ -24,3 +24,4 @@ Here are the colours in question with their position in the colour hierarchy in 
 <br>
 With that out of the way, we can now go through the blocks of Paint Utils
 ## Blocks
+There are only two blocks in the entire extension at the moment. This will change in future updates.

@@ -8,8 +8,8 @@ Paint Utils is a PenguinMod extension made for colour theory. Colour theory desc
 Currently, the extension only supports a small amount of colours with no tints, tones, or shades. This will change in future updates.
 Here are the colours in question with their position in the colour hierarchy in brackets:
 
-![#FE2712](https://placehold.co/15x15/FE2712/FE2712.png) **Red (Primary)**
-![#FD5308](https://placehold.co/15x15/FD5308/FD5308.png) **Vermillion (Tertiary)***
-![#FB9902](https://placehold.co/15x15/FB9902/FB9902.png) **Orange (Secondary)** 
-![#FABC02](https://placehold.co/15x15/FABC02/FABC02.png) **Amber (Tertiary)**
-![#FEFE33](https://placehold.co/15x15/FEFE33/FEFE33.png) **Yellow (Primary)**
+![#FE2712](https://placehold.co/15x15/FE2712/FE2712.png) **Red (Primary)** <br>
+![#FD5308](https://placehold.co/15x15/FD5308/FD5308.png) **Vermillion (Tertiary)** <br>
+![#FB9902](https://placehold.co/15x15/FB9902/FB9902.png) **Orange (Secondary)** <br>
+![#FABC02](https://placehold.co/15x15/FABC02/FABC02.png) **Amber (Tertiary)** <br>
+![#FEFE33](https://placehold.co/15x15/FEFE33/FEFE33.png) **Yellow (Primary)** <br>

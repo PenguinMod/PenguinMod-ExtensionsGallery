@@ -7,7 +7,7 @@ Paint Utils is a PenguinMod extension made for colour theory. Colour theory desc
 **Before we get onto the blocks, we have to know what colours are available in the extension.**
 
 Currently, the extension only supports a small amount of colours with no tints, tones, or shades. This will change in future updates. <br>
-Here are the colours in question with their position in the colour hierarchy in brackets:
+Here are the colours in question with their position in the colour hierarchy in brackets: <br>
 <br>
 ![#FE2712](https://placehold.co/15x15/FE2712/FE2712.png) **Red (Primary)** <br>
 ![#FD5308](https://placehold.co/15x15/FD5308/FD5308.png) **Vermillion (Tertiary)** <br>

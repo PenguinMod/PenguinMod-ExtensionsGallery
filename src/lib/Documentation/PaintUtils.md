@@ -30,4 +30,11 @@ There are only two blocks in the entire extension at the moment. This will chang
 (get colour form colour name (colour name):: #d1d1d1)
 ```
 Let's explain them
+<br>
 ### Mix Colours Block
+The mix colours block mixes two colours together (using names) and then returns either the colour value or the colour name depending on what was selected on the dropdown. <br>
+For example:
+if the the two colours inputted into the block are ![#0247FE](https://placehold.co/15x15/0247FE/0247FE.png) **Blue** and ![#FEFE33](https://placehold.co/15x15/FEFE33/FEFE33.png) **Yellow** then it will return ![#66B032](https://placehold.co/15x15/66B032/66B032.png) **Green**.
+<br>
+### Get Colour Block 
+This block is really simple. It converts a colour name into a colour value.

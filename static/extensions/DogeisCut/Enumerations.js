@@ -185,9 +185,9 @@
                     },
                     '---',
                     {
-                        opcode: "getEunm",
+                        opcode: "enum",
                         blockType: Scratch.BlockType.REPORTER,
-                        text: "MyEnum",
+                        text: "",
                         isDynamic: true,
                         hideFromPalette: true,
                         arguments: {
@@ -196,6 +196,15 @@
                                 defaultValue: "",
                             },
                         },
+                    },
+                    {
+                        blockType: Scratch.BlockType.XML,
+                        xml: `
+                        <block type="dogeiscutenumerations_enum">
+                            <mutation blockInfo="{&quot;text&quot;: &quot;MyEnum&quot;}">
+                            </mutation>
+                        </block>
+                        `
                     },
                     '---',
                     {
@@ -324,6 +333,10 @@
         }
 
         /* blocks */
+
+        enum({ mutator }) {
+            return enums[mutator.blockInfo.text];
+        }
         
         thisEnum(_, util, blockInfo) {
             const isInExtBlock = this.getPrevBlock(util)?.opcode.startsWith("dogeiscutenumerations_");

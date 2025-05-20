@@ -13,3 +13,10 @@ Here are the colours in question with their position in the colour hierarchy in 
 ![#FB9902](https://placehold.co/15x15/FB9902/FB9902.png) **Orange (Secondary)** <br>
 ![#FABC02](https://placehold.co/15x15/FABC02/FABC02.png) **Amber (Tertiary)** <br>
 ![#FEFE33](https://placehold.co/15x15/FEFE33/FEFE33.png) **Yellow (Primary)** <br>
+![#D0EA2B](https://placehold.co/15x15/D0EA2B/D0EA2B.png) **Chartreuse (Tertiary)** <br>
+![#66B032](https://placehold.co/15x15/66B032/66B032.png) **Green (Secondary)** <br>
+![#0392CE](https://placehold.co/15x15/0392CE/0392CE.png) **Teal (Tertiary)** <br>
+![#0247FE](https://placehold.co/15x15/0247FE/0247FE.png) **Blue (Primary)** <br>
+![#3D01A4](https://placehold.co/15x15/3D01A4/3D01A4.png) **Violet (Tertiary)** <br>
+![#8601AF](https://placehold.co/15x15/8601AF/8601AF.png) **Purple (Secondary)** <br>
+![#A7194B](https://placehold.co/15x15/A7194B/A7194B.png) **Blue (Primary)** <br>

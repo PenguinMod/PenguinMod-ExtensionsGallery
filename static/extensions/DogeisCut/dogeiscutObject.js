@@ -9,8 +9,10 @@
 //      - Ideas to solve this:
 //          - When seralising, every object is given an id, nested objects/arrays are replaced with the ID, there's a master table that holds all the objects/arrays and their ids. I'd have to be careful to make sure whatever format I decide to do with this doesn't conflict with anything the user can do.
 //          - SJON format/string (see below for SJSON class)
-// - Fix arrays containing objects inside objects. 
+// - Fix arrays containing objects inside objects.
 // - Handle displaying circular structures (tables containing themselves directly and indirectly.)
+//      - Honestly I might make the reporter bubbles look like how the developer console handles objects (collapsed by default and generated on open)
+// also im done suffering so im just gonna use that structured-clone library for serialization
 
 (function(Scratch) {
     'use strict';

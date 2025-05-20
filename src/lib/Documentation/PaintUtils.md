@@ -29,3 +29,5 @@ There are only two blocks in the entire extension at the moment. This will chang
 (mix colours (colour1) and (colour2) and return the [colour name or colour]:: #d1d1d1)
 (get colour form colour name (colour name):: #d1d1d1)
 ```
+Let's explain them
+### Mix Colours Block

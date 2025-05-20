@@ -6,9 +6,9 @@ Paint Utils is a PenguinMod extension made for colour theory. Colour theory desc
 ## Available Colours
 **Before we get onto the blocks, we have to know what colours are available in the extension.**
 
-Currently, the extension only supports a small amount of colours with no tints, tones, or shades. This will change in future updates.
+Currently, the extension only supports a small amount of colours with no tints, tones, or shades. This will change in future updates. <br>
 Here are the colours in question with their position in the colour hierarchy in brackets:
-
+<br>
 ![#FE2712](https://placehold.co/15x15/FE2712/FE2712.png) **Red (Primary)** <br>
 ![#FD5308](https://placehold.co/15x15/FD5308/FD5308.png) **Vermillion (Tertiary)** <br>
 ![#FB9902](https://placehold.co/15x15/FB9902/FB9902.png) **Orange (Secondary)** <br>
@@ -21,3 +21,6 @@ Here are the colours in question with their position in the colour hierarchy in 
 ![#3D01A4](https://placehold.co/15x15/3D01A4/3D01A4.png) **Violet (Tertiary)** <br>
 ![#8601AF](https://placehold.co/15x15/8601AF/8601AF.png) **Purple (Secondary)** <br>
 ![#A7194B](https://placehold.co/15x15/A7194B/A7194B.png) **Magenta (Tertiary)** <br>
+<br>
+With that out of the way, we can now go through the blocks of Paint Utils
+## Blocks

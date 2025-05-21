@@ -337,6 +337,15 @@ export default [
         isGitHub: false, 
     },
     {
+        name: "Email 2FA",
+        description: "Send 2FA codes to a users email to verify them in an easy to use way.",
+        code: "Ikelene/Email2FA.js",
+        banner: "Ikelene/2FA_ExtensionBanner.png",
+        creator: "ikelene",
+        creatorAlias" "Ikelene",
+        isGitHub: true,
+    },
+    {
         name: "Google Auth",
         description: "Login with Google to your projects. Allows getting a name, profile picture and email from the google account.",
         code: "Ikelene/googleAuthExtension.js",

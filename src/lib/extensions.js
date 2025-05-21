@@ -342,7 +342,7 @@ export default [
         code: "Ikelene/Email2FA.js",
         banner: "Ikelene/2FA_ExtensionBanner.png",
         creator: "ikelene",
-        creatorAlias" "Ikelene",
+        creatorAlias: "Ikelene",
         isGitHub: true,
     },
     {

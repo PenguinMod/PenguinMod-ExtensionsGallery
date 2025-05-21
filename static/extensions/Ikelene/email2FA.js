@@ -1,41 +1,48 @@
 (function(Scratch) {
     'use strict';
 
+    let cachedProjectID = null;
+
     class TwoFAExtension {
         getInfo() {
             return {
                 id: 'twofa',
                 name: 'Email 2FA',
-                color1: '#4C97FF',
-                color2: '#3373CC',
+                color1: '#ff8c3b',
+                color2: '#ff8c3b',
+                blockIconURI: 'https://ikelene.ca/api/2fa/icon-white.svg',
+                menuIconURI: 'https://ikelene.ca/api/2fa/icon-orange.svg',
                 blocks: [
                     {
-                        blockType: Scratch.BlockType.LABEL,
-                        text: 'You can only send a code'
-                    },
-                    {
-                        blockType: Scratch.BlockType.LABEL,
-                        text: 'every 60 seconds.'
+                        opcode: 'registerProjectID',
+                        blockType: Scratch.BlockType.REPORTER,
+                        text: 'register project [PROJECTNAME]',
+                        arguments: {
+                            PROJECTNAME: {
+                                type: Scratch.ArgumentType.STRING,
+                                defaultValue: 'CoolGame'
+                            }
+                        }
                     },
                     {
                         opcode: 'send2FACode',
                         blockType: Scratch.BlockType.COMMAND,
-                        text: 'send 2FA code to [EMAIL] from [PROJECT]',
+                        text: 'send 2FA code to [EMAIL] from project ID [PROJECT_ID]',
                         arguments: {
                             EMAIL: {
                                 type: Scratch.ArgumentType.STRING,
                                 defaultValue: 'user@example.com'
                             },
-                            PROJECT: {
+                            PROJECT_ID: {
                                 type: Scratch.ArgumentType.STRING,
-                                defaultValue: 'My Game'
+                                defaultValue: 'abc123'
                             }
                         }
                     },
                     {
                         opcode: 'verify2FACode',
                         blockType: Scratch.BlockType.BOOLEAN,
-                        text: 'is 2FA code [CODE] correct for [EMAIL]?',
+                        text: 'is 2FA code [CODE] correct for [EMAIL] in project ID [PROJECT_ID]?',
                         arguments: {
                             CODE: {
                                 type: Scratch.ArgumentType.STRING,
@@ -44,28 +51,40 @@
                             EMAIL: {
                                 type: Scratch.ArgumentType.STRING,
                                 defaultValue: 'user@example.com'
+                            },
+                            PROJECT_ID: {
+                                type: Scratch.ArgumentType.STRING,
+                                defaultValue: 'abc123'
                             }
                         }
                     },
                     {
                         opcode: 'isUserVerified',
                         blockType: Scratch.BlockType.BOOLEAN,
-                        text: 'is [EMAIL] verified?',
+                        text: 'is [EMAIL] verified in project ID [PROJECT_ID]?',
                         arguments: {
                             EMAIL: {
                                 type: Scratch.ArgumentType.STRING,
                                 defaultValue: 'user@example.com'
+                            },
+                            PROJECT_ID: {
+                                type: Scratch.ArgumentType.STRING,
+                                defaultValue: 'abc123'
                             }
                         }
                     },
                     {
                         opcode: 'clearVerification',
                         blockType: Scratch.BlockType.COMMAND,
-                        text: 'clear verification for [EMAIL]',
+                        text: 'clear verification for [EMAIL] in project ID [PROJECT_ID]',
                         arguments: {
                             EMAIL: {
                                 type: Scratch.ArgumentType.STRING,
                                 defaultValue: 'user@example.com'
+                            },
+                            PROJECT_ID: {
+                                type: Scratch.ArgumentType.STRING,
+                                defaultValue: 'abc123'
                             }
                         }
                     },
@@ -73,21 +92,33 @@
                         opcode: 'isServerOnline',
                         blockType: Scratch.BlockType.BOOLEAN,
                         text: 'is 2FA server online?'
-                    },
-                    {
-                        blockType: Scratch.BlockType.LABEL,
-                        text: 'It\'s recommended to clear verification'
-                    },
-                    {
-                        blockType: Scratch.BlockType.LABEL,
-                        text: 'before verifying, The user may already'
-                    },
-                    {
-                        blockType: Scratch.BlockType.LABEL,
-                        text: 'be verified from another project.'
                     }
                 ]
             };
+        }
+
+        async registerProjectID(args) {
+            if (cachedProjectID) return cachedProjectID;
+            const confirmed = window.confirm('âš ï¸ DO NOT use this block in running code!\n\nThis block is for one-time manual use to register a project.\nClick OK to continue.');
+            if (!confirmed) return '';
+
+            try {
+                const res = await fetch('https://ikelene.ca/api/2fa/register_project.php', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                    body: new URLSearchParams({ project: args.PROJECTNAME })
+                });
+                const id = await res.text();
+                const trimmed = id.trim();
+                if (trimmed && trimmed !== 'invalid name' && trimmed !== 'disallowed name' && trimmed !== 'rate limited') {
+                    cachedProjectID = trimmed;
+                    return cachedProjectID;
+                }
+                return '';
+            } catch (e) {
+                console.error('Failed to register project:', e);
+                return '';
+            }
         }
 
         async send2FACode(args) {
@@ -97,7 +128,7 @@
                     headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
                     body: new URLSearchParams({
                         email: args.EMAIL,
-                        project: args.PROJECT || 'Your App'
+                        project_id: args.PROJECT_ID
                     })
                 });
             } catch (e) {
@@ -112,7 +143,8 @@
                     headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
                     body: new URLSearchParams({
                         email: args.EMAIL,
-                        code: args.CODE
+                        code: args.CODE,
+                        project_id: args.PROJECT_ID
                     })
                 });
                 const text = await res.text();
@@ -125,7 +157,7 @@
 
         async isUserVerified(args) {
             try {
-                const res = await fetch(`https://ikelene.ca/api/2fa/is_verified.php?email=${encodeURIComponent(args.EMAIL)}`);
+                const res = await fetch(`https://ikelene.ca/api/2fa/is_verified.php?email=${encodeURIComponent(args.EMAIL)}&project_id=${encodeURIComponent(args.PROJECT_ID)}`);
                 const text = await res.text();
                 return text.trim() === 'true';
             } catch (e) {
@@ -139,7 +171,10 @@
                 await fetch('https://ikelene.ca/api/2fa/clear_verification.php', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-                    body: new URLSearchParams({ email: args.EMAIL })
+                    body: new URLSearchParams({
+                        email: args.EMAIL,
+                        project_id: args.PROJECT_ID
+                    })
                 });
             } catch (e) {
                 console.error("2FA clear error:", e);

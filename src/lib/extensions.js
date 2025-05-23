@@ -339,7 +339,7 @@ export default [
     {
         name: "Email 2FA",
         description: "Send 2FA codes to a users email to verify them in an easy to use way.",
-        code: "Ikelene/Email2FA.js",
+        code: "Ikelene/email2FA.js",
         banner: "Ikelene/2FA_ExtensionBanner.png",
         creator: "ikelene",
         creatorAlias: "Ikelene",

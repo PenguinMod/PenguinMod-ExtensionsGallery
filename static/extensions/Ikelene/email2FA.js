@@ -6,7 +6,7 @@
     class TwoFAExtension {
         getInfo() {
             return {
-                id: 'twofa',
+                id: 'IkeEmailTwofa',
                 name: 'Email 2FA',
                 color1: '#ff8c3b',
                 color2: '#ff8c3b',
@@ -20,7 +20,7 @@
                         arguments: {
                             PROJECTNAME: {
                                 type: Scratch.ArgumentType.STRING,
-                                defaultValue: 'CoolGame'
+                                defaultValue: 'Cool Game'
                             }
                         }
                     },
@@ -99,7 +99,7 @@
 
         async registerProjectID(args) {
             if (cachedProjectID) return cachedProjectID;
-            const confirmed = window.confirm('âš ï¸ DO NOT use this block in running code!\n\nThis block is for one-time manual use to register a project.\nClick OK to continue.');
+            const confirmed = window.confirm('⚠️ DO NOT use this block in running code!\n\nThis block is for one-time manual use to register a project.\nClick OK to continue.');
             if (!confirmed) return '';
 
             try {

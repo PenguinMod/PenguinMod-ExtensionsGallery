@@ -1,7 +1,9 @@
 let deviceMotionAccelX = 0;
 let deviceMotionAccelY = 0;
 let deviceMotionAccelZ = 0;
+let deviceMotionAccelGravity = 0;
 let deviceMotionAccelMagnitude = 0;
+let deviceMotionAccelMagnitudeWithGravity = 0;
 let deviceMotionIsShaken = false;
 let deviceShakingTime = 0;
 let deviceRotationRateA = 0;
@@ -13,14 +15,19 @@ let deviceOrientationBeta = 0;
 let deviceOrientationGamma = 0;
 let deviceOrientationAbs = false;
 
+let deviceShakeThreshold = 20;
+let deviceTiltThreshold = 45;
+
 const menuIconURI = "data:image/svg+xml;base64,PHN2ZyB2ZXJzaW9uPSIxLjEiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyIgeG1sbnM6eGxpbms9Imh0dHA6Ly93d3cudzMub3JnLzE5OTkveGxpbmsiIHdpZHRoPSI3MS4zMzAyNiIgaGVpZ2h0PSI3OC44MzAyNSIgdmlld0JveD0iMCwwLDcxLjMzMDI2LDc4LjgzMDI1Ij48ZyB0cmFuc2Zvcm09InRyYW5zbGF0ZSgtMjA0LjMzNDg3LC0xNDAuNTg0ODgpIj48ZyBzdHJva2UtbWl0ZXJsaW1pdD0iMTAiPjxwYXRoIGQ9Ik0yMjEuNTQyNDQsMTgyLjUwMDAxdi01aDM2LjkxNTEzdjV6IiBmaWxsPSIjMDAwMWZmIiBzdHJva2U9Im5vbmUiIHN0cm9rZS13aWR0aD0iMCIvPjxwYXRoIGQ9Ik0yMzcuNSwxOTguNDU3NTd2LTM2LjkxNTEyaDV2MzYuOTE1MTJ6IiBmaWxsPSIjMDFmZjAwIiBzdHJva2U9Im5vbmUiIHN0cm9rZS13aWR0aD0iMCIvPjxwYXRoIGQ9Ik0yMzQuOTgzNDksMTYxLjU0MjQ0bDUuMDMzMDMsLTVsNS4wMzMwMyw1eiIgZmlsbD0iIzAxZmYwMCIgc3Ryb2tlPSJub25lIiBzdHJva2Utd2lkdGg9IjAiLz48cGF0aCBkPSJNMjM0LjQ1Nzk2LDE5MS40OTkwM2MtMS4xMDczNywwIC0yLjAwNTA4LC0wLjg5NzcxIC0yLjAwNTA4LC0yLjAwNTA5bC0wLjAxMzc3LC0xOS4wMTgzM2MwLC0xLjEwNzM3IDAuODk3NzEsLTIuMDA1MDggMi4wMDUwOCwtMi4wMDUwOGwxMS4xMTE2MiwwLjA0MjA1YzEuMTA3MzcsMCAyLjAwNTA4LDAuODk3NzEgMi4wMDUwOCwyLjAwNTA4bC0wLjEyOTIsMTkuMDA2NzNjMCwxLjEwNzM3IC0wLjg5NzcxLDIuMDA1MDggLTIuMDA1MDksMi4wMDUwOHoiIGZpbGw9IiMwMDAwMDAiIHN0cm9rZT0iIzAwMDAwMCIgc3Ryb2tlLXdpZHRoPSIxIi8+PHBhdGggZD0iTTIzMy4xODg4OCwxODcuNDMyNjN2LTE2LjU4MTUyaDEzLjYyMjI0djE2LjU4MTUyeiIgZmlsbD0iI2ZmZmZmZiIgc3Ryb2tlPSIjMDAwMDAwIiBzdHJva2Utd2lkdGg9IjEiLz48cGF0aCBkPSJNMjM3LjQ4MzQ5LDE2OS43MzYxNXYtMS4yNjU2MWg1LjAzMzAzdjEuMjY1NjF6IiBmaWxsPSIjZmZmZmZmIiBzdHJva2U9IiMwMDAwMDAiIHN0cm9rZS13aWR0aD0iMC41Ii8+PHBhdGggZD0iTTIzOC43NDY4MywxODkuNDU5MjVjMCwtMC42OTIxMSAwLjU2MTA2LC0xLjI1MzE3IDEuMjUzMTcsLTEuMjUzMTdjMC42OTIxMSwwIDEuMjUzMTcsMC41NjEwNiAxLjI1MzE3LDEuMjUzMTdjMCwwLjY5MjExIC0wLjU2MTA2LDEuMjUzMTggLTEuMjUzMTcsMS4yNTMxOGMtMC42OTIxMSwwIC0xLjI1MzE3LC0wLjU2MTA3IC0xLjI1MzE3LC0xLjI1MzE4eiIgZmlsbD0iI2ZmZmZmZiIgc3Ryb2tlPSIjMDAwMDAwIiBzdHJva2Utd2lkdGg9IjAuNSIvPjxwYXRoIGQ9Ik0yMDUuNTg0ODcsMTgwLjAwMDAxYzAsLTE5LjAwNjk1IDE1LjQwODE4LC0zNC40MTUxMyAzNC40MTUxMywtMzQuNDE1MTNjMTkuMDA2OTUsMCAzNC40MTUxMywxNS40MDgxOCAzNC40MTUxMywzNC40MTUxM2MwLDE5LjAwNjk1IC0xNS40MDgxOCwzNC40MTUxMyAtMzQuNDE1MTMsMzQuNDE1MTNjLTE5LjAwNjk1LDAgLTM0LjQxNTEzLC0xNS40MDgxOCAtMzQuNDE1MTMsLTM0LjQxNTEzeiIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjZmYwMDAwIiBzdHJva2Utd2lkdGg9IjIuNSIvPjxwYXRoIGQ9Ik0yNDAuMDM4MzMsMTUwLjU4NDg4di01aDV6IiBmaWxsPSIjZmYwMDAwIiBzdHJva2U9Im5vbmUiIHN0cm9rZS13aWR0aD0iMCIvPjxwYXRoIGQ9Ik0yNDUuMDM4MzMsMTQ1LjU4NDg4aC01di01eiIgZmlsbD0iI2ZmMDAwMCIgc3Ryb2tlPSJub25lIiBzdHJva2Utd2lkdGg9IjAiLz48cGF0aCBkPSJNMjM0Ljk1ODg0LDIxNC40MTUxM2g1djV6IiBmaWxsPSIjZmYwMDAwIiBzdHJva2U9Im5vbmUiIHN0cm9rZS13aWR0aD0iMCIvPjxwYXRoIGQ9Ik0yMzkuOTU4ODQsMjA5LjQxNTEzdjVoLTV6IiBmaWxsPSIjZmYwMDAwIiBzdHJva2U9Im5vbmUiIHN0cm9rZS13aWR0aD0iMCIvPjxwYXRoIGQ9Ik0yMTYuNTQyNDQsMTgwLjAwMDAxbDUsLTV2MTB6IiBmaWxsPSIjMDAwMWZmIiBzdHJva2U9Im5vbmUiIHN0cm9rZS13aWR0aD0iMCIvPjxwYXRoIGQ9Ik0yNTguNDcxMTUsMTg1LjAwMDE1di0xMGw1LDV6IiBmaWxsPSIjMDAwMWZmIiBzdHJva2U9Im5vbmUiIHN0cm9rZS13aWR0aD0iMCIvPjxwYXRoIGQ9Ik0yNDQuOTUwMTgsMTk4LjQ1NzU3bC01LjAzMzAzLDVsLTUuMDMzMDMsLTV6IiBmaWxsPSIjMDFmZjAwIiBzdHJva2U9Im5vbmUiIHN0cm9rZS13aWR0aD0iMCIvPjwvZz48L2c+PC9zdmc+PCEtLXJvdGF0aW9uQ2VudGVyOjM1LjY2NTEzMDAwMDAwMDAwNTozOS40MTUxMjQ5OTk5OTk5OS0tPg==";
 
 window.addEventListener("devicemotion", (event) => {
   deviceMotionAccelX = -1 * event.acceleration.x ?? 0;
   deviceMotionAccelY = -1 * event.acceleration.y ?? 0;
   deviceMotionAccelZ = event.acceleration.z ?? 0;
+  deviceMotionAccelMagnitudeWithGravity = Math.sqrt(event.accelerationIncludingGravity.x * event.accelerationIncludingGravity.x + event.accelerationIncludingGravity.y * event.accelerationIncludingGravity.y + event.accelerationIncludingGravity.z * event.accelerationIncludingGravity.z) ?? 0;
   deviceMotionAccelMagnitude = Math.sqrt(deviceMotionAccelX * deviceMotionAccelX + deviceMotionAccelY * deviceMotionAccelY + deviceMotionAccelZ * deviceMotionAccelZ) ?? 0;
-  deviceMotionIsShaken = (deviceMotionAccelMagnitude > 20) ?? false;
+  deviceMotionAccelGravity = (deviceMotionAccelMagnitudeWithGravity - deviceMotionAccelMagnitude);
+  deviceMotionIsShaken = (deviceMotionAccelMagnitude > deviceShakeThreshold) ?? false;
   deviceRotationRateA = event.rotationRate.alpha ?? 0;
   deviceRotationRateB = event.rotationRate.beta ?? 0;
   deviceRotationRateC = event.rotationRate.gamma ?? 0;
@@ -76,6 +83,13 @@ class gaimeriDeviceMotionExtension {
         },
         '---',
         {
+          opcode: 'deviceAccelerationGravityCurrent',
+          blockType: Scratch.BlockType.REPORTER,
+          text: 'device gravity',
+          disableMonitor: false
+        },
+        '---',
+        {
           opcode: 'deviceRotationA',
           blockType: Scratch.BlockType.REPORTER,
           text: 'device rotation rate alpha',
@@ -125,6 +139,23 @@ class gaimeriDeviceMotionExtension {
           text: 'is device direction absolute?',
           disableMonitor: false
         },
+        {
+          opcode: 'deviceTiltDirection',
+          blockType: Scratch.BlockType.REPORTER,
+          text: 'device tilt direction',
+          disableMonitor: false
+        },
+        {
+          opcode: 'setTiltThreshold',
+          blockType: Scratch.BlockType.COMMAND,
+          text: 'set tilt threshold to [THRESHOLD]',
+          arguments: {
+            THRESHOLD: {
+              type: Scratch.ArgumentType.NUMBER,
+              defaultValue: 45
+            }
+          }
+        },
         '---',
         {
           opcode: 'deviceMotionIsShakenContinuous',
@@ -138,6 +169,17 @@ class gaimeriDeviceMotionExtension {
           text: 'device shaken?',
           disableMonitor: false
         },
+        {
+          opcode: 'setShakeThreshold',
+          blockType: Scratch.BlockType.COMMAND,
+          text: 'set shake threshold to [THRESHOLD]',
+          arguments: {
+            THRESHOLD: {
+              type: Scratch.ArgumentType.NUMBER,
+              defaultValue: 20
+            }
+          }
+        }
       ]
     };
   }
@@ -155,6 +197,10 @@ class gaimeriDeviceMotionExtension {
 
   deviceAccelerationMagnitude(){
     return deviceMotionAccelMagnitude;
+  }
+
+  deviceAccelerationGravityCurrent(){
+    return deviceMotionAccelMagnitudeWithGravity;
   }
 
   deviceRotationA(){
@@ -196,6 +242,23 @@ class gaimeriDeviceMotionExtension {
   deviceMotionIsShakenSingle(){
     return (deviceShakingTime == 1);
   }
+
+  setShakeThreshold(args){
+    deviceShakeThreshold = args.THRESHOLD;
+  }
+
+  setTiltThreshold(args){
+    deviceTiltThreshold = args.THRESHOLD;
+  }
+
+  deviceTiltDirection() {
+    if (deviceOrientationGamma > deviceTiltThreshold + 5) return "right";
+    if (deviceOrientationGamma < -deviceTiltThreshold - 5) return "left";
+    if (deviceOrientationBeta > deviceTiltThreshold) return "forward";
+    if (deviceOrientationBeta < -deviceTiltThreshold) return "backward";
+    return "neutral";
+  }
+
 }
 
 Scratch.extensions.register(new gaimeriDeviceMotionExtension());

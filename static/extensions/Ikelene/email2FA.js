@@ -123,27 +123,27 @@
                                 defaultValue: '<h1>Your Code</h1>'
                             }
                         }
-                    },
-                    {
-                        blockType: Scratch.BlockType.LABEL,
-                        text: 'Use your own email'
-                    },
-                    {
-                        opcode: 'setCustomEmailLogin',
-                        blockType: Scratch.BlockType.COMMAND,
-                        text: 'Use custom email login [EMAIL] pass [PASS] smtp [SMTP] port [PORT]',
-                        arguments: {
-                            EMAIL: { type: Scratch.ArgumentType.STRING, defaultValue: 'your@email.com' },
-                            PASS: { type: Scratch.ArgumentType.STRING, defaultValue: 'password' },
-                            SMTP: { type: Scratch.ArgumentType.STRING, defaultValue: 'smtp.gmail.com' },
-                            PORT: { type: Scratch.ArgumentType.STRING, defaultValue: '465' }
-                        }
-                    },
-                    {
-                        opcode: 'clearCustomEmailLogin',
-                        blockType: Scratch.BlockType.COMMAND,
-                        text: 'Clear custom email login'
                     }
+                    //{
+                    //    blockType: Scratch.BlockType.LABEL,
+                    //    text: 'Use your own email'
+                    //},
+                    //{
+                    //    opcode: 'setCustomEmailLogin',
+                    //    blockType: Scratch.BlockType.COMMAND,
+                    //    text: 'Use custom email login [EMAIL] pass [PASS] smtp [SMTP] port [PORT]',
+                    //    arguments: {
+                    //        EMAIL: { type: Scratch.ArgumentType.STRING, defaultValue: 'your@email.com' },
+                    //        PASS: { type: Scratch.ArgumentType.STRING, defaultValue: 'password' },
+                    //        SMTP: { type: Scratch.ArgumentType.STRING, defaultValue: 'smtp.gmail.com' },
+                    //        PORT: { type: Scratch.ArgumentType.STRING, defaultValue: '465' }
+                    //    }
+                    //},
+                    //{
+                    //    opcode: 'clearCustomEmailLogin',
+                    //    blockType: Scratch.BlockType.COMMAND,
+                    //    text: 'Clear custom email login'
+                    //}
                 ],
                 menus: {
                     presetMenu: {
@@ -178,18 +178,18 @@
             customHTML = args.HTML;
         }
 
-        setCustomEmailLogin(args) {
-            customEmailSettings = {
-                email: args.EMAIL,
-                pass: args.PASS,
-                smtp: args.SMTP,
-                port: args.PORT
-            };
-        }
+        //setCustomEmailLogin(args) {
+        //    customEmailSettings = {
+        //        email: args.EMAIL,
+        //        pass: args.PASS,
+        //        smtp: args.SMTP,
+        //        port: args.PORT
+        //    };
+        //}
 
-        clearCustomEmailLogin() {
-            customEmailSettings = null;
-        }
+        //clearCustomEmailLogin() {
+        //    customEmailSettings = null;
+        //}
 
         async registerProjectID(args) {
             if (cachedProjectID) return cachedProjectID;

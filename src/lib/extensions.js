@@ -429,5 +429,16 @@ export default [
     isGitHub: true,
     unstable: true,
     unstableReason: "The AI model can generate inaccurate output and broken syntax!",
-},
-];
+    },
+    {
+    name: "Lazy Money",
+    description: "An extension for people who is to lazy to make variables in a clicker game.",
+    code: "TheShovel/blockAI.js",
+    banner: "TheShovel/thumbnail-blockAI.png",
+    creator: "GatocDev",
+    creatorAlias: "Gatoc",
+    isGitHub: true,
+    unstable: true,
+    unstableReason: "no",
+        },
+        ];

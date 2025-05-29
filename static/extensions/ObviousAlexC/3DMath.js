@@ -1021,7 +1021,7 @@
       a = JSON.parse(a);
       b = JSON.parse(b);
       if (a.length == 3 && b.length == 3) {
-        return a[0] * b[0] + a[1] * b[1] + a[2] + b[2];
+        return a[0] * b[0] + a[1] * b[1] + a[2] * b[2];
       }
       return 0;
     }

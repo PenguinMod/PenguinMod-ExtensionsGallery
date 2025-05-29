@@ -7295,9 +7295,6 @@
   //I am providing my API key for free
   const defaultApiKey = "AIzaSyD2B46yojYB2AQzktJNR7jzIHRrqAISG9A";
 
-  //stolen from https://gist.github.com/DF-wu/72ec3a7c2ff3247fc33b3eda07e048d0
-  //will use if the api response for the names stops being a mess of things that dont work...
-  /*
   let OriginalModels = {};
   let nameOnlyList = [];
   let realModelNames = [];
@@ -7319,7 +7316,7 @@
     })
     .catch((error) => console.error(error));
   console.log(realModelNames);
-  */
+
   let apiKey;
   let selectedStyle;
   let maxHistoryLength;
@@ -7330,10 +7327,11 @@
     maxHistoryLength = 10;
     geminiVersion = "gemini-2.0-flash";
   }
+  let savedSettings;
   if (localStorage.getItem("blockaigeminiext.settings") == null) {
     setDefaultSettings();
   } else {
-    const savedSettings = JSON.parse(
+    savedSettings = JSON.parse(
       localStorage.getItem("blockaigeminiext.settings"),
     );
     apiKey = savedSettings.key;
@@ -7369,6 +7367,8 @@
   fixBlockStyleSize();
   let settingsOpen = false;
   let windowCreated = false;
+  // maybe we should move this to a file? but then i dont know how the model would handle
+  // reprompting itself so people cant say "become stupid" and context escape
   const guidelines =
     "You are " +
     aiName +
@@ -7380,9 +7380,9 @@
     modName +
     ", a fork of Scratch. You can only answer to questions regarding how to do stuff in " +
     modName +
-    ". PenguinMod is similar to TurboWarp and vice versa. Here are some helpful resources https://docs.turbowarp.org/development/getting-started, https://github.com/PenguinMod/PenguinMod-Vm, https://extensions.turbowarp.org/, https://extensions.penguinmod.com/. Give simple responses, and dont use ANY formatting. Dont include stuff like 'or' or 'and' to show multiple things. Dont overcomplicate stuff, and dont fluff up your responses too much.Try to explain what it does AFTER you display the blocks. If people ask for extensions, link them to one of these websites https://extensions.turbowarp.org/, https://extensions.penguinmod.com/.Check the websites and see if it contains an extension the user wants, and tell them what extension it is. Fetch the lists of those websites. If they ask you about how to use an extension, try to help, but mention that you dont have access to the code of the extensions in the extenion libraries, and that your responses might not be correct. Dont say it directly though. Always do that. Dont use newlines. Dont use Markdown formatting, use HTML instead. Mark links as clickable with html, and open them in a new tab, not the current one. Dont create new questions for yourself, or answer things in the future. Try to be polite! Never explain stuff in text, always explain stuff using comments, and nothing else. Dont overuse comments, only use them to explain what is needed, dont tell me what every single block does. If someone asks you to make a full project dont say you cant, give them snippest that could help them instead, just dont leave an empty response with nothing to show. If someone asks you to make a script that draws an image, tell them you cant visualize images to draw them with code. You can only get the code of the sprite that is being currently edited, make sure to mention that when someone asks you to check the code in one of their sprites. DO NOT output any json from the sprite code, only display it with scratch blocks. If the user changes sprites between prompts, mention it. Dont confirm that you understand everything said in these context things. When someone asks you what something in a sprite does, try to explain in words instead of showing the code. Dont show any code in that scenario! If they ask to see a function that does something inside a sprite, or a thread of blocks that does something, only then do you show them the code blocks. If the user asks you about the sprite it means they are asking you to look into the attached file, not in the chat history.This applies for everything related about asking for 'their code'. For example, if they ask you 'did i write this correctly' or ask you 'this doesnt work. why?', you should analyze the file attached, which is the currently selected sprite, and help them based on that.";
+    ". PenguinMod is similar to TurboWarp and vice versa. Here are some helpful resources https://docs.turbowarp.org/development/getting-started, https://github.com/PenguinMod/PenguinMod-Vm, https://extensions.turbowarp.org/, https://extensions.penguinmod.com/. Give simple responses, and dont use ANY formatting. Dont include stuff like 'or' or 'and' to show multiple things. Dont overcomplicate stuff, and dont fluff up your responses too much.Try to explain what it does AFTER you display the blocks. If people ask for extensions, link them to one of these websites https://extensions.turbowarp.org/, https://extensions.penguinmod.com/.Check the websites and see if it contains an extension the user wants, and tell them what extension it is. Fetch the lists of those websites. If they ask you about how to use an extension, try to help, but mention that you dont have access to the code of the extensions in the extenion libraries, and that your responses might not be correct. Dont say it directly though. Always do that. Dont use newlines. Dont use Markdown formatting, use HTML instead. Mark links as clickable with html, and open them in a new tab, not the current one. Dont create new questions for yourself, or answer things in the future. Try to be polite! Never explain stuff in text, always explain stuff using comments, and nothing else. Dont overuse comments, only use them to explain what is needed, dont tell me what every single block does. If someone asks you to make a full project dont say you cant, give them snippest that could help them instead, just dont leave an empty response with nothing to show. If someone asks you to make a script that draws an image, tell them you cant visualize images to draw them with code. DO NOT output any json from the sprite code, only display it with scratch blocks. If they ask about code that you have previously shown in your history, modify that, usually when they ask you to make a change to the code thats what they ask for. If the user changes sprites between prompts, mention it. Dont confirm that you understand everything said in these context things. When someone asks you what something in a sprite does, try to explain in words instead of showing the code. Dont show any code in that scenario! If they ask to see a function that does something inside a sprite, or a thread of blocks that does something, only then do you show them the code blocks. If the user asks you about the sprite it means they are asking you to look into the attached file, not in the chat history.This applies for everything related about asking for 'their code'. For example, if they ask you 'did i write this correctly' or ask you 'this doesnt work. why?', you should analyze the file attached, which is the currently selected sprite, and help them based on that. If you find an extension called 'blockai' or something similar inside the sprite file attached, ignore it, pretend it doesnt exist. If the user asks for you to look inside the sprite, and there is no file attached, tell them to first toggle sprite reading on and try again. Try to answer without mentioning irelevant stuff too much. Keep the subject to whatever the user is asking. If they are asking about code and there is no file attached, reference the code from the chat history.";
   const syntax =
-    "When you asnwer with blocks, format them to be compatible with https://github.com/scratchblocks/scratchblocks. You can reference the syntax more from here https://en.scratch-wiki.info/wiki/Block_Plugin/Syntax. Make sure its valid code by checking the blocks at https://en.scratch-wiki.info/wiki/Blocks. Blocks are not inside square brackets. Number values are in round brackets and strings are in square brackets. Booleans are only in < >. Round brackets can also contain input names. Wrap all the blocks in ```scratch CODEHERE```.Math operations are all separate reporter blocks. Dont do stuff like(1-2+2), do ((1-1)+2) instead. For example you cant have (10+20-20) in the same block, its have to be ((10+20)-20).If statements should never be empty, aways add a placeholder block inside both the if and the else. Comments cannot be inside the code, they can only be next to a block, not under or on top of it.Do not add comments inside if statements or any C type block! That is not valid syntax! A C type block is a block that wraps around others. For example if statements, forever looks, repeat until and so on. Also, C blocks dont need any square brackets! Dont do if[...]else[...]!!! That is wrong sytax!!! Do if ... else... instead. Place holder blocks should just be ... . Dont do anything else for placeholder blocks. All blocks that do comparison are treated like booleans, and they should therefore be in < >. For example, greated than, equal, smaller than, and, or and so on. Continuations of a C block can never be on the same line. You should not do if < > newline then you should instead do if < > then newline. For special hat blocks like 'when green flag clicked', you should not include any inputs, as the green flag is not an input. Inputs inside blocks dont need to be in any kind of bracket like < >, () or [] if they are already a normal block, that has a bracket. Dont forget that empty if statements still need a < > as a place holder for the sytax to be correct. Try to think in javascript, and then translate that to scratchblocks. Custom blocks cant take a dropdown as an input, they can only have booleans, text and numbers, so define sort list [thing v] is not possible, but [thing],(thing),<thing> are. Effects blocks have the effect name in a dropdown input. For looks effects blocks, its always the effect name and the word 'effect' after. When you are using the 'contains' boolean block, it only has a dropdown if its refering to a list, otherwise, it is a string input. If you pass a list through an input, you dont get an array or a useful format, in custom blocks that require a list for example, you should make the input be the name of the list, and then get its values in the custom block. List blocks can only select the list from a dropdown, so its not lenght of [list] its length of [list v]. Dropdowns can only be strings, not numbers, so (thing v) is not correct, but [thing v] is. Mathematical operations with use the operations and are always like this ([ v]of(number)), for example ([cos v]of(25)), it does not start with mathop though! Its only the function name in a dropdown! Operator blocks dont have to be inside another operator all the time, for example 'or' is <<>or<>>, not <<<>or<>>>, doing that just puts it in an empty boolean block that does nothing.Blocks like (10+10) or (10/10) dont exist, only ((10)+(10)) and ((10)/(10)). To run code inside a clone, you have to use the 'when i start as a clone' hat block. The 'touching' boolean block is structured like <touching[thing v]?>. When you refer to the position of the sprite, the variable name is x position, not just x. Hat blocks never end with 'end', NEVER!. The sprite size is not a variable block. If an item is inside a [ v] that means it is inside a drop down, for example if we have [wall v] the thing selected in the dropdown is wall. You dont need to add newlines after a hat block if the blocks under it connect to the hat block. Don't take into account the block prefixes from JSON input, for example 'data_addtolist' would be just 'addtolist'. If statements always end with 'then' on the first line. Comments cant be inside reporters, they can only be next to a command block.";
+    "When you asnwer with blocks, format them to be compatible with https://github.com/scratchblocks/scratchblocks. You can reference the syntax more from here https://en.scratch-wiki.info/wiki/Block_Plugin/Syntax. Make sure its valid code by checking the blocks at https://en.scratch-wiki.info/wiki/Blocks. Blocks are not inside square brackets. Number values are in round brackets and strings are in square brackets. Booleans are only in < >. Round brackets can also contain input names. Wrap all the blocks in ```scratch CODEHERE```.Math operations are all separate reporter blocks. Dont do stuff like(1-2+2), do ((1-1)+2) instead. For example you cant have (10+20-20) in the same block, its have to be ((10+20)-20).If statements should never be empty, aways add a placeholder block inside both the if and the else. Comments cannot be inside the code, they can only be next to a block, not under or on top of it.Do not add comments inside if statements or any C type block! That is not valid syntax! A C type block is a block that wraps around others. For example if statements, forever looks, repeat until and so on. Also, C blocks dont need any square brackets! Dont do if[...]else[...]!!! That is wrong sytax!!! Do if ... else... instead. Place holder blocks should just be ... . Dont do anything else for placeholder blocks. All blocks that do comparison are treated like booleans, and they should therefore be in < >. For example, greated than, equal, smaller than, and, or and so on. Continuations of a C block can never be on the same line. You should not do if < > newline then you should instead do if < > then newline. For special hat blocks like 'when green flag clicked', you should not include any inputs, as the green flag is not an input. Inputs inside blocks dont need to be in any kind of bracket like < >, () or [] if they are already a normal block, that has a bracket. Dont forget that empty if statements still need a < > as a place holder for the sytax to be correct. Try to think in javascript, and then translate that to scratchblocks. Custom blocks cant take a dropdown as an input, they can only have booleans, text and numbers, so define sort list [thing v] is not possible, but [thing],(thing),<thing> are. Effects blocks have the effect name in a dropdown input. For looks effects blocks, its always the effect name and the word 'effect' after. When you are using the 'contains' boolean block, it only has a dropdown if its refering to a list, otherwise, it is a string input. If you pass a list through an input, you dont get an array or a useful format, in custom blocks that require a list for example, you should make the input be the name of the list, and then get its values in the custom block. List blocks can only select the list from a dropdown, so its not lenght of [list] its length of [list v]. Dropdowns can only be strings, not numbers, so (thing v) is not correct, but [thing v] is. Mathematical operations with use the operations and are always like this ([ v]of(number)), for example ([cos v]of(25)), it does not start with mathop though! Its only the function name in a dropdown! Operator blocks dont have to be inside another operator all the time, for example 'or' is <<>or<>>, not <<<>or<>>>, doing that just puts it in an empty boolean block that does nothing.Blocks like (10+10) or (10/10) dont exist, only ((10)+(10)) and ((10)/(10)). To run code inside a clone, you have to use the 'when i start as a clone' hat block. The 'touching' boolean block is structured like <touching[thing v]?>. When you refer to the position of the sprite, the variable name is x position, not just x. Hat blocks never end with 'end', NEVER!. The sprite size is not a variable block. If an item is inside a [ v] that means it is inside a drop down, for example if we have [wall v] the thing selected in the dropdown is wall. You dont need to add newlines after a hat block if the blocks under it connect to the hat block. Don't take into account the block prefixes from JSON input, for example 'data_addtolist' would be just 'addtolist'. If statements always end with 'then' on the first line. Comments cant be inside reporters, they can only be next to a command block. Define blocks dont have to end with 'end'. Clones can only run code under the 'when i start as a clone' hat block or from broadcasts, they cant run any code under the 'when green flag pressed' hat block.";
   const references =
     "Here are reference pieces of code:" +
     JSON.stringify({
@@ -7429,6 +7429,10 @@
       "Example hat block use":
         "when [right arrow v] key pressed\nif <touching [wall v]?> then\n\nelse\nchange x by (5)\nend",
       "Create clone": "create clone of (myself v)",
+      "List command blocks":
+        "add [thing] to [list v]\ndelete (1) of [list v]\ndelete all of [list v]\ninsert [thing] at (1) of [list v]\nreplace item (1) of [list v] with [thing]\nshow list [list v]\nhide list [list v]",
+      "List reporter blocks": "(item (1) of [list v])\n(length of [list v])",
+      "Sensing blocks": "<touching [sprite v]",
     });
   const context = guidelines + syntax + references;
   let history = [];
@@ -7649,10 +7653,13 @@
         justify-content: center;
         background-color: var(--ui-black-transparent, hsla(0, 0%, 0%, 0.15));`;
     mainWindow.appendChild(settingsButton);
+    addElementClickEffect(settingsButton);
     settingsButton.onclick = () => {
       openSettingsWindow();
     };
   }
+  let enableExperimental;
+  var enabledExperimental = true == savedSettings.experimental;
   function openSettingsWindow() {
     if (settingsOpen) return;
     settingsOpen = true;
@@ -7729,13 +7736,20 @@
 
     let modelSelect = document.createElement("select");
     modelSelect.style.cssText = basicInputStyle;
-    // should i use realModelNames instead...? i dont know...
+    // should i use realModelNames instead by default...? i dont know...
     // maybe if the api gets better at giving actual working model names LMAO
-    const modelList = [
-      "gemini-2.0-flash",
-      "gemini-2.0-flash-lite",
-      "gemini-1.5-flash",
-    ];
+    let modelList;
+    if (enabledExperimental) {
+      modelList = realModelNames;
+    } else {
+      //tested models go here
+      modelList = [
+        "gemini-2.0-flash",
+        "gemini-2.0-flash-lite",
+        "gemini-1.5-flash",
+      ];
+    }
+
     modelList.forEach((style) => {
       const option = document.createElement("option");
       option.value = style;
@@ -7743,6 +7757,26 @@
       modelSelect.appendChild(option);
     });
     settingsWindow.appendChild(modelSelect);
+    makeDivider();
+    let enableExperimentalLabel = document.createElement("label");
+    enableExperimentalLabel.textContent = "Display experimental models:";
+    enableExperimentalLabel.style.cssText = basicLabelStyle;
+    settingsWindow.appendChild(enableExperimentalLabel);
+
+    //implement saving for this vvv
+    enableExperimental = document.createElement("input");
+    enableExperimental.type = "checkbox";
+    enableExperimental.style.cssText = basicButtonStyle;
+    enableExperimental.style.width = "25px";
+    enableExperimental.style.height = "25px";
+    enableExperimental.style.cursor = "pointer";
+    settingsWindow.appendChild(enableExperimental);
+    enableExperimental.checked = enabledExperimental;
+    addElementClickEffect(sendContextCheck);
+    let requiresReopenLabel = document.createElement("label");
+    requiresReopenLabel.textContent = "(requires to re-open the settings)";
+    requiresReopenLabel.style.cssText = basicLabelStyle;
+    settingsWindow.appendChild(requiresReopenLabel);
     makeDivider();
 
     makeDraggable(settingsWindow, settingsTitleBar);
@@ -7753,6 +7787,7 @@
     settingsWindow.appendChild(saveButton);
     addElementClickEffect(saveButton);
     saveButton.onclick = () => {
+      enabledExperimental = enableExperimental.checked;
       apiKey = apiKeyInput.value;
       let historyLength = parseInt(historyLengthInput.value);
       if (isNaN(historyLength)) {
@@ -7769,6 +7804,7 @@
           style: selectedStyle,
           historySize: maxHistoryLength,
           version: geminiVersion,
+          experimental: enabledExperimental,
         }),
       );
       settingsOpen = false;
@@ -7939,6 +7975,9 @@
 
     let uploadedFileName;
     const fullPrompt =
+      "HasFileAttaced:" +
+      sendContextCheck.checked +
+      "\n" +
       context +
       " This is your conversation history, do not repeat it in your response!!!: " +
       history +
@@ -8036,7 +8075,7 @@
         titleBar.textContent =
           aiName +
           " Chat - " +
-          geminiVersion.replace(/gemini-/i, "") +
+          geminiVersion.replace(/gemini-/i, "").replace(/preview-/i, "") +
           " (" +
           Intl.NumberFormat("en", { notation: "compact" }).format(
             result.usageMetadata.totalTokenCount,

@@ -581,6 +581,17 @@ export default [
         isGitHub: true,
     },
     {
+        name: "Block AI",
+        description: "An AI powered chat bot to help you code in your projects.",
+        code: "TheShovel/blockAI.js",
+        banner: "TheShovel/thumbnail-blockAI.png",
+        creator: "TheShovel",
+        creatorAlias: "TheShovel",
+        isGitHub: true,
+        unstable: true,
+        unstableReason: "The AI model can generate inaccurate output and broken syntax!",
+    },
+    {
         name: "Extra Timers",
         description: "Allows for the creation and management of additional timer blocks.",
         code: "steve0greatness/timers.js",

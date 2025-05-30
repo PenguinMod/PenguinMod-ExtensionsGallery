@@ -5,7 +5,7 @@
  *
  * @license MIT
  * @author  Steve0Greatness
- * @version 1.1.4
+ * @version 1.1.5
  */
 
 (function(Scratch) {
@@ -13,17 +13,6 @@
 Scratch.translate.setup({});
 
 const selfid = "steve0greatnesstimers";
-
-const color1 = "#1166CC";
-
-const stylesheet = document.createElement("style");
-stylesheet.textContent = `
-div[data-opcode^="${selfid}_"] :is(div[class^="monitor_value_"], div[class^="monitor_large-value_"]) {
-  background-color: ${color1} !important;
-}
-`;
-document.head.appendChild(stylesheet);
-
 
 function uid_clone() {
   const soup = "!#%()*+,-./:;=?@[]^_`{|}~ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
@@ -67,8 +56,6 @@ class Timer {
 
     this.id   = id ?? uid_clone();
     this.name = name;
-
-    this.attached_getter_id = uid_clone();
 
     this.customId = Timer.customId;
     this.type = Timer.customId;
@@ -246,7 +233,7 @@ class SteveZeroGreatnessExtraTimersExt {
     const filterTimers = ({variables}) => {
       return Object.values(variables)
                .filter(vari => vari.type === Timer.customId)
-               .map(vari => [vari.toToolboxDefault("TIMER"), vari.attached_getter_id])
+               .map(vari => [vari.toToolboxDefault("TIMER"), vari.id])
                .map(([xml, g_id]) => getter.replace(
                   "></block>",
                   ` id="${xml_escape(g_id)}">${xml}</block>`
@@ -280,7 +267,7 @@ class SteveZeroGreatnessExtraTimersExt {
       name: "Extra Timers",
       isDynamic: true,
       orderBlocks: this.order_blocks.bind(this),
-      color1,
+      color1: "#1166CC",
       menuIconURI: menu_icon(),
       blocks: [
         {
@@ -297,7 +284,8 @@ class SteveZeroGreatnessExtraTimersExt {
               type: Scratch.ArgumentType.STRING,
               menu: "TIMERS"
             }
-          }
+          },
+          labelFn: "getterLabel"
         },
         {
           opcode: "elapsed",
@@ -325,6 +313,7 @@ class SteveZeroGreatnessExtraTimersExt {
               menu: "TIMERS"
             }
           },
+          switches: [ "restart", "stop", "toggle", "unpause" ]
         },
         {
           opcode: "toggle",
@@ -336,6 +325,7 @@ class SteveZeroGreatnessExtraTimersExt {
               menu: "TIMERS"
             }
           },
+          switches: [ "restart", "stop", "pause", "unpause" ]
         },
         {
           opcode: "unpause",
@@ -347,6 +337,7 @@ class SteveZeroGreatnessExtraTimersExt {
               menu: "TIMERS"
             }
           },
+          switches: [ "restart", "stop", "pause", "toggle" ]
         },
         {
           opcode: "is_paused",
@@ -370,6 +361,7 @@ class SteveZeroGreatnessExtraTimersExt {
               menu: "TIMERS"
             }
           },
+          switches: [ "stop", "unpause", "pause", "toggle" ]
         },
         {
           opcode: "stop",
@@ -381,6 +373,7 @@ class SteveZeroGreatnessExtraTimersExt {
               menu: "TIMERS"
             }
           },
+          switches: [ "restart", "unpause", "pause", "toggle" ]
         },
         {
           opcode: "add",
@@ -503,6 +496,12 @@ class SteveZeroGreatnessExtraTimersExt {
     );
   }
 
+  // Labels
+  
+  getterLabel(params) {
+    return params.TIMER;
+  }
+
   // Blocks
   add({ TIMER: timer, TIME: timing, UNITS: units }, util) {
     let multi = Scratch.Cast.toNumber(units)
@@ -566,3 +565,4 @@ function menu_icon() {
 }
 
 })(Scratch);
+

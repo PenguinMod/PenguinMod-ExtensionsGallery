@@ -7321,13 +7321,13 @@
   let selectedStyle;
   let maxHistoryLength;
   let geminiVersion;
+  var savedSettings;
   function setDefaultSettings() {
     apiKey = defaultApiKey;
     selectedStyle = "scratch3";
     maxHistoryLength = 10;
     geminiVersion = "gemini-2.0-flash";
   }
-  let savedSettings;
   if (localStorage.getItem("blockaigeminiext.settings") == null) {
     setDefaultSettings();
   } else {
@@ -7659,7 +7659,11 @@
     };
   }
   let enableExperimental;
-  var enabledExperimental = true == savedSettings.experimental;
+  if (savedSettings != undefined) {
+    var enabledExperimental = true == savedSettings.experimental;
+  } else {
+    var enabledExperimental = false;
+  }
   function openSettingsWindow() {
     if (settingsOpen) return;
     settingsOpen = true;

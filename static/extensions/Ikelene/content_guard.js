@@ -8,10 +8,10 @@
         fixedText: ''
     };
 
-    class ContentGuardExt {
+    class IkeContentGuard {
         getInfo() {
             return {
-                id: 'textFilterExt',
+                id: 'IkeContentGuard',
                 name: 'Text Filter',
                 color1: '#b399d4', // light purple
                 blocks: [
@@ -108,5 +108,5 @@
         }
     }
 
-    Scratch.extensions.register(new ContentGuardExt());
+    Scratch.extensions.register(new IkeContentGuard());
 })(Scratch);

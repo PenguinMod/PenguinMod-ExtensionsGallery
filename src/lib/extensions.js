@@ -182,6 +182,15 @@ export default [
         creator: "G1nX",
     }, */
     {
+        name: "Content Guard",
+        description: "Includes utilities related to filtering bad words, swearing and profanity.",
+        code: "Ikelene/content_gaurd.js",
+        banner: "Ikelene/content_gaurd.png",
+        creator: "ikelene",
+        creatorAlias: "Ikelene",
+        isGitHub: true,
+    },
+    {
         name: "Mathematics",
         description: "Complicated maths extension for nerds.",
         code: "jwklong/mathematics.js",

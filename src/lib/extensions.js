@@ -184,7 +184,7 @@ export default [
     {
         name: "Content Guard",
         description: "Includes utilities related to filtering bad words, swearing and profanity.",
-        code: "Ikelene/content_gaurd.js",
+        code: "Ikelene/content_guard.js",
         banner: "Ikelene/content_guard.png",
         creator: "ikelene",
         creatorAlias: "Ikelene",

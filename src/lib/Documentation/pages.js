@@ -21,6 +21,10 @@ import PageMoreTypes from "./More-Types.md?raw";
 // Boxed Physics
 import BoxedPhysics from "./BoxedPhysics.md?raw";
 
+//Paint Utils
+import PaintUtils from "./PaintUtils.md?raw";
+
+
 export default {
     // the key is the path to the docs page
     // so you can do "sharkpool-particle-tools" for example
@@ -41,4 +45,7 @@ export default {
 
     // Boxed Physics
     "BoxedPhysics": BoxedPhysics,
+
+    //Paint Utils
+     "PaintUtils": PaintUtils
 };

@@ -438,11 +438,22 @@ class SteveZeroGreatnessExtraTimersExt {
 
   get_or_create(target, id, name) {
     const stage    = this.runtime.getTargetForStage();
-    const variable = target.variables[id] ?? stage.variables[id];
+
+    const attempt_find_by_name = (variables) =>
+      Object.values(variables)
+        .find(vari => vari.name == name && vari.type == Timer.customId)
+
+    var variable =
+      // find by id
+      target.variables[id] ?? stage.variables[id]
+      // attempt to find by name
+      ?? attempt_find_by_name(target.variables)
+      ?? attempt_find_by_name(stage.variables); 
     
     if (!variable) {
       return target.createVariable(id, name, Timer.customId);
     }
+
     if (variable.type != Timer.customId) {
       throw "Bad variable type '" + variable.type +  "'"
     }
@@ -482,23 +493,23 @@ class SteveZeroGreatnessExtraTimersExt {
   add({ TIMER: timer, TIME: timing, UNITS: units }, util) {
     let multi = Scratch.Cast.toNumber(units)
     let time  = Scratch.Cast.toNumber(timing)
-    this.get_or_create(util.target, timer.id, timer.name).add(time * multi)
+    this.get_or_create(util.target, timer.id, timer.name ?? timer).add(time * multi)
   }
 
-  getter({ TIMER: timer }, util) {
-    return this.get_or_create(util.target, timer.id, timer.name) * 0.001;
+  getter({ TIMER: timer }, util) { 
+    return this.get_or_create(util.target, timer.id, timer.name ?? timer) * 0.001;
   }
 
   pause({ TIMER: timer }, util) {
-    this.get_or_create(util.target, timer.id, timer.name).pause();
+    this.get_or_create(util.target, timer.id, timer.name ?? timer).pause();
   }
 
   unpause({ TIMER: timer }, util) {
-    this.get_or_create(util.target, timer.id, timer.name).unpause();
+    this.get_or_create(util.target, timer.id, timer.name ?? timer).unpause();
   }
 
   toggle({ TIMER: timer }, util) {
-    const timer_var = this.get_or_create(util.target, timer.id, timer.name);
+    const timer_var = this.get_or_create(util.target, timer.id, timer.name ?? timer);
     if (timer_var.is_paused)
       timer_var.unpause();
     else
@@ -506,28 +517,28 @@ class SteveZeroGreatnessExtraTimersExt {
   }
 
   is_paused({ TIMER: timer }, util) {
-    return this.get_or_create(util.target, timer.id, timer.name).is_paused;
+    return this.get_or_create(util.target, timer.id, timer.name ?? timer).is_paused;
   }
 
   elapsed({ TIMER: timer, UNITS: units }, util) {
     let multiplier = Scratch.Cast.toNumber(units);
-    return this.get_or_create(util.target, timer.id, timer.name) * multiplier;
+    return this.get_or_create(util.target, timer.id, timer.name ?? timer) * multiplier;
   }
 
   restart({ TIMER: timer }, util) {
-    this.get_or_create(util.target, timer.id, timer.name).restart();
+    this.get_or_create(util.target, timer.id, timer.name ?? timer).restart();
   }
 
   stop({ TIMER: timer }, util) {
-    this.get_or_create(util.target, timer.id, timer.name).pause();
-    this.get_or_create(util.target, timer.id, timer.name).restart();
+    this.get_or_create(util.target, timer.id, timer.name ?? timer).pause();
+    this.get_or_create(util.target, timer.id, timer.name ?? timer).restart();
   }
 
   whengt({ TIMER: timer, TIME: timing, UNITS: units }, util) {
     let multi = Scratch.Cast.toNumber(units);
     let time  = Scratch.Cast.toNumber(timing);
 
-    let elapsed_seconds = this.get_or_create(util.target, timer.id, timer.name).elapsed * multi;
+    let elapsed_seconds = this.get_or_create(util.target, timer.id, timer.name ?? timer).elapsed * multi;
     return elapsed_seconds > time;
   }
 }

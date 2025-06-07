@@ -16,25 +16,20 @@ const selfid = "steve0greatnesstimers";
 
 function uid_clone() {
   const soup = "!#%()*+,-./:;=?@[]^_`{|}~ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
-  const length = 20;
-
-  const max = num => (num * soup.length) >> 8;
-  
-  return [...crypto.getRandomValues(new Uint8Array(length))]
-    .map((e) => soup.charAt(max(e)))
-    .join("");
+  var id;
+  for (id = ""; id.length < 20; id += soup.charAt(Math.random() * soup.length));
+  return id;
 }
 
 function xml_escape(unsafe) {
     if (typeof unsafe !== 'string') {
-        if (Array.isArray(unsafe)) {
-            // This happens when we have hacked blocks from 2.0
-            // See #1030
-            unsafe = String(unsafe);
-        } else {
-            console.log.error(`Unexptected type ${typeof unsafe} in xmlEscape at: ${new Error().stack}`);
+        if (!Array.isArray(unsafe)) {
+            console.error(`Unexptected type ${typeof unsafe} in xmlEscape at: ${new Error().stack}`);
             return unsafe;
         }
+        // This happens when we have hacked blocks from 2.0
+        // See #1030
+        unsafe = String(unsafe);
     }
 
   return unsafe.replace(/[<>&'"]/g, c => {
@@ -53,7 +48,7 @@ class Timer {
 
   constructor(runtime, id, name) {
     this.runtime = runtime;
-
+   
     this.id   = id ?? uid_clone();
     this.name = name;
 
@@ -89,7 +84,7 @@ class Timer {
   // Scratch Type Methods
   
   serialize(obj = this) {
-    return [obj.id, obj.name, obj.toString()];
+    return [obj.id, obj.name];
   }
 
   toString() {
@@ -185,41 +180,22 @@ class Timer {
 }
 
 class SteveZeroGreatnessExtraTimersExt {
-  constructor() {
-    this.runtime = Scratch.vm.runtime;
+  constructor(runtime) {
+    this.runtime = runtime;
 
     this.runtime.registerVariable(Timer.customId, Timer);
-    this.runtime.registerSerializer(
-      Timer.customId,
-      timer => timer.id,
-      (variableId, target) => {
-        let variable = target.variables[variableId];
-        if (!variable) {
-          for (const target of this.runtime.targets) {
-            if (!target.variables[variableId]) { continue; }
-            variable = target.variables[variableId];
-            break;
-          }
-        }
-        return variable;
-      }
-    );
 
     this.runtime.on("variableCreate", (type, id) => {
       if (type !== Timer.customId) return;
-
       this.runtime.vm.extensionManager.refreshDynamicCategorys();
     });
-    this.runtime.on("variableChange", (type, adf) => {
+    this.runtime.on("variableChange", (type, id) => {
       if (type !== Timer.customId) return;
-
       this.runtime.vm.extensionManager.refreshDynamicCategorys();
     });
-    this.runtime.on("variableDelete", (type, adf) => {
+    this.runtime.on("variableDelete", (type, id) => {
       if (type !== Timer.customId) return;
-
       this.runtime.vm.extensionManager.refreshDynamicCategorys();
-      //this.runtime.monitorBlocks
     });
   }
 
@@ -242,7 +218,7 @@ class SteveZeroGreatnessExtraTimersExt {
 
     const stage_target = this.runtime.getTargetForStage();
     const local_target = this.runtime.vm.editingTarget;
-    const is_sprite    = local_target.id !== stage_target.id;
+    const is_sprite    = !local_target.isStage;
     const stage        = filterTimers(stage_target);
     const local        = filterTimers(local_target);
     
@@ -285,7 +261,7 @@ class SteveZeroGreatnessExtraTimersExt {
               menu: "TIMERS"
             }
           },
-          labelFn: "getterLabel"
+          labelFn: "getterLabel",
         },
         {
           opcode: "elapsed",
@@ -556,8 +532,7 @@ class SteveZeroGreatnessExtraTimersExt {
   }
 }
 
-ext = new SteveZeroGreatnessExtraTimersExt();
-Scratch.extensions.register(ext);
+Scratch.extensions.register(new SteveZeroGreatnessExtraTimersExt(Scratch.vm.runtime));
 
 // Made this a function so I could put it at the bottom :P
 function menu_icon() {

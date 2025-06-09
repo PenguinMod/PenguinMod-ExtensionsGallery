@@ -421,6 +421,15 @@ export default [
         creator: "Fruits555000",
         isGitHub: true,
     },
+    {
+        name: "Resolution",
+        description: "Provides utility blocks that simplify the creation of projects with dynamic resolution support.",
+        code: "DogeisCut/Resolution.js",
+        banner: "DogeisCut/Resolution.svg",
+        creator: "DogeisCut",
+        isGitHub: true, 
+        documentation: "Resolution",
+    }
     /* these extensions are completely dead as of now
     {
         name: "Online Captcha",

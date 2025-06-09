@@ -12,8 +12,8 @@ set stage width\: [480] height\: [360]:: #777777
 
 ## Setup
 
-> [!Note]
-> The stage might not match your exact screen resolution or the expected resolution in the Scratch editor. This happens because it's based on the browser window’s inner size. When packaged, the project will scale correctly.
+> NOTE
+> The stage might not match your exact screen resolution or the expected resolution in the editor. This happens because it's based on the browser window’s inner size. When packaged, the project will scale correctly.
 
 A typical setup looks like this:
 
@@ -28,7 +28,7 @@ Since `when window resized` does not trigger on project load or when the green f
 
 ## Anchors
 
-> [!CAUTION]
+> CAUTION
 > Sprites may get stuck to the stage's edge during resizing unless **Remove Fencing** is enabled.
 
 Sometimes you’ll want sprites (e.g., UI elements) to remain attached to specific stage positions—like the bottom-right corner—regardless of resolution.

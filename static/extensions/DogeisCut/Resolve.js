@@ -3,9 +3,6 @@
 // Description: Utility blocks that enables ease in creation of projects with dynamic resolution.
 // By: DogeisCut <https://scratch.mit.edu/users/DogeisCut/>
 
-/* TODO:
-    - Fix anchor blocks to use correct math
-*/
 (function(Scratch) {
     'use strict';
 
@@ -182,11 +179,15 @@
         }
 
         suggestedStageWidth() {
-            return Math.round((window.innerWidth / window.innerHeight) * 360);
+            const width = Math.max(360, Math.round((window.innerWidth / window.innerHeight) * 360));
+            return width;
         }
 
         suggestedStageHeight() {
-            return 360; // lol
+            if (window.innerHeight > window.innerWidth) {
+            return Math.round((window.innerHeight / window.innerWidth) * 360);
+            }
+            return 360;
         }
 
         screenResolution(args) {
@@ -240,14 +241,14 @@
             const PERCENT = Scratch.Cast.toNumber(args.PERCENT);
             const WIDTH = Scratch.Cast.toNumber(args.WIDTH);
 
-            return ((WIDTH / 2) * (PERCENT / 100)) - (WIDTH / 2);
+            return (-WIDTH / 2) + (WIDTH * (PERCENT / 100));
         }
 
         stageAnchorY(args) {
             const PERCENT = Scratch.Cast.toNumber(args.PERCENT);
             const HEIGHT = Scratch.Cast.toNumber(args.HEIGHT);
 
-            return ((HEIGHT / 2) * (PERCENT / 100)) - (HEIGHT / 2);
+            return (-HEIGHT / 2) + (HEIGHT * (PERCENT / 100));
         }
     }
     

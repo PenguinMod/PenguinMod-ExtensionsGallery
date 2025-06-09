@@ -24,8 +24,8 @@ import BoxedPhysics from "./BoxedPhysics.md?raw";
 //Paint Utils
 import PaintUtils from "./PaintUtils.md?raw";
 
-// Resolve
-import Resolve from "./Resolve.md?raw";
+// Resolution
+import Resolution from "./Resolution.md?raw";
 
 export default {
     // the key is the path to the docs page
@@ -51,6 +51,6 @@ export default {
     //Paint Utils
     "PaintUtils": PaintUtils,
     
-    // Resolve
-    "Resolve": Resolve,
+    // Resolution
+    "Resolution": Resolution,
 };

@@ -1,5 +1,5 @@
-// Name: Resolve
-// ID: dogeiscutresolve
+// Name: Resolution
+// ID: dogeiscutResolution
 // Description: Utility blocks that enables ease in creation of projects with dynamic resolution.
 // By: DogeisCut <https://scratch.mit.edu/users/DogeisCut/>
 
@@ -7,16 +7,16 @@
     'use strict';
 
     if (!Scratch.extensions.unsandboxed) {
-        throw new Error('\'Resolve\' must run unsandboxed!');
+        throw new Error('\'Resolution\' must run unsandboxed!');
     }
 
-    class Resolve {
+    class Resolution {
         getInfo() {
             return {
-                id: 'dogeiscutresolve',
-                name: 'Resolve',
+                id: 'dogeiscutResolution',
+                name: 'Resolution',
                 color1: "#009dff",
-                docsURI: 'https://extensions.penguinmod.com/docs/Resolve',
+                docsURI: 'https://extensions.penguinmod.com/docs/Resolution',
                 blocks: [
                     {
                         opcode: 'whenWindowResized',
@@ -253,8 +253,8 @@
     }
     
     window.addEventListener('resize', () => {
-        Scratch.vm.runtime.startHats('dogeiscutresolve_whenWindowResized');
+        Scratch.vm.runtime.startHats('dogeiscutResolution_whenWindowResized');
     });
 
-    Scratch.extensions.register(new Resolve());
+    Scratch.extensions.register(new Resolution());
 })(Scratch);

@@ -1,10 +1,10 @@
-# Resolve
+# Resolution
 
-**Resolve** provides utility blocks that simplify the creation of projects with **dynamic resolution** support.
+**Resolution** provides utility blocks that simplify the creation of projects with **dynamic resolution** support.
 
 ## Other Extensions
 
-It's recommended to pair **Resolve** with an extension that allows dynamic project size changes at runtime, such as **Runtime Modifications**.
+It's recommended to pair **Resolution** with an extension that allows dynamic project size changes at runtime, such as **Runtime Modifications**.
 
 ```scratch
 set stage width\: [480] height\: [360]:: #777777

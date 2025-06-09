@@ -398,13 +398,13 @@ export default [
         isGitHub: true,
     },
     {
-        name: "Resolve",
+        name: "Resolution",
         description: "Provides utility blocks that simplify the creation of projects with dynamic resolution support.",
-        code: "DogeisCut/Resolve.js",
-        banner: "DogeisCut/Resolve.svg",
+        code: "DogeisCut/Resolution.js",
+        banner: "DogeisCut/Resolution.svg",
         creator: "DogeisCut",
         isGitHub: true, 
-        documentation: "Resolve",
+        documentation: "Resolution",
     },
     /* these extensions are completely dead as of now
     {

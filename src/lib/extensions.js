@@ -438,4 +438,12 @@ export default [
         creator: "Steve0Greatness",
         isGitHub: true, 
     },
+{
+    name: "Paint Utils",
+    description: "A colour extension that lets you mix colours.",
+    code: "Fruits555000/PaintUtils.js",
+    banner: "Fruits555000/PaintUtils.svg",
+    creator: "Fruits555000",
+    isGitHub: true,
+},
 ];

@@ -397,6 +397,30 @@ export default [
         creator: "TheShovel",
         isGitHub: true,
     },
+    {
+        name: "Counter++",
+        description: "Count anything, at any time, in PenguinMod!",
+        code: "MrRedstonia/counterplusplus.js",
+        banner: "MrRedstonia/counterplusplus.png",
+        creator: "MrRedstonia",
+        isGitHub: true,
+    },
+    {
+        name: "How many lines?",
+        description: "Blocks to determine the amount of new lines in a piece of text.",
+        code: "Monochromasity/howmanylines.js",
+        banner: "Monochromasity/placeholder-howmanylines.png",
+        creator: "Monochromasity",
+        isGitHub: true,
+    },
+    {
+        name: "Paint Utils",
+        description: "A colour extension that lets you mix colours.",
+        code: "Fruits555000/PaintUtils.js",
+        banner: "Fruits555000/PaintUtils.svg",
+        creator: "Fruits555000",
+        isGitHub: true,
+    },
     /* these extensions are completely dead as of now
     {
         name: "Online Captcha",
@@ -419,32 +443,6 @@ export default [
         code: "Gen1x/mouth_washer.js",
         banner: "Gen1x/mw-placeholder.png",
         creator: "G1nX",
-    },
-    */
-    /* hidden because its currently incredibly useless/already exists
-    {
-        name: "Paint Utils",
-        description: "A colour extension that lets you mix colours.",
-        code: "Fruits555000/PaintUtils.js",
-        banner: "Fruits555000/PaintUtils.svg",
-        creator: "Fruits555000",
-        isGitHub: true,
-    },
-    {
-        name: "Counter++",
-        description: "Count anything, at any time, in PenguinMod!",
-        code: "MrRedstonia/counterplusplus.js",
-        banner: "MrRedstonia/counterplusplus.png",
-        creator: "MrRedstonia",
-        isGitHub: true,
-    },
-    {
-        name: "How many lines?",
-        description: "Blocks to determine the amount of new lines in a piece of text.",
-        code: "Monochromasity/howmanylines.js",
-        banner: "Monochromasity/placeholder-howmanylines.png",
-        creator: "Monochromasity",
-        isGitHub: true,
     },
     */
 ];

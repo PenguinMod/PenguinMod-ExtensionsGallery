@@ -21,6 +21,9 @@ import PageMoreTypes from "./More-Types.md?raw";
 // Boxed Physics
 import BoxedPhysics from "./BoxedPhysics.md?raw";
 
+//Paint Utils
+import PaintUtils from "./PaintUtils.md?raw";
+
 // Resolve
 import Resolve from "./Resolve.md?raw";
 
@@ -45,6 +48,9 @@ export default {
     // Boxed Physics
     "BoxedPhysics": BoxedPhysics,
 
+    //Paint Utils
+    "PaintUtils": PaintUtils,
+    
     // Resolve
     "Resolve": Resolve,
 };

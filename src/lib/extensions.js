@@ -429,7 +429,17 @@ export default [
         creator: "DogeisCut",
         isGitHub: true, 
         documentation: "Resolution",
-    }
+    },
+    {
+        name: "Device Motion",
+        description: "Use Device Motion API to get rotation or movement of the device. Works best on mobile devices.",
+        code: "gaimerI17/DeviceMotion.js",
+        banner: "gaimerI17/DeviceMotion.svg",
+        creator: "gaimerI",
+        isGitHub: true,
+        creatorAlias: "gaimerI17",
+
+    },
     /* these extensions are completely dead as of now
     {
         name: "Online Captcha",

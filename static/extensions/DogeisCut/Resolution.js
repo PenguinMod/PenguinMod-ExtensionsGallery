@@ -212,19 +212,19 @@
 
             switch (EDGE) {
                 case 'top left corner':
-                    return AXIS === 'x' ? -WIDTH / 2 : -HEIGHT / 2;
+                    return AXIS === 'x' ? -WIDTH / 2 : HEIGHT / 2;
                 case 'top edge':
-                    return AXIS === 'x' ? 0 : -HEIGHT / 2;
+                    return AXIS === 'x' ? 0 : HEIGHT / 2;
                 case 'top right corner':
-                    return AXIS === 'x' ? WIDTH / 2 : -HEIGHT / 2;
+                    return AXIS === 'x' ? WIDTH / 2 : HEIGHT / 2;
                 case 'right edge':
                     return AXIS === 'x' ? WIDTH / 2 : 0;
                 case 'bottom right corner':
-                    return AXIS === 'x' ? WIDTH / 2 : HEIGHT / 2;
+                    return AXIS === 'x' ? WIDTH / 2 : -HEIGHT / 2;
                 case 'bottom edge':
-                    return AXIS === 'x' ? 0 : HEIGHT / 2;
+                    return AXIS === 'x' ? 0 : -HEIGHT / 2;
                 case 'bottom left corner':
-                    return AXIS === 'x' ? -WIDTH / 2 : HEIGHT / 2;
+                    return AXIS === 'x' ? -WIDTH / 2 : -HEIGHT / 2;
                 default: // 'left edge'
                     return AXIS === 'x' ? -WIDTH / 2 : 0;
             }

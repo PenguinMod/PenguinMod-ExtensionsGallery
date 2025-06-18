@@ -149,14 +149,14 @@ This simple block allows you to run code any time an object is hit.
 
 > Note: this block does not restart existing threads
 
-```scratch3
+```scratch
 When [Object] has an impact :: #2cb0c0
 say [I HAVE BEEN HIT!]
 ```
 
 You can also use a boolean version that returns true if an object had an impact during the last tick.
 
-```scratch3
+```scratch
 when gf clicked
 wait until <[Object] had an impact :: #2cb0c0>
 say [I got hit during the last tick]
@@ -166,14 +166,14 @@ say [I got hit during the last tick]
 You can also check what objects are colliding with the `Get all objects touching [NAME]` block.
 This block simply lists all the names that hit the object.
 
-```scratch3
+```scratch
 When [Object1] has an impact :: #2cb0c0
 say (join [I was hit by ] (Get all objects touching [Object1] :: #2cb0c0))
 ```
 
 Or you can just get if the object is touching anyting if you don't care what was hit.
 
-```scratch3
+```scratch
 when gf clicked
 forever
     if <[Object] is touching anything :: #2cb0c0> then

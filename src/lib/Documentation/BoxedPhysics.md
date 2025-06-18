@@ -58,7 +58,7 @@ Dеfine Box, Width: [100] Height: [100] :: #2cb0c0
 set [index v] to (0)
 repeat (4)
     change [index v] by (1)
-    Make object (join [Object] (index)) at X: [random(-100, 100)] y: [random(-100, 100)] Dir: [0] :: #2cb0c0
+    Make object (join [Object] (index)) at X: (pick random (-100) to (100)) y: (pick random (-100) to (100)) Dir: [90] :: #2cb0c0
 end
 ```
 

@@ -315,8 +315,8 @@ export default [
         description: "Share your screen or camera to your projects!",
         code: "pooiod/VideoSharing.js",
         banner: "pooiod/VideoSharing.svg",
-        creator: "pooiod",
-        isGitHub: true,
+        creator: "pooiod7",
+        isGitHub: false,
     },
     {
         name: "WindowHasher",

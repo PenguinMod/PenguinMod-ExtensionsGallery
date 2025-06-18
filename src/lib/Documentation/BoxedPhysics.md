@@ -190,20 +190,15 @@ end
 Joints connect objects and enable complex interactions like wheels, sliders and more. <br>
 Here is a description of all joints in BoxedPhysics:
 
-**Rotating:** 
-This joint lets you to join 2 objects togeather while keeping rotations
+**Rotating:** This joint lets you to join 2 objects togeather while keeping rotations
 
-**Weld:** 
-This joint locks 2 objects togeather, making them act like one object
+**Weld:** This joint locks 2 objects togeather, making them act like one object
 
-**Spring:** 
-This joint keeps 2 objects at a semi-fixed distance from eachother
+**Spring:** This joint keeps 2 objects at a semi-fixed distance from eachother
 
-**Slider:** 
-This joint forces an object to only move along the specified axis to the other object
+**Slider:** This joint forces an object to only move along the specified axis to the other object
 
-**Pin:** 
-This joint takes an object and tries to move it to a position with a specified force. 
+**Pin:** This joint takes an object and tries to move it to a position with a specified force. 
 This joint is the only joint to have the input position stay relative to the world instead of the object.<br>
 Creating pin joints uses its own block, instead of the create joint block
 

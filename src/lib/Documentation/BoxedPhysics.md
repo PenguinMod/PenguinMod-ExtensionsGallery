@@ -78,11 +78,10 @@ Make object [Object1] at X: [0] y: [0] Dir: [90] :: #2cb0c0
 Dеfine polygon as this costume :: #2cb0c0
 Make object [Object2] at X: [50] y: [50] Dir: [0] :: #2cb0c0
 
-Dеfine polygon, Points: [0 50   40 -50   -40 -50] :: #2cb0c0 // Triangle
+Dеfine polygon, Points: [0 50   40 -50   -40 -50] :: #2cb0c0 // Triangle
 Make object [Object3] at X: [0] y: [0] Dir: [90] :: #2cb0c0
 ```
 
-<!-- this is meant to be a player embed, but I don't think I'm allowed to do that here -->
 > Point-based objects simply take an array of "x y" values seperated by 3 spaces. You can visualise any point-based polygon in [this demo](https://p7scratchextensions.pages.dev/view/demo?p=%2Fext%2FBoxedPhysics%2Fexamples%2FBoxedPhysics%20point%20render%20system.pmp).
 
 ### Defining Base Attributes
@@ -92,7 +91,7 @@ Customize objects with the `Define base` block:
 
 ```scratch
 when gf clicked //Super bouncy imovable triangle
-Dеfine polygon, Points: [0 50   40 -50   -40 -50] :: #2cb0c0
+Dеfine polygon, Points: [0 50   40 -50   -40 -50] :: #2cb0c0
 Dеfine base, Type: [static v] Density: [0.1] Friction: [0.5] Bounce: [2] :: #2cb0c0
 Make object [Object1] at X: [0] y: [0] Dir: [90] :: #2cb0c0
 ```
@@ -141,14 +140,72 @@ Apply Angular Impulse to object [Wheel1] power: [20] :: #2cb0c0
 
 ---
 
+## Handling Impacts
+Boxed Physics comes with a few blocks that can be used to handle impacts.
+
+### On impact
+When an object collides with another, this hat block is triggered.
+This simple block allows you to run code any time an object is hit.
+
+> Note: this block does not restart existing threads
+
+```scratch3
+When [Object] has an impact :: #2cb0c0
+say [I HAVE BEEN HIT!]
+```
+
+You can also use a boolean version that returns true if an object had an impact during the last tick.
+
+```scratch3
+when gf clicked
+wait until <[Object] had an impact :: #2cb0c0>
+say [I got hit during the last tick]
+```
+
+### What hit me?
+You can also check what objects are colliding with the `Get all objects touching [NAME]` block.
+This block simply lists all the names that hit the object.
+
+```scratch3
+When [Object1] has an impact :: #2cb0c0
+say (join [I was hit by ] (Get all objects touching [Object1] :: #2cb0c0))
+```
+
+Or you can just get if the object is touching anyting if you don't care what was hit.
+
+```scratch3
+when gf clicked
+forever
+    if <[Object] is touching anything :: #2cb0c0> then
+        say [AAAAAAAAAAAAAAAAAHHHHHHHHHHHHHH!!!!!!]
+    else
+        say []
+    end
+end
+```
+
+---
+
 ## Making Joints
 Joints connect objects and enable complex interactions like wheels, sliders and more. <br>
-You can create many types of joints, including:
+Here is a description of all joints in BoxedPhysics:
 
-- Rotating
-- Spring
-- Weld
-- Slider
+**Rotating:** 
+This joint lets you to join 2 objects togeather while keeping rotations
+
+**Weld:** 
+This joint locks 2 objects togeather, making them act like one object
+
+**Spring:** 
+This joint keeps 2 objects at a semi-fixed distance from eachother
+
+**Slider:** 
+This joint forces an object to only move along the specified axis to the other object
+
+**Pin:** 
+This joint takes an object and tries to move it to a position with a specified force. 
+This joint is the only joint to have the input position stay relative to the world instead of the object.<br>
+Creating pin joints uses its own block, instead of the create joint block
 
 
 ```scratch
@@ -156,7 +213,6 @@ Dеfine Spring, Length: [100] Damping: [0.7] Freq: [5] :: #2cb0c0
 Create Joint [Spring1] of type [Spring v] between [Object1] at [0] [0] and [Object2] at [0] [0] :: #2cb0c0
 ```
 
-<!-- This is also meant to be an embed-->
 > Experiment with all the joint types in [this demo](https://studio.penguinmod.com/fullscreen.html?project_url=https://p7scratchextensions.pages.dev/ext/BoxedPhysics/examples/Joints.pmp) to see what they do.
 
 ### Joint Properties

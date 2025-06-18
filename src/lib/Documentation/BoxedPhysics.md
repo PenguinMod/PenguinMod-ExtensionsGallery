@@ -83,7 +83,7 @@ Make object [Object3] at X: [0] y: [0] Dir: [90] :: #2cb0c0
 ```
 
 <!-- this is meant to be a player embed, but I don't think I'm allowed to do that here -->
-> Point-based objects simply take an array of "x y" values seperated by 3 spaces. You can visualise any point-based polygon in [this demo](https://studio.penguinmod.com/fullscreen.html?project_url=https://p7scratchextensions.pages.dev/ext/BoxedPhysics/examples/BoxedPhysics point render system.pmp).
+> Point-based objects simply take an array of "x y" values seperated by 3 spaces. You can visualise any point-based polygon in [this demo](https://p7scratchextensions.pages.dev/view/demo?p=%2Fext%2FBoxedPhysics%2Fexamples%2FBoxedPhysics%20point%20render%20system.pmp).
 
 ### Defining Base Attributes
 Customize objects with the `Define base` block:

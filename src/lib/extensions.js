@@ -434,11 +434,11 @@ export default [
         name: "Device Motion",
         description: "Use Device Motion API to get rotation or movement of the device. Works best on mobile devices.",
         code: "gaimerI17/DeviceMotion.js",
-        banner: "gaimerI17/DeviceMotion.svg",
+        banner: "gaimerI17/DeviceMotion.png",
         creator: "gaimerI",
         isGitHub: true,
         creatorAlias: "gaimerI17",
-
+        note: "Extension thumbnail made by Dillon."
     },
     /* these extensions are completely dead as of now
     {

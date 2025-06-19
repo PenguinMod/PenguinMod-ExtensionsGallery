@@ -432,7 +432,7 @@ export default [
     },
     {
         name: "Device Motion",
-        description: "Use Device Motion API to get rotation or movement of the device. Works best on mobile devices.",
+        description: "Use Device Motion API to get rotation or movement of the device. Works best on mobile devices. \n Thumbnail by Dillon.",
         code: "gaimerI17/DeviceMotion.js",
         banner: "gaimerI17/DeviceMotion.png",
         creator: "gaimerI",

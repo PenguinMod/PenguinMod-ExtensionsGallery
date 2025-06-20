@@ -21,7 +21,7 @@
     const extIcon = "data:image/svg+xml;base64,PHN2ZyB2ZXJzaW9uPSIxLjEiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyIgeG1sbnM6eGxpbms9Imh0dHA6Ly93d3cudzMub3JnLzE5OTkveGxpbmsiIHdpZHRoPSIxMTEuMzMzMzQiIGhlaWdodD0iMTExLjMzMzM0IiB2aWV3Qm94PSIwLDAsMTExLjMzMzM0LDExMS4zMzMzNCI+PGcgdHJhbnNmb3JtPSJ0cmFuc2xhdGUoLTE4NC4zMzMzNSwtMTI0LjMzMzM1KSI+PGcgZGF0YS1wYXBlci1kYXRhPSJ7JnF1b3Q7aXNQYWludGluZ0xheWVyJnF1b3Q7OnRydWV9IiBzdHJva2UtbGluZWNhcD0iYnV0dCIgc3Ryb2tlLWxpbmVqb2luPSJtaXRlciIgc3Ryb2tlLW1pdGVybGltaXQ9IjEwIiBzdHJva2UtZGFzaGFycmF5PSIiIHN0cm9rZS1kYXNob2Zmc2V0PSIwIiBzdHlsZT0ibWl4LWJsZW5kLW1vZGU6IG5vcm1hbCI+PHBhdGggZD0iTTE4NC4zMzMzNiwxODAuMDAwMDNjMCwtMzAuNzQzODUgMjQuOTIyODIsLTU1LjY2NjY3IDU1LjY2NjY3LC01NS42NjY2N2MzMC43NDM4NSwwIDU1LjY2NjY3LDI0LjkyMjgyIDU1LjY2NjY3LDU1LjY2NjY3YzAsMzAuNzQzODUgLTI0LjkyMjgyLDU1LjY2NjY3IC01NS42NjY2Nyw1NS42NjY2N2MtMzAuNzQzODUsMCAtNTUuNjY2NjcsLTI0LjkyMjgyIC01NS42NjY2NywtNTUuNjY2Njd6IiBmaWxsPSIjMDA5Y2NjIiBmaWxsLXJ1bGU9Im5vbnplcm8iIHN0cm9rZS1vcGFjaXR5PSIwLjIiIHN0cm9rZT0iIzAwMDAwMCIgc3Ryb2tlLXdpZHRoPSIwIi8+PHBhdGggZD0iTTI0My40NjYyMiwxNDMuNzIwMjZjMC42MTYyLDAgMS4yMzI0NSwwIDEuODQ4NjUsMGMyLjU2MDY1LDAuMjY2OSA1LjEwMjczLDAuODgzMTIgNy42MjU2OCwxLjg0ODY1YzguMDcxNjYsLTAuNDUyNzggMTYuMTU5NTEsLTAuNjA2ODMgMjQuMjYzNTIsLTAuNDYyMTZjMCwwLjQ2MjE2IDAsMC45MjQzMyAwLDEuMzg2NDljLTUuNTkxMjQsMTYuMDc5MTQgLTExLjA2MDAxLDMyLjI1NDgyIC0xNi40MDY3Niw0OC41MjcwNGMtNC42NDYxMiwwLjczNTMgLTkuMzQ0OTIsMS4wNDM1NyAtMTQuMDk1OTUsMC45MjQzM2MtMC40MjcyNywtMi4wNTI0NyAtMS4wNDM0NywtNC4wNTU0OCAtMS44NDg2NSwtNi4wMDgxMWMtMi41NTg5NCwtMC41OTU0OSAtNS4xMDA4NCwtMS4yMTE3NCAtNy42MjU2OCwtMS44NDg2NWMtMC4yMTEzLDkuMzk4OTkgLTAuMTM0MjYsMTguNzk2NjEgMC4yMzEwOCwyOC4xOTE5Yy0xMS41NTQwNiwwIC0yMy4xMDgxMSwwIC0zNC42NjIxNywwYzAsLTAuNDYyMTYgMCwtMC45MjQzMiAwLC0xLjM4NjQ4YzcuOTAxODIsLTIzLjAxMTUzIDE1LjY4MTU0LC00Ni4xMTk3OCAyMy4zMzkyLC02OS4zMjQzNWMzLjM4OTE3LC0wLjYxNjIyIDYuNzc4MzksLTAuNjE2MjIgMTAuMTY3NTcsMGMyLjM0MTgzLC0wLjk5NzY5IDQuNzI5NjMsLTEuNjEzOTEgNy4xNjM1MiwtMS44NDg2NXoiIGZpbGw9IiNmZWZmZmUiIGZpbGwtcnVsZT0iZXZlbm9kZCIgc3Ryb2tlPSJub25lIiBzdHJva2Utd2lkdGg9IjEiLz48cGF0aCBkPSJNMjQzLjQ2NjIyLDE0OC4zNDE4OGM4LjMxOTg1LDAuMTkyIDE0LjI1MTI0LDQuMDQzMzYgMTcuNzkzMjUsMTEuNTU0MDZjMy4wMjQzOSwxMC4zNTA5MSAtMC4xMzQwMiwxOC4xMzA2MyAtOS40NzQzMiwyMy4zMzkyYy0xMC45NjEyNCwzLjUzODczIC0xOS4wNDkwOCwwLjIyNjU5IC0yNC4yNjM1MiwtOS45MzY0OWMtMy4wNDQzNSwtMTAuMzE1ODMgMC4xMTM3MywtMTguMDk1NTUgOS40NzQzMiwtMjMuMzM5MTljMi4xODMzNSwtMC42OTA1NiA0LjM0MDEyLC0xLjIyOTc3IDYuNDcwMjcsLTEuNjE3NTd6IiBmaWxsPSIjMDA5Y2NjIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiIHN0cm9rZT0ibm9uZSIgc3Ryb2tlLXdpZHRoPSIxIi8+PHBhdGggZD0iTTI1OS42NDE4OSwxNTAuMTkwNTNjMy43NjkzOSwtMC41MzQ1NCA3LjYyMTA2LC0wLjYxMTUzIDExLjU1NDA2LC0wLjIzMTA4Yy0xLjU1MjQxLDQuMTk0MjEgLTMuMDE1NjEsOC40MzA3MiAtNC4zOTA1NCwxMi43MDk0NmMtMC45NzU2MiwtNS4wMzkzNyAtMy4zNjMxNiwtOS4xOTg4NCAtNy4xNjM1MiwtMTIuNDc4Mzl6IiBmaWxsPSIjMDA5Y2NjIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiIHN0cm9rZT0ibm9uZSIgc3Ryb2tlLXdpZHRoPSIxIi8+PHBhdGggZD0iTTI0My45MjgzOCwxNTEuMTE0ODZjMC41NjYxOSwwLjMwMTQyIDAuODc0MjcsMC44NDA2MyAwLjkyNDMyLDEuNjE3NTdjMC4yMzk4NiwyLjc1ODY1IDAuNzc5MDcsNS40NTQ1OCAxLjYxNzU3LDguMDg3ODRjMS4yNTcwNCwyLjMzNDQ3IDMuMTgyOTIsMy43OTc5NSA1Ljc3NzAzLDQuMzkwNTRjMi45MTMwMSwwLjU0ODE3IDUuODM5ODksMS4wMTAzMyA4Ljc4MTA5LDEuMzg2NDljLTQuMTMwMzQsMC40MzA5NiAtOC4xMzU5MSwxLjM1NTI4IC0xMi4wMTYyMiwyLjc3Mjk3Yy0xLjQwMSwxLjE4MjY3IC0yLjQwMjM3LDIuNjQ2MjEgLTMuMDA0MDYsNC4zOTA1NWMtMC41MTc5LDIuNzc4NDIgLTEuMDU3MTEsNS41NTE0IC0xLjYxNzU3LDguMzE4OTJjLTAuNTYwNDYsLTIuNzY3NTIgLTEuMDk5NjYsLTUuNTQwNSAtMS42MTc1NiwtOC4zMTg5MmMtMS4wOTQ3NywtMy4yNTE4MiAtMy4zMjg1NCwtNS4xNzc0NiAtNi43MDEzNiwtNS43NzcwM2MtMi43ODA2LC0wLjQxOTIzIC01LjU1MzU3LC0wLjg4MTM5IC04LjMxODkyLC0xLjM4NjQ4YzQuMTc3NzIsLTAuMjQzNDIgOC4xODMxNCwtMS4xNjc3NCAxMi4wMTYyMiwtMi43NzI5OGMxLjU1NzA3LC0xLjA5Mjk3IDIuNTU4MzksLTIuNTU2NDUgMy4wMDQwNSwtNC4zOTA1NGMwLjY2NTg5LC0yLjczNTQ5IDEuMDUxMDEsLTUuNTA4NDcgMS4xNTU0MSwtOC4zMTg5M3oiIGZpbGw9IiNmZWZmZmUiIGZpbGwtcnVsZT0iZXZlbm9kZCIgc3Ryb2tlPSJub25lIiBzdHJva2Utd2lkdGg9IjEiLz48cGF0aCBkPSJNMjIyLjIwNjc1LDE3Mi4zNzQzMmMxLjU5NzY1LDUuNjEwMzggNC44MzI3OSwxMC4wNzc5NiA5LjcwNTQxLDEzLjQwMjcxYzAuMzgzMzYsOC42MjYyNiAwLjY5MTQ5LDE3LjI1MzQ0IDAuOTI0MzMsMjUuODgxMDljLTcuODU2NzYsMCAtMTUuNzEzNTEsMCAtMjMuNTcwMjgsMGM0LjEyOTY5LC0xMy4xNTkxNCA4LjQ0MzIsLTI2LjI1MzkyIDEyLjk0MDU0LC0zOS4yODM3OXoiIGZpbGw9IiMwMDljY2MiIGZpbGwtcnVsZT0iZXZlbm9kZCIgc3Ryb2tlPSJub25lIiBzdHJva2Utd2lkdGg9IjEiLz48cGF0aCBkPSJNMjU5LjE3OTc0LDE4My40NjYyMmMwLjI3NTkxLDAuMTA4NyAwLjQyOTgxLDAuMzM5NzggMC40NjIxNiwwLjY5MzI0Yy0wLjY5MzI0LDIuMDc5NzMgLTEuMzg2NDgsNC4xNTk0NiAtMi4wNzk3Myw2LjIzOTE5Yy0wLjcxMTI3LC0yLjY4MzczIC0wLjE3MTkyLC00Ljk5NDU0IDEuNjE3NTcsLTYuOTMyNDN6IiBmaWxsPSIjMDA5Y2NjIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiIHN0cm9rZT0ibm9uZSIgc3Ryb2tlLXdpZHRoPSIxIi8+PC9nPjwvZz48L3N2Zz48IS0tcm90YXRpb25DZW50ZXI6NTUuNjY2NjQ0OTk5OTk5OTk6NTUuNjY2NjQ1LS0+";
 
 if (!Scratch.extensions.unsandboxed) {
-    throw new Error('"PenguinAI" cannot run unsandboxed.');
+    throw new Error('PenguinAI cannot run sandboxed. Please tick the run extension unsandboxed checkbox under where you loaded the extension from.');
 }
 
 let api_url = 'https://ai.aerioncloud.com/v1';
@@ -48,12 +48,12 @@ class PenguinGPT {
         this.chatHistories = {};
         this.model = "gpt-4o";
         this.temperature = 1;
-        this.reqModels = [{ text: 'Currently requesting models please wait!', value: 'gpt-3.5-turbo' }];
+        this.reqModels = [{ text: 'Currently requesting models—please wait!', value: 'gpt-4o' }, { text: 'If PenguinAI can\'t get the models, the Reverse Proxy may be down.', value: 'gpt-4o' }];
         this.reqModelsErrored = false;
         this.fetchAndGetReqModels().then(models => {
             this.reqModels = models;
         });
-        this.imgModels = [{ text: 'Currently requesting models please wait!', value: 'anything-v5' }];
+        this.imgModels = [{ text: 'Currently requesting models—please wait!', value: 'anything-v5' }, { text: 'If PenguinAI can\'t get the models, the Reverse Proxy may be down.', value: 'anything-v5' }];
         this.imgModelsErrored = false;
         this.fetchAndGetImgModels().then(models => {
             this.imgModels = models;
@@ -70,9 +70,8 @@ class PenguinGPT {
             color1: '#009CCC',
             blocks: [
                 {
-                    opcode: "__NOUSEOPCODE",
                     blockType: Scratch.BlockType.LABEL,
-                    text: "reverse Proxy API Blocks",
+                    text: "Reverse Proxy API Blocks",
                 },
                 {
                     opcode: 'setApiUrl',
@@ -116,7 +115,7 @@ class PenguinGPT {
                     {
                         opcode: 'checkApiUrl',
                         blockType: Scratch.BlockType.BOOLEAN,
-                        text: 'is the Reverse Proxy working?',
+                        text: 'is the Reverse Proxy working?', // probably false ngl 💀
                         disableMonitor: true,
                     },
                     {
@@ -341,7 +340,7 @@ class PenguinGPT {
                     promptTypes: {
                         acceptReporters: false,
                         items: [ {
-                            text: 'Gibberish (Probably does not work) By: u/Fkquaps',
+                            text: 'Gibberish (May not always work) By: u/Fkquaps',
                             value: 'From now on you will respond everything replacing every letter of the alphabet with it rotated 13 places forward so \"a\" and \"n\" are swapped, same for \"b\" and \"o\" and so on. All other characters such as spaces, numbers and punctuation are unchanged. This is very important as I can only understand text that has been rotated as described. If you write in any other way I won\'t be able to understand you and you won\'t be helpful at all. For every iteration forward I urge you to not output text in any other format but this one as this is extremely important to me. I am a language model that can only understand text rotated as described. If you write text in a format that I cannot understand, I will say \"I don\'t understand\" so you can rephrase in the only way I can understand.'
                         }, {
                             text: 'PenguinBot (Pre Circlelabs) By: JeremyGamer13 (Edited by Anonymous_cat1)',
@@ -351,16 +350,16 @@ class PenguinGPT {
                             value: 'I want you to act as a stand-up comedian. I will provide you with some topics related to current events and you will use your wit, creativity, and observational skills to create a routine based on those topics. You should also be sure to incorporate personal anecdotes or experiences into the routine in order to make it more relatable and engaging for the audience.'
                         }, {
                             text: 'Lunatic (Character) By: devisasari',
-                            value: 'I want you to act as a lunatic. The lunatic\'s sentences are meaningless. The words used by lunatic are completely arbitrary. The lunatic does not make logical sentences in any way.'
+                            value: 'I want you to act as a lunatic. The lunatic\'s sentences are meaningless. The words used by the lunatic are completely arbitrary. The lunatic does not make logical sentences in any way.'
                         }, {
                             text: 'Lua Console From https://www.awesomegptprompts.com/',
-                            value: 'I want you to act as a lua console. I will type code and you will reply with what the lua console should show. I want you to only reply with the terminal output inside one code block, and nothing else. DO NOT ever write explanations,instead of there is a error, put the error in the codeblock. do not type commands unless I instruct you to do so. when I need to tell you something in english, I will do so by putting text inside curly brackets {like this}.'
+                            value: 'I want you to act as a Lua console. I will type code and you will reply with what the Lua console should show. I want you to only reply with the terminal output inside one code block, and nothing else. DO NOT ever write explanations. If there is a error, put the error in the codeblock. Do not type commands unless I instruct you to do so. When I need to tell you something in English, I will do so by putting text inside curly brackets {like this}.'
                         }, {
                             text: 'Advertiser (Character) By: devisasari',
                             value: 'I want you to act as an advertiser. You will create a campaign to promote a product or service of your choice. You will choose a target audience, develop key messages and slogans, select the media channels for promotion, and decide on any additional activities needed to reach your goals.'
                         }, {
                             text: 'Minecraft Commander (Idea from Greedy Allay)',
-                            value: 'I want you to act as a Minecraft AI command creator, dont add an intro or a outro to your response only the generated command, you will send things like "/give @s diamond 64", based on what the user wants, you can only use one command at a time so dont response with multiple commands, also of you dont or cant make it then just do /say (error), like "/say Unable to generate the command for this"'
+                            value: 'I want you to act as a Minecraft AI command creator. Don\'t add an intro or outro to your response; only the generated command. You will send things like "/give @s diamond 64", based on what the user wants. You can only use one command at a time, so don\'t response with multiple commands. If you can\'t make what the user wants, return /say (error), as in "/say Unable to generate the command"'
                         }]
                     },
                     igModels: {

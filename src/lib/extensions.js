@@ -58,6 +58,7 @@ export default [
     {
         name: "Extra Timers",
         description: "Allows for the creation and management of additional timer blocks.",
+        notes: "thumbnail by Dillon",
         code: "steve0greatness/timers.js",
         banner: "steve0greatness/timers.svg",
         creator: "Steve0Greatness",

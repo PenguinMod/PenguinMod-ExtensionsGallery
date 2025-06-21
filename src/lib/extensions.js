@@ -431,6 +431,7 @@ export default [
         creator: "DogeisCut",
         isGitHub: true, 
         documentation: "Resolution",
+        notes: "Gallery banner by Dillon",
     },
     {
         name: "Device Motion",

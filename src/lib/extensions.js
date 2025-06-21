@@ -128,6 +128,7 @@ export default [
         creatorAlias: "MubiLop",
         isGitHub: true,
         unstable: true,
+        documentation: "PenguinAI",
         unstableReason: "AI models can generate unintended or inappropriate output.\nSome AI models may also become temporarily inaccessible.\n\nUse at your own risk.",
     },
     {

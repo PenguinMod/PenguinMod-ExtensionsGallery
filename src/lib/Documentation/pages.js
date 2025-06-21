@@ -16,6 +16,9 @@ import PageTurboWeather from "./TurboWeather.md?raw";
 // Number Utilities
 import PageNumberUtilities from "./NumberUtilities.md?raw";
 
+// PenguinAI
+import PagePenguinAI from "./PenguinAI.md?raw";
+
 import PageMoreTypes from "./More-Types.md?raw";
 
 // Boxed Physics
@@ -42,6 +45,9 @@ export default {
 
     // Number Utilities
     "NumberUtilities": PageNumberUtilities,
+
+    // PenguinAI
+    "PenguinAI": PagePenguinAI,
 
     "more-types": PageMoreTypes,
 

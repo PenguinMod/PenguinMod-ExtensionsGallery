@@ -58,6 +58,7 @@ export default [
     {
         name: "Extra Timers",
         description: "Allows for the creation and management of additional timer blocks.",
+        notes: "thumbnail by Dillon",
         code: "steve0greatness/timers.js",
         banner: "steve0greatness/timers.svg",
         creator: "Steve0Greatness",
@@ -127,6 +128,7 @@ export default [
         creatorAlias: "MubiLop",
         isGitHub: true,
         unstable: true,
+        documentation: "PenguinAI",
         unstableReason: "AI models can generate unintended or inappropriate output.\nSome AI models may also become temporarily inaccessible.\n\nUse at your own risk.",
     },
     {
@@ -315,8 +317,8 @@ export default [
         description: "Share your screen or camera to your projects!",
         code: "pooiod/VideoSharing.js",
         banner: "pooiod/VideoSharing.svg",
-        creator: "pooiod",
-        isGitHub: true,
+        creator: "pooiod7",
+        isGitHub: false,
     },
     {
         name: "WindowHasher",
@@ -432,13 +434,13 @@ export default [
     },
     {
         name: "Device Motion",
-        description: "Use Device Motion API to get rotation or movement of the device. Works best on mobile devices.",
+        description: "Use Device Motion API to get rotation or movement of the device. Works best on mobile devices. \n Thumbnail by Dillon. ",
         code: "gaimerI17/DeviceMotion.js",
-        banner: "gaimerI17/DeviceMotion.svg",
+        banner: "gaimerI17/DeviceMotion.png",
         creator: "gaimerI",
         isGitHub: true,
         creatorAlias: "gaimerI17",
-
+        note: "Extension thumbnail made by Dillon."
     },
     /* these extensions are completely dead as of now
     {

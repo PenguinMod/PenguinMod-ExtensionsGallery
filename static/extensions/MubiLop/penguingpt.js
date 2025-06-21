@@ -84,6 +84,7 @@
                 menuIconURI: extIcon,
                 blockIconURI: gptIcon,
                 color1: '#009CCC',
+                docsURI: "https://extensions.penguinmod.com/docs/PenguinAI",
                 blocks: [{
                         opcode: "__NOUSEOPCODE",
                         blockType: BlockType.LABEL,

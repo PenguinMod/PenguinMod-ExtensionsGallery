@@ -112,6 +112,17 @@
                         }
                     },
                     {
+                        opcode: 'getAllHitSprites',
+                        blockType: Scratch.BlockType.REPORTER,
+                        text: 'all hit sprites at ray [INDEX]',
+                        arguments: {
+                            INDEX: {
+                                type: Scratch.ArgumentType.NUMBER,
+                                defaultValue: 1
+                            }
+                        }
+                    },
+                    {
                         opcode: 'getHitDistance',
                         blockType: Scratch.BlockType.REPORTER,
                         text: 'hit distance at ray [INDEX]',
@@ -191,10 +202,10 @@
             
             this.rayData = [rayResult];
             
-            if (rayResult.hit) {
-                return `Hit: ${rayResult.spriteName} at (${Math.round(rayResult.hitX * 10) / 10}, ${Math.round(rayResult.hitY * 10) / 10})`;
+            if (rayResult.hitSprites && rayResult.hitSprites.length > 0) {
+                return JSON.stringify(rayResult.hitSprites);
             } else {
-                return 'No hit';
+                return JSON.stringify([]);
             }
         }
 
@@ -224,6 +235,7 @@
             const deltaX = Math.cos(angleRad);
             const deltaY = Math.sin(angleRad);
 
+            let hitSprites = [];
             let closestHit = null;
             let closestDistance = maxDistance;
 
@@ -234,28 +246,48 @@
                        !this.disabledSprites.has(target.getName());
             });
 
+            // Collect all hits along the ray path
             for (const target of allSprites) {
                 const hitResult = this.checkRayTargetIntersection(
                     startX, startY, deltaX, deltaY, maxDistance, target
                 );
 
-                if (hitResult && hitResult.distance < closestDistance) {
-                    closestDistance = hitResult.distance;
-                    closestHit = {
-                        hit: true,
-                        spriteName: target.getName(),
-                        spriteX: target.x,
-                        spriteY: target.y,
-                        spriteSize: target.size,
+                if (hitResult) {
+                    hitSprites.push({
+                        name: target.getName(),
+                        distance: hitResult.distance,
                         hitX: hitResult.hitX,
                         hitY: hitResult.hitY,
-                        distance: hitResult.distance
-                    };
+                        spriteX: target.x,
+                        spriteY: target.y,
+                        spriteSize: target.size
+                    });
+
+                    // Still track closest hit for compatibility
+                    if (hitResult.distance < closestDistance) {
+                        closestDistance = hitResult.distance;
+                        closestHit = {
+                            hit: true,
+                            spriteName: target.getName(),
+                            spriteX: target.x,
+                            spriteY: target.y,
+                            spriteSize: target.size,
+                            hitX: hitResult.hitX,
+                            hitY: hitResult.hitY,
+                            distance: hitResult.distance
+                        };
+                    }
                 }
             }
 
+            // Sort hits by distance (closest first)
+            hitSprites.sort((a, b) => a.distance - b.distance);
+
             if (closestHit) {
-                return closestHit;
+                return {
+                    ...closestHit,
+                    hitSprites: hitSprites.map(hit => hit.name)
+                };
             } else {
                 return {
                     hit: false,
@@ -265,7 +297,8 @@
                     spriteSize: 0,
                     hitX: startX + deltaX * maxDistance,
                     hitY: startY + deltaY * maxDistance,
-                    distance: maxDistance
+                    distance: maxDistance,
+                    hitSprites: []
                 };
             }
         }
@@ -375,6 +408,14 @@
                 return this.rayData[index].spriteName;
             }
             return '';
+        }
+
+        getAllHitSprites(args) {
+            const index = Math.floor(Scratch.Cast.toNumber(args.INDEX)) - 1;
+            if (index >= 0 && index < this.rayData.length && this.rayData[index].hitSprites) {
+                return JSON.stringify(this.rayData[index].hitSprites);
+            }
+            return JSON.stringify([]);
         }
 
         getHitDistance(args) {

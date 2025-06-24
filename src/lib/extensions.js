@@ -443,6 +443,18 @@ export default [
         creatorAlias: "gaimerI17",
         note: "Extension thumbnail made by Dillon."
     },
+    {
+    name: "Raycasting",
+    description: "Trow invisible rays and if a ray touches a sprite it will report its information like x, y or size",
+    code: "GatocDev/RayCasting.js",
+    banner: "GatocDev/RayCasting.png",
+    creator: "GatocDev",
+    
+    creatorAlias: "Gatoc-idk", 
+    notes: "Rays are invisible, use pen extension to make them visible", // Optional. Allows you to note anyone else who helped you or any small info.
+    unstable: false, 
+    isGitHub: false,
+},
     /* these extensions are completely dead as of now
     {
         name: "Online Captcha",

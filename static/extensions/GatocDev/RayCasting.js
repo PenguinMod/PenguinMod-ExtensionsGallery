@@ -10,7 +10,7 @@
 
         getInfo() {
             return {
-                id: 'gatocmyextension',
+                id: 'raycast',
                 name: 'Raycast',
                 color1: '#FF6B35',
                 color2: '#F7931E',
@@ -66,6 +66,7 @@
                             }
                         }
                     },
+                    '---',
                     {
                         opcode: 'getHitSpriteX',
                         blockType: Scratch.BlockType.REPORTER,
@@ -121,6 +122,7 @@
                             }
                         }
                     },
+                    '---',
                     {
                         opcode: 'getRayCount',
                         blockType: Scratch.BlockType.REPORTER,
@@ -140,7 +142,7 @@
                     {
                         opcode: 'getRayX',
                         blockType: Scratch.BlockType.REPORTER,
-                        text: 'ray [INDEX] X',
+                        text: 'ray [INDEX] end X',
                         arguments: {
                             INDEX: {
                                 type: Scratch.ArgumentType.NUMBER,
@@ -151,7 +153,7 @@
                     {
                         opcode: 'getRayY',
                         blockType: Scratch.BlockType.REPORTER,
-                        text: 'ray [INDEX] Y',
+                        text: 'ray [INDEX] end Y',
                         arguments: {
                             INDEX: {
                                 type: Scratch.ArgumentType.NUMBER,
@@ -159,6 +161,7 @@
                             }
                         }
                     },
+                    '---',
                     {
                         opcode: 'disableThisSprite',
                         blockType: Scratch.BlockType.COMMAND,
@@ -167,7 +170,7 @@
                     {
                         opcode: 'enableThisSprite',
                         blockType: Scratch.BlockType.COMMAND,
-                        text: 'enable this sprite from ray detection'
+                        text: 'enable this sprite for ray detection'
                     },
                     {
                         opcode: 'clearRays',
@@ -189,7 +192,7 @@
             this.rayData = [rayResult];
             
             if (rayResult.hit) {
-                return `Hit: ${rayResult.spriteName} at (${rayResult.hitX.toFixed(1)}, ${rayResult.hitY.toFixed(1)})`;
+                return `Hit: ${rayResult.spriteName} at (${Math.round(rayResult.hitX * 10) / 10}, ${Math.round(rayResult.hitY * 10) / 10})`;
             } else {
                 return 'No hit';
             }
@@ -217,9 +220,9 @@
         performRaycast(startX, startY, direction, maxDistance, util) {
             const runtime = util.runtime;
             
-            const angleRad = (direction * Math.PI) / 180;
-            const deltaX = Math.sin(angleRad);
-            const deltaY = Math.cos(angleRad);
+            const angleRad = ((direction - 90) * Math.PI) / 180;
+            const deltaX = Math.cos(angleRad);
+            const deltaY = Math.sin(angleRad);
 
             let closestHit = null;
             let closestDistance = maxDistance;
@@ -231,39 +234,29 @@
                        !this.disabledSprites.has(target.getName());
             });
 
-            console.log(`Raycasting from (${startX}, ${startY}) direction ${direction}° distance ${maxDistance}`);
-            console.log(`Found ${allSprites.length} sprites to check`);
-
             for (const target of allSprites) {
-                console.log(`Checking sprite: ${target.getName()} at (${target.x}, ${target.y})`);
-                
                 const hitResult = this.checkRayTargetIntersection(
                     startX, startY, deltaX, deltaY, maxDistance, target
                 );
 
-                if (hitResult) {
-                    console.log(`Hit detected at distance ${hitResult.distance}`);
-                    if (hitResult.distance < closestDistance) {
-                        closestDistance = hitResult.distance;
-                        closestHit = {
-                            hit: true,
-                            spriteName: target.getName(),
-                            spriteX: target.x,
-                            spriteY: target.y,
-                            spriteSize: target.size,
-                            hitX: hitResult.hitX,
-                            hitY: hitResult.hitY,
-                            distance: hitResult.distance
-                        };
-                    }
+                if (hitResult && hitResult.distance < closestDistance) {
+                    closestDistance = hitResult.distance;
+                    closestHit = {
+                        hit: true,
+                        spriteName: target.getName(),
+                        spriteX: target.x,
+                        spriteY: target.y,
+                        spriteSize: target.size,
+                        hitX: hitResult.hitX,
+                        hitY: hitResult.hitY,
+                        distance: hitResult.distance
+                    };
                 }
             }
 
             if (closestHit) {
-                console.log(`Closest hit: ${closestHit.spriteName} at distance ${closestHit.distance}`);
                 return closestHit;
             } else {
-                console.log('No hits detected');
                 return {
                     hit: false,
                     spriteName: '',
@@ -286,64 +279,57 @@
             try {
                 if (target.getBounds) {
                     bounds = target.getBounds();
+                } else if (target.drawable && target.drawable.getBounds) {
+                    bounds = target.drawable.getBounds();
                 }
             } catch (e) {
-              
+                // Bounds not available
             }
 
             let width, height;
-            if (bounds) {
+            if (bounds && bounds.width && bounds.height) {
                 width = bounds.width;
                 height = bounds.height;
             } else {
-
                 const costume = target.getCostume();
-                if (costume) {
-                    width = (costume.bitmapResolution ? costume.size[0] : costume.rotationCenterX * 2) * spriteSize;
-                    height = (costume.bitmapResolution ? costume.size[1] : costume.rotationCenterY * 2) * spriteSize;
+                if (costume && costume.size) {
+                    width = costume.size[0] * spriteSize;
+                    height = costume.size[1] * spriteSize;
                 } else {
                     width = 60 * spriteSize;
                     height = 60 * spriteSize;
                 }
             }
 
+            width = Math.max(width, 10);
+            height = Math.max(height, 10);
 
-            width = Math.max(width, 30);
-            height = Math.max(height, 30);
-
-
-            const padding = 5;
+            const padding = 2;
             const left = spriteX - (width / 2) - padding;
             const right = spriteX + (width / 2) + padding;
             const bottom = spriteY - (height / 2) - padding;
             const top = spriteY + (height / 2) + padding;
 
-       
             let tNear = 0;
             let tFar = maxDistance;
 
-
-            if (Math.abs(deltaX) > 0.001) {
+            if (Math.abs(deltaX) > 0.0001) {
                 const t1 = (left - startX) / deltaX;
                 const t2 = (right - startX) / deltaX;
                 tNear = Math.max(tNear, Math.min(t1, t2));
                 tFar = Math.min(tFar, Math.max(t1, t2));
             } else {
-
                 if (startX < left || startX > right) return null;
             }
 
-
-            if (Math.abs(deltaY) > 0.001) {
+            if (Math.abs(deltaY) > 0.0001) {
                 const t1 = (bottom - startY) / deltaY;
                 const t2 = (top - startY) / deltaY;
                 tNear = Math.max(tNear, Math.min(t1, t2));
                 tFar = Math.min(tFar, Math.max(t1, t2));
             } else {
-
                 if (startY < bottom || startY > top) return null;
             }
-
 
             if (tNear <= tFar && tNear >= 0 && tNear <= maxDistance) {
                 const hitX = startX + deltaX * tNear;
@@ -430,13 +416,11 @@
         disableThisSprite(args, util) {
             const spriteName = util.target.getName();
             this.disabledSprites.add(spriteName);
-            console.log(`Disabled sprite from ray detection: ${spriteName}`);
         }
 
         enableThisSprite(args, util) {
             const spriteName = util.target.getName();
             this.disabledSprites.delete(spriteName);
-            console.log(`Enabled sprite for ray detection: ${spriteName}`);
         }
 
         clearRays() {

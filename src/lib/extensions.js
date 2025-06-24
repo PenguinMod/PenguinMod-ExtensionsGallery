@@ -445,13 +445,13 @@ export default [
     },
     {
     name: "Raycasting",
-    description: "Trow invisible rays and if a ray touches a sprite it will report its information like x, y or size",
+    description: "Throw invisible rays and report information about the sprites it collided with. ",
     code: "GatocDev/RayCasting.js",
     banner: "GatocDev/RayCasting.png",
     creator: "GatocDev",
     
     creatorAlias: "Gatoc_Dev", 
-    notes: "Throw invisible rays and report information about the sprites it collided with. Thumbnail(s) by Steve0Greatness and NotDillon", // Optional. Allows you to note anyone else who helped you or any small info.
+    notes: "Thumbnail(s) by Steve0Greatness and NotDillon", // Optional. Allows you to note anyone else who helped you or any small info.
     unstable: false, 
     isGitHub: false,
 },

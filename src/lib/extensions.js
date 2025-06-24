@@ -451,7 +451,7 @@ export default [
     creator: "GatocDev",
     
     creatorAlias: "Gatoc_Dev", 
-    notes: "huge thanks to steveOgreatness for drawing a banner for this extensio it was not used but still thanks, Creator of the banner:NotDillon", // Optional. Allows you to note anyone else who helped you or any small info.
+    notes: "Throw invisible rays and report information about the sprites it collided with. Thumbnail(s) by Steve0Greatness and NotDillon", // Optional. Allows you to note anyone else who helped you or any small info.
     unstable: false, 
     isGitHub: false,
 },

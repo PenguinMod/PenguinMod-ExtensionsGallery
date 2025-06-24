@@ -453,7 +453,7 @@ export default [
     creatorAlias: "Gatoc-idk", 
     notes: "Rays are invisible, use pen extension to make them visible", // Optional. Allows you to note anyone else who helped you or any small info.
     unstable: false, 
-    isGitHub: false,
+    isGitHub: true,
 },
     /* these extensions are completely dead as of now
     {

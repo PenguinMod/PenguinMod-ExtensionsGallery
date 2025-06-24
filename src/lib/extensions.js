@@ -451,7 +451,7 @@ export default [
     creator: "GatocDev",
     
     creatorAlias: "Gatoc_Dev", 
-    notes: "Rays are invisible, use pen extension to make them visible", // Optional. Allows you to note anyone else who helped you or any small info.
+    notes: "Rays are invisible, use pen extension to make them visible, also huge thanks to steveOgreatness for drawing a banner for this extension, it was not used but still thanks, Creator of the banner:NotDillon", // Optional. Allows you to note anyone else who helped you or any small info.
     unstable: false, 
     isGitHub: false,
 },

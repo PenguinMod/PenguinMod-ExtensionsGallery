@@ -39,6 +39,7 @@
                             }
                         }
                     },
+
                     {
                         opcode: 'castMultipleRays',
                         blockType: Scratch.BlockType.COMMAND,
@@ -66,6 +67,7 @@
                             }
                         }
                     },
+
                     '---',
                     {
                         opcode: 'getHitSpriteX',
@@ -308,6 +310,7 @@
             const spriteY = target.y;
             const spriteSize = target.size / 100;
 
+            // Get sprite dimensions
             let bounds = null;
             try {
                 if (target.getBounds) {
@@ -334,47 +337,37 @@
                 }
             }
 
-            width = Math.max(width, 10);
-            height = Math.max(height, 10);
+            width = Math.max(width, 1);
+            height = Math.max(height, 1);
 
-            const padding = 2;
-            const left = spriteX - (width / 2) - padding;
-            const right = spriteX + (width / 2) + padding;
-            const bottom = spriteY - (height / 2) - padding;
-            const top = spriteY + (height / 2) + padding;
+            // Calculate sprite bounds
+            const left = spriteX - (width / 2);
+            const right = spriteX + (width / 2);
+            const bottom = spriteY - (height / 2);
+            const top = spriteY + (height / 2);
 
-            let tNear = 0;
-            let tFar = maxDistance;
-
-            if (Math.abs(deltaX) > 0.0001) {
-                const t1 = (left - startX) / deltaX;
-                const t2 = (right - startX) / deltaX;
-                tNear = Math.max(tNear, Math.min(t1, t2));
-                tFar = Math.min(tFar, Math.max(t1, t2));
-            } else {
-                if (startX < left || startX > right) return null;
-            }
-
-            if (Math.abs(deltaY) > 0.0001) {
-                const t1 = (bottom - startY) / deltaY;
-                const t2 = (top - startY) / deltaY;
-                tNear = Math.max(tNear, Math.min(t1, t2));
-                tFar = Math.min(tFar, Math.max(t1, t2));
-            } else {
-                if (startY < bottom || startY > top) return null;
-            }
-
-            if (tNear <= tFar && tNear >= 0 && tNear <= maxDistance) {
-                const hitX = startX + deltaX * tNear;
-                const hitY = startY + deltaY * tNear;
+            // Simple step-by-step ray marching to avoid teleporting
+            const stepSize = 1; // Small step size for accuracy
+            const steps = Math.ceil(maxDistance / stepSize);
+            
+            for (let i = 1; i <= steps; i++) {
+                const distance = i * stepSize;
+                if (distance > maxDistance) break;
                 
-                return {
-                    hitX: hitX,
-                    hitY: hitY,
-                    distance: tNear
-                };
+                const checkX = startX + deltaX * distance;
+                const checkY = startY + deltaY * distance;
+                
+                // Check if this point is inside the sprite bounds
+                if (checkX >= left && checkX <= right && 
+                    checkY >= bottom && checkY <= top) {
+                    return {
+                        hitX: checkX,
+                        hitY: checkY,
+                        distance: distance
+                    };
+                }
             }
-
+            
             return null;
         }
 

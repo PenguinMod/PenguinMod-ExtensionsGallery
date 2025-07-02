@@ -443,6 +443,13 @@ export default [
         creatorAlias: "gaimerI17",
         note: "Extension thumbnail made by Dillon."
     },
+    {
+        name: "DeltaTime Expansion",
+        description: "Blocks to calculate deltaTime, FPS, and simpler movement operations with deltaTime.",
+        code: "Kay2811/DeltaTimeExpansion.js",
+        banner: "Kay2811/HQDTE.png",
+        creator: "Kay2811",
+    },
     /* these extensions are completely dead as of now
     {
         name: "Online Captcha",

@@ -5,7 +5,8 @@
 //      "./particle-tools.md?raw"
 // I have completed the steps    --AskingAcake
 
-import PageSimpleBrain from "./SimpleBrain.md?raw";
+import PageSimpleBrain from "./simplebrain.md?raw";
+
 
 import PageParticleTools from "./particle-tools.md?raw";
 
@@ -66,4 +67,4 @@ export default {
     "Resolution": Resolution,
 };
 
-Add SimpleBrain docs page
+Add simplebrain docs page

@@ -312,7 +312,7 @@
         if(!elements[args.id]){return}
         const element = elements[args.id]
         if(element.tagName==='svg'){
-            const rect = element.getBoundingClientRect()
+            const rect = element.getBBox()
             element.style.left = `${(vm.runtime.stageWidth/2) + args.x - (rect.width/2)}px`
             element.style.top = `${(vm.runtime.stageHeight/2) - args.y - (rect.height/2)}px`
         }else{

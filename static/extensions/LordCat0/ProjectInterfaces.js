@@ -420,6 +420,7 @@
         elements[args.id].hidden = (args.menu==="Hide")
     }
     ElementVisibility(args){
+        if(!elements[args.id]) return
         return args.status==='Shown'?!elements[args.id].hidden:!!elements[args.id].hidden
     }
     AllElements(){return JSON.stringify(Object.keys(elements))}

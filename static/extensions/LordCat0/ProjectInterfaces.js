@@ -325,9 +325,7 @@
     Direction(args){
         if(!elements[args.id]){return}
         const element = elements[args.id]
-        //element.style.transform = elements[args.id].tagName==='SVG'?1:`rotate(${args.dir - 90}deg)`
         metadata[args.id].direction = args.dir
-        //this.FixTransform(args.id)
         element.style.transform = `rotate(${args.dir - 90}deg)`
     }
     Scale(args){

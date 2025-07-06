@@ -487,7 +487,7 @@
     }
     async InputValue(args){
         const element = elements[args.id]
-        if(!element || (element.tagName != "INPUT" && element.tagName != "TEXTAREA")){return}
+        if(!element || (element.tagName != "INPUT" && element.tagName != "TEXTAREA")) return ""
         if(element.type === 'checkbox') return element.checked
         return (element.type === 'file' ? await datauri(element.files[0]) : element.value)
     }

@@ -525,13 +525,6 @@
             return true
         }
         return false
-        
-        /*
-        if(!elements[args.id] || (elements[args.id].tagName!="INPUT"&&elements[args.id].tagName!="TEXTAREA")) return false
-        if(metadata[args.id].inputdirty){metadata[args.id].inputdirty = false; return true}
-        return false
-        */
-
     }
     WhenClicked(args){
         //This isnt ideal, but its basically the only option we have

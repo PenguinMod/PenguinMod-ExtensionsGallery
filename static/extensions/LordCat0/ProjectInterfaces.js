@@ -519,9 +519,9 @@
         const value = element.type==='checkbox'?element.checked:element.value
         const blockId = util.thread.peekStack()
         if(!lastValues[blockId])
-            lastValues[blockId] = value
-        if(lastValues[blockId] !== value){
-            lastValues[blockId] = value
+            lastValues[blockId] = value.toString()
+        if(lastValues[blockId] !== value.toString()){
+            lastValues[blockId] = value.toString()
             return true
         }
         return false

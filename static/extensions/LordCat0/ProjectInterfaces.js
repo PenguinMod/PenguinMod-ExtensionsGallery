@@ -248,6 +248,11 @@
             arguments: {id: {type: Scratch.ArgumentType.STRING, defaultValue: "My element"}, placeholder: {type: Scratch.ArgumentType.STRING, defaultValue: "Hello world!"}},
             blockIconURI: inputIcon
             },{
+            opcode: "InputSetValue",
+            text: "Set value of ID [id] to [value]",
+            arguments: {id: {type: Scratch.ArgumentType.STRING, defaultValue: "My element"}, value: {type: Scratch.ArgumentType.STRING, defaultValue: "Hello world!"}},
+            blockIconURI: inputIcon
+            },{
             opcode: "InputValue",
             text: "Value of input with ID [id]",
             blockType: Scratch.BlockType.REPORTER,
@@ -505,6 +510,11 @@
         if(!elements[args.id] || (elements[args.id].tagName != "INPUT" && elements[args.id].tagName != "TEXTAREA")){return}
         elements[args.id].setAttribute('placeholder', args.placeholder)
     }
+    InputSetValue(args){
+        if(!elements[args.id] || (elements[args.id].tagName != "INPUT" && elements[args.id].tagName != "TEXTAREA")){return}
+        if(elements[args.id].type === 'checkbox') elements[args.id].checked = Scratch.Cast.toBoolean(args.value)
+        elements[args.id].value = args.value
+    }
     async InputValue(args){
         if(!elements[args.id] && inputhold[args.id]) return inputhold[args.id]
         const element = elements[args.id]
@@ -525,6 +535,13 @@
             return true
         }
         return false
+        
+        /*
+        if(!elements[args.id] || (elements[args.id].tagName!="INPUT"&&elements[args.id].tagName!="TEXTAREA")) return false
+        if(metadata[args.id].inputdirty){metadata[args.id].inputdirty = false; return true}
+        return false
+        */
+
     }
     WhenClicked(args){
         //This isnt ideal, but its basically the only option we have

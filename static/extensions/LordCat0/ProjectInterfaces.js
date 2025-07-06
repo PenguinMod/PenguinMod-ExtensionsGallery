@@ -18,6 +18,7 @@
     vm.renderer.addOverlay(elementbox, "scale")
     let elements = {}
     let metadata = {}
+    let inputhold = {}
     const css = document.createElement('style')
     css.textContent = `
         .LordCatInterfaces svg{
@@ -282,6 +283,9 @@
         }, 1) // Timeout needed because for some reason it wont run otherwise..
     }
     ClearAll(){
+        Object.entries(elements).forEach(([id, element]) => {
+            if((element.tagName==="INPUT"||element.tagName==="TEXTAREA")) inputhold[id] = element.type==="checkbox"?element.checked:element.value
+        })
         elements = {}
         metadata = {}
         elementbox.innerHTML = ''
@@ -312,9 +316,9 @@
         if(!elements[args.id]){return}
         const element = elements[args.id]
         if(element.tagName==='svg'){
-            const rect = element.getBBox()
-            element.style.left = `${(vm.runtime.stageWidth/2) + args.x - (rect.width/2)}px`
-            element.style.top = `${(vm.runtime.stageHeight/2) - args.y - (rect.height/2)}px`
+            const bbox = element.getBBox()
+            element.style.left = `${(vm.runtime.stageWidth/2) + args.x - (bbox.width/2)}px`
+            element.style.top = `${(vm.runtime.stageHeight/2) - args.y - (bbox.height/2)}px`
         }else{
             element.style.left = `${(vm.runtime.stageWidth/2) + args.x - (element.offsetWidth/2)}px`
             element.style.top = `${(vm.runtime.stageHeight/2) - args.y - (element.offsetHeight/2)}px`
@@ -397,9 +401,9 @@
                 if(element.tagName != 'IMG' && element.tagName != 'VIDEO' && element.tagName != "svg") return
                 return element.tagName==='svg'?element.outerHTML:element.src
             case 'Width':
-                return element.getBoundingClientRect().width
+                return element.getBBox().width
             case 'Height':
-                return element.getBoundingClientRect().height
+                return element.getBBox().height
             default:
                 return meta[args.attr.toLowerCase()]
         }
@@ -409,9 +413,11 @@
         return metadata[args.id].hovered
     }
     Delete(args){
-        if(!elements[args.id]){return}
-        if(document.getElementById(`LCGuiStyle_${args.id}`)){document.getElementById(`LCGuiStyle_${args.id}`).remove()}
-        elements[args.id].remove()
+        const element = elements[args.id]
+        if(!element){return}
+        if((element.tagName==="INPUT"||element.tagName==="TEXTAREA")) inputhold[args.id] = element.type==="checkbox"?element.checked:element.value
+        if(document.getElementById(`LCGuiStyle_${args.id}`)) document.getElementById(`LCGuiStyle_${args.id}`).remove()
+        element.remove()
         delete elements[args.id]
         delete metadata[args.id]
     }
@@ -486,8 +492,10 @@
         elements[args.id].setAttribute('placeholder', args.placeholder)
     }
     async InputValue(args){
+        if(!elements[args.id] && inputhold[args.id]) return inputhold[args.id]
         const element = elements[args.id]
-        if(!element || (element.tagName != "INPUT" && element.tagName != "TEXTAREA")) return ""
+        if((!element) || (element.tagName != "INPUT" && element.tagName != "TEXTAREA")) return ""
+        if(!element && inputhold[args.id]) return inputhold[args.id]
         if(element.type === 'checkbox') return element.checked
         return (element.type === 'file' ? await datauri(element.files[0]) : element.value)
     }

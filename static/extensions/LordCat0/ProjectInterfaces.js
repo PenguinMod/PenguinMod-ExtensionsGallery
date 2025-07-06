@@ -19,6 +19,7 @@
     let elements = {}
     let metadata = {}
     let inputhold = {}
+    let lastValues = {}
     const css = document.createElement('style')
     css.textContent = `
         .LordCatInterfaces svg{
@@ -62,7 +63,10 @@
         newElement.addEventListener("mouseover", () => metadata[id].hovered = true)
         newElement.addEventListener("mouseout", () => metadata[id].hovered = false)
         newElement.addEventListener("click", () => metadata[id].clicked = true)
-        if(oldElement.tagName==="INPUT" || oldElement.tagName==="TEXTAREA") newElement.value = oldElement.value
+        if(oldElement.tagName==="INPUT" || oldElement.tagName==="TEXTAREA"){
+            newElement.value = oldElement.value
+            newElement.addEventListener('input', () => metadata[id].inputdirty = true)
+        }
         oldElement.replaceWith(newElement)
         return newElement
     }
@@ -250,6 +254,12 @@
             arguments: {id: {type: Scratch.ArgumentType.STRING, defaultValue: "My element"}},
             blockIconURI: inputIcon
             },{
+            opcode: "WhenInputChanged",
+            text: "When input with ID [id] changed",
+            blockType: Scratch.BlockType.HAT,
+            arguments: {id: {type: Scratch.ArgumentType.STRING, defaultValue: "My element"}},
+            blockIconURI: inputIcon
+            },{
             blockType: Scratch.BlockType.LABEL,
             text: "Buttons"
             },{
@@ -308,6 +318,10 @@
         elementbox.append(element)
         metadata[args.id] = {x: 0, y: 0, direction: 90, width: boundingRect.width, height: boundingRect.height, hovered: false, clicked: false}
         this.FixPos(args.id)
+        if(args.type === 'Input'){
+            metadata[args.id].inputdirty = false
+            element.addEventListener("input", () => metadata[args.id].inputdirty = true)
+        }
         element.addEventListener("mouseover", () => metadata[args.id].hovered = true)
         element.addEventListener("mouseout", () => metadata[args.id].hovered = false)
         element.addEventListener("click", () => metadata[args.id].clicked = true)
@@ -498,6 +512,26 @@
         if(!element && inputhold[args.id]) return inputhold[args.id]
         if(element.type === 'checkbox') return element.checked
         return (element.type === 'file' ? await datauri(element.files[0]) : element.value)
+    }
+    WhenInputChanged(args, util){
+        if(!elements[args.id] || (elements[args.id].tagName!="INPUT"&&elements[args.id].tagName!="TEXTAREA")) return false
+        const element = elements[args.id]
+        const value = element.type==='checkbox'?element.checked:element.value
+        const blockId = util.thread.peekStack()
+        if(!lastValues[blockId])
+            lastValues[blockId] = value
+        if(lastValues[blockId] !== value){
+            lastValues[blockId] = value
+            return true
+        }
+        return false
+        
+        /*
+        if(!elements[args.id] || (elements[args.id].tagName!="INPUT"&&elements[args.id].tagName!="TEXTAREA")) return false
+        if(metadata[args.id].inputdirty){metadata[args.id].inputdirty = false; return true}
+        return false
+        */
+
     }
     WhenClicked(args){
         //This isnt ideal, but its basically the only option we have

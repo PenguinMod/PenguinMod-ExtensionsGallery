@@ -335,6 +335,16 @@ export default [
         creator: "pooiod7",
     },
     {
+        name: "AuthPenguin",
+        description: "Authenticate with anything and everything!",
+        code: "MubiLop/authpenguin.js",
+        banner: "MubiLop/authpenguin.png",
+        creator: "cicerorph",
+        creatorAlias: "MubiLop",
+        documentation: "AuthPenguin",
+        isGitHub: true,
+    },
+    {
         name: "Google Auth",
         description: "Login with Google to your projects. Allows getting a name, profile picture and email from the google account.",
         code: "Ikelene/googleAuthExtension.js",

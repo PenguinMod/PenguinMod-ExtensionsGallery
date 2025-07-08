@@ -19,6 +19,9 @@ import PageNumberUtilities from "./NumberUtilities.md?raw";
 // PenguinAI
 import PagePenguinAI from "./PenguinAI.md?raw";
 
+// AuthPenguin
+import PageAuthPenguin from "./AuthPenguin.md?raw";
+
 import PageMoreTypes from "./More-Types.md?raw";
 
 // Boxed Physics
@@ -48,6 +51,9 @@ export default {
 
     // PenguinAI
     "PenguinAI": PagePenguinAI,
+
+    // AuthPenguin
+    "AuthPenguin": PageAuthPenguin,
 
     "more-types": PageMoreTypes,
 

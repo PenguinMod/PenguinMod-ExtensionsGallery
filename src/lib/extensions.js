@@ -341,6 +341,7 @@ export default [
         banner: "MubiLop/authpenguin.png",
         creator: "cicerorph",
         creatorAlias: "MubiLop",
+        documentation: "AuthPenguin",
         isGitHub: true,
     },
     {

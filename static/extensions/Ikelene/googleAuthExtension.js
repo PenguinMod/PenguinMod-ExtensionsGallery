@@ -73,11 +73,14 @@ class GoogleAuthExtension {
         const redirectUri = 'https://ikelene.ca/api/googleLogin.php';
         const scope = 'profile email';
 
-        // 🔥 Add the current domain as the source parameter
+        // 🔥 Get the current domain to pass as "source"
         const sourceDomain = window.location.hostname;
 
-        // Build the full auth URL with source
-        const authUrl = `https://accounts.google.com/o/oauth2/v2/auth?response_type=code&client_id=${clientId}&redirect_uri=${encodeURIComponent(redirectUri)}&scope=${encodeURIComponent(scope)}&prompt=select_account&source=${encodeURIComponent(sourceDomain)}`;
+        // Encode sourceDomain in the "state" parameter
+        const state = encodeURIComponent(JSON.stringify({ source: sourceDomain }));
+
+        // Build the OAuth URL
+        const authUrl = `https://accounts.google.com/o/oauth2/v2/auth?response_type=code&client_id=${clientId}&redirect_uri=${encodeURIComponent(redirectUri)}&scope=${encodeURIComponent(scope)}&prompt=select_account&state=${state}`;
 
         // Open the login popup
         this.authWindow = window.open(authUrl, 'Google Login', 'width=500,height=600');

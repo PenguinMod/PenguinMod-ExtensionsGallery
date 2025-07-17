@@ -426,6 +426,14 @@ export default [
         isGitHub: true,
     },
     {
+        name: "New Windows",
+        description: "Lets you open websites in new windows.",
+        code: "Monochromasity/newwindows.js",
+        banner: "Monochromasity/newwindows.png",
+        creator: "Monochromasity",
+        isGithub: true,
+    },
+    {
         name: "Paint Utils",
         description: "A colour extension that lets you mix colours.",
         code: "Fruits555000/PaintUtils.js",

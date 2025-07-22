@@ -72,6 +72,17 @@ export default [
         creator: "pooiod7",
     },
     {
+        name: "Addons",
+        description: "Adds \"addons\", little sandboxed JS scripts that can interact with your project, only using what you give it.",
+        code: "PuzzlingGGG/addons.js",
+        banner: "PuzzlingGGG/addon.png",
+        creator: "PuzzlingGGG",
+        isGitHub: true,
+        documentation: "Addons",
+        unstable: true,
+        unstableReason: "Addons are sandboxed, but can still access the project and its variables (based on what you give it). Use at your own risk.",
+    },
+    {
         name: "Text To Speech: Redone",
         description: "A better alternitive to the base text to speech extension. Powered by the TTStool API",
         code: "PuzzlingGGG/ttsr.js",

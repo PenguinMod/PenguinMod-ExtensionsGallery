@@ -179,7 +179,7 @@
 				color1: '#6A5ACD',
 				color2: '#5B4FBC',
 				color3: '#4C42AA',
-				docsURI: 'https://example.com/puzzlingggg-addons-docs-v11-final',
+				docsURI: 'https://extensions.penguinmod.com/docs/Addons',
 				blocks: [{
 						opcode: 'registerAddon',
 						blockType: Scratch.BlockType.COMMAND,

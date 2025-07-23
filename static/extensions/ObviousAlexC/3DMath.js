@@ -1,3 +1,6 @@
+// 3D Math by ObviousAlexC 
+// Normalize, angle, vector projection, and reflection blocks by LSPECTRONIZTAR
+
 (function (Scratch) {
   "use strict";
   const vm = Scratch.vm;
@@ -6,6 +9,7 @@
   const spriteData = {};
   let fov = 300;
   const d2r = 0.0174533;
+  const r2d = 180 / Math.PI
   const camera = {
     position: [0, 0, 0],
     rotation: [0, 0, 0],
@@ -155,12 +159,73 @@
           },
           {
             disableMonitor: true,
+            opcode: "magnitudeSqV3",
+            blockType: Scratch.BlockType.REPORTER,
+            text: "V3: squared magnitude of [a]",
+            arguments: {
+              a: { type: Scratch.ArgumentType.STRING, defaultValue: "[0,0,0]" },
+            },
+          },
+          {
+            disableMonitor: true,
+            opcode: "normalizeV3",
+            blockType: Scratch.BlockType.REPORTER,
+            text: "V3: normalize [a]",
+            arguments: {
+              a: { type: Scratch.ArgumentType.STRING, defaultValue: "[0,0,0]" },
+            },
+          },
+          {
+            disableMonitor: true,
             opcode: "distanceV3",
             blockType: Scratch.BlockType.REPORTER,
             text: "V3: distance between [a] and [b]",
             arguments: {
               a: { type: Scratch.ArgumentType.STRING, defaultValue: "[0,0,0]" },
               b: { type: Scratch.ArgumentType.STRING, defaultValue: "[0,0,0]" },
+            },
+          },
+          {
+            disableMonitor: true,
+            hideFromPalette: false,
+            opcode: "angleV3",
+            blockType: Scratch.BlockType.REPORTER,
+            text: "V3: angle between [a] and [b]",
+            arguments: {
+              a: { type: Scratch.ArgumentType.STRING, defaultValue: "[0,0,0]" },
+              b: { type: Scratch.ArgumentType.STRING, defaultValue: "[0,0,0]" },
+            },
+          },
+          {
+            disableMonitor: true,
+            hideFromPalette: false,
+            opcode: "projectV3",
+            blockType: Scratch.BlockType.REPORTER,
+            text: "V3: [project] length [len] direction [dir]",
+            arguments: {
+              project: { type: Scratch.ArgumentType.STRING, menu: "projectionMenu" },
+              len: { type: Scratch.ArgumentType.STRING, defaultValue: "[3,4,0]" },
+              dir: { type: Scratch.ArgumentType.STRING, defaultValue: "[1,0,0]" },
+            },
+          },
+          {
+            disableMonitor: true,
+            opcode: "reflectionV3",
+            blockType: Scratch.BlockType.REPORTER,
+            text: "V3: reflect [source] across axis normal [normal]",
+            arguments: {
+              source: { type: Scratch.ArgumentType.STRING, defaultValue: "[2,3,0]" },
+              normal: { type: Scratch.ArgumentType.STRING, defaultValue: "[0,1,0]" },
+            },
+          },
+          {
+            disableMonitor: true,
+            opcode: "reflectAcrossV3",
+            blockType: Scratch.BlockType.REPORTER,
+            text: "V3: reflect [source] across line normal [normal]",
+            arguments: {
+              source: { type: Scratch.ArgumentType.STRING, defaultValue: "[2,3,0]" },
+              normal: { type: Scratch.ArgumentType.STRING, defaultValue: "[0,1,0]" },
             },
           },
           {
@@ -341,12 +406,72 @@
           },
           {
             disableMonitor: true,
+            opcode: "magnitudeSqV2",
+            blockType: Scratch.BlockType.REPORTER,
+            text: "V2: squared magnitude of [a]",
+            arguments: {
+              a: { type: Scratch.ArgumentType.STRING, defaultValue: "[0,0]" },
+            },
+          },
+          {
+            disableMonitor: true,
+            opcode: "normalizeV2",
+            blockType: Scratch.BlockType.REPORTER,
+            text: "V2: normalize [a]",
+            arguments: {
+              a: { type: Scratch.ArgumentType.STRING, defaultValue: "[0,0]" },
+            },
+          },
+          {
+            disableMonitor: true,
             opcode: "distanceV2",
             blockType: Scratch.BlockType.REPORTER,
             text: "V2: distance between [a] and [b]",
             arguments: {
               a: { type: Scratch.ArgumentType.STRING, defaultValue: "[0,0]" },
               b: { type: Scratch.ArgumentType.STRING, defaultValue: "[0,0]" },
+            },
+          },
+          {
+            disableMonitor: true,
+            opcode: "angleV2",
+            blockType: Scratch.BlockType.REPORTER,
+            text: "V2: angle between [a] and [b]",
+            arguments: {
+              a: { type: Scratch.ArgumentType.STRING, defaultValue: "[0,0]" },
+              b: { type: Scratch.ArgumentType.STRING, defaultValue: "[0,0]" },
+            },
+          },
+          {
+            disableMonitor: true,
+            hideFromPalette: false,
+            opcode: "projectV2",
+            blockType: Scratch.BlockType.REPORTER,
+            text: "V2: [project] length [len] direction [dir]",
+            arguments: {
+              project: { type: Scratch.ArgumentType.STRING, menu: "projectionMenu" },
+              len: { type: Scratch.ArgumentType.STRING, defaultValue: "[3,4]" },
+              dir: { type: Scratch.ArgumentType.STRING, defaultValue: "[1,0]" },
+            },
+          },
+          {
+            disableMonitor: true,
+            opcode: "reflectionV2",
+            blockType: Scratch.BlockType.REPORTER,
+            text: "V2: reflect [source] across axis normal [normal]",
+            arguments: {
+              source: { type: Scratch.ArgumentType.STRING, defaultValue: "[2,3]" },
+              normal: { type: Scratch.ArgumentType.STRING, defaultValue: "[0,1]" },
+            },
+          },
+          {
+            disableMonitor: true,
+            opcode: "reflectAcrossV2",
+            blockType: Scratch.BlockType.REPORTER,
+            text: "V2: reflect [source] across line normal [normal]",
+            arguments: {
+              source: { type: Scratch.ArgumentType.STRING, defaultValue: "[2,3]" },
+              normal: { type: Scratch.ArgumentType.STRING, defaultValue: "[0,1]" },
             },
           },
           {
@@ -374,7 +499,7 @@
           //#CAMERA CONTROLS#
           {
             blockType: Scratch.BlockType.LABEL,
-            text: "camera",
+            text: "Camera",
           },
           {
             disableMonitor: true,
@@ -486,7 +611,7 @@
           //#SPRITE 3D#
           {
             blockType: Scratch.BlockType.LABEL,
-            text: "sprite 3D",
+            text: "Sprite 3D",
           },
           {
             disableMonitor: true,
@@ -682,6 +807,13 @@
               { text: "z", value: "2" },
             ],
             acceptReporters: true,
+          },
+          projectionMenu: {
+            items: [
+              { text: "project", value: "proj" },
+              { text: "perpendicular", value: "perp" },
+            ],
+            acceptReporters: false,
           },
           tdMathPPCosMen: {
             items: "tdMathPPCosMen",
@@ -1048,6 +1180,17 @@
       }
       return "[0,0,0]";
     }
+    normalizeV3({ a }) {
+      a = JSON.parse(a);
+      if (a) {
+        const mag = Math.sqrt(
+          Math.pow(a[0], 2) + Math.pow(a[1], 2) + Math.pow(a[2], 2)
+        );
+        if (mag === 0) return "[0,0,0]"; // avoid division by zero
+        return JSON.stringify([a[0] * (1 / mag), a[1] * (1 / mag), a[2] * (1 / mag)]);
+      }
+      return "[0,0,0]";
+    }
     magnitudeV3({ a }) {
       a = JSON.parse(a);
       if (a) {
@@ -1057,17 +1200,94 @@
       }
       return 0;
     }
+    magnitudeSqV3({ a }) {
+      a = JSON.parse(a);
+      if (a) {
+        return Math.pow(a[0], 2) + Math.pow(a[1], 2) + Math.pow(a[2], 2);
+      }
+      return 0;
+    }
     distanceV3({ a, b }) {
       a = JSON.parse(a);
       b = JSON.parse(b);
       if (a && b) {
         return Math.sqrt(
           Math.pow(a[0] - b[0], 2) +
-            Math.pow(a[1] - b[1], 2) +
-            Math.pow(a[2] - b[2], 2)
+          Math.pow(a[1] - b[1], 2) +
+          Math.pow(a[2] - b[2], 2)
         );
       }
       return 0;
+    }
+    angleV3({ a, b }) {
+      a = JSON.parse(a);
+      b = JSON.parse(b);
+      const dot = a[0] * b[0] + a[1] * b[1] + a[2] * b[2];
+      const magA2 = a[0]**2 + a[1]**2 + a[2]**2;
+      const magB2 = b[0]**2 + b[1]**2 + b[2]**2;
+      const m = Math.sqrt(magA2 * magB2);
+      
+      const ratio = dot / m;
+      const clamped = Math.max(-1, Math.min(1, ratio)); // clamp to valid range for acos
+      return Math.trunc((Math.acos(clamped) * r2d) * 1000) / 1000 ;
+    }
+    projectV3({ project, len, dir }) {
+      len = JSON.parse(len);
+      dir = JSON.parse(dir);
+      const dot = len[0] * dir[0] + len[1] * dir[1] + len[2] * dir[2];
+      const magSq = dir[0]**2 + dir[1]**2 + dir[2]**2;
+      const mul = dot / magSq;
+      const returnValue = [dir[0] * mul, dir[1] * mul, dir[2] * mul];
+      if (project === "perp") {
+        return [len[0] - returnValue[0], len[1] - returnValue[1], len[2] - returnValue[2]];
+      } else {
+        return returnValue;
+      }
+    }
+    reflectionV3({ source, normal }) {
+      source = JSON.parse(source);
+      normal = JSON.parse(normal);
+
+      const dot = source[0] * normal[0] + source[1] * normal[1] + source[2] * normal[2];
+      const scale = dot * 2;
+
+      const scaledNormal = [
+        normal[0] * scale,
+        normal[1] * scale,
+        normal[2] * scale
+      ];
+
+      return [
+        source[0] - scaledNormal[0],
+        source[1] - scaledNormal[1],
+        source[2] - scaledNormal[2]
+      ];
+    }
+    reflectAcrossV3({ source, normal }) {
+      source = JSON.parse(source);
+      normal = JSON.parse(normal);
+
+      const dot = source[0] * normal[0] + source[1] * normal[1] + source[2] * normal[2];
+      const magSq = normal[0]**2 + normal[1]**2 + normal[2]**2;
+      const scale = dot / magSq;
+
+      const projection = [
+        normal[0] * scale,
+        normal[1] * scale,
+        normal[2] * scale
+      ];
+
+      const doubleProjection = [
+        projection[0] * 2,
+        projection[1] * 2,
+        projection[2] * 2
+      ];
+
+      return [
+        doubleProjection[0] - source[0],
+        doubleProjection[1] - source[1],
+        doubleProjection[2] - source[2]
+      ];
     }
     rotateAroundPointV3({ a, b, yaw, pitch, roll }) {
       a = JSON.parse(a);
@@ -1325,6 +1545,24 @@
       }
       return 0;
     }
+    magnitudeSqV2({ a }) {
+      a = JSON.parse(a);
+      if (a) {
+        return Math.pow(a[0], 2) + Math.pow(a[1], 2);
+      }
+      return 0;
+    }
+    normalizeV2({ a }) {
+      a = JSON.parse(a);
+      if (a) {
+        const mag = Math.sqrt(
+          Math.pow(a[0], 2) + Math.pow(a[1], 2)
+        );
+        if (mag === 0) return "[0,0]"; // avoid division by zero
+        return JSON.stringify([a[0] * (1 / mag), a[1] * (1 / mag)]);
+      }
+      return "[0,0]";
+    }
     distanceV2({ a, b }) {
       a = JSON.parse(a);
       b = JSON.parse(b);
@@ -1332,6 +1570,71 @@
         return Math.sqrt(Math.pow(a[0] - b[0], 2) + Math.pow(a[1] - b[1], 2));
       }
       return 0;
+    }
+    angleV2({ a, b }) {
+      a = JSON.parse(a);
+      b = JSON.parse(b);
+      const dot = a[0] * b[0] + a[1] * b[1];
+      const magA2 = a[0]**2 + a[1]**2;
+      const magB2 = b[0]**2 + b[1]**2;
+      const m = Math.sqrt(magA2 * magB2);
+      
+      const ratio = dot / m;
+      const clamped = Math.max(-1, Math.min(1, ratio)); // clamp to valid range for acos
+      return Math.trunc((Math.acos(clamped) * r2d) * 1000) / 1000 ;
+    }
+    projectV2({ project, len, dir }) {
+      len = JSON.parse(len);
+      dir = JSON.parse(dir);
+      const dot = len[0] * dir[0] + len[1] * dir[1];
+      const magSq = dir[0]**2 + dir[1]**2;
+      const mul = dot / magSq;
+      const returnValue = [dir[0] * mul, dir[1] * mul];
+      if (project === "perp") {
+        return [len[0] - returnValue[0], len[1] - returnValue[1]];
+      } else {
+        return returnValue;
+      }
+    }
+    reflectionV2({ source, normal }) {
+      source = JSON.parse(source);
+      normal = JSON.parse(normal);
+
+      const dot = source[0] * normal[0] + source[1] * normal[1];
+      const scale = dot * 2;
+
+      const scaledNormal = [
+        normal[0] * scale,
+        normal[1] * scale
+      ];
+
+      return [
+        source[0] - scaledNormal[0],
+        source[1] - scaledNormal[1]
+      ];
+    }
+    reflectAcrossV2({ source, normal }) {
+      source = JSON.parse(source);
+      normal = JSON.parse(normal);
+
+      const dot = source[0] * normal[0] + source[1] * normal[1];
+      const magSq = normal[0]**2 + normal[1]**2;
+      const scale = dot / magSq;
+
+      const projection = [
+        normal[0] * scale,
+        normal[1] * scale
+      ];
+
+      const doubleProjection = [
+        projection[0] * 2,
+        projection[1] * 2
+      ];
+
+      return [
+        doubleProjection[0] - source[0],
+        doubleProjection[1] - source[1]
+      ];
     }
     rotateAroundPointV2({ a, b, yaw }) {
       a = JSON.parse(a);

@@ -1,0 +1,260 @@
+/*
+   Created with ExtForge
+   https://jwklong.github.io/extforge
+*/
+(async function(Scratch) {
+    const variables = {};
+
+
+    if (!Scratch.extensions.unsandboxed) {
+        alert("This extension needs to be unsandboxed to run!")
+        return
+    }
+
+    const ExtForge = {
+        Broadcasts: new function() {
+            this.raw_ = {};
+            this.register = (name, blocks) => {
+                this.raw_[name] = blocks;
+            };
+            this.execute = async (name) => {
+                if (this.raw_[name]) {
+                    await this.raw_[name]();
+                };
+            };
+        },
+
+        Variables: new function() {
+            this.raw_ = {};
+            this.set = (name, value) => {
+                this.raw_[name] = value;
+            };
+            this.get = (name) => {
+                return this.raw_[name] ?? null;
+            }
+        },
+
+        Utils: {
+            setList: (list, index, value) => {
+                [...list][index] = value;
+                return list;
+            },
+            lists_foreach: {
+                index: [0],
+                value: [null],
+                depth: 0
+            },
+            countString: (x, y) => {
+                return y.length == 0 ? 0 : x.split(y).length - 1
+            }
+        }
+    }
+
+    class Extension {
+        getInfo() {
+            return {
+                "id": "CoolWaitingFamilyTime",
+                "name": "Waiting Family",
+                "color1": "#ffac00",
+                "blocks": [{
+                    "opcode": "block_707c425bb3f2b8fe",
+                    "text": "Wait [fc48adcd590b1c85] Minutes",
+                    "blockType": "command",
+                    "arguments": {
+                        "fc48adcd590b1c85": {
+                            "type": "number"
+                        }
+                    }
+                }, {
+                    "opcode": "block_f92d3e9d46331a68",
+                    "text": "wait [fa093fb5d8760d8e] hours",
+                    "blockType": "command",
+                    "arguments": {
+                        "fa093fb5d8760d8e": {
+                            "type": "number"
+                        }
+                    }
+                }, {
+                    "opcode": "block_230160be911221fd",
+                    "text": "wait [e59873ec8073b2ad] days",
+                    "blockType": "command",
+                    "arguments": {
+                        "e59873ec8073b2ad": {
+                            "type": "number"
+                        }
+                    }
+                }, {
+                    "opcode": "block_955a17f4a486c2ad",
+                    "text": "wait [cde4a4757c6bcdb9] weeks",
+                    "blockType": "command",
+                    "arguments": {
+                        "cde4a4757c6bcdb9": {
+                            "type": "number"
+                        }
+                    }
+                }, {
+                    "opcode": "block_2d0b6a59081a7cd0",
+                    "text": "wait [edbeec4589259147] months",
+                    "blockType": "command",
+                    "arguments": {
+                        "edbeec4589259147": {
+                            "type": "number"
+                        }
+                    }
+                }, {
+                    "opcode": "block_24240e65101c8821",
+                    "text": "wait [f96fc67e17a314a1] years",
+                    "blockType": "command",
+                    "arguments": {
+                        "f96fc67e17a314a1": {
+                            "type": "number"
+                        }
+                    }
+                }, {
+                    "opcode": "block_df25727ccf59715e",
+                    "text": "wait [b28b9f0ba7bf3b97] deciseconds",
+                    "blockType": "command",
+                    "arguments": {
+                        "b28b9f0ba7bf3b97": {
+                            "type": "number"
+                        }
+                    }
+                }, {
+                    "opcode": "block_c725f98fd05fb09b",
+                    "text": "wait [0f8858dd0dba4997] centiseconds",
+                    "blockType": "command",
+                    "arguments": {
+                        "0f8858dd0dba4997": {
+                            "type": "number"
+                        }
+                    }
+                }, {
+                    "opcode": "block_fd16adbaeb800a17",
+                    "text": "wait [108a35be48150f7c] milliseconds",
+                    "blockType": "command",
+                    "arguments": {
+                        "108a35be48150f7c": {
+                            "type": "number"
+                        }
+                    }
+                }, {
+                    "opcode": "block_2d73a4620e22ae6d",
+                    "text": "wait [ee21705a632f2c17] microseconds",
+                    "blockType": "command",
+                    "arguments": {
+                        "ee21705a632f2c17": {
+                            "type": "number"
+                        }
+                    }
+                }, {
+                    "opcode": "block_1c878ce9b82832a5",
+                    "text": "wait [a6764f6e7cde16af] nanoseconds",
+                    "blockType": "command",
+                    "arguments": {
+                        "a6764f6e7cde16af": {
+                            "type": "number"
+                        }
+                    }
+                }, {
+                    "opcode": "block_37a886d3565bf26c",
+                    "text": "wait [b01dc43ba3a168a7] picoseconds",
+                    "blockType": "command",
+                    "arguments": {
+                        "b01dc43ba3a168a7": {
+                            "type": "number"
+                        }
+                    }
+                }, {
+                    "opcode": "block_0d83b30d9586a72f",
+                    "text": "wait [e9ad3b0525fa6164] femtoseconds",
+                    "blockType": "command",
+                    "arguments": {
+                        "e9ad3b0525fa6164": {
+                            "type": "number"
+                        }
+                    }
+                }, {
+                    "opcode": "block_3a4d620439165afc",
+                    "text": "wait [6227887e4c274ba6] attoseconds",
+                    "blockType": "command",
+                    "arguments": {
+                        "6227887e4c274ba6": {
+                            "type": "number"
+                        }
+                    }
+                }, {
+                    "opcode": "block_2670249fd7c4acbe",
+                    "text": "wait [76bcebcfce0b3bc2] zeptoseconds",
+                    "blockType": "command",
+                    "arguments": {
+                        "76bcebcfce0b3bc2": {
+                            "type": "number"
+                        }
+                    }
+                }, {
+                    "opcode": "block_0b5f8b0913ade275",
+                    "text": "wait [32de638b8ab61570] yoctoseconds",
+                    "blockType": "command",
+                    "arguments": {
+                        "32de638b8ab61570": {
+                            "type": "number"
+                        }
+                    }
+                }]
+            }
+        }
+        async block_707c425bb3f2b8fe(args) {
+            await new Promise(resolve => setTimeout(() => resolve(), (args["fc48adcd590b1c85"] * (60)) * 1000));
+        }
+        async block_f92d3e9d46331a68(args) {
+            await new Promise(resolve => setTimeout(() => resolve(), (args["fa093fb5d8760d8e"] * (3600)) * 1000));
+        }
+        async block_230160be911221fd(args) {
+            await new Promise(resolve => setTimeout(() => resolve(), (args["e59873ec8073b2ad"] * (86400)) * 1000));
+        }
+        async block_955a17f4a486c2ad(args) {
+            await new Promise(resolve => setTimeout(() => resolve(), (args["cde4a4757c6bcdb9"] * (604800)) * 1000));
+        }
+        async block_2d0b6a59081a7cd0(args) {
+            await new Promise(resolve => setTimeout(() => resolve(), (args["edbeec4589259147"] * (2592000)) * 1000));
+        }
+        async block_24240e65101c8821(args) {
+            await new Promise(resolve => setTimeout(() => resolve(), (args["f96fc67e17a314a1"] * (31536000)) * 1000));
+        }
+        async block_df25727ccf59715e(args) {
+            await new Promise(resolve => setTimeout(() => resolve(), (args["b28b9f0ba7bf3b97"] * (0.1)) * 1000));
+        }
+        async block_c725f98fd05fb09b(args) {
+            await new Promise(resolve => setTimeout(() => resolve(), (args["0f8858dd0dba4997"] * (0.01)) * 1000));
+        }
+        async block_fd16adbaeb800a17(args) {
+            await new Promise(resolve => setTimeout(() => resolve(), (args["108a35be48150f7c"] * (0.001)) * 1000));
+        }
+        async block_2d73a4620e22ae6d(args) {
+            await new Promise(resolve => setTimeout(() => resolve(), (args["ee21705a632f2c17"] * (0.000001)) * 1000));
+        }
+        async block_1c878ce9b82832a5(args) {
+            await new Promise(resolve => setTimeout(() => resolve(), (args["a6764f6e7cde16af"] * (1e-9)) * 1000));
+        }
+        async block_37a886d3565bf26c(args) {
+            await new Promise(resolve => setTimeout(() => resolve(), (args["b01dc43ba3a168a7"] * (1e-12)) * 1000));
+        }
+        async block_0d83b30d9586a72f(args) {
+            await new Promise(resolve => setTimeout(() => resolve(), (args["e9ad3b0525fa6164"] * (1e-15)) * 1000));
+        }
+        async block_3a4d620439165afc(args) {
+            await new Promise(resolve => setTimeout(() => resolve(), (args["6227887e4c274ba6"] * (1e-21)) * 1000));
+        }
+        async block_2670249fd7c4acbe(args) {
+            await new Promise(resolve => setTimeout(() => resolve(), (args["76bcebcfce0b3bc2"] * (1e-21)) * 1000));
+        }
+        async block_0b5f8b0913ade275(args) {
+            await new Promise(resolve => setTimeout(() => resolve(), (args["32de638b8ab61570"] * (1e-24)) * 1000));
+        }
+    }
+
+    let extension = new Extension();
+    // code compiled from extforge
+
+    Scratch.extensions.register(extension);
+})(Scratch);

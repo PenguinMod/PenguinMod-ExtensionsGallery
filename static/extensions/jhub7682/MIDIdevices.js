@@ -3,13 +3,14 @@
 // Description: An extension that exposes MIDI devices
 // By: Jhub7682
 // License: MIT AND LGPL-3.0
-// Version: V.1
+// Version: V.2
 
 class MidiDevicesExtension {
   constructor() {
     this.lastNote = 0;
     this.lastVelocity = 0;
     this.pressedNotes = new Set();
+    this.noteVelocities = new Map();
     this.pitchBendValue = 0;
     this.controlValues = new Map();
     this.programNumber = 0;
@@ -36,13 +37,16 @@ class MidiDevicesExtension {
                   this.lastNote = data1;
                   this.lastVelocity = data2;
                   this.pressedNotes.add(data1);
+                  this.noteVelocities.set(data1, data2);
                 } else {
                   this.pressedNotes.delete(data1);
+                  this.noteVelocities.delete(data1);
                 }
                 break;
 
               case 0x80:
                 this.pressedNotes.delete(data1);
+                this.noteVelocities.delete(data1);
                 break;
 
               case 0xB0:
@@ -145,6 +149,11 @@ class MidiDevicesExtension {
           opcode: "getPressedNotes",
           blockType: "reporter",
           text: "pressed notes array"
+        },
+        {
+          opcode: "getPressedVelocities",
+          blockType: "reporter",
+          text: "pressed velocities array"
         }
       ]
     };
@@ -192,6 +201,11 @@ class MidiDevicesExtension {
 
   getPressedNotes() {
     return Array.from(this.pressedNotes).sort((a, b) => a - b);
+  }
+
+  getPressedVelocities() {
+
+    return this.getPressedNotes().map(note => this.noteVelocities.get(note) || 0);
   }
 }
 

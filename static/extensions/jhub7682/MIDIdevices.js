@@ -17,7 +17,6 @@ class MidiDevicesExtension {
     this.polyAftertouchValues = new Map();
     this.midiDeviceName = "None";
 
-
     this.initializeMIDI();
   }
 
@@ -141,6 +140,11 @@ class MidiDevicesExtension {
           opcode: "midiOctave",
           blockType: "reporter",
           text: "last MIDI octave"
+        },
+        {
+          opcode: "getPressedNotes",
+          blockType: "reporter",
+          text: "pressed notes array"
         }
       ]
     };
@@ -185,7 +189,10 @@ class MidiDevicesExtension {
   midiOctave() {
     return Math.floor(this.lastNote / 12) - 1;
   }
-}
 
+  getPressedNotes() {
+    return Array.from(this.pressedNotes).sort((a, b) => a - b);
+  }
+}
 
 Scratch.extensions.register(new MidiDevicesExtension());

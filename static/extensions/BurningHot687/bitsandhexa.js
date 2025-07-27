@@ -22,18 +22,52 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
 */
 
+function isInCorrectFormat(inputString) {
+    if ((inputString != parseInt(inputString, 10).toString(10)) && (inputString != parseInt(inputString, 16).toString(16))) {
+        console.log(inputString);
+        console.log(parseInt(inputString).toString(10));
+        console.log(parseInt(inputString, 16).toString(16));
+        return false;
+    }
+    console.log("good");
+    return true;
+};
+
 (function(Scratch){
     "use strict";
+
+    if (!Scratch.extensions.unsandboxed) {
+        // throw new Error("This extension prefers to be used unsandboxed");
+    }
+
     class Extension {
         getInfo() {
             return {
                 id: "notrealidipromiselol",
-                name: "Bits and Hexa",
+                name: Scratch.translate("Bits and Hexa"),
                 color1: "#15448f",
                 color2: "#0f1f70",
                 color3: "#0a094f",
-                // docsuri: "setupwhenyouhavetimeto.com",
+                // docsURI: "setupwhenyouhavetimeto.com",
+                // menuIconURI: "you get it",
+                // blockIconURI: "oo I can do this too",
+
                 blocks: [
+                    {
+                        opcode: "isNumActuallyBase",
+                        text: "is [NUM] [BASE]?",
+                        blockType: Scratch.BlockType.BOOLEAN,
+                        disableMonitor: true,
+                        arguments: {
+                            NUM: {
+                                type: Scratch.ArgumentType.STRING,
+                            },
+                            BASE: {
+                                type: Scratch.ArgumentType.STRING,
+                                menu: "BASES",
+                            },
+                        },
+                    },
                     {
                         opcode: "convertBaseTypes",
                         text: "convert [NUM] to [BASE]",
@@ -49,7 +83,12 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
                                 menu: "BASES",
                             },
                         },
-                    }
+                    },
+                    {
+                        opcode: "bitHexManipulationLabel",
+                        text: "Bitwise Manipulation",
+                        blockType: Scratch.BlockType.LABEL,
+                    },
                 ],
                 menus: {
                     BASES: {
@@ -59,18 +98,38 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
                 },
             };
         }
+        
+        isNumActuallyBase(args) {
+            var computeValue = args.NUM;
+            if (isInCorrectFormat(args.NUM) === false) {
+                console.log("bad");
+                return false;
+            }
+
+            switch (args.BASE) {
+                case 'decimal':
+                    console.log(parseInt(computeValue, 10).toString(10));
+                    console.log(computeValue);
+                    console.log(parseInt(computeValue, 10).toString(10) === computeValue);
+                    return (parseInt(computeValue, 10).toString(10) === computeValue);
+                case 'binary':
+                    return (parseInt(computeValue, 2).toString(2) === computeValue);
+                case 'hexadecimal':
+                    return (parseInt(computeValue, 16).toString(16) === computeValue);
+            }
+
+        }
 
         convertBaseTypes(args) {
             var computeValue = args.NUM;
-            if (!parseInt(computeValue) && !parseInt(computeValue, 16)) {
-                console.log("bad");
+            if (isInCorrectFormat(computeValue) === false) {
                 return "";
             }
-            else {
-                console.log("good!");
-                computeValue = parseInt(computeValue);
+            if (computeValue === parseInt(computeValue, 16).toString(16)) {
+                computeValue = "0x" + computeValue;
             }
-            
+            computeValue = parseInt(computeValue);
+
             switch (args.BASE) {
                 case 'decimal':
                     computeValue = computeValue.toString(10);

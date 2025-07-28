@@ -23,14 +23,15 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 */
 
 function isInCorrectFormat(inputString) {
-    if ((inputString != parseInt(inputString, 10).toString(10)) && (inputString != parseInt(inputString, 16).toString(16))) {
-        console.log(inputString);
-        console.log(parseInt(inputString).toString(10));
-        console.log(parseInt(inputString, 16).toString(16));
+    if ((inputString != parseInt(inputString, 10).toString(10)) && !isItHexadecimal(inputString)) {
         return false;
     }
     console.log("good");
     return true;
+};
+
+function isItHexadecimal(inputString) {
+    return !/[^abcdef0123456789]/i.test(inputString);
 };
 
 (function(Scratch){
@@ -61,6 +62,7 @@ function isInCorrectFormat(inputString) {
                         arguments: {
                             NUM: {
                                 type: Scratch.ArgumentType.STRING,
+                                defaultValue: "1011",
                             },
                             BASE: {
                                 type: Scratch.ArgumentType.STRING,
@@ -77,6 +79,7 @@ function isInCorrectFormat(inputString) {
                         arguments: {
                             NUM: {
                                 type: Scratch.ArgumentType.STRING,
+                                defaultValue: "4b2",
                             },
                             BASE: {
                                 type: Scratch.ArgumentType.STRING,
@@ -88,6 +91,38 @@ function isInCorrectFormat(inputString) {
                         opcode: "bitHexManipulationLabel",
                         text: "Bitwise Manipulation",
                         blockType: Scratch.BlockType.LABEL,
+                    },
+                    {
+                        opcode: "rightShiftBitz",
+                        text: "[NUM] >> [AMOUNT]",
+                        blockType: Scratch.BlockType.REPORTER,
+                        disableMonitor: true,
+                        arguments: {
+                            NUM: {
+                                type: Scratch.ArgumentType.STRING,
+                                defaultValue: "4b2",
+                            },
+                            AMOUNT: {
+                                type: Scratch.ArgumentType.NUMBER,
+                                defaultValue: 3,
+                            }
+                        },
+                    },
+                    {
+                        opcode: "leftShiftBitz",
+                        text: "[NUM] << [AMOUNT]",
+                        blockType: Scratch.BlockType.REPORTER,
+                        disableMonitor: true,
+                        arguments: {
+                            NUM: {
+                                type: Scratch.ArgumentType.STRING,
+                                defaultValue: "31",
+                            },
+                            AMOUNT: {
+                                type: Scratch.ArgumentType.NUMBER,
+                                defaultValue: 2,
+                            }
+                        },
                     },
                 ],
                 menus: {
@@ -101,21 +136,18 @@ function isInCorrectFormat(inputString) {
         
         isNumActuallyBase(args) {
             var computeValue = args.NUM;
-            if (isInCorrectFormat(args.NUM) === false) {
+            if (isInCorrectFormat(computeValue) === false) {
                 console.log("bad");
                 return false;
             }
 
             switch (args.BASE) {
                 case 'decimal':
-                    console.log(parseInt(computeValue, 10).toString(10));
-                    console.log(computeValue);
-                    console.log(parseInt(computeValue, 10).toString(10) === computeValue);
-                    return (parseInt(computeValue, 10).toString(10) === computeValue);
+                    return !/[^0123456789]/.test(computeValue);
                 case 'binary':
-                    return (parseInt(computeValue, 2).toString(2) === computeValue);
+                    return !/[^01]/.test(computeValue);
                 case 'hexadecimal':
-                    return (parseInt(computeValue, 16).toString(16) === computeValue);
+                    return isItHexadecimal(computeValue);
             }
 
         }
@@ -125,7 +157,7 @@ function isInCorrectFormat(inputString) {
             if (isInCorrectFormat(computeValue) === false) {
                 return "";
             }
-            if (computeValue === parseInt(computeValue, 16).toString(16)) {
+            if (isItHexadecimal(computeValue) && /[abcdef]/i.test(computeValue)) {
                 computeValue = "0x" + computeValue;
             }
             computeValue = parseInt(computeValue);
@@ -141,6 +173,43 @@ function isInCorrectFormat(inputString) {
 
             return computeValue;
         }
+
+        rightShiftBitz(args) {
+            var computeValue = args.NUM;
+            if (isInCorrectFormat(computeValue) === false) {
+                return "";
+            }
+            if (!parseInt(args.AMOUNT)) {
+                return computeValue;
+            }
+            if (isNaN(parseInt(computeValue)) || isNaN(parseInt(args.AMOUNT)) || parseInt(args.AMOUNT) < 0) {
+                return "";
+            }
+            if (isItHexadecimal(computeValue) && /[abcdef]/i.test(computeValue)) {
+                computeValue = "0x" + computeValue;
+            }
+
+            return computeValue >> args.AMOUNT;
+        }
+
+        leftShiftBitz(args) {
+            var computeValue = args.NUM;
+            if (isInCorrectFormat(computeValue) === false) {
+                return "";
+            }
+            if (!parseInt(args.AMOUNT)) {
+                return computeValue;
+            }
+            if (isNaN(parseInt(computeValue)) || isNaN(parseInt(args.AMOUNT)) || parseInt(args.AMOUNT) < 0) {
+                return "";
+            }
+            if (isItHexadecimal(computeValue) && /[abcdef]/i.test(computeValue)) {
+                computeValue = "0x" + computeValue;
+            }
+
+            return computeValue << args.AMOUNT;
+        }
+
     }
     Scratch.extensions.register(new Extension());
 })(Scratch);

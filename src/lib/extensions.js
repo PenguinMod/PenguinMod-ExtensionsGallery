@@ -453,6 +453,17 @@ export default [
         creatorAlias: "gaimerI17",
         note: "Extension thumbnail made by Dillon."
     },
+    {
+        name: "Bits & Hexa",
+        description: "An extension to deal with bitwise operations that supports hexadecimal.",
+        code: "BurningHot687/bitsandhexa.js",
+        banner: "BurningHot687/ADDMEbitsandhexa.png",
+        creator: "Raichu-Model",
+        documentation: "ADDMEpage-name",
+        creatorAlias: "BurningHot687",
+        notes: "An expansion of a turbowarp extension",
+        isGitHub: false,
+    },
     /* these extensions are completely dead as of now
     {
         name: "Online Captcha",

@@ -141,6 +141,38 @@ function isItHexadecimal(inputString) {
                         },
                     },
                     {
+                        opcode: "circularRightShiftBitz",
+                        text: "[NUM] ↻ [AMOUNT]",
+                        blockType: Scratch.BlockType.REPORTER,
+                        disableMonitor: true,
+                        arguments: {
+                            NUM: {
+                                type: Scratch.ArgumentType.STRING,
+                                defaultValue: "fe5",
+                            },
+                            AMOUNT: {
+                                type: Scratch.ArgumentType.NUMBER,
+                                defaultValue: 5,
+                            }
+                        },
+                    },
+                    {
+                        opcode: "circularLeftShiftBitz",
+                        text: "[NUM] ↺ [AMOUNT]",
+                        blockType: Scratch.BlockType.REPORTER,
+                        disableMonitor: true,
+                        arguments: {
+                            NUM: {
+                                type: Scratch.ArgumentType.STRING,
+                                defaultValue: "fe5",
+                            },
+                            AMOUNT: {
+                                type: Scratch.ArgumentType.NUMBER,
+                                defaultValue: 5,
+                            }
+                        },
+                    },
+                    {
                         opcode: "bitHexBitwiseOpratorsLabel",
                         text: "Bitwise Operators",
                         blockType: Scratch.BlockType.LABEL,
@@ -259,7 +291,7 @@ function isItHexadecimal(inputString) {
 
             switch (args.BASE) {
                 case 'decimal':
-                    return !/[^0123456789]/.test(computeValue);
+                    return !/[^0123456789-]/.test(computeValue);
                 case 'binary':
                     return !/[^01]/.test(computeValue);
                 case 'hexadecimal':
@@ -275,6 +307,7 @@ function isItHexadecimal(inputString) {
             }
             if (isItHexadecimal(computeValue) && /[abcdef]/i.test(computeValue)) {
                 computeValue = "0x" + computeValue;
+                console.log("hexa");
             }
             computeValue = parseInt(computeValue);
 
@@ -282,8 +315,19 @@ function isItHexadecimal(inputString) {
                 case 'decimal':
                     computeValue = computeValue.toString(10);
                 case 'binary':
+                    if (computeValue < 0) {
+                        console.log("huh cool");
+                        computeValue *= -1;
+                        computeValue = ~computeValue;
+                        computeValue++;
+                    }
                     computeValue = computeValue.toString(2);
                 case 'hexadecimal':
+                    if (computeValue < 0) {
+                        computeValue *= -1;
+                        computeValue = ~computeValue;
+                        computeValue++;
+                    }
                     computeValue = computeValue.toString(16);
             }
 
@@ -326,7 +370,7 @@ function isItHexadecimal(inputString) {
             return computeValue << args.AMOUNT;
         }
 
-        signedRightShiftBitz(args) {
+        unsignedRightShiftBitz(args) {
             var computeValue = args.NUM;
             if (isInCorrectFormat(computeValue) === false) {
                 return "";
@@ -344,6 +388,42 @@ function isItHexadecimal(inputString) {
             return computeValue >>> args.AMOUNT;
         }
 
+        circularRightShiftBitz(args) {
+            var computeValue = args.NUM;
+            if (isInCorrectFormat(computeValue) === false) {
+                return "";
+            }
+            if (!parseInt(args.AMOUNT)) {
+                return computeValue;
+            }
+            if (isNaN(parseInt(computeValue)) || isNaN(parseInt(args.AMOUNT)) || parseInt(args.AMOUNT) < 0) {
+                return "";
+            }
+            if (isItHexadecimal(computeValue) && /[abcdef]/i.test(computeValue)) {
+                computeValue = "0x" + computeValue;
+            }
+
+            return computeValue >> args.AMOUNT | computeValue << (32 - args.AMOUNT);
+        }
+
+        circularLeftShiftBitz(args) {
+            var computeValue = args.NUM;
+            if (isInCorrectFormat(computeValue) === false) {
+                return "";
+            }
+            if (!parseInt(args.AMOUNT)) {
+                return computeValue;
+            }
+            if (isNaN(parseInt(computeValue)) || isNaN(parseInt(args.AMOUNT)) || parseInt(args.AMOUNT) < 0) {
+                return "";
+            }
+            if (isItHexadecimal(computeValue) && /[abcdef]/i.test(computeValue)) {
+                computeValue = "0x" + computeValue;
+            }
+
+            return computeValue << args.AMOUNT | computeValue >> (32 - args.AMOUNT);
+        }
+
         bitwiseAndOperator(args) {
             var value1 = args.NUM;
             var value2 = args.NUM2;
@@ -354,7 +434,9 @@ function isItHexadecimal(inputString) {
                 return "";
             }
             if (isItHexadecimal(value1) && /[abcdef]/i.test(value1)) {
+                console.log(value1);
                 value1 = "0x" + value1;
+                console.log(value1);
             }
             if (isItHexadecimal(value2) && /[abcdef]/i.test(value2)) {
                 value2 = "0x" + value2;

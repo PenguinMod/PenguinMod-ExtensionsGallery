@@ -459,7 +459,7 @@ export default [
         code: "BurningHot687/bitsandhexa.js",
         banner: "BurningHot687/ADDMEbitsandhexa.png",
         creator: "Raichu-Model",
-        documentation: "ADDMEpage-name",
+        documentation: "bitsandhexa",
         creatorAlias: "BurningHot687",
         notes: "An expansion of a turbowarp extension",
         isGitHub: false,

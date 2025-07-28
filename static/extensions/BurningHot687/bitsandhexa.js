@@ -93,7 +93,7 @@ function isItHexadecimal(inputString) {
                         blockType: Scratch.BlockType.LABEL,
                     },
                     {
-                        opcode: "rightShiftBitz",
+                        opcode: "signedRightShiftBitz",
                         text: "[NUM] >> [AMOUNT]",
                         blockType: Scratch.BlockType.REPORTER,
                         disableMonitor: true,
@@ -121,6 +121,122 @@ function isItHexadecimal(inputString) {
                             AMOUNT: {
                                 type: Scratch.ArgumentType.NUMBER,
                                 defaultValue: 2,
+                            }
+                        },
+                    },
+                    {
+                        opcode: "unsignedRightShiftBitz",
+                        text: "[NUM] >>> [AMOUNT]",
+                        blockType: Scratch.BlockType.REPORTER,
+                        disableMonitor: true,
+                        arguments: {
+                            NUM: {
+                                type: Scratch.ArgumentType.STRING,
+                                defaultValue: "fe5",
+                            },
+                            AMOUNT: {
+                                type: Scratch.ArgumentType.NUMBER,
+                                defaultValue: 5,
+                            }
+                        },
+                    },
+                    {
+                        opcode: "bitHexBitwiseOpratorsLabel",
+                        text: "Bitwise Operators",
+                        blockType: Scratch.BlockType.LABEL,
+                    },
+                    {
+                        opcode: "bitwiseAndOperator",
+                        text: "[NUM] & [NUM2] | and",
+                        blockType: Scratch.BlockType.REPORTER,
+                        disableMonitor: true,
+                        arguments: {
+                            NUM: {
+                                type: Scratch.ArgumentType.STRING,
+                            },
+                            NUM2: {
+                                type: Scratch.ArgumentType.STRING,
+                            }
+                        },
+                    },
+                    {
+                        opcode: "bitwiseOrOperator",
+                        text: "[NUM] | [NUM2] | or",
+                        blockType: Scratch.BlockType.REPORTER,
+                        disableMonitor: true,
+                        arguments: {
+                            NUM: {
+                                type: Scratch.ArgumentType.STRING,
+                            },
+                            NUM2: {
+                                type: Scratch.ArgumentType.STRING,
+                            }
+                        },
+                    },
+                    {
+                        opcode: "bitwiseXorOperator",
+                        text: "[NUM] ^ [NUM2] | xor",
+                        blockType: Scratch.BlockType.REPORTER,
+                        disableMonitor: true,
+                        arguments: {
+                            NUM: {
+                                type: Scratch.ArgumentType.STRING,
+                            },
+                            NUM2: {
+                                type: Scratch.ArgumentType.STRING,
+                            }
+                        },
+                    },
+                    {
+                        opcode: "bitwiseNotOperator",
+                        text: "~[NUM] | not",
+                        blockType: Scratch.BlockType.REPORTER,
+                        disableMonitor: true,
+                        arguments: {
+                            NUM: {
+                                type: Scratch.ArgumentType.STRING,
+                            },
+                        },
+                    },
+                    {
+                        opcode: "bitwiseNandOperator",
+                        text: "~[NUM] & [NUM2] | nand",
+                        blockType: Scratch.BlockType.REPORTER,
+                        disableMonitor: true,
+                        arguments: {
+                            NUM: {
+                                type: Scratch.ArgumentType.STRING,
+                            },
+                            NUM2: {
+                                type: Scratch.ArgumentType.STRING,
+                            }
+                        },
+                    },
+                    {
+                        opcode: "bitwiseNorOperator",
+                        text: "~[NUM] | [NUM2] | nor",
+                        blockType: Scratch.BlockType.REPORTER,
+                        disableMonitor: true,
+                        arguments: {
+                            NUM: {
+                                type: Scratch.ArgumentType.STRING,
+                            },
+                            NUM2: {
+                                type: Scratch.ArgumentType.STRING,
+                            }
+                        },
+                    },
+                    {
+                        opcode: "bitwiseXnorOperator",
+                        text: "~[NUM] ^ [NUM2] | xnor",
+                        blockType: Scratch.BlockType.REPORTER,
+                        disableMonitor: true,
+                        arguments: {
+                            NUM: {
+                                type: Scratch.ArgumentType.STRING,
+                            },
+                            NUM2: {
+                                type: Scratch.ArgumentType.STRING,
                             }
                         },
                     },
@@ -174,7 +290,7 @@ function isItHexadecimal(inputString) {
             return computeValue;
         }
 
-        rightShiftBitz(args) {
+        signedRightShiftBitz(args) {
             var computeValue = args.NUM;
             if (isInCorrectFormat(computeValue) === false) {
                 return "";
@@ -210,6 +326,152 @@ function isItHexadecimal(inputString) {
             return computeValue << args.AMOUNT;
         }
 
+        signedRightShiftBitz(args) {
+            var computeValue = args.NUM;
+            if (isInCorrectFormat(computeValue) === false) {
+                return "";
+            }
+            if (!parseInt(args.AMOUNT)) {
+                return computeValue;
+            }
+            if (isNaN(parseInt(computeValue)) || isNaN(parseInt(args.AMOUNT)) || parseInt(args.AMOUNT) < 0) {
+                return "";
+            }
+            if (isItHexadecimal(computeValue) && /[abcdef]/i.test(computeValue)) {
+                computeValue = "0x" + computeValue;
+            }
+
+            return computeValue >>> args.AMOUNT;
+        }
+
+        bitwiseAndOperator(args) {
+            var value1 = args.NUM;
+            var value2 = args.NUM2;
+            if (!isInCorrectFormat(value1) && !isInCorrectFormat(value2)) {
+                return "";
+            }
+            if (isNaN(parseInt(value1)) || isNaN(parseInt(value2))) {
+                return "";
+            }
+            if (isItHexadecimal(value1) && /[abcdef]/i.test(value1)) {
+                value1 = "0x" + value1;
+            }
+            if (isItHexadecimal(value2) && /[abcdef]/i.test(value2)) {
+                value2 = "0x" + value2;
+            }
+
+            return value1 & value2;
+        }
+
+        bitwiseOrOperator(args) {
+            var value1 = args.NUM;
+            var value2 = args.NUM2;
+            if (!isInCorrectFormat(value1) && !isInCorrectFormat(value2)) {
+                return "";
+            }
+            if (isNaN(parseInt(value1)) || isNaN(parseInt(value2))) {
+                return "";
+            }
+            if (isItHexadecimal(value1) && /[abcdef]/i.test(value1)) {
+                value1 = "0x" + value1;
+            }
+            if (isItHexadecimal(value2) && /[abcdef]/i.test(value2)) {
+                value2 = "0x" + value2;
+            }
+
+            return value1 | value2;
+        }
+
+        bitwiseXorOperator(args) {
+            var value1 = args.NUM;
+            var value2 = args.NUM2;
+            if (!isInCorrectFormat(value1) && !isInCorrectFormat(value2)) {
+                return "";
+            }
+            if (isNaN(parseInt(value1)) || isNaN(parseInt(value2))) {
+                return "";
+            }
+            if (isItHexadecimal(value1) && /[abcdef]/i.test(value1)) {
+                value1 = "0x" + value1;
+            }
+            if (isItHexadecimal(value2) && /[abcdef]/i.test(value2)) {
+                value2 = "0x" + value2;
+            }
+
+            return value1 ^ value2;
+        }
+
+        bitwiseNotOperator(args) {
+            var value1 = args.NUM;
+            if (!isInCorrectFormat(value1)) {
+                return "";
+            }
+            if (isNaN(parseInt(value1))) {
+                return "";
+            }
+            if (isItHexadecimal(value1) && /[abcdef]/i.test(value1)) {
+                value1 = "0x" + value1;
+            }
+
+            return ~value1;
+        }
+
+        bitwiseNandOperator(args) {
+            var value1 = args.NUM;
+            var value2 = args.NUM2;
+            if (!isInCorrectFormat(value1) && !isInCorrectFormat(value2)) {
+                return "";
+            }
+            if (isNaN(parseInt(value1)) || isNaN(parseInt(value2))) {
+                return "";
+            }
+            if (isItHexadecimal(value1) && /[abcdef]/i.test(value1)) {
+                value1 = "0x" + value1;
+            }
+            if (isItHexadecimal(value2) && /[abcdef]/i.test(value2)) {
+                value2 = "0x" + value2;
+            }
+
+            return !(value1 & value2);
+        }
+
+        bitwiseNorOperator(args) {
+            var value1 = args.NUM;
+            var value2 = args.NUM2;
+            if (!isInCorrectFormat(value1) && !isInCorrectFormat(value2)) {
+                return "";
+            }
+            if (isNaN(parseInt(value1)) || isNaN(parseInt(value2))) {
+                return "";
+            }
+            if (isItHexadecimal(value1) && /[abcdef]/i.test(value1)) {
+                value1 = "0x" + value1;
+            }
+            if (isItHexadecimal(value2) && /[abcdef]/i.test(value2)) {
+                value2 = "0x" + value2;
+            }
+
+            return !(value1 | value2);
+        }
+
+        bitwiseXnorOperator(args) {
+            var value1 = args.NUM;
+            var value2 = args.NUM2;
+            if (!isInCorrectFormat(value1) && !isInCorrectFormat(value2)) {
+                return "";
+            }
+            if (isNaN(parseInt(value1)) || isNaN(parseInt(value2))) {
+                return "";
+            }
+            if (isItHexadecimal(value1) && /[abcdef]/i.test(value1)) {
+                value1 = "0x" + value1;
+            }
+            if (isItHexadecimal(value2) && /[abcdef]/i.test(value2)) {
+                value2 = "0x" + value2;
+            }
+
+            return !(value1 ^ value2);
+        }
     }
     Scratch.extensions.register(new Extension());
 })(Scratch);

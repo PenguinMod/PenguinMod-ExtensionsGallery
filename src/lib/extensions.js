@@ -453,6 +453,13 @@ export default [
         creatorAlias: "gaimerI17",
         note: "Extension thumbnail made by Dillon."
     },
+    {
+        name: "Sparrow",
+        description: "Adds Sparrow V2 Spritesheet support with animations.",
+        code: "SkyBuilder1717/Sparrow.js",
+        banner: "SkyBuilder1717/Sparrow.svg",
+        creator: "SkyBuilder1717",
+    },
     /* these extensions are completely dead as of now
     {
         name: "Online Captcha",

@@ -32,6 +32,7 @@
           },
           { blockType: Scratch.BlockType.LABEL, text: "File control" },
           {
+            hideFromPalette: true, // putting a token in your project isn't a good idea
             opcode: "createFile",
             blockType: Scratch.BlockType.COMMAND,
             text: "create file [FILE] with content [CONTENT] in repository [REPO] of user [NAME] using token [TOKEN]",
@@ -59,6 +60,7 @@
             }
           },
           {
+            hideFromPalette: true, // putting a token in your project isn't a good idea
             opcode: "editFileContent",
             blockType: Scratch.BlockType.COMMAND,
             text: "edit content of file [FILE] in repository [REPO] of user [NAME] to [CONTENT] using token [TOKEN]",
@@ -92,6 +94,7 @@
           },
           { blockType: Scratch.BlockType.LABEL, text: "DANGEROUS" },
           {
+            hideFromPalette: true, // putting a token in your project isn't a good idea
             opcode: "deleteFile",
             blockType: Scratch.BlockType.COMMAND,
             text: "delete file [FILE] from repository [REPO] of user [NAME] using token [TOKEN]",

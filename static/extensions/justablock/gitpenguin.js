@@ -1,5 +1,6 @@
 (function (Scratch) {
   let lastStatus = "", encodeMode = true;
+  let dangerousBlocksHidden = true;
 
   class GitPenguin {
     getInfo() {
@@ -32,7 +33,7 @@
           },
           { blockType: Scratch.BlockType.LABEL, text: "File control" },
           {
-            hideFromPalette: true, // putting a token in your project isn't a good idea
+            hideFromPalette: dangerousBlocksHidden,
             opcode: "createFile",
             blockType: Scratch.BlockType.COMMAND,
             text: "create file [FILE] with content [CONTENT] in repository [REPO] of user [NAME] using token [TOKEN]",
@@ -60,7 +61,7 @@
             }
           },
           {
-            hideFromPalette: true, // putting a token in your project isn't a good idea
+            hideFromPalette: dangerousBlocksHidden,
             opcode: "editFileContent",
             blockType: Scratch.BlockType.COMMAND,
             text: "edit content of file [FILE] in repository [REPO] of user [NAME] to [CONTENT] using token [TOKEN]",
@@ -94,7 +95,7 @@
           },
           { blockType: Scratch.BlockType.LABEL, text: "DANGEROUS" },
           {
-            hideFromPalette: true, // putting a token in your project isn't a good idea
+            hideFromPalette: dangerousBlocksHidden,
             opcode: "deleteFile",
             blockType: Scratch.BlockType.COMMAND,
             text: "delete file [FILE] from repository [REPO] of user [NAME] using token [TOKEN]",
@@ -128,11 +129,29 @@
               }
             }
           },
+          {
+            blockType: Scratch.BlockType.BUTTON,
+            func: "showHiddenBlocks",
+            text: Scratch.translate("Show dangerous blocks using a github token")
+          },        
         ],
         menus: {
           TOGGLE: ["on", "off"]
         }
       };
+    }
+
+    showHiddenBlocks() {
+      alert(Scratch.translate("Anyone with your github token can access your account and create repositories, delete repositories, commit changes, and more, all while pretending to be you. You should not include your token in any capacity in a project shared with other people."))
+      const response = prompt(Scratch.translate("To show these blocks, type \"I will not post a project with my github token anywhere and I understand people can impersonate me if I do\" (not case sensitive)."))
+
+      if (response.toLowerCase() === "i will not post a project with my github token anywhere and i understand people can impersonate me if i do") {
+        dangerousBlocksHidden = false;
+        Scratch.vm.extensionManager.refreshBlocks()
+      }
+      else {
+        alert("Prompt answered incorrectly.")
+      }
     }
 
     async getFileContents({ FILE, REPO, NAME }) {

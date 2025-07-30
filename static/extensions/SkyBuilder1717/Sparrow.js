@@ -14,14 +14,13 @@
     const sparrowData = {loadedSprites: {}, animationTimers: {}, currentFrames: {}};
     const runtime = Scratch.vm.runtime;
     const renderer = runtime.renderer;
-    const blocks = [];
 
-    function getSprite(name) {
+    function _getSprite(name) {
         if (!sparrowData.loadedSprites) return null;
         return sparrowData.loadedSprites[name] || null;
     }
 
-    function deleteSprite(name) {
+    function _removeSprite(name) {
         if (!sparrowData.loadedSprites) return;
         const spriteName = name.trim();
         if (sparrowData.animationTimers[spriteName]) {
@@ -36,7 +35,99 @@
         delete sparrowData.loadedSprites[spriteName];
     }
 
-    class Extension {
+    function _setFrame(skin, target, frame) {
+        renderer._allDrawables[target.drawableID].skin = renderer._allSkins[skin];
+        sparrowData.currentFrames[target.getName()] = frame;
+    }
+
+    async function _playAnimation(target, sprite, prefix, interval, options = {}) {
+        if (!target.drawableID) {
+            console.error("target.drawableID is empty");
+            return;
+        }
+
+        const skins = sprite.skins;
+        if (!skins || Object.keys(skins).length === 0) {
+            console.error("skins is empty");
+            return;
+        }
+
+        const drawable = renderer._allDrawables[target.drawableID];
+        if (!drawable) {
+            console.error("Drawable not found for drawableID:", target.drawableID);
+            return;
+        }
+
+        const timerKey = target.getName();
+
+        if (!sparrowData.animationTimers[timerKey]) {
+            sparrowData.animationTimers[timerKey] = {
+                stopped: false,
+                stopPromise: null,
+                stopResolve: null,
+            };
+        }
+
+        const controller = sparrowData.animationTimers[timerKey];
+        controller.stopped = false;
+
+        controller.stopPromise = new Promise(resolve => {
+            controller.stopResolve = resolve;
+        });
+
+        const frameNames = Object.keys(skins)
+            .filter(name => name.startsWith(prefix))
+            .sort();
+
+        if (frameNames.length === 0) {
+            console.error("Frames with", prefix, "not found");
+            return;
+        }
+
+        for (let frameIndex = 0; frameIndex < frameNames.length; frameIndex++) {
+            if (controller.stopped) {
+                break;
+            }
+
+            const frameName = frameNames[frameIndex];
+            const skin = skins[frameName];
+
+            if (!skin) {
+                console.error(frameName, "not found");
+                break;
+            }
+
+            _setFrame(skin, target, frameIndex);
+
+            await Promise.race([
+                new Promise(resolve => setTimeout(resolve, interval)),
+                controller.stopPromise,
+            ]);
+
+            if (controller.stopped) {
+                break;
+            }
+        }
+
+        delete sparrowData.animationTimers[timerKey];
+    }
+
+    function _stopAnimation(util) {
+        const target = util.target;
+        if (!target) return;
+
+        const timerKey = target.getName();
+        const controller = sparrowData.animationTimers[timerKey];
+        if (controller && !controller.stopped) {
+            controller.stopped = true;
+            if (controller.stopResolve) {
+                controller.stopResolve();
+            }
+            delete sparrowData.animationTimers[timerKey];
+        }
+    }
+
+    class SparrowExtension {
         getInfo() {
             return {
                 id: "sparrow",
@@ -45,36 +136,239 @@
                 name: "Sparrow",
                 color1: "#e32c53",
                 color2: "#c42144ff",
-                blocks: blocks,
+                blocks: [
+                    { blockType: Scratch.BlockType.LABEL, text: "Loading" },
+                    {
+                        opcode: "loadSparrowFilesAs",
+                        blockType: Scratch.BlockType.COMMAND,
+                        text: "load PNG: [PNG] XML: [XML] as [SPRITENAME]",
+                        arguments: {
+                            PNG: { type: Scratch.ArgumentType.STRING, defaultValue: "https://example.com/spritesheet.png" },
+                            XML: { type: Scratch.ArgumentType.STRING, defaultValue: "https://example.com/spritesheet.xml" },
+                            SPRITENAME: { type: Scratch.ArgumentType.STRING, defaultValue: "default" }
+                        }
+                    },
+                    {
+                        opcode: "onSpriteLoaded",
+                        blockType: Scratch.BlockType.HAT,
+                        text: "when sprite [SPRITENAME] loaded",
+                        arguments: { SPRITENAME: { type: Scratch.ArgumentType.STRING, defaultValue: "default" } }
+                    },
+                    {
+                        opcode: "isSpriteLoaded",
+                        blockType: Scratch.BlockType.BOOLEAN,
+                        text: "is sprite [SPRITENAME] loaded?",
+                        arguments: { SPRITENAME: { type: Scratch.ArgumentType.STRING, defaultValue: "default" } }
+                    },
+                    {
+                        opcode: "deleteSprite",
+                        blockType: Scratch.BlockType.COMMAND,
+                        text: "delete spritesheet [SPRITENAME]",
+                        arguments: { SPRITENAME: { type: Scratch.ArgumentType.STRING, defaultValue: "default" }  }
+                    },
+                    {
+                        opcode: "deleteSprites",
+                        blockType: Scratch.BlockType.COMMAND,
+                        text: "delete all of spritesheets"
+                    },
+                    {
+                        opcode: "getLoadedSprites",
+                        blockType: Scratch.BlockType.REPORTER,
+                        disableMonitor: true,
+                        text: "list of loaded sprites"
+                    },
+                    { blockType: Scratch.BlockType.LABEL, text: "Frame Count" },
+                    {
+                        opcode: "getFrameNames",
+                        blockType: Scratch.BlockType.REPORTER,
+                        disableMonitor: true,
+                        text: "get frame names as [SPRITENAME]",
+                        arguments: { SPRITENAME: { type: Scratch.ArgumentType.STRING, defaultValue: "default" } }
+                    },
+                    {
+                        opcode: "getFrameCount",
+                        blockType: Scratch.BlockType.REPORTER,
+                        disableMonitor: true,
+                        text: "amount of frames for [SPRITENAME]",
+                        arguments: { SPRITENAME: { type: Scratch.ArgumentType.STRING, defaultValue: "default" } }
+                    },
+                    {
+                        opcode: "getFrameCountPrefix",
+                        blockType: Scratch.BlockType.REPORTER,
+                        disableMonitor: true,
+                        text: "amount of frames for animation [PREFIX] as [SPRITENAME]",
+                        arguments: {
+                            SPRITENAME: { type: Scratch.ArgumentType.STRING, defaultValue: "default" },
+                            PREFIX: { type: Scratch.ArgumentType.STRING, defaultValue: "" }
+                        }
+                    },
+                    { blockType: Scratch.BlockType.LABEL, text: "Frame Data" },
+                    {
+                        opcode: "getFrameName",
+                        blockType: Scratch.BlockType.REPORTER,
+                        disableMonitor: true,
+                        text: "frame name of [INDEX] as [SPRITENAME]",
+                        arguments: {
+                            INDEX: { type: Scratch.ArgumentType.NUMBER, defaultValue: 1 },
+                            SPRITENAME: { type: Scratch.ArgumentType.STRING, defaultValue: "default" }
+                        }
+                    },
+                    {
+                        opcode: "getFrameIndex",
+                        blockType: Scratch.BlockType.REPORTER,
+                        disableMonitor: true,
+                        text: "index of frame name [FRAME] as [SPRITENAME]",
+                        arguments: {
+                            FRAME: { type: Scratch.ArgumentType.STRING, defaultValue: "" },
+                            SPRITENAME: { type: Scratch.ArgumentType.STRING, defaultValue: "default" }
+                        }
+                    },
+                    {
+                        opcode: "getFrameProperty",
+                        blockType: Scratch.BlockType.REPORTER,
+                        disableMonitor: true,
+                        text: "property [PROPERTY] of frame [INDEX] as [SPRITENAME]",
+                        arguments: {
+                            INDEX: { type: Scratch.ArgumentType.NUMBER, defaultValue: 1 },
+                            SPRITENAME: { type: Scratch.ArgumentType.STRING, defaultValue: "default" },
+                            PROPERTY: {
+                                type: Scratch.ArgumentType.STRING,
+                                menu: "frameProperties",
+                                defaultValue: "x"
+                            }
+                        }
+                    },
+                    {
+                        opcode: "getFramePropertyByName",
+                        blockType: Scratch.BlockType.REPORTER,
+                        disableMonitor: true,
+                        text: "property [PROPERTY] of frame named [FRAME] as [SPRITENAME]",
+                        arguments: {
+                            FRAME: { type: Scratch.ArgumentType.STRING, defaultValue: "" },
+                            SPRITENAME: { type: Scratch.ArgumentType.STRING, defaultValue: "default" },
+                            PROPERTY: {
+                                type: Scratch.ArgumentType.STRING,
+                                menu: "frameProperties",
+                                defaultValue: "x"
+                            }
+                        }
+                    },
+                    {
+                        opcode: "getFrameIndexCycle",
+                        blockType: Scratch.BlockType.REPORTER,
+                        disableMonitor: true,
+                        text: "frame index [INDEX] as [SPRITENAME] (cyclic)",
+                        arguments: {
+                            INDEX: { type: Scratch.ArgumentType.NUMBER, defaultValue: 1 },
+                            SPRITENAME: { type: Scratch.ArgumentType.STRING, defaultValue: "default" }
+                        }
+                    },
+                    {
+                        opcode: "getFrameNameCycle",
+                        blockType: Scratch.BlockType.REPORTER,
+                        disableMonitor: true,
+                        text: "frame index [INDEX] with prefix [PREFIX] as [SPRITENAME] (cyclic)",
+                        arguments: {
+                            INDEX: { type: Scratch.ArgumentType.NUMBER, defaultValue: 1 },
+                            PREFIX: { type: Scratch.ArgumentType.STRING, defaultValue: "" },
+                            SPRITENAME: { type: Scratch.ArgumentType.STRING, defaultValue: "default" }
+                        }
+                    },
+                    "---",
+                    {
+                        opcode: "getFrameImageIndex",
+                        blockType: Scratch.BlockType.REPORTER,
+                        disableMonitor: true,
+                        text: "base64 from frame [INDEX] as [SPRITENAME]",
+                        arguments: {
+                            INDEX: { type: Scratch.ArgumentType.NUMBER, defaultValue: 1 },
+                            SPRITENAME: { type: Scratch.ArgumentType.STRING, defaultValue: "default" }
+                        } 
+                    },
+                    {
+                        opcode: "getFrameImageName",
+                        blockType: Scratch.BlockType.REPORTER,
+                        disableMonitor: true,
+                        text: "base64 from frame name [FRAME] as [SPRITENAME]",
+                        arguments: {
+                            FRAME: { type: Scratch.ArgumentType.STRING, defaultValue: "" },
+                            SPRITENAME: { type: Scratch.ArgumentType.STRING, defaultValue: "default" }
+                        }
+                    },
+                    { blockType: Scratch.BlockType.LABEL, text: "Animation" },
+                    {
+                        opcode: "getNextFrame",
+                        blockType: Scratch.BlockType.REPORTER,
+                        disableMonitor: true,
+                        text: "next frame after [INDEX] with animation [PREFIX] as [SPRITENAME]",
+                        arguments: {
+                            INDEX: { type: Scratch.ArgumentType.NUMBER, defaultValue: 1 },
+                            PREFIX: { type: Scratch.ArgumentType.STRING, defaultValue: "" },
+                            SPRITENAME: { type: Scratch.ArgumentType.STRING, defaultValue: "default" }
+                        }
+                    },
+                    {
+                        opcode: "getPrevFrame",
+                        blockType: Scratch.BlockType.REPORTER,
+                        disableMonitor: true,
+                        text: "previous frame before [INDEX] with animation [PREFIX] as [SPRITENAME]",
+                        arguments: {
+                            INDEX: { type: Scratch.ArgumentType.NUMBER, defaultValue: 1 },
+                            PREFIX: { type: Scratch.ArgumentType.STRING, defaultValue: "" },
+                            SPRITENAME: { type: Scratch.ArgumentType.STRING, defaultValue: "default" }
+                        }
+                    },
+                    {
+                        opcode: "currentFrame",
+                        blockType: Scratch.BlockType.REPORTER,
+                        text: "current frame"
+                    },
+                    {
+                        opcode: "setFrameIndex",
+                        blockType: Scratch.BlockType.COMMAND,
+                        text: "set frame to [INDEX] as [SPRITENAME]",
+                        arguments: {
+                            INDEX: { type: Scratch.ArgumentType.NUMBER, defaultValue: 1 },
+                            SPRITENAME: { type: Scratch.ArgumentType.STRING, defaultValue: "default" }
+                        }
+                    },
+                    {
+                        opcode: "setFrameName",
+                        blockType: Scratch.BlockType.COMMAND,
+                        text: "set frame name to [FRAME] as [SPRITENAME]",
+                        arguments: {
+                            FRAME: { type: Scratch.ArgumentType.STRING, defaultValue: "" },
+                            SPRITENAME: { type: Scratch.ArgumentType.STRING, defaultValue: "default" }
+                        }
+                    },
+                    {
+                        opcode: "playAnimation",
+                        blockType: Scratch.BlockType.COMMAND,
+                        text: "play animation as [SPRITENAME] frames starting with [PREFIX] interval [INTERVAL] ms",
+                        arguments: {
+                            SPRITENAME: { type: Scratch.ArgumentType.STRING, defaultValue: "default" },
+                            PREFIX: { type: Scratch.ArgumentType.STRING, defaultValue: "" },
+                            INTERVAL: { type: Scratch.ArgumentType.NUMBER, defaultValue: 100 }
+                        }
+                    },
+                    {
+                        opcode: "stopAnimation",
+                        blockType: Scratch.BlockType.COMMAND,
+                        text: "stop animation"
+                    },
+                    {
+                        opcode: "resetSprite",
+                        blockType: Scratch.BlockType.COMMAND,
+                        text: "reset default sprite"
+                    }
+                ],
                 menus: {
                     frameProperties: ["x", "y", "width", "height", "frameX", "frameY", "frameWidth", "frameHeight"]
                 }
             };
         }
-    }
 
-    function createBlock(type, opcode, text, args, func, monitor = true) {
-        blocks.push({
-            opcode: opcode,
-            blockType: type,
-            text: text,
-            arguments: args,
-            disableMonitor: monitor
-        });
-        Extension.prototype[opcode] = func;
-    }
-    function createSeparator() { blocks.push("---"); }
-    function createLabel(text) { blocks.push({ blockType: Scratch.BlockType.LABEL, text: text }); }
-
-    createLabel("Loading");
-    
-    createBlock(Scratch.BlockType.COMMAND, "loadSparrowFilesAs",
-        "load PNG: [PNG] XML: [XML] as [SPRITENAME]", {
-            PNG: { type: Scratch.ArgumentType.STRING, defaultValue: "https://example.com/spritesheet.png" },
-            XML: { type: Scratch.ArgumentType.STRING, defaultValue: "https://example.com/spritesheet.xml" },
-            SPRITENAME: { type: Scratch.ArgumentType.STRING, defaultValue: "default" }
-        },
-        async function(args) {
+        async loadSparrowFilesAs(args) {
             const name = args.SPRITENAME.trim();
             if (!name) {
                 alert("Sprite name cannot be empty!");
@@ -168,13 +462,9 @@
                 alert("Error while loading Sparrow files: " + e.message);
                 sparrowData.loadedSprites[name] = null;
             }
-        });
+        }
 
-    createBlock(Scratch.BlockType.HAT, "onSpriteLoaded",
-        "when sprite [SPRITENAME] loaded", {
-            SPRITENAME: { type: Scratch.ArgumentType.STRING, defaultValue: "default" }
-        },
-        function(args) {
+        onSpriteLoaded(args) {
             const sprite = sparrowData.loadedSprites[args.SPRITENAME]
             if(!sprite) return false
             if(!sprite.hat) {
@@ -186,65 +476,40 @@
                 })
             }
             return false
-        }, true);
-    
-    createBlock(Scratch.BlockType.BOOLEAN, "isSpriteLoaded",
-        "is sprite [SPRITENAME] loaded?", {
-            SPRITENAME: { type: Scratch.ArgumentType.STRING, defaultValue: "default" }
-        },
-        function(args) {
-            return !!getSprite(args.SPRITENAME);
-        });
-    
-    createBlock(Scratch.BlockType.COMMAND, "deleteSprite",
-        "delete spritesheet [SPRITENAME]", {
-            SPRITENAME: { type: Scratch.ArgumentType.STRING, defaultValue: "default" }
-        },
-        function(args) {
-            deleteSprite(args.SPRITENAME);
-        });
-    
-    createBlock(Scratch.BlockType.COMMAND, "deleteSprites",
-        "delete all of spritesheets", {},
-        function(_) {
+        }
+
+        isSpriteLoaded(args) {
+            return !!_getSprite(args.SPRITENAME);
+        }
+
+        async deleteSprite(args) {
+            _removeSprite(args.SPRITENAME);
+        }
+
+        async deleteSprites() {
             for (var i = 0; i < Object.keys(sparrowData.loadedSprites).length; i++) {
-                deleteSprite(Object.keys(sparrowData.loadedSprites)[i]);
+                _removeSprite(Object.keys(sparrowData.loadedSprites)[i]);
             }
-        });
+        }
 
-    createBlock(Scratch.BlockType.REPORTER, "getLoadedSprites",
-        "list of loaded sprites", {}, 
-        function() {
+        getLoadedSprites() {
             return JSON.stringify(Object.keys(sparrowData.loadedSprites));
-        });
+        }
 
-    createLabel("Frame Count");
-
-    createBlock(Scratch.BlockType.REPORTER, "getFrameNames",
-        "get frame names as [SPRITENAME]", {
-            SPRITENAME: { type: Scratch.ArgumentType.STRING, defaultValue: "default" }
-        },
-        function(args) {
-            const spr = getSprite(args.SPRITENAME);
+        getFrameNames(args) {
+            const spr = _getSprite(args.SPRITENAME);
             if (!spr || !spr.frames) return '[]';
             return JSON.stringify(spr.frames.map(f => f.name));
-        });
+        }
 
-    createBlock(Scratch.BlockType.REPORTER, "getFrameCount",
-        "amount of frames for [SPRITENAME]", {
-            SPRITENAME: { type: Scratch.ArgumentType.STRING, defaultValue: "default" }
-        }, function(args) {
-            const spr = getSprite(args.SPRITENAME.trim());
+        getFrameCount(args) {
+            const spr = _getSprite(args.SPRITENAME.trim());
             if (!spr) return 0;
             return spr.frames.length;
-        });
-    
-    createBlock(Scratch.BlockType.REPORTER, "getFrameCountPrefix",
-        "amount of frames for animation [PREFIX] as [SPRITENAME]", {
-            SPRITENAME: { type: Scratch.ArgumentType.STRING, defaultValue: "default" },
-            PREFIX: { type: Scratch.ArgumentType.STRING, defaultValue: "" }
-        }, function(args) {
-            const spr = getSprite(args.SPRITENAME.trim());
+        }
+
+        getFrameCountPrefix(args) {
+            const spr = _getSprite(args.SPRITENAME.trim());
             if (!spr) return 0;
             if (!args.PREFIX) return spr.frames.length;
             const prefix = args.PREFIX;
@@ -253,93 +518,53 @@
                 if (frame.name.startsWith(prefix)) count++;
             }
             return count;
-        });
+        }
 
-    createLabel("Frame Data");
-
-    createBlock(Scratch.BlockType.REPORTER, "getFrameName",
-        "frame name of [INDEX] as [SPRITENAME]", {
-            INDEX: { type: Scratch.ArgumentType.NUMBER, defaultValue: 1 },
-            SPRITENAME: { type: Scratch.ArgumentType.STRING, defaultValue: "default" }
-        }, function(args) {
-            const spr = getSprite(args.SPRITENAME.trim());
+        getFrameName(args) {
+            const spr = _getSprite(args.SPRITENAME.trim());
             if (!spr) return "";
             const idx = Math.floor(args.INDEX) - 1;
             if (idx < 0 || idx >= spr.frames.length) return "";
             return spr.frames[idx].name;
-        });
-    
-    createBlock(Scratch.BlockType.REPORTER, "getFrameIndex",
-        "index of frame name [FRAME] as [SPRITENAME]", {
-            FRAME: { type: Scratch.ArgumentType.STRING, defaultValue: "" },
-            SPRITENAME: { type: Scratch.ArgumentType.STRING, defaultValue: "default" }
-        }, function(args) {
-            const spr = getSprite(args.SPRITENAME.trim());
+        }
+
+        getFrameIndex(args) {
+            const spr = _getSprite(args.SPRITENAME.trim());
             if (!spr) return 0;
             const idx = spr.frames.findIndex(f => f.name === args.FRAME);
             return idx >= 0 ? idx + 1 : 0;
-        });
+        }
 
-    createBlock(Scratch.BlockType.REPORTER, "getFrameProperty",
-        "property [PROPERTY] of frame [INDEX] as [SPRITENAME]", {
-            INDEX: { type: Scratch.ArgumentType.NUMBER, defaultValue: 1 },
-            SPRITENAME: { type: Scratch.ArgumentType.STRING, defaultValue: "default" },
-            PROPERTY: {
-                type: Scratch.ArgumentType.STRING,
-                menu: "frameProperties",
-                defaultValue: "x"
-            }
-        }, function(args) {
-            const spr = getSprite(args.SPRITENAME.trim());
+        getFrameProperty(args) {
+            const spr = _getSprite(args.SPRITENAME.trim());
             if (!spr) return 0;
             const idx = Math.floor(args.INDEX) - 1;
             if (idx < 0 || idx >= spr.frames.length) return 0;
             const frame = spr.frames[idx];
             return frame[args.PROPERTY] || 0;
-        });
-    
-    createBlock(Scratch.BlockType.REPORTER, "getFramePropertyByName",
-        "property [PROPERTY] of frame named [FRAME] as [SPRITENAME]", {
-            FRAME: { type: Scratch.ArgumentType.STRING, defaultValue: "" },
-            SPRITENAME: { type: Scratch.ArgumentType.STRING, defaultValue: "default" },
-            PROPERTY: {
-                type: Scratch.ArgumentType.STRING,
-                menu: "frameProperties",
-                defaultValue: "x"
-            }
-        },
-        function(args) {
-            const spr = getSprite(args.SPRITENAME);
+        }
+
+        getFramePropertyByName(args) {
+            const spr = _getSprite(args.SPRITENAME);
             if (!spr || !spr.frames) return "";
             const frame = spr.frames.find(f => f.name === args.FRAME);
             if (!frame) return "";
             const prop = args.PROPERTY.toLowerCase();
             return frame.hasOwnProperty(prop) ? frame[prop] : "";
-        });
+        }
 
-    createBlock(Scratch.BlockType.REPORTER, "getFrameIndexCycle",
-        "frame index [INDEX] as [SPRITENAME] (cyclic)", {
-            INDEX: { type: Scratch.ArgumentType.NUMBER, defaultValue: 1 },
-            SPRITENAME: { type: Scratch.ArgumentType.STRING, defaultValue: "default" }
-        },
-        function(args) {
-            const spr = getSprite(args.SPRITENAME);
+        getFrameIndexCycle(args) {
+            const spr = _getSprite(args.SPRITENAME);
             if (!spr || !spr.frames) return 0;
             const len = spr.frames.length;
             if (len === 0) return 0;
             let idx = Math.floor(args.INDEX);
             idx = ((idx - 1) % len + len) % len + 1;
             return idx;
-        });
-    
-    createBlock(Scratch.BlockType.REPORTER, "getFrameNameCycle",
-        "frame index [INDEX] with prefix [PREFIX] as [SPRITENAME] (cyclic)", {
-            INDEX: { type: Scratch.ArgumentType.NUMBER, defaultValue: 1 },
-            PREFIX: { type: Scratch.ArgumentType.STRING, defaultValue: "" },
-            SPRITENAME: { type: Scratch.ArgumentType.STRING, defaultValue: "default" }
-        },
-        function(args) {
-            const spr = getSprite(args.SPRITENAME);
+        }
+
+        getFrameNameCycle(args) {
+            const spr = _getSprite(args.SPRITENAME);
             if (!spr || !spr.frames) return 0;
             const prefix = args.PREFIX;
             const filteredFrames = spr.frames.filter(name => name.startsWith(prefix));
@@ -348,16 +573,10 @@
             let idx = Math.floor(args.INDEX);
             idx = ((idx - 1) % len + len) % len + 1;
             return idx;
-        });
+        }
 
-    createSeparator();
-
-    createBlock(Scratch.BlockType.REPORTER, "getFrameImageIndex",
-        "base64 from frame [INDEX] as [SPRITENAME]", {
-            INDEX: { type: Scratch.ArgumentType.NUMBER, defaultValue: 1 },
-            SPRITENAME: { type: Scratch.ArgumentType.STRING, defaultValue: "default" }
-        }, function(args) {
-            const spr = getSprite(args.SPRITENAME.trim());
+        getFrameImageIndex(args) {
+            const spr = _getSprite(args.SPRITENAME.trim());
             if (!spr) return "";
             const idx = Math.floor(args.INDEX) - 1;
             if (idx < 0 || idx >= spr.frames.length) return "";
@@ -375,14 +594,10 @@
             );
 
             return canvas.toDataURL("image/png");
-        });
+        }
 
-    createBlock(Scratch.BlockType.REPORTER, "getFrameImageName",
-        "base64 from frame name [FRAME] as [SPRITENAME]", {
-            FRAME: { type: Scratch.ArgumentType.STRING, defaultValue: "" },
-            SPRITENAME: { type: Scratch.ArgumentType.STRING, defaultValue: "default" }
-        }, function(args) {
-            const spr = getSprite(args.SPRITENAME.trim());
+        getFrameImageName(args) {
+            const spr = _getSprite(args.SPRITENAME.trim());
             if (!spr) return "";
             const frame = spr.frames.find(f => f.name === args.FRAME);
             if (!frame) return "";
@@ -399,18 +614,10 @@
             );
 
             return canvas.toDataURL("image/png");
-        });
-    
-    createLabel("Animation");
-    
-    createBlock(Scratch.BlockType.REPORTER, "getNextFrame",
-        "next frame after [INDEX] with animation [PREFIX] as [SPRITENAME]", {
-            INDEX: { type: Scratch.ArgumentType.NUMBER, defaultValue: 1 },
-            PREFIX: { type: Scratch.ArgumentType.STRING, defaultValue: "" },
-            SPRITENAME: { type: Scratch.ArgumentType.STRING, defaultValue: "default" }
-        },
-        function(args) {
-            const spr = getSprite(args.SPRITENAME);
+        }
+
+        getNextFrame(args) {
+            const spr = _getSprite(args.SPRITENAME);
             if (!spr || !spr.frames) return 0;
             const prefix = args.PREFIX;
             const filteredFrames = spr.frames
@@ -423,16 +630,10 @@
             let idx = ((currentIdx - 1) % len + len) % len;
             let nextIdx = (idx + 1) % len;
             return nextIdx + 1;
-        });
+        }
 
-    createBlock(Scratch.BlockType.REPORTER, "getPrevFrame",
-        "previous frame before [INDEX] with animation [PREFIX] as [SPRITENAME]", {
-            INDEX: { type: Scratch.ArgumentType.NUMBER, defaultValue: 1 },
-            PREFIX: { type: Scratch.ArgumentType.STRING, defaultValue: "" },
-            SPRITENAME: { type: Scratch.ArgumentType.STRING, defaultValue: "default" }
-        },
-        function(args) {
-            const spr = getSprite(args.SPRITENAME);
+        getPrevFrame(args) {
+            const spr = _getSprite(args.SPRITENAME);
             if (!spr || !spr.frames) return 0;
             const prefix = args.PREFIX;
             const filteredFrames = spr.frames
@@ -446,113 +647,12 @@
             let idx = ((currentIdx - 1) % len + len) % len;
             let prevIdx = (idx - 1 + len) % len;
             return prevIdx + 1;
-        });
-    
-    function setFrame(skin, target, frame) {
-        renderer._allDrawables[target.drawableID].skin = renderer._allSkins[skin];
-        sparrowData.currentFrames[target.getName()] = frame;
-    }
-
-    async function playAnimation(target, sprite, prefix, interval, options = {}) {
-        if (!target.drawableID) {
-            console.error("target.drawableID is empty");
-            return;
         }
 
-        const skins = sprite.skins;
-        if (!skins || Object.keys(skins).length === 0) {
-            console.error("skins is empty");
-            return;
-        }
+        currentFrame(_, util) { return sparrowData.currentFrames[util.target.getName()] || 0; }
 
-        const drawable = renderer._allDrawables[target.drawableID];
-        if (!drawable) {
-            console.error("Drawable not found for drawableID:", target.drawableID);
-            return;
-        }
-
-        const timerKey = target.getName();
-
-        if (!sparrowData.animationTimers[timerKey]) {
-            sparrowData.animationTimers[timerKey] = {
-                stopped: false,
-                stopPromise: null,
-                stopResolve: null,
-            };
-        }
-
-        const controller = sparrowData.animationTimers[timerKey];
-        controller.stopped = false;
-
-        controller.stopPromise = new Promise(resolve => {
-            controller.stopResolve = resolve;
-        });
-
-        const frameNames = Object.keys(skins)
-            .filter(name => name.startsWith(prefix))
-            .sort();
-
-        if (frameNames.length === 0) {
-            console.error("Frames with", prefix, "not found");
-            return;
-        }
-
-        for (let frameIndex = 0; frameIndex < frameNames.length; frameIndex++) {
-            if (controller.stopped) {
-                break;
-            }
-
-            const frameName = frameNames[frameIndex];
-            const skin = skins[frameName];
-
-            if (!skin) {
-                console.error(frameName, "not found");
-                break;
-            }
-
-            setFrame(skin, target, frameIndex);
-
-            await Promise.race([
-                new Promise(resolve => setTimeout(resolve, interval)),
-                controller.stopPromise,
-            ]);
-
-            if (controller.stopped) {
-                break;
-            }
-        }
-
-        delete sparrowData.animationTimers[timerKey];
-    }
-
-    function stopAnimation(util) {
-        const target = util.target;
-        if (!target) return;
-
-        const timerKey = target.getName();
-        const controller = sparrowData.animationTimers[timerKey];
-        if (controller && !controller.stopped) {
-            controller.stopped = true;
-            if (controller.stopResolve) {
-                controller.stopResolve();
-            }
-            delete sparrowData.animationTimers[timerKey];
-        }
-    }
-
-    createBlock(Scratch.BlockType.REPORTER, "currentFrame",
-        "current frame", {},
-        async function(_, util) {
-            return sparrowData.currentFrames[util.target.getName()] || 0;
-        }, false);
-
-    createBlock(Scratch.BlockType.COMMAND, "setFrameIndex",
-        "set frame to [INDEX] as [SPRITENAME]", {
-            INDEX: { type: Scratch.ArgumentType.NUMBER, defaultValue: 1 },
-            SPRITENAME: { type: Scratch.ArgumentType.STRING, defaultValue: "default" }
-        },
-        async function(args, util) {
-            const spr = getSprite(args.SPRITENAME.trim());
+        async setFrameIndex(args, util) {
+            const spr = _getSprite(args.SPRITENAME.trim());
             if (!spr || !spr.frames || spr.frames.length === 0) return;
 
             const idx = Math.floor(args.INDEX) - 1;
@@ -562,62 +662,46 @@
             const skin = spr.skins[frameName];
             if (!skin) return;
 
-            setFrame(skin, util.target, idx)
-        });
+            _setFrame(skin, util.target, idx)
+        }
 
-    createBlock(Scratch.BlockType.COMMAND, "setFrameName",
-        "set frame name to [FRAME] as [SPRITENAME]", {
-            FRAME: { type: Scratch.ArgumentType.STRING, defaultValue: "" },
-            SPRITENAME: { type: Scratch.ArgumentType.STRING, defaultValue: "default" }
-        },
-        async function(args, util) {
-            const spr = getSprite(args.SPRITENAME.trim());
+        async setFrameName(args, util) {
+            const spr = _getSprite(args.SPRITENAME.trim());
             if (!spr || !spr.frames || spr.frames.length === 0) return;
 
             const skin = spr.skins[args.FRAME];
             if (!skin) return;
             const idx = spr.frames.findIndex(f => f.name === args.FRAME);
 
-            setFrame(skin, util.target, idx)
-        });
+            _setFrame(skin, util.target, idx)
+        }
 
-    createBlock(Scratch.BlockType.COMMAND, "playAnimation",
-        "play animation as [SPRITENAME] frames starting with [PREFIX] interval [INTERVAL] ms", {
-            SPRITENAME: { type: Scratch.ArgumentType.STRING, defaultValue: "default" },
-            PREFIX: { type: Scratch.ArgumentType.STRING, defaultValue: "" },
-            INTERVAL: { type: Scratch.ArgumentType.NUMBER, defaultValue: 100 }
-        },
-        async function(args, util) {
-            stopAnimation(util);
+        async playAnimation(args, util) {
+            _stopAnimation(util);
             const target = util.target;
             if (!target) return;
             const spriteName = args.SPRITENAME.trim();
             const prefix = args.PREFIX.trim();
             if (!spriteName || !prefix) return;
 
-            const spr = getSprite(spriteName);
+            const spr = _getSprite(spriteName);
             if (!spr || !spr.frames || spr.frames.length === 0) {
                 console.error("Sprite not found");
                 return;
             }
 
-            await playAnimation(target, spr, prefix, parseInt(args.INTERVAL));
-        });
+            await _playAnimation(target, spr, prefix, parseInt(args.INTERVAL));
+        }
 
-    createBlock(Scratch.BlockType.COMMAND, "stopAnimation",
-        "stop animation", {},
-        function(_, util) {
-            stopAnimation(util);
-        });
-    
-    createBlock(Scratch.BlockType.COMMAND, "resetSprite",
-        "reset default sprite", {},
-        function(_, util) {
+        async stopAnimation(_, util) { _stopAnimation(util); }
+
+        resetSprite(_, util) {
             const target = util.target;
             if (!target) return;
             target.updateAllDrawableProperties();
             delete sparrowData.currentFrames[target.getName()];
-        });
+        }
+    }
 
-    Scratch.extensions.register(new Extension());
+    Scratch.extensions.register(new SparrowExtension());
 })(Scratch);

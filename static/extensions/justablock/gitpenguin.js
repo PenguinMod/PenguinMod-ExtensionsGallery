@@ -31,7 +31,30 @@
               }
             }
           },
-          { blockType: Scratch.BlockType.LABEL, text: "File control" },
+          {
+            opcode: "getStatus",
+            blockType: Scratch.BlockType.REPORTER,
+            text: "recent file status"
+          },
+          {
+            opcode: "toggleEncode",
+            blockType: Scratch.BlockType.COMMAND,
+            text: "toggle file encoding [TYPE]",
+            arguments: {
+              TYPE: {
+                type: Scratch.ArgumentType.STRING,
+                menu: "TOGGLE"
+              }
+            }
+          },
+          ...(dangerousBlocksHidden ? ["---"] : []),
+          { blockType: Scratch.BlockType.LABEL, text: "File Control", hideFromPalette: dangerousBlocksHidden },
+          {
+            blockType: Scratch.BlockType.BUTTON,
+            hideFromPalette: !dangerousBlocksHidden,
+            func: "showDangerousBlocks",
+            text: Scratch.translate("Show Potentially Dangerous Blocks")
+          },
           {
             hideFromPalette: dangerousBlocksHidden,
             opcode: "createFile",
@@ -89,12 +112,6 @@
             }
           },
           {
-            opcode: "getStatus",
-            blockType: Scratch.BlockType.REPORTER,
-            text: "recent file status"
-          },
-          { blockType: Scratch.BlockType.LABEL, text: "DANGEROUS" },
-          {
             hideFromPalette: dangerousBlocksHidden,
             opcode: "deleteFile",
             blockType: Scratch.BlockType.COMMAND,
@@ -118,23 +135,6 @@
               }
             }
           },
-          {
-            opcode: "toggleEncode",
-            blockType: Scratch.BlockType.COMMAND,
-            text: "toggle file encoding [TYPE]",
-            arguments: {
-              TYPE: {
-                type: Scratch.ArgumentType.STRING,
-                menu: "TOGGLE"
-              }
-            }
-          },
-          {
-            blockType: Scratch.BlockType.BUTTON,
-            hideFromPalette: !dangerousBlocksHidden,
-            func: "requestUnhidingDangerousBlocks",
-            text: Scratch.translate("Show potentially dangerous blocks")
-          },        
         ],
         menus: {
           TOGGLE: ["on", "off"]
@@ -142,17 +142,22 @@
       };
     }
 
-    async requestUnhidingDangerousBlocks() {
+    showDangerousBlocks() {
       const confirmationText = "I understand these blocks could compromise my account";
-      const response = await new Promise((res, _) => ScratchBlocks.prompt(`Anyone with your github token can access your account and create repositories, delete repositories, commit changes, and more, all while pretending to be you. You should not include your token in any capacity in a project shared with other people.\nTo show these blocks, type "${confirmationText}" (not case sensitive).`, "", (answer) => { res(answer) }, "Show potentially dangerous blocks", "broadcast_msg"));
+      ScratchBlocks.prompt(
+        `WARNING: Anyone who has access to your GitHub token has control of your GitHub account. Depending on the access you gave your token, anyone can perform actions that can be used in a malicious way as if they were you. Never share your token in a public project. To reveal these blocks, type: '${confirmationText}'`,
+        "",
+        (answer) => {
+          if (answer.toLowerCase() !== confirmationText.toLowerCase()) {
+            if (answer) alert("Prompt answered incorrectly!");
+            return;
+          }
 
-      if (response.toLowerCase() !== confirmationText.toLowerCase()) {  
-        alert("Prompt answered incorrectly.")
-        return
-      }
-
-      dangerousBlocksHidden = false;
-      Scratch.vm.extensionManager.refreshBlocks("gitpenguin")
+          dangerousBlocksHidden = false;
+          Scratch.vm.extensionManager.refreshBlocks("gitpenguin");
+        },
+        "Danger Notice", "broadcast_msg"
+      );
     }
 
     async getFileContents({ FILE, REPO, NAME }) {

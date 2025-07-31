@@ -35,20 +35,30 @@
         delete sparrowData.loadedSprites[spriteName];
     }
 
-    function _setFrame(skin, target, frame) {
+    function _setFrame(target, skins, frame, name, sprite) {
+        const skin = skins[name];
+        if (!skin) {
+            throw new Error("\"" + name + "\" not found")
+        }
         renderer._allDrawables[target.drawableID].skin = renderer._allSkins[skin];
-        sparrowData.currentFrames[target.getName()] = frame;
+        sparrowData.currentFrames[target.getName()] = { frame: frame, name: name, sprite: sprite };
     }
 
-    async function _playAnimation(target, sprite, prefix, interval, options = {}) {
+    async function _playAnimation(target, spr, prefix, interval) {
         if (!target.drawableID) {
             console.error("target.drawableID is empty");
             return;
         }
 
+        const sprite = _getSprite(spr);
+        if (!sprite || !sprite.frames || sprite.frames.length === 0) {
+            throw new Error("Spritesheet not found");
+            return;
+        }
+
         const skins = sprite.skins;
         if (!skins || Object.keys(skins).length === 0) {
-            console.error("skins is empty");
+            console.error("Rendered textures are not available");
             return;
         }
 
@@ -84,29 +94,27 @@
             return;
         }
 
-        for (let frameIndex = 0; frameIndex < frameNames.length; frameIndex++) {
-            if (controller.stopped) {
-                break;
+        try {
+            for (let frameIndex = 0; frameIndex < frameNames.length; frameIndex++) {
+                if (controller.stopped) {
+                    break;
+                }
+
+                const frameName = frameNames[frameIndex];
+            
+                _setFrame(target, skins, frameIndex, frameName, spr);
+
+                await Promise.race([
+                    new Promise(resolve => setTimeout(resolve, interval)),
+                    controller.stopPromise,
+                ]);
+
+                if (controller.stopped) {
+                    break;
+                }
             }
-
-            const frameName = frameNames[frameIndex];
-            const skin = skins[frameName];
-
-            if (!skin) {
-                console.error(frameName, "not found");
-                break;
-            }
-
-            _setFrame(skin, target, frameIndex);
-
-            await Promise.race([
-                new Promise(resolve => setTimeout(resolve, interval)),
-                controller.stopPromise,
-            ]);
-
-            if (controller.stopped) {
-                break;
-            }
+        } catch (e) {
+            throw new Error(e.message);
         }
 
         delete sparrowData.animationTimers[timerKey];
@@ -127,10 +135,103 @@
         }
     }
 
+    async function _costumeToImage(costume) {
+        return new Promise(async (resolve, reject) => {
+            try {
+                const dataUrl = costume.asset.encodeDataURI();
+                if (costume.dataFormat === 'svg') {
+                    const img = new Image();
+                    img.crossOrigin = "anonymous";
+                    img.onload = async () => {
+                        try {
+                            const canvas = document.createElement('canvas');
+                            const width = costume.size[0];
+                            const height = costume.size[1];
+                            canvas.width = width;
+                            canvas.height = height;
+                            const ctx = canvas.getContext('2d');
+                            ctx.clearRect(0, 0, width, height);
+                            ctx.drawImage(img, 0, 0, width, height);
+                            const pngDataUrl = canvas.toDataURL('image/png');
+
+                            const pngImg = new Image();
+                            pngImg.crossOrigin = "anonymous";
+                            pngImg.src = pngDataUrl;
+                            await pngImg.decode();
+                            resolve(pngImg);
+                        } catch (err) {
+                            reject(err);
+                        }
+                    };
+                    img.onerror = reject;
+                    img.src = dataUrl;
+
+                } else if (costume.dataFormat === 'bitmap') {
+                    const img = new Image();
+                    img.crossOrigin = "anonymous";
+                    img.src = dataUrl;
+                    await img.decode();
+                    resolve(img);
+
+                } else {
+                    reject("Unsupported costume dataFormat: " + costume.dataFormat);
+                }
+            } catch (e) {
+                reject(e);
+            }
+        });
+    }
+
+    async function _createSpriteSheetFromCostumes(costumes) {
+        const canvas = document.createElement('canvas');
+
+        let sheetWidth = 0;
+        let sheetHeight = 0;
+        for (let i = 0; i < costumes.length; i++) {
+            const costume = costumes[i];
+            sheetWidth += costume.size[0];
+            if (costume.size[1] > sheetHeight) {
+                sheetHeight = costume.size[1];
+            }
+        }
+
+        canvas.width = sheetWidth;
+        canvas.height = sheetHeight;
+        const ctx = canvas.getContext('2d');
+
+        const frames = [];
+        let offsetX = 0;
+        for (let i = 0; i < costumes.length; i++) {
+            const costume = costumes[i];
+            const frameWidth = costume.size[0];
+            const frameHeight = costume.size[1];
+            try {
+                const img = await _costumeToImage(costume);
+                ctx.drawImage(img, offsetX, 0, frameWidth, frameHeight);
+
+                frames.push({
+                    name: costume.name,
+                    x: offsetX,
+                    y: 0,
+                    width: frameWidth,
+                    height: frameHeight,
+                    frameWidth: frameWidth,
+                    frameHeight: frameHeight
+                });
+
+                offsetX += frameWidth;
+            } catch (e) {
+                throw new Error(e);
+            }
+        }
+
+        return { base64: canvas.toDataURL('image/png'), frames: frames };
+    }
+
     class SparrowExtension {
         getInfo() {
             return {
-                id: "sparrow",
+                id: "SkyBuilder1717Sparrow",
                 menuIconURI: "data:image/svg+xml;base64,PHN2ZyB4bWxuczppbmtzY2FwZT0iaHR0cDovL3d3dy5pbmtzY2FwZS5vcmcvbmFtZXNwYWNlcy9pbmtzY2FwZSIgeG1sbnM6c29kaXBvZGk9Imh0dHA6Ly9zb2RpcG9kaS5zb3VyY2Vmb3JnZS5uZXQvRFREL3NvZGlwb2RpLTAuZHRkIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHhtbG5zOnN2Zz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxMDBtbSIgaGVpZ2h0PSIxMDBtbSIgdmlld0JveD0iMCAwIDEwMCAxMDAiIHZlcnNpb249IjEuMSIgaWQ9InN2ZzEiIGlua3NjYXBlOnZlcnNpb249IjEuNC4yIChmNDMyN2Y0LCAyMDI1LTA1LTEzKSIgc29kaXBvZGk6ZG9jbmFtZT0ic3BhcnJvd19sb2dvLnN2ZyI+CiAgPHNvZGlwb2RpOm5hbWVkdmlldyBpZD0ibmFtZWR2aWV3MSIgcGFnZWNvbG9yPSIjZmZmZmZmIiBib3JkZXJjb2xvcj0iI2NjY2NjYyIgYm9yZGVyb3BhY2l0eT0iMSIgaW5rc2NhcGU6c2hvd3BhZ2VzaGFkb3c9IjAiIGlua3NjYXBlOnBhZ2VvcGFjaXR5PSIxIiBpbmtzY2FwZTpwYWdlY2hlY2tlcmJvYXJkPSIwIiBpbmtzY2FwZTpkZXNrY29sb3I9IiNkMWQxZDEiIGlua3NjYXBlOmRvY3VtZW50LXVuaXRzPSJtbSIgaW5rc2NhcGU6em9vbT0iMS40Mzc4MzY3IiBpbmtzY2FwZTpjeD0iMjU2Ljk4MzI5IiBpbmtzY2FwZTpjeT0iMTY5LjM1MTY0IiBpbmtzY2FwZTp3aW5kb3ctd2lkdGg9IjE5MjAiIGlua3NjYXBlOndpbmRvdy1oZWlnaHQ9IjEwMDkiIGlua3NjYXBlOndpbmRvdy14PSItOCIgaW5rc2NhcGU6d2luZG93LXk9Ii04IiBpbmtzY2FwZTp3aW5kb3ctbWF4aW1pemVkPSIxIiBpbmtzY2FwZTpjdXJyZW50LWxheWVyPSJsYXllcjEiLz4KICA8ZGVmcyBpZD0iZGVmczEiLz4KICA8ZyBpbmtzY2FwZTpsYWJlbD0i0KHQu9C+0LkgMSIgaW5rc2NhcGU6Z3JvdXBtb2RlPSJsYXllciIgaWQ9ImxheWVyMSI+CiAgICA8cmVjdCBzdHlsZT0iZmlsbDojZTMyYzUzO2ZpbGwtb3BhY2l0eToxO3N0cm9rZS13aWR0aDowLjEyOTc1NCIgaWQ9InJlY3QyIiB3aWR0aD0iNTAuMDI3OTE2IiBoZWlnaHQ9IjUwLjAyNzkxNiIgeD0iNC43NzUwMDAxIiB5PSI0NS4yMTQ2MDciLz4KICAgIDxyZWN0IHN0eWxlPSJmaWxsOiNlMzJjNTM7ZmlsbC1vcGFjaXR5OjE7c3Ryb2tlLXdpZHRoOjAuMTI5NzU0IiBpZD0icmVjdDMiIHdpZHRoPSI0MS4zNDk2MDkiIGhlaWdodD0iNDEuMzQ5NjA5IiB4PSI1NC43OTg2NDEiIHk9IjMuODY1Ii8+CiAgPC9nPgo8L3N2Zz4=",
                 blockIconURI: "data:image/svg+xml;base64,PHN2ZyB4bWxuczppbmtzY2FwZT0iaHR0cDovL3d3dy5pbmtzY2FwZS5vcmcvbmFtZXNwYWNlcy9pbmtzY2FwZSIgeG1sbnM6c29kaXBvZGk9Imh0dHA6Ly9zb2RpcG9kaS5zb3VyY2Vmb3JnZS5uZXQvRFREL3NvZGlwb2RpLTAuZHRkIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHhtbG5zOnN2Zz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIzNzcuOTUzIiBoZWlnaHQ9IjM3Ny45NTI3NiIgdmlld0JveD0iMCAwIDEwMC4wMDAwNyAxMDAiIHZlcnNpb249IjEuMSIgaWQ9InN2ZzEiIGlua3NjYXBlOnZlcnNpb249IjEuNC4yIChmNDMyN2Y0LCAyMDI1LTA1LTEzKSIgc29kaXBvZGk6ZG9jbmFtZT0ic3BhcnJvd19sb2dvX3doaXRlLnN2ZyI+CiAgPHNvZGlwb2RpOm5hbWVkdmlldyBpZD0ibmFtZWR2aWV3MSIgcGFnZWNvbG9yPSIjZmZmZmZmIiBib3JkZXJjb2xvcj0iI2NjY2NjYyIgYm9yZGVyb3BhY2l0eT0iMSIgaW5rc2NhcGU6c2hvd3BhZ2VzaGFkb3c9IjAiIGlua3NjYXBlOnBhZ2VvcGFjaXR5PSIxIiBpbmtzY2FwZTpwYWdlY2hlY2tlcmJvYXJkPSIwIiBpbmtzY2FwZTpkZXNrY29sb3I9IiNhN2E3YTciIGlua3NjYXBlOmRvY3VtZW50LXVuaXRzPSJweCIgaW5rc2NhcGU6em9vbT0iMS40Mzc4MzY3IiBpbmtzY2FwZTpjeD0iMjU2Ljk4MzI5IiBpbmtzY2FwZTpjeT0iMTY5LjM1MTY0IiBpbmtzY2FwZTp3aW5kb3ctd2lkdGg9IjE5MjAiIGlua3NjYXBlOndpbmRvdy1oZWlnaHQ9IjEwMDkiIGlua3NjYXBlOndpbmRvdy14PSItOCIgaW5rc2NhcGU6d2luZG93LXk9Ii04IiBpbmtzY2FwZTp3aW5kb3ctbWF4aW1pemVkPSIxIiBpbmtzY2FwZTpjdXJyZW50LWxheWVyPSJsYXllcjEiLz4KICA8ZGVmcyBpZD0iZGVmczEiLz4KICA8ZyBpbmtzY2FwZTpsYWJlbD0i0KHQu9C+0LkgMSIgaW5rc2NhcGU6Z3JvdXBtb2RlPSJsYXllciIgaWQ9ImxheWVyMSI+CiAgICA8cmVjdCBzdHlsZT0iZmlsbDojZmZmZmZmO2ZpbGwtb3BhY2l0eToxO3N0cm9rZS13aWR0aDowLjEyOTc1NCIgaWQ9InJlY3QyIiB3aWR0aD0iNTAuMDI3OTE2IiBoZWlnaHQ9IjUwLjAyNzkxNiIgeD0iNC43NzUwMDAxIiB5PSI0NS4yMTQ2MDciLz4KICAgIDxyZWN0IHN0eWxlPSJmaWxsOiNmZmZmZmY7ZmlsbC1vcGFjaXR5OjE7c3Ryb2tlLXdpZHRoOjAuMTI5NzU0IiBpZD0icmVjdDMiIHdpZHRoPSI0MS4zNDk2MDkiIGhlaWdodD0iNDEuMzQ5NjA5IiB4PSI1NC43OTg2NDEiIHk9IjMuODY1Ii8+CiAgPC9nPgo8L3N2Zz4=",
                 name: "Sparrow",
@@ -147,6 +248,12 @@
                             XML: { type: Scratch.ArgumentType.STRING, defaultValue: "https://example.com/spritesheet.xml" },
                             SPRITENAME: { type: Scratch.ArgumentType.STRING, defaultValue: "default" }
                         }
+                    },
+                    {
+                        opcode: "createSpritesheetFromCostumes",
+                        blockType: Scratch.BlockType.COMMAND,
+                        text: "create spritesheet from costumes as [SPRITENAME]",
+                        arguments: { SPRITENAME: { type: Scratch.ArgumentType.STRING, defaultValue: "default" } }
                     },
                     {
                         opcode: "onSpriteLoaded",
@@ -321,7 +428,17 @@
                     {
                         opcode: "currentFrame",
                         blockType: Scratch.BlockType.REPORTER,
-                        text: "current frame"
+                        text: "current frame index"
+                    },
+                    {
+                        opcode: "currentFrameName",
+                        blockType: Scratch.BlockType.REPORTER,
+                        text: "current frame name"
+                    },
+                    {
+                        opcode: "currentSprite",
+                        blockType: Scratch.BlockType.REPORTER,
+                        text: "current spritesheet"
                     },
                     {
                         opcode: "setFrameIndex",
@@ -363,7 +480,7 @@
                     }
                 ],
                 menus: {
-                    frameProperties: ["x", "y", "width", "height", "frameX", "frameY", "frameWidth", "frameHeight"]
+                    frameProperties: ["x", "y", "width", "height", "frameX", "frameY", "frameWidth", "frameHeight"],
                 }
             };
         }
@@ -459,9 +576,72 @@
                     hat: false
                 };
             } catch (e) {
-                alert("Error while loading Sparrow files: " + e.message);
-                sparrowData.loadedSprites[name] = null;
+                delete sparrowData.loadedSprites[name];
+                throw new Error(e.message);
             }
+        }
+
+        async createSpritesheetFromCostumes(args, util) {
+            const name = args.SPRITENAME.trim();
+            if (!name) {
+                alert("Sprite name cannot be empty!");
+                return;
+            }
+            const data = await _createSpriteSheetFromCostumes(util.target.getCostumes());
+            const frames = data.frames
+            const base64 = data.base64
+            const img = new Image();
+            img.crossOrigin = "anonymous";
+            const imgLoadPromise = new Promise((resolve, reject) => {
+                img.onload = () => resolve(img);
+                img.onerror = () => reject(new Error("Failed to load costumes"));
+            });
+            img.src = base64;
+            const imgLoad = await imgLoadPromise;
+
+            const skins = {};
+            for (let i = 0; i < frames.length; i++) {
+                const image = frames[i];
+                if (!image) {
+                    console.warn(`frames[${i}] is undefined.`);
+                    continue;
+                }
+
+                const frameWidth = image.frameWidth || image.width;
+                const frameHeight = image.frameHeight || image.height;
+
+                const canvas = document.createElement("canvas");
+                canvas.width = frameWidth;
+                canvas.height = frameHeight;
+                const ctx = canvas.getContext("2d");
+
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                ctx.drawImage(
+                    imgLoad,
+                    image.x, image.y, image.width, image.height,
+                    - (image.frameX || 0), - (image.frameY || 0),
+                    image.width, image.height
+                );
+
+                const frameImage = new Image();
+                await new Promise((resolve, reject) => {
+                    frameImage.onload = resolve;
+                    frameImage.onerror = reject;
+                    frameImage.src = canvas.toDataURL();
+                });
+
+                await frameImage.decode();
+
+                const skin = renderer.createBitmapSkin(frameImage);
+                skins[image.name] = skin;
+            }
+
+            sparrowData.loadedSprites[name] = {
+                image: imgLoad,
+                frames: frames,
+                skins: skins,
+                hat: false
+            };
         }
 
         onSpriteLoaded(args) {
@@ -482,9 +662,7 @@
             return !!_getSprite(args.SPRITENAME);
         }
 
-        async deleteSprite(args) {
-            _removeSprite(args.SPRITENAME);
-        }
+        async deleteSprite(args) { _removeSprite(args.SPRITENAME); }
 
         async deleteSprites() {
             for (var i = 0; i < Object.keys(sparrowData.loadedSprites).length; i++) {
@@ -649,7 +827,23 @@
             return prevIdx + 1;
         }
 
-        currentFrame(_, util) { return sparrowData.currentFrames[util.target.getName()] || 0; }
+        currentFrame(_, util) {
+            const currentFrame = sparrowData.currentFrames[util.target.getName()];
+            if (!currentFrame || !currentFrame.frame) return 0;
+            return currentFrame.frame;
+        }
+
+        currentFrameName(_, util) {
+            const currentFrame = sparrowData.currentFrames[util.target.getName()];
+            if (!currentFrame || !currentFrame.name) return '';
+            return currentFrame.name;
+        }
+
+        currentSprite(_, util) {
+            const currentFrame = sparrowData.currentFrames[util.target.getName()];
+            if (!currentFrame || !currentFrame.sprite) return '';
+            return currentFrame.sprite;
+        }
 
         async setFrameIndex(args, util) {
             const spr = _getSprite(args.SPRITENAME.trim());
@@ -659,21 +853,21 @@
             if (idx < 0 || idx >= spr.frames.length) return;
 
             const frameName = spr.frames[idx].name;
-            const skin = spr.skins[frameName];
+            const skin = spr.skins;
             if (!skin) return;
 
-            _setFrame(skin, util.target, idx)
+            _setFrame(util.target, skin, idx, frameName, args.SPRITENAME.trim())
         }
 
         async setFrameName(args, util) {
             const spr = _getSprite(args.SPRITENAME.trim());
             if (!spr || !spr.frames || spr.frames.length === 0) return;
 
-            const skin = spr.skins[args.FRAME];
+            const skin = spr.skins;
             if (!skin) return;
             const idx = spr.frames.findIndex(f => f.name === args.FRAME);
 
-            _setFrame(skin, util.target, idx)
+            _setFrame(util.target, skin, idx, args.FRAME, args.SPRITENAME.trim())
         }
 
         async playAnimation(args, util) {
@@ -683,14 +877,7 @@
             const spriteName = args.SPRITENAME.trim();
             const prefix = args.PREFIX.trim();
             if (!spriteName || !prefix) return;
-
-            const spr = _getSprite(spriteName);
-            if (!spr || !spr.frames || spr.frames.length === 0) {
-                console.error("Sprite not found");
-                return;
-            }
-
-            await _playAnimation(target, spr, prefix, parseInt(args.INTERVAL));
+            await _playAnimation(target, spriteName, prefix, parseInt(args.INTERVAL));
         }
 
         async stopAnimation(_, util) { _stopAnimation(util); }

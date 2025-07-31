@@ -131,8 +131,9 @@
           },
           {
             blockType: Scratch.BlockType.BUTTON,
-            func: "showHiddenBlocks",
-            text: Scratch.translate("Show dangerous blocks using a github token")
+            hideFromPalette: !dangerousBlocksHidden,
+            func: "requestUnhidingDangerousBlocks",
+            text: Scratch.translate("Show potentially dangerous blocks")
           },        
         ],
         menus: {
@@ -141,17 +142,17 @@
       };
     }
 
-    showHiddenBlocks() {
-      alert(Scratch.translate("Anyone with your github token can access your account and create repositories, delete repositories, commit changes, and more, all while pretending to be you. You should not include your token in any capacity in a project shared with other people."))
-      const response = prompt(Scratch.translate("To show these blocks, type \"I will not post a project with my github token anywhere and I understand people can impersonate me if I do\" (not case sensitive)."))
+    async requestUnhidingDangerousBlocks() {
+      const confirmationText = "I understand these blocks could compromise my account";
+      const response = await new Promise((res, _) => ScratchBlocks.prompt(`Anyone with your github token can access your account and create repositories, delete repositories, commit changes, and more, all while pretending to be you. You should not include your token in any capacity in a project shared with other people.\nTo show these blocks, type "${confirmationText}" (not case sensitive).`, "", (answer) => { res(answer) }, "Show potentially dangerous blocks", "broadcast_msg"));
 
-      if (response.toLowerCase() === "i will not post a project with my github token anywhere and i understand people can impersonate me if i do") {
-        dangerousBlocksHidden = false;
-        Scratch.vm.extensionManager.refreshBlocks()
-      }
-      else {
+      if (response.toLowerCase() !== confirmationText.toLowerCase()) {  
         alert("Prompt answered incorrectly.")
+        return
       }
+
+      dangerousBlocksHidden = false;
+      Scratch.vm.extensionManager.refreshBlocks("gitpenguin")
     }
 
     async getFileContents({ FILE, REPO, NAME }) {

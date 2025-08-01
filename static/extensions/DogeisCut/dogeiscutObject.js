@@ -128,33 +128,34 @@
             return new ObjectType({ value: x })
         }
 
-        static display(x) {
-            try {
-                switch (typeof x) {
-                    case "object":
-                        if (x === null) return "null"
-                        if (typeof x.jwArrayHandler == "function") {
-                            return x.jwArrayHandler()
-                        }
-                        if (typeof x.dogeiscutObjectHandler == "function") {
-                            return x.dogeiscutObjectHandler()
-                        }
-                        return Cast.toString(x)
-                    case "undefined":
-                        return "null"
-                    case "number":
-                        return formatNumber(x)
-                    case "boolean":
-                        return x ? "true" : "false"
-                    case "string":
-                        return `"${Cast.toString(x)}"`
-                }
-            } catch {}
-            return "?"
-        }
+        //do i even use this??
+        // static display(x) {
+        //     try {
+        //         switch (typeof x) {
+        //             case "object":
+        //                 if (x === null) return "null"
+        //                 if (typeof x.dogeiscutObjectHandler == "function") {
+        //                     return x.dogeiscutObjectHandler()
+        //                 }
+        //                 if (typeof x.jwArrayHandler == "function") {
+        //                     return x.jwArrayHandler()
+        //                 }
+        //                 return Cast.toString(x)
+        //             case "undefined":
+        //                 return "null"
+        //             case "number":
+        //                 return formatNumber(x)
+        //             case "boolean":
+        //                 return x ? "true" : "false"
+        //             case "string":
+        //                 return `"${Cast.toString(x)}"`
+        //         }
+        //     } catch {}
+        //     return "?"
+        // }
 
         dogeiscutObjectHandler() {
-            return 'Object'//this.toString()
+            return this.toString()
         }
 
         static convertIfNeeded(x) {
@@ -169,22 +170,27 @@
                 if (obj instanceof jwArray.Type) {
                     return `[${obj.array.map(item => stringify(item)).join(",")}]`;
                 }
-                if (obj instanceof dogeiscutObject.Type) {
-                    return obj.toString();
-                }
-                if (obj === null) return "null";
-                if (typeof obj === "string") return JSON.stringify(obj);
-                if (typeof obj === "number" || typeof obj === "boolean") return obj.toString();
                 if (Array.isArray(obj)) {
                     return `[${obj.map(stringify).join(",")}]`;
                 }
+                if (obj instanceof dogeiscutObject.Type) {
+                    return obj.toString();
+                }
                 if (typeof obj === "object") {
+                    if (typeof obj.dogeiscutObjectHandler == "function") {
+                        return obj.dogeiscutObjectHandler()
+                    }
+                    if (typeof obj.jwArrayHandler == "function") {
+                        return obj.jwArrayHandler()
+                    }
                     const entries = Object.entries(obj)
                         .map(([key, value]) => `"${key.replace(/\\/g, "\\\\").replace(/"/g, '\\"')}":${stringify(value)}`)
                         .join(",");
                     return `{${entries}}`;
                 }
-
+                if (obj === null) return "null";
+                if (typeof obj === "string") return JSON.stringify(obj);
+                if (typeof obj === "number" || typeof obj === "boolean") return obj.toString();
                 return "null"; // Fallback for unsupported types
             };
 
@@ -363,10 +369,11 @@
                             OBJECT: dogeiscutObject.Argument,
                             KEY: {
                                 type: Scratch.ArgumentType.STRING,
+                                defaultValue: "foo"
                             },
                             VALUE: {
                                 type: Scratch.ArgumentType.STRING,
-                                defaultValue: "foo",
+                                defaultValue: "bar",
                                 exemptFromNormalization: true
                             }
                         },
@@ -440,7 +447,7 @@
                         arguments: {
                             VALUE: {
                                 type: Scratch.ArgumentType.STRING,
-                                defaultValue: "fooey",
+                                defaultValue: "foo",
                                 exemptFromNormalization: true
                             }
                         }
@@ -475,6 +482,34 @@
                             }
                         }
                     },
+                    '---',
+                    {
+                        opcode: 'build',
+                        text: 'build object',
+                        ...dogeiscutObject.Block,
+                        branches: [{
+                            accepts: 'objectBuilder'
+                        }],
+                    },
+                    {
+                        opcode: 'buildAddObject',
+                        text: 'add key [KEY] value [VALUE]',
+                        blockType: Scratch.BlockType.COMMAND,
+                        notchAccepts: 'objectBuilder',
+                        arguments: {
+                            KEY: {
+                                type: Scratch.ArgumentType.STRING,
+                                defaultValue: "foo",
+                                exemptFromNormalization: true
+                            },
+                            VALUE: {
+                                type: Scratch.ArgumentType.STRING,
+                                defaultValue: "bar",
+                                exemptFromNormalization: true
+                            }
+                        }
+                    },
+                    '---',
                     {
                         blockType: Scratch.BlockType.XML,
                         xml:  `<block type="event_whenflagclicked" ><next><block type="data_setvariableto" ><value name="VALUE"><block type="dogeiscutObject_empty" ></block><shadow type="text" ><field name="TEXT">0</field></shadow></value><field name="VARIABLE" variabletype="">foo</field><next><block type="data_setvariableto" ><value name="VALUE"><block type="dogeiscutObject_object" ><value name="KEY"><shadow type="text" ><field name="TEXT">foo</field></shadow></value><value name="VALUE"><block type="data_variable" ><field name="VARIABLE" variabletype="">foo</field></block><shadow type="text" ><field name="TEXT">bar</field></shadow></value></block><shadow type="text" ><field name="TEXT">0</field></shadow></value><field name="VARIABLE" variabletype="">bar</field><next><block type="data_setvariableto" ><value name="VALUE"><block type="dogeiscutObject_set" ><value name="KEY"><shadow type="text" ><field name="TEXT">bar</field></shadow></value><value name="VALUE"><block type="data_variable" ><field name="VARIABLE" variabletype="">bar</field></block><shadow type="text" ><field name="TEXT">foo</field></shadow></value><value name="OBJECT"><block type="data_variable" ><field name="VARIABLE" variabletype="">foo</field></block></value></block><shadow type="text" ><field name="TEXT">0</field></shadow></value><field name="VARIABLE" variabletype="">foo</field></block></next></block></next></block></next></block>,<shadow type="text" ><field name="TEXT">0</field></shadow>,<shadow type="text" ><field name="TEXT">0</field></shadow>,<shadow type="text" ><field name="TEXT">0</field></shadow>,<shadow type="text" ><field name="TEXT">foo</field></shadow>,<shadow type="text" ><field name="TEXT">bar</field></shadow>`
@@ -603,7 +638,7 @@
         deepduplicate({ OBJECT }) {
             OBJECT = dogeiscutObject.Type.toObject(OBJECT);
 
-            return new dogeiscutObject.Type(JSON.parse(JSON.stringify(OBJECT.object)));
+            return new dogeiscutObject.Type(inflate(JSON.parse(JSON.stringify(flatten(OBJECT.object)))));
         }
 
         is({ VALUE }) {
@@ -645,6 +680,16 @@
             }
             util.startBranch(1, true);
         }
+
+        buildAddObject({ KEY, VALUE }, util) {
+            // ?????????
+        }
+
+        build({}, util) {
+            return new dogeiscutObject.Type({});
+        }
+
+
     }
 
     Scratch.extensions.register(new Extension());

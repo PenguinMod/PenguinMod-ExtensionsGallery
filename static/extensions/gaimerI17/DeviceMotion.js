@@ -20,6 +20,11 @@ let deviceTiltThreshold = 45;
 
 let baseAlpha = 0, baseBeta = 0, baseGamma = 0;
 
+let smoothedAccelX = 0;
+let smoothedAccelY = 0;
+let smoothedAccelZ = 0
+let alpha = 0.8;
+
 /*
   Some ideas I might add:
 

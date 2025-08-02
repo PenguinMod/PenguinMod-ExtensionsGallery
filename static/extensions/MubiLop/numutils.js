@@ -305,8 +305,8 @@
 
     clamp(args) {
       const num = Cast.toNumber(args.NUMBER);
-      const min = Cast.toNumber(args.MIN);
-      const max = Cast.toNumber(args.MAX);
+      let min = Cast.toNumber(args.MIN);
+      let max = Cast.toNumber(args.MAX);
       
       // swap stuff
       if (min > max) {

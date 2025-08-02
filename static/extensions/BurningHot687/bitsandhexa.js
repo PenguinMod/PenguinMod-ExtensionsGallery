@@ -44,12 +44,11 @@ function isItHexadecimal(inputString) {
     class Extension {
         getInfo() {
             return {
-                id: "notrealidipromiselol",
+                id: "burninghot687bitwisewhexa",
                 name: Scratch.translate("Bits and Hexa"),
                 color1: "#15448f",
                 color2: "#0f1f70",
                 color3: "#0a094f",
-                // docsURI: "setupwhenyouhavetimeto.com",
                 // menuIconURI: "you get it",
                 // blockIconURI: "oo I can do this too",
 
@@ -71,21 +70,38 @@ function isItHexadecimal(inputString) {
                         },
                     },
                     {
-                        opcode: "convertBaseTypes",
-                        text: "convert [NUM] to [BASE]",
+                        opcode: "convertBaseTypesBitW",
+                        text: "convert [NUM] from dec/hexa to [BASE]",
                         blockType: Scratch.BlockType.REPORTER,
                         disableMonitor: true,
                         // allowDropAnywhere: true, could potentially save on blocks in minor use cases and doesn't harm otherwise?
                         arguments: {
                             NUM: {
                                 type: Scratch.ArgumentType.STRING,
-                                defaultValue: "4b2",
+                                defaultValue: "4d2",
                             },
                             BASE: {
                                 type: Scratch.ArgumentType.STRING,
                                 menu: "BASES",
                             },
                         },
+                    },
+                    {
+                        opcode: "convertBinaryToOtherTypes",
+                        text: "convert [NUM] from binary to [BASE]",
+                        /// hideFromPalette: true,
+                        blockType: Scratch.BlockType.REPORTER,
+                        disableMonitor: true,
+                        arguments: {
+                            NUM: {
+                                type: Scratch.ArgumentType.STRING,
+                                defaultValue: "10011010010",
+                            },
+                            BASE: {
+                                type: Scratch.ArgumentType.STRING,
+                                menu: "BASES",
+                            }
+                        }
                     },
                     {
                         opcode: "bitHexManipulationLabel",
@@ -283,6 +299,7 @@ function isItHexadecimal(inputString) {
         }
         
         isNumActuallyBase(args) {
+            console.log(args.BASE);
             var computeValue = args.NUM;
             if (isInCorrectFormat(computeValue) === false) {
                 console.log("bad");
@@ -300,7 +317,7 @@ function isItHexadecimal(inputString) {
 
         }
 
-        convertBaseTypes(args) {
+        convertBaseTypesBitW(args) {
             var computeValue = args.NUM;
             if (isInCorrectFormat(computeValue) === false) {
                 return "";
@@ -314,21 +331,57 @@ function isItHexadecimal(inputString) {
             switch (args.BASE) {
                 case 'decimal':
                     computeValue = computeValue.toString(10);
+                    break;
                 case 'binary':
                     if (computeValue < 0) {
                         console.log("huh cool");
-                        computeValue *= -1;
+                        computeValue = Math.abs(computeValue);
                         computeValue = ~computeValue;
                         computeValue++;
                     }
-                    computeValue = computeValue.toString(2);
+                    computeValue = (parseInt(args.NUM) < 0) ? "1" : "0" + computeValue.toString(2);
+                    break;
                 case 'hexadecimal':
                     if (computeValue < 0) {
-                        computeValue *= -1;
+                        computeValue = Math.abs(computeValue);
                         computeValue = ~computeValue;
                         computeValue++;
                     }
                     computeValue = computeValue.toString(16);
+                    break;
+                default:
+                    console.log("failed?");
+                    return "";
+            }
+
+            return computeValue;
+        }
+
+        convertBinaryToOtherTypes(args) {
+            if (/[^01]/.test(args.NUM)) {
+                return "";
+            }
+            var computeValue;
+
+            switch (args.BASE) {
+                case 'decimal':
+                    for (var i = 0; i < args.NUM.length; i++) {
+                        computeValue = computeValue + (parseInt(args.NUM[i])*2^(args.NUM.length - i - 1)).toString();
+                    }
+                    break;
+                case 'binary':
+                    return args.NUM;
+                case 'hexadecimal':
+                    if (computeValue < 0) {
+                        computeValue *= -1;
+                        computeValue = ~computeValue;
+                        computeValue--;
+                    }
+                    computeValue = computeValue.toString(16);
+                    break;
+                default:
+                    console.log("failed?");
+                    return "";
             }
 
             return computeValue;

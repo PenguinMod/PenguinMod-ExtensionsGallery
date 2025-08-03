@@ -50,6 +50,7 @@ window.addEventListener("devicemotion", (event) => {
 
     if (deviceMotionIsShaken) {
         deviceShakingTime += 1;
+        Scratch.vm.runtime.startHats('gaimeriDeviceMotionExtension_whileDeviceShaking');
     } else {
         deviceShakingTime = 0;
     }
@@ -234,6 +235,12 @@ class gaimeriDeviceMotionExtension {
                         }
                     }
                 },
+                     {
+                  opcode: 'whileDeviceShaking',
+                  blockType: Scratch.BlockType.EVENT,
+                  text: 'while device shaking',
+                  isEdgeActivated: false
+                     },
                      '---',
                      {
                          opcode: 'calibrateOrientation',

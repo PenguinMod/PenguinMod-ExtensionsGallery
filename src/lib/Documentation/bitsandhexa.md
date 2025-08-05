@@ -37,4 +37,4 @@ For this reason, for each shift, we "duplicate" the sign bit and move it over to
 
 `11111111111111111111111111111110`
 
-Obviously positive numbers wouldn't be affected drastically due to their sign bits being 0.
+Obviously positive numbers wouldn't be affected drastically due to their sign bits being `0`.

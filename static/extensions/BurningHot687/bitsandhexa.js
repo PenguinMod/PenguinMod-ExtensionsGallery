@@ -20,7 +20,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
 */
 
-// V0.10.0.0
+// V0.11
 
 var fullLength = true;
 var basesArray = ["decimal", "binary", "hexadecimal"];
@@ -223,6 +223,7 @@ function testForFormat(numString, base) {
                                 type: Scratch.ArgumentType.STRING,
                             }
                         },
+                        switches: [ 'bitwiseOrOperator', 'bitwiseXorOperator', 'bitwiseNotOperator', 'bitwiseNandOperator', 'bitwiseNorOperator', 'bitwiseXnorOperator' ],
                     },
                     {
                         opcode: "bitwiseOrOperator",
@@ -237,6 +238,7 @@ function testForFormat(numString, base) {
                                 type: Scratch.ArgumentType.STRING,
                             }
                         },
+                        switches: [ 'bitwiseAndOperator', 'bitwiseXorOperator', 'bitwiseNotOperator', 'bitwiseNandOperator', 'bitwiseNorOperator', 'bitwiseXnorOperator' ],
                     },
                     {
                         opcode: "bitwiseXorOperator",
@@ -251,6 +253,7 @@ function testForFormat(numString, base) {
                                 type: Scratch.ArgumentType.STRING,
                             }
                         },
+                        switches: [ 'bitwiseOrOperator', 'bitwiseAndOperator', 'bitwiseNotOperator', 'bitwiseNandOperator', 'bitwiseNorOperator', 'bitwiseXnorOperator' ],
                     },
                     {
                         opcode: "bitwiseNotOperator",
@@ -262,6 +265,7 @@ function testForFormat(numString, base) {
                                 type: Scratch.ArgumentType.STRING,
                             },
                         },
+                        switches: [ 'bitwiseOrOperator', 'bitwiseXorOperator', 'bitwiseAndOperator', 'bitwiseNandOperator', 'bitwiseNorOperator', 'bitwiseXnorOperator' ],
                     },
                     {
                         opcode: "bitwiseNandOperator",
@@ -276,6 +280,7 @@ function testForFormat(numString, base) {
                                 type: Scratch.ArgumentType.STRING,
                             }
                         },
+                        switches: [ 'bitwiseOrOperator', 'bitwiseXorOperator', 'bitwiseNotOperator', 'bitwiseAndOperator', 'bitwiseNorOperator', 'bitwiseXnorOperator' ],
                     },
                     {
                         opcode: "bitwiseNorOperator",
@@ -290,6 +295,7 @@ function testForFormat(numString, base) {
                                 type: Scratch.ArgumentType.STRING,
                             }
                         },
+                        switches: [ 'bitwiseOrOperator', 'bitwiseXorOperator', 'bitwiseNotOperator', 'bitwiseNandOperator', 'bitwiseAndOperator', 'bitwiseXnorOperator' ],
                     },
                     {
                         opcode: "bitwiseXnorOperator",
@@ -304,6 +310,7 @@ function testForFormat(numString, base) {
                                 type: Scratch.ArgumentType.STRING,
                             }
                         },
+                        switches: [ 'bitwiseOrOperator', 'bitwiseXorOperator', 'bitwiseNotOperator', 'bitwiseNandOperator', 'bitwiseNorOperator', 'bitwiseAndOperator' ],
                     },
                     {
                         opcode: "bitHexConfigurationLabel",
@@ -539,14 +546,12 @@ function testForFormat(numString, base) {
 
         bitwiseNotOperator(args) {
             var value1 = args.NUM;
-            if (!isInCorrectFormat(value1)) {
-                return "";
+            if (!(isItDecimal(value1) || isItHexadecimal(value2))) return "";
+            if (isItHexadecimal(value1) && /[abcdef]/i.test(value1)) {
+                value1 = "0x" + value1;
             }
             if (isNaN(parseInt(value1))) {
                 return "";
-            }
-            if (isItHexadecimal(value1) && /[abcdef]/i.test(value1)) {
-                value1 = "0x" + value1;
             }
 
             return ~value1;

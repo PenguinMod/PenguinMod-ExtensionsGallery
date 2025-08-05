@@ -36,11 +36,11 @@
       var s = Object.keys(e);
       if (Object.getOwnPropertySymbols) {
         var i = Object.getOwnPropertySymbols(e);
-        t &&
+        (t &&
           (i = i.filter(function (t) {
             return Object.getOwnPropertyDescriptor(e, t).enumerable;
           })),
-          s.push.apply(s, i);
+          s.push.apply(s, i));
       }
       return s;
     }
@@ -66,10 +66,10 @@
     function s(e, t) {
       for (var s = 0; s < t.length; s++) {
         var i = t[s];
-        (i.enumerable = i.enumerable || !1),
+        ((i.enumerable = i.enumerable || !1),
           (i.configurable = !0),
           "value" in i && (i.writable = !0),
-          Object.defineProperty(e, h(i.key), i);
+          Object.defineProperty(e, h(i.key), i));
       }
     }
     function i(e, t, i) {
@@ -184,10 +184,10 @@
         },
         n: function () {
           var e = s.next();
-          return (o = e.done), e;
+          return ((o = e.done), e);
         },
         e: function (e) {
-          (c = !0), (n = e);
+          ((c = !0), (n = e));
         },
         f: function () {
           try {
@@ -1991,7 +1991,7 @@
           hasLoopArrow: !!e.hasLoopArrow,
         };
         if (E[t.id]) throw Error("Duplicate ID: " + t.id);
-        return (E[t.id] = t), t;
+        return ((E[t.id] = t), t);
       }),
       R = {
         "@greenFlag": "⚑",
@@ -2005,16 +2005,16 @@
       Object.keys(e).forEach(function (t) {
         return (function (e, t) {
           var s = (t.blocksByHash = {});
-          Object.keys(t.commands).forEach(function (e) {
+          (Object.keys(t.commands).forEach(function (e) {
             var i = t.commands[e],
               r = E[e],
               n = S(i);
-            s[n] || (s[n] = []), s[n].push(r);
+            (s[n] || (s[n] = []), s[n].push(r));
             var o = m.exec(r.spec);
             if (o) {
               var a = o[0],
                 c = n.replace(S(a), R[a]);
-              s[c] || (s[c] = []), s[c].push(r);
+              (s[c] || (s[c] = []), s[c].push(r));
             }
           }),
             (t.nativeAliases = {}),
@@ -2023,18 +2023,18 @@
                 r = E[i];
               if (void 0 === r) throw Error("Invalid alias '" + i + "'");
               var n = S(e);
-              s[n] || (s[n] = []),
+              (s[n] || (s[n] = []),
                 s[n].push(r),
                 t.nativeAliases[i] || (t.nativeAliases[i] = []),
-                t.nativeAliases[i].push(e);
+                t.nativeAliases[i].push(e));
             }),
             Object.keys(t.renamedBlocks || {}).forEach(function (e) {
               var s = t.renamedBlocks[e];
               if (!E[s]) throw Error("Unknown ID: " + s);
               var i = E[s],
                 r = S(e);
-              I.blocksByHash[r] || (I.blocksByHash[r] = []),
-                I.blocksByHash[r].push(i);
+              (I.blocksByHash[r] || (I.blocksByHash[r] = []),
+                I.blocksByHash[r].push(i));
             }),
             (t.nativeDropdowns = {}),
             Object.keys(t.dropdowns).forEach(function (e) {
@@ -2042,7 +2042,7 @@
               t.nativeDropdowns[s] = e;
             }),
             (t.code = e),
-            (C[e] = t);
+            (C[e] = t));
         })(t, e[t]);
       });
     }
@@ -2094,12 +2094,12 @@
       E[e].accepts = t;
     }
     function x(e, t, s) {
-      N(e, function (e, t, i) {
+      (N(e, function (e, t, i) {
         return s(t, i);
       }),
         N(t, function (e, t, i) {
           return !s(t, i);
-        });
+        }));
     }
     function B(e) {
       var t,
@@ -2121,7 +2121,7 @@
     function D(e, t) {
       if (!e) throw Error("Assertion failed! " + (t || ""));
     }
-    T.forEach(function (e) {
+    (T.forEach(function (e) {
       I.commands[e.id] = e.spec;
     }),
       M({ en: I }),
@@ -2261,15 +2261,15 @@
             ? t(t({}, E.CONTROL_STOP), {}, { shape: "stack" })
             : void 0;
         }
-      });
+      }));
     var P = (function () {
         function e(e, t) {
-          (this.value = e),
+          ((this.value = e),
             (this.cls = t || ""),
             (this.el = null),
             (this.height = 12),
             (this.metrics = null),
-            (this.x = 0);
+            (this.x = 0));
         }
         return (
           i(e, [
@@ -2293,9 +2293,9 @@
       })(),
       F = (function () {
         function e(t) {
-          (this.name = t),
+          ((this.name = t),
             (this.isArrow = "loopArrow" === t),
-            D(e.icons[t], "no info for icon " + t);
+            D(e.icons[t], "no info for icon " + t));
         }
         return (
           i(
@@ -2337,7 +2337,7 @@
       })(),
       z = (function () {
         function e(e, t, s) {
-          (this.shape = e),
+          ((this.shape = e),
             (this.value = t),
             (this.menu = s || null),
             (this.isRound = "number" === e || "number-dropdown" === e),
@@ -2355,7 +2355,7 @@
             (this.label = this.hasLabel
               ? new P(t, "literal-" + this.shape)
               : null),
-            (this.x = 0);
+            (this.x = 0));
         }
         return (
           i(e, [
@@ -2369,7 +2369,7 @@
               key: "stringify",
               value: function () {
                 if (this.isColor)
-                  return D("#" === this.value[0]), "[" + this.value + "]";
+                  return (D("#" === this.value[0]), "[" + this.value + "]");
                 var e = (this.value ? this.value + "" : "")
                   .replace(/([\]\\])/g, "\\$1")
                   .replace(/ v$/, " \\v");
@@ -2392,8 +2392,8 @@
               value: function (e) {
                 if (this.hasArrow) {
                   var t = this.menu || this.value;
-                  (this.value = t),
-                    (this.label = new P(this.value, "literal-" + this.shape));
+                  ((this.value = t),
+                    (this.label = new P(this.value, "literal-" + this.shape)));
                 }
               },
             },
@@ -2403,13 +2403,13 @@
       })(),
       H = (function () {
         function e(e, s, i) {
-          D(e),
+          (D(e),
             (this.info = t({}, e)),
             (this.children = s),
             (this.comment = i || null),
-            (this.diff = null);
+            (this.diff = null));
           var r = this.info.shape;
-          (this.isHat = "hat" === r || "cat" === r || "define-hat" === r),
+          ((this.isHat = "hat" === r || "cat" === r || "define-hat" === r),
             (this.hasPuzzle =
               "stack" === r || "hat" === r || "cat" === r || "c-block" === r),
             (this.isFinal = /cap/.test(r)),
@@ -2420,7 +2420,7 @@
             (this.isRing = "ring" === r),
             (this.hasScript = /block/.test(r)),
             (this.isElse = "celse" === r),
-            (this.isEnd = "cend" === r);
+            (this.isEnd = "cend" === r));
         }
         return (
           i(e, [
@@ -2462,7 +2462,8 @@
                   if (n && n.length) {
                     var o = n[0];
                     return (
-                      v.test(o) && t && (o = o.replace(v, t.stringify())), o
+                      v.test(o) && t && (o = o.replace(v, t.stringify())),
+                      o
                     );
                   }
                 }
@@ -2513,10 +2514,10 @@
                           }),
                         h = 0,
                         p = c.map(function (e) {
-                          return (h = Math.max(h, e)), a[e - 1];
+                          return ((h = Math.max(h, e)), a[e - 1]);
                         }),
                         u = a.slice(h);
-                      (this.children = o.parts
+                      ((this.children = o.parts
                         .map(function (e) {
                           if ((e = e.trim())) {
                             var t = w(e);
@@ -2531,14 +2532,14 @@
                           return e;
                         })),
                         u.forEach(function (t, i) {
-                          1 === i &&
+                          (1 === i &&
                             "CONTROL_IF" === s.info.id &&
                             s.children.push(new P(e.commands.CONTROL_ELSE)),
-                            s.children.push(t);
+                            s.children.push(t));
                         }),
                         (this.info.language = e),
                         (this.info.isRTL = V.includes(e.code)),
-                        (this.info.categoryIsDefault = !0);
+                        (this.info.categoryIsDefault = !0));
                     }
                   } else {
                     var f = this.children.find(function (e) {
@@ -2579,9 +2580,9 @@
       })(),
       G = (function () {
         function e(e, t) {
-          (this.label = new P(e, "comment-label")),
+          ((this.label = new P(e, "comment-label")),
             (this.width = null),
-            (this.hasBlock = t);
+            (this.hasBlock = t));
         }
         return (
           i(e, [
@@ -2603,11 +2604,11 @@
       })(),
       U = (function () {
         function e(e) {
-          D(e),
+          (D(e),
             (this.child = e),
             e.isBlock
               ? ((this.shape = e.info.shape), (this.info = e.info))
-              : (this.shape = "stack");
+              : (this.shape = "stack"));
         }
         return (
           i(e, [
@@ -2643,9 +2644,9 @@
       })(),
       j = (function () {
         function e(e) {
-          (this.blocks = e),
+          ((this.blocks = e),
             (this.isEmpty = !e.length),
-            (this.isFinal = !this.isEmpty && e[e.length - 1].isFinal);
+            (this.isFinal = !this.isEmpty && e[e.length - 1].isFinal));
         }
         return (
           i(e, [
@@ -2661,7 +2662,7 @@
                 return this.blocks
                   .map(function (e) {
                     var t = e.stringify();
-                    return e.comment && (t += " " + e.comment.stringify()), t;
+                    return (e.comment && (t += " " + e.comment.stringify()), t);
                   })
                   .join("\n");
               },
@@ -2768,7 +2769,7 @@
           }
         })((e.hash = L(p)), e, t, s);
       if (u)
-        (c = u.lang),
+        ((c = u.lang),
           (h = u.type),
           (e.language = c),
           (e.isRTL = V.includes(c.code)),
@@ -2779,7 +2780,7 @@
           h.selector && (e.selector = h.selector),
           h.id && (e.id = h.id),
           (e.hasLoopArrow = h.hasLoopArrow),
-          ". . ." === h.spec && (t = [new P(". . .")]);
+          ". . ." === h.spec && (t = [new P(". . .")]));
       else {
         var f,
           y = l(s);
@@ -2787,7 +2788,7 @@
           for (y.s(); !(f = y.n()).done; ) {
             var v = f.value;
             if (W(t, v)) {
-              (e.shape = "define-hat"), (e.category = "custom");
+              ((e.shape = "define-hat"), (e.category = "custom"));
               var b = t
                   .splice(
                     v.definePrefix.length,
@@ -2847,7 +2848,7 @@
           y.f();
         }
       }
-      !(function (e, t) {
+      (!(function (e, t) {
         var s,
           i = l(t);
         try {
@@ -2869,7 +2870,7 @@
           i.f();
         }
       })(e, i),
-        e.hasLoopArrow && t.push(new F("loopArrow"));
+        e.hasLoopArrow && t.push(new F("loopArrow")));
       var w = new H(e, t);
       return (
         h && m.test(h.spec) && w.translate(c, !0),
@@ -2949,7 +2950,7 @@
           ) {
             var r = a();
             if ("[" === r || "(" === r || "<" === r || "{" === r) {
-              (t = null), s.push(new P(i)), n();
+              ((t = null), s.push(new P(i)), n());
               continue;
             }
           }
@@ -2957,43 +2958,43 @@
           if ("/" === i && "/" === o() && !e) break;
           switch (i) {
             case "[":
-              (t = null), s.push(f());
+              ((t = null), s.push(f()));
               break;
             case "(":
-              (t = null), s.push(g());
+              ((t = null), s.push(g()));
               break;
             case "<":
-              (t = null), s.push(V());
+              ((t = null), s.push(V()));
               break;
             case "{":
-              (t = null), s.push(y());
+              ((t = null), s.push(y()));
               break;
             case " ":
             case "\t":
-              n(), (t = null);
+              (n(), (t = null));
               break;
             case "◂":
             case "▸":
-              s.push(v()), (t = null);
+              (s.push(v()), (t = null));
               break;
             case "@":
               n();
-              for (var c = ""; i && /[a-zA-Z]/.test(i); ) (c += i), n();
-              "cloud" === c
+              for (var c = ""; i && /[a-zA-Z]/.test(i); ) ((c += i), n());
+              ("cloud" === c
                 ? s.push(new P("☁"))
                 : s.push(
                     Object.prototype.hasOwnProperty.call(F.icons, c)
                       ? new F(c)
                       : new P("@" + c),
                   ),
-                (t = null);
+                (t = null));
               break;
             case "\\":
               n();
             case ":":
-              if (":" === i && ":" === o()) return s.push(b(e)), s;
+              if (":" === i && ":" === o()) return (s.push(b(e)), s);
             default:
-              t || s.push((t = new P(""))), (t.value += i), n();
+              (t || s.push((t = new P(""))), (t.value += i), n());
           }
         }
         return s;
@@ -3004,7 +3005,7 @@
           if ("\\" === i) {
             if ((n(), "v" === i && (t = !0), !i)) break;
           } else t = !1;
-          (e += i), n();
+          ((e += i), n());
         }
         return (
           "]" === i && n(),
@@ -3028,7 +3029,7 @@
       }
       function g() {
         if ((n(), " " === i && (n(), "v" === i && ")" === o())))
-          return n(), n(), new z("number-dropdown", "");
+          return (n(), n(), new z("number-dropdown", ""));
         var e = u(")");
         if ((i && ")" === i && n(), 0 === e.length)) return new z("number", "");
         if (1 === e.length && e[0].isLabel) {
@@ -3074,7 +3075,7 @@
         );
       }
       function y() {
-        n(), (s = !1);
+        (n(), (s = !1));
         var e = Z(function () {
             for (; i && "}" !== i; ) {
               var e = d("}");
@@ -3107,7 +3108,7 @@
         }
       }
       function b(e) {
-        n(), n();
+        (n(), n());
         for (var t = [], s = ""; i && "\n" !== i && i !== e; ) {
           if (" " === i) s && (t.push(s), (s = ""));
           else {
@@ -3116,7 +3117,7 @@
           }
           n();
         }
-        return s && t.push(s), t;
+        return (s && t.push(s), t);
       }
       function m() {
         var e;
@@ -3124,14 +3125,14 @@
         var t = d();
         if ("/" === i && "/" === o()) {
           var s = (function (e) {
-            n(), n();
-            for (var t = ""; i && "\n" !== i && i !== e; ) (t += i), n();
-            return i && "\n" === i && n(), new G(t, !0);
+            (n(), n());
+            for (var t = ""; i && "\n" !== i && i !== e; ) ((t += i), n());
+            return (i && "\n" === i && n(), new G(t, !0));
           })();
           if (((s.hasBlock = t && t.children.length), !s.hasBlock)) return s;
           t.comment = s;
         }
-        return t && (t.diff = e), t;
+        return (t && (t.diff = e), t);
       }
       return (
         t.map(function (e) {
@@ -3181,11 +3182,11 @@
             if ((n && (t.diff = null), n)) {
               var o = e[e.length - 1],
                 a = [];
-              o &&
+              (o &&
                 o.isGlow &&
                 (e.pop(), (a = o.child.isScript ? o.child.blocks : [o.child])),
                 a.push(t),
-                e.push(new U(new j(a)));
+                e.push(new U(new j(a))));
             } else e.push(t);
           } else i();
         return e;
@@ -3207,19 +3208,19 @@
             ) {
               var c = n[n.length - 1],
                 l = [];
-              c &&
+              (c &&
                 c.isGlow &&
                 (n.pop(), (l = c.child.isScript ? c.child.blocks : [c.child])),
                 l.push(o),
-                n.push(new U(new j(l)));
-            } else if (o.isHat) n.length && e.push(new j(n)), (n = [o]);
+                n.push(new U(new j(l))));
+            } else if (o.isHat) (n.length && e.push(new j(n)), (n = [o]));
             else {
               if (o.isFinal) {
                 n.push(o);
                 break;
               }
               if (!o.isCommand) {
-                n.length && e.push(new j(n)), e.push(new j([o])), (n = []);
+                (n.length && e.push(new j(n)), e.push(new j([o])), (n = []));
                 break;
               }
               n.push(o);
@@ -3233,11 +3234,11 @@
     function X(e, t) {
       e.isScript
         ? (e.blocks = e.blocks.map(function (e) {
-            return X(e, t), t(e) || e;
+            return (X(e, t), t(e) || e);
           }))
         : e.isBlock
           ? (e.children = e.children.map(function (e) {
-              return X(e, t), t(e) || e;
+              return (X(e, t), t(e) || e);
             }))
           : e.isGlow && X(e.child, t);
     }
@@ -3254,8 +3255,8 @@
     function $(e, s) {
       if ((s = t({ inline: !1, languages: ["en"] }, s)).dialect)
         throw Error("Option 'dialect' no longer supported");
-      (e = (e = e.replace(/&lt;/g, "<")).replace(/&gt;/g, ">")),
-        s.inline && (e = e.replace(/\n/g, " "));
+      ((e = (e = e.replace(/&lt;/g, "<")).replace(/&gt;/g, ">")),
+        s.inline && (e = e.replace(/\n/g, " ")));
       var i = s.languages.map(function (e) {
           var t = C[e];
           if (!t) throw Error("Unknown language: '" + e + "'");
@@ -3266,7 +3267,7 @@
         (function (e) {
           var t = Object.create(null),
             s = new Set();
-          e.forEach(function (e) {
+          (e.forEach(function (e) {
             var i = new Set();
             X(e, function (e) {
               if (e.isBlock)
@@ -3291,7 +3292,7 @@
                           ],
                         );
                         var p = B(h);
-                        o.push(p), i.add(p);
+                        (o.push(p), i.add(p));
                       }
                     }
                   } catch (e) {
@@ -3302,12 +3303,12 @@
                   var u = a.join(" "),
                     f = S(u),
                     d = { spec: u, names: o };
-                  t[f] || (t[f] = d),
+                  (t[f] || (t[f] = d),
                     (e.info.id = "PROCEDURES_DEFINITION"),
                     (e.info.selector = "procDef"),
                     (e.info.call = d.spec),
                     (e.info.names = d.names),
-                    (e.info.category = "custom");
+                    (e.info.category = "custom"));
                 } else if (
                   e.info.categoryIsDefault &&
                   (e.isReporter || e.isBoolean)
@@ -3344,7 +3345,7 @@
                     (e.info.category = "custom"));
                 } else {
                   var r, n;
-                  e.isReporter &&
+                  (e.isReporter &&
                     "variables" === e.info.category &&
                     e.info.categoryIsDefault &&
                     ((e.info.selector = "readVariable"),
@@ -3354,10 +3355,10 @@
                       s.has(r) &&
                       ((n.category = "list"),
                       (n.categoryIsDefault = !1),
-                      (n.selector = "contentsOfList:"));
+                      (n.selector = "contentsOfList:")));
                 }
               });
-            });
+            }));
         })(r),
         new K(r)
       );
@@ -3375,8 +3376,11 @@
               value: function (t) {
                 Y = t.document;
                 var s = t.DOMParser;
-                (q = new s().parseFromString("<xml></xml>", "application/xml")),
-                  (e.XMLSerializer = t.XMLSerializer);
+                ((q = new s().parseFromString(
+                  "<xml></xml>",
+                  "application/xml",
+                )),
+                  (e.XMLSerializer = t.XMLSerializer));
               },
             },
             {
@@ -3502,10 +3506,10 @@
                 ) {
                   var a = r[o];
                   if ("A" !== a)
-                    /[A-Za-z]/.test(a)
+                    (/[A-Za-z]/.test(a)
                       ? ee(i, "translatePath: invalid argument")
                       : ((a = +a), (a += i ? e : t), (i = !i)),
-                      n.push(a);
+                      n.push(a));
                   else {
                     var c = o + 5;
                     for (n.push("A"); o < c; ) n.push(r[++o]);
@@ -3856,11 +3860,11 @@
                   l += 2
                 ) {
                   var h = l + 2 === n.length;
-                  (a += n[l].height - 3), c.push(e.getArm(s, a));
+                  ((a += n[l].height - 3), c.push(e.getArm(s, a)));
                   var p = !(h && r),
                     u = h ? 0 : 15;
-                  (a += n[l + 1].height + 3),
-                    c.push(e.getRightAndBottom(s, a, p, u));
+                  ((a += n[l + 1].height + 3),
+                    c.push(e.getRightAndBottom(s, a, p, u)));
                 }
                 return e.path(t(t({}, o), {}, { path: c }));
               },
@@ -3951,7 +3955,7 @@
       })(),
       ie = (function () {
         function e(e, s) {
-          (this.el = se.el(
+          ((this.el = se.el(
             "filter",
             t(
               t({}, s),
@@ -3965,7 +3969,7 @@
               },
             ),
           )),
-            (this.highestId = 0);
+            (this.highestId = 0));
         }
         return (
           i(e, [
@@ -4214,7 +4218,7 @@
               key: "makeStyle",
               value: function () {
                 var t = se.el("style");
-                return t.appendChild(se.cdata(e.cssContent)), t;
+                return (t.appendChild(se.cdata(e.cssContent)), t);
               },
             },
             {
@@ -4284,11 +4288,11 @@
       he = re.darkFilter,
       pe = (function () {
         function e(e) {
-          n(this, e),
+          (n(this, e),
             (this.el = null),
             (this.height = 12),
             (this.metrics = null),
-            (this.x = 0);
+            (this.x = 0));
         }
         return (
           i(
@@ -4341,7 +4345,8 @@
                 value: function (t, s) {
                   var i = e.measuring;
                   return (
-                    (i.font = s), { width: (i.measureText(t).width + 0.5) | 0 }
+                    (i.font = s),
+                    { width: (i.measureText(t).width + 0.5) | 0 }
                   );
                 },
               },
@@ -4350,7 +4355,7 @@
           e
         );
       })();
-    (pe.metricsCache = {}), (pe.toMeasure = []);
+    ((pe.metricsCache = {}), (pe.toMeasure = []));
     var ue = (function () {
         function e(t) {
           n(this, t);
@@ -4401,7 +4406,7 @@
       })(),
       fe = (function () {
         function e(e) {
-          n(this, e), e.label && (this.label = be(e.label)), (this.x = 0);
+          (n(this, e), e.label && (this.label = be(e.label)), (this.x = 0));
         }
         return (
           i(
@@ -4417,7 +4422,7 @@
                 key: "draw",
                 value: function (t) {
                   var s, i;
-                  this.hasLabel
+                  (this.hasLabel
                     ? ((i = this.label.draw()),
                       (s = Math.max(
                         14,
@@ -4429,7 +4434,7 @@
                       )))
                     : (s = this.isInset ? 30 : this.isColor ? 13 : null),
                     this.hasArrow && (s += 10),
-                    (this.width = s);
+                    (this.width = s));
                   var r = (this.height =
                       this.isRound || this.isColor ? 13 : 14),
                     n = e.shapes[this.shape](s, r);
@@ -4488,7 +4493,7 @@
       })(),
       de = (function () {
         function e(e) {
-          n(this, e),
+          (n(this, e),
             (this.children = e.children.map(be)),
             (this.comment = this.comment ? be(this.comment) : null),
             Object.prototype.hasOwnProperty.call(f, this.info.category) &&
@@ -4501,7 +4506,7 @@
             (this.width = null),
             (this.height = null),
             (this.firstLine = null),
-            (this.innerWidth = null);
+            (this.innerWidth = null));
         }
         return (
           i(
@@ -4594,20 +4599,20 @@
                     o = i[2],
                     a = 0,
                     c = function (e) {
-                      (this.y = e),
+                      ((this.y = e),
                         (this.width = 0),
                         (this.height = e ? 13 : 16),
-                        (this.children = []);
+                        (this.children = []));
                     },
                     h = 0,
                     p = 0,
                     u = new c(a),
                     f = function (e) {
-                      0 === y.length
+                      (0 === y.length
                         ? (u.height += r + o)
                         : ((u.height += e ? 0 : 2), (u.y -= 1)),
                         (a += u.height),
-                        y.push(u);
+                        y.push(u));
                     };
                   if (this.info.isRTL) {
                     var d,
@@ -4625,14 +4630,14 @@
                   for (var y = [], v = 0; v < s.length; v++) {
                     var b = s[v];
                     if (((b.el = b.draw(this)), b.isScript && this.isCommand))
-                      (this.hasScript = !0),
+                      ((this.hasScript = !0),
                         f(),
                         (b.y = a),
                         y.push(b),
                         (p = Math.max(p, Math.max(1, b.width))),
                         (b.height = Math.max(12, b.height) + 3),
                         (a += b.height),
-                        (u = new c(a));
+                        (u = new c(a)));
                     else if (b.isArrow) u.children.push(b);
                     else {
                       var m = v > 0 ? 30 : 0,
@@ -4642,13 +4647,13 @@
                             ? m
                             : 0
                           : k;
-                      A && !y.length && u.width < A - n && (u.width = A - n),
+                      (A && !y.length && u.width < A - n && (u.width = A - n),
                         (b.x = u.width),
                         (u.width += b.width),
                         (h = Math.max(h, u.width + Math.max(0, k - n))),
                         (u.width += 4),
                         b.isLabel || (u.height = Math.max(u.height, b.height)),
-                        u.children.push(b);
+                        u.children.push(b));
                     }
                   }
                   if (
@@ -4666,9 +4671,9 @@
                     t)
                   ) {
                     var w = Math.min(26, (3.5 + 0.13 * h) | 0) - 18;
-                    (this.height += w), (r += 2 * w);
+                    ((this.height += w), (r += 2 * w));
                   }
-                  (this.firstLine = y[0]), (this.innerWidth = h);
+                  ((this.firstLine = y[0]), (this.innerWidth = h));
                   for (var O = [], S = 0, L = y; S < L.length; S++) {
                     var E = L[S];
                     if (E.isScript) O.push(se.move(15, E.y, E.el));
@@ -4760,7 +4765,7 @@
       })(),
       ge = (function () {
         function e(e) {
-          n(this, e), (this.label = be(e.label)), (this.width = null);
+          (n(this, e), (this.label = be(e.label)), (this.width = null));
         }
         return (
           i(
@@ -4815,11 +4820,11 @@
       })(),
       Ve = (function () {
         function e(e) {
-          n(this, e),
+          (n(this, e),
             (this.child = be(e.child)),
             (this.width = null),
             (this.height = null),
-            (this.y = 0);
+            (this.y = 0));
         }
         return (
           i(e, [
@@ -4872,7 +4877,7 @@
       })(),
       ye = (function () {
         function e(e) {
-          n(this, e), (this.blocks = e.blocks.map(be)), (this.y = 0);
+          (n(this, e), (this.blocks = e.blocks.map(be)), (this.y = 0));
         }
         return (
           i(e, [
@@ -4918,10 +4923,10 @@
                     ) {
                       var c = n.width,
                         h = n.firstLine.height || n.height;
-                      t.push(
+                      (t.push(
                         se.move(o, s + h / 2 + 1, se.strikethroughLine(c)),
                       ),
-                        (this.width = Math.max(this.width, n.width));
+                        (this.width = Math.max(this.width, n.width)));
                     }
                     s += n.height;
                     var p = n.comment;
@@ -4930,8 +4935,8 @@
                         f = n.innerWidth + 2 + ge.lineLength,
                         d = s - n.height + u.height / 2,
                         g = p.draw();
-                      t.push(se.move(f, d - p.height / 2, g)),
-                        (this.width = Math.max(this.width, f + p.width));
+                      (t.push(se.move(f, d - p.height / 2, g)),
+                        (this.width = Math.max(this.width, f + p.width)));
                     }
                   }
                 } catch (e) {
@@ -4939,9 +4944,9 @@
                 } finally {
                   r.f();
                 }
-                (this.height = s), e || this.isFinal || (this.height += 3);
+                ((this.height = s), e || this.isFinal || (this.height += 3));
                 var V = this.blocks[this.blocks.length - 1];
-                return !e && V.isGlow && (this.height += 2), se.group(t);
+                return (!e && V.isGlow && (this.height += 2), se.group(t));
               },
             },
           ]),
@@ -4950,13 +4955,13 @@
       })(),
       ve = (function () {
         function e(e, t) {
-          n(this, e),
+          (n(this, e),
             (this.scripts = e.scripts.map(be)),
             (this.width = null),
             (this.height = null),
             (this.el = null),
             (this.defs = null),
-            (this.scale = t.scale);
+            (this.scale = t.scale));
         }
         return (
           i(e, [
@@ -4982,18 +4987,18 @@
                 try {
                   for (n.s(); !(t = n.n()).done; ) {
                     var a = t.value;
-                    i && (i += 10),
+                    (i && (i += 10),
                       (a.y = i),
                       r.push(se.move(0, i, a.draw())),
                       (i += a.height),
-                      (s = Math.max(s, a.width + 4));
+                      (s = Math.max(s, a.width + 4)));
                   }
                 } catch (e) {
                   n.e(e);
                 } finally {
                   n.f();
                 }
-                (this.width = s), (this.height = i);
+                ((this.width = s), (this.height = i));
                 var c = se.newSVG(s, i, this.scale);
                 return (
                   c.appendChild(
@@ -5019,7 +5024,7 @@
                 var e = oe();
                 this.defs.appendChild(e);
                 var t = new se.XMLSerializer().serializeToString(this.el);
-                return this.defs.removeChild(e), t;
+                return (this.defs.removeChild(e), t);
               },
             },
             {
@@ -5036,18 +5041,18 @@
               value: function (e, t) {
                 t = t || 1;
                 var s = se.makeCanvas();
-                (s.width = Math.max(1, this.width * t * this.scale)),
-                  (s.height = Math.max(1, this.height * t * this.scale));
+                ((s.width = Math.max(1, this.width * t * this.scale)),
+                  (s.height = Math.max(1, this.height * t * this.scale)));
                 var i = s.getContext("2d"),
                   r = new Image();
-                (r.src = this.exportSVG()),
+                ((r.src = this.exportSVG()),
                   (r.onload = function () {
-                    i.save(),
+                    (i.save(),
                       i.scale(t, t),
                       i.drawImage(r, 0, 0),
                       i.restore(),
-                      e(s);
-                  });
+                      e(s));
+                  }));
               },
             },
             {
@@ -5103,11 +5108,11 @@
               value: function (t) {
                 me = t.document;
                 var s = t.DOMParser;
-                (ke = new s().parseFromString(
+                ((ke = new s().parseFromString(
                   "<xml></xml>",
                   "application/xml",
                 )),
-                  (e.XMLSerializer = t.XMLSerializer);
+                  (e.XMLSerializer = t.XMLSerializer));
               },
             },
             {
@@ -5510,16 +5515,16 @@
                 ) {
                   var h = l + 2 === n.length,
                     p = n[l];
-                  (a += p.height - 3),
+                  ((a += p.height - 3),
                     p.isFinal
                       ? c.push(e.getArmNoNotch(s, a))
-                      : c.push(e.getArm(s, a));
+                      : c.push(e.getArm(s, a)));
                   var u = !(h && r),
                     f = h ? 0 : 16;
-                  (a += n[l + 1].height + 3),
-                    c.push(e.getRightAndBottom(s, a, u, f));
+                  ((a += n[l + 1].height + 3),
+                    c.push(e.getRightAndBottom(s, a, u, f)));
                 }
-                return c.push("Z"), e.path(t(t({}, o), {}, { path: c }));
+                return (c.push("Z"), e.path(t(t({}, o), {}, { path: c })));
               },
             },
             {
@@ -6293,7 +6298,7 @@
               key: "makeStyle",
               value: function () {
                 var t = Oe.el("style");
-                return t.appendChild(Oe.cdata(e.cssContent)), t;
+                return (t.appendChild(Oe.cdata(e.cssContent)), t);
               },
             },
             {
@@ -6320,11 +6325,11 @@
       Ie = Le.iconName,
       Ne = (function () {
         function e(e) {
-          n(this, e),
+          (n(this, e),
             (this.el = null),
             (this.height = 12),
             (this.metrics = null),
-            (this.x = 0);
+            (this.x = 0));
         }
         return (
           i(
@@ -6373,7 +6378,8 @@
                 value: function (t, s) {
                   var i = e.measuring;
                   return (
-                    (i.font = s), { width: (i.measureText(t).width + 0.5) | 0 }
+                    (i.font = s),
+                    { width: (i.measureText(t).width + 0.5) | 0 }
                   );
                 },
               },
@@ -6382,7 +6388,7 @@
           e
         );
       })();
-    (Ne.metricsCache = {}), (Ne.toMeasure = []);
+    ((Ne.metricsCache = {}), (Ne.toMeasure = []));
     var xe = (function () {
         function e(t) {
           n(this, t);
@@ -6444,7 +6450,7 @@
       })(),
       Be = (function () {
         function e() {
-          (this.width = 1), (this.height = 40), (this.x = 0);
+          ((this.width = 1), (this.height = 40), (this.x = 0));
         }
         return (
           i(e, [
@@ -6475,12 +6481,12 @@
       })(),
       De = (function () {
         function e(e) {
-          n(this, e),
+          (n(this, e),
             e.label && (this.label = Ue(e.label)),
             (this.isBoolean = "boolean" === this.shape),
             (this.isDropdown = "dropdown" === this.shape),
             (this.isRound = !(this.isBoolean || this.isDropdown)),
-            (this.x = 0);
+            (this.x = 0));
         }
         return (
           i(
@@ -6508,12 +6514,12 @@
                     r = this.label.draw(t);
                     var n =
                       this.label.width >= 18 ? 11 : (40 - this.label.width) / 2;
-                    (i = this.label.width + 2 * n), (r = Oe.move(n, 9, r));
+                    ((i = this.label.width + 2 * n), (r = Oe.move(n, 9, r)));
                   } else i = this.isInset ? 30 : null;
-                  this.hasArrow && (i += 20), (this.width = i);
+                  (this.hasArrow && (i += 20), (this.width = i));
                   var o = (this.height = 32),
                     a = e.shapes[this.shape](i, o);
-                  Oe.setProps(a, {
+                  (Oe.setProps(a, {
                     class:
                       (this.isColor ? "" : "sb3-" + s.info.category) +
                       " sb3-input sb3-input-" +
@@ -6540,7 +6546,7 @@
                             s.info.color &&
                               Oe.setProps(a, {
                                 fill: "rgba(0, 0, 0, 0.15)",
-                              }));
+                              })));
                   var c = Oe.group([a]);
                   return (
                     this.hasLabel && c.appendChild(r),
@@ -6585,7 +6591,7 @@
       })(),
       Pe = (function () {
         function e(e) {
-          n(this, e),
+          (n(this, e),
             (this.children = e.children.map(Ue)),
             (this.comment = this.comment ? Ue(this.comment) : null),
             (this.isRound = this.isReporter),
@@ -6602,7 +6608,7 @@
             (this.width = null),
             (this.height = null),
             (this.firstLine = null),
-            (this.innerWidth = null);
+            (this.innerWidth = null));
         }
         return (
           i(
@@ -6697,20 +6703,20 @@
                     a = n[1],
                     c = "cat" === this.info.shape ? 16 : 0,
                     l = function (e) {
-                      (this.y = e),
+                      ((this.y = e),
                         (this.width = 0),
                         (this.height = r ? 40 : 32),
-                        (this.children = []);
+                        (this.children = []));
                     },
                     h = 0,
                     p = 0,
                     u = new l(c),
                     f = function () {
-                      0 === b.length
+                      (0 === b.length
                         ? (u.height += o + a)
                         : ((u.height -= 11), (u.y -= 2)),
                         (c += u.height),
-                        b.push(u);
+                        b.push(u));
                     };
                   if (this.info.isRTL) {
                     var d,
@@ -6730,7 +6736,7 @@
                     if (
                       ((k.el = k.draw(t, this)), k.isScript && this.isCommand)
                     )
-                      (this.hasScript = !0),
+                      ((this.hasScript = !0),
                         f(),
                         (k.y = c - 1),
                         b.push(k),
@@ -6738,8 +6744,8 @@
                         (k.height = Math.max(29, k.height + 3) - 2),
                         (c += k.height),
                         (u = new l(c)),
-                        (y = null);
-                    else if (k.isArrow) u.children.push(k), (y = k);
+                        (y = null));
+                    else if (k.isArrow) (u.children.push(k), (y = k));
                     else {
                       if (
                         (b.length || (v = k),
@@ -6753,7 +6759,7 @@
                           u.width < A &&
                           (u.width = A);
                       }
-                      k.isIcon &&
+                      (k.isIcon &&
                         0 === m &&
                         this.isCommand &&
                         (u.height = Math.max(u.height, k.height + 8)),
@@ -6762,13 +6768,13 @@
                         (h = Math.max(h, u.width)),
                         k.isLabel || (u.height = Math.max(u.height, k.height)),
                         u.children.push(k),
-                        (y = k);
+                        (y = k));
                     }
                   }
                   f();
                   var w = i.length ? this.horizontalPadding(i[0]) : 0,
                     O = (h += w + (i.length ? this.horizontalPadding(v) : 0));
-                  (h = Math.max(
+                  ((h = Math.max(
                     this.hasScript
                       ? 160
                       : this.isHat
@@ -6784,7 +6790,7 @@
                     (this.height = c),
                     (this.width = p ? Math.max(h, 15 + p) : h),
                     (this.firstLine = b[0]),
-                    (this.innerWidth = h);
+                    (this.innerWidth = h));
                   for (var S = [], L = 0; L < b.length; L++) {
                     var E = b[L];
                     if (E.isScript) S.push(Oe.move(16, E.y, E.el));
@@ -6810,8 +6816,8 @@
                                   0 === R &&
                                   (M += 4));
                           var I = w + C.x;
-                          C.dx && (I += C.dx),
-                            S.push(Oe.move(I, (E.y + M) | 0, C.el));
+                          (C.dx && (I += C.dx),
+                            S.push(Oe.move(I, (E.y + M) | 0, C.el)));
                         }
                       }
                   }
@@ -6866,7 +6872,7 @@
       })(),
       Fe = (function () {
         function e(e) {
-          n(this, e), (this.label = Ue(e.label)), (this.width = null);
+          (n(this, e), (this.label = Ue(e.label)), (this.width = null));
         }
         return (
           i(
@@ -6921,11 +6927,11 @@
       })(),
       ze = (function () {
         function e(e) {
-          n(this, e),
+          (n(this, e),
             (this.child = Ue(e.child)),
             (this.width = null),
             (this.height = null),
-            (this.y = 0);
+            (this.y = 0));
         }
         return (
           i(e, [
@@ -6978,7 +6984,7 @@
       })(),
       He = (function () {
         function e(e) {
-          n(this, e), (this.blocks = e.blocks.map(Ue)), (this.y = 0);
+          (n(this, e), (this.blocks = e.blocks.map(Ue)), (this.y = 0));
         }
         return (
           i(e, [
@@ -7024,10 +7030,10 @@
                     ) {
                       var h = o.width,
                         p = o.firstLine.height || o.height;
-                      s.push(
+                      (s.push(
                         Oe.move(a, i + p / 2 + 1, Oe.strikethroughLine(h)),
                       ),
-                        (this.width = Math.max(this.width, o.width));
+                        (this.width = Math.max(this.width, o.width)));
                     }
                     i += o.height;
                     var u = o.comment;
@@ -7036,8 +7042,8 @@
                         d = o.innerWidth + 2 + Fe.lineLength,
                         g = i - o.height + f.height / 2,
                         V = u.draw(e);
-                      s.push(Oe.move(d, g - u.height / 2, V)),
-                        (this.width = Math.max(this.width, d + u.width));
+                      (s.push(Oe.move(d, g - u.height / 2, V)),
+                        (this.width = Math.max(this.width, d + u.width)));
                     }
                   }
                 } catch (e) {
@@ -7060,14 +7066,14 @@
       })(),
       Ge = (function () {
         function e(e, t) {
-          n(this, e),
+          (n(this, e),
             (this.scripts = e.scripts.map(Ue)),
             (this.width = null),
             (this.height = null),
             (this.el = null),
             (this.defs = null),
             (this.scale = t.scale),
-            (this.iconStyle = t.style.replace("scratch3-", ""));
+            (this.iconStyle = t.style.replace("scratch3-", "")));
         }
         return (
           i(e, [
@@ -7091,14 +7097,14 @@
                   r++
                 ) {
                   var n = this.scripts[r];
-                  s && (s += 10),
+                  (s && (s += 10),
                     (n.y = s),
                     i.push(Oe.move(0, s, n.draw(this.iconStyle))),
                     (s += n.height),
                     r !== this.scripts.length - 1 && (s += 36),
-                    (t = Math.max(t, n.width + 4));
+                    (t = Math.max(t, n.width + 4)));
                 }
-                (this.width = t), (this.height = s);
+                ((this.width = t), (this.height = s));
                 var o = Oe.newSVG(t, s, this.scale),
                   a = "high-contrast" === this.iconStyle ? Me() : Ce();
                 return (
@@ -7122,7 +7128,7 @@
                 var e = Re();
                 this.defs.appendChild(e);
                 var t = new Oe.XMLSerializer().serializeToString(this.el);
-                return this.defs.removeChild(e), t;
+                return (this.defs.removeChild(e), t);
               },
             },
             {
@@ -7139,18 +7145,18 @@
               value: function (e, t) {
                 t = t || 1;
                 var s = Oe.makeCanvas();
-                (s.width = Math.max(1, this.width * t * this.scale)),
-                  (s.height = Math.max(1, this.height * t * this.scale));
+                ((s.width = Math.max(1, this.width * t * this.scale)),
+                  (s.height = Math.max(1, this.height * t * this.scale)));
                 var i = s.getContext("2d"),
                   r = new Image();
-                (r.src = this.exportSVG()),
+                ((r.src = this.exportSVG()),
                   (r.onload = function () {
-                    i.save(),
+                    (i.save(),
                       i.scale(t, t),
                       i.drawImage(r, 0, 0),
                       i.restore(),
-                      e(s);
-                  });
+                      e(s));
+                  }));
               },
             },
             {
@@ -7209,7 +7215,7 @@
         if ("function" == typeof t)
           throw Error("render() no longer takes a callback");
         var s = i(e, t).render();
-        return s.classList.add("scratchblocks-style-" + t.style), s;
+        return (s.classList.add("scratchblocks-style-" + t.style), s);
       }
       function n(e, i) {
         i = t({ inline: !1 }, i);
@@ -7217,28 +7223,28 @@
           n = s.createElement("pre");
         n.innerHTML = r;
         var o = n.textContent;
-        return i.inline && (o = o.replace("\n", "")), o;
+        return (i.inline && (o = o.replace("\n", "")), o);
       }
       function o(e, t, i, r) {
         var n;
         if (r.inline) {
           n = s.createElement("span");
           var o = "scratchblocks scratchblocks-inline";
-          i.scripts[0] &&
+          (i.scripts[0] &&
             !i.scripts[0].isEmpty &&
             (o += " scratchblocks-inline-" + i.scripts[0].blocks[0].shape),
             (n.className = o),
             (n.style.display = "inline-block"),
-            (n.style.verticalAlign = "middle");
+            (n.style.verticalAlign = "middle"));
         } else (n = s.createElement("div")).className = "scratchblocks";
-        n.appendChild(t), (e.innerHTML = ""), e.appendChild(n);
+        (n.appendChild(t), (e.innerHTML = ""), e.appendChild(n));
       }
       return (
         (function (e) {
-          se.init(e), (pe.measuring = se.makeCanvas().getContext("2d"));
+          (se.init(e), (pe.measuring = se.makeCanvas().getContext("2d")));
         })(e),
         (function (e) {
-          Oe.init(e), (Ne.measuring = Oe.makeCanvas().getContext("2d"));
+          (Oe.init(e), (Ne.measuring = Oe.makeCanvas().getContext("2d")));
         })(e),
         {
           allLanguages: C,
@@ -7259,7 +7265,7 @@
           replace: o,
           render: r,
           renderMatching: function (e, i) {
-            (e = e || "pre.blocks"),
+            ((e = e || "pre.blocks"),
               (i = t(
                 {
                   style: "scratch2",
@@ -7278,15 +7284,15 @@
                   s = i.parse(t, i),
                   r = i.render(s, i);
                 i.replace(e, r, s, i);
-              });
+              }));
           },
           appendStyles: function () {
-            s.head.appendChild(Ae()), s.head.appendChild(je());
+            (s.head.appendChild(Ae()), s.head.appendChild(je()));
           },
         }
       );
     })(window));
-    return Ke.appendStyles(), Ke;
+    return (Ke.appendStyles(), Ke);
   })();
 
   const icon =
@@ -7326,6 +7332,7 @@
     apiKey = defaultApiKey;
     selectedStyle = "scratch3";
     maxHistoryLength = 10;
+    //keeping the default to 2.0 for now because of the quota limits
     geminiVersion = "gemini-2.0-flash";
   }
   if (localStorage.getItem("blockaigeminiext.settings") == null) {
@@ -7748,6 +7755,8 @@
     } else {
       //tested models go here
       modelList = [
+        "gemini-2.5-pro",
+        "gemini-2.5-flash",
         "gemini-2.0-flash",
         "gemini-2.0-flash-lite",
         "gemini-1.5-flash",

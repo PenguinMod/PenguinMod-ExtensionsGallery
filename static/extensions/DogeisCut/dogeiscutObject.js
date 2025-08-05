@@ -20,6 +20,8 @@
         throw new Error('\'Objects\' must run unsandboxed!');
     }
 
+    ScratchBlocks.BlockSvg.registerCustomNotch("dogeiscutObjectBuilder", `l0 5 12 0 0 5 12 0 0-5 12 0 0-5`);
+
     function inflate(json) {
         const raw = json.objects;
         const cache = [];
@@ -96,6 +98,26 @@
         el.style.width = '100%'
         el.style.textAlign = 'center'
         return el
+    }
+
+    // stole the builder code (and most of this code tbh) from jwklong muhahah i am evi;l
+
+    function waitForThread(thread) {
+        return new Promise((resolve, reject) => {
+            if (thread.status == 4) {
+                resolve()
+                return
+            }
+
+            let handler = t => {
+                if (t === thread) {
+                    resolve()
+                    vm.runtime.off('THREAD_FINISHED', handler)
+                }
+            }
+
+            vm.runtime.on('THREAD_FINISHED', handler)
+        })
     }
 
     function paragraph(text) {
@@ -326,6 +348,41 @@
                             }
                         }
                     },
+                    {
+                        opcode: 'assign',
+                        text: 'assign from [ARRAY]',
+                        ...dogeiscutObject.Block,
+                        arguments: {
+                            ARRAY: jwArray.Argument
+                        }
+                    },
+                    '---',
+                    {
+                        opcode: 'builder',
+                        text: 'object builder',
+                        ...dogeiscutObject.Block,
+                        branches: [{
+                            //accepts: 'dogeiscutObjectBuilder'
+                        }],
+                    },
+                    {
+                        opcode: 'builderAppend',
+                        text: 'append key [KEY] value [VALUE] to builder',
+                        blockType: Scratch.BlockType.COMMAND,
+                        //notchAccepts: 'dogeiscutObjectBuilder',
+                        arguments: {
+                            KEY: {
+                                type: Scratch.ArgumentType.STRING,
+                                defaultValue: "foo",
+                                exemptFromNormalization: true
+                            },
+                            VALUE: {
+                                type: Scratch.ArgumentType.STRING,
+                                defaultValue: "bar",
+                                exemptFromNormalization: true
+                            }
+                        }
+                    },
                     '---',
                     {
                         opcode: 'get',
@@ -484,33 +541,6 @@
                     },
                     '---',
                     {
-                        opcode: 'build',
-                        text: 'build object',
-                        ...dogeiscutObject.Block,
-                        branches: [{
-                            accepts: 'objectBuilder'
-                        }],
-                    },
-                    {
-                        opcode: 'buildAddObject',
-                        text: 'add key [KEY] value [VALUE]',
-                        blockType: Scratch.BlockType.COMMAND,
-                        notchAccepts: 'objectBuilder',
-                        arguments: {
-                            KEY: {
-                                type: Scratch.ArgumentType.STRING,
-                                defaultValue: "foo",
-                                exemptFromNormalization: true
-                            },
-                            VALUE: {
-                                type: Scratch.ArgumentType.STRING,
-                                defaultValue: "bar",
-                                exemptFromNormalization: true
-                            }
-                        }
-                    },
-                    '---',
-                    {
                         blockType: Scratch.BlockType.XML,
                         xml:  `<block type="event_whenflagclicked" ><next><block type="data_setvariableto" ><value name="VALUE"><block type="dogeiscutObject_empty" ></block><shadow type="text" ><field name="TEXT">0</field></shadow></value><field name="VARIABLE" variabletype="">foo</field><next><block type="data_setvariableto" ><value name="VALUE"><block type="dogeiscutObject_object" ><value name="KEY"><shadow type="text" ><field name="TEXT">foo</field></shadow></value><value name="VALUE"><block type="data_variable" ><field name="VARIABLE" variabletype="">foo</field></block><shadow type="text" ><field name="TEXT">bar</field></shadow></value></block><shadow type="text" ><field name="TEXT">0</field></shadow></value><field name="VARIABLE" variabletype="">bar</field><next><block type="data_setvariableto" ><value name="VALUE"><block type="dogeiscutObject_set" ><value name="KEY"><shadow type="text" ><field name="TEXT">bar</field></shadow></value><value name="VALUE"><block type="data_variable" ><field name="VARIABLE" variabletype="">bar</field></block><shadow type="text" ><field name="TEXT">foo</field></shadow></value><value name="OBJECT"><block type="data_variable" ><field name="VARIABLE" variabletype="">foo</field></block></value></block><shadow type="text" ><field name="TEXT">0</field></shadow></value><field name="VARIABLE" variabletype="">foo</field></block></next></block></next></block></next></block>,<shadow type="text" ><field name="TEXT">0</field></shadow>,<shadow type="text" ><field name="TEXT">0</field></shadow>,<shadow type="text" ><field name="TEXT">0</field></shadow>,<shadow type="text" ><field name="TEXT">foo</field></shadow>,<shadow type="text" ><field name="TEXT">bar</field></shadow>`
                     }
@@ -559,6 +589,36 @@
             return new dogeiscutObject.Type(obj);
         }
 
+        assign({ ARRAY }) {
+            ARRAY = jwArray.Type.toArray(ARRAY);
+            
+            return dogeiscutObject.Type.toObject(Object.assign({}, ARRAY.array));
+        }
+
+        builderIndex = []
+
+        async builder({ }, util) {
+            let branch = util.thread.blockContainer.getBranch(util.thread.peekStack(), 1)
+            if (!branch) return new dogeiscutObject.Type()
+
+            const thread = vm.runtime._pushThread(branch, util.target)
+            let index = this.builderIndex.push({})
+            thread.stackFrames[0].dogeiscutObjectBuilderIndex = index
+            util.thread.stackFrames[0].dogeiscutObjectBuilderIndex = index
+            await waitForThread(thread)
+
+            const output = this.builderIndex[index]
+            delete this.builderIndex[index]
+            return new dogeiscutObject.Type(output)
+        }
+
+        builderAppend({ KEY, VALUE }, util) {
+            console.log(util.thread.stackFrames)
+            if (util.stackFrame.dogeiscutObjectBuilderIndex && this.builderIndex[util.stackFrame.dogeiscutObjectBuilderIndex]) {
+                this.builderIndex[util.stackFrame.dogeiscutObjectBuilderIndex][KEY] = VALUE
+            }
+        }
+
         get({ OBJECT, KEY }) {
             OBJECT = dogeiscutObject.Type.toObject(OBJECT)
 
@@ -571,6 +631,9 @@
 
             let current = OBJECT.object;
             for (const key of ARRAY.array) {
+                if (current instanceof dogeiscutObject.Type) {
+                    current = current.object
+                }
                 if (current && current.hasOwnProperty(key)) {
                     current = current[key];
                 } else {
@@ -680,15 +743,6 @@
             }
             util.startBranch(1, true);
         }
-
-        buildAddObject({ KEY, VALUE }, util) {
-            // ?????????
-        }
-
-        build({}, util) {
-            return new dogeiscutObject.Type({});
-        }
-
 
     }
 

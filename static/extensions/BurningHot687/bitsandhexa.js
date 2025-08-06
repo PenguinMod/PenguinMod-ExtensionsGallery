@@ -20,102 +20,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
 */
 
-// V0.13
-
-let fullLength = true;
-let extOpen = false;
-let basesArray = ["decimal", "binary", "hexadecimal"];
-const extBlockArray = [
-    {
-        opcode: "bitHexConfigurationLabel",
-        text: "Configuration Settings ⚠",
-        blockType: Scratch.BlockType.LABEL,
-    },
-    {
-        opcode: "binaryLengthSetter",
-        text: "use a [LENGTH] length for binary",
-        blockType: Scratch.BlockType.COMMAND,
-        arguments: {
-            LENGTH: {
-                type: Scratch.ArgumentType.STRING,
-                menu: "LENGTHS",
-            }
-        },
-    },
-    {
-        opcode: "binaryLengthGetter",
-        text: "using [LENGTH] length?",
-        blockType: Scratch.BlockType.BOOLEAN,
-        label: "using fixed length",
-        arguments: {
-            LENGTH: {
-                type: Scratch.ArgumentType.STRING,
-                menu: "LENGTHS",
-            },
-        },
-    },
-];
-const icon = "data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiPz4KPHN2ZyBpZD0iTGF5ZXJfMSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIiB2ZXJzaW9uPSIxLjEiIHZpZXdCb3g9IjAgMCAyMjUgMjI1Ij4KICA8IS0tIEdlbmVyYXRvcjogQWRvYmUgSWxsdXN0cmF0b3IgMjkuNS4xLCBTVkcgRXhwb3J0IFBsdWctSW4gLiBTVkcgVmVyc2lvbjogMi4xLjAgQnVpbGQgMTQxKSAgLS0+CiAgPGRlZnM+CiAgICA8c3R5bGU+CiAgICAgIC5zdDAgewogICAgICAgIGZpbGw6ICNmZmY7CiAgICAgIH0KCiAgICAgIC5zdDEgewogICAgICAgIGZpbGw6ICMxYjQ2OGQ7CiAgICAgIH0KCiAgICAgIC5zdDIgewogICAgICAgIGZpbGw6ICMxNDY0OGE7CiAgICAgIH0KICAgIDwvc3R5bGU+CiAgPC9kZWZzPgogIDxyZWN0IGNsYXNzPSJzdDEiIHdpZHRoPSIyMjUiIGhlaWdodD0iMjI1Ii8+CiAgPGc+CiAgICA8cG9seWdvbiBjbGFzcz0ic3QwIiBwb2ludHM9IjE3NC4wNiAxNC4wMSAxMTkuMjEgMTQuMDEgOTEuNzkgNjEuNTEgMTE5LjIxIDEwOS4wMSAxNzQuMDYgMTA5LjAxIDIwMS40OSA2MS41MSAxNzQuMDYgMTQuMDEiLz4KICAgIDxjaXJjbGUgY2xhc3M9InN0MiIgY3g9IjY1LjY1IiBjeT0iMTIyLjI2IiByPSI0Mi4xNCIvPgogICAgPHJlY3QgY2xhc3M9InN0MCIgeD0iMTE3LjE3IiB5PSIxMTcuOCIgd2lkdGg9Ijc0LjE4IiBoZWlnaHQ9IjkzLjE5IiByeD0iMTIiIHJ5PSIxMiIvPgogIDwvZz4KPC9zdmc+";
-const iconCircle = "data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiPz4KPHN2ZyBpZD0iTGF5ZXJfMSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIiB2ZXJzaW9uPSIxLjEiIHZpZXdCb3g9IjAgMCAyMjUgMjI1Ij4KICA8IS0tIEdlbmVyYXRvcjogQWRvYmUgSWxsdXN0cmF0b3IgMjkuNS4xLCBTVkcgRXhwb3J0IFBsdWctSW4gLiBTVkcgVmVyc2lvbjogMi4xLjAgQnVpbGQgMTQxKSAgLS0+CiAgPGRlZnM+CiAgICA8c3R5bGU+CiAgICAgIC5zdDAgewogICAgICAgIGZpbGw6ICMxNDY0OGE7CiAgICAgIH0KCiAgICAgIC5zdDEgewogICAgICAgIGZpbGw6ICNmZmY7CiAgICAgIH0KCiAgICAgIC5zdDIgewogICAgICAgIGZpbGw6ICMxYjQ2OGQ7CiAgICAgIH0KICAgIDwvc3R5bGU+CiAgPC9kZWZzPgogIDxyZWN0IGNsYXNzPSJzdDIiIHg9IjAiIHk9IjAiIHdpZHRoPSIyMjUiIGhlaWdodD0iMjI1IiByeD0iMTEyLjUiIHJ5PSIxMTIuNSIvPgogIDxnPgogICAgPHBvbHlnb24gY2xhc3M9InN0MSIgcG9pbnRzPSIxNjMuODUgMzAuMzQgMTE4LjEgMzAuMzQgOTUuMjIgNjkuOTcgMTE4LjEgMTA5LjU5IDE2My44NSAxMDkuNTkgMTg2LjczIDY5Ljk3IDE2My44NSAzMC4zNCIvPgogICAgPGNpcmNsZSBjbGFzcz0ic3QwIiBjeD0iNzMuNDIiIGN5PSIxMjAuNjQiIHI9IjM1LjE1Ii8+CiAgICA8cmVjdCBjbGFzcz0ic3QxIiB4PSIxMTYuNCIgeT0iMTE2LjkyIiB3aWR0aD0iNjEuODgiIGhlaWdodD0iNzcuNzQiIHJ4PSIxMC4wMSIgcnk9IjEwLjAxIi8+CiAgPC9nPgogIDxwYXRoIGNsYXNzPSJzdDEiIGQ9Ik01MS41MSwxOTAuMjNjLTMuNjksMC0zLjY5LDUuNzMsMCw1LjczczMuNjktNS43MywwLTUuNzNaIi8+CiAgPHBhdGggY2xhc3M9InN0MSIgZD0iTTcwLjk3LDE3OS4wM2MtMy42OSwwLTMuNjksNS43MywwLDUuNzNzMy42OS01LjczLDAtNS43M1oiLz4KICA8cGF0aCBjbGFzcz0ic3QxIiBkPSJNNjYuNzcsMTkzLjF2MS40NGMtLjI2LS4xNS0uNTEtLjMtLjc2LS40NS0zLjE0LTEuOTYtNi4wMiwzLTIuODksNC45NSwxLjA3LjY3LDIuMTksMS4yMiwzLjM2LDEuNywxLjI4LjUzLDIuNjMsMS4wMywzLjk5LjQsMS42NS0uNzYsMi4wMy0yLjM2LDIuMDQtNC4wM3YtNC4wMWMwLTMuNjktNS43Mi0zLjY5LTUuNzMsMFoiLz4KPC9zdmc+";
-
-function isInCorrectFormat(inputString) {
-    if ((inputString != parseInt(inputString, 10).toString(10)) && !isItHexadecimal(inputString)) {
-        console.log("bad string")
-        return false;
-    }
-    console.log("good string");
-    return true;
-};
-
-function isItHexadecimal(inputString) {
-    return !/[^abcdef0123456789]/i.test(inputString);
-};
-
-function isItDecimal(inputString) {
-    return !/[^0123456789-]/.test(inputString);
-};
-
-function isItBinary(inputString) {
-    return !/[^01]/.test(inputString);
-};
-
-function testForFormat(numString, base) {
-    switch (basesArray.indexOf(base)) {
-        case 0:
-            return isItDecimal(numString);
-        case 1:
-            return isItBinary(numString);
-        case 2:
-            return isItHexadecimal(numString);
-    }
-};
-
-function binaryReformat(Value, neg = true) {
-    let newValue = Math.abs(Value).toString(2).length + 1;
-    let computedValue = (Value >>> 0).toString(2);
-    if (!fullLength) {
-        console.log(computedValue);
-        console.log(newValue);
-        if (neg) computedValue = computedValue.slice(clamp(computedValue.length - newValue, 0, computedValue.length), computedValue.length);
-        if (!neg) computedValue = "0" + computedValue
-        console.log(computedValue);
-    }
-    return computedValue;
-};
-
-function clamp(value, min, max) {
-    console.log(Math.max(min, Math.min(value, max)))
-    return Math.max(min, Math.min(value, max));
-};
-
-function binaryToDecimal(computedValue) {
-    let newerValue = 0;
-    for (let i = computedValue.length; i > 0; i--) {
-        newerValue += parseInt(computedValue[i]) * (Math.pow(2, computedValue.length - i)) * ((i === 0) ? -1 : 1);
-    }
-    console.log(newerValue);
-    return newerValue;
-};
+// V0.14
 
 (function(Scratch){
     "use strict";
@@ -123,6 +28,102 @@ function binaryToDecimal(computedValue) {
     if (!Scratch.extensions.unsandboxed) {
         // throw new Error("This extension prefers to be used unsandboxed");
     }
+
+    let fullLength = true;
+    let selLengthIsFull = true;
+    let extOpen = false;
+    let basesArray = ["decimal", "binary", "hexadecimal"];
+    const extBlockArray = [
+        {
+            opcode: "bitHexConfigurationLabel",
+            text: "Configuration Settings ⚠",
+            blockType: Scratch.BlockType.LABEL,
+        },
+        {
+            opcode: "binaryLengthSetter",
+            text: "use a [LENGTH] length for binary",
+            blockType: Scratch.BlockType.COMMAND,
+            arguments: {
+                LENGTH: {
+                    type: Scratch.ArgumentType.STRING,
+                    menu: "LENGTHS",
+                }
+            },
+        },
+        {
+            opcode: "binaryLengthGetter",
+            text: "using [LENGTH] length?",
+            blockType: Scratch.BlockType.BOOLEAN,
+            label: selLengthIsFull ? "using fixed length" : "using dynamic length",
+            arguments: {
+                LENGTH: {
+                    type: Scratch.ArgumentType.STRING,
+                    menu: "LENGTHS",
+                },
+            },
+        },
+    ];
+    const icon = "data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiPz4KPHN2ZyBpZD0iTGF5ZXJfMSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIiB2ZXJzaW9uPSIxLjEiIHZpZXdCb3g9IjAgMCAyMjUgMjI1Ij4KICA8IS0tIEdlbmVyYXRvcjogQWRvYmUgSWxsdXN0cmF0b3IgMjkuNS4xLCBTVkcgRXhwb3J0IFBsdWctSW4gLiBTVkcgVmVyc2lvbjogMi4xLjAgQnVpbGQgMTQxKSAgLS0+CiAgPGRlZnM+CiAgICA8c3R5bGU+CiAgICAgIC5zdDAgewogICAgICAgIGZpbGw6ICNmZmY7CiAgICAgIH0KCiAgICAgIC5zdDEgewogICAgICAgIGZpbGw6ICMxYjQ2OGQ7CiAgICAgIH0KCiAgICAgIC5zdDIgewogICAgICAgIGZpbGw6ICMxNDY0OGE7CiAgICAgIH0KICAgIDwvc3R5bGU+CiAgPC9kZWZzPgogIDxyZWN0IGNsYXNzPSJzdDEiIHdpZHRoPSIyMjUiIGhlaWdodD0iMjI1Ii8+CiAgPGc+CiAgICA8cG9seWdvbiBjbGFzcz0ic3QwIiBwb2ludHM9IjE3NC4wNiAxNC4wMSAxMTkuMjEgMTQuMDEgOTEuNzkgNjEuNTEgMTE5LjIxIDEwOS4wMSAxNzQuMDYgMTA5LjAxIDIwMS40OSA2MS41MSAxNzQuMDYgMTQuMDEiLz4KICAgIDxjaXJjbGUgY2xhc3M9InN0MiIgY3g9IjY1LjY1IiBjeT0iMTIyLjI2IiByPSI0Mi4xNCIvPgogICAgPHJlY3QgY2xhc3M9InN0MCIgeD0iMTE3LjE3IiB5PSIxMTcuOCIgd2lkdGg9Ijc0LjE4IiBoZWlnaHQ9IjkzLjE5IiByeD0iMTIiIHJ5PSIxMiIvPgogIDwvZz4KPC9zdmc+";
+    const iconCircle = "data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiPz4KPHN2ZyBpZD0iTGF5ZXJfMSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIiB2ZXJzaW9uPSIxLjEiIHZpZXdCb3g9IjAgMCAyMjUgMjI1Ij4KICA8IS0tIEdlbmVyYXRvcjogQWRvYmUgSWxsdXN0cmF0b3IgMjkuNS4xLCBTVkcgRXhwb3J0IFBsdWctSW4gLiBTVkcgVmVyc2lvbjogMi4xLjAgQnVpbGQgMTQxKSAgLS0+CiAgPGRlZnM+CiAgICA8c3R5bGU+CiAgICAgIC5zdDAgewogICAgICAgIGZpbGw6ICMxNDY0OGE7CiAgICAgIH0KCiAgICAgIC5zdDEgewogICAgICAgIGZpbGw6ICNmZmY7CiAgICAgIH0KCiAgICAgIC5zdDIgewogICAgICAgIGZpbGw6ICMxYjQ2OGQ7CiAgICAgIH0KICAgIDwvc3R5bGU+CiAgPC9kZWZzPgogIDxyZWN0IGNsYXNzPSJzdDIiIHg9IjAiIHk9IjAiIHdpZHRoPSIyMjUiIGhlaWdodD0iMjI1IiByeD0iMTEyLjUiIHJ5PSIxMTIuNSIvPgogIDxnPgogICAgPHBvbHlnb24gY2xhc3M9InN0MSIgcG9pbnRzPSIxNjMuODUgMzAuMzQgMTE4LjEgMzAuMzQgOTUuMjIgNjkuOTcgMTE4LjEgMTA5LjU5IDE2My44NSAxMDkuNTkgMTg2LjczIDY5Ljk3IDE2My44NSAzMC4zNCIvPgogICAgPGNpcmNsZSBjbGFzcz0ic3QwIiBjeD0iNzMuNDIiIGN5PSIxMjAuNjQiIHI9IjM1LjE1Ii8+CiAgICA8cmVjdCBjbGFzcz0ic3QxIiB4PSIxMTYuNCIgeT0iMTE2LjkyIiB3aWR0aD0iNjEuODgiIGhlaWdodD0iNzcuNzQiIHJ4PSIxMC4wMSIgcnk9IjEwLjAxIi8+CiAgPC9nPgogIDxwYXRoIGNsYXNzPSJzdDEiIGQ9Ik01MS41MSwxOTAuMjNjLTMuNjksMC0zLjY5LDUuNzMsMCw1LjczczMuNjktNS43MywwLTUuNzNaIi8+CiAgPHBhdGggY2xhc3M9InN0MSIgZD0iTTcwLjk3LDE3OS4wM2MtMy42OSwwLTMuNjksNS43MywwLDUuNzNzMy42OS01LjczLDAtNS43M1oiLz4KICA8cGF0aCBjbGFzcz0ic3QxIiBkPSJNNjYuNzcsMTkzLjF2MS40NGMtLjI2LS4xNS0uNTEtLjMtLjc2LS40NS0zLjE0LTEuOTYtNi4wMiwzLTIuODksNC45NSwxLjA3LjY3LDIuMTksMS4yMiwzLjM2LDEuNywxLjI4LjUzLDIuNjMsMS4wMywzLjk5LjQsMS42NS0uNzYsMi4wMy0yLjM2LDIuMDQtNC4wM3YtNC4wMWMwLTMuNjktNS43Mi0zLjY5LTUuNzMsMFoiLz4KPC9zdmc+";
+
+    function isInCorrectFormat(inputString) {
+        if ((inputString != parseInt(inputString, 10).toString(10)) && !isItHexadecimal(inputString)) {
+            console.log("bad string")
+            return false;
+        }
+        console.log("good string");
+        return true;
+    };
+
+    function isItHexadecimal(inputString) {
+        return !/[^abcdef0123456789]/i.test(inputString);
+    };
+
+    function isItDecimal(inputString) {
+        return !/[^0123456789-]/.test(inputString);
+    };
+
+    function isItBinary(inputString) {
+        return !/[^01]/.test(inputString);
+    };
+
+    function testForFormat(numString, base) {
+        switch (basesArray.indexOf(base)) {
+            case 0:
+                return isItDecimal(numString);
+            case 1:
+                return isItBinary(numString);
+            case 2:
+                return isItHexadecimal(numString);
+        }
+    };
+
+    function binaryReformat(Value, neg = true) {
+        let newValue = Math.abs(Value).toString(2).length + 1;
+        let computedValue = (Value >>> 0).toString(2);
+        if (!fullLength) {
+            console.log(computedValue);
+            console.log(newValue);
+            if (neg) computedValue = computedValue.slice(clamp(computedValue.length - newValue, 0, computedValue.length), computedValue.length);
+            if (!neg) computedValue = "0" + computedValue
+            console.log(computedValue);
+        }
+        return computedValue;
+    };
+
+    function clamp(value, min, max) {
+        console.log(Math.max(min, Math.min(value, max)))
+        return Math.max(min, Math.min(value, max));
+    };
+
+    function binaryToDecimal(computedValue) {
+        let newerValue = 0;
+        for (let i = computedValue.length; i > 0; i--) {
+            newerValue += parseInt(computedValue[i - 1]) * (Math.pow(2, computedValue.length - i)) * ((i === 0) ? -1 : 1);
+        }
+        console.log(newerValue);
+        return newerValue;
+    };
 
     class Extension {
         getInfo() {
@@ -136,15 +137,8 @@ function binaryToDecimal(computedValue) {
                 menuIconURI: iconCircle,
                 blockIconURI: icon,
                 isDynamic: true,
-                /*function orderBlocks(blocks) {
-                    if (extOpen) {
-                        return mainBlockArray.concat(extBlockArray);
-                    }
-                        return mainBlockArray;
-                };*/
 
                 blocks: [
-                    "---",
                     {
                         opcode: "bitwiseDocumentationButton",
                         text: "Open Documentation",
@@ -353,6 +347,7 @@ function binaryToDecimal(computedValue) {
                         },
                         switches: [ 'bitwiseOrOperator', 'bitwiseAndOperator', 'bitwiseNotOperator', 'bitwiseNandOperator', 'bitwiseNorOperator', 'bitwiseXnorOperator' ],
                     },
+                    "---",
                     {
                         opcode: "bitwiseNotOperator",
                         text: "~[NUM] | not",
@@ -449,10 +444,13 @@ function binaryToDecimal(computedValue) {
         }
 
         binaryLengthGetter(args) {
+            // Still need to fix monitors here lol
             switch (args.LENGTH) {
                 case 'fixed':
+                    selLengthIsFull = true;
                     return fullLength;
                 case 'dynamic':
+                    selLengthIsFull = false;
                     return !fullLength;
                 default:
                     console.log("error here?");
@@ -510,7 +508,7 @@ function binaryToDecimal(computedValue) {
                         computeValue = binaryToDecimal(computeValue);
                         break;
                     case 2:
-                        computeValue = binaryToDecimal(parseInt(computeValue, 16).toString(2));
+                        computeValue = binaryToDecimal((parseInt(computeValue, 16) >>> 0).toString(2));
                         break;
                 }
             }
@@ -523,12 +521,7 @@ function binaryToDecimal(computedValue) {
                     computeValue = binaryReformat(computeValue, computeValue < 0);
                     break;
                 case 2:
-                    /*if (computeValue < 0) {
-                        computeValue = Math.abs(computeValue);
-                        computeValue = ~computeValue;
-                        computeValue++;
-                    }*/
-                    computeValue = (parseInt(binaryReformat(computeValue, computeValue < 0), 2) >>> 0).toString(16);
+                    computeValue = fullLength ? computeValue.toString(16) : parseInt(binaryReformat(computeValue, computeValue < 0), 2).toString(16);
                     break;
                 default:
                     console.log("failed?");
@@ -539,13 +532,14 @@ function binaryToDecimal(computedValue) {
         }
 
         getBitAtIdx(args) {
-            if (args.AMOUNT > 31) return "";
+            if (args.IDX > 31) return "";
             let computeValue = args.NUM;
             if (!(isItDecimal(computeValue) || isItHexadecimal(computeValue))) return "";
             if (isItHexadecimal(computeValue) && /[abcdef]/i.test(computeValue)) {
                 computeValue = "0x" + computeValue;
             }
-            return (computeValue >> args.IDX) & 1;
+            if (args.IDX > parseInt(computeValue, 2).length && !fullLength) return "";
+            return (parseInt(computeValue) >> args.IDX) & 1;
         }
 
         signedRightShiftBitz(args) {

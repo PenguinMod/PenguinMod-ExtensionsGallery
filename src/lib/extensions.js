@@ -188,6 +188,14 @@ export default [
         notes: "Gallery banner by Dillon",
     },
     {
+        name: "Yet Another String Extension",
+        description: "A small collection of utilty blocks intended to make managing strings much, much easier.",
+        code: "DogeisCut/YetAnotherStringExtension.js",
+        banner: "DogeisCut/YetAnotherStringExtension.svg",
+        creator: "DogeisCut",
+        isGitHub: true, 
+    },
+    {
         name: "Random Utilities",
         description: "Many blocks related to generating random values, including seed-based number generation, true number generation, UUID's, random strings, etc.",
         code: "Gen1x/random_utils.js",

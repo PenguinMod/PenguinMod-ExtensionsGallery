@@ -98,7 +98,48 @@
                         },
                         extensions: ["colours_operators"],
                     },
+                    {
+                        opcode: 'repeat',
+                        text: 'repeat [STRING] [INT] times',
+                        blockType: Scratch.BlockType.REPORTER,
+                        arguments: {
+                            STRING: { type: Scratch.ArgumentType.STRING, defaultValue: "foo" },
+                            INT: { type: Scratch.ArgumentType.NUMBER, defaultValue: 3 },
+                        },
+                        extensions: ["colours_operators"],
+                    },
                     '---',
+                    {
+                        opcode: 'nextLine',
+                        text: '[A] next line [B]',
+                        blockType: Scratch.BlockType.REPORTER,
+                        arguments: {
+                            A: { type: Scratch.ArgumentType.STRING, defaultValue: "Hello" },
+                            B: { type: Scratch.ArgumentType.STRING, defaultValue: "world!" },
+                        },
+                        extensions: ["colours_operators"],
+                    },
+                    {
+                        opcode: 'pick',
+                        text: 'pick [A] or [B]',
+                        blockType: Scratch.BlockType.REPORTER,
+                        arguments: {
+                            A: { type: Scratch.ArgumentType.STRING, defaultValue: "foo" },
+                            B: { type: Scratch.ArgumentType.STRING, defaultValue: "bar" },
+                        },
+                        extensions: ["colours_operators"],
+                    },
+                    '---',
+                    {
+                        opcode: 'containsAllLetters',
+                        text: '[A] contains all letters from [B]?',
+                        blockType: Scratch.BlockType.BOOLEAN,
+                        arguments: {
+                            A: { type: Scratch.ArgumentType.STRING, defaultValue: "bcad" },
+                            B: { type: Scratch.ArgumentType.STRING, defaultValue: "abc" },
+                        },
+                        extensions: ["colours_operators"],
+                    },
                     {
                         blockType: Scratch.BlockType.XML,
                         hideFromPalette: true,
@@ -216,6 +257,38 @@
                 .replace(/(?:TH)/g, 'D')
                 .replace(/\b(?:me)\b/gi, 'mwe')
                 .replace(/(?:s+)/g, 's~');
+        }
+
+        nextLine({ A, B }) {
+            A = Scratch.Cast.toString(A);
+            B = Scratch.Cast.toString(B);
+            return A + '\n' + B;
+        }
+
+        pick({ A, B }) {
+            A = Scratch.Cast.toString(A);
+            B = Scratch.Cast.toString(B);
+            return Math.random() < 0.5 ? A : B;
+        }
+
+        containsAllLetters({ A, B }) {
+            A = Scratch.Cast.toString(A);
+            B = Scratch.Cast.toString(B);
+            for (const letter of B) {
+                if (!A.includes(letter)) {
+                    return false;
+                }
+            }
+            return true;
+        }
+
+        repeat({ STRING, INT }) {
+            STRING = Scratch.Cast.toString(STRING);
+            INT = Scratch.Cast.toNumber(INT);
+            if (INT <= 0 || INT == Infinity) {
+                return '';
+            }
+            return STRING.repeat(Math.round(INT));
         }
             
     }

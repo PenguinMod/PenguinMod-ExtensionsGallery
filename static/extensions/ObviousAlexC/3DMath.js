@@ -212,16 +212,18 @@
             disableMonitor: true,
             opcode: "reflectionV3",
             blockType: Scratch.BlockType.REPORTER,
-            text: "V3: reflect [source] across axis normal [normal]",
+            text: "V3: reflect [source] across [axis] normal [normal]",
             arguments: {
               source: { type: Scratch.ArgumentType.STRING, defaultValue: "[2,3,0]" },
               normal: { type: Scratch.ArgumentType.STRING, defaultValue: "[0,1,0]" },
+              axis: { type: Scratch.ArgumentType.STRING, menu: "axisMenu3" },
             },
           },
           {
             disableMonitor: true,
             opcode: "reflectAcrossV3",
             blockType: Scratch.BlockType.REPORTER,
+            hideFromPalette: true,
             text: "V3: reflect [source] across line normal [normal]",
             arguments: {
               source: { type: Scratch.ArgumentType.STRING, defaultValue: "[2,3,0]" },
@@ -458,14 +460,16 @@
             disableMonitor: true,
             opcode: "reflectionV2",
             blockType: Scratch.BlockType.REPORTER,
-            text: "V2: reflect [source] across axis normal [normal]",
+            text: "V2: reflect [source] across [axis] normal [normal]",
             arguments: {
               source: { type: Scratch.ArgumentType.STRING, defaultValue: "[2,3]" },
               normal: { type: Scratch.ArgumentType.STRING, defaultValue: "[0,1]" },
+              axis: { type: Scratch.ArgumentType.STRING, menu: "axisMenu3" },
             },
           },
           {
             disableMonitor: true,
+            hideFromPalette: true,
             opcode: "reflectAcrossV2",
             blockType: Scratch.BlockType.REPORTER,
             text: "V2: reflect [source] across line normal [normal]",
@@ -807,6 +811,13 @@
               { text: "z", value: "2" },
             ],
             acceptReporters: true,
+          },
+          axisMenu3: {
+            items: [
+              { text: "axis", value: "axis" },
+              { text: "line", value: "line" },
+            ],
+            acceptReporters: false,
           },
           projectionMenu: {
             items: [
@@ -1229,7 +1240,8 @@
       
       const ratio = dot / m;
       const clamped = Math.max(-1, Math.min(1, ratio)); // clamp to valid range for acos
-      return Math.trunc((Math.acos(clamped) * r2d) * 1000) / 1000 ;
+      const result = Math.trunc((Math.acos(clamped) * r2d) * 1000) / 1000;
+      return isNaN(result) ? 0 : result;
     }
     projectV3({ project, len, dir }) {
       len = JSON.parse(len);
@@ -1244,7 +1256,7 @@
         return returnValue;
       }
     }
-    reflectionV3({ source, normal }) {
+    reflectionV3({ source, normal, axis }) {
       source = JSON.parse(source);
       normal = JSON.parse(normal);
 
@@ -1257,11 +1269,12 @@
         normal[2] * scale
       ];
 
-      return [
+      const result = [
         source[0] - scaledNormal[0],
         source[1] - scaledNormal[1],
         source[2] - scaledNormal[2]
       ];
+      return axis === 'axis' ? result : this.reflectAcrossV3({ source: JSON.stringify(source), normal: JSON.stringify(normal) });
     }
     reflectAcrossV3({ source, normal }) {
       source = JSON.parse(source);
@@ -1581,7 +1594,8 @@
       
       const ratio = dot / m;
       const clamped = Math.max(-1, Math.min(1, ratio)); // clamp to valid range for acos
-      return Math.trunc((Math.acos(clamped) * r2d) * 1000) / 1000 ;
+      const result = Math.trunc((Math.acos(clamped) * r2d) * 1000) / 1000;
+      return isNaN(result) ? 0 : result;
     }
     projectV2({ project, len, dir }) {
       len = JSON.parse(len);
@@ -1596,7 +1610,7 @@
         return returnValue;
       }
     }
-    reflectionV2({ source, normal }) {
+    reflectionV2({ source, normal, axis }) {
       source = JSON.parse(source);
       normal = JSON.parse(normal);
 
@@ -1608,10 +1622,12 @@
         normal[1] * scale
       ];
 
-      return [
+      const result = [
         source[0] - scaledNormal[0],
         source[1] - scaledNormal[1]
       ];
+      
+      return axis === 'axis' ? result : this.reflectAcrossV2({ source: JSON.stringify(source), normal: JSON.stringify(normal) });
     }
     reflectAcrossV2({ source, normal }) {
       source = JSON.parse(source);

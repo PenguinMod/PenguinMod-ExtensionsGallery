@@ -160,18 +160,19 @@
                     builder: (node, compiler, imports) => {
                         const originalSource = compiler.source;
 
-                        compiler.source = 'yield* (function*() {';
-                        compiler.source += '    const __inner = yield* (function*() {';
-                        compiler.source += `        runtime.ext_dogeiscutyetanotherstringextension.builderIndex.push('');`;
+                        compiler.source = '(yield* (function*() {';
+                        compiler.source += '    const __inner = (yield* (function*() {';
+                        compiler.source += `        thread._dogeiscutyetanotherstringextensionBuilderIndex ??= [];`;
+                        compiler.source += `        thread._dogeiscutyetanotherstringextensionBuilderIndex.push('');`;
                         compiler.descendStack(node.substack, new imports.Frame(false, undefined, true));
-                        compiler.source += `        return new runtime.ext_dogeiscutyetanotherstringextension.BuilderReturnValue(runtime.ext_dogeiscutyetanotherstringextension.builderIndex.pop());`;
-                        compiler.source += '    })();';
+                        compiler.source += `        return new runtime.ext_dogeiscutyetanotherstringextension.BuilderReturnValue(thread._dogeiscutyetanotherstringextensionBuilderIndex.pop());`;
+                        compiler.source += '    })());';
                         compiler.source += '    const __result = __inner;';
                         compiler.source += '    if (!(__result instanceof runtime.ext_dogeiscutyetanotherstringextension.BuilderReturnValue)) {';
                         compiler.source += '        throw "Return statements are not supported in builders.";';
                         compiler.source += '    }';
                         compiler.source += '    return __result.value;';
-                        compiler.source += '})()';
+                        compiler.source += '})())';
 
                         const stackSource = compiler.source;
                         compiler.source = originalSource;
@@ -181,17 +182,15 @@
             };
         }
 
-        builderIndex = []
-
         BuilderReturnValue = class {
             constructor(value) {
                 this.value = value
             }
         } 
 
-        currentString({}) {
-            if (this.builderIndex.length > 0) {
-                return this.builderIndex[this.builderIndex.length-1]
+        currentString({}, util) {
+            if (util.thread._dogeiscutyetanotherstringextensionBuilderIndex && util.thread._dogeiscutyetanotherstringextensionBuilderIndex.length > 0) {
+                return util.thread._dogeiscutyetanotherstringextensionBuilderIndex[util.thread._dogeiscutyetanotherstringextensionBuilderIndex.length-1]
             } else {
                 throw 'This block must be inside of a "string builder" block.';
             }
@@ -201,19 +200,19 @@
             return 'noop'
         }
 
-        builderAppend({ STRING }) {
+        builderAppend({ STRING }, util) {
             STRING = Scratch.Cast.toString(STRING)
-            if (this.builderIndex.length > 0) {
-                this.builderIndex[this.builderIndex.length-1] += STRING
+            if (util.thread._dogeiscutyetanotherstringextensionBuilderIndex && util.thread._dogeiscutyetanotherstringextensionBuilderIndex.length > 0) {
+                util.thread._dogeiscutyetanotherstringextensionBuilderIndex[util.thread._dogeiscutyetanotherstringextensionBuilderIndex.length-1] += STRING
             } else {
                 throw 'This block must be inside of a "string builder" block.';
             }
         }
 
-        builderSet({ STRING }) {
+        builderSet({ STRING }, util) {
             STRING = Scratch.Cast.toString(STRING)
-            if (this.builderIndex.length > 0) {
-                this.builderIndex[this.builderIndex.length-1] = STRING
+            if (util.thread._dogeiscutyetanotherstringextensionBuilderIndex && util.thread._dogeiscutyetanotherstringextensionBuilderIndex.length > 0) {
+                util.thread._dogeiscutyetanotherstringextensionBuilderIndex[util.thread._dogeiscutyetanotherstringextensionBuilderIndex.length-1] = STRING
             } else {
                 throw 'This block must be inside of a "string builder" block.';
             }

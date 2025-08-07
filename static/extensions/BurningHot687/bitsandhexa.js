@@ -19,13 +19,20 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
 */
 
-// V0.14
+// V0.15
 
 (function(Scratch){
     "use strict";
 
     if (!Scratch.extensions.unsandboxed) {
         // throw new Error("This extension prefers to be used unsandboxed");
+    }
+
+    // yo thanks PackGod, or jwlong or whatever you like to call yourself
+    let jwArray = {
+        Type: class { },
+        Block: {},
+        Argument: {},
     }
 
     let fullLength = true;
@@ -60,6 +67,33 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
                 },
             },
         },
+        {
+            opcode: "testinglol",
+            text: "foo and [ARG]",
+            blockType: Scratch.BlockType.REPORTER,
+            blockShape: Scratch.BlockShape.SQUARE,
+            hideFromPalette: true,
+            arguments: {
+                ARG: jwArray.Argument
+            },
+            ...jwArray.Block
+        },
+        {
+            opcode: "stringToASCIIArray",
+            text: "[STR] to ASCII array in [BASE]",
+            blockType: Scratch.BlockType.REPORTER,
+            blockShape: Scratch.BlockShape.SQUARE,
+            arguments: {
+                STR: {
+                    type: Scratch.ArgumentType.STRING,
+                    defaultValue: "foo?!",
+                },
+                BASE: {
+                    type: Scratch.ArgumentType.STRING,
+                    menu: "BASES",
+                },
+            },
+        },
     ];
     const icon = "data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiPz4KPHN2ZyBpZD0iTGF5ZXJfMSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIiB2ZXJzaW9uPSIxLjEiIHZpZXdCb3g9IjAgMCAyMjUgMjI1Ij4KICA8IS0tIEdlbmVyYXRvcjogQWRvYmUgSWxsdXN0cmF0b3IgMjkuNS4xLCBTVkcgRXhwb3J0IFBsdWctSW4gLiBTVkcgVmVyc2lvbjogMi4xLjAgQnVpbGQgMTQxKSAgLS0+CiAgPGRlZnM+CiAgICA8c3R5bGU+CiAgICAgIC5zdDAgewogICAgICAgIGZpbGw6ICNmZmY7CiAgICAgIH0KCiAgICAgIC5zdDEgewogICAgICAgIGZpbGw6ICMxYjQ2OGQ7CiAgICAgIH0KCiAgICAgIC5zdDIgewogICAgICAgIGZpbGw6ICMxNDY0OGE7CiAgICAgIH0KICAgIDwvc3R5bGU+CiAgPC9kZWZzPgogIDxyZWN0IGNsYXNzPSJzdDEiIHdpZHRoPSIyMjUiIGhlaWdodD0iMjI1Ii8+CiAgPGc+CiAgICA8cG9seWdvbiBjbGFzcz0ic3QwIiBwb2ludHM9IjE3NC4wNiAxNC4wMSAxMTkuMjEgMTQuMDEgOTEuNzkgNjEuNTEgMTE5LjIxIDEwOS4wMSAxNzQuMDYgMTA5LjAxIDIwMS40OSA2MS41MSAxNzQuMDYgMTQuMDEiLz4KICAgIDxjaXJjbGUgY2xhc3M9InN0MiIgY3g9IjY1LjY1IiBjeT0iMTIyLjI2IiByPSI0Mi4xNCIvPgogICAgPHJlY3QgY2xhc3M9InN0MCIgeD0iMTE3LjE3IiB5PSIxMTcuOCIgd2lkdGg9Ijc0LjE4IiBoZWlnaHQ9IjkzLjE5IiByeD0iMTIiIHJ5PSIxMiIvPgogIDwvZz4KPC9zdmc+";
     const iconCircle = "data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiPz4KPHN2ZyBpZD0iTGF5ZXJfMSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIiB2ZXJzaW9uPSIxLjEiIHZpZXdCb3g9IjAgMCAyMjUgMjI1Ij4KICA8IS0tIEdlbmVyYXRvcjogQWRvYmUgSWxsdXN0cmF0b3IgMjkuNS4xLCBTVkcgRXhwb3J0IFBsdWctSW4gLiBTVkcgVmVyc2lvbjogMi4xLjAgQnVpbGQgMTQxKSAgLS0+CiAgPGRlZnM+CiAgICA8c3R5bGU+CiAgICAgIC5zdDAgewogICAgICAgIGZpbGw6ICMxNDY0OGE7CiAgICAgIH0KCiAgICAgIC5zdDEgewogICAgICAgIGZpbGw6ICNmZmY7CiAgICAgIH0KCiAgICAgIC5zdDIgewogICAgICAgIGZpbGw6ICMxYjQ2OGQ7CiAgICAgIH0KICAgIDwvc3R5bGU+CiAgPC9kZWZzPgogIDxyZWN0IGNsYXNzPSJzdDIiIHg9IjAiIHk9IjAiIHdpZHRoPSIyMjUiIGhlaWdodD0iMjI1IiByeD0iMTEyLjUiIHJ5PSIxMTIuNSIvPgogIDxnPgogICAgPHBvbHlnb24gY2xhc3M9InN0MSIgcG9pbnRzPSIxNjMuODUgMzAuMzQgMTE4LjEgMzAuMzQgOTUuMjIgNjkuOTcgMTE4LjEgMTA5LjU5IDE2My44NSAxMDkuNTkgMTg2LjczIDY5Ljk3IDE2My44NSAzMC4zNCIvPgogICAgPGNpcmNsZSBjbGFzcz0ic3QwIiBjeD0iNzMuNDIiIGN5PSIxMjAuNjQiIHI9IjM1LjE1Ii8+CiAgICA8cmVjdCBjbGFzcz0ic3QxIiB4PSIxMTYuNCIgeT0iMTE2LjkyIiB3aWR0aD0iNjEuODgiIGhlaWdodD0iNzcuNzQiIHJ4PSIxMC4wMSIgcnk9IjEwLjAxIi8+CiAgPC9nPgogIDxwYXRoIGNsYXNzPSJzdDEiIGQ9Ik01MS41MSwxOTAuMjNjLTMuNjksMC0zLjY5LDUuNzMsMCw1LjczczMuNjktNS43MywwLTUuNzNaIi8+CiAgPHBhdGggY2xhc3M9InN0MSIgZD0iTTcwLjk3LDE3OS4wM2MtMy42OSwwLTMuNjksNS43MywwLDUuNzNzMy42OS01LjczLDAtNS43M1oiLz4KICA8cGF0aCBjbGFzcz0ic3QxIiBkPSJNNjYuNzcsMTkzLjF2MS40NGMtLjI2LS4xNS0uNTEtLjMtLjc2LS40NS0zLjE0LTEuOTYtNi4wMiwzLTIuODksNC45NSwxLjA3LjY3LDIuMTksMS4yMiwzLjM2LDEuNywxLjI4LjUzLDIuNjMsMS4wMywzLjk5LjQsMS42NS0uNzYsMi4wMy0yLjM2LDIuMDQtNC4wM3YtNC4wMWMwLTMuNjktNS43Mi0zLjY5LTUuNzMsMFoiLz4KPC9zdmc+";
@@ -87,13 +121,28 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
     function testForFormat(numString, base) {
         switch (basesArray.indexOf(base)) {
-            case 0:
-                return isItDecimal(numString);
-            case 1:
-                return isItBinary(numString);
-            case 2:
-                return isItHexadecimal(numString);
+        case 0:
+            return isItDecimal(numString);
+        case 1:
+            return isItBinary(numString);
+        case 2:
+            return isItHexadecimal(numString);
         }
+    };
+    
+    function getBitAt(NUM, IDX) {
+        if (IDX > 31) return "";
+        let cValue = NUM;
+        console.log(NUM);
+        console.log(IDX);
+        if (!(isItDecimal(cValue) || isItHexadecimal(cValue))) return "";
+        if (isItHexadecimal(cValue) && /[abcdef]/i.test(cValue)) {
+            cValue = "0x" + cValue;
+        }
+        if (IDX > parseInt(cValue, 2).length && !fullLength) return "";
+        console.log(parseInt(cValue).toString(2));
+        console.log((parseInt(cValue) >>> IDX) & 1);
+        return (parseInt(cValue) >>> IDX) & 1;
     };
 
     function binaryReformat(Value, neg = true) {
@@ -124,6 +173,10 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     };
 
     class Extension {
+        constructor() {
+            if (!vm.jwArray) vm.extensionManager.loadExtensionIdSync('jwArray'); jwArray = vm.jwArray;
+        }
+
         getInfo() {
             const extraBlocks = extOpen ? extBlockArray : [];
             return {
@@ -411,7 +464,6 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
                         text: extOpen ? "Close Extras" : "Open Extras",
                         blockType: Scratch.BlockType.BUTTON,
                     },
-                    "---",
                 ].concat(extraBlocks),
                 menus: {
                     BASES: {
@@ -442,29 +494,29 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
         binaryLengthGetter(args) {
             // Still need to fix monitors here lol
             switch (args.LENGTH) {
-                case 'fixed':
-                    selLengthIsFull = true;
-                    return fullLength;
-                case 'dynamic':
-                    selLengthIsFull = false;
-                    return !fullLength;
-                default:
-                    console.log("error here?");
-                    break;
+            case 'fixed':
+                selLengthIsFull = true;
+                return fullLength;
+            case 'dynamic':
+                selLengthIsFull = false;
+                return !fullLength;
+            default:
+                console.log("error here?");
+                break;
             }
         }
 
         binaryLengthSetter(args) {
             switch (args.LENGTH) {
-                case 'fixed':
-                    fullLength = true;
-                    break;
-                case 'dynamic':
-                    fullLength = false;
-                    break;
-                default:
-                    console.log("error here?");
-                    break;
+            case 'fixed':
+                fullLength = true;
+                break;
+            case 'dynamic':
+                fullLength = false;
+                break;
+            default:
+                console.log("error here?");
+                break;
             }
         }
 
@@ -492,50 +544,52 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
                 console.log("same!");
                 // return args.NUM;
             }
+
+            let leadingZeroes = '';
             if (fullLength) {
                 computeValue = parseInt(computeValue, (args.FROM === basesArray[0]) ? 10 : ((args.FROM === basesArray[1]) ? 2: 16));
             } else {
+                for (let i = 0; i < computeValue.length; i++) {
+                    if (computeValue[i] != "0") break;
+                    leadingZeroes = leadingZeroes.concat("0");
+                }
                 console.log("dynamic adjust")
                 switch (basesArray.indexOf(args.FROM)) {
-                    case 0:
-                        computeValue = parseInt(computeValue);
-                        break;
-                    case 1:
-                        computeValue = binaryToDecimal(computeValue);
-                        break;
-                    case 2:
-                        computeValue = binaryToDecimal((parseInt(computeValue, 16) >>> 0).toString(2));
-                        break;
-                }
-            }
-
-            switch (basesArray.indexOf(args.BASE)) {
                 case 0:
-                    computeValue = computeValue.toString(10);
+                    computeValue = parseInt(computeValue);
                     break;
                 case 1:
-                    computeValue = binaryReformat(computeValue, computeValue < 0);
+                    computeValue = binaryToDecimal(computeValue);
                     break;
                 case 2:
-                    computeValue = fullLength ? computeValue.toString(16) : parseInt(binaryReformat(computeValue, computeValue < 0), 2).toString(16);
+                    computeValue = binaryToDecimal(leadingZeroes.concat((parseInt(computeValue, 16) >>> 0).toString(2)));
                     break;
-                default:
-                    console.log("failed?");
-                    return "";
+                }
+            }
+            if (fullLength) computeValue = computeValue >> 0;
+            
+            switch (basesArray.indexOf(args.BASE)) {
+            case 0:
+                computeValue = computeValue.toString(10);
+                break;
+            case 1:
+                computeValue = binaryReformat(computeValue, computeValue < 0);
+                break;
+            case 2:
+                let negative = computeValue < 0;
+                computeValue = parseInt(binaryReformat(computeValue, negative), 2).toString(16);
+                if (!fullLength && !negative) computeValue = "0" + computeValue; 
+                break;
+            default:
+                console.log("failed?");
+                return "";
             }
 
             return computeValue;
         }
 
         getBitAtIdx(args) {
-            if (args.IDX > 31) return "";
-            let computeValue = args.NUM;
-            if (!(isItDecimal(computeValue) || isItHexadecimal(computeValue))) return "";
-            if (isItHexadecimal(computeValue) && /[abcdef]/i.test(computeValue)) {
-                computeValue = "0x" + computeValue;
-            }
-            if (args.IDX > parseInt(computeValue, 2).length && !fullLength) return "";
-            return (parseInt(computeValue) >> args.IDX) & 1;
+            return getBitAt(args.NUM, args.IDX);
         }
 
         signedRightShiftBitz(args) {
@@ -544,8 +598,12 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
             if (isItHexadecimal(computeValue) && /[abcdef]/i.test(computeValue)) {
                 computeValue = "0x" + computeValue;
             }
+            let signBit = binaryReformat(computeValue)[0];
 
-            return computeValue >> args.AMOUNT;
+            if (fullLength) {
+                return computeValue >> args.AMOUNT;
+            }
+            return signBit.repeat(args>AMOUNT) + (computeValue >> args.AMOUNT).toString();
         }
 
         leftShiftBitz(args) {
@@ -575,7 +633,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
                 computeValue = "0x" + computeValue;
             }
 
-            return computeValue >> args.AMOUNT | computeValue << (32 - args.AMOUNT);
+            return computeValue >> args.AMOUNT | computeValue << (fullLength ? 32 : binaryReformat(computeValue) - args.AMOUNT);
         }
 
         circularLeftShiftBitz(args) {
@@ -585,7 +643,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
                 computeValue = "0x" + computeValue;
             }
 
-            return computeValue << args.AMOUNT | computeValue >> (32 - args.AMOUNT);
+            return computeValue << args.AMOUNT | computeValue >> (fullLength ? 32 : binaryReformat(computeValue) - args.AMOUNT);
         }
 
         bitwiseAndOperator(args) {
@@ -709,6 +767,19 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
             }
 
             return ~(value1 ^ value2);
+        }
+
+        testinglol(args) {
+            args.ARG = jwArray.Type.toArray(args.ARG);
+            return new jwArray.Type(["foo", args.ARG]);
+        }
+
+        stringToASCIIArray(args) {
+            let computeValue = [];
+            for (let i = 0; i < args.STR.length; i++) {
+                computeValue.push(args.STR.charCodeAt(i).toString(args.BASE === 'decimal' ? 10 : args.BASE === 'binary' ? 2 : 16));
+            }
+            return new jwArray.Type(computeValue);
         }
     }
     Scratch.extensions.register(new Extension());

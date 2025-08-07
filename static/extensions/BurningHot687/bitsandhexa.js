@@ -39,62 +39,6 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     let selLengthIsFull = true;
     let extOpen = false;
     let basesArray = ["decimal", "binary", "hexadecimal"];
-    const extBlockArray = [
-        {
-            text: "Configuration Settings ⚠",
-            blockType: Scratch.BlockType.LABEL,
-        },
-        {
-            opcode: "binaryLengthSetter",
-            text: "use a [LENGTH] length for binary",
-            blockType: Scratch.BlockType.COMMAND,
-            arguments: {
-                LENGTH: {
-                    type: Scratch.ArgumentType.STRING,
-                    menu: "LENGTHS",
-                }
-            },
-        },
-        {
-            opcode: "binaryLengthGetter",
-            text: "using [LENGTH] length?",
-            blockType: Scratch.BlockType.BOOLEAN,
-            label: selLengthIsFull ? "using fixed length" : "using dynamic length",
-            arguments: {
-                LENGTH: {
-                    type: Scratch.ArgumentType.STRING,
-                    menu: "LENGTHS",
-                },
-            },
-        },
-        {
-            opcode: "testinglol",
-            text: "foo and [ARG]",
-            blockType: Scratch.BlockType.REPORTER,
-            blockShape: Scratch.BlockShape.SQUARE,
-            hideFromPalette: true,
-            arguments: {
-                ARG: jwArray.Argument
-            },
-            ...jwArray.Block
-        },
-        {
-            opcode: "stringToASCIIArray",
-            text: "[STR] to ASCII array in [BASE]",
-            blockType: Scratch.BlockType.REPORTER,
-            blockShape: Scratch.BlockShape.SQUARE,
-            arguments: {
-                STR: {
-                    type: Scratch.ArgumentType.STRING,
-                    defaultValue: "foo?!",
-                },
-                BASE: {
-                    type: Scratch.ArgumentType.STRING,
-                    menu: "BASES",
-                },
-            },
-        },
-    ];
     const icon = "data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiPz4KPHN2ZyBpZD0iTGF5ZXJfMSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIiB2ZXJzaW9uPSIxLjEiIHZpZXdCb3g9IjAgMCAyMjUgMjI1Ij4KICA8IS0tIEdlbmVyYXRvcjogQWRvYmUgSWxsdXN0cmF0b3IgMjkuNS4xLCBTVkcgRXhwb3J0IFBsdWctSW4gLiBTVkcgVmVyc2lvbjogMi4xLjAgQnVpbGQgMTQxKSAgLS0+CiAgPGRlZnM+CiAgICA8c3R5bGU+CiAgICAgIC5zdDAgewogICAgICAgIGZpbGw6ICNmZmY7CiAgICAgIH0KCiAgICAgIC5zdDEgewogICAgICAgIGZpbGw6ICMxYjQ2OGQ7CiAgICAgIH0KCiAgICAgIC5zdDIgewogICAgICAgIGZpbGw6ICMxNDY0OGE7CiAgICAgIH0KICAgIDwvc3R5bGU+CiAgPC9kZWZzPgogIDxyZWN0IGNsYXNzPSJzdDEiIHdpZHRoPSIyMjUiIGhlaWdodD0iMjI1Ii8+CiAgPGc+CiAgICA8cG9seWdvbiBjbGFzcz0ic3QwIiBwb2ludHM9IjE3NC4wNiAxNC4wMSAxMTkuMjEgMTQuMDEgOTEuNzkgNjEuNTEgMTE5LjIxIDEwOS4wMSAxNzQuMDYgMTA5LjAxIDIwMS40OSA2MS41MSAxNzQuMDYgMTQuMDEiLz4KICAgIDxjaXJjbGUgY2xhc3M9InN0MiIgY3g9IjY1LjY1IiBjeT0iMTIyLjI2IiByPSI0Mi4xNCIvPgogICAgPHJlY3QgY2xhc3M9InN0MCIgeD0iMTE3LjE3IiB5PSIxMTcuOCIgd2lkdGg9Ijc0LjE4IiBoZWlnaHQ9IjkzLjE5IiByeD0iMTIiIHJ5PSIxMiIvPgogIDwvZz4KPC9zdmc+";
     const iconCircle = "data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiPz4KPHN2ZyBpZD0iTGF5ZXJfMSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIiB2ZXJzaW9uPSIxLjEiIHZpZXdCb3g9IjAgMCAyMjUgMjI1Ij4KICA8IS0tIEdlbmVyYXRvcjogQWRvYmUgSWxsdXN0cmF0b3IgMjkuNS4xLCBTVkcgRXhwb3J0IFBsdWctSW4gLiBTVkcgVmVyc2lvbjogMi4xLjAgQnVpbGQgMTQxKSAgLS0+CiAgPGRlZnM+CiAgICA8c3R5bGU+CiAgICAgIC5zdDAgewogICAgICAgIGZpbGw6ICMxNDY0OGE7CiAgICAgIH0KCiAgICAgIC5zdDEgewogICAgICAgIGZpbGw6ICNmZmY7CiAgICAgIH0KCiAgICAgIC5zdDIgewogICAgICAgIGZpbGw6ICMxYjQ2OGQ7CiAgICAgIH0KICAgIDwvc3R5bGU+CiAgPC9kZWZzPgogIDxyZWN0IGNsYXNzPSJzdDIiIHg9IjAiIHk9IjAiIHdpZHRoPSIyMjUiIGhlaWdodD0iMjI1IiByeD0iMTEyLjUiIHJ5PSIxMTIuNSIvPgogIDxnPgogICAgPHBvbHlnb24gY2xhc3M9InN0MSIgcG9pbnRzPSIxNjMuODUgMzAuMzQgMTE4LjEgMzAuMzQgOTUuMjIgNjkuOTcgMTE4LjEgMTA5LjU5IDE2My44NSAxMDkuNTkgMTg2LjczIDY5Ljk3IDE2My44NSAzMC4zNCIvPgogICAgPGNpcmNsZSBjbGFzcz0ic3QwIiBjeD0iNzMuNDIiIGN5PSIxMjAuNjQiIHI9IjM1LjE1Ii8+CiAgICA8cmVjdCBjbGFzcz0ic3QxIiB4PSIxMTYuNCIgeT0iMTE2LjkyIiB3aWR0aD0iNjEuODgiIGhlaWdodD0iNzcuNzQiIHJ4PSIxMC4wMSIgcnk9IjEwLjAxIi8+CiAgPC9nPgogIDxwYXRoIGNsYXNzPSJzdDEiIGQ9Ik01MS41MSwxOTAuMjNjLTMuNjksMC0zLjY5LDUuNzMsMCw1LjczczMuNjktNS43MywwLTUuNzNaIi8+CiAgPHBhdGggY2xhc3M9InN0MSIgZD0iTTcwLjk3LDE3OS4wM2MtMy42OSwwLTMuNjksNS43MywwLDUuNzNzMy42OS01LjczLDAtNS43M1oiLz4KICA8cGF0aCBjbGFzcz0ic3QxIiBkPSJNNjYuNzcsMTkzLjF2MS40NGMtLjI2LS4xNS0uNTEtLjMtLjc2LS40NS0zLjE0LTEuOTYtNi4wMiwzLTIuODksNC45NSwxLjA3LjY3LDIuMTksMS4yMiwzLjM2LDEuNywxLjI4LjUzLDIuNjMsMS4wMywzLjk5LjQsMS42NS0uNzYsMi4wMy0yLjM2LDIuMDQtNC4wM3YtNC4wMWMwLTMuNjktNS43Mi0zLjY5LTUuNzMsMFoiLz4KPC9zdmc+";
 
@@ -178,6 +122,61 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
         }
 
         getInfo() {
+            const extBlockArray = [
+                {
+                    text: "Configuration Settings ⚠",
+                    blockType: Scratch.BlockType.LABEL,
+                },
+                {
+                    opcode: "binaryLengthSetter",
+                    text: "use a [LENGTH] length for binary",
+                    blockType: Scratch.BlockType.COMMAND,
+                    arguments: {
+                        LENGTH: {
+                            type: Scratch.ArgumentType.STRING,
+                            menu: "LENGTHS",
+                        }
+                    },
+                },
+                {
+                    opcode: "binaryLengthGetter",
+                    text: "using [LENGTH] length?",
+                    blockType: Scratch.BlockType.BOOLEAN,
+                    label: selLengthIsFull ? "using fixed length" : "using dynamic length",
+                    arguments: {
+                        LENGTH: {
+                            type: Scratch.ArgumentType.STRING,
+                            menu: "LENGTHS",
+                        },
+                    },
+                },
+                {
+                    opcode: "testinglol",
+                    text: "foo and [ARG]",
+                    blockType: Scratch.BlockType.REPORTER,
+                    blockShape: Scratch.BlockShape.SQUARE,
+                    hideFromPalette: true,
+                    arguments: {
+                        ARG: jwArray.Argument
+                    },
+                    ...jwArray.Block
+                },
+                {
+                    opcode: "stringToASCIIArray",
+                    text: "[STR] to ASCII array in [BASE]",
+                    arguments: {
+                        STR: {
+                            type: Scratch.ArgumentType.STRING,
+                            defaultValue: "foo?!",
+                        },
+                        BASE: {
+                            type: Scratch.ArgumentType.STRING,
+                            menu: "BASES",
+                        },
+                    },
+                    ...jwArray.Block
+                },
+            ];
             const extraBlocks = extOpen ? extBlockArray : [];
             return {
                 id: "burninghot687bitwisewhexa",

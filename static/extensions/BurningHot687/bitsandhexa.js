@@ -115,6 +115,10 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
         console.log(newerValue);
         return newerValue;
     };
+    
+    function binaryStupidity(value) {
+        return fullLength ? value : binaryToDecimal(binaryReformat(value, binaryToDecimal(value.toString(2)) < 0));
+    };
 
     class Extension {
         constructor() {
@@ -602,7 +606,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
             if (fullLength) {
                 return computeValue >> args.AMOUNT;
             }
-            return signBit.repeat(args>AMOUNT) + (computeValue >> args.AMOUNT).toString();
+            return binaryToDecimal(signBit.repeat(args.AMOUNT) + (computeValue >> args.AMOUNT).toString(2));
         }
 
         leftShiftBitz(args) {
@@ -612,7 +616,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
                 computeValue = "0x" + computeValue;
             }
 
-            return computeValue << args.AMOUNT;
+            return binaryStupidity(computeValue << args.AMOUNT);
         }
 
         unsignedRightShiftBitz(args) {
@@ -622,7 +626,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
                 computeValue = "0x" + computeValue;
             }
 
-            return computeValue >>> args.AMOUNT;
+            return binaryStupidity(computeValue >>> args.AMOUNT);
         }
 
         circularRightShiftBitz(args) {
@@ -632,7 +636,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
                 computeValue = "0x" + computeValue;
             }
 
-            return computeValue >> args.AMOUNT | computeValue << (fullLength ? 32 : binaryReformat(computeValue) - args.AMOUNT);
+            return binaryStupidity(computeValue >> args.AMOUNT | computeValue << (fullLength ? 32 : binaryReformat(computeValue) - args.AMOUNT));
         }
 
         circularLeftShiftBitz(args) {
@@ -642,7 +646,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
                 computeValue = "0x" + computeValue;
             }
 
-            return computeValue << args.AMOUNT | computeValue >> (fullLength ? 32 : binaryReformat(computeValue) - args.AMOUNT);
+            return binaryStupidity(computeValue << args.AMOUNT | computeValue >> (fullLength ? 32 : binaryReformat(computeValue) - args.AMOUNT));
         }
 
         bitwiseAndOperator(args) {
@@ -662,7 +666,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
                 return "";
             }
 
-            return value1 & value2;
+            return binaryStupidity(value1 & value2);
         }
 
         bitwiseOrOperator(args) {
@@ -680,7 +684,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
                 return "";
             }
 
-            return value1 | value2;
+            return binaryStupidity(value1 | value2);
         }
 
         bitwiseXorOperator(args) {
@@ -698,7 +702,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
                 return "";
             }
 
-            return value1 ^ value2;
+            return binaryStupidity(value1 ^ value2);
         }
 
         bitwiseNotOperator(args) {

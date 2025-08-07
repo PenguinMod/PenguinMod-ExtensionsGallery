@@ -128,7 +128,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
             const extraBlocks = extOpen ? extBlockArray : [];
             return {
                 id: "burninghot687bitwisewhexa",
-                name: Scratch.translate("Bits and Hexa"),
+                name: Scratch.translate("Bitwise") + "+",
                 color1: "#15448f",
                 color2: "#0f1f70",
                 color3: "#0a094f",

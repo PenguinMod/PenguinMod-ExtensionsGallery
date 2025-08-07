@@ -462,13 +462,13 @@ export default [
         note: "Extension thumbnail made by Dillon."
     },
     {
-        name: "Bits & Hexa",
-        description: "An extension to deal with bitwise operations that supports hexadecimal.",
+        name: "Bitwise+",
+        description: "An expansion of the original Bitwise extension, this adds a lot of binary representation abilities!",
         code: "BurningHot687/bitsandhexa.js",
-        banner: "BurningHot687/ADDMEbitsandhexa.png",
+        banner: "BurningHot687/bitsandhexa.png",
         creator: "Raichu-Model",
         documentation: "bitsandhexa",
-        creatorAlias: "BurningHot687",
+        creatorAlias: "BurningHot687/Raichu-Model/-Rig",
         notes: "An expansion of a turbowarp extension",
         isGitHub: false,
     },

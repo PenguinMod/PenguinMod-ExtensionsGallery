@@ -15,7 +15,6 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
     TO-DO:
 
-    - Add more of the blocks that TrueFantom had
     - Get feedback
 
 */
@@ -35,7 +34,6 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     let basesArray = ["decimal", "binary", "hexadecimal"];
     const extBlockArray = [
         {
-            opcode: "bitHexConfigurationLabel",
             text: "Configuration Settings ⚠",
             blockType: Scratch.BlockType.LABEL,
         },
@@ -119,7 +117,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     function binaryToDecimal(computedValue) {
         let newerValue = 0;
         for (let i = computedValue.length; i > 0; i--) {
-            newerValue += parseInt(computedValue[i - 1]) * (Math.pow(2, computedValue.length - i)) * ((i === 0) ? -1 : 1);
+            newerValue += parseInt(computedValue[i - 1]) * (Math.pow(2, computedValue.length - i)) * ((i === 1) ? -1 : 1);
         }
         console.log(newerValue);
         return newerValue;
@@ -200,7 +198,6 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
                         },
                     },
                     {
-                        opcode: "bitHexManipulationLabel",
                         text: "Bitwise Manipulation",
                         blockType: Scratch.BlockType.LABEL,
                     },
@@ -295,7 +292,6 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
                         switches: [ "signedRightShiftBitz", "leftShiftBitz", "unsignedRightShiftBitz", "circularRightShiftBitz" ],
                     },
                     {
-                        opcode: "bitHexBitwiseOperatorsLabel",
                         text: "Bitwise Operators",
                         blockType: Scratch.BlockType.LABEL,
                     },
@@ -440,7 +436,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
         }
 
         bitwiseDocumentationButton() {
-            window.location.href = "https://docs.penguinmod.com/extensions/bitsandhexa";
+            window.location.href = "https://extensions.penguinmod.com/docs/bitsandhexa";
         }
 
         binaryLengthGetter(args) {

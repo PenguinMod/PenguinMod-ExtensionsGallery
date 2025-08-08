@@ -1,10 +1,12 @@
-# Bits & Hexa v0.11
+# Bitwise+ v0.17
 ## Bitwise Operations for Decimals, Binary, and Hexadecimal
-### By BurningHot687/Raichu-Model
+### By BurningHot687/Raichu-Model/-Rig
 
 If you are unfamiliar with bitwise operations, then hopefully this documentation can help you. If you still need further reading, you may go to this [Wikipedia Article](https://en.wikipedia.org/wiki/Bitwise_operation).
 
-###### Keep in mind that version 0.11 currently only supports binary, decimal, and hexadecimal. Do not attempt other bases like base 64 or octals because they're not here yet.
+###### Keep in mind that version 0.17 currently only supports binary, decimal, and hexadecimal. All outputs, unless specified otherwise, are going to be in decimal. All inputs, unless specified otherwise, are assumed decimal unless there is a hexadecimal character within it.
+
+---
 
 ```scratch
 <is [1011] [decimal v]?:: #15448f>
@@ -19,8 +21,16 @@ convert [4d2] from [hexadecimal v] to [decimal v] :: reporter :: #15448f
 If the input and its assigned base are the same, then it will convert to the requested base.
 
 ```scratch
+get bit at index (3) of [13] :: reporter :: #15448f
+```
+
+Gets the bit (`0` or `1`) at the index of the binary representation of the input number. Index `0` refers to the least significant bit.
+
+```scratch
 [-13] >> (3) :: reporter :: #15448f
 ```
+
+---
 
 Signed right shift. Think of it like this:
 
@@ -38,3 +48,17 @@ For this reason, for each shift, we "duplicate" the sign bit and move it over to
 `11111111111111111111111111111110`
 
 Obviously positive numbers wouldn't be affected drastically due to their sign bits being `0`.
+
+---
+
+## Extras
+
+These blocks are more experimental and definitely require updates here and there. These are meant to be used for specific-use cases.
+
+---
+
+---
+
+
+
+And that should be all! :D

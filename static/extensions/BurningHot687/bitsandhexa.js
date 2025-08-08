@@ -19,7 +19,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
 */
 
-// V0.15
+// V0.17.4.0
 
 (function(Scratch){
     "use strict";
@@ -90,7 +90,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     };
 
     function binaryReformat(Value, neg = true) {
-        let newValue = Math.abs(Value).toString(2).length + 1;
+        let newValue = Value.toString(2).length;
         let computedValue = (Value >>> 0).toString(2);
         if (!fullLength) {
             console.log(computedValue);
@@ -141,7 +141,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
         getInfo() {
             const extBlockArray = [
                 {
-                    text: "String Array",
+                    text: "Strings",
                     blockType: Scratch.BlockType.LABEL,
                 },
                 {
@@ -154,6 +154,36 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
                         ARG: jwArray.Argument
                     },
                     ...jwArray.Block
+                },
+                {
+                    opcode: "charToASCII",
+                    text: "character [CHAR] to ASCII in [BASE]",
+                    blockType: Scratch.BlockType.REPORTER,
+                    arguments: {
+                        CHAR: {
+                            type: Scratch.ArgumentType.STRING,
+                            defaultValue: "f",
+                        },
+                        BASE: {
+                            type: Scratch.ArgumentType.STRING,
+                            menu: "BASES",
+                        },
+                    },
+                },
+                {
+                    opcode: "ASCIIToChar",
+                    text: "ASCII [ASCII] in [BASE] to character",
+                    blockType: Scratch.BlockType.REPORTER,
+                    arguments: {
+                        ASCII: {
+                            type: Scratch.ArgumentType.STRING,
+                            defaultValue: "f",
+                        },
+                        BASE: {
+                            type: Scratch.ArgumentType.STRING,
+                            menu: "BASES",
+                        },
+                    },
                 },
                 {
                     opcode: "stringToASCIIArray",
@@ -172,7 +202,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
                 },
                 {
                     opcode: "ASCIIArrayToString",
-                    text: "[ARRAY] in [BASE] to string",
+                    text: "ASCII array[ARRAY] in [BASE] to string",
                     blockType: Scratch.BlockType.REPORTER,
                     arguments: {
                         ARRAY: jwArray.Argument,
@@ -182,6 +212,65 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
                         },
                     },
                 },
+                "---",
+                {
+                    opcode: "charToUTF",
+                    text: "character [CHAR] to UTF-16 in [BASE]",
+                    blockType: Scratch.BlockType.REPORTER,
+                    arguments: {
+                        CHAR: {
+                            type: Scratch.ArgumentType.STRING,
+                            defaultValue: "β",
+                        },
+                        BASE: {
+                            type: Scratch.ArgumentType.STRING,
+                            menu: "BASES",
+                        },
+                    },
+                },
+                {
+                    opcode: "UTFToChar",
+                    text: "UTF-16 [UTF] in [BASE] to character",
+                    blockType: Scratch.BlockType.REPORTER,
+                    arguments: {
+                        UTF: {
+                            type: Scratch.ArgumentType.STRING,
+                            defaultValue: "946",
+                        },
+                        BASE: {
+                            type: Scratch.ArgumentType.STRING,
+                            menu: "BASES",
+                        },
+                    },
+                },
+                {
+                    opcode: "stringToUTFArray",
+                    text: "[STR] to UTF-16 array in [BASE]",
+                    arguments: {
+                        STR: {
+                            type: Scratch.ArgumentType.STRING,
+                            defaultValue: "foo%",
+                        },
+                        BASE: {
+                            type: Scratch.ArgumentType.STRING,
+                            menu: "BASES",
+                        },
+                    },
+                    ...jwArray.Block
+                },
+                {
+                    opcode: "UTFArrayToString",
+                    text: "UTF array[ARRAY] in [BASE] to string",
+                    blockType: Scratch.BlockType.REPORTER,
+                    arguments: {
+                        ARRAY: jwArray.Argument,
+                        BASE: {
+                            type: Scratch.ArgumentType.STRING,
+                            menu: "BASES",
+                        },
+                    },
+                },
+                "---",
                 {
                     text: "Configuration Settings ⚠",
                     blockType: Scratch.BlockType.LABEL,
@@ -593,7 +682,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
                     computeValue = binaryToDecimal(computeValue);
                     break;
                 case 2:
-                    computeValue = binaryToDecimal(leadingZeroez(computeValue).concat((parseInt(computeValue, 16) >>> 0).toString(2)));
+                    computeValue = binaryToDecimal(leadingZeroez(computeValue) + (parseInt(computeValue, 16) >>> 0).toString(2));
                     break;
                 }
             }
@@ -807,6 +896,14 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
             return new jwArray.Type(["foo", args.ARG]);
         }
 
+        charToASCII(args) {
+            return args.CHAR.charCodeAt(0).toString(chooseBaseValue(basesArray.indexOf(args.BASE)));
+        }
+
+        ASCIIToChar(args) {
+            return String.fromCharCode(parseInt(args.ASCII, chooseBaseValue(basesArray.indexOf(args.BASE))));
+        }
+
         stringToASCIIArray(args) {
             let computeValue = [];
             for (let i = 0; i < args.STR.length; i++) {
@@ -823,6 +920,34 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
             for (let i = 0; i < myArray.length; i++) {
                 console.log(String.fromCharCode(parseInt(myArray[i], chooseBaseValue(basesArray.indexOf(args.BASE)))));
                 computeValue = computeValue + String.fromCharCode(parseInt(myArray[i], chooseBaseValue(basesArray.indexOf(args.BASE))));
+            }
+            return computeValue;
+        }
+
+        charToUTF(args) {
+            return args.CHAR.codePointAt(0).toString(chooseBaseValue(basesArray.indexOf(args.BASE)));
+        }
+
+        UTFToChar(args) {
+            return String.fromCodePoint(parseInt(args.UTF, chooseBaseValue(basesArray.indexOf(args.BASE))));
+        }
+
+        stringToUTFArray(args) {
+            let computeValue = [];
+            for (let i = 0; i < args.STR.length; i++) {
+                computeValue.push(args.STR.codePointAt(i).toString(args.BASE === 'decimal' ? 10 : args.BASE === 'binary' ? 2 : 16));
+            }
+            return new jwArray.Type(computeValue);
+        }
+
+        UTFArrayToString(args) {
+            console.log(args.ARRAY);
+            let myArray = jwArray.Type.toArray(args.ARRAY).array;
+            console.log(myArray);
+            let computeValue = '';
+            for (let i = 0; i < myArray.length; i++) {
+                console.log(String.fromCodePoint(parseInt(myArray[i], chooseBaseValue(basesArray.indexOf(args.BASE)))));
+                computeValue = computeValue + String.fromCodePoint(parseInt(myArray[i], chooseBaseValue(basesArray.indexOf(args.BASE))));
             }
             return computeValue;
         }

@@ -75,7 +75,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     };
     
     function getBitAt(NUM, IDX) {
-        if (IDX > 31) return "";
+        if (IDX > 31 || IDX < 0) return "";
         let cValue = NUM;
         console.log(NUM);
         console.log(IDX);
@@ -83,7 +83,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
         if (isItHexadecimal(cValue) && /[abcdef]/i.test(cValue)) {
             cValue = "0x" + cValue;
         }
-        if (IDX > parseInt(cValue, 2).length && !fullLength) return "";
+        if (IDX > parseInt(cValue).toString(2).length && !fullLength) return "";
         console.log(parseInt(cValue).toString(2));
         console.log((parseInt(cValue) >>> IDX) & 1);
         return (parseInt(cValue) >>> IDX) & 1;
@@ -120,6 +120,19 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
         return fullLength ? value : binaryToDecimal(binaryReformat(value, binaryToDecimal(value.toString(2)) < 0));
     };
 
+    function leadingZeroez(computeValue) {
+        let returnValue = '';
+        for (let i = 0; i < computeValue.length; i++) {
+            if (computeValue[i] != "0") break;
+            returnValue = returnValue.concat("0");
+        }
+        return returnValue;
+    };
+
+    function chooseBaseValue(index) {
+        return index === 0 ? 10 : index === 1 ? 2 : 16;
+    };
+
     class Extension {
         constructor() {
             if (!vm.jwArray) vm.extensionManager.loadExtensionIdSync('jwArray'); jwArray = vm.jwArray;
@@ -128,31 +141,8 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
         getInfo() {
             const extBlockArray = [
                 {
-                    text: "Configuration Settings ⚠",
+                    text: "String Array",
                     blockType: Scratch.BlockType.LABEL,
-                },
-                {
-                    opcode: "binaryLengthSetter",
-                    text: "use a [LENGTH] length for binary",
-                    blockType: Scratch.BlockType.COMMAND,
-                    arguments: {
-                        LENGTH: {
-                            type: Scratch.ArgumentType.STRING,
-                            menu: "LENGTHS",
-                        }
-                    },
-                },
-                {
-                    opcode: "binaryLengthGetter",
-                    text: "using [LENGTH] length?",
-                    blockType: Scratch.BlockType.BOOLEAN,
-                    label: selLengthIsFull ? "using fixed length" : "using dynamic length",
-                    arguments: {
-                        LENGTH: {
-                            type: Scratch.ArgumentType.STRING,
-                            menu: "LENGTHS",
-                        },
-                    },
                 },
                 {
                     opcode: "testinglol",
@@ -179,6 +169,49 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
                         },
                     },
                     ...jwArray.Block
+                },
+                {
+                    opcode: "ASCIIArrayToString",
+                    text: "[ARRAY] in [BASE] to string",
+                    blockType: Scratch.BlockType.REPORTER,
+                    arguments: {
+                        ARRAY: jwArray.Argument,
+                        BASE: {
+                            type: Scratch.ArgumentType.STRING,
+                            menu: "BASES",
+                        },
+                    },
+                },
+                {
+                    text: "Configuration Settings ⚠",
+                    blockType: Scratch.BlockType.LABEL,
+                },
+                {
+                    text: "Doesn't work with all blocks!",
+                    blockType: Scratch.BlockType.LABEL,
+                },
+                {
+                    opcode: "binaryLengthSetter",
+                    text: "use a [LENGTH] length for binary",
+                    blockType: Scratch.BlockType.COMMAND,
+                    arguments: {
+                        LENGTH: {
+                            type: Scratch.ArgumentType.STRING,
+                            menu: "LENGTHS",
+                        }
+                    },
+                },
+                {
+                    opcode: "binaryLengthGetter",
+                    text: "using [LENGTH] length?",
+                    blockType: Scratch.BlockType.BOOLEAN,
+                    label: selLengthIsFull ? "using fixed length" : "using dynamic length",
+                    arguments: {
+                        LENGTH: {
+                            type: Scratch.ArgumentType.STRING,
+                            menu: "LENGTHS",
+                        },
+                    },
                 },
             ];
             const extraBlocks = extOpen ? extBlockArray : [];
@@ -548,14 +581,9 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
                 // return args.NUM;
             }
 
-            let leadingZeroes = '';
             if (fullLength) {
-                computeValue = parseInt(computeValue, (args.FROM === basesArray[0]) ? 10 : ((args.FROM === basesArray[1]) ? 2: 16));
+                computeValue = parseInt(computeValue, chooseBaseValue(basesArray.indexOf(args.FROM)));
             } else {
-                for (let i = 0; i < computeValue.length; i++) {
-                    if (computeValue[i] != "0") break;
-                    leadingZeroes = leadingZeroes.concat("0");
-                }
                 console.log("dynamic adjust")
                 switch (basesArray.indexOf(args.FROM)) {
                 case 0:
@@ -565,7 +593,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
                     computeValue = binaryToDecimal(computeValue);
                     break;
                 case 2:
-                    computeValue = binaryToDecimal(leadingZeroes.concat((parseInt(computeValue, 16) >>> 0).toString(2)));
+                    computeValue = binaryToDecimal(leadingZeroez(computeValue).concat((parseInt(computeValue, 16) >>> 0).toString(2)));
                     break;
                 }
             }
@@ -601,12 +629,13 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
             if (isItHexadecimal(computeValue) && /[abcdef]/i.test(computeValue)) {
                 computeValue = "0x" + computeValue;
             }
-            let signBit = binaryReformat(computeValue)[0];
-
+            
             if (fullLength) {
                 return computeValue >> args.AMOUNT;
             }
-            return binaryToDecimal(signBit.repeat(args.AMOUNT) + (computeValue >> args.AMOUNT).toString(2));
+            computeValue = leadingZeroez(computeValue) + (computeValue >> args.AMOUNT).toString(2);
+            let signBit = computeValue[0];
+            return binaryToDecimal(signBit.repeat(args.AMOUNT) + computeValue);
         }
 
         leftShiftBitz(args) {
@@ -615,8 +644,9 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
             if (isItHexadecimal(computeValue) && /[abcdef]/i.test(computeValue)) {
                 computeValue = "0x" + computeValue;
             }
-
-            return binaryStupidity(computeValue << args.AMOUNT);
+            
+            if (fullLength) return computeValue << args.AMOUNT;
+            return binaryToDecimal(leadingZeroez(computeValue) + (computeValue << args.AMOUNT).toString(2));
         }
 
         unsignedRightShiftBitz(args) {
@@ -783,6 +813,18 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
                 computeValue.push(args.STR.charCodeAt(i).toString(args.BASE === 'decimal' ? 10 : args.BASE === 'binary' ? 2 : 16));
             }
             return new jwArray.Type(computeValue);
+        }
+
+        ASCIIArrayToString(args) {
+            console.log(args.ARRAY);
+            let myArray = jwArray.Type.toArray(args.ARRAY).array;
+            console.log(myArray);
+            let computeValue = '';
+            for (let i = 0; i < myArray.length; i++) {
+                console.log(String.fromCharCode(parseInt(myArray[i], chooseBaseValue(basesArray.indexOf(args.BASE)))));
+                computeValue = computeValue + String.fromCharCode(parseInt(myArray[i], chooseBaseValue(basesArray.indexOf(args.BASE))));
+            }
+            return computeValue;
         }
     }
     Scratch.extensions.register(new Extension());

@@ -19,7 +19,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
 */
 
-// V0.17.4.0
+// V0.18.0.2
 
 (function(Scratch){
     "use strict";
@@ -90,12 +90,17 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     };
 
     function binaryReformat(Value, neg = true) {
-        let newValue = Value.toString(2).length;
         let computedValue = (Value >>> 0).toString(2);
+        let newValue = 0;
+        for (let i = 0; i < computedValue.length; i++) {
+            if (computedValue[i] == "0") break;
+            newValue++;
+        }
+        newValue--;
         if (!fullLength) {
             console.log(computedValue);
             console.log(newValue);
-            if (neg) computedValue = computedValue.slice(clamp(computedValue.length - newValue, 0, computedValue.length), computedValue.length);
+            if (neg) computedValue = computedValue.slice(newValue);
             if (!neg) computedValue = "0" + computedValue
             console.log(computedValue);
         }
@@ -157,9 +162,13 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
                 },
                 {
                     opcode: "charToASCII",
-                    text: "character [CHAR] to ASCII in [BASE]",
+                    text: "character [NUM] of [CHAR] to ASCII in [BASE]",
                     blockType: Scratch.BlockType.REPORTER,
                     arguments: {
+                        NUM: {
+                            type: Scratch.ArgumentType.NUMBER,
+                            defaultValue: 0,
+                        },
                         CHAR: {
                             type: Scratch.ArgumentType.STRING,
                             defaultValue: "f",
@@ -177,7 +186,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
                     arguments: {
                         ASCII: {
                             type: Scratch.ArgumentType.STRING,
-                            defaultValue: "f",
+                            defaultValue: "41",
                         },
                         BASE: {
                             type: Scratch.ArgumentType.STRING,
@@ -215,9 +224,13 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
                 "---",
                 {
                     opcode: "charToUTF",
-                    text: "character [CHAR] to UTF-16 in [BASE]",
+                    text: "character [NUM] of [CHAR] to UTF-16 in [BASE]",
                     blockType: Scratch.BlockType.REPORTER,
                     arguments: {
+                        NUM: {
+                            type: Scratch.ArgumentType.NUMBER,
+                            defaultValue: 0,
+                        },
                         CHAR: {
                             type: Scratch.ArgumentType.STRING,
                             defaultValue: "β",
@@ -249,7 +262,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
                     arguments: {
                         STR: {
                             type: Scratch.ArgumentType.STRING,
-                            defaultValue: "foo%",
+                            defaultValue: "foo (ﾉ◕ヮ◕)ﾉ*:･ﾟ✧",
                         },
                         BASE: {
                             type: Scratch.ArgumentType.STRING,
@@ -272,11 +285,32 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
                 },
                 "---",
                 {
+                    text: "Utilities",
+                    blockType: Scratch.BlockType.LABEL,
+                },
+                {
+                    opcode: "convertToLittleEndian",
+                    text: "convert [NUM] in [BASE] to little endian",
+                    blockType: Scratch.BlockType.REPORTER,
+                    disableMonitor: true,
+                    arguments: {
+                        NUM: {
+                            type: Scratch.ArgumentType.STRING,
+                            defaultValue: "1011",
+                        },
+                        BASE: {
+                            type: Scratch.ArgumentType.STRING,
+                            menu: "BASES",
+                        },
+                    },
+                },
+                "---",
+                {
                     text: "Configuration Settings ⚠",
                     blockType: Scratch.BlockType.LABEL,
                 },
                 {
-                    text: "Doesn't work with all blocks!",
+                    text: "Likely to break or not be supported!",
                     blockType: Scratch.BlockType.LABEL,
                 },
                 {
@@ -629,6 +663,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
                 console.log("error here?");
                 break;
             }
+            Scratch.vm.runtime.requestToolboxExtensionsUpdate();
         }
 
         binaryLengthSetter(args) {
@@ -667,7 +702,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
             }
             if (args.FROM === args.BASE) {
                 console.log("same!");
-                // return args.NUM;
+                return args.NUM;
             }
 
             if (fullLength) {
@@ -897,7 +932,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
         }
 
         charToASCII(args) {
-            return args.CHAR.charCodeAt(0).toString(chooseBaseValue(basesArray.indexOf(args.BASE)));
+            return args.CHAR.charCodeAt(args.NUM).toString(chooseBaseValue(basesArray.indexOf(args.BASE)));
         }
 
         ASCIIToChar(args) {
@@ -925,7 +960,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
         }
 
         charToUTF(args) {
-            return args.CHAR.codePointAt(0).toString(chooseBaseValue(basesArray.indexOf(args.BASE)));
+            return args.CHAR.codePointAt(args.NUM).toString(chooseBaseValue(basesArray.indexOf(args.BASE)));
         }
 
         UTFToChar(args) {
@@ -950,6 +985,19 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
                 computeValue = computeValue + String.fromCodePoint(parseInt(myArray[i], chooseBaseValue(basesArray.indexOf(args.BASE))));
             }
             return computeValue;
+        }
+
+        convertToLittleEndian(args) {
+            let computeValue = parseInt(args.NUM, chooseBaseValue(basesArray.indexOf(args.BASE))).toString(2);
+            computeValue = '0'.repeat(computeValue.length % 8) + computeValue;
+            let returnValue = '';
+            // computeValue = new Int32Array([computeValue]);
+            // const myDataView = new DataView(computeValue.buffer);
+            for (let i = computeValue.length; i > 0; i -= 8) {
+                returnValue = returnValue + computeValue.slice(clamp(i - 8, 0, computeValue.length), i);
+                console.log(returnValue);
+            }
+            return parseInt(returnValue, 2);
         }
     }
     Scratch.extensions.register(new Extension());

@@ -378,17 +378,11 @@
     }
 
     async rnd() {
-      const id = this.generateIdWithArgs("rngProject", {});
-      let data = this.getCached(id);
-
       try {
-        if (data === null) {
-          const response = await fetch(`${apiURL}projects/getrandomproject`);
-          if (!response.ok) throw new Error("Failed to fetch random project");
-          data = await response.json();
-        }
+        const response = await fetch(`${apiURL}projects/getrandomproject`);
+        if (!response.ok) throw new Error("Failed to fetch random project");
+        let data = await response.json();
 
-        this.setCached(id, data, true);
         return data.id;
       } catch {
         return "";

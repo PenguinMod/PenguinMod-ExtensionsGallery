@@ -161,6 +161,83 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
                     ...jwArray.Block
                 },
                 {
+                    opcode: "charToBit",
+                    text: "character [NUM] of [CHAR] to [ENCODE] in [BASE]",
+                    blockType: Scratch.BlockType.REPORTER,
+                    arguments: {
+                        NUM: {
+                            type: Scratch.ArgumentType.NUMBER,
+                            defaultValue: 0,
+                        },
+                        CHAR: {
+                            type: Scratch.ArgumentType.STRING,
+                            defaultValue: "f",
+                        },
+                        ENCODE: {
+                            type: Scratch.ArgumentType.STRING,
+                            menu: "ENCODING",
+                        },
+                        BASE: {
+                            type: Scratch.ArgumentType.STRING,
+                            menu: "BASES",
+                        },
+                    },
+                },
+                {
+                    opcode: "bitToChar",
+                    text: "number [NUM] using [ENCODE] in [BASE] to character",
+                    blockType: Scratch.BlockType.REPORTER,
+                    arguments: {
+                        NUM: {
+                            type: Scratch.ArgumentType.STRING,
+                            defaultValue: "41",
+                        },
+                        ENCODE: {
+                            type: Scratch.ArgumentType.STRING,
+                            menu: "ENCODING",
+                        },
+                        BASE: {
+                            type: Scratch.ArgumentType.STRING,
+                            menu: "BASES",
+                        },
+                    },
+                },
+                {
+                    opcode: "stringToBitArray",
+                    text: "[STR]] to [ENCODE] array in [BASE]",
+                    arguments: {
+                        STR: {
+                            type: Scratch.ArgumentType.STRING,
+                            defaultValue: "foo?!",
+                        },
+                        ENCODE: {
+                            type: Scratch.ArgumentType.STRING,
+                            menu: "ENCODING",
+                        },
+                        BASE: {
+                            type: Scratch.ArgumentType.STRING,
+                            menu: "BASES",
+                        },
+                    },
+                    ...jwArray.Block
+                },
+                {
+                    opcode: "bitArrayToString",
+                    text: "[ENCODE] array [ARRAY] in [BASE] to string",
+                    blockType: Scratch.BlockType.REPORTER,
+                    arguments: {
+                        ARRAY: jwArray.Argument,
+                        ENCODE: {
+                            type: Scratch.ArgumentType.STRING,
+                            menu: "ENCODING",
+                        },
+                        BASE: {
+                            type: Scratch.ArgumentType.STRING,
+                            menu: "BASES",
+                        },
+                    },
+                },
+                {
                     opcode: "charToASCII",
                     text: "character [NUM] of [CHAR] to ASCII in [BASE]",
                     blockType: Scratch.BlockType.REPORTER,
@@ -637,6 +714,10 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
                         acceptReporters: false,
                         items: basesArray.slice(),
                     },
+                    ENCODING: {
+                        acceptReporters: false,
+                        items: ['ASCII', 'UTF-16'],
+                    },
                 },
             };
         }
@@ -948,12 +1029,9 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
         }
 
         ASCIIArrayToString(args) {
-            console.log(args.ARRAY);
             let myArray = jwArray.Type.toArray(args.ARRAY).array;
-            console.log(myArray);
             let computeValue = '';
             for (let i = 0; i < myArray.length; i++) {
-                console.log(String.fromCharCode(parseInt(myArray[i], chooseBaseValue(basesArray.indexOf(args.BASE)))));
                 computeValue = computeValue + String.fromCharCode(parseInt(myArray[i], chooseBaseValue(basesArray.indexOf(args.BASE))));
             }
             return computeValue;
@@ -981,8 +1059,35 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
             console.log(myArray);
             let computeValue = '';
             for (let i = 0; i < myArray.length; i++) {
-                console.log(String.fromCodePoint(parseInt(myArray[i], chooseBaseValue(basesArray.indexOf(args.BASE)))));
                 computeValue = computeValue + String.fromCodePoint(parseInt(myArray[i], chooseBaseValue(basesArray.indexOf(args.BASE))));
+            }
+            return computeValue;
+        }
+
+        charToBit(args) {
+            if (args.ENCODE == 'ASCII') return args.CHAR.charCodeAt(args.NUM).toString(chooseBaseValue(basesArray.indexOf(args.BASE)));
+            if (args.ENCODE == 'UTF-16') return args.CHAR.codePointAt(args.NUM).toString(chooseBaseValue(basesArray.indexOf(args.BASE)));
+        }
+
+        bitToChar(args) {
+            if (args.ENCODE == 'ASCII') return String.fromCharCode(parseInt(args.NUM, chooseBaseValue(basesArray.indexOf(args.BASE))));
+            if (args.ENCODE == 'UTF-16') return String.fromCodePoint(parseInt(args.NUM, chooseBaseValue(basesArray.indexOf(args.BASE))));
+        }
+
+        stringToBitArray(args) {
+            let computeValue = [];
+            for (let i = 0; i < args.STR.length; i++) {
+                if (args.ENCODE == 'ASCII') computeValue.push(args.STR.charCodeAt(i).toString(args.BASE === 'decimal' ? 10 : args.BASE === 'binary' ? 2 : 16));
+                if (args.ENCODE == 'UTF-16') computeValue.push(args.STR.codePointAt(i).toString(args.BASE === 'decimal' ? 10 : args.BASE === 'binary' ? 2 : 16));
+            }
+            return new jwArray.Type(computeValue);
+        }
+
+        bitArrayToString(args) {
+            let myArray = jwArray.Type.toArray(args.ARRAY).array;
+            let computeValue = '';
+            for (let i = 0; i < myArray.length; i++) {
+                computeValue = computeValue + (args.ENCODE == 'ASCII') ? String.fromCharCode(parseInt(myArray[i], chooseBaseValue(basesArray.indexOf(args.BASE)))) : String.fromCodePoint(parseInt(myArray[i], chooseBaseValue(basesArray.indexOf(args.BASE))));
             }
             return computeValue;
         }

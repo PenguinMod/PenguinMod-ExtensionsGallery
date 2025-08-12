@@ -7720,6 +7720,33 @@
       background-repeat: no-repeat;
     `;
     mainWindow.appendChild(buddyBox);
+    buddyBox.addEventListener("mouseover", () => {
+      buddyBox.style.opacity = "0.25";
+    });
+    buddyBox.addEventListener("mouseout", () => {
+      buddyBox.style.opacity = "1";
+    });
+    const dragCorner = document.createElement("div");
+    let cornerAccent;
+    if (isPM) {
+      cornerAccent = "rgb(0 195 255 / 73%);";
+    } else {
+      cornerAccent = "var(--menu-bar-background);";
+    }
+    dragCorner.style.cssText = `
+      transition: all 0.2s ease;
+      position: absolute;
+      width: 0;
+      height: 0;
+      border-left: 25px solid transparent;
+      border-right: 0px solid transparent;
+      border-bottom: 25px solid ${cornerAccent};
+      background-color: transparent;
+      z-index: 10000;
+      bottom: 0px;
+      right: 0px;
+    `;
+    mainWindow.appendChild(dragCorner);
   }
 
   async function testAllModels() {

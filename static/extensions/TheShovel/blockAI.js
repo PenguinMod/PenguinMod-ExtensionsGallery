@@ -7335,6 +7335,7 @@
     "gemma-3-1b-it",
   ];
 
+  let uploadedFileName;
   let sessionFailedModels = [];
   let shownFailureMessages = [];
   let apiKey;
@@ -7536,6 +7537,7 @@
     mainWindow.appendChild(titleBar);
     makeDraggable(mainWindow, titleBar);
     let minimizeButton = document.createElement("button");
+    minimizeButton.title = "Collapse";
     minimizeButton.textContent = "_";
     minimizeButton.style.cssText = `
         bottom: 99999px;
@@ -7562,6 +7564,7 @@
       if (isMinimized) {
         dragCorner.style.visibility = "";
         minimizeButton.textContent = "_";
+        minimizeButton.title = "Collapse";
         mainWindow.style.height = heightBeforeMin;
         mainWindow.style.minHeight = "400px";
 
@@ -7582,6 +7585,7 @@
       } else {
         heightBeforeMin = mainWindow.style.height;
         minimizeButton.textContent = "□";
+        minimizeButton.title = "Open";
         mainWindow.style.resize = "none";
         mainWindow.style.overflow = "";
         dragCorner.style.opacity = "0";
@@ -7615,6 +7619,7 @@
     //these buttons are placed like this for padding without extra values. I know. 50 billion IQ move
     mainWindow.appendChild(responseArea);
     let settingsButton = document.createElement("button");
+    settingsButton.title = "Settings";
     settingsButton.textContent = "@";
     settingsButton.style.cssText = `
         bottom: 99999px;
@@ -7654,6 +7659,70 @@
       align-items: center;
     `;
     inputContainer.appendChild(buttonContainer2);
+
+    let enhanceButton = document.createElement("button");
+    enhanceButton.title = "Enhancements";
+    enhanceButton.textContent = "+";
+    enhanceButton.style.cssText = basicButtonStyle;
+    //buttonContainer2.appendChild(enhanceButton);
+    addElementClickEffect(enhanceButton);
+
+    let enhancementOptions = document.createElement("div");
+    enhancementOptions.id = "enhancementOptions";
+    enhancementOptions.style.cssText = `
+        display: none;
+        position: absolute;
+        background-color: var(--ui-primary, white);
+        min-width: 160px;
+        z-index: 1;
+        bottom: 80px;
+        left: 0;
+        border-radius: 4px;
+        padding: 10px;
+    `;
+
+    const enhancementOptionsList = ["Code comments"];
+
+    let optionsHtml = "";
+    enhancementOptionsList.forEach((optionText, index) => {
+      const optionId = `enhancementOption${index}`;
+      optionsHtml += `
+            <div style=\"display: flex; align-items: center; margin-bottom: 8px;\">
+                <input type=\"checkbox\" id=\"${optionId}\" class=\"enhancement-checkbox\" style=\"margin-right: 8px; width: 20px; height: 20px; cursor: pointer;\">
+                <label for=\"${optionId}\" style=\"color: var(--text-primary); font-size: 14px;\">${optionText}</label>
+            </div>
+        `;
+    });
+    enhancementOptions.innerHTML = optionsHtml;
+    inputContainer.appendChild(enhancementOptions);
+
+    enhancementOptionsList.forEach((optionText, index) => {
+      const optionId = `enhancementOption${index}`;
+      const checkbox = document.getElementById(optionId);
+      if (checkbox) {
+        checkbox.addEventListener("change", (event) => {
+          console.log(
+            `${optionText} is now: ${event.target.checked ? "checked" : "unchecked"}`,
+          );
+        });
+      }
+    });
+
+    enhanceButton.onclick = () => {
+      if (enhancementOptions.style.display === "none") {
+        enhancementOptions.style.display = "block";
+      } else {
+        enhancementOptions.style.display = "none";
+      }
+
+      const prompt = promptInput.value;
+      if (prompt.length > 0) {
+        getGeminiResponse(prompt);
+        promptInput.value = "";
+      }
+      promptInput.focus();
+    };
+
     promptInput = document.createElement("input");
     promptInput.type = "text";
     promptInput.placeholder = "Type here to ask for help";
@@ -7686,6 +7755,7 @@
     addElementClickEffect(sendContextCheck);
 
     let sendButton = document.createElement("button");
+    sendButton.title = "Send";
     sendButton.textContent = ">";
     sendButton.style.cssText = basicButtonStyle;
     buttonContainer2.appendChild(sendButton);
@@ -7745,6 +7815,15 @@
       right: 0px;
     `;
     mainWindow.appendChild(dragCorner);
+
+    document.addEventListener("click", (event) => {
+      if (
+        !enhancementOptions.contains(event.target) &&
+        !enhanceButton.contains(event.target)
+      ) {
+        enhancementOptions.style.display = "none";
+      }
+    });
   }
 
   async function testAllModels() {

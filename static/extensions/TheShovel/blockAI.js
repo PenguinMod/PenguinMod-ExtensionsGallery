@@ -7317,6 +7317,7 @@
   }
 
   // default: https://raw.githubusercontent.com/TheShovel/block-ai/refs/heads/main/
+  // dev: http://localhost:8000/
   const assetsPath =
     "https://raw.githubusercontent.com/TheShovel/block-ai/refs/heads/main/";
 
@@ -7334,6 +7335,8 @@
     "gemma-3-4b-it",
     "gemma-3-1b-it",
   ];
+  //extra options stuff
+  let addCommentsToCode = "(Don't add comments to the code)";
 
   let uploadedFileName;
   let sessionFailedModels = [];
@@ -7664,7 +7667,7 @@
     enhanceButton.title = "Enhancements";
     enhanceButton.textContent = "+";
     enhanceButton.style.cssText = basicButtonStyle;
-    //buttonContainer2.appendChild(enhanceButton);
+    buttonContainer2.appendChild(enhanceButton);
     addElementClickEffect(enhanceButton);
 
     let enhancementOptions = document.createElement("div");
@@ -7677,11 +7680,11 @@
         z-index: 1;
         bottom: 80px;
         left: 0;
-        border-radius: 4px;
+        border-radius: 5px;
         padding: 10px;
     `;
 
-    const enhancementOptionsList = ["Code comments"];
+    const enhancementOptionsList = ["Code comments", "Read current sprite"];
 
     let optionsHtml = "";
     enhancementOptionsList.forEach((optionText, index) => {
@@ -7701,9 +7704,19 @@
       const checkbox = document.getElementById(optionId);
       if (checkbox) {
         checkbox.addEventListener("change", (event) => {
-          console.log(
-            `${optionText} is now: ${event.target.checked ? "checked" : "unchecked"}`,
-          );
+          switch (optionText) {
+            case "Code comments":
+              if (event.target.checked) {
+                addCommentsToCode =
+                  "(Add detailed comments to the blocks even if its not needed.)";
+              } else {
+                addCommentsToCode = "(Don't add comments to the code)";
+              }
+              break;
+            case "Read current sprite":
+              sendContextCheck.checked = event.target.checked;
+              break;
+          }
         });
       }
     });
@@ -7714,13 +7727,6 @@
       } else {
         enhancementOptions.style.display = "none";
       }
-
-      const prompt = promptInput.value;
-      if (prompt.length > 0) {
-        getGeminiResponse(prompt);
-        promptInput.value = "";
-      }
-      promptInput.focus();
     };
 
     promptInput = document.createElement("input");
@@ -7739,20 +7745,18 @@
     let buttonContainer = document.createElement("div");
     buttonContainer.style.cssText = buttonContainer2.style.cssText;
     inputContainer.appendChild(buttonContainer);
-    let checkLaber = document.createElement("label");
-    checkLaber.textContent = "Read current sprite:";
-    checkLaber.style.cssText = basicLabelStyle;
-    buttonContainer.appendChild(checkLaber);
 
+    //this is getting moved to the enchancements menu
     sendContextCheck = document.createElement("input");
     sendContextCheck.type = "checkbox";
-    sendContextCheck.style.cssText = basicButtonStyle;
-    sendContextCheck.style.width = "25px";
-    sendContextCheck.style.height = "25px";
-    sendContextCheck.style.cursor = "pointer";
-    buttonContainer.appendChild(sendContextCheck);
+    //buttonContainer.appendChild(sendContextCheck);
     sendContextCheck.checked = false;
-    addElementClickEffect(sendContextCheck);
+
+    let divider = document.createElement("label");
+    divider.textContent = "M";
+    divider.style.cssText = basicLabelStyle;
+    divider.style.color = "transparent";
+    buttonContainer.appendChild(divider);
 
     let sendButton = document.createElement("button");
     sendButton.title = "Send";
@@ -8165,6 +8169,23 @@
       styleSelect.value = selectedStyle;
       buddyStyleSelect.value = buddyStyle;
     };
+
+    let clearChatButton = document.createElement("button");
+    clearChatButton.textContent = "Clear Chat";
+    clearChatButton.style.cssText = basicButtonStyle;
+    settingsWindow.appendChild(clearChatButton);
+    addElementClickEffect(clearChatButton);
+    clearChatButton.onclick = () => {
+      if (typeof history !== "undefined" && Array.isArray(history)) {
+        history.length = 0;
+      }
+      if (responseArea) {
+        responseArea.innerHTML = "";
+      }
+      settingsOpen = false;
+      settingsWindow.remove();
+    };
+
     let closeSettings = document.createElement("button");
     closeSettings.textContent = "Cancel";
     closeSettings.style.cssText = basicButtonStyle;
@@ -8342,7 +8363,8 @@
       "\n" +
       "User:" +
       "\n" +
-      prompt;
+      prompt +
+      addCommentsToCode;
 
     try {
       responseArea.innerHTML +=

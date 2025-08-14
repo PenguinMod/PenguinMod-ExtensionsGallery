@@ -26,13 +26,13 @@ get bit at index (3) of [13] :: reporter :: #15448f
 
 Gets the bit (`0` or `1`) at the index of the binary representation of the input number. Index `0` refers to the least significant bit.
 
+---
+
 ```scratch
 [-13] >> (3) :: reporter :: #15448f
 ```
 
----
-
-Signed right shift. Think of it like this:
+Think of it like this:
 
 We have a number -13 in binary:
 `11111111111111111111111111110011`
@@ -48,6 +48,20 @@ For this reason, for each shift, we "duplicate" the sign bit and move it over to
 `11111111111111111111111111111110`
 
 Obviously positive numbers wouldn't be affected drastically due to their sign bits being `0`.
+
+```scratch
+[13] << (3) :: reporter :: #15448f
+```
+
+Shifts the bits left by the amount requested (`1111` to `111100` if the amount was `2`).
+
+```scratch
+[-13] >>> (3) :: reporter :: #15448f
+```
+
+Just shifts it to the right without caring about the sign bit:
+
+`11111111111111111111111111110011` to `00011111111111111111111111111110` or `-13` to `536870899`
 
 ---
 

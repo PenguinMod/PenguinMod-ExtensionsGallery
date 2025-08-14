@@ -128,17 +128,81 @@ These blocks are more experimental and definitely require updates here and there
 ---
 
 ```scratch
-(::ring)[foo?!] to [BMP v] array in [decimal v](::ring) :: ring control :: #15448f
+character (0) of [f] to [UTF-16 v] in [decimal v] :: #15448f :: reporter
+```
+
+Takes in a string and applies
+```javascript
+"string".charCodeAt(number);
+```
+
+`codePointAt` is used for Unicode.
+
+```scratch
+number (41) using [UTF-16 v] in [decimal v] to character :: #15448f :: reporter
+```
+
+Takes in a number and applies
+```javascript
+String.fromCharCode(number);
+```
+
+`fromCodePoint` is used for Unicode.
+
+```scratch
+(::ring)[foo?!] to [UTF-16 v] array in [decimal v](::ring) :: ring control :: #15448f
 ```
 
 Takes in an array and turns it into a string.
 
----
+```scratch
+[UTF-16] array ((::ring)(::ring):: ring control :: #0a094f) in [decimal v] to string :: #15448f :: reporter
+```
+
+Takes in an array and returns a string.
 
 ---
 
+```scratch
+reverse endianness of (37) in [decimal v] :: #15448f :: reporter
+```
+
+Switches the byte order of the provided number.
+
+```scratch
+0x () :: #15448f :: reporter
+```
+
+Takes in a hexadecimal number and returns a decimal.
+
+```scratch
+0b () :: #15448f :: reporter
+```
+
+Takes in a binary number and returns a decimal.
+
+```scratch
+0o () :: #15448f :: reporter
+```
+
+Takes in an octal number and returns a decimal.
+
 ---
 
+>>> These blocks probably won't work with extra blocks and *might* break normal blocks (or at least show unexpected behavior).
 
+```scratch
+use a [static v] length for binary :: #15448f
+```
+
+Changes the representation of binary numbers. Two's complement is applied to the most significant bit provided rather than the 32nd bit in dynamic mode.
+
+```scratch
+<using [static v] length?:: #15448f>
+```
+
+Checks if you're using static or dynamic length.
+
+---
 
 And that should be all! :D

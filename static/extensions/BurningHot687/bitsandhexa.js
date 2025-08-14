@@ -19,7 +19,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
 */
 
-// V1.1.0.16
+// V1.1.1.16
 
 (function(Scratch){
     "use strict";
@@ -44,10 +44,8 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
     function isInCorrectFormat(inputString) {
         if ((inputString != parseInt(inputString, 10).toString(10)) && !isItHexadecimal(inputString)) {
-            console.log("bad string")
             return false;
         }
-        console.log("good string");
         return true;
     };
 
@@ -81,15 +79,11 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     function getBitAt(NUM, IDX) {
         if (IDX > 31 || IDX < 0) return "";
         let cValue = NUM;
-        console.log(NUM);
-        console.log(IDX);
         if (!(isItDecimal(cValue) || isItHexadecimal(cValue))) return "";
         if (isItHexadecimal(cValue) && /[abcdef]/i.test(cValue)) {
             cValue = "0x" + cValue;
         }
         if (IDX > parseInt(cValue).toString(2).length && !fullLength) return "";
-        console.log(parseInt(cValue).toString(2));
-        console.log((parseInt(cValue) >>> IDX) & 1);
         return (parseInt(cValue) >>> IDX) & 1;
     };
 
@@ -102,17 +96,13 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
         }
         newValue--;
         if (!fullLength) {
-            console.log(computedValue);
-            console.log(newValue);
             if (neg) computedValue = computedValue.slice(newValue);
             if (!neg) computedValue = "0" + computedValue
-            console.log(computedValue);
         }
         return computedValue;
     };
 
     function clamp(value, min, max) {
-        console.log(Math.max(min, Math.min(value, max)))
         return Math.max(min, Math.min(value, max));
     };
 
@@ -121,7 +111,6 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
         for (let i = computedValue.length; i > 0; i--) {
             newerValue += parseInt(computedValue[i - 1]) * (Math.pow(2, computedValue.length - i)) * ((i === 1) ? -1 : 1);
         }
-        console.log(newerValue);
         return newerValue;
     };
     
@@ -320,7 +309,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
                     opcode: "binaryLengthGetter",
                     text: "using [LENGTH] length?",
                     blockType: Scratch.BlockType.BOOLEAN,
-                    label: selLengthIsFull ? "using fixed length" : "using dynamic length",
+                    label: selLengthIsFull ? "using static length" : "using dynamic length",
                     disableMonitor: true, // NEED TO FIX SOMEDAY
                     arguments: {
                         LENGTH: {
@@ -548,7 +537,6 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
                         },
                         switches: [ 'bitwiseOrOperator', 'bitwiseAndOperator', 'bitwiseNotOperator', 'bitwiseNandOperator', 'bitwiseNorOperator', 'bitwiseXnorOperator' ],
                     },
-                    "---",
                     {
                         opcode: "bitwiseNotOperator",
                         text: "~[NUM] | not",
@@ -562,6 +550,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
                         },
                         switches: [ 'bitwiseOrOperator', 'bitwiseXorOperator', 'bitwiseAndOperator', 'bitwiseNandOperator', 'bitwiseNorOperator', 'bitwiseXnorOperator' ],
                     },
+                    "---",
                     {
                         opcode: "bitwiseNandOperator",
                         text: "~[NUM] & [NUM2] | nand",
@@ -624,7 +613,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
                     },
                     LENGTHS: {
                         acceptReporters: false,
-                        items: ['fixed', 'dynamic'],
+                        items: ['static', 'dynamic'],
                     },
                     BASES2: {
                         acceptReporters: false,
@@ -650,29 +639,23 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
         binaryLengthGetter(args) {
             // Still need to fix monitors here lol
             switch (args.LENGTH) {
-            case 'fixed':
+            case 'static':
                 selLengthIsFull = true;
                 return fullLength;
             case 'dynamic':
                 selLengthIsFull = false;
                 return !fullLength;
-            default:
-                console.log("error here?");
-                break;
             }
             // Scratch.vm.runtime.requestToolboxExtensionsUpdate();
         }
 
         binaryLengthSetter(args) {
             switch (args.LENGTH) {
-            case 'fixed':
+            case 'static':
                 fullLength = true;
                 break;
             case 'dynamic':
                 fullLength = false;
-                break;
-            default:
-                console.log("error here?");
                 break;
             }
         }
@@ -688,24 +671,19 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
         convertBaseTypesBitW(args) {
             let computeValue = args.NUM;
-            console.log(args.FROM);
-            console.log(args.BASE);
             if (isInCorrectFormat(computeValue) === false) {
                 return "";
             }
             if (!testForFormat(computeValue, args.FROM)) {
-                console.log("not same as [from]");
                 return "";
             }
             if (args.FROM === args.BASE) {
-                console.log("same!");
                 return args.NUM;
             }
 
             if (fullLength) {
                 computeValue = parseInt(computeValue, chooseBaseValue(basesArray.indexOf(args.FROM)));
             } else {
-                console.log("dynamic adjust")
                 switch (basesArray.indexOf(args.FROM)) {
                 case 0:
                     computeValue = parseInt(computeValue);
@@ -733,7 +711,6 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
                 if (!fullLength && !negative) computeValue = "0" + computeValue; 
                 break;
             default:
-                console.log("failed?");
                 return "";
             }
 
@@ -803,8 +780,6 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
         bitwiseAndOperator(args) {
             let value1 = args.NUM;
             let value2 = args.NUM2;
-            console.log(value1);
-            console.log(value2);
             if (!(isItDecimal(value1) || isItHexadecimal(value2))) return "";
             if (!(isItDecimal(value2) || isItHexadecimal(value2))) return "";
             if (isItHexadecimal(value1) && /[abcdef]/i.test(value1)) {
@@ -961,13 +936,11 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
         bitArrayToString(args) {
             let myArray = jwArray.Type.toArray(args.ARRAY).array;
-            console.log(myArray);
             if (myArray.length === 0) return '';
             let computeValue = '';
             for (let i = 0; i < myArray.length; i++) {
                 let charValue = parseInt(myArray[i], chooseBaseValue(basesArray.indexOf(args.BASE)));
                 computeValue = computeValue.concat(args.ENCODE === 'BMP' ? String.fromCharCode(charValue) : String.fromCodePoint(charValue));
-                console.log(computeValue);
             }
             return computeValue;
         }
@@ -976,7 +949,6 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
         convertToLittleEndian(args) {
             let computeValue = parseInt(args.NUM, chooseBaseValue(basesArray.indexOf(args.BASE)));
             computeValue = new Int32Array([computeValue]);
-            console.log(computeValue);
             computeValue.reverse();
             const myDataView = new DataView(computeValue.buffer);
             return myDataView.getInt32(0, false);

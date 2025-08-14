@@ -1,4 +1,4 @@
-# Bitwise+ v0.17
+# Bitwise+ v1.1
 ## Bitwise Operations for Decimals, Binary, and Hexadecimal
 ### By BurningHot687/Raichu-Model/-Rig
 

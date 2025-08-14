@@ -32,7 +32,7 @@ Gets the bit (`0` or `1`) at the index of the binary representation of the input
 [-13] >> (3) :: reporter :: #15448f
 ```
 
-Think of it like this:
+Signed right shift. Think of it like this:
 
 We have a number -13 in binary:
 `11111111111111111111111111110011`
@@ -59,11 +59,43 @@ Shifts the bits left by the amount requested (`1111` to `111100` if the amount w
 [-13] >>> (3) :: reporter :: #15448f
 ```
 
-Just shifts it to the right without caring about the sign bit:
+Unsigned right shift. Just shifts it to the right without caring about the sign bit:
 
 `11111111111111111111111111110011` to `00011111111111111111111111111110` or `-13` to `536870899`
 
+```scratch
+[-13] ↻ (3) :: reporter :: #15448f
+```
+
+Circular right shift: 
+
+Basically an unsigned right shift but instead of deleting bits they are looped to the 32nd bit.
+
+```scratch
+[-13] ↺ (3) :: reporter :: #15448f
+```
+
+Same as before but opposite direction.
+
 ---
+
+```scratch
+() & () | and :: reporter :: #15448f
+```
+
+Bitwise and.
+
+```scratch
+() | () | or :: reporter :: #15448f
+```
+
+Bitwise or.
+
+```scratch
+() ^ () | xor :: reporter :: #15448f
+```
+
+Bitwise exclusive or (returns `1` if only one bit is on).
 
 ## Extras
 

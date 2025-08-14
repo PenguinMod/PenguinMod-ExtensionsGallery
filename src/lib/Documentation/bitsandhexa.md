@@ -127,6 +127,16 @@ These blocks are more experimental and definitely require updates here and there
 
 ---
 
+```scratch
+(::ring)[foo?!] to [BMP v] array in [decimal v](::ring) :: ring control :: #15448f
+```
+
+Takes in an array and turns it into a string.
+
+---
+
+---
+
 ---
 
 

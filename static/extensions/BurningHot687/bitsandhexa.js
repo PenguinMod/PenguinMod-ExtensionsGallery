@@ -621,7 +621,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
                     },
                     ENCODING: {
                         acceptReporters: false,
-                        items: ['BMP', 'UTF-16'],
+                        items: ['UTF-16', 'Unicode'],
                     },
                 },
             };
@@ -916,20 +916,20 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
         }
 
         charToBit(args) {
-            if (args.ENCODE == 'ASCII') return args.CHAR.charCodeAt(args.NUM).toString(chooseBaseValue(basesArray.indexOf(args.BASE)));
-            if (args.ENCODE == 'UTF-16') return args.CHAR.codePointAt(args.NUM).toString(chooseBaseValue(basesArray.indexOf(args.BASE)));
+            if (args.ENCODE == 'UTF-16') return args.CHAR.charCodeAt(args.NUM).toString(chooseBaseValue(basesArray.indexOf(args.BASE)));
+            if (args.ENCODE == 'Unicode') return args.CHAR.codePointAt(args.NUM).toString(chooseBaseValue(basesArray.indexOf(args.BASE)));
         }
 
         bitToChar(args) {
-            if (args.ENCODE == 'ASCII') return String.fromCharCode(parseInt(args.NUM, chooseBaseValue(basesArray.indexOf(args.BASE))));
-            if (args.ENCODE == 'UTF-16') return String.fromCodePoint(parseInt(args.NUM, chooseBaseValue(basesArray.indexOf(args.BASE))));
+            if (args.ENCODE == 'UTF-16') return String.fromCharCode(parseInt(args.NUM, chooseBaseValue(basesArray.indexOf(args.BASE))));
+            if (args.ENCODE == 'Unicode') return String.fromCodePoint(parseInt(args.NUM, chooseBaseValue(basesArray.indexOf(args.BASE))));
         }
 
         stringToBitArray(args) {
             let computeValue = [];
             for (let i = 0; i < args.STR.length; i++) {
-                if (args.ENCODE == 'BMP') computeValue.push(args.STR.charCodeAt(i).toString(args.BASE === 'decimal' ? 10 : args.BASE === 'binary' ? 2 : 16));
-                if (args.ENCODE == 'UTF-16') computeValue.push(args.STR.codePointAt(i).toString(args.BASE === 'decimal' ? 10 : args.BASE === 'binary' ? 2 : 16));
+                if (args.ENCODE == 'UTF-16') computeValue.push(args.STR.charCodeAt(i).toString(args.BASE === 'decimal' ? 10 : args.BASE === 'binary' ? 2 : 16));
+                if (args.ENCODE == 'Unicode') computeValue.push(args.STR.codePointAt(i).toString(args.BASE === 'decimal' ? 10 : args.BASE === 'binary' ? 2 : 16));
             }
             return new jwArray.Type(computeValue);
         }
@@ -940,7 +940,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
             let computeValue = '';
             for (let i = 0; i < myArray.length; i++) {
                 let charValue = parseInt(myArray[i], chooseBaseValue(basesArray.indexOf(args.BASE)));
-                computeValue = computeValue.concat(args.ENCODE === 'BMP' ? String.fromCharCode(charValue) : String.fromCodePoint(charValue));
+                computeValue = computeValue.concat(args.ENCODE === 'UTF-16' ? String.fromCharCode(charValue) : String.fromCodePoint(charValue));
             }
             return computeValue;
         }

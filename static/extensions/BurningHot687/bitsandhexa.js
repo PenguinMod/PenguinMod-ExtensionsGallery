@@ -197,7 +197,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
                 },
                 {
                     opcode: "stringToBitArray",
-                    text: "[STR]] to [ENCODE] array in [BASE]",
+                    text: "[STR] to [ENCODE] array in [BASE]",
                     arguments: {
                         STR: {
                             type: Scratch.ArgumentType.STRING,

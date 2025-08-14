@@ -19,7 +19,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
 */
 
-// V0.18.0.2
+// V1.1.0.16
 
 (function(Scratch){
     "use strict";
@@ -61,6 +61,10 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
     function isItBinary(inputString) {
         return !/[^01]/.test(inputString);
+    };
+
+    function isItOctal(inputString) {
+        return !/[^01234567]/.test(inputString);
     };
 
     function testForFormat(numString, base) {
@@ -237,143 +241,54 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
                         },
                     },
                 },
-                {
-                    opcode: "charToASCII",
-                    text: "character [NUM] of [CHAR] to ASCII in [BASE]",
-                    blockType: Scratch.BlockType.REPORTER,
-                    arguments: {
-                        NUM: {
-                            type: Scratch.ArgumentType.NUMBER,
-                            defaultValue: 0,
-                        },
-                        CHAR: {
-                            type: Scratch.ArgumentType.STRING,
-                            defaultValue: "f",
-                        },
-                        BASE: {
-                            type: Scratch.ArgumentType.STRING,
-                            menu: "BASES",
-                        },
-                    },
-                },
-                {
-                    opcode: "ASCIIToChar",
-                    text: "ASCII [ASCII] in [BASE] to character",
-                    blockType: Scratch.BlockType.REPORTER,
-                    arguments: {
-                        ASCII: {
-                            type: Scratch.ArgumentType.STRING,
-                            defaultValue: "41",
-                        },
-                        BASE: {
-                            type: Scratch.ArgumentType.STRING,
-                            menu: "BASES",
-                        },
-                    },
-                },
-                {
-                    opcode: "stringToASCIIArray",
-                    text: "[STR] to ASCII array in [BASE]",
-                    arguments: {
-                        STR: {
-                            type: Scratch.ArgumentType.STRING,
-                            defaultValue: "foo?!",
-                        },
-                        BASE: {
-                            type: Scratch.ArgumentType.STRING,
-                            menu: "BASES",
-                        },
-                    },
-                    ...jwArray.Block
-                },
-                {
-                    opcode: "ASCIIArrayToString",
-                    text: "ASCII array[ARRAY] in [BASE] to string",
-                    blockType: Scratch.BlockType.REPORTER,
-                    arguments: {
-                        ARRAY: jwArray.Argument,
-                        BASE: {
-                            type: Scratch.ArgumentType.STRING,
-                            menu: "BASES",
-                        },
-                    },
-                },
-                "---",
-                {
-                    opcode: "charToUTF",
-                    text: "character [NUM] of [CHAR] to UTF-16 in [BASE]",
-                    blockType: Scratch.BlockType.REPORTER,
-                    arguments: {
-                        NUM: {
-                            type: Scratch.ArgumentType.NUMBER,
-                            defaultValue: 0,
-                        },
-                        CHAR: {
-                            type: Scratch.ArgumentType.STRING,
-                            defaultValue: "β",
-                        },
-                        BASE: {
-                            type: Scratch.ArgumentType.STRING,
-                            menu: "BASES",
-                        },
-                    },
-                },
-                {
-                    opcode: "UTFToChar",
-                    text: "UTF-16 [UTF] in [BASE] to character",
-                    blockType: Scratch.BlockType.REPORTER,
-                    arguments: {
-                        UTF: {
-                            type: Scratch.ArgumentType.STRING,
-                            defaultValue: "946",
-                        },
-                        BASE: {
-                            type: Scratch.ArgumentType.STRING,
-                            menu: "BASES",
-                        },
-                    },
-                },
-                {
-                    opcode: "stringToUTFArray",
-                    text: "[STR] to UTF-16 array in [BASE]",
-                    arguments: {
-                        STR: {
-                            type: Scratch.ArgumentType.STRING,
-                            defaultValue: "foo (ﾉ◕ヮ◕)ﾉ*:･ﾟ✧",
-                        },
-                        BASE: {
-                            type: Scratch.ArgumentType.STRING,
-                            menu: "BASES",
-                        },
-                    },
-                    ...jwArray.Block
-                },
-                {
-                    opcode: "UTFArrayToString",
-                    text: "UTF array[ARRAY] in [BASE] to string",
-                    blockType: Scratch.BlockType.REPORTER,
-                    arguments: {
-                        ARRAY: jwArray.Argument,
-                        BASE: {
-                            type: Scratch.ArgumentType.STRING,
-                            menu: "BASES",
-                        },
-                    },
-                },
                 "---",
                 {
                     text: "Utilities",
                     blockType: Scratch.BlockType.LABEL,
                 },
                 {
-                    opcode: "convertToLittleEndian",
-                    text: "convert [NUM] in [BASE] to little endian",
+                    opcode: "hexaNum",
+                    text: "Ox[NUM]",
                     blockType: Scratch.BlockType.REPORTER,
                     disableMonitor: true,
                     arguments: {
                         NUM: {
                             type: Scratch.ArgumentType.STRING,
-                            defaultValue: "1011",
+                        },
+                    },
+                },
+                {
+                    opcode: "bitNum",
+                    text: "Ob[NUM]",
+                    blockType: Scratch.BlockType.REPORTER,
+                    disableMonitor: true,
+                    arguments: {
+                        NUM: {
+                            type: Scratch.ArgumentType.NUMBER,
+                        },
+                    },
+                },
+                {
+                    opcode: "octNum",
+                    text: "Oo[NUM]",
+                    blockType: Scratch.BlockType.REPORTER,
+                    disableMonitor: true,
+                    arguments: {
+                        NUM: {
+                            type: Scratch.ArgumentType.NUMBER,
+                        },
+                    },
+                },
+                {
+                    opcode: "convertToLittleEndian",
+                    text: "reverse endianness of [NUM] in [BASE]",
+                    tooltip: 'This just basically reverses the byte order. Doesn\'t support dynamic length.',
+                    blockType: Scratch.BlockType.REPORTER,
+                    disableMonitor: true,
+                    arguments: {
+                        NUM: {
+                            type: Scratch.ArgumentType.STRING,
+                            defaultValue: "37",
                         },
                         BASE: {
                             type: Scratch.ArgumentType.STRING,
@@ -387,7 +302,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
                     blockType: Scratch.BlockType.LABEL,
                 },
                 {
-                    text: "Likely to break or not be supported!",
+                    text: "Likely to not work as intended!",
                     blockType: Scratch.BlockType.LABEL,
                 },
                 {
@@ -406,6 +321,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
                     text: "using [LENGTH] length?",
                     blockType: Scratch.BlockType.BOOLEAN,
                     label: selLengthIsFull ? "using fixed length" : "using dynamic length",
+                    disableMonitor: true, // NEED TO FIX SOMEDAY
                     arguments: {
                         LENGTH: {
                             type: Scratch.ArgumentType.STRING,
@@ -716,7 +632,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
                     },
                     ENCODING: {
                         acceptReporters: false,
-                        items: ['ASCII', 'UTF-16'],
+                        items: ['BMP', 'UTF-16'],
                     },
                 },
             };
@@ -744,7 +660,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
                 console.log("error here?");
                 break;
             }
-            Scratch.vm.runtime.requestToolboxExtensionsUpdate();
+            // Scratch.vm.runtime.requestToolboxExtensionsUpdate();
         }
 
         binaryLengthSetter(args) {
@@ -950,7 +866,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
                 return "";
             }
 
-            return ~value1;
+            return binaryStupidity(~value1);
         }
 
         bitwiseNandOperator(args) {
@@ -968,7 +884,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
                 return "";
             }
 
-            return ~(value1 & value2);
+            return binaryStupidity(~(value1 & value2));
         }
 
         bitwiseNorOperator(args) {
@@ -986,7 +902,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
                 return "";
             }
 
-            return ~(value1 | value2);
+            return binaryStupidity(~(value1 | value2));
         }
 
         bitwiseXnorOperator(args) {
@@ -1003,65 +919,25 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
             if (isNaN(parseInt(value1)) || isNaN(parseInt(value2))) {
                 return "";
             }
+            
+            return binaryStupidity(~(value1 ^ value2));
+        }
+        
+        hexaNum(args) {
+            return isItHexadecimal(args.NUM) ? parseInt(args.NUM, 16) : '';
+        }
 
-            return ~(value1 ^ value2);
+        bitNum(args) {
+            return isItBinary(args.NUM.toString()) ? parseInt(args.NUM.toString(), 2) : '';
+        }
+
+        octNum(args) {
+            return isItOctal(args.NUM.toString()) ? parseInt(args.NUM.toString(), 8) : '';
         }
 
         testinglol(args) {
             args.ARG = jwArray.Type.toArray(args.ARG);
             return new jwArray.Type(["foo", args.ARG]);
-        }
-
-        charToASCII(args) {
-            return args.CHAR.charCodeAt(args.NUM).toString(chooseBaseValue(basesArray.indexOf(args.BASE)));
-        }
-
-        ASCIIToChar(args) {
-            return String.fromCharCode(parseInt(args.ASCII, chooseBaseValue(basesArray.indexOf(args.BASE))));
-        }
-
-        stringToASCIIArray(args) {
-            let computeValue = [];
-            for (let i = 0; i < args.STR.length; i++) {
-                computeValue.push(args.STR.charCodeAt(i).toString(args.BASE === 'decimal' ? 10 : args.BASE === 'binary' ? 2 : 16));
-            }
-            return new jwArray.Type(computeValue);
-        }
-
-        ASCIIArrayToString(args) {
-            let myArray = jwArray.Type.toArray(args.ARRAY).array;
-            let computeValue = '';
-            for (let i = 0; i < myArray.length; i++) {
-                computeValue = computeValue + String.fromCharCode(parseInt(myArray[i], chooseBaseValue(basesArray.indexOf(args.BASE))));
-            }
-            return computeValue;
-        }
-
-        charToUTF(args) {
-            return args.CHAR.codePointAt(args.NUM).toString(chooseBaseValue(basesArray.indexOf(args.BASE)));
-        }
-
-        UTFToChar(args) {
-            return String.fromCodePoint(parseInt(args.UTF, chooseBaseValue(basesArray.indexOf(args.BASE))));
-        }
-
-        stringToUTFArray(args) {
-            let computeValue = [];
-            for (let i = 0; i < args.STR.length; i++) {
-                computeValue.push(args.STR.codePointAt(i).toString(args.BASE === 'decimal' ? 10 : args.BASE === 'binary' ? 2 : 16));
-            }
-            return new jwArray.Type(computeValue);
-        }
-
-        UTFArrayToString(args) {
-            console.log(args.ARRAY);
-            let myArray = jwArray.Type.toArray(args.ARRAY).array;
-            console.log(myArray);
-            let computeValue = '';
-            for (let i = 0; i < myArray.length; i++) {
-                computeValue = computeValue + String.fromCodePoint(parseInt(myArray[i], chooseBaseValue(basesArray.indexOf(args.BASE))));
-            }
-            return computeValue;
         }
 
         charToBit(args) {
@@ -1077,7 +953,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
         stringToBitArray(args) {
             let computeValue = [];
             for (let i = 0; i < args.STR.length; i++) {
-                if (args.ENCODE == 'ASCII') computeValue.push(args.STR.charCodeAt(i).toString(args.BASE === 'decimal' ? 10 : args.BASE === 'binary' ? 2 : 16));
+                if (args.ENCODE == 'BMP') computeValue.push(args.STR.charCodeAt(i).toString(args.BASE === 'decimal' ? 10 : args.BASE === 'binary' ? 2 : 16));
                 if (args.ENCODE == 'UTF-16') computeValue.push(args.STR.codePointAt(i).toString(args.BASE === 'decimal' ? 10 : args.BASE === 'binary' ? 2 : 16));
             }
             return new jwArray.Type(computeValue);
@@ -1085,24 +961,25 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
         bitArrayToString(args) {
             let myArray = jwArray.Type.toArray(args.ARRAY).array;
+            console.log(myArray);
+            if (myArray.length === 0) return '';
             let computeValue = '';
             for (let i = 0; i < myArray.length; i++) {
-                computeValue = computeValue + (args.ENCODE == 'ASCII') ? String.fromCharCode(parseInt(myArray[i], chooseBaseValue(basesArray.indexOf(args.BASE)))) : String.fromCodePoint(parseInt(myArray[i], chooseBaseValue(basesArray.indexOf(args.BASE))));
+                let charValue = parseInt(myArray[i], chooseBaseValue(basesArray.indexOf(args.BASE)));
+                computeValue = computeValue.concat(args.ENCODE === 'BMP' ? String.fromCharCode(charValue) : String.fromCodePoint(charValue));
+                console.log(computeValue);
             }
             return computeValue;
         }
 
+
         convertToLittleEndian(args) {
-            let computeValue = parseInt(args.NUM, chooseBaseValue(basesArray.indexOf(args.BASE))).toString(2);
-            computeValue = '0'.repeat(computeValue.length % 8) + computeValue;
-            let returnValue = '';
-            // computeValue = new Int32Array([computeValue]);
-            // const myDataView = new DataView(computeValue.buffer);
-            for (let i = computeValue.length; i > 0; i -= 8) {
-                returnValue = returnValue + computeValue.slice(clamp(i - 8, 0, computeValue.length), i);
-                console.log(returnValue);
-            }
-            return parseInt(returnValue, 2);
+            let computeValue = parseInt(args.NUM, chooseBaseValue(basesArray.indexOf(args.BASE)));
+            computeValue = new Int32Array([computeValue]);
+            console.log(computeValue);
+            computeValue.reverse();
+            const myDataView = new DataView(computeValue.buffer);
+            return myDataView.getInt32(0, false);
         }
     }
     Scratch.extensions.register(new Extension());

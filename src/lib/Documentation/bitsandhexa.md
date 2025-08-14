@@ -4,7 +4,7 @@
 
 If you are unfamiliar with bitwise operations, then hopefully this documentation can help you. If you still need further reading, you may go to this [Wikipedia Article](https://en.wikipedia.org/wiki/Bitwise_operation).
 
-###### Keep in mind that version 0.17 currently only supports binary, decimal, and hexadecimal. All outputs, unless specified otherwise, are going to be in decimal. All inputs, unless specified otherwise, are assumed decimal unless there is a hexadecimal character within it.
+###### Keep in mind that version 1.1 currently only supports binary, decimal, and hexadecimal. All outputs, unless specified otherwise, are going to be in decimal. All inputs, unless specified otherwise, are assumed decimal unless there is a hexadecimal character within it. Also keep in mind Scratch has a 32 bit system and floats aren't supported yet.
 
 ---
 
@@ -95,7 +95,31 @@ Bitwise or.
 () ^ () | xor :: reporter :: #15448f
 ```
 
-Bitwise exclusive or (returns `1` if only one bit is on).
+Bitwise exclusive or (returns `1` if both bits are different).
+
+```scratch
+~() | not :: reporter :: #15448f
+```
+
+Bitwise not.
+
+```scratch
+~() & () | nand :: reporter :: #15448f
+```
+
+Bitwise nand (`0` if both inputs are on).
+
+```scratch
+~() | () | nor :: reporter :: #15448f
+```
+
+Bitwise nor (`1` if both inputs are off).
+
+```scratch
+~() ^ () | xnor :: reporter :: #15448f
+```
+
+Bitwise exclusive nor (`1` if both inputs are the same).
 
 ## Extras
 

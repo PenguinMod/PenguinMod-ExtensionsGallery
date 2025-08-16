@@ -461,6 +461,17 @@ export default [
         creatorAlias: "gaimerI17",
         note: "Extension thumbnail made by Dillon."
     },
+    {
+        name: "Bitwise+",
+        description: "An expansion of the original Bitwise extension, this adds a lot of binary representation abilities!",
+        code: "BurningHot687/bitsandhexa.js",
+        banner: "BurningHot687/bitsandhexa.png",
+        creator: "Raichu-Model",
+        documentation: "bitsandhexa",
+        creatorAlias: "BurningHot687/Raichu-Model/-Rig",
+        notes: "An expansion of a turbowarp extension",
+        isGitHub: false,
+    },
     /* these extensions are completely dead as of now
     {
         name: "Online Captcha",

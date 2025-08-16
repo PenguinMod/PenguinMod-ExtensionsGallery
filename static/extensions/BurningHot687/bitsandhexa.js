@@ -19,13 +19,13 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
 */
 
-// V1.1.1.16
+// V1.1.2.7
 
 (function(Scratch){
     "use strict";
 
     if (!Scratch.extensions.unsandboxed) {
-        // throw new Error("This extension prefers to be used unsandboxed");
+        throw new Error("This extension has to be used unsandboxed, please.");
     }
 
     // yo thanks PackGod, or jwlong or whatever you like to call yourself
@@ -143,17 +143,6 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
                     blockType: Scratch.BlockType.LABEL,
                 },
                 {
-                    opcode: "testinglol",
-                    text: "foo and [ARG]",
-                    blockType: Scratch.BlockType.REPORTER,
-                    blockShape: Scratch.BlockShape.SQUARE,
-                    hideFromPalette: true,
-                    arguments: {
-                        ARG: jwArray.Argument
-                    },
-                    ...jwArray.Block
-                },
-                {
                     opcode: "charToBit",
                     text: "character [NUM] of [CHAR] to [ENCODE] in [BASE]",
                     blockType: Scratch.BlockType.REPORTER,
@@ -238,6 +227,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
                 {
                     opcode: "hexaNum",
                     text: "Ox[NUM]",
+                    switchText: "Ox",
                     blockType: Scratch.BlockType.REPORTER,
                     disableMonitor: true,
                     arguments: {
@@ -245,10 +235,12 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
                             type: Scratch.ArgumentType.STRING,
                         },
                     },
+                    switches: [ 'bitNum', 'octNum' ],
                 },
                 {
                     opcode: "bitNum",
                     text: "Ob[NUM]",
+                    switchText: "Ob",
                     blockType: Scratch.BlockType.REPORTER,
                     disableMonitor: true,
                     arguments: {
@@ -256,10 +248,12 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
                             type: Scratch.ArgumentType.NUMBER,
                         },
                     },
+                    switches: [ 'hexaNum', 'octNum' ],
                 },
                 {
                     opcode: "octNum",
                     text: "Oo[NUM]",
+                    switchText: "Oo",
                     blockType: Scratch.BlockType.REPORTER,
                     disableMonitor: true,
                     arguments: {
@@ -267,6 +261,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
                             type: Scratch.ArgumentType.NUMBER,
                         },
                     },
+                    switches: [ 'hexaNum', 'bitNum' ],
                 },
                 {
                     opcode: "convertToLittleEndian",
@@ -319,7 +314,6 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
                     },
                 },
             ];
-            const extraBlocks = extOpen ? extBlockArray : [];
             return {
                 id: "burninghot687bitwisewhexa",
                 name: Scratch.translate("Bitwise") + "+",
@@ -335,7 +329,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
                         opcode: "bitwiseDocumentationButton",
                         text: "Open Documentation",
                         blockType: Scratch.BlockType.BUTTON,
-                        hideFromPalette: true,
+                        // hideFromPalette: true,
                     },
                     {
                         opcode: "isNumActuallyBase",
@@ -605,7 +599,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
                         text: extOpen ? "Close Extras" : "Open Extras",
                         blockType: Scratch.BlockType.BUTTON,
                     },
-                ].concat(extraBlocks),
+                ].concat(extOpen ? extBlockArray : []),
                 menus: {
                     BASES: {
                         acceptReporters: false,
@@ -908,11 +902,6 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
         octNum(args) {
             return isItOctal(args.NUM.toString()) ? parseInt(args.NUM.toString(), 8) : '';
-        }
-
-        testinglol(args) {
-            args.ARG = jwArray.Type.toArray(args.ARG);
-            return new jwArray.Type(["foo", args.ARG]);
         }
 
         charToBit(args) {

@@ -189,7 +189,7 @@ Takes in an octal number and returns a decimal.
 
 ---
 
->>> These blocks probably won't work with extra blocks and *might* break normal blocks (or at least show unexpected behavior).
+These blocks probably won't work with extra blocks and *might* break normal blocks (or at least show unexpected behavior).
 
 ```scratch
 use a [static v] length for binary :: #15448f

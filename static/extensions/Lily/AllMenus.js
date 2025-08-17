@@ -3,6 +3,7 @@
 
   var blockXML;
   const blacklist = ["looks_costumenumbername", "extension_wedo_tilt_menu"];
+  const whitelist = ["looks_costume", "looks_backdrops", "sensing_keyoptions"];
 
   Scratch.vm.addListener("BLOCKSINFO_UPDATE", refreshMenus);
 
@@ -13,7 +14,7 @@
     let allBlocks = Object.keys(ScratchBlocks.Blocks);
 
     allBlocks = allBlocks.filter(
-      (item) => item.includes("menu") && !blacklist.includes(item)
+      (item) => item.includes("menu") && !blacklist.includes(item) || whitelist.includes(item)
     );
 
     const menuBlocks = allBlocks.map(

@@ -1,5 +1,14 @@
 var decoder = new TextDecoder('utf8');
 
+async function bufferToBase64(buffer) {
+    const base64url = await new Promise(r => {
+        const reader = new FileReader()
+        reader.onload = () => r(reader.result)
+        reader.readAsDataURL(new Blob([buffer]))
+    });
+    return base64url.slice(base64url.indexOf(',') + 1);
+}
+
 class CustomArray {
     constructor(data, type, context) {
         let TypeClass = globalThis[type];
@@ -9,7 +18,12 @@ class CustomArray {
             data = data.buffer || data;
         }
         if (typeof data == "string" && data.startsWith('data:')) {
-            data = Uint8Array.fromBase64(data.split(',')[1]).buffer
+            let binaryString = data.split(',')[1]
+            const len = binaryString.length;
+            data = new Uint8Array(len);
+            for (let i = 0; i < len; i++) {
+                data[i] = binaryString.charCodeAt(i);
+            } 
         }
 
         if (TypeClass && (TypeClass == Array || TypeClass.prototype.__proto__ == Uint8Array.prototype.__proto__)) {
@@ -40,7 +54,7 @@ class CustomArray {
     toString() {
         let prefix = (this.context == "Bitmap") ? "image/png" : "image/bmp";
         if (this.context == "Bitmap" || this.context == "Bitmap (easy)") {
-            return "data:" + prefix + ";base64," + this.data.toBase64({options: "base64url"});
+            return "data:" + prefix + ";base64," + bufferToBase64(this.data);
         }
         return JSON.stringify({
             type: this.type,
@@ -151,7 +165,7 @@ class Extension {
         return VALUE;
     }
     string_arr({DATA,TYPE}) {
-        return "data:" + TYPE + ";base64," + DATA.data.toBase64({options: "base64url"});    
+        return "data:" + TYPE + ";base64," + bufferToBase64(DATA.data);    
     }
 }
 

@@ -20,8 +20,6 @@
         throw new Error('\'Objects\' must run unsandboxed!');
     }
 
-    ScratchBlocks.BlockSvg.registerCustomNotch("dogeiscutObjectBuilder", `l0 5 12 0 0 5 12 0 0-5 12 0 0-5`);
-
     function inflate(json) {
         const raw = json.objects;
         const cache = [];
@@ -100,25 +98,6 @@
         return el
     }
 
-    // stole the builder code (and most of this code tbh) from jwklong muhahah i am evi;l
-
-    function waitForThread(thread) {
-        return new Promise((resolve, reject) => {
-            if (thread.status == 4) {
-                resolve()
-                return
-            }
-
-            let handler = t => {
-                if (t === thread) {
-                    resolve()
-                    vm.runtime.off('THREAD_FINISHED', handler)
-                }
-            }
-
-            vm.runtime.on('THREAD_FINISHED', handler)
-        })
-    }
 
     function paragraph(text) {
         let el = document.createElement('p');
@@ -254,6 +233,8 @@
 
     class Extension {
         constructor() {
+            vm.runtime.registerCompiledExtensionBlocks('dogeiscutObject', this.getCompileInfo());
+
             vm.dogeiscutObject = dogeiscutObject
             const referenceMap = new Map();
 
@@ -548,6 +529,46 @@
             }
         }
 
+        getCompileInfo() {
+            return {
+                ir: {
+                    builder: (generator, block) => ({
+                        kind: 'input',
+                        substack: generator.descendSubstack(block, 'SUBSTACK')
+                    }),
+                },
+                js: {
+                    builder: (node, compiler, imports) => {
+                        const originalSource = compiler.source;
+
+                        compiler.source = '(yield* (function*() {';
+                        compiler.source += '    const __inner = (yield* (function*() {';
+                        compiler.source += `        thread._dogeiscutObjectBuilderIndex ??= [];`;
+                        compiler.source += `        thread._dogeiscutObjectBuilderIndex.push({});`;
+                        compiler.descendStack(node.substack, new imports.Frame(false, undefined, true));
+                        compiler.source += `        return new runtime.ext_dogeiscutObject.BuilderReturnValue(thread._dogeiscutObjectBuilderIndex.pop());`;
+                        compiler.source += '    })());';
+                        compiler.source += '    const __result = __inner;';
+                        compiler.source += '    if (!(__result instanceof runtime.ext_dogeiscutObject.BuilderReturnValue)) {';
+                        compiler.source += '        throw "Return statements are not supported in builders.";';
+                        compiler.source += '    }';
+                        compiler.source += '    return new runtime.vm.dogeiscutObject.Type(__result.value);';
+                        compiler.source += '})())';
+
+                        const stackSource = compiler.source;
+                        compiler.source = originalSource;
+                        return new imports.TypedInput(stackSource, imports.TYPE_UNKNOWN);
+                    }
+                }
+            };
+        }
+
+        BuilderReturnValue = class {
+            constructor(value) {
+                this.value = value
+            }
+        } 
+
         /* Buttons */
 
         warning() {
@@ -595,27 +616,15 @@
             return dogeiscutObject.Type.toObject(Object.assign({}, ARRAY.array));
         }
 
-        builderIndex = []
-
-        async builder({ }, util) {
-            let branch = util.thread.blockContainer.getBranch(util.thread.peekStack(), 1)
-            if (!branch) return new dogeiscutObject.Type()
-
-            const thread = vm.runtime._pushThread(branch, util.target)
-            let index = this.builderIndex.push({})
-            thread.stackFrames[0].dogeiscutObjectBuilderIndex = index
-            util.thread.stackFrames[0].dogeiscutObjectBuilderIndex = index
-            await waitForThread(thread)
-
-            const output = this.builderIndex[index]
-            delete this.builderIndex[index]
-            return new dogeiscutObject.Type(output)
+        async builder({}, util) {
+            return 'noop'
         }
 
         builderAppend({ KEY, VALUE }, util) {
-            console.log(util.thread.stackFrames)
-            if (util.stackFrame.dogeiscutObjectBuilderIndex && this.builderIndex[util.stackFrame.dogeiscutObjectBuilderIndex]) {
-                this.builderIndex[util.stackFrame.dogeiscutObjectBuilderIndex][KEY] = VALUE
+            if (util.thread._dogeiscutObjectBuilderIndex && util.thread._dogeiscutObjectBuilderIndex.length > 0) {
+                util.thread._dogeiscutObjectBuilderIndex[util.thread._dogeiscutObjectBuilderIndex.length-1][KEY] = VALUE
+            } else {
+                throw 'This block must be inside of a "object builder" block.';
             }
         }
 

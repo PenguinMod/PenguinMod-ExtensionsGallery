@@ -627,7 +627,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
         }
 
         bitwiseDocumentationButton() {
-            window.location.href = "https://extensions.penguinmod.com/docs/bitsandhexa";
+            window.open("https://extensions.penguinmod.com/docs/bitsandhexa");
         }
 
         binaryLengthGetter(args) {

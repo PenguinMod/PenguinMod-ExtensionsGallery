@@ -1,10 +1,10 @@
-# Bitwise+ v1.1
+# Bitwise+ v1.3
 ## Bitwise Operations for Decimals, Binary, and Hexadecimal
 ### By BurningHot687/Raichu-Model/-Rig
 
-If you are unfamiliar with bitwise operations, then hopefully this documentation can help you. If you still need further reading, you may go to this [Wikipedia Article](https://en.wikipedia.org/wiki/Bitwise_operation).
+If you are unfamiliar with bitwise operations, then hopefully this documentation can help you. If you still need further reading, you may go to this [Wikipedia Article](https://en.wikipedia.org/wiki/Bitwise_operation). I do not claim to be an expert, so these explanations might not be the best unless you've got the context for them.
 
-###### Keep in mind that version 1.1 currently only supports binary, decimal, and hexadecimal. All outputs, unless specified otherwise, are going to be in decimal. All inputs, unless specified otherwise, are assumed decimal unless there is a hexadecimal character within it. Also keep in mind Scratch has a 32 bit system and floats aren't supported yet.
+###### Keep in mind that version 1.3 currently only supports binary, decimal, hexadecimal, and octals. All outputs, unless specified otherwise, are going to be in decimal. All inputs, unless specified otherwise, are assumed decimal unless there is a hexadecimal character within it. Also keep in mind Scratch has a 32 bit system.
 
 ---
 ```scratch
@@ -137,12 +137,6 @@ Takes in an array and returns a string.
 ---
 
 ```scratch
-(reverse endianness of (37) in [decimal v]::#15448f
-```
-
-Switches the byte order of the provided number.
-
-```scratch
 (0x ()::#15448f
 ```
 
@@ -159,6 +153,23 @@ Takes in a binary number and returns a decimal.
 ```
 
 Takes in an octal number and returns a decimal.
+
+```scratch
+(convert float 32 (6.28) to [binary v]::#15448f
+```
+
+Takes in a single-precision float (32 bits) and turns it into the requested base. 
+
+```scratch
+(convert [f00] in [hexadecimal v] to float 32::#15448f
+```
+Takes in a number, reads it in the assigned base, and converts it into a float32. Because of the way floats are stored, using the above block as the number input in this block would most likely result in a different number being outputted, with a few exceptions.
+
+```scratch
+(reverse endianness of (37) in [decimal v]::#15448f
+```
+
+Switches the byte order of the provided number.
 
 ---
 

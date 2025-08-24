@@ -11,15 +11,11 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 /* 
     By BurningHot687 (Raichu-Model or Raichu-Rig on Scratch). In case you can't tell I have basically no idea what I'm doing lol. What even is this license :sob:
 
-    oh all the other blocks assume you are using decimal input unless it's shown to be hexadecimal
-
     TO-DO:
-
     - Get feedback
-
 */
 
-// V1.1.2.7
+// V1.3.2.4
 
 (function(Scratch){
     "use strict";
@@ -38,7 +34,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     let fullLength = true;
     let selLengthIsFull = true;
     let extOpen = false;
-    let basesArray = ["decimal", "binary", "hexadecimal"];
+    let basesArray = ["decimal", "binary", "hexadecimal", "octal"];
     const icon = "data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiPz4KPHN2ZyBpZD0iTGF5ZXJfMSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIiB2ZXJzaW9uPSIxLjEiIHZpZXdCb3g9IjAgMCAyMjUgMjI1Ij4KICA8IS0tIEdlbmVyYXRvcjogQWRvYmUgSWxsdXN0cmF0b3IgMjkuNS4xLCBTVkcgRXhwb3J0IFBsdWctSW4gLiBTVkcgVmVyc2lvbjogMi4xLjAgQnVpbGQgMTQxKSAgLS0+CiAgPGRlZnM+CiAgICA8c3R5bGU+CiAgICAgIC5zdDAgewogICAgICAgIGZpbGw6ICNmZmY7CiAgICAgIH0KCiAgICAgIC5zdDEgewogICAgICAgIGZpbGw6ICMxYjQ2OGQ7CiAgICAgIH0KCiAgICAgIC5zdDIgewogICAgICAgIGZpbGw6ICMxNDY0OGE7CiAgICAgIH0KICAgIDwvc3R5bGU+CiAgPC9kZWZzPgogIDxyZWN0IGNsYXNzPSJzdDEiIHdpZHRoPSIyMjUiIGhlaWdodD0iMjI1Ii8+CiAgPGc+CiAgICA8cG9seWdvbiBjbGFzcz0ic3QwIiBwb2ludHM9IjE3NC4wNiAxNC4wMSAxMTkuMjEgMTQuMDEgOTEuNzkgNjEuNTEgMTE5LjIxIDEwOS4wMSAxNzQuMDYgMTA5LjAxIDIwMS40OSA2MS41MSAxNzQuMDYgMTQuMDEiLz4KICAgIDxjaXJjbGUgY2xhc3M9InN0MiIgY3g9IjY1LjY1IiBjeT0iMTIyLjI2IiByPSI0Mi4xNCIvPgogICAgPHJlY3QgY2xhc3M9InN0MCIgeD0iMTE3LjE3IiB5PSIxMTcuOCIgd2lkdGg9Ijc0LjE4IiBoZWlnaHQ9IjkzLjE5IiByeD0iMTIiIHJ5PSIxMiIvPgogIDwvZz4KPC9zdmc+";
     const iconCircle = "data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiPz4KPHN2ZyBpZD0iTGF5ZXJfMSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIiB2ZXJzaW9uPSIxLjEiIHZpZXdCb3g9IjAgMCAyMjUgMjI1Ij4KICA8IS0tIEdlbmVyYXRvcjogQWRvYmUgSWxsdXN0cmF0b3IgMjkuNS4xLCBTVkcgRXhwb3J0IFBsdWctSW4gLiBTVkcgVmVyc2lvbjogMi4xLjAgQnVpbGQgMTQxKSAgLS0+CiAgPGRlZnM+CiAgICA8c3R5bGU+CiAgICAgIC5zdDAgewogICAgICAgIGZpbGw6ICMxNDY0OGE7CiAgICAgIH0KCiAgICAgIC5zdDEgewogICAgICAgIGZpbGw6ICNmZmY7CiAgICAgIH0KCiAgICAgIC5zdDIgewogICAgICAgIGZpbGw6ICMxYjQ2OGQ7CiAgICAgIH0KICAgIDwvc3R5bGU+CiAgPC9kZWZzPgogIDxyZWN0IGNsYXNzPSJzdDIiIHg9IjAiIHk9IjAiIHdpZHRoPSIyMjUiIGhlaWdodD0iMjI1IiByeD0iMTEyLjUiIHJ5PSIxMTIuNSIvPgogIDxnPgogICAgPHBvbHlnb24gY2xhc3M9InN0MSIgcG9pbnRzPSIxNjMuODUgMzAuMzQgMTE4LjEgMzAuMzQgOTUuMjIgNjkuOTcgMTE4LjEgMTA5LjU5IDE2My44NSAxMDkuNTkgMTg2LjczIDY5Ljk3IDE2My44NSAzMC4zNCIvPgogICAgPGNpcmNsZSBjbGFzcz0ic3QwIiBjeD0iNzMuNDIiIGN5PSIxMjAuNjQiIHI9IjM1LjE1Ii8+CiAgICA8cmVjdCBjbGFzcz0ic3QxIiB4PSIxMTYuNCIgeT0iMTE2LjkyIiB3aWR0aD0iNjEuODgiIGhlaWdodD0iNzcuNzQiIHJ4PSIxMC4wMSIgcnk9IjEwLjAxIi8+CiAgPC9nPgogIDxwYXRoIGNsYXNzPSJzdDEiIGQ9Ik01MS41MSwxOTAuMjNjLTMuNjksMC0zLjY5LDUuNzMsMCw1LjczczMuNjktNS43MywwLTUuNzNaIi8+CiAgPHBhdGggY2xhc3M9InN0MSIgZD0iTTcwLjk3LDE3OS4wM2MtMy42OSwwLTMuNjksNS43MywwLDUuNzNzMy42OS01LjczLDAtNS43M1oiLz4KICA8cGF0aCBjbGFzcz0ic3QxIiBkPSJNNjYuNzcsMTkzLjF2MS40NGMtLjI2LS4xNS0uNTEtLjMtLjc2LS40NS0zLjE0LTEuOTYtNi4wMiwzLTIuODksNC45NSwxLjA3LjY3LDIuMTksMS4yMiwzLjM2LDEuNywxLjI4LjUzLDIuNjMsMS4wMywzLjk5LjQsMS42NS0uNzYsMi4wMy0yLjM2LDIuMDQtNC4wM3YtNC4wMWMwLTMuNjktNS43Mi0zLjY5LTUuNzMsMFoiLz4KPC9zdmc+";
 
@@ -73,6 +69,8 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
             return isItBinary(numString);
         case 2:
             return isItHexadecimal(numString);
+        case 3:
+            return isItOctal(numString);
         }
     };
     
@@ -127,8 +125,8 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
         return returnValue;
     };
 
-    function chooseBaseValue(index) {
-        return index === 0 ? 10 : index === 1 ? 2 : 16;
+    function chooseBaseValue(text) {
+        return basesArray.indexOf(text) === 0 ? 10 : basesArray.indexOf(text) === 1 ? 2 : basesArray.indexOf(text) === 2 ? 16 : 8;
     };
 
     class Extension {
@@ -233,6 +231,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
                     arguments: {
                         NUM: {
                             type: Scratch.ArgumentType.STRING,
+                            defaultValue: '0',
                         },
                     },
                     switches: [ 'bitNum', 'octNum' ],
@@ -262,6 +261,38 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
                         },
                     },
                     switches: [ 'hexaNum', 'bitNum' ],
+                },
+                {
+                    opcode: 'convertSingleToBases',
+                    text: 'convert float32 [NUM] to [BASE]',
+                    blockType: Scratch.BlockType.REPORTER,
+                    disableMonitor: true,
+                    arguments: {
+                        NUM: {
+                            type: Scratch.ArgumentType.NUMBER,
+                            defaultValue: 6.28,
+                        },
+                        BASE: {
+                            type: Scratch.ArgumentType.STRING,
+                            menu: "BASES_NO_DEC",
+                        },
+                    },
+                },
+                {
+                    opcode: 'convertBasesToSingle',
+                    text: 'convert [NUM] in [BASE] to float32',
+                    blockType: Scratch.BlockType.REPORTER,
+                    disableMonitor: true,
+                    arguments: {
+                        NUM: {
+                            type: Scratch.ArgumentType.STRING,
+                            defaultValue: 'f00',
+                        },
+                        BASE: {
+                            type: Scratch.ArgumentType.STRING,
+                            menu: "BASES",
+                        },
+                    },
                 },
                 {
                     opcode: "convertToLittleEndian",
@@ -385,6 +416,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
                             },
                         },
                     },
+                    "---",
                     {
                         text: "Bitwise Manipulation",
                         blockType: Scratch.BlockType.LABEL,
@@ -479,6 +511,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
                         },
                         switches: [ "signedRightShiftBitz", "leftShiftBitz", "unsignedRightShiftBitz", "circularRightShiftBitz" ],
                     },
+                    '---',
                     {
                         text: "Bitwise Operators",
                         blockType: Scratch.BlockType.LABEL,
@@ -617,6 +650,10 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
                         acceptReporters: false,
                         items: ['UTF-16', 'Unicode'],
                     },
+                    BASES_NO_DEC: {
+                        acceptReporters: false,
+                        items: basesArray.slice(1),
+                    },
                 },
             };
         }
@@ -676,7 +713,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
             }
 
             if (fullLength) {
-                computeValue = parseInt(computeValue, chooseBaseValue(basesArray.indexOf(args.FROM)));
+                computeValue = parseInt(computeValue, chooseBaseValue(args.FROM));
             } else {
                 switch (basesArray.indexOf(args.FROM)) {
                 case 0:
@@ -688,10 +725,14 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
                 case 2:
                     computeValue = binaryToDecimal(leadingZeroez(computeValue) + (parseInt(computeValue, 16) >>> 0).toString(2));
                     break;
+                case 3:
+                    computeValue = binaryToDecimal(leadingZeroez(computeValue) + (parseInt(computeValue, 8) >>> 0).toString(2));
+                    break;
                 }
             }
             if (fullLength) computeValue = computeValue >> 0;
             
+            let negative = computeValue < 0;
             switch (basesArray.indexOf(args.BASE)) {
             case 0:
                 computeValue = computeValue.toString(10);
@@ -700,8 +741,11 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
                 computeValue = binaryReformat(computeValue, computeValue < 0);
                 break;
             case 2:
-                let negative = computeValue < 0;
                 computeValue = parseInt(binaryReformat(computeValue, negative), 2).toString(16);
+                if (!fullLength && !negative) computeValue = "0" + computeValue; 
+                break;
+            case 3:
+                computeValue = parseInt(binaryReformat(computeValue, negative), 2).toString(8);
                 if (!fullLength && !negative) computeValue = "0" + computeValue; 
                 break;
             default:
@@ -905,20 +949,20 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
         }
 
         charToBit(args) {
-            if (args.ENCODE == 'UTF-16') return args.CHAR.charCodeAt(args.NUM).toString(chooseBaseValue(basesArray.indexOf(args.BASE)));
-            if (args.ENCODE == 'Unicode') return args.CHAR.codePointAt(args.NUM).toString(chooseBaseValue(basesArray.indexOf(args.BASE)));
+            if (args.ENCODE == 'UTF-16') return args.CHAR.charCodeAt(args.NUM).toString(chooseBaseValue(args.BASE));
+            if (args.ENCODE == 'Unicode') return args.CHAR.codePointAt(args.NUM).toString(chooseBaseValue(args.BASE));
         }
 
         bitToChar(args) {
-            if (args.ENCODE == 'UTF-16') return String.fromCharCode(parseInt(args.NUM, chooseBaseValue(basesArray.indexOf(args.BASE))));
-            if (args.ENCODE == 'Unicode') return String.fromCodePoint(parseInt(args.NUM, chooseBaseValue(basesArray.indexOf(args.BASE))));
+            if (args.ENCODE == 'UTF-16') return String.fromCharCode(parseInt(args.NUM, chooseBaseValue(args.BASE)));
+            if (args.ENCODE == 'Unicode') return String.fromCodePoint(parseInt(args.NUM, chooseBaseValue(args.BASE)));
         }
 
         stringToBitArray(args) {
             let computeValue = [];
             for (let i = 0; i < args.STR.length; i++) {
-                if (args.ENCODE == 'UTF-16') computeValue.push(args.STR.charCodeAt(i).toString(args.BASE === 'decimal' ? 10 : args.BASE === 'binary' ? 2 : 16));
-                if (args.ENCODE == 'Unicode') computeValue.push(args.STR.codePointAt(i).toString(args.BASE === 'decimal' ? 10 : args.BASE === 'binary' ? 2 : 16));
+                if (args.ENCODE == 'UTF-16') computeValue.push(args.STR.charCodeAt(i).toString(chooseBaseValue(args.BASE)));
+                if (args.ENCODE == 'Unicode') computeValue.push(args.STR.codePointAt(i).toString(chooseBaseValue(args.BASE)));
             }
             return new jwArray.Type(computeValue);
         }
@@ -928,7 +972,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
             if (myArray.length === 0) return '';
             let computeValue = '';
             for (let i = 0; i < myArray.length; i++) {
-                let charValue = parseInt(myArray[i], chooseBaseValue(basesArray.indexOf(args.BASE)));
+                let charValue = parseInt(myArray[i], chooseBaseValue(args.BASE));
                 computeValue = computeValue.concat(args.ENCODE === 'UTF-16' ? String.fromCharCode(charValue) : String.fromCodePoint(charValue));
             }
             return computeValue;
@@ -936,11 +980,40 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
 
         convertToLittleEndian(args) {
-            let computeValue = parseInt(args.NUM, chooseBaseValue(basesArray.indexOf(args.BASE)));
+            let computeValue = parseInt(args.NUM, chooseBaseValue(args.BASE));
             computeValue = new Int32Array([computeValue]);
             computeValue.reverse();
             const myDataView = new DataView(computeValue.buffer);
             return myDataView.getInt32(0, false);
+        }
+
+        convertSingleToBases(args) {
+            // https://stackoverflow.com/questions/25942516/double-to-byte-array-conversion-in-javascript is where I found this solution
+            // If I don't keep snoozing this Copilot I get jumpscared by it being smarter and faster than me 0_0'
+            let computeValue = parseFloat(args.NUM);
+            let buffer = new ArrayBuffer(4);
+            let intArray = new Int32Array(buffer);
+            let floatArray = new Float32Array(buffer);
+            floatArray[0] = computeValue;
+
+            let binaryString = '';
+            for (let i = floatArray.byteLength; i > 0; i--) {
+                let byte = (intArray[0] >> ((i - 1) * 8)) & 0xFF;
+                binaryString += byte.toString(chooseBaseValue(args.BASE)).padStart(basesArray.indexOf(args.BASE) == 1 ? 8 : basesArray.indexOf(args.BASE) == 2 ? 2 : 3, '0');
+            }
+
+            return binaryString;
+        }
+
+        convertBasesToSingle(args) {
+            let computeValue = parseInt(args.NUM, chooseBaseValue(args.BASE));
+            if (!testForFormat(computeValue, args.BASE)) {
+                return "";
+            }
+            if ((computeValue >>> 0).toString(2).length > 32) return '';
+            let myDataView = new DataView(new ArrayBuffer(4));
+            myDataView.setInt32(0, computeValue, false);
+            return myDataView.getFloat32(0, false);
         }
     }
     Scratch.extensions.register(new Extension());

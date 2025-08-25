@@ -1,7 +1,7 @@
 (function(Scratch) {
     'use strict';
 
-	const mimeTypes = {
+	const mimeTypes = { //this is long asf, just skip until you see the class
 		"123": "application/vnd.lotus-1-2-3",
 		"1km": "application/vnd.1000minds.decision-model+xml",
 		"3dml": "text/vnd.in3d.3dml",
@@ -1223,6 +1223,7 @@
 
         getInfo() {
             return {
+				docsURI: 'https://extensions.penguinmod.com/docs/YeetYourFiles',
                 id: 'yeetyourfiles',
                 name: 'YeetYourFiles',
                 color1: '#FF8C00',  

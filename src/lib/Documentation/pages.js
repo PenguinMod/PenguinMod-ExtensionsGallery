@@ -22,6 +22,9 @@ import PagePenguinAI from "./PenguinAI.md?raw";
 // AuthPenguin
 import PageAuthPenguin from "./AuthPenguin.md?raw";
 
+// YeetYourFiles
+import PageYeetYourFiles from "./YeetYourFiles.md?raw";
+
 import PageMoreTypes from "./More-Types.md?raw";
 
 // Boxed Physics
@@ -54,6 +57,9 @@ export default {
 
     // AuthPenguin
     "AuthPenguin": PageAuthPenguin,
+
+    // YeetYourFiles
+    "YeetYourFiles": PageYeetYourFiles,
 
     "more-types": PageMoreTypes,
 

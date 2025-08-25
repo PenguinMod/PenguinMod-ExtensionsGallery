@@ -321,6 +321,7 @@ export default [
         banner: "MubiLop/placeholder-yeetyourfiles.png",
         creator: "cicerorph",
         creatorAlias: "MubiLop",
+        documentation: "YeetYourFiles",
         isGitHub: true,
     },
     {

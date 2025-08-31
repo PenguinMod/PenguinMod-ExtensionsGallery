@@ -15,7 +15,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     - Get feedback
 */
 
-// V1.3.2.4
+// V1.3.5.1
 
 (function(Scratch){
     "use strict";
@@ -23,6 +23,8 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     if (!Scratch.extensions.unsandboxed) {
         throw new Error("This extension has to be used unsandboxed, please.");
     }
+
+    const extraFeaturesOn = Scratch.extensions.isPenguinMod;
 
     // yo thanks PackGod, or jwlong or whatever you like to call yourself
     let jwArray = {
@@ -131,7 +133,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
     class Extension {
         constructor() {
-            if (!vm.jwArray) vm.extensionManager.loadExtensionIdSync('jwArray'); jwArray = vm.jwArray;
+            if (extraFeaturesOn) if (!vm.jwArray) vm.extensionManager.loadExtensionIdSync('jwArray'); jwArray = vm.jwArray;
         }
 
         getInfo() {
@@ -182,7 +184,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
                         },
                     },
                 },
-                {
+                ...extraFeaturesOn ? [{
                     opcode: "stringToBitArray",
                     text: "[STR] to [ENCODE] array in [BASE]",
                     arguments: {
@@ -200,8 +202,8 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
                         },
                     },
                     ...jwArray.Block
-                },
-                {
+                },] : [],
+                ...extraFeaturesOn ? [{
                     opcode: "bitArrayToString",
                     text: "[ENCODE] array [ARRAY] in [BASE] to string",
                     blockType: Scratch.BlockType.REPORTER,
@@ -216,8 +218,62 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
                             menu: "BASES",
                         },
                     },
-                },
+                },] : [],
                 "---",
+                {
+                    text: "Constants",
+                    blockType: Scratch.BlockType.LABEL,
+                },
+                {
+                    opcode: 'largestInt',
+                    text: 'largest positive integer',
+                    blockType: Scratch.BlockType.REPORTER,
+                    disableMonitor: true,
+                    switches: [ 'smallestInt', 'largestUint', 'largestPosFloat', 'smallestPosFloat', 'smallestNegativeFloat', 'largestNegativeFloat' ],
+                },
+                {
+                    opcode: 'smallestInt',
+                    text: 'smallest negative integer',
+                    blockType: Scratch.BlockType.REPORTER,
+                    disableMonitor: true,
+                    switches: [ 'largestInt', 'largestUint', 'largestPosFloat', 'smallestPosFloat', 'smallestNegativeFloat', 'largestNegativeFloat' ],
+                },
+                {
+                    opcode: 'largestUint',
+                    text: 'largest unsigned integer',
+                    blockType: Scratch.BlockType.REPORTER,
+                    disableMonitor: true,
+                    switches: [ 'largestInt', 'smallestInt', 'largestPosFloat', 'smallestPosFloat', 'smallestNegativeFloat', 'largestNegativeFloat' ],
+                },
+                {
+                    opcode: 'largestPosFloat',
+                    text: 'largest positive float',
+                    blockType: Scratch.BlockType.REPORTER,
+                    disableMonitor: true,
+                    switches: [ 'largestInt', 'smallestInt', 'largestUint', 'smallestPosFloat', 'smallestNegativeFloat', 'largestNegativeFloat' ],
+                },
+                {
+                    opcode: 'smallestPosFloat',
+                    text: 'smallest positive float',
+                    blockType: Scratch.BlockType.REPORTER,
+                    disableMonitor: true,
+                    switches: [ 'largestInt', 'smallestInt', 'largestUint', 'largestPosFloat', 'smallestNegativeFloat', 'largestNegativeFloat' ],
+                },
+                {
+                    opcode: 'smallestNegativeFloat',
+                    text: 'smallest negative float',
+                    blockType: Scratch.BlockType.REPORTER,
+                    disableMonitor: true,
+                    switches: [ 'largestInt', 'smallestInt', 'largestUint', 'largestPosFloat', 'smallestPosFloat', 'largestNegativeFloat' ],
+                },
+                {
+                    opcode: 'largestNegativeFloat',
+                    text: 'largest negative float',
+                    blockType: Scratch.BlockType.REPORTER,
+                    disableMonitor: true,
+                    switches: [ 'largestInt', 'smallestInt', 'largestUint', 'largestPosFloat', 'smallestPosFloat', 'smallestNegativeFloat' ],
+                },
+                '---',
                 {
                     text: "Utilities",
                     blockType: Scratch.BlockType.LABEL,
@@ -264,7 +320,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
                 },
                 {
                     opcode: 'convertSingleToBases',
-                    text: 'convert float32 [NUM] to [BASE]',
+                    text: 'float32 [NUM] to [BASE]',
                     blockType: Scratch.BlockType.REPORTER,
                     disableMonitor: true,
                     arguments: {
@@ -280,7 +336,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
                 },
                 {
                     opcode: 'convertBasesToSingle',
-                    text: 'convert [NUM] in [BASE] to float32',
+                    text: '[NUM] in [BASE] to float32',
                     blockType: Scratch.BlockType.REPORTER,
                     disableMonitor: true,
                     arguments: {
@@ -360,7 +416,6 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
                         opcode: "bitwiseDocumentationButton",
                         text: "Open Documentation",
                         blockType: Scratch.BlockType.BUTTON,
-                        // hideFromPalette: true,
                     },
                     {
                         opcode: "isNumActuallyBase",
@@ -380,7 +435,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
                     },
                     {
                         opcode: "convertBaseTypesBitW",
-                        text: "convert [NUM] from [FROM] to [BASE]",
+                        text: "[NUM] from [FROM] to [BASE]",
                         blockType: Scratch.BlockType.REPORTER,
                         disableMonitor: true,
                         // allowDropAnywhere: true, could potentially save on blocks in minor use cases and doesn't harm otherwise?
@@ -402,6 +457,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
                     {
                         opcode: "getBitAtIdx",
                         text: "get bit at index [IDX] of [NUM]",
+                        switchText: "get bit",
                         blockType: Scratch.BlockType.REPORTER,
                         disableMonitor: true,
                         allowDropAnywhere: true,
@@ -415,6 +471,45 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
                                 defaultValue: '13',
                             },
                         },
+                        switches: [ "getHexAtIdx", "getOctAtIdx" ],
+                    },
+                    {
+                        opcode: "getHexAtIdx",
+                        text: "get hex at index [IDX] of [NUM]",
+                        switchText: "get hex",
+                        blockType: Scratch.BlockType.REPORTER,
+                        disableMonitor: true,
+                        allowDropAnywhere: true,
+                        arguments: {
+                            IDX: {
+                                type: Scratch.ArgumentType.NUMBER,
+                                defaultValue: 0,
+                            },
+                            NUM: {
+                                type: Scratch.ArgumentType.STRING,
+                                defaultValue: 'de5',
+                            },
+                        },
+                        switches: [ "getBitAtIdx", "getOctAtIdx" ],
+                    },
+                    {
+                        opcode: "getOctAtIdx",
+                        text: "get octal at index [IDX] of [NUM]",
+                        switchText: "get octal",
+                        blockType: Scratch.BlockType.REPORTER,
+                        disableMonitor: true,
+                        allowDropAnywhere: true,
+                        arguments: {
+                            IDX: {
+                                type: Scratch.ArgumentType.NUMBER,
+                                defaultValue: 1,
+                            },
+                            NUM: {
+                                type: Scratch.ArgumentType.STRING,
+                                defaultValue: '213',
+                            },
+                        },
+                        switches: [ "getBitAtIdx", "getHexAtIdx" ],
                     },
                     "---",
                     {
@@ -759,6 +854,28 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
             return getBitAt(args.NUM, args.IDX);
         }
 
+        getHexAtIdx(args) {
+            if (args.IDX > 7 || args.IDX < 0) return "";
+            let cValue = args.NUM;
+            if (!(isItDecimal(cValue) || isItHexadecimal(cValue))) return "";
+            if (isItHexadecimal(cValue) && /[abcdef]/i.test(cValue)) {
+                cValue = "0x" + cValue;
+            }
+            if (args.IDX > parseInt(cValue).toString(16).length && !fullLength) return "";
+            return ((parseInt(cValue) >>> args.IDX * 4) & 15).toString(16);
+        }
+
+        getOctAtIdx(args) {
+            if (args.IDX > 10 || args.IDX < 0) return "";
+            let cValue = args.NUM;
+            if (!(isItDecimal(cValue) || isItHexadecimal(cValue))) return "";
+            if (isItHexadecimal(cValue) && /[abcdef]/i.test(cValue)) {
+                cValue = "0x" + cValue;
+            }
+            if (args.IDX > parseInt(cValue).toString(8).length && !fullLength) return "";
+            return ((parseInt(cValue) >>> args.IDX * 3) & 7).toString(8);
+        }
+
         signedRightShiftBitz(args) {
             let computeValue = args.NUM;
             if (!(isItDecimal(computeValue) || isItHexadecimal(computeValue))) return "";
@@ -1014,6 +1131,34 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
             let myDataView = new DataView(new ArrayBuffer(4));
             myDataView.setInt32(0, computeValue, false);
             return myDataView.getFloat32(0, false);
+        }
+
+        largestInt() {
+            return 0x7fffffff >> 0;
+        }
+
+        smallestInt() {
+            return 0x80000000 >> 0;
+        }
+
+        largestUint() {
+            return 0xffffffff >>> 0;
+        }
+
+        largestPosFloat() {
+            return 3.4028235e+38;
+        }
+
+        smallestPosFloat() {
+            return 1.4012985e-45;
+        }
+
+        smallestNegativeFloat() {
+            return -3.4028235e+38;
+        }
+
+        largestNegativeFloat() {
+            return -1.4012985e-45;
         }
     }
     Scratch.extensions.register(new Extension());

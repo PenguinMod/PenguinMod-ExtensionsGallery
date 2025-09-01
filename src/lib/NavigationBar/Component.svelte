@@ -23,7 +23,7 @@
 
     // svelte-ignore non_reactive_update
     // this is from bind:this, idk why svelte is mad
-    let searchInput;
+    let searchInput = null;
     const searchExtensions = () => {
         if (!searchInput) return;
         const searchTerm = String(searchInput.value)
@@ -41,6 +41,7 @@
             searchInput.focus();
         });
 
+        if (!searchInput) return;
         searchInput.placeholder = (window.innerWidth <= 850 ? "Extension search" : "Search for an extension...")
     });
 </script>

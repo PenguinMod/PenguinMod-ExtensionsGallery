@@ -1,6 +1,6 @@
 <script>
-    import { selectedRecommendedExt, searchRecommendations } from '$lib/stores.js';
-
+    import stateSearchBar from '$lib/state/searchBar.svelte.js';
+    
     let props = $props();
     let name = $derived(props.name || "Test");
     let image = $derived(props.image || "/images/example.png");

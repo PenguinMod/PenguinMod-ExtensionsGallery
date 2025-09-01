@@ -16,7 +16,6 @@
         displayedTheme = darkTheme ? "dark" : "light";
     };
 
-
     if (browser) {
         document.addEventListener("penguinmod-dark-updated", () => {
             updateDisplayedTheme();

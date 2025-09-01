@@ -6,8 +6,8 @@
     import Footer from "$lib/Footer/Component.svelte";
     import Logo from "$lib/Logo/Component.svelte";
 
+    import stateSearchBar from '$lib/state/searchBar.svelte.js';
     import extensions from "$lib/extensions.js";
-    import { searchQuery, searchRecommendations, selectedRecommendedExt } from '$lib/stores.js';
 
     const origin = $page.url.origin;
     const searchable = (text = '') => {

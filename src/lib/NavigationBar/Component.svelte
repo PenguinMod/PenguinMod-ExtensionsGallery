@@ -5,6 +5,8 @@
     import BarPage from "./Page.svelte";
     import BarButton from "./Button.svelte";
     
+    import stateSearchBar from '$lib/state/searchBar.svelte.js';
+    
     let props = $props();
     let displaySearchBar = $derived(props.displaySearchBar);
 
@@ -29,13 +31,13 @@
 
         if (props.onsearch) props.onsearch(searchTerm);
     };
-    // searchRecommendations.subscribe(() => {
-    //     if (!searchInput) return;
-    //     searchInput.focus();
-    // });
-
     onMount(() => {
-        // searchInput.placeholder = (window.innerWidth <= 850 ? "Extension search" : "Search for an extension...")
+        document.addEventListener("penguinmod-recommendations-updated", () => {
+            if (!searchInput) return;
+            searchInput.focus();
+        });
+
+        searchInput.placeholder = (window.innerWidth <= 850 ? "Extension search" : "Search for an extension...")
     });
 </script>
 
@@ -65,7 +67,7 @@
                 oninput={searchExtensions}
                 bind:this={searchInput}
             />
-            <!-- {#each $searchRecommendations as searchRecommendation, idx}
+            {#each $searchRecommendations as searchRecommendation, idx}
                 <button
                     class="search-recommendation"
                     style="margin-top: {idx * 3}em;
@@ -75,7 +77,7 @@
                 >
                     <p>{searchRecommendation.name}</p>
                 </button>
-            {/each} -->
+            {/each}
         </div>
     {/if}
 </div>

@@ -18,26 +18,19 @@
         return `${origin}/extensions/${relativeUrl}`;
     };
 
-    let recommendedExtensions = [];
-    let showNoExtensionsFound = false;
-    searchQuery.subscribe((query) => {
+    let showNoExtensionsFound = $state(false);
+    $effect(() => {
         const matchingExts = extensions
-            .filter(extension => searchable(extension.name).includes(query));
+            .filter(extension => searchable(extension.name).includes(stateSearchBar.query));
         showNoExtensionsFound = matchingExts.length <= 0;
 
-        $searchRecommendations = [];
-        if (matchingExts.length > 5 || showNoExtensionsFound) {
-            recommendedExtensions = [];
-            return;
+        stateSearchBar.recommendations = [];
+        if (matchingExts.length <= 5 && !showNoExtensionsFound) {
+            stateSearchBar.recommendations = matchingExts.slice(0, 2);
         }
-        recommendedExtensions = matchingExts.slice(0, 2);
-        $searchRecommendations = recommendedExtensions.map(ext => ({
-            name: `Copy ${ext.name} to clipboard`,
-            callback: () => {
-                $selectedRecommendedExt = ''; // reset first
-                $selectedRecommendedExt = ext.code;
-            }
-        }));
+        
+        const event = new CustomEvent("penguinmod-recommendations-updated");
+        document.dispatchEvent(event);
     });
 </script>
 
@@ -59,7 +52,7 @@
     <div class="extension-list">
         <!-- This list can be modified in "src/lib/extensions.js" -->
         {#each extensions as extension}
-            {#if searchable(extension.name).includes($searchQuery)}
+            {#if searchable(extension.name).includes(stateSearchBar.query)}
                 <Extension
                     name={extension.name}
                     image={`/images/${extension.banner}`}

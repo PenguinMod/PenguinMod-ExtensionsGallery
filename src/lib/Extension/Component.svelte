@@ -1,5 +1,6 @@
 <script>
     import stateSearchBar from '$lib/state/searchBar.svelte.js';
+    import { onMount } from 'svelte';
     
     let props = $props();
     let name = $derived(props.name || "Test");
@@ -84,12 +85,18 @@
         });
     };
 
-    selectedRecommendedExt.subscribe((subUrl) => {
-        if (!subUrl) return;
-        if (subUrl === relUrl) {
-            copyToClipboard(url);
-            $searchRecommendations = [];
-        }
+    onMount(() => {
+        document.addEventListener("penguinmod-recommendation-clicked", (event) => {
+            const extCodeUrl = event.detail;
+            if (!extCodeUrl) return;
+            if (extCodeUrl === relUrl) {
+                copyToClipboard(url);
+                stateSearchBar.recommendations = [];
+                
+                const event = new CustomEvent("penguinmod-recommendations-updated");
+                document.dispatchEvent(event);
+            }
+        });
     });
 </script>
 
@@ -99,14 +106,14 @@
 <div class="block">
     <div>
         <img src={image} alt="Thumb" class="image" />
-        <p class="title">
+        <div class="title">
             {name}
             {#if unstable}
                 <button class="unstable-warning">
                     <div class="unstable-message">{unstableReason}</div>
                 </button>
             {/if}
-        </p>
+        </div>
         <p class="description">
             {@render props.children?.()}
         </p>
@@ -200,9 +207,12 @@
         border-radius: 4px;
     }
     .title {
+        margin-block: 6px;
+
+        display: block;
+
         font-size: 2em;
         font-weight: bold;
-        margin-block: 6px;
     }
     .description {
         width: calc(600px / 1.85);

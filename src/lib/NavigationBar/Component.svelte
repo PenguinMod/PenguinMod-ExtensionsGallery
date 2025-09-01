@@ -31,8 +31,9 @@
 
         if (props.onsearch) props.onsearch(searchTerm);
     };
-    const recommendationClicked = () => {
-        
+    const recommendationClicked = (extension) => {
+        const event = new CustomEvent("penguinmod-recommendation-clicked", { detail: extension.code });
+        document.dispatchEvent(event);
     };
     onMount(() => {
         document.addEventListener("penguinmod-recommendations-updated", () => {
@@ -70,15 +71,15 @@
                 oninput={searchExtensions}
                 bind:this={searchInput}
             />
-            {#each $searchRecommendations as searchRecommendation, idx}
+            {#each stateSearchBar.recommendations as searchRecommendation, idx}
                 <button
                     class="search-recommendation"
                     style="margin-top: {idx * 3}em;
                         {idx === 0 ? ' border-top: 0;' : ''}
-                        {idx === ($searchRecommendations.length - 1) ? ' border-bottom-left-radius: 8px; border-bottom-right-radius: 8px;' : ''}"
-                    onclick={searchRecommendation.callback}
+                        {idx === (stateSearchBar.recommendations.length - 1) ? ' border-bottom-left-radius: 8px; border-bottom-right-radius: 8px;' : ''}"
+                    onclick={() => recommendationClicked(searchRecommendation)}
                 >
-                    <p>{searchRecommendation.name}</p>
+                    <p>Copy {searchRecommendation.name} to clipboard</p>
                 </button>
             {/each}
         </div>

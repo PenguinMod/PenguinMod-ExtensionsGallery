@@ -31,6 +31,9 @@
 
         if (props.onsearch) props.onsearch(searchTerm);
     };
+    const recommendationClicked = () => {
+        
+    };
     onMount(() => {
         document.addEventListener("penguinmod-recommendations-updated", () => {
             if (!searchInput) return;

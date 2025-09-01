@@ -105,7 +105,7 @@
 </div>
 <div class="block">
     <div>
-        <img src={image} alt="Thumb" class="image" />
+        <img src={image} alt="Thumb" class="image" loading="lazy" />
         <div class="title">
             {name}
             {#if unstable}

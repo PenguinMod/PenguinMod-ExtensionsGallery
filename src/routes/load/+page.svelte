@@ -1,4 +1,5 @@
 <script>
+    // Components
     import Logo from "$lib/Logo/Component.svelte";
     import Footer from "$lib/Footer/Component.svelte";
 </script>
@@ -57,17 +58,15 @@
         style="width: 600px"
     />
 
-    <div style="height: 32px" />
+    <div style="height: 32px"></div>
 
     <p style="width: 100%; text-align: center">
         If you did it correctly, the extension should appear in the category
         list.
-        <br />
-        If you have questions, feel free to join our Discord.
     </p>
 
     <Footer />
-    <div style="height: 64px" />
+    <div style="height: 64px"></div>
 </div>
 
 <style>

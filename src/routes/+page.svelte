@@ -1,6 +1,7 @@
 <script>
     import { page } from '$app/stores';
 
+    // Components
     import Extension from "$lib/Extension/Component.svelte";
     import Footer from "$lib/Footer/Component.svelte";
     import Logo from "$lib/Logo/Component.svelte";
@@ -88,7 +89,7 @@
     </p>
 
     <Footer />
-    <div style="height: 64px" />
+    <div style="height: 64px"></div>
 </div>
 
 <style>

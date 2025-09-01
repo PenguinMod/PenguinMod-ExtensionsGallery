@@ -1,16 +1,17 @@
 <script>
     import { selectedRecommendedExt, searchRecommendations } from '$lib/stores.js';
 
-    export let name = "Test";
-    export let image = "/images/example.png";
-    export let url = "";
-    export let notes = "";
-    export let creator = "";
-    export let creatorAlias;
-    export let documentation = "";
-    export let isGitHub = false;
-    export let unstable = false;
-    export let unstableReason = "This extension is unstable. Use at your own risk.";
+    let props = $props();
+    let name = $derived(props.name || "Test");
+    let image = $derived(props.image || "/images/example.png");
+    let url = $derived(props.url || "");
+    let notes = $derived(props.notes || "");
+    let creator = $derived(props.creator || "");
+    let creatorAlias = $derived(props.creatorAlias);
+    let documentation = $derived(props.documentation || "");
+    let isGitHub = $derived(props.isGitHub || false);
+    let unstable = $derived(props.unstable || false);
+    let unstableReason = $derived(props.unstableReason || "This extension is unstable. Use at your own risk.");
 
     const baseUrl = "https://studio.penguinmod.com/editor.html?extension=";
 
@@ -26,7 +27,7 @@
     let copyPrompt;
 
     // used for search
-    export let relUrl = "";
+    let relUrl = $derived(props.relUrl);
 
     const displayCopiedToClipboard = (x, y) => {
         if (!(copyButton && copyPrompt)) return;
@@ -107,7 +108,7 @@
             {/if}
         </p>
         <p class="description">
-            <slot />
+            {@render props.children?.()}
         </p>
         {#if creator}
             <p>
@@ -134,8 +135,8 @@
     <div class="block-buttons">
         <div>
             <button
-                on:click={() => copyToClipboard(url)}
                 bind:this={copyButton}
+                onclick={() => copyToClipboard(url)}
                 class="blue"
             >
                 Copy URL

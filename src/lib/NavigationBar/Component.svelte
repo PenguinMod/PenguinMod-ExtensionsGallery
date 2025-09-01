@@ -35,7 +35,7 @@
     // });
 
     onMount(() => {
-        searchInput.placeholder = (window.innerWidth <= 850 ? "Extension search" : "Search for an extension...")
+        // searchInput.placeholder = (window.innerWidth <= 850 ? "Extension search" : "Search for an extension...")
     });
 </script>
 

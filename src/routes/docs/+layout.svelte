@@ -1,9 +1,11 @@
 <script>
+    let props = $props();
+
     // Components
     import Footer from "$lib/Footer/Component.svelte";
 </script>
 
-<slot />
+{@render props.children?.()}
 
 <Footer>
     <br />

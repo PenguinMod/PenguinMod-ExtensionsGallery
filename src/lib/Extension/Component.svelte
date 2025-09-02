@@ -1,16 +1,18 @@
 <script>
-    import { selectedRecommendedExt, searchRecommendations } from '$lib/stores.js';
-
-    export let name = "Test";
-    export let image = "/images/example.png";
-    export let url = "";
-    export let notes = "";
-    export let creator = "";
-    export let creatorAlias;
-    export let documentation = "";
-    export let isGitHub = false;
-    export let unstable = false;
-    export let unstableReason = "This extension is unstable. Use at your own risk.";
+    import stateSearchBar from '$lib/state/searchBar.svelte.js';
+    import { onMount } from 'svelte';
+    
+    let props = $props();
+    let name = $derived(props.name || "Test");
+    let image = $derived(props.image || "/images/example.png");
+    let url = $derived(props.url || "");
+    let notes = $derived(props.notes || "");
+    let creator = $derived(props.creator || "");
+    let creatorAlias = $derived(props.creatorAlias);
+    let documentation = $derived(props.documentation || "");
+    let isGitHub = $derived(props.isGitHub || false);
+    let unstable = $derived(props.unstable || false);
+    let unstableReason = $derived(props.unstableReason || "This extension is unstable. Use at your own risk.");
 
     const baseUrl = "https://studio.penguinmod.com/editor.html?extension=";
 
@@ -26,7 +28,7 @@
     let copyPrompt;
 
     // used for search
-    export let relUrl = "";
+    let relUrl = $derived(props.relUrl);
 
     const displayCopiedToClipboard = (x, y) => {
         if (!(copyButton && copyPrompt)) return;
@@ -83,12 +85,18 @@
         });
     };
 
-    selectedRecommendedExt.subscribe((subUrl) => {
-        if (!subUrl) return;
-        if (subUrl === relUrl) {
-            copyToClipboard(url);
-            $searchRecommendations = [];
-        }
+    onMount(() => {
+        document.addEventListener("penguinmod-recommendation-clicked", (event) => {
+            const extCodeUrl = event.detail;
+            if (!extCodeUrl) return;
+            if (extCodeUrl === relUrl) {
+                copyToClipboard(url);
+                stateSearchBar.recommendations = [];
+                
+                const event = new CustomEvent("penguinmod-recommendations-updated");
+                document.dispatchEvent(event);
+            }
+        });
     });
 </script>
 
@@ -97,17 +105,17 @@
 </div>
 <div class="block">
     <div>
-        <img src={image} alt="Thumb" class="image" />
-        <p class="title">
+        <img src={image} alt="Thumb" class="image" loading="lazy" />
+        <div class="title">
             {name}
             {#if unstable}
                 <button class="unstable-warning">
                     <div class="unstable-message">{unstableReason}</div>
                 </button>
             {/if}
-        </p>
+        </div>
         <p class="description">
-            <slot />
+            {@render props.children?.()}
         </p>
         {#if creator}
             <p>
@@ -134,8 +142,8 @@
     <div class="block-buttons">
         <div>
             <button
-                on:click={() => copyToClipboard(url)}
                 bind:this={copyButton}
+                onclick={() => copyToClipboard(url)}
                 class="blue"
             >
                 Copy URL
@@ -199,9 +207,12 @@
         border-radius: 4px;
     }
     .title {
+        margin-block: 6px;
+
+        display: block;
+
         font-size: 2em;
         font-weight: bold;
-        margin-block: 6px;
     }
     .description {
         width: calc(600px / 1.85);

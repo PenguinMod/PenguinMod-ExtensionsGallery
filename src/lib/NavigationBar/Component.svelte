@@ -1,41 +1,49 @@
 <script>
-    import { createEventDispatcher } from "svelte";
-    import { searchRecommendations } from '$lib/stores.js';
     import {onMount} from 'svelte';
 
     // Components
     import BarPage from "./Page.svelte";
     import BarButton from "./Button.svelte";
-    import SearchSVG from "./SearchIcon.svelte";
+    
+    import stateSearchBar from '$lib/state/searchBar.svelte.js';
+    
+    let props = $props();
+    let displaySearchBar = $derived(props.displaySearchBar);
 
     const toggleTheme = () => {
+        let isNowDark = false;
         if (localStorage.getItem("pm:dark") !== "true") {
-            localStorage.setItem("pm:dark", true);
-            return;
+            isNowDark = true;
         }
-        localStorage.setItem("pm:dark", false);
+        localStorage.setItem("pm:dark", isNowDark);
+        
+        const event = new CustomEvent("penguinmod-dark-updated", { detail: isNowDark });
+        document.dispatchEvent(event);
     };
 
-    export let displaySearchBar = false;
-    const dispatch = createEventDispatcher();
-    let searchInput;
-
+    // svelte-ignore non_reactive_update
+    // this is from bind:this, idk why svelte is mad
+    let searchInput = null;
     const searchExtensions = () => {
         if (!searchInput) return;
         const searchTerm = String(searchInput.value)
             .trim().toLowerCase();
 
-        dispatch("search", searchTerm);
+        if (props.onsearch) props.onsearch(searchTerm);
     };
-    searchRecommendations.subscribe(() => {
-        if (!searchInput) return;
-        searchInput.focus();
-    });
-
+    const recommendationClicked = (extension) => {
+        const event = new CustomEvent("penguinmod-recommendation-clicked", { detail: extension.code });
+        document.dispatchEvent(event);
+    };
     onMount(() => {
-        searchInput.placeholder = (window.innerWidth<=850 ? "Extension search" : "Search for an extension...")
-    });
+        document.addEventListener("penguinmod-recommendations-updated", () => {
+            if (!searchInput) return;
+            searchInput.focus();
+        });
 
+        if (!searchInput) return;
+        searchInput.placeholder = (window.innerWidth <= 850 ? "Extension search" : "Search for an extension...")
+    });
 </script>
 
 <div class="bar">
@@ -43,38 +51,36 @@
         <img class="logo-image" src="/navicon.png" alt="PenguinMod" />
     </a>
     <div style="margin-right: 12px;"></div>
-    <BarPage style="padding:0.5rem" on:click={toggleTheme}>
+    <BarPage style="padding:0.5rem" onclick={toggleTheme}>
         <img src="/icons/moon.svg" alt="Theme" />
     </BarPage>
-    <BarPage link={"/docs"}>Documentation</BarPage>
+    <BarPage link={"/docs.html"}>Documentation</BarPage>
 
     {#if displaySearchBar}
         <div class="search">
-            <button class="search-button" on:click={searchExtensions}>
-                <SearchSVG
-                    width="30px"
-                    height="20px"
-                    color="#ffffff"
-                    scale="2px"
-                    style="margin-bottom:5px; margin-top: 5px;"
+            <button class="search-button" onclick={searchExtensions}>
+                <img
+                    src="/icons/search-icon.svg"
+                    alt="Search"
+                    style="width:30px; height:20px; margin-bottom:5px; margin-top: 5px;"
                 />
             </button>
             <input
                 type="text"
                 class="search-bar"
                 placeholder="Search for an extension..."
-                on:input={searchExtensions}
+                oninput={searchExtensions}
                 bind:this={searchInput}
             />
-            {#each $searchRecommendations as searchRecommendation, idx}
+            {#each stateSearchBar.recommendations as searchRecommendation, idx}
                 <button
                     class="search-recommendation"
                     style="margin-top: {idx * 3}em;
-                    {idx === 0 ? ' border-top: 0;' : ''}
-                    {idx === ($searchRecommendations.length - 1) ? ' border-bottom-left-radius: 8px; border-bottom-right-radius: 8px;' : ''}"
-                    on:click={searchRecommendation.callback}
+                        {idx === 0 ? ' border-top: 0;' : ''}
+                        {idx === (stateSearchBar.recommendations.length - 1) ? ' border-bottom-left-radius: 8px; border-bottom-right-radius: 8px;' : ''}"
+                    onclick={() => recommendationClicked(searchRecommendation)}
                 >
-                    <p>{searchRecommendation.name}</p>
+                    <p>Copy {searchRecommendation.name} to clipboard</p>
                 </button>
             {/each}
         </div>

@@ -182,11 +182,14 @@
             text: "fit area to stage",
             disableMonitor: true,
           },
-          ,
+          {
+            blockType: Scratch.BlockType.LABEL,
+            text: "This is what the computer sees",
+          },
           {
             opcode: "cropareapreview",
             blockType: Scratch.BlockType.BUTTON,
-            text: "scan area preview",
+            text: "Area preview",
             disableMonitor: true,
           },
           "---",
@@ -344,12 +347,21 @@
     async cropareapreview(args, util, event) {
       await this.clasifyThings(args, util);
       const previewImage = document.createElement("img");
+      cropArea.width = 28;
+      cropArea.height = 28;
+      ctx.clearRect(0, 0, cropArea.width, cropArea.height);
+      ctx.drawImage(img, 0, 0, cropArea.width, cropArea.height);
+      img.src = cropArea.toDataURL();
       previewImage.src = img.src;
       previewImage.style.position = "absolute";
       previewImage.style.left = mx + "px";
       previewImage.style.top = my + "px";
       previewImage.style.borderRadius = "4px";
+      previewImage.style.width = "300px";
+      previewImage.style.height = "300px";
+      previewImage.style.filter = "grayscale(1)";
       previewImage.style.zIndex = 9999;
+      previewImage.style.imageRendering = "pixelated";
       document.body.appendChild(previewImage);
       await delay(100);
       let oldm = mx + my;

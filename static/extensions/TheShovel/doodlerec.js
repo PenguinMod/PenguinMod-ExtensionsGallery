@@ -1,3 +1,9 @@
+// Name: Doodle Recognition
+// ID: imagevisionquickdraw
+// Description: A implementation of Google's Quick Draw image vision model
+// By: TheShovel <https://theshovel.rocks/>
+// License: MIT
+
 (function (Scratch) {
   "use strict";
   const menuIconURI =

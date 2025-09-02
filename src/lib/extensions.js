@@ -74,7 +74,7 @@ export default [
     },
         {
         name: "Doodle Recognition",
-        description: "A implementation of Google's Quick Draw image vision model.",
+        description: "A implementation of Google's Quick Draw image vision model",
         code: "TheShovel/doodlerec.js",
         banner: "PuzzlingGGG/doodlerec.png",
         creator: "TheShovel",

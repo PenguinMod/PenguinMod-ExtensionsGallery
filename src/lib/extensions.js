@@ -64,12 +64,21 @@ export default [
         creator: "Steve0Greatness",
         isGitHub: true, 
     },
+    
     {
         name: "Dictation",
         description: "Convert your voice into text. (not supported in all browsers)",
         code: "pooiod/Dictation.js",
         banner: "pooiod/Dictation.svg",
         creator: "pooiod7",
+    },
+        {
+        name: "Doodle Recognition",
+        description: "A implementation of Google's Quick Draw image vision model.",
+        code: "TheShovel/doodlerec.js",
+        banner: "PuzzlingGGG/doodlerec.png",
+        creator: "TheShovel",
+        isGitHub: true,
     },
     {
         name: "Text To Speech: Redone",

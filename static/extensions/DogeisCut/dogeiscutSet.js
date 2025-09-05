@@ -83,6 +83,9 @@
                 switch (typeof x) {
                     case "object":
                         if (x === null) return "null"
+                        if (typeof x.jwArrayHandler == "function") {
+                            return x.jwArrayHandler()
+                        }
                         if (typeof x.dogeiscutSetHandler == "function") {
                             return x.dogeiscutSetHandler()
                         }
@@ -101,6 +104,10 @@
         }
 
         dogeiscutSetHandler() {
+            return `Set<${formatNumber(this.set.size)}>`
+        }
+
+        jwArrayHandler() {
             return `Set<${formatNumber(this.set.size)}>`
         }
 

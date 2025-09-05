@@ -355,7 +355,7 @@
             ],
           },
           dateParts: {
-            acceptReporters: false,
+            acceptReporters: true,
             items: [
               { text: "milliseconds", value: "millisecond" },
               { text: "seconds", value: "second" },
@@ -368,7 +368,7 @@
             ],
           },
           timeUnits: {
-            acceptReporters: false,
+            acceptReporters: true,
             items: [
               "milliseconds",
               "seconds",

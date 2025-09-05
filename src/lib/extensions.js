@@ -215,6 +215,14 @@ export default [
         isGitHub: true,
     },
     {
+        name: "Sets",
+        description: "Store non-repeating, unordered, data super efficently in sets.",
+        code: "DogeisCut/dogeiscutSet.js",
+        banner: "DogeisCut/dogeiscutSet.svg",
+        creator: "DogeisCut",
+        isGitHub: true, 
+    },
+    {
         name: "Random Utilities",
         description: "Many blocks related to generating random values, including seed-based number generation, true number generation, UUID's, random strings, etc.",
         code: "Gen1x/random_utils.js",

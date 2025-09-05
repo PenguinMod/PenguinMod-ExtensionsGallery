@@ -1,12 +1,13 @@
 <script>
     import { page } from '$app/stores';
 
+    // Components
     import Extension from "$lib/Extension/Component.svelte";
     import Footer from "$lib/Footer/Component.svelte";
     import Logo from "$lib/Logo/Component.svelte";
 
+    import stateSearchBar from '$lib/state/searchBar.svelte.js';
     import extensions from "$lib/extensions.js";
-    import { searchQuery, searchRecommendations, selectedRecommendedExt } from '$lib/stores.js';
 
     const origin = $page.url.origin;
     const searchable = (text = '') => {
@@ -17,26 +18,19 @@
         return `${origin}/extensions/${relativeUrl}`;
     };
 
-    let recommendedExtensions = [];
-    let showNoExtensionsFound = false;
-    searchQuery.subscribe((query) => {
+    let showNoExtensionsFound = $state(false);
+    $effect(() => {
         const matchingExts = extensions
-            .filter(extension => searchable(extension.name).includes(query));
+            .filter(extension => searchable(extension.name).includes(stateSearchBar.query));
         showNoExtensionsFound = matchingExts.length <= 0;
 
-        $searchRecommendations = [];
-        if (matchingExts.length > 5 || showNoExtensionsFound) {
-            recommendedExtensions = [];
-            return;
+        stateSearchBar.recommendations = [];
+        if (matchingExts.length <= 5 && !showNoExtensionsFound) {
+            stateSearchBar.recommendations = matchingExts.slice(0, 2);
         }
-        recommendedExtensions = matchingExts.slice(0, 2);
-        $searchRecommendations = recommendedExtensions.map(ext => ({
-            name: `Copy ${ext.name} to clipboard`,
-            callback: () => {
-                $selectedRecommendedExt = ''; // reset first
-                $selectedRecommendedExt = ext.code;
-            }
-        }));
+        
+        const event = new CustomEvent("penguinmod-recommendations-updated");
+        document.dispatchEvent(event);
     });
 </script>
 
@@ -51,14 +45,14 @@
     <p>
         To use some of these extensions in your projects, click the "Copy URL"
         button on an extension and
-        <a href="/load" target="_blank">load it into PenguinMod,</a>
+        <a href="/load.html" target="_blank">load it into PenguinMod,</a>
         or click the "View" button to create a new project with the extension.
     </p>
 
     <div class="extension-list">
         <!-- This list can be modified in "src/lib/extensions.js" -->
         {#each extensions as extension}
-            {#if searchable(extension.name).includes($searchQuery)}
+            {#if searchable(extension.name).includes(stateSearchBar.query)}
                 <Extension
                     name={extension.name}
                     image={`/images/${extension.banner}`}
@@ -88,7 +82,7 @@
     </p>
 
     <Footer />
-    <div style="height: 64px" />
+    <div style="height: 64px"></div>
 </div>
 
 <style>

@@ -23,7 +23,7 @@
     </p>
 {/each}
 
-<div style="height: 32px;" />
+<div style="height: 32px;"></div>
 
 <style>
     .lil-guy {

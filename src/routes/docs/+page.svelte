@@ -19,7 +19,7 @@
 
 {#each pages as page}
     <p>
-        <a href={`/docs/${page}`}>{page}</a>
+        <a href={`/docs/${page}.html`}>{page}</a>
     </p>
 {/each}
 

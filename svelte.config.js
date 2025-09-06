@@ -6,8 +6,8 @@ export default {
 		adapter: adapter({
 			// default options are shown. On some platforms
 			// these options are set automatically — see below
-			pages: 'public',
-			assets: 'public',
+			pages: 'build',
+			assets: 'build',
 			fallback: undefined,
 			precompress: false,
 			strict: true

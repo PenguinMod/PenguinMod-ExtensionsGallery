@@ -9,6 +9,7 @@
 // - https://discord.com/channels/1033551490331197462/1038238583686967428/1413652436983353404
 // - https://discord.com/channels/1033551490331197462/1038238583686967428/1413641037502611467
 // - decide the final look of the reporter bubbles and monitors
+// - fix from JSON block handling arrays e.g. `[{}]`
 
 // FUTURE TODO:
 // - Cooler reporter bubble
@@ -78,8 +79,15 @@
         }
 
         static convertIfNeeded(x) {
-            if (x instanceof Object) x = dogeiscutObject.Type.toObject(x);
-            if (x instanceof Array) x = jwArray.Type.toArray(x);
+            if (x instanceof Array &&
+                !(x instanceof jwArray.Type) &&
+                !(x instanceof dogeiscutObject.Type)
+            ) return jwArray.Type.toArray(x);
+            if (
+                x instanceof Object &&
+                !(x instanceof jwArray.Type) &&
+                !(x instanceof dogeiscutObject.Type)
+            ) return dogeiscutObject.Type.toObject(x);
             return x;
         }
 
@@ -150,7 +158,7 @@
                             arrTable.style.borderCollapse = 'collapse';
                             arrTable.style.margin = '2px 0';
                             arrTable.style.fontSize = '12px';
-                            arrTable.style.background = '#f6f6f6';
+                            arrTable.style.background = background;
                             arrTable.style.border = border;
                             arr.forEach((item, idx) => {
                                 const row = document.createElement('tr');
@@ -542,22 +550,7 @@
 
         cast({ VALUE }) {
             try {
-            const parsed = JSON.parse(VALUE, (key, value) => {
-                if (Array.isArray(value)) {
-                return new jwArray.Type(value.map(item => {
-                    if (typeof item === 'object' && item !== null) {
-                    return dogeiscutObject.Type.toObject(item);
-                    }
-                    return item;
-                }));
-                } else if (typeof value === 'object' && value !== null) {
-                return new dogeiscutObject.Type(Object.fromEntries(
-                    Object.entries(value).map(([k, v]) => [k, typeof v === 'object' && v !== null ? dogeiscutObject.Type.toObject(v) : v])
-                ));
-                }
-                return value;
-            });
-            return dogeiscutObject.Type.toObject(parsed);
+            return dogeiscutObject.Type.convertIfNeeded(JSON.parse(VALUE))
             } catch {
             return dogeiscutObject.Type.toObject(VALUE);
             }

@@ -53,16 +53,16 @@
         getExtList() {
             return Array.from(Scratch.vm.extensionManager._loadedExtensions.keys());
         }
-        runcommand(args) {
-            Scratch.vm.runtime["ext_" + args.EXTLIST][args.FUNCNAME](JSON.parse(args.INPUT));
+        runcommand(args, util, realBlockInfo) {
+            Scratch.vm.runtime["ext_" + args.EXTLIST][args.FUNCNAME](JSON.parse(args.INPUT), util, realBlockInfo);
         }
-        runreporter(args) {
-            return Scratch.vm.runtime["ext_" + args.EXTLIST][args.FUNCNAME](JSON.parse(args.INPUT));
+        runreporter(args, util, realBlockInfo) {
+            return Scratch.vm.runtime["ext_" + args.EXTLIST][args.FUNCNAME](JSON.parse(args.INPUT), util, realBlockInfo);
         }
-        runboolean(args) {
-            return Scratch.vm.runtime["ext_" + args.EXTLIST][args.FUNCNAME](JSON.parse(args.INPUT));
+        runboolean(args, util, realBlockInfo) {
+            return Scratch.vm.runtime["ext_" + args.EXTLIST][args.FUNCNAME](JSON.parse(args.INPUT), util, realBlockInfo);
         }
-        
+
         test(args) {
             return args.INPUT;
         }

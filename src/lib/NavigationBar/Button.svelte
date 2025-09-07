@@ -1,10 +1,11 @@
 <script>
-    export let highlighted = false;
-    export let link = false;
-    export let label = "";
-    export let noredirect = false;
-    export let classActor = "";
-    export let id = "";
+    let props = $props();
+    let highlighted = $derived(props.highlighted || false);
+    let link = $derived(props.link);
+    let label = $derived(props.label || "");
+    let noredirect = $derived(props.noredirect || false);
+    let classActor = $derived(props.classActor);
+    let id = $derived(props.id);
 </script>
 
 {#if link}
@@ -16,18 +17,17 @@
     >
         <button class={highlighted ? "button button-highlight" : "button"} {id}>
             {@html label}
-            <slot />
+            {@render props.children?.()}
         </button>
     </a>
-{/if}
-{#if !link}
+{:else}
     <button
         class={(highlighted ? "button button-highlight" : "button") +
             (classActor ? ` ca-${classActor}` : "")}
         {id}
     >
         {@html label}
-        <slot />
+        {@render props.children?.()}
     </button>
 {/if}
 

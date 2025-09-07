@@ -1,4 +1,5 @@
 <script>
+    // Components
     import Logo from "$lib/Logo/Component.svelte";
     import Footer from "$lib/Footer/Component.svelte";
 </script>
@@ -22,6 +23,7 @@
         src="/examples/loadextensions/1.png"
         alt="Opening Extension Menu"
         style="width: 345px"
+        loading="lazy"
     />
 
     <br />
@@ -37,11 +39,13 @@
         src="/examples/loadextensions/2.png"
         alt="Opening the custom extension screen"
         style="width: 345px"
+        loading="lazy"
     />
     <img
         src="/examples/loadextensions/2-alt.png"
         alt="Opening the custom extension screen on the sidebar"
         style="width: 345px"
+        loading="lazy"
     />
 
     <br />
@@ -55,19 +59,18 @@
         src="/examples/loadextensions/3.png"
         alt="Entering an extension URL to load a custom extension"
         style="width: 600px"
+        loading="lazy"
     />
 
-    <div style="height: 32px" />
+    <div style="height: 32px"></div>
 
     <p style="width: 100%; text-align: center">
         If you did it correctly, the extension should appear in the category
         list.
-        <br />
-        If you have questions, feel free to join our Discord.
     </p>
 
     <Footer />
-    <div style="height: 64px" />
+    <div style="height: 64px"></div>
 </div>
 
 <style>

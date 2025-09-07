@@ -486,7 +486,7 @@ export default [
         creator: "gaimerI",
         isGitHub: true,
         creatorAlias: "gaimerI17",
-        note: "Extension thumbnail made by Dillon."
+        notes: "Extension thumbnail made by Dillon."
     },
     /* these extensions are completely dead as of now
     {

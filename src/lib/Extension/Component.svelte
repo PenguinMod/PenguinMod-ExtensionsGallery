@@ -4,7 +4,7 @@
     
     let props = $props();
     let name = $derived(props.name || "Test");
-    let image = $derived(props.image || "/images/example.png");
+    let image = $derived(props.image || "/images/example.avif");
     let url = $derived(props.url || "");
     let notes = $derived(props.notes || "");
     let creator = $derived(props.creator || "");

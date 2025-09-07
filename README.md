@@ -208,7 +208,7 @@ Each extension is incased in `{}` brackets. Look below on how to copy it.
     name: "Evaluating Expressions", // The name of the extension.
     description: "Blocks to return the result of an expression.", // The description for the extension.
     code: "Username/extension.js", // The folder and file name for the code of the extension.
-    banner: "Username/Extension.png", // The folder and file name for the banner of the extension.
+    banner: "Username/Extension.avif", // The folder and file name for the banner of the extension. Ideally, use .avif format to save storage space.
     creator: "Username", // Your username. Adds a link to your profile.
     
     // Only applies if you created a documentation page.

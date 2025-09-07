@@ -67,7 +67,7 @@
         getfunctions(args) {
             const extension = Scratch.vm.runtime["ext_" + args.EXTLIST];
             const info = extension.getInfo() || {};
-            return (info.blocks || []).map(block => block.opcode).join(",")
+            return (info.blocks || []).map(block => block.opcode).filter(opcode => !!opcode).join(",")
         }
         runcommand(args, util, realBlockInfo) {
             Scratch.vm.runtime["ext_" + args.EXTLIST][args.FUNCNAME](JSON.parse(args.INPUT), util, realBlockInfo);

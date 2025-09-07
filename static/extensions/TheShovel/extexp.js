@@ -1,6 +1,14 @@
 (function (Scratch) {
     'use strict';
     
+    const parseJSON = (json) => {
+        try {
+            return JSON.parse(json);
+        } catch {
+            return {};
+        }
+    };
+
     class jodieextexp {
         getInfo() {
             const defaultArgs = {
@@ -70,17 +78,17 @@
             return (info.blocks || []).map(block => block.opcode).filter(opcode => !!opcode).join(",")
         }
         runcommand(args, util, realBlockInfo) {
-            Scratch.vm.runtime["ext_" + args.EXTLIST][args.FUNCNAME](JSON.parse(args.INPUT), util, realBlockInfo);
+            Scratch.vm.runtime["ext_" + args.EXTLIST][args.FUNCNAME](parseJSON(args.INPUT), util, realBlockInfo);
         }
         runreporter(args, util, realBlockInfo) {
-            return Scratch.vm.runtime["ext_" + args.EXTLIST][args.FUNCNAME](JSON.parse(args.INPUT), util, realBlockInfo);
+            return Scratch.vm.runtime["ext_" + args.EXTLIST][args.FUNCNAME](parseJSON(args.INPUT), util, realBlockInfo);
         }
         runboolean(args, util, realBlockInfo) {
-            return Scratch.vm.runtime["ext_" + args.EXTLIST][args.FUNCNAME](JSON.parse(args.INPUT), util, realBlockInfo);
+            return Scratch.vm.runtime["ext_" + args.EXTLIST][args.FUNCNAME](parseJSON(args.INPUT), util, realBlockInfo);
         }
 
         test(args) {
-            return args.INPUT;
+            return args.INPUT || "";
         }
     }
     

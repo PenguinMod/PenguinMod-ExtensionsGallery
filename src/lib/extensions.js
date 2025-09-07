@@ -269,7 +269,7 @@ export default [
         name: "TurboWeather",
         description: "Show weather and location data for any place in our world. Data that could be used for doxxing is deleted from results.",
         code: "RubyDevs/turboweather.js",
-        banner: "RubyDevs/turboweather.webp",
+        banner: "RubyDevs/turboweather.avif",
         documentation: "TurboWeather",
         creator: "RubyDevs",
     },

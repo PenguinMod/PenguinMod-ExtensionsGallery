@@ -9,7 +9,7 @@
                     defaultValue: "test"
                 },
                 EXTLIST: {
-                    type: Scratch.ArgumentType.MENU,
+                    type: Scratch.ArgumentType.STRING,
                     menu: 'EXTLIST'
                 },
                 INPUT: {
@@ -22,6 +22,17 @@
                 id: 'jodieextexp',
                 name: 'Extension Exposer',
                 blocks: [
+                    {
+                        opcode: 'getfunctions',
+                        blockType: Scratch.BlockType.REPORTER,
+                        text: 'get blocks from [EXTLIST]',
+                        arguments: {
+                            EXTLIST: {
+                                type: Scratch.ArgumentType.STRING,
+                                menu: 'EXTLIST'
+                            },
+                        }
+                    },
                     {
                         opcode: 'runcommand',
                         blockType: Scratch.BlockType.COMMAND,
@@ -52,6 +63,11 @@
         
         getExtList() {
             return Array.from(Scratch.vm.extensionManager._loadedExtensions.keys());
+        }
+        getfunctions(args) {
+            const extension = Scratch.vm.runtime["ext_" + args.EXTLIST];
+            const info = extension.getInfo() || {};
+            return (info.blocks || []).map(block => block.opcode).join(",")
         }
         runcommand(args, util, realBlockInfo) {
             Scratch.vm.runtime["ext_" + args.EXTLIST][args.FUNCNAME](JSON.parse(args.INPUT), util, realBlockInfo);

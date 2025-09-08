@@ -50,6 +50,7 @@
                     {
                         opcode: 'runreporter',
                         blockType: Scratch.BlockType.REPORTER,
+                        allowDropAnywhere: true,
                         text: 'run function [FUNCNAME] from [EXTLIST] with inputs [INPUT]',
                         arguments: defaultArgs
                     },

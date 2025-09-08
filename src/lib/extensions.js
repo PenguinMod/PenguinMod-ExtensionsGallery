@@ -295,7 +295,7 @@ export default [
         banner: "TheShovel/placeholder-extexp.avif",
         creator: "TheShovel",
         isGitHub: true,
-        notes: "Reimplements features by 0znzw and faunks",
+        notes: "Reimplements features by faunks",
     },
     {
         name: "Project Page",

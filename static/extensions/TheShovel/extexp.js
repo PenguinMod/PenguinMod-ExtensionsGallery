@@ -97,7 +97,7 @@
         const info = ext.getInfo().blocks;
         if (!info) return blocks;
         for (let index = 0; index < info.length; index++) {
-          blocks.push(info[index]);
+          blocks.push(info[index].opcode);
         }
       }
       return blocks;

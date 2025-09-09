@@ -4,7 +4,7 @@
  * @author 0znzw https://scratch.mit.edu/users/0znzw/
  * @author Faunksys https://github.com/faunks/
  * @version 1.5
- * @copyright MIT (with credit) License
+ * @copyright MIT License
  * Do not remove this comment
  */
 (function(Scratch) {

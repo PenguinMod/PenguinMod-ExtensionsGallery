@@ -1,0 +1,220 @@
+// Name: Better Keyboard
+// ID: SuperCodes_BetterKeyboard
+// Description: Advanced text input and display on the stage.
+// By: SuperCodes_
+
+// A message for users of the version from pen-group's site.
+if (!Scratch.extensions.unsandboxed) {
+    alert("Better Keyboard must be run unsandboxed!");
+    throw new Error("Better Keyboard must run unsandboxed");
+}
+
+(function (Scratch) {
+    "use strict";
+
+    const vm = Scratch.vm;
+    const runtime = vm.runtime;
+    const renderer = runtime.renderer;
+
+    // Use a WeakMap to store sprite-specific data, such as the text buffer.
+    const spriteData = new WeakMap();
+
+    // The state of the extension.
+    class BetterKeyboard {
+        constructor() {
+            this._isTypingMode = false;
+            this._fontSettings = {
+                size: 24,
+                type: "sans-serif",
+                color: "#000000",
+            };
+            this._typingTarget = null;
+            this._keyListener = this._handleKeyPress.bind(this);
+        }
+
+        getInfo() {
+            return {
+                id: 'SuperCodes_BetterKeyboard', // This is the ID that needs to be updated.
+                name: 'Better Keyboard',
+                blocks: [
+                    {
+                        opcode: 'setFontSize',
+                        blockType: Scratch.BlockType.COMMAND,
+                        text: 'set font size to [SIZE]',
+                        arguments: {
+                            SIZE: {
+                                type: Scratch.ArgumentType.NUMBER,
+                                defaultValue: 24
+                            }
+                        }
+                    },
+                    {
+                        opcode: 'setFontType',
+                        blockType: Scratch.BlockType.COMMAND,
+                        text: 'set font type to [TYPE]',
+                        arguments: {
+                            TYPE: {
+                                type: Scratch.ArgumentType.STRING,
+                                defaultValue: 'sans-serif'
+                            }
+                        }
+                    },
+                    {
+                        opcode: 'setFontColor',
+                        blockType: Scratch.BlockType.COMMAND,
+                        text: 'set font color to [COLOR]',
+                        arguments: {
+                            COLOR: {
+                                type: Scratch.ArgumentType.COLOR,
+                                defaultValue: '#000000'
+                            }
+                        }
+                    },
+                    {
+                        opcode: 'toggleTypingMode',
+                        blockType: Scratch.BlockType.COMMAND,
+                        text: 'turn typing mode [MODE]',
+                        arguments: {
+                            MODE: {
+                                type: Scratch.ArgumentType.STRING,
+                                menu: 'typing_mode_options'
+                            }
+                        }
+                    },
+                    {
+                        opcode: 'isTypingModeOn',
+                        blockType: Scratch.BlockType.BOOLEAN,
+                        text: 'typing mode is on?',
+                        disableMonitor: true
+                    },
+                    {
+                        opcode: 'getTypingModeStatus',
+                        blockType: Scratch.BlockType.REPORTER,
+                        text: 'typing mode status',
+                        disableMonitor: true
+                    }
+                ],
+                menus: {
+                    typing_mode_options: {
+                        acceptReporters: true,
+                        items: ['on', 'off']
+                    }
+                }
+            };
+        }
+
+        // --- Block Implementations ---
+
+        setFontSize(args) {
+            this._fontSettings.size = Scratch.Cast.toNumber(args.SIZE);
+        }
+
+        setFontType(args) {
+            this._fontSettings.type = Scratch.Cast.toString(args.TYPE);
+        }
+
+        setFontColor(args) {
+            this._fontSettings.color = Scratch.Cast.toCSSColor(args.COLOR);
+        }
+
+        toggleTypingMode(args, util) {
+            const mode = args.MODE.toLowerCase();
+            const wasTyping = this._isTypingMode;
+            if (mode === 'on') {
+                this._isTypingMode = true;
+                // Add the event listener only once.
+                if (!wasTyping) {
+                    window.addEventListener('keydown', this._keyListener);
+                    // Set the typing target to the current sprite.
+                    this._typingTarget = util.target;
+                    // Initialize the text buffer for the sprite.
+                    this._getSpriteData(util.target).textBuffer = '';
+                }
+            } else {
+                this._isTypingMode = false;
+                // Remove the event listener to stop capturing keys.
+                if (wasTyping) {
+                    window.removeEventListener('keydown', this._keyListener);
+                }
+            }
+        }
+
+        isTypingModeOn() {
+            return this._isTypingMode;
+        }
+
+        getTypingModeStatus() {
+            return this._isTypingMode ? "on" : "off";
+        }
+
+        // --- Internal Methods ---
+
+        _getSpriteData(target) {
+            if (!spriteData.has(target)) {
+                spriteData.set(target, {
+                    textBuffer: '',
+                    costume: null
+                });
+            }
+            return spriteData.get(target);
+        }
+
+        _updateTextCostume(target) {
+            const targetData = this._getSpriteData(target);
+            const text = targetData.textBuffer;
+
+            // Create an offscreen canvas to render the text.
+            const textCanvas = document.createElement('canvas');
+            const context = textCanvas.getContext('2d');
+            
+            context.font = `${this._fontSettings.size}px ${this._fontSettings.type}`;
+            const metrics = context.measureText(text);
+
+            // Set canvas size based on text metrics.
+            textCanvas.width = metrics.width + 10;
+            textCanvas.height = this._fontSettings.size + 10;
+            
+            context.clearRect(0, 0, textCanvas.width, textCanvas.height);
+            context.font = `${this._fontSettings.size}px ${this._fontSettings.type}`;
+            context.fillStyle = this._fontSettings.color;
+            context.fillText(text, 5, this._fontSettings.size - 2);
+
+            // Create a new costume from the canvas and set it for the sprite.
+            const costume = {
+                name: 'typed text',
+                assetId: 'typed_text_asset',
+                dataFormat: 'svg',
+                is==svg: false,
+                bitmapResolution: 1,
+                skinId: renderer.createBitmapSkinFromCanvas(textCanvas, 1),
+                rotationCenter: [textCanvas.width / 2, textCanvas.height / 2]
+            };
+            
+            target.setCostume(costume);
+        }
+
+        _handleKeyPress(event) {
+            if (!this._isTypingMode || this._typingTarget === null) {
+                return;
+            }
+
+            const targetData = this._getSpriteData(this._typingTarget);
+            const key = event.key;
+
+            if (key === 'Enter') {
+                targetData.textBuffer += '\n';
+            } else if (key === 'Backspace') {
+                targetData.textBuffer = targetData.textBuffer.slice(0, -1);
+            } else if (key.length === 1) {
+                targetData.textBuffer += key;
+            }
+
+            // Immediately update the sprite's costume to show the new text.
+            this._updateTextCostume(this._typingTarget);
+            runtime.requestRedraw();
+        }
+    }
+
+    Scratch.extensions.register(new BetterKeyboard());
+
+})(Scratch);

@@ -7,7 +7,6 @@
 
 // TODO:
 // - https://discord.com/channels/1033551490331197462/1038238583686967428/1413652436983353404
-// - https://discord.com/channels/1033551490331197462/1038238583686967428/1413641037502611467
 // - decide the final look of the reporter bubbles and monitors
 // - fix from JSON block handling arrays e.g. `[{}]`
 

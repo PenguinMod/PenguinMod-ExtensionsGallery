@@ -18,8 +18,7 @@ and [Gallery page](https://extensions.penguinmod.com/) to confirm.
 - Your extension should be easily explainable in 1-2 sentences or a single picture. This is what will determine whether you can be on the gallery or not.
 - Your extension should be MIT licensed (not compatible with the MIT license, should be the actual MIT license. This may change in the future.)
     - `Ashime/MoreFields` is currently a **temporary** exception to this rule. (MIT & LGPL-3.0 license)
-    - `TheShovel/extexp` is currently a **temporary** exception to this rule. (MIT & LGPL-3.0 license)
-    - The above exceptions are accidental changes. Do not knowingly submit extensions under a seperate license to purposely cause licensing issues on our repository.
+    - The above exception is an accidental change. Do not knowingly submit extensions under a seperate license to purposely cause licensing issues on our repository.
 - If your extension uses external content such as JS libraries or CSS stylesheets, you must include them inside the extension code itself. You **CANNOT** fetch/import content from URLs that is a core part of your extension as it'll make the extension unusable offline, or in offline packaged projects. This does not apply to content that obviously requires internet, like an extension that allows projects to use a public API.
 - Your extension **CANNOT** be made entirely with AI or assistive tools such as TurboBuilder. You must understand the raw code your extension is running.
 - Your extension **CANNOT** rely on the use of any generative AI. This is mainly for extensions that respond to messages from AI like ChatGPT. Any extensions added before this rule are an exception.
@@ -208,7 +207,7 @@ Each extension is incased in `{}` brackets. Look below on how to copy it.
     name: "Evaluating Expressions", // The name of the extension.
     description: "Blocks to return the result of an expression.", // The description for the extension.
     code: "Username/extension.js", // The folder and file name for the code of the extension.
-    banner: "Username/Extension.png", // The folder and file name for the banner of the extension.
+    banner: "Username/Extension.avif", // The folder and file name for the banner of the extension. Ideally, use .avif format to save storage space.
     creator: "Username", // Your username. Adds a link to your profile.
     
     // Only applies if you created a documentation page.

@@ -36,11 +36,39 @@
     }
 
     toReporterContent() {
-      const span = document.createElement("span");
-      span.innerText = this.isValid() ? this.toString() : "Invalid Date";
-      span.style.fontStyle = "italic";
-      span.title = this.toString();
-      return span;
+      const container = document.createElement("span");
+      container.style.display = "flex";
+      container.style.flexDirection = "column";
+      container.style.alignItems = "center";
+      container.style.gap = "0.3em";
+
+      if (this.isValid()) {
+        const pretty = document.createElement("span");
+        pretty.innerText = this._prettyShort();
+        pretty.style.fontWeight = "500";
+        pretty.style.fontStyle = "italic";
+        container.appendChild(pretty);
+
+        const detail = document.createElement("span");
+        detail.innerText = `(${this._date.toLocaleDateString(undefined, {
+          weekday: "short",
+          year: "numeric",
+          month: "short",
+          day: "numeric",
+        })})`;
+        detail.style.opacity = "0.7";
+        detail.style.fontSize = "0.85em";
+        container.appendChild(detail);
+
+        container.title = this.toString();
+      } else {
+        const invalid = document.createElement("span");
+        invalid.innerText = "Invalid Date";
+        invalid.style.fontStyle = "italic";
+        container.appendChild(invalid);
+      }
+
+      return container;
     }
 
     toMonitorContent() {
@@ -88,6 +116,14 @@
       const hh = String(this._date.getUTCHours()).padStart(2, "0");
       const mm = String(this._date.getUTCMinutes()).padStart(2, "0");
       return `${y}-${m}-${d} ${hh}:${mm}`;
+    }
+
+    jwArrayHandler() {
+      return this.isValid() ? this._prettyShort() : "Invalid Date";
+    }
+
+    dogeiscutObjectHandler() {
+      return this.toListItem();
     }
   }
 
@@ -162,7 +198,7 @@
   function addToDate(d, amount, unit) {
     if (!(d instanceof Date) || isNaN(d.getTime()))
       throw new Error("Invalid Date");
-    
+
     const result = new Date(d.getTime());
     amount = Number(amount) || 0;
     switch ((unit || "").toLowerCase()) {
@@ -224,6 +260,19 @@
     }
   }
 
+  Scratch.vm.runtime.registerSerializer(
+    "ddeDateFormat.date",
+    (i) => {
+      if (i instanceof DateType) {
+        return { dateString: i._date };
+      }
+    },
+    (i) => {
+      if (!i.dateString) return null;
+      return new DateType(i.dateString);
+    }
+  );
+
   class DateFormatExtension {
     constructor() {
       this.isValidDate = (d) => d instanceof DateType && d.isValid();
@@ -268,6 +317,21 @@
               format: {
                 type: Scratch.ArgumentType.STRING,
                 defaultValue: "dddd, MMMM D, YYYY",
+              },
+            },
+          },
+          {
+            opcode: "localeFormatDate",
+            blockType: Scratch.BlockType.REPORTER,
+            text: "format date [date] to [type] locale",
+            arguments: {
+              date: {
+                type: Scratch.ArgumentType.STRING,
+                exemptFromNormalization: true,
+              },
+              type: {
+                type: Scratch.ArgumentType.STRING,
+                menu: "localeLength",
               },
             },
           },
@@ -379,6 +443,10 @@
               "years",
             ],
           },
+          localeLength: {
+            acceptReporters: true,
+            items: ["short", "long"],
+          },
         },
       };
     }
@@ -407,6 +475,20 @@
       );
     }
 
+    localeFormatDate({ date, type }) {
+      type = type === "long" ? "long" : "short";
+
+      const d = this.toNativeDate(date);
+      if (isNaN(d.getTime())) throw new Error("Invalid Date");
+
+      return d.toLocaleDateString(undefined, {
+        weekday: type,
+        year: "numeric",
+        month: type,
+        day: "numeric",
+      });
+    }
+
     compareDate({ date1, date2, operation }) {
       const d1 = this.toNativeDate(date1);
       const d2 = this.toNativeDate(date2);
@@ -430,6 +512,7 @@
     getDatePart({ part, date }) {
       const d = this.toNativeDate(date);
       if (isNaN(d.getTime())) throw new Error("Invalid Date");
+
       switch (part) {
         case "millisecond":
           return d.getUTCMilliseconds();

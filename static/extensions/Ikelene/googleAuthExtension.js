@@ -64,13 +64,12 @@ class GoogleAuthExtension {
                 },
             ],
             menus: {},
-            docsURI: 'https://ikelene.ca/api/googleAuthDocumentation',
         };
     }
 
     login() {
         const clientId = '382430967410-3svk456rj8ntlu3d3gd9oma09i96cpr9.apps.googleusercontent.com';
-        const redirectUri = 'https://ikelene.ca/api/googleLogin.php';
+        const redirectUri = 'https://cadex.dev/google/googleLogin.php';
         const scope = 'profile email';
 
         // 🔥 Get the current domain to pass as "source"
@@ -87,7 +86,7 @@ class GoogleAuthExtension {
 
         // Listen for messages from the redirect page
         window.addEventListener('message', (event) => {
-            if (event.origin === 'https://ikelene.ca') {
+            if (event.origin === 'https://cadex.dev') {
                 const { accountName, fullName, profilePicture, userId, locale, emailVerified } = event.data;
                 this.accountName = accountName;
                 this.fullName = fullName;

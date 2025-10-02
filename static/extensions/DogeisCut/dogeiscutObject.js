@@ -315,14 +315,14 @@
                             }
                         }
                     },
-                    {
-                        opcode: 'assign',
-                        text: 'assign from [ARRAY]',
-                        ...dogeiscutObject.Block,
-                        arguments: {
-                            ARRAY: jwArray.Argument
-                        }
-                    },
+                    // {
+                    //     opcode: 'assign',
+                    //     text: 'assign from [ARRAY]',
+                    //     ...dogeiscutObject.Block,
+                    //     arguments: {
+                    //         ARRAY: jwArray.Argument
+                    //     }
+                    // },
                     '---',
                     {
                         opcode: 'builder',

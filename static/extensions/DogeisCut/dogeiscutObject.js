@@ -20,22 +20,26 @@
     class ObjectType {
         customId = "dogeiscutObject"
 
-        object = {}
+        object = Object.create(null)
 
-        constructor(object = {}) {
-            this.object = { ...object }
+        constructor(object = Object.create(null)) {
+            this.object = Object.assign(Object.create(null), object)
         }
 
         static toObject(x) {
             if (x instanceof ObjectType) return new ObjectType(x.object)
-            if (x instanceof Object) return new ObjectType(x)
+            if (x && typeof x === "object" && !Array.isArray(x)) return new ObjectType(Object.assign(Object.create(null), x))
             if (x === "" || x === null || x === undefined) return new ObjectType()
             try {
                 let parsed = JSON.parse(x)
-                if (parsed instanceof Array) return new ObjectType({ array: parsed })
-                if (parsed instanceof Object) return new ObjectType(parsed)
+                if (parsed instanceof Array) {
+                    return new ObjectType(Object.assign(Object.create(null), { array: parsed }))
+                }
+                if (typeof parsed === "object") {
+                    return new ObjectType(Object.assign(Object.create(null), parsed))
+                }
             } catch { }
-            return new ObjectType({ value: x })
+            return new ObjectType(Object.assign(Object.create(null), { value: x }))
         }
 
         jwArrayHandler() {
@@ -53,7 +57,7 @@
                 !(x instanceof dogeiscutObject.Type)
             ) return jwArray.Type.toArray(x);
             if (
-                x instanceof Object &&
+                typeof x === "object" &&
                 !(x instanceof jwArray.Type) &&
                 !(x instanceof dogeiscutObject.Type)
             ) return dogeiscutObject.Type.toObject(x);
@@ -298,23 +302,25 @@
                             }
                         }
                     },
-                    {
-                        opcode: 'keyValue',
-                        text: 'key [KEY] value [VALUE]',
-                        ...dogeiscutObject.Block,
-                        arguments: {
-                            KEY: {
-                                type: Scratch.ArgumentType.STRING,
-                                defaultValue: "foo",
-                                exemptFromNormalization: true
-                            },
-                            VALUE: {
-                                type: Scratch.ArgumentType.STRING,
-                                defaultValue: "bar",
-                                exemptFromNormalization: true
-                            }
-                        }
-                    },
+                    // can litterally just use a blank (set foo in () to bar)
+                    // {
+                    //     opcode: 'keyValue',
+                    //     text: 'key [KEY] value [VALUE]',
+                    //     ...dogeiscutObject.Block,
+                    //     arguments: {
+                    //         KEY: {
+                    //             type: Scratch.ArgumentType.STRING,
+                    //             defaultValue: "foo",
+                    //             exemptFromNormalization: true
+                    //         },
+                    //         VALUE: {
+                    //             type: Scratch.ArgumentType.STRING,
+                    //             defaultValue: "bar",
+                    //             exemptFromNormalization: true
+                    //         }
+                    //     }
+                    // },
+                    // just putting an array in (parse () as object) does the same thing
                     // {
                     //     opcode: 'assign',
                     //     text: 'assign from [ARRAY]',
@@ -511,7 +517,7 @@
                         compiler.source = '(yield* (function*() {';
                         compiler.source += '    const __inner = (yield* (function*() {';
                         compiler.source += `        thread._dogeiscutObjectBuilderIndex ??= [];`;
-                        compiler.source += `        thread._dogeiscutObjectBuilderIndex.push({});`;
+                        compiler.source += `        thread._dogeiscutObjectBuilderIndex.push(Object.create(null));`;
                         compiler.descendStack(node.substack, new imports.Frame(false, undefined, true));
                         compiler.source += `        return new runtime.ext_dogeiscutObject.BuilderReturnValue(thread._dogeiscutObjectBuilderIndex.pop());`;
                         compiler.source += '    })());';
@@ -546,8 +552,8 @@
             try {
                 var val = dogeiscutObject.Type.convertIfNeeded(JSON.parse(VALUE))
                 if (typeof val == jwArray.Type || val instanceof jwArray.Type) {
-                    val = Object.fromEntries(
-                        val.array.map((value, index) => [index + 1, value])
+                    val = Object.assign(Object.create(null),
+                        Object.fromEntries(val.array.map((value, index) => [index + 1, value]))
                     )
                     val = new dogeiscutObject.Type(val);
                 }
@@ -558,7 +564,7 @@
         }
 
         keyValue({ KEY, VALUE }) {
-            const obj = {};
+            const obj = Object.create(null);
             obj[KEY] = VALUE;
             return new dogeiscutObject.Type(obj);
         }
@@ -566,11 +572,11 @@
         assign({ ARRAY }) {
             ARRAY = jwArray.Type.toArray(ARRAY)
 
-            const objectWithShiftedKeys = Object.fromEntries(
-                ARRAY.array.map((value, index) => [index + 1, value])
+            const objectWithShiftedKeys = Object.assign(Object.create(null),
+                Object.fromEntries(ARRAY.array.map((value, index) => [index + 1, value]))
             )
 
-            return dogeiscutObject.Type.toObject(objectWithShiftedKeys)
+            return new dogeiscutObject.Type(objectWithShiftedKeys)
         }
 
         async builder({}, util) {
@@ -588,7 +594,7 @@
         get({ OBJECT, KEY }) {
             OBJECT = dogeiscutObject.Type.toObject(OBJECT)
 
-            return OBJECT.object.hasOwnProperty(KEY) ? dogeiscutObject.Type.convertIfNeeded(OBJECT.object[KEY]) : ""
+            return Object.hasOwn(OBJECT.object, KEY) ? dogeiscutObject.Type.convertIfNeeded(OBJECT.object[KEY]) : ""
         }
 
         getPath({ OBJECT, ARRAY }) {
@@ -600,7 +606,7 @@
                 if (current instanceof dogeiscutObject.Type) {
                     current = current.object
                 }
-                if (current && current.hasOwnProperty(key)) {
+                if (current && Object.hasOwn(current, key)) {
                     current = current[key];
                 } else {
                     return "";
@@ -613,7 +619,7 @@
         has({ OBJECT, KEY }) {
             OBJECT = dogeiscutObject.Type.toObject(OBJECT)
 
-            return OBJECT.object.hasOwnProperty(KEY)
+            return Object.hasOwn(OBJECT.object, KEY)
         }
 
         set({ OBJECT, KEY, VALUE }) {
@@ -634,7 +640,7 @@
             ONE = dogeiscutObject.Type.toObject(ONE);
             TWO = dogeiscutObject.Type.toObject(TWO);
 
-            Object.assign(TWO.object, ONE.object);
+            Object.assign(TWO.object, Object.assign(Object.create(null), ONE.object))
             return TWO;
         }
 

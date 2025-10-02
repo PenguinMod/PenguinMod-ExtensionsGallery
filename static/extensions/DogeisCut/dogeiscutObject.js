@@ -564,9 +564,13 @@
         }
 
         assign({ ARRAY }) {
-            ARRAY = jwArray.Type.toArray(ARRAY);
-            
-            return dogeiscutObject.Type.toObject(Object.assign({}, ARRAY.array));
+            ARRAY = jwArray.Type.toArray(ARRAY)
+
+            const objectWithShiftedKeys = Object.fromEntries(
+                ARRAY.array.map((value, index) => [index + 1, value])
+            )
+
+            return dogeiscutObject.Type.toObject(objectWithShiftedKeys)
         }
 
         async builder({}, util) {

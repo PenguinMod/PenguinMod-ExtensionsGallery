@@ -5,16 +5,7 @@
 
 // this was a nightmare to code
 
-// TODO:
-// - https://discord.com/channels/1033551490331197462/1038238583686967428/1413652436983353404
-// - decide the final look of the reporter bubbles and monitors
-// - fix from JSON block handling arrays e.g. `[{}]`
-
-// FUTURE TODO:
-// - Cooler reporter bubble
-//      - Honestly I might make the reporter bubbles look like how the developer console handles objects (collapsed by default and generated on open)
-//      - something much more akin to this: https://jsonformatter.org/json-viewer
-//      - \/ this would only be neccisarry if i implement the lower thing however \/
+// FUTURE UPDATE TODO:
 // - block toggle for the recursion stuff i had before (wouldn't save or display in bubbles though unless i figure that out)
 
 (function(Scratch) {
@@ -25,27 +16,6 @@
     }
 
     const vm = Scratch.vm
-    const Cast = Scratch.Cast
-
-    function span(text) {
-        let el = document.createElement('span')
-        el.innerHTML = text
-        el.style.display = 'hidden'
-        el.style.whiteSpace = 'nowrap'
-        el.style.width = '100%'
-        el.style.textAlign = 'center'
-        return el
-    }
-
-
-    function paragraph(text) {
-        let el = document.createElement('p');
-        el.textContent = text;
-        el.style.margin = '0';
-        el.style.padding = '0';
-        el.style.textAlign = 'left';
-        return el;
-    }
 
     class ObjectType {
         customId = "dogeiscutObject"
@@ -223,6 +193,19 @@
         toMonitorContent = () => this.toVisualContent('1px solid #fff', '#ffffff33', 'ffffff00')
 
         toReporterContent = () => this.toVisualContent()
+
+        toJSON() {
+            return Object.fromEntries(
+                Object.entries(this.object).map(([key, value]) => {
+                    if (typeof value === "object" && value !== null) {
+                        if (typeof value.toJSON === "function") return [key, value.toJSON()]
+                        if (typeof value.toString === "function") return [key, value.toString()]
+                        return [key, JSON.stringify(value)]
+                    }
+                    return [key, value]
+                })
+            )
+        }
     }
 
     const dogeiscutObject = {
@@ -305,7 +288,7 @@
                     },
                     {
                         opcode: 'cast',
-                        text: 'from JSON [VALUE]',
+                        text: 'parse [VALUE] as object',
                         ...dogeiscutObject.Block,
                         arguments: {
                             VALUE: {
@@ -417,6 +400,18 @@
                                 defaultValue: "bar",
                                 exemptFromNormalization: true
                             }
+                        },
+                        ...dogeiscutObject.Block,
+                    },
+                    {
+                        opcode: 'delete',
+                        text: 'delete key [KEY] in [OBJECT]',
+                        arguments: {
+                            OBJECT: dogeiscutObject.Argument,
+                            KEY: {
+                                type: Scratch.ArgumentType.STRING,
+                                defaultValue: "foo"
+                            },
                         },
                         ...dogeiscutObject.Block,
                     },
@@ -549,9 +544,16 @@
 
         cast({ VALUE }) {
             try {
-            return dogeiscutObject.Type.convertIfNeeded(JSON.parse(VALUE))
+                var val = dogeiscutObject.Type.convertIfNeeded(JSON.parse(VALUE))
+                if (typeof val == jwArray.Type || val instanceof jwArray.Type) {
+                    val = Object.fromEntries(
+                        val.array.map((value, index) => [index + 1, value])
+                    )
+                    val = new dogeiscutObject.Type(val);
+                }
+                return val;
             } catch {
-            return dogeiscutObject.Type.toObject(VALUE);
+                return dogeiscutObject.Type.toObject(VALUE);
             }
         }
 
@@ -614,6 +616,13 @@
             OBJECT = dogeiscutObject.Type.toObject(OBJECT);
 
             OBJECT.object[KEY] = VALUE;
+            return OBJECT;
+        }
+
+        delete({ KEY, OBJECT }) {
+            OBJECT = dogeiscutObject.Type.toObject(OBJECT);
+
+            delete OBJECT.object[KEY];
             return OBJECT;
         }
 

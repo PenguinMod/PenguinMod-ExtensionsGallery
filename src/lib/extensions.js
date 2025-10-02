@@ -46,14 +46,6 @@ export default [
         isGitHub: true,
     },
     {
-        name: "Objects",
-        description: "Store key-value pair data efficiently in multi-purpose objects.",
-        code: "DogeisCut/dogeiscutObject.js",
-        banner: "DogeisCut/dogeiscutObject.svg",
-        creator: "DogeisCut",
-        isGitHub: true, 
-    },
-    {
         name: "Scope Variable",
         description: "Manage your variables in a block-like structure.",
         code: "0znzw/ScopeVars.js",

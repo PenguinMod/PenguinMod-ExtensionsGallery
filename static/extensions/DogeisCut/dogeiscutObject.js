@@ -45,9 +45,9 @@
                 ))
             }
             if (x instanceof ObjectType) return new ObjectType(x.object)
+            if (x === "" || x === null || x === undefined) return new ObjectType()
             if (!isClass(x)) {
                 if (x && typeof x === "object" && !Array.isArray(x)) return new ObjectType(Object.assign(Object.create(null), x))
-                if (x === "" || x === null || x === undefined) return new ObjectType()
                 try {
                     let parsed = JSON.parse(x, (key, value) => {
                         if (value === null || value === undefined) return null;

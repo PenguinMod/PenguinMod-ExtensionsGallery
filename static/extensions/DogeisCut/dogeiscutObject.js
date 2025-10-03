@@ -48,18 +48,6 @@
                         Object.fromEntries(x.map((value, index) => [index + 1, value]))
                     ))
                 }
-                function replaceNullsWithUndefined(obj) {
-                    if (obj && typeof obj === "object") {
-                        for (let key of Object.keys(obj)) {
-                            if (obj[key] === null) {
-                                obj[key] = undefined
-                            } else {
-                                replaceNullsWithUndefined(obj[key])
-                            }
-                        }
-                    }
-                }
-                replaceNullsWithUndefined(parsed);
                 if (parsed instanceof Array) {
                     return new ObjectType(Object.assign(Object.create(null),
                     Object.fromEntries(parsed.map((value, index) => [index + 1, value]))

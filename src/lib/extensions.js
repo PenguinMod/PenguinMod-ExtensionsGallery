@@ -340,6 +340,16 @@ export default [
         unstableReason: "File System Access is not supported by all browsers.\nProjects can maliciously edit files that you open.",
     },
     {
+        name: "YeetYourFiles",
+        description: "Upload files to the cloud by throwing it to outer space!",
+        code: "MubiLop/yeetyourfiles.js",
+        banner: "MubiLop/yeetyourfiles.png",
+        creator: "cicerorph",
+        creatorAlias: "MubiLop",
+        documentation: "YeetYourFiles",
+        isGitHub: true,
+    },
+    {
         name: "File Upload",
         description: "Upload files to the Network, can also used with Files extension.",
         code: "Codefoxy/cfupload.js",

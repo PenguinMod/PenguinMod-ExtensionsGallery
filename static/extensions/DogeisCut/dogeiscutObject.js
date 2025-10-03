@@ -18,9 +18,9 @@
     const vm = Scratch.vm
 
     const isArray = Array.isArray
-
     const fnToString = Function.prototype.toString
     const classRegex = /^class\s/
+    const hasOwn = Object.hasOwn;
 
     function isClassOrInstance(x) {
         if (typeof x === "function") {
@@ -45,9 +45,14 @@
             }
         }
 
-        static toObject(x) {
-            if (x === "" || x === null || x === undefined) return new ObjectType()
-            if (x instanceof ObjectType) return new ObjectType(x.object)
+        static toObject(x, copy = true) {
+            if (copy) {
+                if (x === "" || x === null || x === undefined) return new ObjectType()
+                if (x instanceof ObjectType) return new ObjectType(x.object)
+            } else {
+                if (x === "" || x === null || x === undefined) return ObjectType.blank
+                if (x instanceof ObjectType) return x
+            }
 
             if (isClassOrInstance(x)) {
                 return new ObjectType({ value: x })
@@ -252,6 +257,8 @@
                 })
             )
         }
+
+        static blank = new ObjectType()
     }
 
     const dogeiscutObject = {
@@ -264,6 +271,7 @@
         },
         Argument: {
             shape: Scratch.BlockShape.PLUS,
+            exemptFromNormalization: true,
             check: ["Object"]
         }
     }
@@ -600,7 +608,7 @@
         /* Blocks */
 
         blank() {
-            return new dogeiscutObject.Type()
+            return dogeiscutObject.Type.blank;
         }
 
         parse({ VALUE }) {
@@ -644,13 +652,13 @@
         }
 
         get({ OBJECT, KEY }) {
-            OBJECT = dogeiscutObject.Type.toObject(OBJECT)
+            OBJECT = dogeiscutObject.Type.toObject(OBJECT, false)
 
-            return Object.hasOwn(OBJECT.object, KEY) ? dogeiscutObject.Type.convertIfNeeded(OBJECT.object[KEY]) : ""
+            return hasOwn(OBJECT.object, KEY) ? dogeiscutObject.Type.convertIfNeeded(OBJECT.object[KEY]) : ""
         }
 
         getPath({ OBJECT, ARRAY }) {
-            OBJECT = dogeiscutObject.Type.toObject(OBJECT);
+            OBJECT = dogeiscutObject.Type.toObject(OBJECT, false);
             ARRAY = jwArray.Type.toArray(ARRAY);
 
             let current = OBJECT.object;
@@ -658,7 +666,7 @@
                 if (current instanceof dogeiscutObject.Type) {
                     current = current.object
                 }
-                if (current && Object.hasOwn(current, key)) {
+                if (current && hasOwn(current, key)) {
                     current = current[key];
                 } else {
                     return "";
@@ -669,9 +677,9 @@
         }
 
         has({ OBJECT, KEY }) {
-            OBJECT = dogeiscutObject.Type.toObject(OBJECT)
+            OBJECT = dogeiscutObject.Type.toObject(OBJECT, false)
 
-            return Object.hasOwn(OBJECT.object, KEY)
+            return hasOwn(OBJECT.object, KEY)
         }
 
         set({ OBJECT, KEY, VALUE }) {
@@ -689,6 +697,8 @@
         }
 
         merge({ ONE, TWO }) {
+            console.log(ONE)
+            console.log(TWO)
             ONE = dogeiscutObject.Type.toObject(ONE);
             TWO = dogeiscutObject.Type.toObject(TWO);
 
@@ -697,19 +707,19 @@
         }
 
         keys({ OBJECT }) {
-            OBJECT = dogeiscutObject.Type.toObject(OBJECT);
+            OBJECT = dogeiscutObject.Type.toObject(OBJECT, false);
 
             return new jwArray.Type(Object.keys(OBJECT.object));
         }
 
         values({ OBJECT }) {
-            OBJECT = dogeiscutObject.Type.toObject(OBJECT);
+            OBJECT = dogeiscutObject.Type.toObject(OBJECT, false);
 
             return new jwArray.Type(Object.values(OBJECT.object).map(dogeiscutObject.Type.convertIfNeeded));
         }
 
         entries({ OBJECT }) {
-            OBJECT = dogeiscutObject.Type.toObject(OBJECT);
+            OBJECT = dogeiscutObject.Type.toObject(OBJECT, false);
 
             return new jwArray.Type(Object.entries(OBJECT.object).map(([key, value]) => {
                 return new jwArray.Type([key, dogeiscutObject.Type.convertIfNeeded(value)]);
@@ -736,22 +746,21 @@
         }
 
         forEach({ OBJECT }, util) {
-            OBJECT = dogeiscutObject.Type.toObject(OBJECT);
-
             if (util.stackFrame.execute) {
-            util.stackFrame.index++;
-            const { index, entries } = util.stackFrame;
-            if (index > entries.length - 1) return;
-            util.thread.stackFrames[0].dogeiscutObject = entries[index];
+                util.stackFrame.index++;
+                const { index, entries } = util.stackFrame;
+                if (index > entries.length - 1) return;
+                util.thread.stackFrames[0].dogeiscutObject = entries[index];
             } else {
-            const entries = Object.entries(OBJECT.object).map(([key, value]) => {
-                return [dogeiscutObject.Type.convertIfNeeded(key), dogeiscutObject.Type.convertIfNeeded(value)];
-            });
-            if (entries.length === 0) return;
-            util.stackFrame.entries = entries;
-            util.stackFrame.execute = true;
-            util.stackFrame.index = 0;
-            util.thread.stackFrames[0].dogeiscutObject = entries[0];
+                OBJECT = dogeiscutObject.Type.toObject(OBJECT, false);
+                const entries = Object.entries(OBJECT.object).map(([key, value]) => {
+                    return [dogeiscutObject.Type.convertIfNeeded(key), dogeiscutObject.Type.convertIfNeeded(value)];
+                });
+                if (entries.length === 0) return;
+                util.stackFrame.entries = entries;
+                util.stackFrame.execute = true;
+                util.stackFrame.index = 0;
+                util.thread.stackFrames[0].dogeiscutObject = entries[0];
             }
             util.startBranch(1, true);
         }

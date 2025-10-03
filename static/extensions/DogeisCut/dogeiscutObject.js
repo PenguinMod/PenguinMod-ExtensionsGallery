@@ -27,36 +27,50 @@
         }
 
         static toObject(x) {
+            // thanks https://stackoverflow.com/questions/526559/testing-if-something-is-a-class-in-javascript/43197340#43197340
+            function isClass(obj) {
+                const isCtorClass = obj.constructor
+                    && obj.constructor.toString().substring(0, 5) === 'class'
+                if(obj.prototype === undefined) {
+                    return isCtorClass
+                }
+                const isPrototypeCtorClass = obj.prototype.constructor 
+                    && obj.prototype.constructor.toString
+                    && obj.prototype.constructor.toString().substring(0, 5) === 'class'
+                return isCtorClass || isPrototypeCtorClass
+            }
             if (typeof x == jwArray.Type || x instanceof jwArray.Type) {
                 return new ObjectType(Object.assign(Object.create(null),
                     Object.fromEntries(x.array.map((value, index) => [index + 1, value]))
                 ))
             }
             if (x instanceof ObjectType) return new ObjectType(x.object)
-            if (x && typeof x === "object" && !Array.isArray(x)) return new ObjectType(Object.assign(Object.create(null), x))
-            if (x === "" || x === null || x === undefined) return new ObjectType()
-            try {
-                let parsed = JSON.parse(x, (key, value) => {
-                    if (value === null || value === undefined) return null;
-                    if (value && typeof value === "object" && !Array.isArray(value)) {
-                        return Object.assign(Object.create(null), value)
+            if (!isClass(x)) {
+                if (x && typeof x === "object" && !Array.isArray(x)) return new ObjectType(Object.assign(Object.create(null), x))
+                if (x === "" || x === null || x === undefined) return new ObjectType()
+                try {
+                    let parsed = JSON.parse(x, (key, value) => {
+                        if (value === null || value === undefined) return null;
+                        if (value && typeof value === "object" && !Array.isArray(value)) {
+                            return Object.assign(Object.create(null), value)
+                        }
+                        return this.convertIfNeeded(value)
+                    })
+                    if (parsed instanceof Array) {
+                        return new ObjectType(Object.assign(Object.create(null),
+                            Object.fromEntries(x.map((value, index) => [index + 1, value]))
+                        ))
                     }
-                    return this.convertIfNeeded(value)
-                })
-                if (parsed instanceof Array) {
-                    return new ObjectType(Object.assign(Object.create(null),
-                        Object.fromEntries(x.map((value, index) => [index + 1, value]))
-                    ))
-                }
-                if (parsed instanceof Array) {
-                    return new ObjectType(Object.assign(Object.create(null),
-                    Object.fromEntries(parsed.map((value, index) => [index + 1, value]))
-                    ))
-                }
-                if (typeof parsed === "object") {
-                    return new ObjectType(Object.assign(Object.create(null), parsed))
-                }
-            } catch { }
+                    if (parsed instanceof Array) {
+                        return new ObjectType(Object.assign(Object.create(null),
+                            Object.fromEntries(parsed.map((value, index) => [index + 1, value]))
+                        ))
+                    }
+                    if (typeof parsed === "object") {
+                        return new ObjectType(Object.assign(Object.create(null), parsed))
+                    }
+                } catch { }
+            }
             return new ObjectType(Object.assign(Object.create(null), { value: x }))
         }
 

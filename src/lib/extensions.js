@@ -318,7 +318,7 @@ export default [
         name: "YeetYourFiles",
         description: "Upload files to the cloud by throwing it to outer space!",
         code: "MubiLop/yeetyourfiles.js",
-        banner: "MubiLop/placeholder-yeetyourfiles.png",
+        banner: "MubiLop/yeetyourfiles.png",
         creator: "cicerorph",
         creatorAlias: "MubiLop",
         documentation: "YeetYourFiles",

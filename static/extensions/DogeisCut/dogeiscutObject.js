@@ -193,9 +193,9 @@
                                 arrTable.appendChild(row);
                             });
                             valueCell.appendChild(arrTable);
-                        } else if (item !== null && typeof value.dogeiscutObjectHandler === "function") {
+                        } else if (value !== null && typeof value.dogeiscutObjectHandler === "function") {
                             valueCell.innerHTML = value.dogeiscutObjectHandler();
-                        } else if (item !== null && typeof value.jwArrayHandler === "function") {
+                        } else if (value !== null && typeof value.jwArrayHandler === "function") {
                             valueCell.innerHTML = value.jwArrayHandler();
                         } else {
                             valueCell.appendChild(renderObject(value));

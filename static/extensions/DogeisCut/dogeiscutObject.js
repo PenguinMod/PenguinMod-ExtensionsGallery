@@ -33,6 +33,7 @@
             try {
                 let parsed = JSON.parse(x)
                 if (parsed instanceof Array) {
+                    // this should not happen but it's here anyways
                     return new ObjectType(Object.assign(Object.create(null), { array: parsed }))
                 }
                 if (typeof parsed === "object") {
@@ -558,7 +559,7 @@
                     )
                     val = new dogeiscutObject.Type(val);
                 }
-                return val;
+                return dogeiscutObject.Type.toObject(val);
             } catch {
                 return dogeiscutObject.Type.toObject(VALUE);
             }

@@ -175,6 +175,8 @@
                                     }
                                 } else if (item && typeof item.toString === "function" && item.toString !== Object.prototype.toString) {
                                     valCell.textContent = item.toString();
+                                } else if (item === null || item === undefined) {
+                                    valCell.textContent = "null";
                                 } else {
                                     valCell.textContent = String(item);
                                 }
@@ -191,6 +193,8 @@
                         }
                     } else if (value && typeof value.toString === "function" && value.toString !== Object.prototype.toString) {
                         valueCell.textContent = value.toString();
+                    } else if (value === null || value === undefined) {
+                        valueCell.textContent = "null";
                     } else {
                         valueCell.textContent = String(value);
                     }
@@ -367,6 +371,19 @@
                                 defaultValue: "bar",
                                 exemptFromNormalization: true
                             }
+                        }
+                    },
+                    {
+                        opcode: 'builderAppendUndefined',
+                        text: 'append key [KEY] to builder',
+                        blockType: Scratch.BlockType.COMMAND,
+                        //notchAccepts: 'dogeiscutObjectBuilder',
+                        arguments: {
+                            KEY: {
+                                type: Scratch.ArgumentType.STRING,
+                                defaultValue: "foo",
+                                exemptFromNormalization: true
+                            },
                         }
                     },
                     '---',
@@ -588,6 +605,14 @@
         builderAppend({ KEY, VALUE }, util) {
             if (util.thread._dogeiscutObjectBuilderIndex && util.thread._dogeiscutObjectBuilderIndex.length > 0) {
                 util.thread._dogeiscutObjectBuilderIndex[util.thread._dogeiscutObjectBuilderIndex.length-1][KEY] = VALUE
+            } else {
+                throw 'This block must be inside of a "object builder" block.';
+            }
+        }
+
+        builderAppendUndefined({ KEY }, util) {
+            if (util.thread._dogeiscutObjectBuilderIndex && util.thread._dogeiscutObjectBuilderIndex.length > 0) {
+                util.thread._dogeiscutObjectBuilderIndex[util.thread._dogeiscutObjectBuilderIndex.length - 1][KEY] = undefined
             } else {
                 throw 'This block must be inside of a "object builder" block.';
             }

@@ -27,14 +27,25 @@
         }
 
         static toObject(x) {
+            if (typeof x == jwArray.Type || x instanceof jwArray.Type) {
+                return new ObjectType(Object.assign(Object.create(null),
+                    Object.fromEntries(x.array.map((value, index) => [index + 1, value]))
+                ))
+            }
             if (x instanceof ObjectType) return new ObjectType(x.object)
             if (x && typeof x === "object" && !Array.isArray(x)) return new ObjectType(Object.assign(Object.create(null), x))
             if (x === "" || x === null || x === undefined) return new ObjectType()
             try {
-                let parsed = JSON.parse(x)
+                let parsed = JSON.parse(x, (key, value) => {
+                    if (value && typeof value === "object" && !Array.isArray(value)) {
+                        return Object.assign(Object.create(null), value)
+                    }
+                    return this.convertIfNeeded(value)
+                })
                 if (parsed instanceof Array) {
-                    // this should not happen but it's here anyways
-                    return new ObjectType(Object.assign(Object.create(null), { array: parsed }))
+                    return new ObjectType(Object.assign(Object.create(null),
+                        Object.fromEntries(x.map((value, index) => [index + 1, value]))
+                    ))
                 }
                 if (typeof parsed === "object") {
                     return new ObjectType(Object.assign(Object.create(null), parsed))
@@ -551,18 +562,7 @@
         }
 
         parse({ VALUE }) {
-            try {
-                var val = dogeiscutObject.Type.convertIfNeeded(JSON.parse(VALUE))
-                if (typeof val == jwArray.Type || val instanceof jwArray.Type) {
-                    val = Object.assign(Object.create(null),
-                        Object.fromEntries(val.array.map((value, index) => [index + 1, value]))
-                    )
-                    val = new dogeiscutObject.Type(val);
-                }
-                return dogeiscutObject.Type.toObject(val);
-            } catch {
-                return dogeiscutObject.Type.toObject(VALUE);
-            }
+            return dogeiscutObject.Type.toObject(VALUE);
         }
 
         keyValue({ KEY, VALUE }) {

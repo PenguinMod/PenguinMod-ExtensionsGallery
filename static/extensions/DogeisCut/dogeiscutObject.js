@@ -1,6 +1,6 @@
 // Name: Objects
 // ID: dogeiscutObject
-// Description: Store data efficiently in multi-purpose objects which support shared and circular references.
+// Description: Store data efficiently in multi-purpose objects.
 // By: dogeiscut <https://scratch.mit.edu/users/dogeiscut/>
 
 // this was a nightmare to code
@@ -193,9 +193,9 @@
                                 arrTable.appendChild(row);
                             });
                             valueCell.appendChild(arrTable);
-                        } else if (item !== null && typeof value.dogeiscutObjectHandler === "function") {
+                        } else if (value !== null && typeof value.dogeiscutObjectHandler === "function") {
                             valueCell.innerHTML = value.dogeiscutObjectHandler();
-                        } else if (item !== null && typeof value.jwArrayHandler === "function") {
+                        } else if (value !== null && typeof value.jwArrayHandler === "function") {
                             valueCell.innerHTML = value.jwArrayHandler();
                         } else {
                             valueCell.appendChild(renderObject(value));

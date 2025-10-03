@@ -106,7 +106,7 @@
                 if (obj instanceof dogeiscutObject.Type) {
                     return obj.toString();
                 }
-                if (typeof obj === "object") {
+                if (obj !== null && typeof obj === "object") {
                     if (typeof obj.dogeiscutObjectHandler == "function") {
                         return obj.dogeiscutObjectHandler()
                     }
@@ -205,9 +205,9 @@
                                 arrTable.appendChild(row);
                             });
                             valueCell.appendChild(arrTable);
-                        } else if (typeof value.dogeiscutObjectHandler === "function") {
+                        } else if (item !== null && typeof value.dogeiscutObjectHandler === "function") {
                             valueCell.innerHTML = value.dogeiscutObjectHandler();
-                        } else if (typeof value.jwArrayHandler === "function") {
+                        } else if (item !== null && typeof value.jwArrayHandler === "function") {
                             valueCell.innerHTML = value.jwArrayHandler();
                         } else {
                             valueCell.appendChild(renderObject(value));
@@ -397,7 +397,7 @@
                         }
                     },
                     {
-                        opcode: 'builderAppendUndefined',
+                        opcode: 'builderAppendEmpty',
                         text: 'append key [KEY] to builder',
                         blockType: Scratch.BlockType.COMMAND,
                         //notchAccepts: 'dogeiscutObjectBuilder',
@@ -633,9 +633,9 @@
             }
         }
 
-        builderAppendUndefined({ KEY }, util) {
+        builderAppendEmpty({ KEY }, util) {
             if (util.thread._dogeiscutObjectBuilderIndex && util.thread._dogeiscutObjectBuilderIndex.length > 0) {
-                util.thread._dogeiscutObjectBuilderIndex[util.thread._dogeiscutObjectBuilderIndex.length - 1][KEY] = undefined
+                util.thread._dogeiscutObjectBuilderIndex[util.thread._dogeiscutObjectBuilderIndex.length - 1][KEY] = null;
             } else {
                 throw 'This block must be inside of a "object builder" block.';
             }

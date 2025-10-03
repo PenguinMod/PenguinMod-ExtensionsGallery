@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 186">
+  <defs></defs>
+  <rect width="299.982" height="186" style="paint-order: fill; fill-rule: nonzero; fill: rgb(216, 0, 82);" x="0.009"></rect>
+  <rect x="9.56" y="8.736" width="280.881" height="168.528" style="fill: rgb(255, 0, 97);"></rect>
+  <rect x="115.792" y="62.749" width="84.853" height="84.853" style="fill: none; stroke: rgb(255, 255, 255); stroke-width: 8px;"></rect>
+  <g transform="matrix(1, 0, 0, 1, 8.218257, 7.175148)">
+    <g transform="matrix(-2.49995, 0, 0, 1.948804, 154.998904, 4.11433)" style="">
+      <path d="M1.99974 12.9999L1.9996 11L15.5858 11V5.58582L22 12L15.5858 18.4142V13L1.99974 12.9999Z" style="fill: rgb(255, 255, 255);"></path>
+    </g>
+    <g transform="matrix(2.49995, 0, 0, 1.948804, 145.001101, 4.114331)" style="">
+      <path d="M1.99974 12.9999L1.9996 11L15.5858 11V5.58582L22 12L15.5858 18.4142V13L1.99974 12.9999Z" style="fill: rgb(255, 255, 255);"></path>
+    </g>
+  </g>
+  <g transform="matrix(0, 0.999999, -1.000001, 0, -59.281728, 78.675096)" style="transform-origin: 150px 27.5px;">
+    <g transform="matrix(-2.49995, 0, 0, 1.948804, 154.998904, 4.11433)" style="">
+      <path d="M1.99974 12.9999L1.9996 11L15.5858 11V5.58582L22 12L15.5858 18.4142V13L1.99974 12.9999Z" style="fill: rgb(255, 255, 255);"></path>
+    </g>
+    <g transform="matrix(2.49995, 0, 0, 1.948804, 145.001101, 4.114331)" style="">
+      <path d="M1.99974 12.9999L1.9996 11L15.5858 11V5.58582L22 12L15.5858 18.4142V13L1.99974 12.9999Z" style="fill: rgb(255, 255, 255);"></path>
+    </g>
+  </g>
+</svg>

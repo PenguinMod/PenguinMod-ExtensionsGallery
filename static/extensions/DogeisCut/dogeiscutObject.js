@@ -37,6 +37,7 @@
             if (x === "" || x === null || x === undefined) return new ObjectType()
             try {
                 let parsed = JSON.parse(x, (key, value) => {
+                    if (value === null || value === undefined) return null;
                     if (value && typeof value === "object" && !Array.isArray(value)) {
                         return Object.assign(Object.create(null), value)
                     }
@@ -45,6 +46,23 @@
                 if (parsed instanceof Array) {
                     return new ObjectType(Object.assign(Object.create(null),
                         Object.fromEntries(x.map((value, index) => [index + 1, value]))
+                    ))
+                }
+                function replaceNullsWithUndefined(obj) {
+                    if (obj && typeof obj === "object") {
+                        for (let key of Object.keys(obj)) {
+                            if (obj[key] === null) {
+                                obj[key] = undefined
+                            } else {
+                                replaceNullsWithUndefined(obj[key])
+                            }
+                        }
+                    }
+                }
+                replaceNullsWithUndefined(parsed);
+                if (parsed instanceof Array) {
+                    return new ObjectType(Object.assign(Object.create(null),
+                    Object.fromEntries(parsed.map((value, index) => [index + 1, value]))
                     ))
                 }
                 if (typeof parsed === "object") {
@@ -88,7 +106,7 @@
                 if (obj instanceof dogeiscutObject.Type) {
                     return obj.toString();
                 }
-                if (typeof obj === "object") {
+                if (obj !== null && typeof obj === "object") {
                     if (typeof obj.dogeiscutObjectHandler == "function") {
                         return obj.dogeiscutObjectHandler()
                     }
@@ -113,6 +131,7 @@
             // wasnt sure how i wanted this to look so i have some customization
             const RENDER_ARRAYS_VISUALLY = true;
             const SHOW_ARRAY_INDEX_NUMBERS = false;
+            const RENDER_STRING_VALUES_WITH_QUOTES = true;
 
             function renderObject(obj) {
                 const table = document.createElement('table');
@@ -173,6 +192,8 @@
                                     } else {
                                         valCell.appendChild(renderObject(item));
                                     }
+                                } else if (typeof item === "string" && RENDER_STRING_VALUES_WITH_QUOTES) {
+                                    valCell.textContent = `"${item}"`;
                                 } else if (item && typeof item.toString === "function" && item.toString !== Object.prototype.toString) {
                                     valCell.textContent = item.toString();
                                 } else if (item === null || item === undefined) {
@@ -184,13 +205,15 @@
                                 arrTable.appendChild(row);
                             });
                             valueCell.appendChild(arrTable);
-                        } else if (typeof value.dogeiscutObjectHandler === "function") {
+                        } else if (item !== null && typeof value.dogeiscutObjectHandler === "function") {
                             valueCell.innerHTML = value.dogeiscutObjectHandler();
-                        } else if (typeof value.jwArrayHandler === "function") {
+                        } else if (item !== null && typeof value.jwArrayHandler === "function") {
                             valueCell.innerHTML = value.jwArrayHandler();
                         } else {
                             valueCell.appendChild(renderObject(value));
                         }
+                    } else if (typeof value === "string" && RENDER_STRING_VALUES_WITH_QUOTES) {
+                        valueCell.textContent = `"${value}"`;
                     } else if (value && typeof value.toString === "function" && value.toString !== Object.prototype.toString) {
                         valueCell.textContent = value.toString();
                     } else if (value === null || value === undefined) {
@@ -374,7 +397,7 @@
                         }
                     },
                     {
-                        opcode: 'builderAppendUndefined',
+                        opcode: 'builderAppendEmpty',
                         text: 'append key [KEY] to builder',
                         blockType: Scratch.BlockType.COMMAND,
                         //notchAccepts: 'dogeiscutObjectBuilder',
@@ -610,9 +633,9 @@
             }
         }
 
-        builderAppendUndefined({ KEY }, util) {
+        builderAppendEmpty({ KEY }, util) {
             if (util.thread._dogeiscutObjectBuilderIndex && util.thread._dogeiscutObjectBuilderIndex.length > 0) {
-                util.thread._dogeiscutObjectBuilderIndex[util.thread._dogeiscutObjectBuilderIndex.length - 1][KEY] = undefined
+                util.thread._dogeiscutObjectBuilderIndex[util.thread._dogeiscutObjectBuilderIndex.length - 1][KEY] = null;
             } else {
                 throw 'This block must be inside of a "object builder" block.';
             }

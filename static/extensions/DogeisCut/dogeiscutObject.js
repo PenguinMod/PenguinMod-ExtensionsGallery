@@ -17,61 +17,65 @@
 
     const vm = Scratch.vm
 
+    const isArray = Array.isArray
+
+    const fnToString = Function.prototype.toString
+    const classRegex = /^class\s/
+
+    function isClassOrInstance(x) {
+        if (typeof x === "function") {
+            return classRegex.test(fnToString.call(x))
+        }
+        if (x && typeof x === "object") {
+            const ctor = x.constructor
+            return typeof ctor === "function" && classRegex.test(fnToString.call(ctor))
+        }
+        return false
+    }
+    
     class ObjectType {
         customId = "dogeiscutObject"
 
-        object = Object.create(null)
-
-        constructor(object = Object.create(null)) {
-            this.object = Object.assign(Object.create(null), object)
+        constructor(object) {
+            if (object && typeof object === "object") {
+                this.object = { ...object }
+                Object.setPrototypeOf(this.object, null)
+            } else {
+                this.object = Object.create(null)
+            }
         }
 
         static toObject(x) {
-            // thanks https://stackoverflow.com/questions/526559/testing-if-something-is-a-class-in-javascript/43197340#43197340
-            function isClass(obj) {
-                const isCtorClass = obj.constructor
-                    && obj.constructor.toString().substring(0, 5) === 'class'
-                if(obj.prototype === undefined) {
-                    return isCtorClass
-                }
-                const isPrototypeCtorClass = obj.prototype.constructor 
-                    && obj.prototype.constructor.toString
-                    && obj.prototype.constructor.toString().substring(0, 5) === 'class'
-                return isCtorClass || isPrototypeCtorClass
-            }
-            if (typeof x == jwArray.Type || x instanceof jwArray.Type) {
-                return new ObjectType(Object.assign(Object.create(null),
-                    Object.fromEntries(x.array.map((value, index) => [index + 1, value]))
-                ))
-            }
-            if (x instanceof ObjectType) return new ObjectType(x.object)
             if (x === "" || x === null || x === undefined) return new ObjectType()
-            if (!isClass(x)) {
-                if (x && typeof x === "object" && !Array.isArray(x)) return new ObjectType(Object.assign(Object.create(null), x))
+            if (x instanceof ObjectType) return new ObjectType(x.object)
+
+            if (isClassOrInstance(x)) {
+                return new ObjectType({ value: x })
+            }
+
+            if (x && typeof x === "object") {
+                if (x instanceof jwArray.Type) {
+                    return new ObjectType(Object.fromEntries(x.array.map((v,i)=>[i+1,v])))
+                }
+                if (isArray(x)) {
+                    return new ObjectType(Object.fromEntries(x.map((v,i)=>[i+1,v])))
+                }
+                return new ObjectType(Object.assign(Object.create(null), x))
+            }
+
+            if (typeof x === "string") {
                 try {
-                    let parsed = JSON.parse(x, (key, value) => {
-                        if (value === null || value === undefined) return null;
-                        if (value && typeof value === "object" && !Array.isArray(value)) {
-                            return Object.assign(Object.create(null), value)
-                        }
-                        return this.convertIfNeeded(value)
-                    })
-                    if (parsed instanceof Array) {
-                        return new ObjectType(Object.assign(Object.create(null),
-                            Object.fromEntries(x.map((value, index) => [index + 1, value]))
-                        ))
+                    const parsed = JSON.parse(x)
+                    if (isArray(parsed)) {
+                        return new ObjectType(Object.fromEntries(parsed.map((v,i)=>[i+1,v])))
                     }
-                    if (parsed instanceof Array) {
-                        return new ObjectType(Object.assign(Object.create(null),
-                            Object.fromEntries(parsed.map((value, index) => [index + 1, value]))
-                        ))
-                    }
-                    if (typeof parsed === "object") {
+                    if (parsed && typeof parsed === "object") {
                         return new ObjectType(Object.assign(Object.create(null), parsed))
                     }
-                } catch { }
+                } catch {}
             }
-            return new ObjectType(Object.assign(Object.create(null), { value: x }))
+
+            return new ObjectType({ value: x })
         }
 
         jwArrayHandler() {
@@ -84,18 +88,13 @@
         }
 
         static convertIfNeeded(x) {
-            if (x instanceof Array &&
-                !(x instanceof jwArray.Type) &&
-                !(x instanceof dogeiscutObject.Type)
-            ) return jwArray.Type.toArray(x);
-            if (
-                x !== null && 
-                typeof x === "object" &&
-                Object.getPrototypeOf(x) === null &&
-                !(x instanceof jwArray.Type) &&
-                !(x instanceof dogeiscutObject.Type)
-            ) return dogeiscutObject.Type.toObject(x);
-            return x;
+            if (x === null || typeof x !== "object") return x
+            if (x instanceof jwArray.Type || x instanceof dogeiscutObject.Type) return x
+
+            if (isArray(x)) return jwArray.Type.toArray(x)
+            if (!Object.getPrototypeOf(x)) return dogeiscutObject.Type.toObject(x)
+
+            return x
         }
 
         toString() {
@@ -103,7 +102,7 @@
                 if (obj instanceof jwArray.Type) {
                     return `[${obj.array.map(item => stringify(item)).join(",")}]`;
                 }
-                if (Array.isArray(obj)) {
+                if (isArray(obj)) {
                     return `[${obj.map(stringify).join(",")}]`;
                 }
                 if (obj instanceof dogeiscutObject.Type) {
@@ -160,8 +159,8 @@
                     if (typeof value === 'object' && value !== null) {
                         if (value instanceof dogeiscutObject.Type) {
                             valueCell.appendChild(renderObject(value.object));
-                        } else if (RENDER_ARRAYS_VISUALLY && (Array.isArray(value) || (jwArray && value instanceof jwArray.Type))) {
-                            const arr = Array.isArray(value) ? value : (value.array || []);
+                        } else if (RENDER_ARRAYS_VISUALLY && (isArray(value) || (jwArray && value instanceof jwArray.Type))) {
+                            const arr = isArray(value) ? value : (value.array || []);
                             const arrTable = document.createElement('table');
                             arrTable.style.borderCollapse = 'collapse';
                             arrTable.style.margin = '2px 0';
@@ -186,7 +185,7 @@
                                 if (typeof item === 'object' && item !== null) {
                                     if (item instanceof dogeiscutObject.Type) {
                                         valCell.appendChild(renderObject(item.object));
-                                    } else if (RENDER_ARRAYS_VISUALLY && (Array.isArray(item) || (jwArray && item instanceof jwArray.Type))) {
+                                    } else if (RENDER_ARRAYS_VISUALLY && (isArray(item) || (jwArray && item instanceof jwArray.Type))) {
                                         valCell.appendChild(renderObject(item));
                                     } else if (typeof item.dogeiscutObjectHandler === "function") {
                                         valCell.innerHTML = item.dogeiscutObjectHandler();
@@ -720,7 +719,7 @@
         is({ VALUE }) {
             try {
                 const parsed = JSON.parse(VALUE);
-                return typeof parsed === 'object' && parsed !== null && !Array.isArray(parsed);
+                return typeof parsed === 'object' && parsed !== null && !isArray(parsed);
             } catch {
                 return false;
             }

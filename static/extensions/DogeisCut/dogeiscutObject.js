@@ -131,6 +131,7 @@
             // wasnt sure how i wanted this to look so i have some customization
             const RENDER_ARRAYS_VISUALLY = true;
             const SHOW_ARRAY_INDEX_NUMBERS = false;
+            const RENDER_STRING_VALUES_WITH_QUOTES = true;
 
             function renderObject(obj) {
                 const table = document.createElement('table');
@@ -191,6 +192,8 @@
                                     } else {
                                         valCell.appendChild(renderObject(item));
                                     }
+                                } else if (typeof item === "string" && RENDER_STRING_VALUES_WITH_QUOTES) {
+                                    valCell.textContent = `"${item}"`;
                                 } else if (item && typeof item.toString === "function" && item.toString !== Object.prototype.toString) {
                                     valCell.textContent = item.toString();
                                 } else if (item === null || item === undefined) {
@@ -209,6 +212,8 @@
                         } else {
                             valueCell.appendChild(renderObject(value));
                         }
+                    } else if (typeof value === "string" && RENDER_STRING_VALUES_WITH_QUOTES) {
+                        valueCell.textContent = `"${value}"`;
                     } else if (value && typeof value.toString === "function" && value.toString !== Object.prototype.toString) {
                         valueCell.textContent = value.toString();
                     } else if (value === null || value === undefined) {

@@ -75,6 +75,7 @@
                 !(x instanceof dogeiscutObject.Type)
             ) return jwArray.Type.toArray(x);
             if (
+                x !== null && 
                 typeof x === "object" &&
                 Object.getPrototypeOf(x) === null &&
                 !(x instanceof jwArray.Type) &&

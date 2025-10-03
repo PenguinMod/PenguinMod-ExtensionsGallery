@@ -37,6 +37,7 @@
             if (x === "" || x === null || x === undefined) return new ObjectType()
             try {
                 let parsed = JSON.parse(x, (key, value) => {
+                    if (value === null || value === undefined) return null;
                     if (value && typeof value === "object" && !Array.isArray(value)) {
                         return Object.assign(Object.create(null), value)
                     }
@@ -45,6 +46,23 @@
                 if (parsed instanceof Array) {
                     return new ObjectType(Object.assign(Object.create(null),
                         Object.fromEntries(x.map((value, index) => [index + 1, value]))
+                    ))
+                }
+                function replaceNullsWithUndefined(obj) {
+                    if (obj && typeof obj === "object") {
+                        for (let key of Object.keys(obj)) {
+                            if (obj[key] === null) {
+                                obj[key] = undefined
+                            } else {
+                                replaceNullsWithUndefined(obj[key])
+                            }
+                        }
+                    }
+                }
+                replaceNullsWithUndefined(parsed);
+                if (parsed instanceof Array) {
+                    return new ObjectType(Object.assign(Object.create(null),
+                    Object.fromEntries(parsed.map((value, index) => [index + 1, value]))
                     ))
                 }
                 if (typeof parsed === "object") {

@@ -32,7 +32,7 @@
         }
         return false
     }
-    
+
     class ObjectType {
         customId = "dogeiscutObject"
 
@@ -52,6 +52,10 @@
             } else {
                 if (x === "" || x === null || x === undefined) return ObjectType.blank
                 if (x instanceof ObjectType) return x
+            }
+
+            if (typeof x == "object" && typeof x.toJSON == "function") {
+                x = x.toJSON()
             }
 
             if (isClassOrInstance(x)) {

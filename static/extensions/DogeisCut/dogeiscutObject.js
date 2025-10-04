@@ -32,7 +32,7 @@
         }
         return false
     }
-    
+
     class ObjectType {
         customId = "dogeiscutObject"
 
@@ -52,6 +52,10 @@
             } else {
                 if (x === "" || x === null || x === undefined) return ObjectType.blank
                 if (x instanceof ObjectType) return x
+            }
+
+            if (typeof x == "object" && typeof x.toJSON == "function") {
+                x = x.toJSON()
             }
 
             if (isClassOrInstance(x)) {
@@ -739,17 +743,39 @@
 
             let current = OBJECT.object;
             for (let i = 0; i < ARRAY.array.length; i++) {
-                const key = ARRAY.array[i];
+                let key = ARRAY.array[i];
+
                 if (current instanceof dogeiscutObject.Type) {
                     current = current.object;
+                } else if (current instanceof jwArray.Type) {
+                    current = current.array;
                 }
+
+                if (Array.isArray(current) && typeof key === "number") {
+                    key = key - 1;
+                }
+
                 if (i === ARRAY.array.length - 1) {
                     current[key] = VALUE;
                     return OBJECT;
                 }
-                if (!hasOwn(current, key) || typeof current[key] !== 'object' || current[key] === null) {
+
+                let existing = current[key];
+                if (existing === undefined || existing === null || typeof existing !== "object") {
                     current[key] = Object.create(null);
+                } else if (existing instanceof dogeiscutObject.Type) {
+                    current[key] = new dogeiscutObject.Type(
+                        Object.assign(Object.create(null), existing.object)
+                    );
+                } else if (existing instanceof jwArray.Type) {
+                    current[key] = new jwArray.Type(existing.array.slice());
+                } else {
+                    current[key] = Object.assign(
+                        Array.isArray(existing) ? [] : Object.create(null),
+                        existing
+                    );
                 }
+
                 current = current[key];
             }
 

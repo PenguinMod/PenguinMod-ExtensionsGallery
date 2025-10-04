@@ -518,7 +518,7 @@
                     },
                     {
                         opcode: 'delete',
-                        text: 'delete key [KEY] in [OBJECT]',
+                        text: 'delete key [KEY] from [OBJECT]',
                         arguments: {
                             OBJECT: dogeiscutObject.Argument,
                             KEY: {

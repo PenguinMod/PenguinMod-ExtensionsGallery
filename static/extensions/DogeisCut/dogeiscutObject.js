@@ -503,6 +503,20 @@
                         ...dogeiscutObject.Block,
                     },
                     {
+                        opcode: 'setPath',
+                        text: 'set path [ARRAY] in [OBJECT] to [VALUE]',
+                        arguments: {
+                            OBJECT: dogeiscutObject.Argument,
+                            ARRAY: jwArray.Argument,
+                            VALUE: {
+                                type: Scratch.ArgumentType.STRING,
+                                defaultValue: "bar",
+                                exemptFromNormalization: true
+                            },
+                        },
+                        ...dogeiscutObject.Block,
+                    },
+                    {
                         opcode: 'delete',
                         text: 'delete key [KEY] in [OBJECT]',
                         arguments: {
@@ -716,6 +730,29 @@
             OBJECT = dogeiscutObject.Type.toObject(OBJECT);
 
             OBJECT.object[KEY] = VALUE;
+            return OBJECT;
+        }
+
+        setPath({ OBJECT, ARRAY, VALUE }) {
+            OBJECT = dogeiscutObject.Type.toObject(OBJECT);
+            ARRAY = jwArray.Type.toArray(ARRAY);
+
+            let current = OBJECT.object;
+            for (let i = 0; i < ARRAY.array.length; i++) {
+                const key = ARRAY.array[i];
+                if (current instanceof dogeiscutObject.Type) {
+                    current = current.object;
+                }
+                if (i === ARRAY.array.length - 1) {
+                    current[key] = VALUE;
+                    return OBJECT;
+                }
+                if (!hasOwn(current, key) || typeof current[key] !== 'object' || current[key] === null) {
+                    current[key] = Object.create(null);
+                }
+                current = current[key];
+            }
+
             return OBJECT;
         }
 

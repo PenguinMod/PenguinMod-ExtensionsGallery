@@ -2,6 +2,8 @@
     const Cast = Scratch.Cast
     const vm = Scratch.vm
 
+    if (vm.IAliRect) vm.extensionManager.removeExtension('IAliRect')
+
     if (!vm.jwVector) vm.extensionManager.loadExtensionIdSync('jwVector')
 
     const jwVector = vm.jwVector
@@ -218,18 +220,19 @@
 
     }
 
+    // Makes it so Vectors & Jsons can grab XYWH
     const Rect = {
         Type: RectType,
         Block: {
             blockType: Scratch.BlockType.REPORTER,
             blockShape: Scratch.BlockShape.SQUARE,
-            forceOutputType: "Rect",
+            //forceOutputType: "Rect",
             disableMonitor: true,
             allowDropAnywhere: true,
         },
         Argument: {
             shape: Scratch.BlockShape.SQUARE,
-            check: ["Rect"]
+            //check: ["Rect"]
         }
     }
 
@@ -237,6 +240,17 @@
         type: Scratch.ArgumentType.NUMBER,
         defaultValue: 0
     }
+
+    const SingleValue = {
+        menu: 'singleRectValue',
+        defaultValue: 'x'
+    }
+
+    const VectorValue = {
+        menu: 'vectorRectValue',
+        defaultValue: 'topleft'
+    }
+
 
 
 
@@ -256,30 +270,23 @@
                 name: "Rect",
                 color1: "#ff0061",
                 color2: "#d80052",
-                menuIconURI: "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyMCAyMCI+DQogIDxlbGxpcHNlIHN0eWxlPSJmaWxsOiByZ2IoMjE2LCAwLCA4Mik7IiBjeD0iMTAiIGN5PSIxMCIgcng9IjEwIiByeT0iMTAiPjwvZWxsaXBzZT4NCiAgPGVsbGlwc2Ugc3R5bGU9ImZpbGw6IHJnYigyNTUsIDAsIDk3KTsiIGN4PSIxMCIgY3k9IjEwIiByeD0iOSIgcnk9IjkiPjwvZWxsaXBzZT4NCiAgPHJlY3QgeD0iNi45ODMiIHk9IjcuMDE1IiB3aWR0aD0iNy4yMTYiIGhlaWdodD0iNy4yMTYiIHN0eWxlPSJmaWxsOiBub25lOyBzdHJva2U6IHJnYigyNTUsIDI1NSwgMjU1KTsiPjwvcmVjdD4NCiAgPGcgdHJhbnNmb3JtPSJtYXRyaXgoMC4wODUwMzksIDAsIDAsIDAuMDg1MDM5LCAtMi4xNjQ3NzgsIDIuMjg5ODk0KSIgc3R5bGU9IiI+DQogICAgPGcgdHJhbnNmb3JtPSJtYXRyaXgoLTIuNDk5OTUsIDAsIDAsIDEuOTQ4ODA0LCAxNTQuOTk4OTA0LCA0LjExNDMzKSIgc3R5bGU9IiI+DQogICAgICA8cGF0aCBkPSJNMS45OTk3NCAxMi45OTk5TDEuOTk5NiAxMUwxNS41ODU4IDExVjUuNTg1ODJMMjIgMTJMMTUuNTg1OCAxOC40MTQyVjEzTDEuOTk5NzQgMTIuOTk5OVoiIHN0eWxlPSJmaWxsOiByZ2IoMjU1LCAyNTUsIDI1NSk7Ij48L3BhdGg+DQogICAgPC9nPg0KICAgIDxnIHRyYW5zZm9ybT0ibWF0cml4KDIuNDk5OTUsIDAsIDAsIDEuOTQ4ODA0LCAxNDUuMDAxMTAxLCA0LjExNDMzMSkiIHN0eWxlPSIiPg0KICAgICAgPHBhdGggZD0iTTEuOTk5NzQgMTIuOTk5OUwxLjk5OTYgMTFMMTUuNTg1OCAxMVY1LjU4NTgyTDIyIDEyTDE1LjU4NTggMTguNDE0MlYxM0wxLjk5OTc0IDEyLjk5OTlaIiBzdHlsZT0iZmlsbDogcmdiKDI1NSwgMjU1LCAyNTUpOyI+PC9wYXRoPg0KICAgIDwvZz4NCiAgPC9nPg0KICA8ZyB0cmFuc2Zvcm09Im1hdHJpeCgwLCAtMC4yMTI1OTIsIC0wLjE2NTcyMywgMCwgNi44Mzk1NzIsIDExLjEzMzc4OSkiIHN0eWxlPSIiPg0KICAgIDxwYXRoIGQ9Ik0xLjk5OTc0IDEyLjk5OTlMMS45OTk2IDExTDE1LjU4NTggMTFWNS41ODU4MkwyMiAxMkwxNS41ODU4IDE4LjQxNDJWMTNMMS45OTk3NCAxMi45OTk5WiIgc3R5bGU9ImZpbGw6IHJnYigyNTUsIDI1NSwgMjU1KTsiPjwvcGF0aD4NCiAgPC9nPg0KICA8cGF0aCBkPSJNIDIuNzI1IDEzIEwgMi43MjUgMTIuNjY5IEwgNS42MTMgMTIuNjY5IEwgNS42MTMgMTEuNzcxIEwgNi45NzcgMTIuODM0IEwgNS42MTMgMTMuODk4IEwgNS42MTMgMTMgTCAyLjcyNSAxMyBaIiBzdHlsZT0iZmlsbDogcmdiKDI1NSwgMjU1LCAyNTUpOyBzdHJva2Utd2lkdGg6IDIuMjI0OyB0cmFuc2Zvcm0tYm94OiBmaWxsLWJveDsgdHJhbnNmb3JtLW9yaWdpbjogNTAlIDUwJTsiIHRyYW5zZm9ybT0ibWF0cml4KDAsIDEuMDAwMDA3LCAtMC45OTk5OTMsIDAsIDAuMDAwMDAyLCAwKSI+PC9wYXRoPg0KPC9zdmc+",
+                menuIconURI: "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyMCAyMCI+DQogIDxlbGxpcHNlIHN0eWxlPSJmaWxsOiByZ2IoMjU1LCAwLCA5Nyk7IHN0cm9rZTogcmdiKDIxNiwgMCwgODIpOyIgY3g9IjEwIiBjeT0iMTAiIHJ4PSI5LjUiIHJ5PSI5LjUiPjwvZWxsaXBzZT4NCiAgPHJlY3QgeD0iNi4wNTkiIHk9IjUuNzkzIiB3aWR0aD0iOS40NzciIGhlaWdodD0iOS40NzciIHN0eWxlPSJmaWxsOiBub25lOyBzdHJva2U6IHJnYigyNTUsIDI1NSwgMjU1KTsiPjwvcmVjdD4NCiAgPHJlY3QgeD0iNS40OTQiIHk9IjMuMjIyIiB3aWR0aD0iMTAuNjQzIiBoZWlnaHQ9IjEuMzcyIiByeD0iMSIgcnk9IjEiIHN0eWxlPSJmaWxsOiByZ2IoMjU1LCAyNTUsIDI1NSk7Ij48L3JlY3Q+DQogIDxyZWN0IHg9IjEuNjA1IiB5PSI3LjQ3MyIgd2lkdGg9IjEwLjY0MyIgaGVpZ2h0PSIxLjM3MiIgcng9IjEiIHJ5PSIxIiBzdHlsZT0iZmlsbDogcmdiKDI1NSwgMjU1LCAyNTUpOyBzdHJva2Utd2lkdGg6IDE7IHRyYW5zZm9ybS1ib3g6IGZpbGwtYm94OyB0cmFuc2Zvcm0tb3JpZ2luOiA1MCUgNTAlOyIgdHJhbnNmb3JtPSJtYXRyaXgoMCwgMSwgLTEsIDAsIC0yLjcwMTY4NCwgMi41MTc0OCkiPjwvcmVjdD4NCjwvc3ZnPg==",
                 blocks: [
-                    {
-                        blockType: Scratch.BlockType.LABEL,
-                        text: 'Sprite-Based Rects'
-                    },
                     {
                         opcode: 'fromSprite',
                         text: 'from [SPRITE]',
                         arguments: {
                             SPRITE: {
                                 type: Scratch.ArgumentType.STRING,
-                                defaultValue: ""
+                                menu: "sprites",
                             }
                         },
                         ...Rect.Block
                     },
-                    {
-                        blockType: Scratch.BlockType.LABEL,
-                        text: 'Rect Initialization'
-                    },
+                    '---',
                     {
                         opcode: 'newRectX_Y_W_H',
-                        text: 'Rect X: [X] Y: [Y] W: [W] H: [H]',
+                        text: 'rect x: [X] y: [Y] w: [W] h: [H]',
                         arguments: {
                             X: RectArgType1,
                             Y: RectArgType1,
@@ -290,325 +297,80 @@
                     },
                     {
                         opcode: 'newRectXY_WH',
-                        text: "Rect XY: [XY] WH: [WH]",
+                        text: "rect xy: [XY] wh: [WH]",
                         arguments: {
                             XY: vm.jwVector.Argument,
                             WH: vm.jwVector.Argument,
                         },
                         ...Rect.Block
                     },
+                    '---',
                     {
-                        blockType: Scratch.BlockType.LABEL,
-                        text: 'Getters'
-                    },
-                    {
-                        blockType: Scratch.BlockType.LABEL,
-                        text: "Single Positional Value",
-                    },
-                    {
-                        opcode: 'getRectX',
-                        text: 'Get [RECT] X',
-                        blockType: Scratch.BlockType.REPORTER,
-                        arguments: {
-                            RECT: Rect.Argument
-                        }
-                    },
-                    {
-                        opcode: 'getRectY',
-                        text: 'Get [RECT] Y',
-                        blockType: Scratch.BlockType.REPORTER,
-                        arguments: {
-                            RECT: Rect.Argument
-                        }
-                    },
-                    {
-                        opcode: 'getRectW',
-                        text: 'Get [RECT] Width',
-                        blockType: Scratch.BlockType.REPORTER,
-                        arguments: {
-                            RECT: Rect.Argument
-                        }
-                    },
-                    {
-                        opcode: 'getRectH',
-                        text: 'Get [RECT] Height',
-                        blockType: Scratch.BlockType.REPORTER,
-                        arguments: {
-                            RECT: Rect.Argument
-                        }
-                    },
-
-                    {
-                        opcode: 'getRectTopLeftX',
-                        text: 'Get [RECT] TopLeft X',
-                        blockType: Scratch.BlockType.REPORTER,
-                        arguments: {
-                            RECT: Rect.Argument
-                        }
-                    },
-
-                    {
-                        opcode: 'getRectTopLeftY',
-                        text: 'Get [RECT] TopLeft Y',
-                        blockType: Scratch.BlockType.REPORTER,
-                        arguments: {
-                            RECT: Rect.Argument
-                        }
-                    },
-
-                    {
-                        blockType: Scratch.BlockType.LABEL,
-                        text: 'Vector Positional Value',
-                    },
-
-                    {
-                        opcode: 'getRectTopLeft',
-                        text: 'Get [RECT] TopLeft',
-                        blockType: Scratch.BlockType.REPORTER,
-                        arguments: {
-                            RECT: Rect.Argument
-                        },
-                        ...jwVector.Block
-                    },
-
-                    {
-                        opcode: 'getRectMidTop',
-                        text: 'Get [RECT] MidTop',
-                        blockType: Scratch.BlockType.REPORTER,
-                        arguments: {
-                            RECT: Rect.Argument
-                        },
-                        ...jwVector.Block
-                    },
-
-                    {
-                        opcode: 'getRectTopRight',
-                        text: 'Get [RECT] TopRight',
-                        blockType: Scratch.BlockType.REPORTER,
-                        arguments: {
-                            RECT: Rect.Argument
-                        },
-                        ...jwVector.Block
-                    },
-
-                    {
-                        opcode: 'getRectMidLeft',
-                        text: 'Get [RECT] MidLeft',
-                        blockType: Scratch.BlockType.REPORTER,
-                        arguments: {
-                            RECT: Rect.Argument
-                        },
-                        ...jwVector.Block
-                    },
-
-                    {
-                        opcode: 'getRectCenter',
-                        text: 'Get [RECT] Center',
-                        blockType: Scratch.BlockType.REPORTER,
-                        arguments: {
-                            RECT: Rect.Argument
-                        },
-                        ...jwVector.Block
-                    },
-
-                    {
-                        opcode: 'getRectMidRight',
-                        text: 'Get [RECT] MidRight',
-                        blockType: Scratch.BlockType.REPORTER,
-                        arguments: {
-                            RECT: Rect.Argument
-                        },
-                        ...jwVector.Block
-                    },
-
-                    {
-                        opcode: 'getRectBottomLeft',
-                        text: 'Get [RECT] BottomLeft',
-                        blockType: Scratch.BlockType.REPORTER,
-                        arguments: {
-                            RECT: Rect.Argument
-                        },
-                        ...jwVector.Block
-                    },
-
-                    {
-                        opcode: 'getRectMidBottom',
-                        text: 'Get [RECT] MidBottom',
-                        blockType: Scratch.BlockType.REPORTER,
-                        arguments: {
-                            RECT: Rect.Argument
-                        },
-                        ...jwVector.Block
-                    },
-
-                    {
-                        opcode: 'getRectBottomRight',
-                        text: 'Get [RECT] BottomRight',
-                        blockType: Scratch.BlockType.REPORTER,
-                        arguments: {
-                            RECT: Rect.Argument
-                        },
-                        ...jwVector.Block
-                    },
-
-                    {
-                        blockType: Scratch.BlockType.LABEL,
-                        text: 'Setters',
-                    },
-                    {
-                        blockType: Scratch.BlockType.LABEL,
-                        text: 'Single Positional Value',
-                    },
-
-                    {
-                        opcode: 'setRectX',
-                        text: 'Set [RECT] X [VALUE]',
+                        opcode: 'getSingleRectPoint',
+                        text: 'get [RECT] [TYPE]',
                         blockType: Scratch.BlockType.REPORTER,
                         arguments: {
                             RECT: Rect.Argument,
+                            TYPE: SingleValue
+                        },
+                    },
+
+                    {
+                        opcode: 'setSingleRectPoint',
+                        text: 'set [RECT] [TYPE] to [VALUE]',
+                        blockType: Scratch.BlockType.REPORTER,
+                        arguments: {
+                            RECT: Rect.Argument,
+                            TYPE: SingleValue,
                             VALUE: RectArgType1,
                         },
                         ...Rect.Block
                     },
 
+                    '---',
+
                     {
-                        opcode: 'setRectY',
-                        text: 'Set [RECT] Y [VALUE]',
+                        opcode: 'getVectorRectPoint',
+                        text: 'get [RECT] [TYPE]',
                         blockType: Scratch.BlockType.REPORTER,
                         arguments: {
                             RECT: Rect.Argument,
-                            VALUE: RectArgType1
+                            TYPE: VectorValue,
                         },
-                        ...Rect.Block
+                        ...jwVector.Block
                     },
 
                     {
-                        opcode: 'setRectW',
-                        text: 'Set [RECT] W [VALUE]',
+                        opcode: 'setVectorRectPoint',
+                        text: 'set [RECT] [TYPE] to [VALUE]',
                         blockType: Scratch.BlockType.REPORTER,
                         arguments: {
                             RECT: Rect.Argument,
-                            VALUE: RectArgType1
+                            TYPE: VectorValue,
+                            VALUE: jwVector.Argument,
                         },
                         ...Rect.Block
                     },
-
-                    {
-                        opcode: 'setRectH',
-                        text: 'Set [RECT] H [VALUE]',
-                        blockType: Scratch.BlockType.REPORTER,
-                        arguments: {
-                            RECT: Rect.Argument,
-                            VALUE: RectArgType1
-                        },
-                        ...Rect.Block
-                    },
-
-                    {
-                        blockType: Scratch.BlockType.LABEL,
-                        text: 'Vector Positional Value',
-                    },
-
-                    {
-                        opcode: 'setRectTopLeft',
-                        text: 'Set [RECT] TopLeft [VALUE]',
-                        blockType: Scratch.BlockType.REPORTER,
-                        arguments: {
-                            RECT: Rect.Argument,
-                            VALUE: jwVector.Argument
-                        },
-                        ...Rect.Block
-                    },
-
-                    {
-                        opcode: 'setRectMidTop',
-                        text: 'Set [RECT] MidTop [VALUE]',
-                        blockType: Scratch.BlockType.REPORTER,
-                        arguments: {
-                            RECT: Rect.Argument,
-                            VALUE: jwVector.Argument
-                        },
-                        ...Rect.Block
-                    },
-
-                    {
-                        opcode: 'setRectTopRight',
-                        text: 'Set [RECT] TopRight [VALUE]',
-                        blockType: Scratch.BlockType.REPORTER,
-                        arguments: {
-                            RECT: Rect.Argument,
-                            VALUE: jwVector.Argument
-                        },
-                        ...Rect.Block
-                    },
-
-                    {
-                        opcode: 'setRectMidLeft',
-                        text: 'Set [RECT] MidLeft [VALUE]',
-                        blockType: Scratch.BlockType.REPORTER,
-                        arguments: {
-                            RECT: Rect.Argument,
-                            VALUE: jwVector.Argument
-                        },
-                        ...Rect.Block
-                    },
-
-                    {
-                        opcode: 'setRectCenter',
-                        text: 'Set [RECT] Center [VALUE]',
-                        blockType: Scratch.BlockType.REPORTER,
-                        arguments: {
-                            RECT: Rect.Argument,
-                            VALUE: jwVector.Argument
-                        },
-                        ...Rect.Block
-                    },
-
-                    {
-                        opcode: 'setRectMidRight',
-                        text: 'Set [RECT] MidRight [VALUE]',
-                        blockType: Scratch.BlockType.REPORTER,
-                        arguments: {
-                            RECT: Rect.Argument,
-                            VALUE: jwVector.Argument
-                        },
-                        ...Rect.Block
-                    },
-
-                    {
-                        opcode: 'setRectBottomLeft',
-                        text: 'Set [RECT] BottomLeft [VALUE]',
-                        blockType: Scratch.BlockType.REPORTER,
-                        arguments: {
-                            RECT: Rect.Argument,
-                            VALUE: jwVector.Argument
-                        },
-                        ...Rect.Block
-                    },
-
-                    {
-                        opcode: 'setRectMidBottom',
-                        text: 'Set [RECT] MidBottom [VALUE]',
-                        blockType: Scratch.BlockType.REPORTER,
-                        arguments: {
-                            RECT: Rect.Argument,
-                            VALUE: jwVector.Argument
-                        },
-                        ...Rect.Block
-                    },
-
-                    {
-                        opcode: 'setRectBottomRight',
-                        text: 'Set [RECT] BottomRight [VALUE]',
-                        blockType: Scratch.BlockType.REPORTER,
-                        arguments: {
-                            RECT: Rect.Argument,
-                            VALUE: jwVector.Argument
-                        },
-                        ...Rect.Block
-                    }
                 ],
                 menus: {
+                    sprites: {
+                        acceptReporters: true,
+                        items: this.getSpriteMenu()
+                    },
+                    singleRectValue: {
+                        acceptReporters: true,
+                        items: ['x', 'y', 'width', 'height', 'topleft x', 'topleft y']
+                    },
+                    vectorRectValue: {
+                        acceptReporters: true,
+                        items: [
+                            'topleft', 'midtop', 'topright',
+                            'midleft', 'center', 'midright',
+                            'bottomleft', 'midbottom', 'bottomright',
+                            'size'
+                        ],
+                    },
+
                     roundingFunctions: {
                         acceptReporters: false,
                         items: [
@@ -630,16 +392,24 @@
             }
         }
 
+        getSpriteMenu (){
+            const targets = vm.runtime.targets;
+            const emptyMenu = [{ text: "", value: "" }];
+            if (!targets) return emptyMenu;
+            const menu = targets.filter(target => target.isOriginal && (!target.isStage)).map(target => ({ text: target.sprite.name, value: target.sprite.name }));
+            return (menu.length > 0) ? menu : emptyMenu;
+        }
+
         /**
          *
          * @param args
          * @returns {RectType}
          */
-        newRectX_Y_W_H(args) {
-            const X = Cast.toNumber(args.X)
-            const Y = Cast.toNumber(args.Y)
-            const W = Cast.toNumber(args.W)
-            const H = Cast.toNumber(args.H)
+        newRectX_Y_W_H({AX, AY, AW, AH}) {
+            const X = Cast.toNumber(AX)
+            const Y = Cast.toNumber(AY)
+            const W = Cast.toNumber(AW)
+            const H = Cast.toNumber(AH)
 
             return new RectType(X, Y, W, H)
         }
@@ -649,146 +419,128 @@
          * @param args
          * @returns {RectType}
          */
-        newRectXY_WH(args) {
-            const XY = args.XY
-            const WH = args.WH
-
-            return new RectType(XY.x, XY.y, WH.x, WH.y)
+        newRectXY_WH({XY, WH}) {
+            let xy = jwVectorType.toVector(XY)
+            let wh = jwVectorType.toVector(WH)
+            return new RectType(xy.x, xy.y, wh.x, wh.y)
         }
 
-        getRectX(args) {
-            return RectType.toRect(args.RECT).x
+        getSingleRectPoint({RECT, TYPE}) {
+            let rect = RectType.toRect(RECT);
+            switch(TYPE) {
+                case 'x':
+                    return rect.x;
+                case 'y':
+                    return rect.y;
+                case 'width':
+                    return rect.width;
+                case 'height':
+                    return rect.height;
+                case 'topleft x':
+                    return rect.topleft.x;
+                case 'topleft y':
+                    return rect.topleft.y
+            }
+            return 0;
         }
 
-        getRectY(args) {
-            return RectType.toRect(args.RECT).y
+        setSingleRectPoint({RECT, TYPE, VALUE}) {
+            let rect = RectType.toRect(RECT);
+            let value = Cast.toNumber(VALUE);
+
+            switch (TYPE) {
+                case 'x':
+                    rect.x = value;
+                    break;
+                case 'y':
+                    rect.y = value;
+                    break;
+                case 'width':
+                    rect.width = value;
+                    break;
+                case 'height':
+                    rect.height = value;
+                    break;
+                case 'topleft x':
+                    rect.topleft = new jwVectorType(value, rect.topleft.y)
+                    break;
+                case 'topleft y':
+                    rect.topleft = new jwVectorType(rect.topleft.x, value)
+                    break;
+            }
+            return rect;
         }
 
-        getRectW(args) {
-            return RectType.toRect(args.RECT).width
-        }
-        getRectH(args) {
-            return RectType.toRect(args.RECT).height
+        getVectorRectPoint({RECT, TYPE}) {
+            let rect = RectType.toRect(RECT);
+            switch (TYPE) {
+                case 'topleft':
+                    return rect.topleft;
+                case 'midtop':
+                    return rect.midtop;
+                case 'topright':
+                    return rect.topright;
+
+                case 'midleft':
+                    return rect.midleft;
+                case 'center':
+                    return rect.center;
+                case 'midright':
+                    return rect.midright;
+
+                case 'bottomleft':
+                    return rect.bottomleft;
+                case 'midbottom':
+                    return rect.midbottom;
+                case 'bottomright':
+                    return rect.bottomright;
+
+                case 'size':
+                    return rect.size;
+            }
+            return new jwVectorType(0, 0);
         }
 
-        getRectTopLeftX(args) {
-            return RectType.toRect(args.RECT).singlePoints.left
-        }
-
-        getRectTopLeftY(args) {
-            return RectType.toRect(args.RECT).singlePoints.top
-        }
-
-        getRectTopLeft(args) {
-            return RectType.toRect(args.RECT).topleft
-        }
-
-        getRectMidTop(args) {
-            return RectType.toRect(args.RECT).midtop
-        }
-        getRectTopRight(args) {
-            return RectType.toRect(args.RECT).topright
-        }
-
-        getRectMidLeft(args) {
-            return RectType.toRect(args.RECT).midleft
-        }
-        getRectCenter(args) {
-            return RectType.toRect(args.RECT).center
-        }
-        getRectMidRight(args) {
-            return RectType.toRect(args.RECT).midright
-        }
-
-        getRectBottomLeft(args) {
-            return RectType.toRect(args.RECT).bottomleft
-        }
-        getRectMidBottom(args) {
-            return RectType.toRect(args.RECT).midbottom
-        }
-        getRectBottomRight(args) {
-            return RectType.toRect(args.RECT).bottomright
-        }
-
-        setRectX(args) {
-            let rect = RectType.toRect(args.RECT)
-            rect.x = args.VALUE
-            return rect
-        }
-
-        setRectY(args) {
-            let rect = RectType.toRect(args.RECT)
-            rect.y = args.VALUE
-            return rect
-        }
-
-        setRectW(args) {
-            let rect = RectType.toRect(args.RECT)
-            rect.width = args.VALUE
-            return rect
-        }
-
-        setRectH(args) {
-            let rect = RectType.toRect(args.RECT)
-            rect.height = args.VALUE
-            return rect
-        }
-
-        setRectTopLeft(args) {
-            let rect = RectType.toRect(args.RECT)
-            rect.topleft = args.VALUE
-            return rect
-        }
-        setRectMidTop(args) {
-            let rect = RectType.toRect(args.RECT)
-            rect.midtop = args.VALUE
-            return rect
-        }
-        setRectTopRight(args) {
-            let rect = RectType.toRect(args.RECT)
-            rect.topright = args.VALUE
-            return rect
-        }
-
-        setRectMidLeft(args) {
-            let rect = RectType.toRect(args.RECT)
-            rect.midleft = args.VALUE
-            return rect
-        }
-
-        setRectCenter(args) {
-            let rect = RectType.toRect(args.RECT)
-            rect.center = args.VALUE
-            return rect
-        }
-
-        setRectMidRight(args) {
-            let rect = RectType.toRect(args.RECT)
-            rect.midright = args.VALUE
-            return rect
-        }
-
-        setRectBottomLeft(args) {
-            let rect = RectType.toRect(args.RECT)
-            rect.bottomleft = args.VALUE
-            return rect
-        }
-
-        setRectMidBottom(args) {
-            let rect = RectType.toRect(args.RECT)
-            rect.midbottom = args.VALUE
-            return rect
-        }
-
-        setRectBottomRight(args) {
-            let rect = RectType.toRect(args.RECT)
-            rect.bottomright = args.VALUE
-            return rect
+        setVectorRectPoint({RECT, TYPE, VALUE}) {
+            let rect = RectType.toRect(RECT);
+            let value = jwVectorType.toVector(VALUE);
+            switch (TYPE) {
+                case 'topleft':
+                    rect.topleft = value;
+                    break;
+                case 'midtop':
+                    rect.midtop = value;
+                    break;
+                case 'topright':
+                    rect.topright = value;
+                    break;
+                case 'midleft':
+                    rect.midleft = value;
+                    break;
+                case 'center':
+                    rect.center = value;
+                    break;
+                case 'midright':
+                    rect.midright = value;
+                    break;
+                case 'bottomleft':
+                    rect.bottomleft = value;
+                    break;
+                case 'midbottom':
+                    rect.midbottom = value;
+                    break;
+                case 'bottomright':
+                    rect.bottomright = value;
+                    break;
+                case 'size':
+                    rect.size = value;
+                    break;
+            }
+            return rect;
         }
 
         fromSprite({SPRITE}) {
             let spr = vm.runtime.getSpriteTargetByName(SPRITE)
-            console.log(spr)
             let x = spr.x
             let y = spr.y
 

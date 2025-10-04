@@ -258,6 +258,36 @@
             )
         }
 
+        // Runtime var support
+
+        get(key) {
+            if (typeof key !== "string" && typeof key !== "number") return undefined
+            return ObjectType.convertIfNeeded(this.object[key])
+        }
+
+        set(key, value) {
+            if (typeof key !== "string" && typeof key !== "number") return
+            this.object[key] = ObjectType.convertIfNeeded(value)
+        }
+
+        delete(key) {
+            if (typeof key !== "string" && typeof key !== "number") return
+            if (hasOwn(this.object, key)) {
+                delete this.object[key]
+            }
+        }
+
+        remove(key) {
+            this.delete(key)
+        }
+
+        has(key) {
+            if (typeof key !== "string" && typeof key !== "number") return false
+            return hasOwn(this.object, key)
+        }
+
+        // Optomizition thingy
+
         static blank = new ObjectType()
     }
 

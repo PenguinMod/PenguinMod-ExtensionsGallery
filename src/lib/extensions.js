@@ -140,6 +140,13 @@ export default [
         documentation: "PenguinAI",
         unstableReason: "AI models can generate unintended or inappropriate output.\nSome AI models may also become temporarily inaccessible.\n\nUse at your own risk.",
     },
+    {
+        name: "Rect", // The name of the extension.
+        description: "Creates a Rectangle-Based object which you can grab positions of (Works with Vectors!)",
+        code: "IrshaadAli/static_Rect.js", // There exists a translated version too
+        banner: "IrshaadAli/Rect.svg", // Sorry - Don't know how to avif
+        creator: "Irshaad_Ali", // Had to create a new one
+    },
 /*
     {
         name: "Block AI",

@@ -2,8 +2,6 @@
     const Cast = Scratch.Cast
     const vm = Scratch.vm
 
-    if (vm.IAliRect) vm.extensionManager.removeExtension('IAliRect')
-
     if (!vm.jwVector) vm.extensionManager.loadExtensionIdSync('jwVector')
 
     const jwVector = vm.jwVector

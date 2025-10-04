@@ -387,7 +387,7 @@
 
                     {
                         opcode: 'isCollidingWithXY',
-                        text: '[RECT] colliding with x: [X] y: [Y]',
+                        text: '[RECT] colliding with x: [X] y: [Y]?',
                         blockType: Scratch.BlockType.BOOLEAN,
                         arguments: {
                             RECT: Rect.Argument,
@@ -408,7 +408,7 @@
 
                     {
                         opcode: 'isCollidingWithRect',
-                        text: '[RECTA] colliding with rect [RECTB]',
+                        text: '[RECTA] colliding with rect [RECTB]?',
                         blockType: Scratch.BlockType.BOOLEAN,
                         arguments: {
                             RECTA: Rect.Argument,

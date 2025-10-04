@@ -154,55 +154,55 @@
         }
 
         set topleft(value) {
-            let values = parseToArray(value)
-            this.x = values[0] - this.singlePoints.left
-            this.y = values[1] - this.singlePoints.top
+            let values = jwVectorType.toVector(value)
+            this.x = values.x - this.singlePoints.left
+            this.y = values.y - this.singlePoints.top
         }
 
         set midtop(value) {
-            let values = parseToArray(value)
-            this.x = values[0]
-            this.y = values[1] - this.singlePoints.top
+            let values = jwVectorType.toVector(value)
+            this.x = values.x
+            this.y = values.y - this.singlePoints.top
         }
 
         set topright(value) {
-            let values = parseToArray(value)
-            this.x = values[0] - this.singlePoints.right
-            this.y = values[1] - this.singlePoints.top
+            let values = jwVectorType.toVector(value)
+            this.x = values.x - this.singlePoints.right
+            this.y = values.y - this.singlePoints.top
         }
 
         set midleft(value) {
-            let values = parseToArray(value)
-            this.x = values[0] - this.singlePoints.left
-            this.y = values[1]
+            let values = jwVectorType.toVector(value)
+            this.x = values.x - this.singlePoints.left
+            this.y = values.y
         }
 
         set center(value) {
-            let values = parseToArray(value)
-            this.x = values[0]
-            this.y = values[1]
+            let values = jwVectorType.toVector(value)
+            this.x = values.x
+            this.y = values.y
         }
 
         set midright(value) {
-            let values = parseToArray(value)
-            this.x = values[0] - this.singlePoints.right
-            this.y = values[1]
+            let values = jwVectorType.toVector(value)
+            this.x = values.x - this.singlePoints.right
+            this.y = values.y
         }
 
         set bottomleft(value) {
-            let values = parseToArray(value)
-            this.x = values[0] - this.singlePoints.left
-            this.y = values[1] - this.singlePoints.bottom
+            let values = jwVectorType.toVector(value)
+            this.x = values.x - this.singlePoints.left
+            this.y = values.y - this.singlePoints.bottom
         }
         set midbottom(value) {
-            let values = parseToArray(value)
-            this.x = values[0]
-            this.y = values[1] - this.singlePoints.bottom
+            let values = jwVectorType.toVector(value)
+            this.x = values.x
+            this.y = values.y - this.singlePoints.bottom
         }
         set bottomright(value) {
-            let values = parseToArray(value)
-            this.x = values[0] - this.singlePoints.right
-            this.y = values[1] - this.singlePoints.bottom
+            let values = jwVectorType.toVector(value)
+            this.x = values.x - this.singlePoints.right
+            this.y = values.y - this.singlePoints.bottom
         }
 
         get size() {
@@ -210,9 +210,9 @@
         }
 
         set size(value) {
-            let values = parseToArray(value)
-            this.width = isNaN(values[0]) ? 0 : values[0]
-            this.height = isNaN(values[1]) ? 0 : values[1]
+            let values = jwVectorType.toVector(value)
+            this.width = isNaN(values.x) ? 0 : values.x
+            this.height = isNaN(values.y) ? 0 : values.y
         }
 
 

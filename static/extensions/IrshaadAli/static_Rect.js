@@ -215,6 +215,36 @@
             this.height = isNaN(values.y) ? 0 : values.y
         }
 
+        collidesXYPoint(x, y) {
+            x = isNaN(x) ? 0 : x
+            y = isNaN(y) ? 0 : y
+
+            return (
+                x >= this.singlePoints.left && x <= this.singlePoints.right &&
+                y >= this.singlePoints.bottom && y <= this.singlePoints.top
+            )
+        }
+
+        collidesVectorPoint(vec) {
+            vec = jwVectorType.toVector(vec)
+
+            return (
+                vec.x >= this.singlePoints.left && vec.x <= this.singlePoints.right &&
+                vec.y >= this.singlePoints.bottom && vec.y <= this.singlePoints.top
+            )
+        }
+
+        collidesRect(rect) {
+            rect = RectType.toRect(rect)
+
+            return (
+                this.singlePoints.left <= rect.singlePoints.right &&
+                this.singlePoints.right >= rect.singlePoints.left &&
+                this.singlePoints.top >= rect.singlePoints.bottom &&
+                this.singlePoints.bottom <= rect.singlePoints.top
+
+            )
+        }
 
     }
 
@@ -349,6 +379,42 @@
                         },
                         ...Rect.Block
                     },
+
+                    {
+                        blockType: Scratch.BlockType.LABEL,
+                        text: 'Collisions',
+                    },
+
+                    {
+                        opcode: 'isCollidingWithXY',
+                        text: '[RECT] colliding with x: [X] y: [Y]',
+                        blockType: Scratch.BlockType.BOOLEAN,
+                        arguments: {
+                            RECT: Rect.Argument,
+                            X: RectArgType1,
+                            Y: RectArgType1,
+                        }
+                    },
+
+                    {
+                        opcode: 'isCollidingWithPoint',
+                        text: '[RECT] colliding with point [VECTOR]?',
+                        blockType: Scratch.BlockType.BOOLEAN,
+                        arguments: {
+                            RECT: Rect.Argument,
+                            VECTOR: jwVector.Argument,
+                        }
+                    },
+
+                    {
+                        opcode: 'isCollidingWithRect',
+                        text: '[RECTA] colliding with rect [RECTB]',
+                        blockType: Scratch.BlockType.BOOLEAN,
+                        arguments: {
+                            RECTA: Rect.Argument,
+                            RECTB: Rect.Argument,
+                        },
+                    }
                 ],
                 menus: {
                     sprites: {
@@ -403,12 +469,7 @@
          * @param args
          * @returns {RectType}
          */
-        newRectX_Y_W_H({AX, AY, AW, AH}) {
-            const X = Cast.toNumber(AX)
-            const Y = Cast.toNumber(AY)
-            const W = Cast.toNumber(AW)
-            const H = Cast.toNumber(AH)
-
+        newRectX_Y_W_H({X, Y, W, H}) {
             return new RectType(X, Y, W, H)
         }
 
@@ -548,6 +609,29 @@
             let size = costume.size
 
             return new RectType(x, y, assetType == "ImageBitmap" ? size[0]/2 : size[0], assetType == "ImageBitmap" ? size[1]/2 : size[1])
+        }
+
+
+        isCollidingWithXY({RECT, X, Y}) {
+            RECT = RectType.toRect(RECT);
+            X = Cast.toNumber(X);
+            Y = Cast.toNumber(Y);
+
+            return RECT.collidesXYPoint(X, Y);
+        }
+
+        isCollidingWithPoint({RECT, VECTOR}) {
+            RECT = RectType.toRect(RECT);
+            let XY = jwVectorType.toVector(VECTOR);
+
+            return RECT.collidesVectorPoint(XY)
+        }
+
+        isCollidingWithRect({RECTA, RECTB}) {
+            RECTA = RectType.toRect(RECTA)
+            RECTB = RectType.toRect(RECTB)
+
+            return RECTA.collidesRect(RECTB)
         }
     }
 

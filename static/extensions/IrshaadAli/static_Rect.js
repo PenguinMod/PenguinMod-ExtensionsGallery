@@ -1,11 +1,16 @@
 (function (Scratch) {
-    const Cast = Scratch.Cast
-    const vm = Scratch.vm
+    const Cast = Scratch.Cast;
+    const BlockType = Scratch.BlockType;
+    const BlockShape = Scratch.BlockShape;
+    const ArgumentType = Scratch.ArgumentType;
+
+    const vm = Scratch.vm;
+    const mouse = vm.runtime.ioDevices.mouse
 
     if (!vm.jwVector) vm.extensionManager.loadExtensionIdSync('jwVector')
 
     const jwVector = vm.jwVector
-    const jwVectorType = jwVector.Type
+    const Vector = jwVector.Type
 
     /**
      * @param {number} x
@@ -20,16 +25,6 @@
         }
     }
 
-    /**
-     @param {jwVectorType, Array} x
-     @returns {[number, number]}
-     */
-    function parseToArray(x) {
-        if (x instanceof jwVectorType && x.length == 2) { return [x.x, x.y] }
-        if (x instanceof Array) { return x }
-
-    }
-
     function span(text) {
         let el = document.createElement('span')
         el.innerHTML = text
@@ -39,6 +34,7 @@
         el.style.textAlign = 'center'
         return el
     }
+
 
     class RectType {
         customId = "IAliRect"
@@ -50,20 +46,44 @@
             this.height = isNaN(height) ? 0 : height
         }
 
-        static toRect(x) {
-            if (x instanceof RectType) return x
-            if (x instanceof Array && x.length == 4) return new RectType(x[0], x[1], x[2], x[3])
-            if (x instanceof Array && x.length == 2) return new RectType(x[0][0], x[0][1], x[1][0], x[1][1])
-            if (String(x).split(',')) {
-                let array = String(x).split(',')
+        static toRect(r) {
+            if (r instanceof RectType) return r
+            if (r instanceof Array && r.length == 4) return new RectType(r[0], r[1], r[2], r[3])
+            if (r instanceof Array && r.length == 2) {
+                let x = 0
+                let y = 0
+                let w = 0
+                let h = 0
+
+                if (r[0] instanceof Vector) {
+                    r[0] = Vector.toVector(r[0])
+                    x = r[0].x
+                    y = r[0].y
+                } else {
+                    x = r[0][0]
+                    y = r[0][1]
+                }
+                if (r[1] instanceof Vector) {
+                    r[1] = Vector.toVector(r[1])
+                    w = r[1].x
+                    h = r[1].y
+                } else {
+                    w = r[1][0]
+                    h = r[1][1]
+                }
+
+                return new RectType(x, y, w, h)
+            }
+            if (String(r).split(',')) {
+                let array = String(r).split(',').map(value => Cast.toNumber(value))
                 return new RectType(
-                    Cast.toNumber(array[0]),
-                    Cast.toNumber(array[1]),
-                    Cast.toNumber(array[2]),
-                    Cast.toNumber(array[3])
+                    array[0],
+                    array[1],
+                    array[2],
+                    array[3],
                 )
             }
-            return new RectType(0, 0, 0,0)
+            return new RectType(0, 0, 0, 0)
         }
 
         IAliRectHandler() {
@@ -116,103 +136,115 @@
             }
         }
 
-        get singlePoints() {
-            return {
-                'top': this.y + this.offsets.top,
-                'left': this.x + this.offsets.left,
-                'right': this.x + this.offsets.right,
-                'bottom': this.y + this.offsets.bottom,
+        getPoint(type) {
+            switch (type) {
+                case 'x':
+                    return this.x
+                case 'y':
+                    return this.y
+                case 'width':
+                    return this.width
+                case 'height':
+                    return this.height
+
+                case 'left':
+                    return this.x + this.offsets.left
+                case 'top':
+                    return this.y + this.offsets.top
+                case 'bottom':
+                    return this.y + this.offsets.bottom
+                case 'right':
+                    return this.x + this.offsets.right
+
+                case 'topleft x':
+                    return this.getPoint('left')
+                case 'topleft y':
+                    return this.getPoint('top')
+
+                case 'topleft':
+                    return new Vector(this.getPoint('left'), this.getPoint('top'))
+                case 'midtop':
+                    return new Vector(this.x, this.getPoint('top'))
+                case 'topright':
+                    return new Vector(this.getPoint('right'), this.getPoint('top'))
+
+                case 'midleft':
+                    return new Vector(this.getPoint('left'), this.y)
+                case 'center':
+                    return new Vector(this.x, this.y)
+                case 'midright':
+                    return new Vector(this.getPoint('right'), this.y)
+
+                case 'bottomleft':
+                    return new Vector(this.getPoint('left'), this.getPoint('bottom'))
+                case 'midbottom':
+                    return new Vector(this.x, this.getPoint('bottom'))
+                case 'bottomright':
+                    return new Vector(this.getPoint('right'), this.getPoint('bottom'))
+                case 'size':
+                    return new Vector(this.width, this.height)
+            }
+            return NaN
+        }
+
+        setSinglePoint(type, value) {
+            value = Cast.toNumber(value)
+            switch (type) {
+                case 'x': this.x = value; break;
+                case 'y': this.y = value; break;
+                case 'width': this.width = value; break;
+                case 'height': this.height = value; break;
+
+                case 'topleft x': this.x = value - this.offsets.left; break;
+                case 'topleft y': this.y = value - this.offsets.top; break;
             }
         }
 
-        get topleft() {
-            return new jwVectorType(this.singlePoints.left, this.singlePoints.top)
-        }
-        get midtop() {
-            return new jwVectorType(this.x, this.singlePoints.top)
-        }
-        get topright() {
-            return new jwVectorType(this.singlePoints.right, this.singlePoints.top)
-        }
-        get midleft() {
-            return new jwVectorType(this.singlePoints.left, this.y)
-        }
-        get center() {
-            return new jwVectorType(this.x, this.y)
-        }
-        get midright() {
-            return new jwVectorType(this.singlePoints.right, this.y)
-        }
-        get bottomleft() {
-            return new jwVectorType(this.singlePoints.left, this.singlePoints.bottom)
-        }
-        get midbottom() {
-            return new jwVectorType(this.x, this.singlePoints.bottom)
-        }
-        get bottomright() {
-            return new jwVectorType(this.singlePoints.right, this.singlePoints.bottom)
-        }
+        setVectorPoint(type, value) {
+            value = Vector.toVector(value)
+            switch (type) {
+                case 'topleft':
+                    this.x = value.x - this.offsets.left;
+                    this.y = value.y - this.offsets.top;
+                    break;
+                case 'midtop':
+                    this.x = value.x;
+                    this.y = value.y - this.offsets.top;
+                    break;
+                case 'topright':
+                    this.x = value.x - this.offsets.right;
+                    this.y = value.y - this.offsets.left;
+                    break;
+                case 'midleft':
+                    this.x = value.x - this.offsets.left;
+                    this.y = value.y;
+                    break;
+                case 'center':
+                    this.x = value.x
+                    this.y = value.y
+                    break;
+                case 'midright':
+                    this.x = value.x - this.offsets.right;
+                    this.y = value.y;
+                    break;
+                case 'bottomleft':
+                    this.x = value.x - this.offsets.left;
+                    this.y = value.y - this.offsets.bottom;
+                    break;
+                case 'midbottom':
+                    this.x = value.x;
+                    this.y = value.y - this.offsets.bottom;
+                    break;
+                case 'bottomright':
+                    this.x = value.x - this.offsets.right;
+                    this.y = value.y - this.offsets.bottom;
+                    break;
 
-        set topleft(value) {
-            let values = jwVectorType.toVector(value)
-            this.x = values.x - this.singlePoints.left
-            this.y = values.y - this.singlePoints.top
-        }
-
-        set midtop(value) {
-            let values = jwVectorType.toVector(value)
-            this.x = values.x
-            this.y = values.y - this.singlePoints.top
-        }
-
-        set topright(value) {
-            let values = jwVectorType.toVector(value)
-            this.x = values.x - this.singlePoints.right
-            this.y = values.y - this.singlePoints.top
-        }
-
-        set midleft(value) {
-            let values = jwVectorType.toVector(value)
-            this.x = values.x - this.singlePoints.left
-            this.y = values.y
-        }
-
-        set center(value) {
-            let values = jwVectorType.toVector(value)
-            this.x = values.x
-            this.y = values.y
-        }
-
-        set midright(value) {
-            let values = jwVectorType.toVector(value)
-            this.x = values.x - this.singlePoints.right
-            this.y = values.y
-        }
-
-        set bottomleft(value) {
-            let values = jwVectorType.toVector(value)
-            this.x = values.x - this.singlePoints.left
-            this.y = values.y - this.singlePoints.bottom
-        }
-        set midbottom(value) {
-            let values = jwVectorType.toVector(value)
-            this.x = values.x
-            this.y = values.y - this.singlePoints.bottom
-        }
-        set bottomright(value) {
-            let values = jwVectorType.toVector(value)
-            this.x = values.x - this.singlePoints.right
-            this.y = values.y - this.singlePoints.bottom
-        }
-
-        get size() {
-            return jwVectorType(this.width, this.height)
-        }
-
-        set size(value) {
-            let values = jwVectorType.toVector(value)
-            this.width = isNaN(values.x) ? 0 : values.x
-            this.height = isNaN(values.y) ? 0 : values.y
+                case 'size':
+                    this.width = value.x;
+                    this.height = value.y;
+                    break;
+            }
         }
 
         collidesXYPoint(x, y) {
@@ -220,17 +252,17 @@
             y = isNaN(y) ? 0 : y
 
             return (
-                x >= this.singlePoints.left && x <= this.singlePoints.right &&
-                y >= this.singlePoints.bottom && y <= this.singlePoints.top
+                x >= this.getPoint('left') && x <= this.getPoint('right') &&
+                y >= this.getPoint('bottom') && y <= this.getPoint('top')
             )
         }
 
         collidesVectorPoint(vec) {
-            vec = jwVectorType.toVector(vec)
+            vec = Vector.toVector(vec)
 
             return (
-                vec.x >= this.singlePoints.left && vec.x <= this.singlePoints.right &&
-                vec.y >= this.singlePoints.bottom && vec.y <= this.singlePoints.top
+                vec.x >= this.getPoint('left') && vec.x <= this.getPoint('right') &&
+                vec.y >= this.getPoint('bottom') && vec.y <= this.getPoint('top')
             )
         }
 
@@ -238,52 +270,45 @@
             rect = RectType.toRect(rect)
 
             return (
-                this.singlePoints.left <= rect.singlePoints.right &&
-                this.singlePoints.right >= rect.singlePoints.left &&
-                this.singlePoints.top >= rect.singlePoints.bottom &&
-                this.singlePoints.bottom <= rect.singlePoints.top
-
+                this.getPoint('left') <= rect.getPoint('right') &&
+                this.getPoint('right') >= rect.getPoint('left') &&
+                this.getPoint('top') >= rect.getPoint('bottom') &&
+                this.getPoint('bottom') <= rect.getPoint('top')
             )
         }
-
     }
 
-    // Makes it so Vectors & Jsons can grab XYWH
     const Rect = {
         Type: RectType,
         Block: {
-            blockType: Scratch.BlockType.REPORTER,
-            blockShape: Scratch.BlockShape.SQUARE,
-            //forceOutputType: "Rect",
+            blockType: BlockType.REPORTER,
+            blockShape: BlockShape.SQUARE,
+            // forceOutputType: "Rect",
             disableMonitor: true,
             allowDropAnywhere: true,
         },
         Argument: {
-            shape: Scratch.BlockShape.SQUARE,
-            //check: ["Rect"]
+            shape: BlockShape.SQUARE,
+        },
+
+        NumberArg: {
+            type: ArgumentType.NUMBER,
+            defaultValue: 0,
+        },
+
+        SinglePointArg: {
+            menu: 'singlePoint',
+            defaultValue: 'x'
+        },
+
+        VectorPointArg: {
+            menu: 'vectorPoint',
+            defaultValue: 'topleft',
         }
     }
 
-    const RectArgType1 = {
-        type: Scratch.ArgumentType.NUMBER,
-        defaultValue: 0
-    }
-
-    const SingleValue = {
-        menu: 'singleRectValue',
-        defaultValue: 'x'
-    }
-
-    const VectorValue = {
-        menu: 'vectorRectValue',
-        defaultValue: 'topleft'
-    }
-
-
-
-
     class Extension {
-        constructor() {
+        constructor () {
             vm.IAliRect = Rect
             vm.runtime.registerSerializer(
                 "IAliRect",
@@ -293,139 +318,185 @@
         }
 
         getInfo() {
+            let blocks = [
+                {
+                    opcode: 'fromSprite',
+                    text: 'from [SPRITE]',
+                    arguments: {
+                        SPRITE: {
+                            type: ArgumentType.STRING,
+                            menu: 'sprites'
+                        }
+                    },
+                    ...Rect.Block
+                },
+                '---',
+                {
+                    opcode: 'newRect4',
+                    text: 'rect x: [X] y: [Y] w: [W] h: [H]',
+                    arguments: {
+                        X: Rect.NumberArg,
+                        Y: Rect.NumberArg,
+                        W: Rect.NumberArg,
+                        H: Rect.NumberArg,
+                    },
+                    ...Rect.Block
+                },
+                {
+                    opcode: 'newRect2',
+                    text: 'rect xy: [XY] wh: [WH]',
+                    arguments: {
+                        XY: jwVector.Argument,
+                        WH: jwVector.Argument,
+                    },
+                    ...Rect.Block
+                },
+            ]
+
+            blocks = blocks.concat([{
+                opcode: 'newRect1',
+                text: 'rect xywh: [XYWH]',
+                hideFromPalette: !vm.runtime.ext_jwArray,
+                arguments: {
+                    XYWH: vm.runtime.ext_jwArray ? vm.jwArray.Argument : ArgumentType.CUSTOM,
+                },
+                ...Rect.Block
+            }])
+
+            blocks = blocks.concat([
+                '---',
+                {
+                    opcode: 'getSinglePoint',
+                    text: 'get [RECT] [TYPE]',
+                    blockType: BlockType.REPORTER,
+                    arguments: {
+                        RECT: Rect.Argument,
+                        TYPE: Rect.SinglePointArg
+                    }
+                },
+                {
+                    opcode: 'setSinglePoint',
+                    text: 'set [RECT] [TYPE] to [VALUE]',
+                    arguments: {
+                        RECT: Rect.Argument,
+                        TYPE: Rect.SinglePointArg,
+                        VALUE: Rect.NumberArg,
+                    },
+                    ...Rect.Block
+                },
+
+                '---',
+
+                {
+                    opcode: 'getVectorPoint',
+                    text: 'get [RECT] [TYPE]',
+                    arguments: {
+                        RECT: Rect.Argument,
+                        TYPE: Rect.VectorPointArg
+                    },
+                    ...jwVector.Block
+                },
+                {
+                    opcode: 'setVectorPoint',
+                    text: 'set [VALUE] [TYPE] to [VALUE]',
+                    arguments: {
+                        RECT: Rect.Argument,
+                        TYPE: Rect.VectorPointArg,
+                        VALUE: jwVector.Argument
+                    },
+                    ...Rect.Block
+                },
+
+                {
+                    blockType: BlockType.LABEL,
+                    text: 'Collisions'
+                },
+
+                {
+                    opcode: 'collidingXY',
+                    text: '[RECT] colliding with x: [X] y: [Y]?',
+                    blockType: BlockType.BOOLEAN,
+                    arguments: {
+                        RECT: Rect.Argument,
+                        X: Rect.NumberArg,
+                        Y: Rect.NumberArg,
+                    }
+                },
+
+                {
+                    opcode: 'collidingPoint',
+                    text: '[RECT] colliding with point [VECTOR]?',
+                    blockType: BlockType.BOOLEAN,
+                    arguments: {
+                        RECT: Rect.Argument,
+                        VECTOR: jwVector.Argument,
+                    }
+                },
+
+                {
+                    opcode: 'collidingRect',
+                    text: '[RECTA] colliding with rect [RECTB]?',
+                    blockType: Scratch.BlockType.BOOLEAN,
+                    arguments: {
+                        RECTA: Rect.Argument,
+                        RECTB: Rect.Argument,
+                    },
+                },
+
+                {
+                    opcode: 'collidingMouse',
+                    text: '[RECT] touching mouse (via client [CLIENT] and centered [CENTERED])?',
+                    blockType: BlockType.BOOLEAN,
+                    arguments: {
+                        RECT: Rect.Argument,
+                        CLIENT: {type: ArgumentType.BOOLEAN, shape: BlockShape.HEXAGONAL},
+                        CENTERED: {type: ArgumentType.BOOLEAN, shape: BlockShape.HEXAGONAL},
+                    }
+                },
+
+                {
+                    blockType: BlockType.LABEL,
+                    text: 'Extras'
+                },
+
+                {
+                    opcode: 'mousePos',
+                    text: 'mouse pos (client: [CLIENT] and centered: [CENTERED])',
+                    arguments: {
+                        CLIENT: {
+                            type: ArgumentType.BOOLEAN,
+                            shape: BlockShape.HEXAGONAL,
+                        },
+                        CENTERED: {type: ArgumentType.BOOLEAN, shape: BlockShape.HEXAGONAL},
+                    },
+                    ...jwVector.Block
+                },
+
+                {
+                    opcode: 'screenSize',
+                    text: 'screen size',
+                    ...jwVector.Block
+                }
+            ])
+
             return {
                 id: "IAliRect",
                 name: "Rect",
                 color1: "#ff0061",
                 color2: "#d80052",
                 menuIconURI: "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyMCAyMCI+DQogIDxlbGxpcHNlIHN0eWxlPSJmaWxsOiByZ2IoMjU1LCAwLCA5Nyk7IHN0cm9rZTogcmdiKDIxNiwgMCwgODIpOyIgY3g9IjEwIiBjeT0iMTAiIHJ4PSI5LjUiIHJ5PSI5LjUiPjwvZWxsaXBzZT4NCiAgPHJlY3QgeD0iNi4wNTkiIHk9IjUuNzkzIiB3aWR0aD0iOS40NzciIGhlaWdodD0iOS40NzciIHN0eWxlPSJmaWxsOiBub25lOyBzdHJva2U6IHJnYigyNTUsIDI1NSwgMjU1KTsiPjwvcmVjdD4NCiAgPHJlY3QgeD0iNS40OTQiIHk9IjMuMjIyIiB3aWR0aD0iMTAuNjQzIiBoZWlnaHQ9IjEuMzcyIiByeD0iMSIgcnk9IjEiIHN0eWxlPSJmaWxsOiByZ2IoMjU1LCAyNTUsIDI1NSk7Ij48L3JlY3Q+DQogIDxyZWN0IHg9IjEuNjA1IiB5PSI3LjQ3MyIgd2lkdGg9IjEwLjY0MyIgaGVpZ2h0PSIxLjM3MiIgcng9IjEiIHJ5PSIxIiBzdHlsZT0iZmlsbDogcmdiKDI1NSwgMjU1LCAyNTUpOyBzdHJva2Utd2lkdGg6IDE7IHRyYW5zZm9ybS1ib3g6IGZpbGwtYm94OyB0cmFuc2Zvcm0tb3JpZ2luOiA1MCUgNTAlOyIgdHJhbnNmb3JtPSJtYXRyaXgoMCwgMSwgLTEsIDAsIC0yLjcwMTY4NCwgMi41MTc0OCkiPjwvcmVjdD4NCjwvc3ZnPg==",
-                blocks: [
-                    {
-                        opcode: 'fromSprite',
-                        text: 'from [SPRITE]',
-                        arguments: {
-                            SPRITE: {
-                                type: Scratch.ArgumentType.STRING,
-                                menu: "sprites",
-                            }
-                        },
-                        ...Rect.Block
-                    },
-                    '---',
-                    {
-                        opcode: 'newRectX_Y_W_H',
-                        text: 'rect x: [X] y: [Y] w: [W] h: [H]',
-                        arguments: {
-                            X: RectArgType1,
-                            Y: RectArgType1,
-                            W: RectArgType1,
-                            H: RectArgType1,
-                        },
-                        ...Rect.Block
-                    },
-                    {
-                        opcode: 'newRectXY_WH',
-                        text: "rect xy: [XY] wh: [WH]",
-                        arguments: {
-                            XY: vm.jwVector.Argument,
-                            WH: vm.jwVector.Argument,
-                        },
-                        ...Rect.Block
-                    },
-                    '---',
-                    {
-                        opcode: 'getSingleRectPoint',
-                        text: 'get [RECT] [TYPE]',
-                        blockType: Scratch.BlockType.REPORTER,
-                        arguments: {
-                            RECT: Rect.Argument,
-                            TYPE: SingleValue
-                        },
-                    },
 
-                    {
-                        opcode: 'setSingleRectPoint',
-                        text: 'set [RECT] [TYPE] to [VALUE]',
-                        blockType: Scratch.BlockType.REPORTER,
-                        arguments: {
-                            RECT: Rect.Argument,
-                            TYPE: SingleValue,
-                            VALUE: RectArgType1,
-                        },
-                        ...Rect.Block
-                    },
-
-                    '---',
-
-                    {
-                        opcode: 'getVectorRectPoint',
-                        text: 'get [RECT] [TYPE]',
-                        blockType: Scratch.BlockType.REPORTER,
-                        arguments: {
-                            RECT: Rect.Argument,
-                            TYPE: VectorValue,
-                        },
-                        ...jwVector.Block
-                    },
-
-                    {
-                        opcode: 'setVectorRectPoint',
-                        text: 'set [RECT] [TYPE] to [VALUE]',
-                        blockType: Scratch.BlockType.REPORTER,
-                        arguments: {
-                            RECT: Rect.Argument,
-                            TYPE: VectorValue,
-                            VALUE: jwVector.Argument,
-                        },
-                        ...Rect.Block
-                    },
-
-                    {
-                        blockType: Scratch.BlockType.LABEL,
-                        text: 'Collisions',
-                    },
-
-                    {
-                        opcode: 'isCollidingWithXY',
-                        text: '[RECT] colliding with x: [X] y: [Y]?',
-                        blockType: Scratch.BlockType.BOOLEAN,
-                        arguments: {
-                            RECT: Rect.Argument,
-                            X: RectArgType1,
-                            Y: RectArgType1,
-                        }
-                    },
-
-                    {
-                        opcode: 'isCollidingWithPoint',
-                        text: '[RECT] colliding with point [VECTOR]?',
-                        blockType: Scratch.BlockType.BOOLEAN,
-                        arguments: {
-                            RECT: Rect.Argument,
-                            VECTOR: jwVector.Argument,
-                        }
-                    },
-
-                    {
-                        opcode: 'isCollidingWithRect',
-                        text: '[RECTA] colliding with rect [RECTB]?',
-                        blockType: Scratch.BlockType.BOOLEAN,
-                        arguments: {
-                            RECTA: Rect.Argument,
-                            RECTB: Rect.Argument,
-                        },
-                    }
-                ],
+                blocks: blocks,
                 menus: {
                     sprites: {
                         acceptReporters: true,
                         items: this.getSpriteMenu()
                     },
-                    singleRectValue: {
+                    singlePoint: {
                         acceptReporters: true,
                         items: ['x', 'y', 'width', 'height', 'topleft x', 'topleft y']
                     },
-                    vectorRectValue: {
+                    vectorPoint: {
                         acceptReporters: true,
                         items: [
                             'topleft', 'midtop', 'topright',
@@ -433,169 +504,35 @@
                             'bottomleft', 'midbottom', 'bottomright',
                             'size'
                         ],
-                    },
-
-                    roundingFunctions: {
-                        acceptReporters: false,
-                        items: [
-                            {
-                                text: 'round',
-                                value: 'round'
-                            },
-                            {
-                                text: 'ceil', // might as well go full in on the inconsistencies since we are already doing "round of"
-                                value: 'ceil'
-                            },
-                            {
-                                text: 'floor',
-                                value: 'floor'
-                            }
-                        ]
                     }
+                },
+
+                roundingFunctions: {
+                    acceptReporters: false,
+                    items: [
+                        {
+                            text: 'round',
+                            value: 'round'
+                        },
+                        {
+                            text: 'ceil', // might as well go full in on the inconsistencies since we are already doing "round of"
+                            value: 'ceil'
+                        },
+                        {
+                            text: 'floor',
+                            value: 'floor'
+                        }
+                    ]
                 }
             }
         }
 
-        getSpriteMenu (){
+        getSpriteMenu(){
             const targets = vm.runtime.targets;
             const emptyMenu = [{ text: "", value: "" }];
             if (!targets) return emptyMenu;
             const menu = targets.filter(target => target.isOriginal && (!target.isStage)).map(target => ({ text: target.sprite.name, value: target.sprite.name }));
             return (menu.length > 0) ? menu : emptyMenu;
-        }
-
-        /**
-         *
-         * @param args
-         * @returns {RectType}
-         */
-        newRectX_Y_W_H({X, Y, W, H}) {
-            return new RectType(X, Y, W, H)
-        }
-
-        /**
-         *
-         * @param args
-         * @returns {RectType}
-         */
-        newRectXY_WH({XY, WH}) {
-            let xy = jwVectorType.toVector(XY)
-            let wh = jwVectorType.toVector(WH)
-            return new RectType(xy.x, xy.y, wh.x, wh.y)
-        }
-
-        getSingleRectPoint({RECT, TYPE}) {
-            let rect = RectType.toRect(RECT);
-            switch(TYPE) {
-                case 'x':
-                    return rect.x;
-                case 'y':
-                    return rect.y;
-                case 'width':
-                    return rect.width;
-                case 'height':
-                    return rect.height;
-                case 'topleft x':
-                    return rect.topleft.x;
-                case 'topleft y':
-                    return rect.topleft.y
-            }
-            return 0;
-        }
-
-        setSingleRectPoint({RECT, TYPE, VALUE}) {
-            let rect = RectType.toRect(RECT);
-            let value = Cast.toNumber(VALUE);
-
-            switch (TYPE) {
-                case 'x':
-                    rect.x = value;
-                    break;
-                case 'y':
-                    rect.y = value;
-                    break;
-                case 'width':
-                    rect.width = value;
-                    break;
-                case 'height':
-                    rect.height = value;
-                    break;
-                case 'topleft x':
-                    rect.topleft = new jwVectorType(value, rect.topleft.y)
-                    break;
-                case 'topleft y':
-                    rect.topleft = new jwVectorType(rect.topleft.x, value)
-                    break;
-            }
-            return rect;
-        }
-
-        getVectorRectPoint({RECT, TYPE}) {
-            let rect = RectType.toRect(RECT);
-            switch (TYPE) {
-                case 'topleft':
-                    return rect.topleft;
-                case 'midtop':
-                    return rect.midtop;
-                case 'topright':
-                    return rect.topright;
-
-                case 'midleft':
-                    return rect.midleft;
-                case 'center':
-                    return rect.center;
-                case 'midright':
-                    return rect.midright;
-
-                case 'bottomleft':
-                    return rect.bottomleft;
-                case 'midbottom':
-                    return rect.midbottom;
-                case 'bottomright':
-                    return rect.bottomright;
-
-                case 'size':
-                    return rect.size;
-            }
-            return new jwVectorType(0, 0);
-        }
-
-        setVectorRectPoint({RECT, TYPE, VALUE}) {
-            let rect = RectType.toRect(RECT);
-            let value = jwVectorType.toVector(VALUE);
-            switch (TYPE) {
-                case 'topleft':
-                    rect.topleft = value;
-                    break;
-                case 'midtop':
-                    rect.midtop = value;
-                    break;
-                case 'topright':
-                    rect.topright = value;
-                    break;
-                case 'midleft':
-                    rect.midleft = value;
-                    break;
-                case 'center':
-                    rect.center = value;
-                    break;
-                case 'midright':
-                    rect.midright = value;
-                    break;
-                case 'bottomleft':
-                    rect.bottomleft = value;
-                    break;
-                case 'midbottom':
-                    rect.midbottom = value;
-                    break;
-                case 'bottomright':
-                    rect.bottomright = value;
-                    break;
-                case 'size':
-                    rect.size = value;
-                    break;
-            }
-            return rect;
         }
 
         fromSprite({SPRITE}) {
@@ -612,7 +549,43 @@
         }
 
 
-        isCollidingWithXY({RECT, X, Y}) {
+        newRect4({X, Y, W, H}) {
+            return new RectType(X, Y, W, H);
+        }
+
+        newRect2({XY, WH}) {
+            XY = Vector.toVector(XY)
+            WH = Vector.toVector(WH)
+            return RectType.toRect([XY, WH]);
+        }
+
+        newRect1({XYWH}) {
+            return RectType.toRect(XYWH)
+        }
+
+        getSinglePoint({RECT, TYPE}) {
+            let val = RectType.toRect(RECT).getPoint(TYPE)
+            return isNaN(val) ? 0 : val
+        }
+
+        getVectorPoint({RECT, TYPE}) {
+            let val = RectType.toRect(RECT).getPoint(TYPE);
+            return isNaN(val) ? val : new Vector()
+        }
+
+        setSinglePoint({RECT, TYPE, VALUE}) {
+            RECT = RectType.toRect(RECT)
+            RECT.setSinglePoint(TYPE, VALUE);
+            return RECT;
+        }
+
+        setVectorPoint({RECT, TYPE, VALUE}) {
+            RECT = RectType.toRect(RECT)
+            RECT.setVectorPoint(TYPE, VALUE);
+            return RECT;
+        }
+
+        collidingXY({RECT, X, Y}) {
             RECT = RectType.toRect(RECT);
             X = Cast.toNumber(X);
             Y = Cast.toNumber(Y);
@@ -620,19 +593,39 @@
             return RECT.collidesXYPoint(X, Y);
         }
 
-        isCollidingWithPoint({RECT, VECTOR}) {
+        collidingPoint({RECT, VECTOR}) {
             RECT = RectType.toRect(RECT);
-            let XY = jwVectorType.toVector(VECTOR);
+            let XY = Vector.toVector(VECTOR);
 
             return RECT.collidesVectorPoint(XY)
         }
 
-        isCollidingWithRect({RECTA, RECTB}) {
+        collidingRect({RECTA, RECTB}) {
             RECTA = RectType.toRect(RECTA)
             RECTB = RectType.toRect(RECTB)
 
             return RECTA.collidesRect(RECTB)
         }
+
+        collidingMouse({RECT, CLIENT, CENTERED}) {
+            RECT = RectType.toRect(RECT);
+            let vector = new Vector(CLIENT ? mouse.getClientX() : mouse.getScratchX(), CLIENT ? mouse.getClientY() : mouse.getScratchY());
+            vector = CENTERED && CLIENT ? new Vector(vector.x - vm.runtime.stageWidth / 2, -vector.y + vm.runtime.stageHeight / 2) : vector;
+            return RECT.collidesVectorPoint(vector);
+        }
+
+
+        mousePos({CLIENT, CENTERED}) {
+            let vector = new Vector(CLIENT ? mouse.getClientX() : mouse.getScratchX(), CLIENT ? mouse.getClientY() : mouse.getScratchY());
+            vector = CENTERED && CLIENT ? new Vector(vector.x - vm.runtime.stageWidth / 2, -vector.y + vm.runtime.stageHeight / 2) : vector;
+            return vector;
+        }
+
+        screenSize() {
+            return new Vector(vm.runtime.stageWidth, vm.runtime.stageHeight)
+        }
+
+
     }
 
     Scratch.extensions.register(new Extension())

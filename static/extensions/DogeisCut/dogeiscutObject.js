@@ -8,6 +8,9 @@
 // FUTURE UPDATE TODO:
 // - block toggle for the recursion stuff i had before (wouldn't save or display in bubbles though unless i figure that out)
 
+// TODO:
+// turn keys values and entires of into a single block with a dropdown
+
 (function(Scratch) {
     'use strict';
 
@@ -21,6 +24,7 @@
     const fnToString = Function.prototype.toString
     const classRegex = /^class\s/
     const hasOwn = Object.hasOwn;
+    const defaultPrototype = Object.getPrototypeOf({})
 
     function isClassOrInstance(x) {
         if (typeof x === "function") {
@@ -54,20 +58,18 @@
                 if (x instanceof ObjectType) return x
             }
 
-            if (typeof x == "object" && typeof x.toJSON == "function") {
-                x = x.toJSON()
-            }
-
-            if (isClassOrInstance(x)) {
-                return new ObjectType({ value: x })
-            }
-
             if (x && typeof x === "object") {
                 if (x instanceof jwArray.Type) {
                     return new ObjectType(Object.fromEntries(x.array.map((v,i)=>[i+1,v])))
                 }
                 if (isArray(x)) {
                     return new ObjectType(Object.fromEntries(x.map((v,i)=>[i+1,v])))
+                }
+                if (typeof x.toJSON == "function") {
+                    x = x.toJSON()
+                }
+                if (isClassOrInstance(x)) {
+                    return new ObjectType({ value: x })
                 }
                 return new ObjectType(Object.assign(Object.create(null), x))
             }
@@ -101,7 +103,8 @@
             if (x instanceof jwArray.Type || x instanceof dogeiscutObject.Type) return x
 
             if (isArray(x)) return jwArray.Type.toArray(x)
-            if (!Object.getPrototypeOf(x)) return dogeiscutObject.Type.toObject(x)
+            const prototype = Object.getPrototypeOf(x)
+            if (!prototype || prototype === defaultPrototype) return dogeiscutObject.Type.toObject(x)
 
             return x
         }

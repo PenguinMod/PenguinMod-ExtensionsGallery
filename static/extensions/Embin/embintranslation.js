@@ -11,13 +11,13 @@
         throw new Error('"Translation Keys" must run unsandboxed');
     }
 
-    const embin_translation_keys_version = 'v1.1.1';
+    const embin_translation_keys_version = 'v1.1.2';
     const Cast = Scratch.Cast;
     let selected_lang = navigator.language || navigator.userLanguage;
-    let current_lang_data = {};
-    let languages = {};
-    languages[selected_lang] = {};
-    if (selected_lang != "en-US") languages["en-US"] = {};
+    let current_lang_data = Object.create(null);
+    let languages = Object.create(null);
+    languages[selected_lang] = Object.create(null);
+    if (selected_lang != "en-US") languages["en-US"] = Object.create(null);
   
     class EmbinTranslation {
         getInfo() {
@@ -242,8 +242,8 @@
         }
 
         clear_translations (args) {
-            current_lang_data = {};
-            languages[selected_lang] = {};
+            current_lang_data = Object.create(null);
+            languages[selected_lang] = Object.create(null);
         }
 
         get_selected_language (args) {
@@ -251,13 +251,13 @@
         }
 
         clear_all_translations (args) {
-            languages = {};
-            current_lang_data = {};
+            languages = Object.create(null);
+            current_lang_data = Object.create(null);
         }
 
         set_current_language (args) {
             selected_lang = Cast.toString(args.lang);
-            if (!Object.hasOwn(languages, selected_lang)) languages[selected_lang] = {};
+            if (!Object.hasOwn(languages, selected_lang)) languages[selected_lang] = Object.create(null);
             current_lang_data = languages[selected_lang];
         }
 

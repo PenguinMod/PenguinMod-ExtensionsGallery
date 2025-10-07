@@ -446,7 +446,7 @@
                     //     }
                     // },
                     {
-                        opcode: 'fromEntires',
+                        opcode: 'fromEntries',
                         text: 'from entries [ARRAY]',
                         ...dogeiscutObject.Block,
                         arguments: {

@@ -36,6 +36,8 @@ import PaintUtils from "./PaintUtils.md?raw";
 // Resolution
 import Resolution from "./Resolution.md?raw";
 
+import PageBitsAndHexaDocs from "./bitsandhexa.md?raw";
+
 export default {
     // the key is the path to the docs page
     // so you can do "sharkpool-particle-tools" for example
@@ -71,4 +73,7 @@ export default {
     
     // Resolution
     "Resolution": Resolution,
+
+    // Bitwise with Hexadecimal
+    "bitsandhexa": PageBitsAndHexaDocs,
 };

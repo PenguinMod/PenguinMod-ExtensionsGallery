@@ -445,15 +445,14 @@
                     //         }
                     //     }
                     // },
-                    // just putting an array in (parse () as object) does the same thing
-                    // {
-                    //     opcode: 'assign',
-                    //     text: 'assign from [ARRAY]',
-                    //     ...dogeiscutObject.Block,
-                    //     arguments: {
-                    //         ARRAY: jwArray.Argument
-                    //     }
-                    // },
+                    {
+                        opcode: 'fromEntries',
+                        text: 'from entries [ARRAY]',
+                        ...dogeiscutObject.Block,
+                        arguments: {
+                            ARRAY: jwArray.Argument
+                        }
+                    },
                     '---',
                     {
                         opcode: 'builder',
@@ -710,14 +709,15 @@
             return new dogeiscutObject.Type(obj);
         }
 
-        assign({ ARRAY }) {
+        fromEntries({ ARRAY }) {
             ARRAY = jwArray.Type.toArray(ARRAY)
 
-            const objectWithShiftedKeys = Object.assign(Object.create(null),
-                Object.fromEntries(ARRAY.array.map((value, index) => [index + 1, value]))
-            )
-
-            return new dogeiscutObject.Type(objectWithShiftedKeys)
+            try {
+                return new dogeiscutObject.Type(Object.assign(Object.create(null),
+                    Object.fromEntries(ARRAY.array.map((value) => value.array ? value.array : value))
+                ))
+            } catch {}
+            return new dogeiscutObject.Type()
         }
 
         async builder({}, util) {

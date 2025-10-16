@@ -455,9 +455,21 @@
                     },
                     '---',
                     {
-                        opcode: 'builder',
-                        text: 'object builder',
+                        opcode: 'currentObject',
+                        text: 'current object',
+                        hideFromPalette: true,
+                        canDragDuplicate: true,
                         ...dogeiscutObject.Block,
+                    },
+                    {
+                        opcode: 'builder',
+                        text: 'object builder [CURRENT_OBJECT]',
+                        ...dogeiscutObject.Block,
+                        arguments: {
+                            CURRENT_OBJECT: {
+                                fillIn: 'currentObject'
+                            },
+                        },
                         branches: [{
                             //accepts: 'dogeiscutObjectBuilder'
                         }],
@@ -491,6 +503,15 @@
                                 defaultValue: "foo",
                                 exemptFromNormalization: true
                             },
+                        }
+                    },
+                    {
+                        opcode: 'builderSet',
+                        text: 'set builder to [OBJECT]',
+                        blockType: Scratch.BlockType.COMMAND,
+                        //notchAccepts: 'dogeiscutObjectBuilder',
+                        arguments: {
+                            OBJECT: dogeiscutObject.Argument
                         }
                     },
                     '---',
@@ -720,6 +741,14 @@
             return new dogeiscutObject.Type()
         }
 
+        currentObject({}, util) {
+            if (util.thread._dogeiscutObjectBuilderIndex && util.thread._dogeiscutObjectBuilderIndex.length > 0) {
+                return dogeiscutObject.Type.toObject(util.thread._dogeiscutObjectBuilderIndex[util.thread._dogeiscutObjectBuilderIndex.length-1])
+            } else {
+                throw 'This block must be inside of a "string builder" block.';
+            }
+        }
+
         async builder({}, util) {
             return 'noop'
         }
@@ -739,6 +768,17 @@
                 throw 'This block must be inside of a "object builder" block.';
             }
         }
+
+        builderSet({ OBJECT }, util) {
+            OBJECT = dogeiscutObject.Type.toObject(OBJECT)
+
+            if (util.thread._dogeiscutObjectBuilderIndex && util.thread._dogeiscutObjectBuilderIndex.length > 0) {
+                util.thread._dogeiscutObjectBuilderIndex[util.thread._dogeiscutObjectBuilderIndex.length-1] = OBJECT.object
+            } else {
+                throw 'This block must be inside of a "object builder" block.';
+            }
+        }
+
 
         get({ OBJECT, KEY }) {
             OBJECT = dogeiscutObject.Type.toObject(OBJECT, false)

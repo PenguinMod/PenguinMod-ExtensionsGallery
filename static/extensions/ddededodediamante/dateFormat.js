@@ -281,7 +281,7 @@
     getInfo() {
       return {
         id: "ddeDateFormat",
-        name: "Date Format",
+        name: "Date Format (OLD VERSION)",
         menuIconURI: extensionIcon,
         color1: "#59c074",
         blocks: [

@@ -199,20 +199,20 @@ export default [
         notes: "Gallery banner by Dillon",
     },
     {
+        name: "Date Format",
+        description: "Manage, format and compare dates.",
+        code: "ddededodediamante/dateFormatV2.js",
+        banner: "ddededodediamante/dateFormat.svg",
+        creator: "ddededodediamante",
+        isGitHub: true,
+    },
+    {
         name: "Yet Another String Extension",
         description: "A small collection of utilty blocks intended to make managing strings much, much easier.",
         code: "DogeisCut/YetAnotherStringExtension.js",
         banner: "DogeisCut/YetAnotherStringExtension.svg",
         creator: "DogeisCut",
         isGitHub: true, 
-    },
-    {
-        name: "Date Format",
-        description: "Manage, format and compare dates.",
-        code: "ddededodediamante/dateFormat.js",
-        banner: "ddededodediamante/dateFormat.svg",
-        creator: "ddededodediamante",
-        isGitHub: true,
     },
     {
         name: "Sets",

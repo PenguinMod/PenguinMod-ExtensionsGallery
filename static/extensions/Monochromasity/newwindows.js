@@ -5,6 +5,16 @@
 
 (function (Scratch) {
   "use strict";
+  
+  let menubar = "no";
+  let status = "no";
+  let titlebar = "no";
+  let full = "no";
+  let location = "no";
+  let resizable = "no";
+  let scroll = "no";
+  let toolbar = "no";
+  let replace = "false";
 
   class NewWindows {
     getInfo() {
@@ -16,7 +26,7 @@
           {
             opcode: 'openwindow',
             blockType: Scratch.BlockType.COMMAND,
-            text: 'open website [WEB] in new window with ID: [ID] width: [WIDTH] height: [HEIGHT] distance from left: [LEFT] distance from top: [TOP] show menu bar: [MENUBAR] add status bar: [STATUSBAR] show title bar: [TITLEBAR] fullscreen (Internet Explorer): [FULLSCREEN] show address field (Opera): [LOCATION] resizable (Internet Explorer): [RESIZABLE] show scrollbars (Internet Explorer, Firefox, Opera): [SCROLL] show toolbar (Internet Explorer, Firefox): [TOOLBAR] replace (Deprecated): [REPLACE]',
+            text: 'open website [WEB] in new window with ID: [ID] width: [WIDTH] height: [HEIGHT] distance from left: [LEFT] distance from top: [TOP]',
             arguments: {
               WEB: {
                 type: Scratch.ArgumentType.STRING,
@@ -41,51 +51,38 @@
               TOP: {
                 type: Scratch.ArgumentType.NUMBER,
                 defaultValue: '0'
-              },
-              MENUBAR: {
+              }
+            }
+          },
+          {
+            opcode: 'setproperty',
+            blockType: Scratch.BlockType.COMMAND,
+            text: 'set window property [PROPERTY] to [TOGGLE]',
+            arguments: {
+              PROPERTY: {
                 type: Scratch.ArgumentType.STRING,
-                menu: 'MENUBAR',
-                defaultValue: 'no'
+                menu: 'PROPERTY'
               },
-              STATUSBAR: {
+              TOGGLE: {
                 type: Scratch.ArgumentType.STRING,
-                menu: 'STATUSBAR',
-                defaultValue: 'no'
-              },
-              TITLEBAR: {
+                menu: 'TOGGLE'
+              }
+            }
+          },
+          {
+            opcode: 'reset',
+            blockType: Scratch.BlockType.COMMAND,
+            text: 'reset properties to default',
+            hideFromPalette: true
+          },
+          {
+            opcode: 'getproperty',
+            blockType: Scratch.BlockType.REPORTER,
+            text: 'get value of property [PROPERTY]',
+            arguments: {
+              PROPERTY: {
                 type: Scratch.ArgumentType.STRING,
-                menu: 'TITLEBAR',
-                defaultValue: 'no'
-              },
-              FULLSCREEN: {
-                type: Scratch.ArgumentType.STRING,
-                menu: 'FULLSCREEN',
-                defaultValue: 'no'
-              },
-              LOCATION: {
-                type: Scratch.ArgumentType.STRING,
-                menu: 'LOCATION',
-                defaultValue: 'no'
-              },
-              RESIZABLE: {
-                type: Scratch.ArgumentType.STRING,
-                menu: 'RESIZABLE',
-                defaultValue: 'yes'
-              },
-              SCROLL: {
-                type: Scratch.ArgumentType.STRING,
-                menu: 'SCROLL',
-                defaultValue: 'yes'
-              },
-              TOOLBAR: {
-                type: Scratch.ArgumentType.STRING,
-                menu: 'TOOLBAR',
-                defaultValue: 'yes'
-              },
-              REPLACE: {
-                type: Scratch.ArgumentType.STRING,
-                menu: 'REPLACE',
-                defaultValue: 'false'
+                menu: 'PROPERTY'
               }
             }
           },
@@ -113,41 +110,59 @@
           }
         ],
         menus: {
-          FULLSCREEN: {
+          PROPERTY: {
             acceptReporters: true,
-            items: ['yes', 'no']
+            items: [
+              {
+                text: 'menu bar',
+                value: 'menubar'
+              },
+              {
+                text: 'status bar',
+                value: 'status'
+              },
+              {
+                text: 'title bar',
+                value: 'titlebar'
+              },
+              {
+                text: 'fullscreen (IE only)',
+                value: 'full'
+              },
+              {
+                text: 'address field (Opera only)',
+                value: 'location'
+              },
+              {
+                text: 'resizable (IE only)',
+                value: 'resizable'
+              },
+              {
+                text: 'scrollbars (IE, Firefox, Opera only)',
+                value: 'scroll',
+              },
+              {
+                text: 'toolbar (IE, Firefox)',
+                value: 'toolbar',
+              },
+              {
+                text: 'replace (Deprecated)',
+                value: 'replace'
+              }
+            ]
           },
-          MENUBAR: {
+          TOGGLE: {
             acceptReporters: true,
-            items: ['yes', 'no']
-          },
-          STATUSBAR: {
-            acceptReporters: true,
-            items: ['yes', 'no']
-          },
-          TITLEBAR: {
-            acceptReporters: true,
-            items: ['yes', 'no']
-          },
-          LOCATION: {
-            acceptReporters: true,
-            items: ['yes', 'no']
-          },
-          RESIZABLE: {
-            acceptReporters: true,
-            items: ['yes', 'no']
-          },
-          SCROLL: {
-            acceptReporters: true,
-            items: ['yes', 'no']
-          },
-          TOOLBAR: {
-            acceptReporters: true,
-            items: ['yes', 'no']
-          },
-          REPLACE: {
-            acceptReporters: true,
-            items: ['true', 'false']
+            items: [
+              {
+                text: 'true',
+                value: 'yes'
+              },
+              {
+                text: 'false',
+                value: 'no'
+              }
+            ]
           }
         }
       };
@@ -160,18 +175,10 @@
       let width = args.WIDTH;
       let height = args.HEIGHT;
       let strstart = "width=";
-      let full = args.FULLSCREEN;
       let left = Math.abs(Number(args.LEFT));
       let top = Math.abs(Number(args.TOP));
-      let menubar = args.MENUBAR;
-      let status = args.STATUSBAR;
-      let titlebar = args.TITLEBAR;
-      let location = args.LOCATION;
-      let resizable = args.RESIZABLE;
-      let scroll = args.SCROLL;
-      let toolbar = args.TOOLBAR;
-      let replace = args.REPLACE;
       let str = strstart.concat(width, ",height=", height, ",fullscreen=", full, ",left=", left, ",top=", top, ",menubar=", menubar, ",status=", status, ",titlebar=", titlebar, ",location=", location, ",resizable=", resizable, ",scrollbars=", scroll, ",toolbar=", toolbar);
+      console.log(str);
       let name = "windows" + id;
       this[name] = window.open(web, '', str, replace);
     }
@@ -194,6 +201,41 @@
       }
       catch(err) {
         return false;
+      }
+    }
+    setproperty(args) {
+      let title = args.PROPERTY;
+      if (title == "replace") {
+        let toggle = args.TOGGLE;
+        if (toggle == "yes") {
+          this[title] = "true";
+        } else if (toggle == "no") {
+          this[title] = "false";
+        }
+      } else {
+        this[title] = args.TOGGLE;
+      }
+    }
+    reset() {
+      menubar = "no";
+      status = "no";
+      titlebar = "no";
+      full = "no";
+      location = "no";
+      resizable = "no";
+      scroll = "no";
+      toolbar = "no";
+      replace = "false";
+    }
+    getproperty(args) {
+      let title = args.PROPERTY;
+      let propval = this[title];
+      if (propval == "yes") {
+        return true;
+      } else if (propval == "no") {
+        return false;
+      } else {
+        return propval;
       }
     }
   }

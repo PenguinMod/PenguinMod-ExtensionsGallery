@@ -498,6 +498,14 @@ export default [
         creatorAlias: "gaimerI17",
         notes: "Extension thumbnail made by Dillon."
     },
+    {
+        name: "MIDI Devices",
+        description: "Extension for exposing MIDI devices.",
+        code: "jhub7682/MIDIdevices.js",
+        banner: "jhub7682/MIDI_devices_extention.png",
+        creator: "Jhub7682",
+        isGitHub: true,
+    },
     /* these extensions are completely dead as of now
     {
         name: "Online Captcha",

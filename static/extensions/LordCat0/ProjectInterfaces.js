@@ -78,12 +78,9 @@
         name: "Project interfaces",
         color1: "#707eff",
         color2: "#6675fa",
+        docsURI: "https://extensions.penguinmod.com/docs/ProjectInterfaces",
         menuIconURI: extIcon,
         blocks: [{
-            blockType: Scratch.BlockType.BUTTON,
-            text: "How to use (discord thread)",
-            func: "tutorial"
-            },{
             opcode: "ClearAll",
             text: "Clear all elements",
             blockType: Scratch.BlockType.COMMAND

@@ -11,7 +11,7 @@ This documentation will teach you the basics of how to use it.
 An "element" refers to an image, button, video, etc on the screen.
 This extension uses an ID system to keep track of GUI elements for later customization.
 
-To create an element, use the specificed "create element block".
+To create an element, use the "create element block".
 ```scratch
     Create [Label v] element with ID [My element] :: #707eff
 ```
@@ -45,7 +45,7 @@ It's important to note that Project Interfaces uses [HTML elements](https://deve
 
 This extension has several blocks to further customize elements for those who have a deeper understanding of HTML and CSS.
 
-The "Create html element" block will allow you to create a element based of a HTML tag of your choice.
+The "Create html element" block will allow you to create an element based of a HTML tag of your choice.
 The "Set custom CSS" block will override an elements CSS properties.
 
 ```scratch
@@ -54,6 +54,6 @@ Set custom CSS of [HTML header] to [background-color: red] :: #707eff
 ```
 
 ## Security
-For security reasons, only Label elements (Or span tags) can have text set to them.
+For security reasons, only Label elements (Or span tags) can have text set for them.
 This prevents script execution from &lt;script&gt;&lt;/script&gt; tags.
 If you wish to execute JavaScript inside your project, please use the JavaScript V2 extension.

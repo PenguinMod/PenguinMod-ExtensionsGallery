@@ -12,6 +12,14 @@ export default [
         banner: "ObviousAlexC/PenPlus.svg",
         creator: "pinksheep2917",
     },
+        {
+        name: "MotionSprite",
+        description: "An advanced math-based animation system",
+        code: "TheShovel/qoan-renderer.js",
+        banner: "TheShovel/thumbnail-motionsprite.avif",
+        isGitHub: true,
+        creator: "TheShovel",
+    },
     {
         name: "Boxed Physics",
         description: "Implements the Box2D physics engine into PenguinMod, adding joints, springs, etc. This is different from TurboWarp's implementation.",

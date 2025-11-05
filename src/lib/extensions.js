@@ -88,6 +88,13 @@ export default [
         creator: "TheShovel",
         isGitHub: true,
     },
+            {
+        name: "Stylus",
+        description: "Get the pressure and tilt of a stylus or graphic tablet",
+        code: "sourdoggy/stylus extension.js",
+        banner: "sourdoggy/stylus_ext.avif",
+        creator: "sourdoggy",
+    },
     {
         name: "Text To Speech: Redone",
         description: "A better alternitive to the base text to speech extension. Powered by the TTStool API",

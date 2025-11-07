@@ -143,7 +143,7 @@ export default [
         banner: "dumzdev/removebgbanner.svg",
         creator: "dumzdev",
     },
-    {
+    /*{
         name: "PenguinAI",
         description: "Talk to AI! Use Models like DALL-E-3, GPT, LLama, Claude, and more!",
         code: "MubiLop/penguingpt.js",
@@ -154,7 +154,7 @@ export default [
         unstable: true,
         documentation: "PenguinAI",
         unstableReason: "AI models can generate unintended or inappropriate output.\nSome AI models may also become temporarily inaccessible.\n\nUse at your own risk.",
-    },
+    },*/
 /*
     {
         name: "Block AI",

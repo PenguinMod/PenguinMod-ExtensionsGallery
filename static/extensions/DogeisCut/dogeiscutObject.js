@@ -37,6 +37,15 @@
         return false
     }
 
+    function escapeHTML (unsafe) {
+        return unsafe
+            .replaceAll("&", "&amp;")
+            .replaceAll("<", "&lt;")
+            .replaceAll(">", "&gt;")
+            .replaceAll('"', "&quot;")
+            .replaceAll("'", "&#039;")
+    }
+
     class ObjectType {
         customId = "dogeiscutObject"
 
@@ -178,9 +187,9 @@
                         } else if (RENDER_ARRAYS_VISUALLY && (isArray(value) || (jwArray && value instanceof jwArray.Type))) {
                             valueCell.appendChild(renderArray(isArray(value) ? value : (value.array || [])));
                         } else if (typeof value.dogeiscutObjectHandler === "function") {
-                            valueCell.innerHTML = value.dogeiscutObjectHandler();
+                            valueCell.innerHTML = escapeHTML(value.dogeiscutObjectHandler());
                         } else if (typeof value.jwArrayHandler === "function") {
-                            valueCell.innerHTML = value.jwArrayHandler();
+                            valueCell.innerHTML = escapeHTML(value.jwArrayHandler());
                         } else {
                             valueCell.appendChild(renderObject(value));
                         }
@@ -247,9 +256,9 @@
                         } else if (RENDER_ARRAYS_VISUALLY && (isArray(item) || (jwArray && item instanceof jwArray.Type))) {
                             valCell.appendChild(renderArray(isArray(item) ? item : (item.array || [])));
                         } else if (typeof item.dogeiscutObjectHandler === "function") {
-                            valCell.innerHTML = item.dogeiscutObjectHandler();
+                            valCell.innerHTML = escapeHTML(item.dogeiscutObjectHandler());
                         } else if (typeof item.jwArrayHandler === "function") {
-                            valCell.innerHTML = item.jwArrayHandler();
+                            valCell.innerHTML = escapeHTML(item.jwArrayHandler());
                         } else {
                             valCell.appendChild(renderObject(item));
                         }

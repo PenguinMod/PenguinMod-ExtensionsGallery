@@ -103,6 +103,10 @@
             return "?"
         }
 
+        dogeiscutSetHandler(expectsPlainString, context) {
+            return `Set<${formatNumber(this.set.size)}>`
+        }
+        
         dogeiscutObjectHandler(expectsPlainString, context) {
             return `Set<${formatNumber(this.set.size)}>`
         }

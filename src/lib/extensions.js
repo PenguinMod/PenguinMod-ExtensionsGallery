@@ -12,6 +12,14 @@ export default [
         banner: "ObviousAlexC/PenPlus.svg",
         creator: "pinksheep2917",
     },
+        {
+        name: "MotionSprite",
+        description: "An advanced math-based animation system",
+        code: "TheShovel/qoan-renderer.js",
+        banner: "TheShovel/thumbnail-motionsprite.avif",
+        isGitHub: true,
+        creator: "TheShovel",
+    },
     {
         name: "Boxed Physics",
         description: "Implements the Box2D physics engine into PenguinMod, adding joints, springs, etc. This is different from TurboWarp's implementation.",
@@ -80,6 +88,13 @@ export default [
         creator: "TheShovel",
         isGitHub: true,
     },
+            {
+        name: "Stylus",
+        description: "Get the pressure and tilt of a stylus or graphic tablet",
+        code: "sourdoggy/stylus extension.js",
+        banner: "sourdoggy/stylus_ext.avif",
+        creator: "sourdoggy",
+    },
     {
         name: "Text To Speech: Redone",
         description: "A better alternitive to the base text to speech extension. Powered by the TTStool API",
@@ -128,7 +143,7 @@ export default [
         banner: "dumzdev/removebgbanner.svg",
         creator: "dumzdev",
     },
-    {
+    /*{
         name: "PenguinAI",
         description: "Talk to AI! Use Models like DALL-E-3, GPT, LLama, Claude, and more!",
         code: "MubiLop/penguingpt.js",
@@ -139,7 +154,7 @@ export default [
         unstable: true,
         documentation: "PenguinAI",
         unstableReason: "AI models can generate unintended or inappropriate output.\nSome AI models may also become temporarily inaccessible.\n\nUse at your own risk.",
-    },
+    },*/
 /*
     {
         name: "Block AI",

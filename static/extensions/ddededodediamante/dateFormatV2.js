@@ -1,4 +1,6 @@
 (function (Scratch) {
+  const isPM = Scratch.extensions?.isPenguinMod ?? false;
+
   if (!Scratch.extensions.unsandboxed) {
     window.alert('The extension "Date Format" must be ran unsandboxed!');
     throw new Error('The extension "Date Format" must be ran unsandboxed!');
@@ -7,12 +9,36 @@
   const extensionIcon =
     "data:image/svg+xml;base64,PHN2ZyB2ZXJzaW9uPSIxLjEiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyIgeG1sbnM6eGxpbms9Imh0dHA6Ly93d3cudzMub3JnLzE5OTkveGxpbmsiIHdpZHRoPSIxNjQiIGhlaWdodD0iMTY0IiB2aWV3Qm94PSIwLDAsMTY0LDE2NCI+PGcgdHJhbnNmb3JtPSJ0cmFuc2xhdGUoLTE1OCwtOTgpIj48ZyBzdHJva2UtbWl0ZXJsaW1pdD0iMTAiPjxwYXRoIGQ9Ik0xNTgsMTgwYzAsLTQ1LjI4NzM1IDM2LjcxMjY1LC04MiA4MiwtODJjNDUuMjg3MzUsMCA4MiwzNi43MTI2NSA4Miw4MmMwLDQ1LjI4NzM1IC0zNi43MTI2NSw4MiAtODIsODJjLTQ1LjI4NzM1LDAgLTgyLC0zNi43MTI2NSAtODIsLTgyeiIgZmlsbD0iIzU5YzA3NCIgc3Ryb2tlPSJub25lIiBzdHJva2Utd2lkdGg9IjAiIHN0cm9rZS1saW5lY2FwPSJidXR0IiBzdHJva2UtbGluZWpvaW49Im1pdGVyIi8+PHBhdGggZD0iTTE4OC45MDY0MSwyMDYuMzc4NDV2LTUxLjgxNTYxbDUwLjkwMTI3LDMzLjk1Mzk3djUxLjU2Mjg1bC01MC43NzMwNSwtMzMuMzY0MiIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjZmZmZmZmIiBzdHJva2Utd2lkdGg9IjkuNSIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIi8+PHBhdGggZD0iTTI5MC45NjUzOCwyMDYuNzE1NDZsLTUwLjc3MzA1LDMzLjM2NDJ2LTUxLjU2Mjg1bDUwLjkwMTI4LC0zMy45NTM5N3Y1MS44MTU2MSIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjZmZmZmZmIiBzdHJva2Utd2lkdGg9IjkuNSIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIi8+PHBhdGggZD0iTTIzOS45OTk5OSwxODguNjk5ODJsLTUxLjA5MzU5LC0zNC4zODk3NWw1MS4wOTM1OSwtMzQuMzg5NzRsNTEuMDkzNiwzNC4zODk3NHoiIGZpbGw9Im5vbmUiIHN0cm9rZT0iI2ZmZmZmZiIgc3Ryb2tlLXdpZHRoPSI5LjUiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIvPjwvZz48L2c+PC9zdmc+PCEtLXJvdGF0aW9uQ2VudGVyOjgyLjAwMDAwMDAwMDAwMDAzOjgxLjk5OTk5OTk5OTk5OTk5LS0+";
 
+  const weekdays = [
+    "Sunday",
+    "Monday",
+    "Tuesday",
+    "Wednesday",
+    "Thursday",
+    "Friday",
+    "Saturday",
+  ];
+  const months = [
+    "January",
+    "February",
+    "March",
+    "April",
+    "May",
+    "June",
+    "July",
+    "August",
+    "September",
+    "October",
+    "November",
+    "December",
+  ];
+  const pad = (n) => String(n).padStart(2, "0");
+
   const ddeDateFormat = {
     BlockOutput: {
       blockType: Scratch.BlockType.REPORTER,
       blockShape: Scratch.BlockShape.TICKET,
       forceOutputType: "Date",
-      disableMonitor: true,
     },
     Argument: {
       shape: Scratch.BlockShape.TICKET,
@@ -25,8 +51,11 @@
       if (dateInput instanceof Date) {
         this._date = dateInput;
       } else if (dateInput instanceof ddeDateType) {
-        this._date = new Date(dateInput._date);
-      } else if (["number", "string"].includes(typeof dateInput)) {
+        this._date = dateInput._date;
+      } else if (
+        typeof dateInput === "number" ||
+        typeof dateInput === "string"
+      ) {
         this._date = new Date(dateInput);
       } else {
         this._date = new Date(NaN);
@@ -123,11 +152,11 @@
 
     _prettyShort() {
       if (!this.isValid()) return "Invalid Date";
-      const y = this._date.getUTCFullYear();
-      const m = String(this._date.getUTCMonth() + 1).padStart(2, "0");
-      const d = String(this._date.getUTCDate()).padStart(2, "0");
-      const hh = String(this._date.getUTCHours()).padStart(2, "0");
-      const mm = String(this._date.getUTCMinutes()).padStart(2, "0");
+      const y = this._date.getFullYear();
+      const m = pad(this._date.getMonth() + 1);
+      const d = pad(this._date.getDate());
+      const hh = pad(this._date.getHours());
+      const mm = pad(this._date.getMinutes());
       return `${y}-${m}-${d} ${hh}:${mm}`;
     }
 
@@ -141,34 +170,7 @@
   }
 
   function formatDate(d, format) {
-    if (!(d instanceof Date) || isNaN(d.getTime()))
-      throw new Error("Invalid Date");
-
-    const pad = (n) => String(n).padStart(2, "0");
-
-    const weekdays = [
-      "Sunday",
-      "Monday",
-      "Tuesday",
-      "Wednesday",
-      "Thursday",
-      "Friday",
-      "Saturday",
-    ];
-    const months = [
-      "January",
-      "February",
-      "March",
-      "April",
-      "May",
-      "June",
-      "July",
-      "August",
-      "September",
-      "October",
-      "November",
-      "December",
-    ];
+    if (isNaN(d?.getTime())) throw new Error("Invalid Date");
 
     const tokens = {
       YYYY: () => d.getFullYear(),
@@ -209,8 +211,7 @@
   }
 
   function addToDate(d, amount, unit) {
-    if (!(d instanceof Date) || isNaN(d.getTime()))
-      throw new Error("Invalid Date");
+    if (isNaN(d?.getTime())) throw new Error("Invalid Date");
 
     const result = new Date(d.getTime());
     amount = Number(amount) || 0;
@@ -241,15 +242,12 @@
   }
 
   function diffDates(d1, d2, unit) {
-    if (
-      !(d1 instanceof Date) ||
-      isNaN(d1.getTime()) ||
-      !(d2 instanceof Date) ||
-      isNaN(d2.getTime())
-    )
+    if (isNaN(d1?.getTime()) || isNaN(d2?.getTime()))
       throw new Error("Invalid Date");
+
     const ms = d1.getTime() - d2.getTime();
     const absMs = Math.abs(ms);
+
     switch ((unit || "").toLowerCase()) {
       case "milliseconds":
         return absMs;
@@ -273,18 +271,16 @@
     }
   }
 
-  Scratch.vm.runtime.registerSerializer(
-    "ddeDateFormat.date",
-    (i) => {
-      if (i instanceof ddeDateType) {
-        return { dateString: i._date };
+  if (isPM)
+    Scratch.vm.runtime.registerSerializer(
+      ddeDateType.prototype.customId,
+      (i) => {
+        if (i instanceof ddeDateType) return { dateString: i._date };
+      },
+      (i) => {
+        if (i.dateString) return new ddeDateType(i.dateString);
       }
-    },
-    (i) => {
-      if (!i.dateString) return null;
-      return new ddeDateType(i.dateString);
-    }
-  );
+    );
 
   class ddeDateExtension {
     constructor() {
@@ -330,13 +326,21 @@
           {
             opcode: "localeFormatDate",
             blockType: Scratch.BlockType.REPORTER,
-            text: "format [date] to [type] locale",
+            text: "format [date] as [type] locale",
             arguments: {
               date: ddeDateFormat.Argument,
               type: {
                 type: Scratch.ArgumentType.STRING,
                 menu: "localeLength",
               },
+            },
+          },
+          {
+            opcode: "isoFormatDate",
+            blockType: Scratch.BlockType.REPORTER,
+            text: "format [date] as ISO string",
+            arguments: {
+              date: ddeDateFormat.Argument,
             },
           },
           { blockType: Scratch.BlockType.LABEL, text: "Comparisons" },
@@ -373,7 +377,6 @@
               },
             },
           },
-
           { blockType: Scratch.BlockType.LABEL, text: "Operators" },
           {
             opcode: "diffDate",
@@ -385,8 +388,19 @@
               unit: { type: Scratch.ArgumentType.STRING, menu: "timeUnits" },
             },
           },
+          /* old version that uses UTC */
           {
             opcode: "getDatePart",
+            blockType: Scratch.BlockType.REPORTER,
+            text: "get UTC [part] of [date]",
+            arguments: {
+              part: { type: Scratch.ArgumentType.STRING, menu: "dateParts" },
+              date: ddeDateFormat.Argument,
+            },
+            hideFromPalette: true
+          },
+          {
+            opcode: "getDatePartNew",
             blockType: Scratch.BlockType.REPORTER,
             text: "get [part] of [date]",
             arguments: {
@@ -444,6 +458,7 @@
               { text: "day (month)", value: "date" },
               { text: "month", value: "month" },
               { text: "year", value: "year" },
+              { text: "time", value: "time" },
             ],
           },
           timeUnits: {
@@ -484,12 +499,14 @@
     }
 
     toNativeDate(input) {
+      if (input instanceof ddeDateType && input.isValid())
+        return input.toDate();
       const d = this.toDateType(input);
-      return d.isValid() ? d.toDate() : new Date(NaN);
+      return d.toDate();
     }
 
     currentDate() {
-      return new ddeDateType(new Date());
+      return new ddeDateType(Date.now());
     }
 
     createDate({ string }) {
@@ -517,10 +534,17 @@
       });
     }
 
+    isoFormatDate({ date }) {
+      const d = this.toNativeDate(date);
+      if (isNaN(d.getTime())) throw new Error("Invalid Date");
+      return d.toISOString();
+    }
+
     compareDate({ date1, date2, operation }) {
       const d1 = this.toNativeDate(date1);
       const d2 = this.toNativeDate(date2);
-      if (isNaN(d1.getTime()) || isNaN(d2.getTime())) throw new Error("Invalid Date");
+      if (isNaN(d1.getTime()) || isNaN(d2.getTime()))
+        throw new Error("Invalid Date");
 
       switch (operation) {
         case "after":
@@ -536,6 +560,34 @@
 
     isValid({ date }) {
       return this.toDateType(date).isValid();
+    }
+
+    getDatePartNew({ part, date }) {
+      const d = this.toNativeDate(date);
+      if (isNaN(d.getTime())) throw new Error("Invalid Date");
+
+      switch (part) {
+        case "millisecond":
+          return d.getMilliseconds();
+        case "second":
+          return d.getSeconds();
+        case "minute":
+          return d.getMinutes();
+        case "hour":
+          return d.getHours();
+        case "weekday":
+          return d.getDay();
+        case "date":
+          return d.getDate();
+        case "month":
+          return d.getMonth() + 1;
+        case "year":
+          return d.getFullYear();
+        case "time":
+          return d.getTime();
+        default:
+          return 0;
+      }
     }
 
     getDatePart({ part, date }) {
@@ -559,6 +611,8 @@
           return d.getUTCMonth() + 1;
         case "year":
           return d.getUTCFullYear();
+        case "time":
+          return d.getTime();
         default:
           return 0;
       }
@@ -608,6 +662,9 @@
           break;
         case "year":
           newDate.setFullYear(v);
+          break;
+        case "time":
+          newDate.setTime(v);
           break;
       }
 

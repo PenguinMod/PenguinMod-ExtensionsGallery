@@ -42,7 +42,8 @@
   class jodieextexp {
     constructor() {
       this._strict = [false, null];
-      // Packaged projects can do whatever, strict mode is mainly for in the editor anyways.
+      // Packaged projects can do whatever, strict mode is mainly for when the user
+      // is in the editor or on the project page anyways.
       if (!isPackaged) this._toggleStrict(true);
     }
     static exports = {
@@ -123,7 +124,7 @@
       // Unsandboxed (mod) export style.
       ext = runtime[`cext_${id}`];
       if (ext) return ext;
-      // Allows built in extensions that are not loaded fully to also work.
+      // Allow built-in extensions that are not loaded fully to also be ran.
       ext = (
         Object.prototype.hasOwnProperty.call(extensionManager.builtinExtensions, id) &&
         extensionManager.builtinExtensions[id]
@@ -135,11 +136,11 @@
       EXTLIST = Cast.toString(EXTLIST);
       FUNCNAME = Cast.toString(FUNCNAME);
 
-      // Blocks have priority over built in functions.
+      // Blocks have priority over built-in functions.
       let fn = runtime._primitives[`${EXTLIST}_${FUNCNAME}`];
       if (!fn) fn = this._getExtensionObject(EXTLIST)[FUNCNAME];
       
-      // If the function does not exist then the function doesn not exist on the target extension.
+      // If the function does not exist then the function does not exist on the target extension, or the extension lied about existing.
       return fn(this._parseJSON(Cast.toString(INPUT)), util, blockJSON);
     }
     getBlocks({ EXTLIST }) {
@@ -165,9 +166,10 @@
       return Cast.toString(INPUT);
     }
 
-    // Custom strict mode that disables blocks known to allow XSS or that enable a path to XSS.
-    // It also disables errors on platforms that do not support error returns, and null coalshes values for safety.
-    // This does not affect any packaged projects, current projects will function the same unless they are abusing the vulnerabilites.
+    // Custom strict mode that disables blocks known to allow XSS or that enable a path to XSS, it also disables errors on platforms
+    // that do not support error returns, and null coalescing values to empty strings for safety.
+    // 
+    // This does not affect any packaged projects, current projects will function the same unless they are abusing the vulnerabilities.
     // You can disable strict mode in the editor if you want, it does not save to the project and should only be used for say... testing.
     // If a package project calls this then it is their own fault, not mine.
     async _toggleStrict(skipRefresh) {
@@ -207,7 +209,7 @@
           }
         };
       }
-      // Doing !== true here because some mods pass special Blockly arguments to buttons.
+      // We are doing `!== true` here because some mods pass special Blockly arguments to buttons.
       if (skipRefresh !== true) extensionManager.refreshBlocks(extId);
     }
   }

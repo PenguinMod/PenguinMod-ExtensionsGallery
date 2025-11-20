@@ -3,7 +3,7 @@
  * @author TheShovel https://github.com/TheShovel/
  * @author 0znzw https://scratch.mit.edu/users/0znzw/
  * @author Faunksys https://github.com/faunks/
- * @version 2.1
+ * @version 2.2
  * @copyright MIT License
  * Do not remove this comment
  */
@@ -22,21 +22,7 @@
         },
         getBlocksArgument = {
           EXTLIST: { type: ArgumentType.STRING, menu: 'EXTLIST', defaultValue: extId },
-        },
-        bannedExtensions = new Set([]),
-        bannedBlocks = new Set([`${extId}/_toggleStrict`]);
-
-  if (runtime.ext_pm_liveTests) {
-    // Some built in extensions come with XSS that this extension can bypass
-    // the restrictions for; this only affects strict mode.
-    bannedExtensions.add('jgJavascript');
-    bannedExtensions.add('SPjavascriptV2');
-    
-    bannedBlocks.add('scratch3_control/runJavascript');
-    bannedBlocks.add('jgPrism/evaluate');
-    bannedBlocks.add('jgPrism/evaluate2');
-    bannedBlocks.add('jgPrism/evaluate3');
-  }
+        };
   
   const isPackaged = ('scaffolding' in globalThis) && !Scratch.gui;
   class jodieextexp {
@@ -46,9 +32,6 @@
       // is in the editor or on the project page anyways.
       if (!isPackaged) this._toggleStrict(true);
     }
-    static exports = {
-      bannedExtensions, bannedBlocks,
-    };
     getInfo() {
       return {
         id: extId,
@@ -114,8 +97,18 @@
     }
     _extensions() {
       const arr = Array.from(extensionManager._loadedExtensions.keys()).map(id => String(id));
-      if (typeof arr[0] !== 'string') arr.push('');
-      return arr;
+      return [
+        // Built in categories.
+        `scratch3_motion`,
+        `scratch3_looks`,
+        `scratch3_sound`,
+        `scratch3_event`,
+        `scratch3_control`,
+        `scratch3_sensing`,
+        `scratch3_operators`,
+        `scratch3_data`,
+        `scratch3_procedures`,
+      ].concat(arr);
     }
     _getExtensionObject(id) {
       // TurboWarp and PenguinMod export style.
@@ -163,12 +156,7 @@
       return Cast.toString(INPUT);
     }
 
-    // Custom strict mode that disables blocks known to allow XSS or that enable a path to XSS, it also disables errors on platforms
-    // that do not support error returns, and null coalescing values to empty strings for safety.
-    // 
-    // This does not affect any packaged projects, current projects will function the same unless they are abusing the vulnerabilities.
-    // You can disable strict mode in the editor if you want, it does not save to the project and should only be used for say... testing.
-    // If a package project calls this then it is their own fault, not mine.
+    // Strict mode disables any non-block related functions.
     async _toggleStrict(skipRefresh) {
       if (this._strict[0]) {
         if (!isPackaged) {
@@ -181,20 +169,14 @@
       } else {
         this._strict[0] = true;
         this._strict[1] = this.run;
-        this.run = function run({ FUNCNAME, EXTLIST, INPUT }, util, blockJSON) {
+        this.run = function run({ FUNCNAME, EXTLIST }) {
           EXTLIST = Cast.toString(EXTLIST);
           FUNCNAME = Cast.toString(FUNCNAME);
-          
-          if (
-            bannedExtensions.has(EXTLIST) ||
-            bannedBlocks.has(`${EXTLIST}/${FUNCNAME}`)
-          ) {
-            console.error('The block or extension a block tried to use is restricted.', EXTLIST, FUNCNAME);
-            if (runtime.ext_pm_liveTests) {
-              throw new ReferenceError('The block or extension a block tried to use is restricted.');
-            } else {
-              return '';
-            }
+
+          if (!runtime._primitives[`${EXTLIST}_${FUNCNAME}`]) {
+            console.error('The block a block tried to use does not exist.', EXTLIST, FUNCNAME);
+            if (runtime.ext_pm_liveTests) throw new ReferenceError('The block a block tried to use does not exist.');
+            return '';
           }
 
           if (runtime.ext_pm_liveTests) return this._strict[1].apply(this, arguments);
@@ -210,5 +192,8 @@
       if (skipRefresh !== true) extensionManager.refreshBlocks(extId);
     }
   }
-  Scratch.extensions.register(runtime[`ext_${extId}`] = new jodieextexp());
+
+  const instance = (runtime[`ext_${extId}`] = new jodieextexp());
+  runtime._primitives[`${extId}_test`] = instance.test.bind(instance);
+  Scratch.extensions.register(instance);
 })(Scratch);

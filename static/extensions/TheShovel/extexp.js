@@ -3,7 +3,7 @@
  * @author TheShovel https://github.com/TheShovel/
  * @author 0znzw https://scratch.mit.edu/users/0znzw/
  * @author Faunksys https://github.com/faunks/
- * @version 2.0
+ * @version 2.1
  * @copyright MIT License
  * Do not remove this comment
  */
@@ -124,12 +124,6 @@
       // Unsandboxed (mod) export style.
       ext = runtime[`cext_${id}`];
       if (ext) return ext;
-      // Allow built-in extensions that are not loaded fully to also be ran.
-      ext = (
-        Object.prototype.hasOwnProperty.call(extensionManager.builtinExtensions, id) &&
-        extensionManager.builtinExtensions[id]
-      );
-      if (ext) return ext;
       return null;
     }
     run({ FUNCNAME, EXTLIST, INPUT }, util, blockJSON) {
@@ -138,7 +132,10 @@
 
       // Blocks have priority over built-in functions.
       let fn = runtime._primitives[`${EXTLIST}_${FUNCNAME}`];
-      if (!fn) fn = this._getExtensionObject(EXTLIST)[FUNCNAME];
+      if (!fn) {
+        const ext = this._getExtensionObject(EXTLIST);
+        fn = (typeof ext[FUNCNAME] === 'function') && ext[FUNCNAME].bind(ext);
+      }
       
       // If the function does not exist then the function does not exist on the target extension, or the extension lied about existing.
       return fn(this._parseJSON(Cast.toString(INPUT)), util, blockJSON);

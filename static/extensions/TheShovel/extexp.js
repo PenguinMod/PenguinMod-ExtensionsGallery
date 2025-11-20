@@ -86,8 +86,10 @@
     run({ FUNCNAME, EXTLIST, INPUT }, util, blockJSON) {
       EXTLIST = Cast.toString(EXTLIST);
       FUNCNAME = Cast.toString(FUNCNAME);
+      if (!(runtime._primitives[`${EXTLIST}_${FUNCNAME}`] || runtime[`ext_${EXTLIST}`]?.[FUNCNAME]))
+        throw new Error(`The block ${FUNCNAME}, or the extension ${EXTLIST}, do not exits.`);
       // If the function does not exist then it is not referenced as a real block, or the extension is not global (fallback)
-      return (runtime._primitives[`${EXTLIST}_${FUNCNAME}`] || runtime[`ext_${EXTLIST}`][FUNCNAME])(this._parseJSON(Cast.toString(INPUT)), util, blockJSON);
+      return (runtime._primitives[`${EXTLIST}_${FUNCNAME}`] || runtime[`ext_${EXTLIST}`][FUNCNAME].bind(runtime[`ext_${EXTLIST}`]))(this._parseJSON(Cast.toString(INPUT)), util, blockJSON);
     }
     getBlocks({ EXTLIST }, util, blockJSON) {
       const ext = runtime[`ext_${EXTLIST}`];

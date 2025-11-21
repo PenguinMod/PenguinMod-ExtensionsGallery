@@ -226,7 +226,7 @@ Each extension is incased in `{}` brackets. Look below on how to copy it.
 
 ### Site license
 
-The source for this site (including but not limited too: the source code, assets, extension images and extension documentation) are all licensed under the MIT license,
+The source for this site (including but not limited to: the source code, assets, extension images and extension documentation) are all licensed under the MIT license,
 extensions have their own licensing terms.
 
 ```

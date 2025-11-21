@@ -225,7 +225,7 @@ export default [
         name: "Translation Keys",
         description: "Use translation keys in your projects for multi-language support",
         code: "Embin/embintranslation.js",
-        banner: "Embin/embintranslation.png",
+        banner: "Embin/embintranslation.avif",
         creator: "NotEmbin",
         isGitHub: true, 
         creatorAlias: "Embin",

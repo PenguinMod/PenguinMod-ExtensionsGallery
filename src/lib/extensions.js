@@ -222,6 +222,15 @@ export default [
         isGitHub: true,
     },
     {
+        name: "Translation Keys",
+        description: "Use translation keys in your projects for multi-language support",
+        code: "Embin/embintranslation.js",
+        banner: "Embin/embintranslation.png",
+        creator: "NotEmbin",
+        isGitHub: true, 
+        creatorAlias: "Embin",
+    },
+    {
         name: "Yet Another String Extension",
         description: "A small collection of utilty blocks intended to make managing strings much, much easier.",
         code: "DogeisCut/YetAnotherStringExtension.js",

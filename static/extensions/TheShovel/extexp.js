@@ -76,21 +76,17 @@
         },
       };
     }
-    // NOTE: This is only meant to return Object values and nothing else (no Arrays or null)
+    // NOTE: This is only meant to return object values and nothing else (no Arrays or null as they don't count here)
     _convertToObject(obj) {
       if (typeof obj === 'object') {
-        if (
-          obj === null ||
-          !Object.is(Object.getPrototypeOf(obj), Object.prototype)
-        ) return {};
+        if (obj === null || Array.isArray(obj)) return {};
+        // NOTE: Unlike the "JSON.parse" this is not guarenteed to actually be a safe object to pass around.
         return obj;
       }
       try {
         obj = JSON.parse(obj);
-        if (
-          obj === null ||
-          !Object.is(Object.getPrototypeOf(obj), Object.prototype)
-        ) return {};
+        // "JSON.parse" only returns Object, Array and null as "object-like" values.
+        if (typeof obj !== 'object' || obj === null || Array.isArray(obj)) return {};
         return obj;
       } catch {
         return {};

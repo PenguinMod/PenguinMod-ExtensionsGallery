@@ -241,6 +241,6 @@ THE SOFTWARE IS PROVIDED “AS IS”, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR I
 
 ### Extension licenses
 
-All of the extensions in this gallery are licensed under MIT and or LGPL-3.0, to see which license an extension is under check the top of the file.
+All of the extensions in this gallery are licensed under MIT and/or LGPL-3.0, to see which license an extension is under check the top of the file.
 <br />
 If there is no license listed at the top of the file then you may assume that the extension is licensed under the MIT license.

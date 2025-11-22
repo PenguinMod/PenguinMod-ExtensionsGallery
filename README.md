@@ -2,7 +2,7 @@
 
 ## Licensing
 The source for [the extensions site](https://extensions.penguinmod.com)
-(including but not limited to: the source code, assets, extension images and extension documentation)
+(including but not limited to: the source code, assets, extension thumbnails and extension documentation)
 are all licensed under [the MIT license](https://opensource.org/license/mit).
 
 ### Extension code licensing
@@ -15,6 +15,8 @@ For an extension to use a specific license, it should specify the SPDX license c
 
 If an extension does not specify a license, it is assummed to be released under the MIT license with
 the copyright holders being the people credited to said extension.
+
+Extension thumbnails and documentation are under the MIT license.
 
 ## Submitting an extension
 

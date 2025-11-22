@@ -1,5 +1,21 @@
 # Extension Gallery
 
+## Licensing
+The source for [the extensions site](https://extensions.penguinmod.com)
+(including but not limited to: the source code, assets, extension images and extension documentation)
+are all licensed under [the MIT license](https://opensource.org/license/mit).
+
+### Extension code licensing
+All PenguinMod extension code submitted to this repository is under
+one of two licenses:
+- [MIT](https://opensource.org/license/mit)
+- [LGPL-3.0](https://opensource.org/license/LGPL-3.0)
+
+For an extension to use a specific license, it should specify the SPDX license code (seen above) in a comment at or near the top of the file.
+
+If an extension does not specify a license, it is assummed to be released under the MIT license with
+the copyright holders being the people credited to said extension.
+
 ## Submitting an extension
 
 ### NOTE!
@@ -17,8 +33,7 @@ and [Gallery page](https://extensions.penguinmod.com/) to confirm.
 - Your extension should be created for a specific purpose. An extension with random blocks someone might need will likely not get accepted if the blocks are not in a certain theme, like math or rendering.
 - Your extension should be easily explainable in 1-2 sentences or a single picture. This is what will determine whether you can be on the gallery or not.
 - Your extension should be under the MIT license or the LGPL-3.0 license.
-    - You cannot make or use a different license that is compatible with one of the above licenses. You must use one of the specified licenses exactly.
-    - Do not knowingly submit extensions under a separate license to purposely cause licensing issues on our repository.
+    - See [Extension code licensing](#extension-code-licensing) for information.
 - If your extension uses external content such as JS libraries or CSS stylesheets, you must include them inside the extension code itself. You **CANNOT** fetch/import content from URLs that is a core part of your extension as it'll make the extension unusable offline, or in offline packaged projects. This does not apply to content that obviously requires internet, like an extension that allows projects to use a public API.
 - Your extension **CANNOT** be made entirely with AI or assistive tools such as TurboBuilder. You must understand the raw code your extension is running.
 - Your extension **CANNOT** rely on the use of any generative AI. This is mainly for extensions that respond to messages from AI like ChatGPT. Any extensions added before this rule are an exception.
@@ -221,26 +236,3 @@ Each extension is incased in `{}` brackets. Look below on how to copy it.
     isGitHub: false, // Optional. false means this is your Scratch username, true means this is your GitHub username.
 },
 ```
-
-## License
-
-### Site license
-
-The source for this site (including but not limited to: the source code, assets, extension images and extension documentation) are all licensed under the MIT license,
-extensions have their own licensing terms.
-
-```
-Copyright 2025 PenguinMod and contributors
-
-Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the “Software”), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
-
-The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED “AS IS”, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-```
-
-### Extension licenses
-
-All of the extensions in this gallery are licensed under MIT and/or LGPL-3.0, to see which license an extension is under check the top of the file.
-<br />
-If there is no license listed at the top of the file then you may assume that the extension is licensed under the MIT license.

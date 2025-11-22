@@ -5,10 +5,20 @@ PenguinMod extension code in this folder is under one of two licenses:
 
 For an extension to use a specific license, it should specify the [SPDX short identifier](https://spdx.org/licenses/) (seen above) in a comment at or near the top of the file.
 
-Licensing example:
+Licensing examples:
 ```js
 // By: PenguinMod <https://github.com/PenguinMod>
 // License: LGPL-3.0
+(function (Scratch) {
+    // ...
+```
+```js
+/**!
+ * @file My Very Cool Extension
+ * @author PenguinMod
+ * @link https://github.com/PenguinMod
+ * @copyright Licensed under LGPL-3.0
+ */
 (function (Scratch) {
     // ...
 ```

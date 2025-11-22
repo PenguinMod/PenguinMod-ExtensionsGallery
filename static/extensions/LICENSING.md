@@ -20,9 +20,9 @@ people credited to said extension.
 An extension may also specify that you can use one license *or* the other, being "dual-licensing." In this case, you may choose the one that fits for you.
 
 ## Mixed licensing
-Extensions **cannot** specify to use one license *and* another.
+Extensions currently **cannot** specify to use one license *and* another.
 The only **exception** is extensions that specify a mix of MIT *and* LGPL-3.0.
 
 This is not recommended for use, as the LGPL-3.0 license essentially overrides the MIT license. See [this thread for more information](https://github.com/PenguinMod/PenguinMod-ExtensionsGallery/pull/419#issuecomment-3565666951).
 
-If you modify these extensions, you need to include both the MIT and LGPL-3.0 license texts. Please do not submit extensions that use mixed licensing.
+If you modify these extensions, you need to include both the MIT and LGPL-3.0 license texts. Avoid submitting extensions that use mixed licensing.

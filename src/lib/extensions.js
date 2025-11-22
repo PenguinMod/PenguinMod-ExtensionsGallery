@@ -94,6 +94,7 @@ export default [
         code: "sourdoggy/stylus extension.js",
         banner: "sourdoggy/stylus_ext.avif",
         creator: "sourdoggy",
+        isGitHub: true,
     },
     {
         name: "Text To Speech: Redone",

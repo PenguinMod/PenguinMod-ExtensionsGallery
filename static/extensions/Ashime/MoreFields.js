@@ -1,7 +1,7 @@
 /**!
  * More Fields
  * @author 0znzw <meow@miyo.icu> (@link https://scratch.mit.edu/users/0znzw/)
- * @version 1.8
+ * @version 1.8.1
  * @license MIT AND LGPL-3.0
  * Do not remove this comment
  */
@@ -222,6 +222,7 @@
         Blockly.DropDownDiv.clearContent();
         const div = Blockly.DropDownDiv.getContentDiv();
         const input = document.createElement('textarea');
+        input.setAttribute('style', 'color-scheme: light; color: #575E75;');
         input.value = this.getValue();
         div.append(input);
         this._textarea = input;
@@ -274,6 +275,7 @@
         this._FakeWidth ??= 40;
         this._FakeHeight ??= 24;
         const textareaHolder = document.createElementNS('http://www.w3.org/2000/svg', 'foreignObject');
+        textareaHolder.setAttribute('style', 'color-scheme: light; color: #575E75;');
         textareaHolder.setAttribute('x', '6');
         textareaHolder.setAttribute('y', String(BlockSvg.NOTCH_START_PADDING / 2 - 0.375));
         textareaHolder.addEventListener('mousedown', (e) => e.stopPropagation());
@@ -609,7 +611,9 @@
           this.textNode__.style.display = 'none';
           if (this.sourceBlock_.parentBlock_) _fixColours.call(this, false, this.sourceBlock_.parentBlock_.colour_);
         }
-        this._fileData = this.getValue() ?? null;
+        this._fileData = this.getValue() ?? '';
+        if (this._fileData === ArgumentType.FILE) this._fileData = '';
+        this.setValue(this._fileData);
         const fg_ = this.fieldGroup_;
         if (!fg_) return;
         const path = fg_?.previousElementSibling;
@@ -639,7 +643,23 @@
       _loadData(item) {
         const value = this.getValue();
         const cr1 = value.indexOf(this._delim);
-        const cr2 = value.indexOf(this._delim, cr1 + 1);
+        const cr2 = value.indexOf(this._delim, cr1 === -1 ? Infinity : cr1 + 1);
+        if (cr1 === -1 || cr2 === -1) {
+          switch (item) {
+            case 1:
+              this._fileData = '';
+              break;
+            case 2:
+              this._outputOptions.value = 'dataURL';
+              break;
+            case 3:
+              this._fileLimiter.value = '*.*';
+              break;
+            default:
+              break;
+          }
+          return;
+        }
         switch (item) {
           case 1:
             this._fileData = value.substr(cr2 + 1);
@@ -659,7 +679,7 @@
         this.showEditor_(true);
         this._onInput(this._fileData);
         Blockly.DropDownDiv.hideWithoutAnimation();
-        this._fileData = null;
+        this._fileData = '';
       }
       _onSettingsClick(e) {
         e.stopPropagation();
@@ -670,7 +690,7 @@
         const fileInput = document.createElement('input');
         this.showEditor_(true);
         fileInput.type = 'file';
-        fileInput.accept = this._fileLimiter.value.replaceAll(this._delim, '').trim() || '*.*';
+        fileInput.accept = this._fileLimiter.value.trim() || '*.*';
         const loadType = this._outputOptions.value;
         Blockly.DropDownDiv.hideWithoutAnimation();
         const fiErr = (c, alr) => {
@@ -719,15 +739,15 @@
         fileInput.click();
       }
       _getFileData() {
-        if (this._fileData) return this._fileData;
+        if (this._fileData && this._fileData !== '') return this._fileData;
         this._loadData(1);
         const fileData = this._fileData ?? '';
-        this._fileData = null;
+        this._fileData = '';
         return fileData;
       }
       _onInput(fileData) {
         if (this._fileLimiter.value.trim().length < 1) this._fileLimiter.value = '*.*';
-        this.setValue(`${this._outputOptions.value}${this._delim}${this._fileLimiter.value.replaceAll(this._delim, '')}${this._delim}${fileData ?? this._getFileData()}`);
+        this.setValue(`${this._outputOptions.value.trim() || 'dataURL'}${this._delim}${this._fileLimiter.value.trim() || '*.*'}${this._delim}${fileData ?? (this._getFileData() ?? '')}`);
       }
       _optDropdown(selected, ...optValues) {
         optValues = (optValues ?? []).map(opt => `<option value="${opt}"${selected===opt ? 'selected=""' : ''}>${opt}</option>`).join('\n');
@@ -747,7 +767,7 @@
         const clearBtn = document.createElement('button');
         if (this._getFileData().at(0)) {
           clearBtn.addEventListener('click', () => {
-            this._fileData = null;
+            this._fileData = '';
             this._onInput('');
             clearBtn.nextElementSibling.remove();
             clearBtn.remove();
@@ -1028,6 +1048,7 @@
           FIELD: {
             type: onu,
             defaultValue: opts.defaultValue,
+            exemptFromNormalization: true,
           },
         },
         allowDropAnywhere: (opts.output === null),
@@ -1073,15 +1094,18 @@
             arguments: {
               FILE: {
                 type: ArgumentType.FILE,
-                defaultValue: 'dataURL\n*/*\n',
+                defaultValue: '',
+                exemptFromNormalization: true,
               },
               BOOL: {
                 type: ArgumentType.SNAPBOOLEAN,
                 defaultValue: 0,
+                exemptFromNormalization: true,
               },
               NUM: {
                 type: ArgumentType.INLINESLIDER,
                 defaultValue: '10,0,20',
+                exemptFromNormalization: true,
               },
             },
             allowDropAnywhere: true,
@@ -1095,6 +1119,7 @@
               TEXT: {
                 type: ArgumentType.TEXTAREA,
                 defaultValue: ':D',
+                exemptFromNormalization: true,
               },
             },
             allowDropAnywhere: true,
@@ -1109,6 +1134,7 @@
               TEXT: {
                 type: ArgumentType.INLINETEXTAREA,
                 defaultValue: ':D',
+                exemptFromNormalization: true,
               },
             },
             allowDropAnywhere: true,
@@ -1127,6 +1153,7 @@
               BOOL: {
                 type: ArgumentType.SNAPBOOLEAN,
                 defaultValue: 0,
+                exemptFromNormalization: true,
               },
             },
             allowDropAnywhere: true,
@@ -1140,6 +1167,7 @@
               NUM: {
                 type: ArgumentType.INLINESLIDER,
                 defaultValue: '10,0,20',
+                exemptFromNormalization: true,
               }
             },
             allowDropAnywhere: true,
@@ -1153,6 +1181,7 @@
               TEXT: {
                 type: ArgumentType.HIDDENSTRING,
                 defaultValue: 'oo a secret ;)',
+                exemptFromNormalization: true,
               },
             },
             allowDropAnywhere: true,
@@ -1166,6 +1195,7 @@
               DATE: {
                 type: ArgumentType.INLINEDATE,
                 defaultValue: '2024-03-14',
+                exemptFromNormalization: true,
               },
             },
             allowDropAnywhere: true,
@@ -1178,7 +1208,8 @@
             arguments: {
               FILE: {
                 type: ArgumentType.FILE,
-                defaultValue: 'dataURL\n*/*\n',
+                defaultValue: '',
+                exemptFromNormalization: true,
               },
             },
             allowDropAnywhere: true,
@@ -1193,6 +1224,7 @@
               _a: {
                 type: 'InlineDoom',
                 defaultValue: '',
+                exemptFromNormalization: true,
               },
             },
           },
@@ -1234,6 +1266,7 @@
       try {
         const cr1 = args.FILE.indexOf('\n');
         const cr2 = args.FILE.indexOf('\n', cr1 + 1);
+        if (cr1 === -1 || cr2 === -1) return '';
         return args.FILE.substr(cr2 + 1);
       } catch {
         return '';
@@ -1248,3 +1281,4 @@
   vm._events['MOREFIELDS_REGISTERED'] = (() => {});
   vm.emit('MOREFIELDS_REGISTERED', inst, extension);
 })(Scratch);
+

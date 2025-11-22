@@ -1,7 +1,7 @@
 # Licensing
 PenguinMod extension code in this folder is under one of two licenses:
 - [MIT](https://opensource.org/license/mit)
-- [LGPL-3.0](https://opensource.org/license/LGPL-3.0)
+- [LGPL-3.0](https://www.gnu.org/licenses/lgpl-3.0.en.html)
 
 For an extension to use a specific license, it should specify the [SPDX short identifier](https://spdx.org/licenses/) (seen above) in a comment at or near the top of the file.
 

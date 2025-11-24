@@ -338,14 +338,14 @@ export default [
         creator: "LilyMakesThings",
         isGitHub: false,
     },
-    // { // temporary due to licensing issues
-    //     name: "More Fields",
-    //     description: "Custom Field Types",
-    //     code: "Ashime/MoreFields.js",
-    //     banner: "0znzw/MoreFields.avif",
-    //     creator: "yuri-kiss",
-    //     isGitHub: true,
-    // },
+    {
+        name: "More Fields",
+        description: "Custom Field Types",
+        code: "Ashime/MoreFields.js",
+        banner: "0znzw/MoreFields.avif",
+        creator: "yuri-kiss",
+        isGitHub: true,
+    },
     {
         name: "Beepbox Player",
         description: "Play, edit, and read songs from any BeepBox mod directly from the URL or JSON!",

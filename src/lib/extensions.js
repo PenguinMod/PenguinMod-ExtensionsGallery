@@ -440,7 +440,7 @@ export default [
         isGitHub: false,
     },
     {
-        name: "Chess (UPDATED)",
+        name: "Chess (updated)",
         description: "A powerful extension that lets you manage a chessboard, customize it, use Stockfish 17 (via API), a local chess engine (Lozza) and much, MUCH more!",
         code: "Gen1x/chess-ext.js",
         banner: "Gen1x/chess-ext.avif",

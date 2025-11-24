@@ -414,7 +414,10 @@
             return 'active';
         }
     }
-    class ChessExtension {
+    if (!Scratch.extensions.unsandboxed) {
+		throw new Error("Chess Extension must run unsandboxed!")
+	}
+	class ChessExtension {
         constructor() {
             this.game = new ChessLogic();
             this.overlay = null;

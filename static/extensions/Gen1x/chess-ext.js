@@ -4,7 +4,7 @@
         constructor() {
             this.reset();
         }
-        reset() {
+        reset(startingTurn = 'w') {
             this.board = [
                 ['r', 'n', 'b', 'q', 'k', 'b', 'n', 'r'],
                 ['p', 'p', 'p', 'p', 'p', 'p', 'p', 'p'],
@@ -15,7 +15,7 @@
                 ['P', 'P', 'P', 'P', 'P', 'P', 'P', 'P'],
                 ['R', 'N', 'B', 'Q', 'K', 'B', 'N', 'R']
             ];
-            this.turn = 'w';
+            this.turn = startingTurn;
             this.castling = { w: { k: true, q: true }, b: { k: true, q: true } };
             this.enPassantTarget = null;
             this.halfMoveClock = 0;
@@ -461,6 +461,7 @@
                     { opcode: 'setBoardPosition', blockType: 'command', text: 'set board position to [POSITION]', arguments: { POSITION: { type: 'string', menu: 'positionMenu', defaultValue: 'center' } } },
                     { opcode: 'setBoardSize', blockType: 'command', text: 'set board size to [SIZE]', arguments: { SIZE: { type: 'string', menu: 'sizeMenu', defaultValue: 'medium' } } },
                     { opcode: 'setCustomBoardSize', blockType: 'command', text: 'set custom board size to [SIZE] pixels', arguments: { SIZE: { type: 'number', defaultValue: 300 } } },
+                    { opcode: 'setPerspective', blockType: 'command', text: 'set perspective to [PERSPECTIVE]', arguments: { PERSPECTIVE: { type: 'string', menu: 'perspectiveMenu', defaultValue: 'white' } } },
                     { opcode: 'toggleBoardInteractivity', blockType: 'command', text: 'set board interactivity to [INTERACTIVE]', arguments: { INTERACTIVE: { type: 'string', menu: 'interactivityMenu', defaultValue: 'true' } } },
                     { opcode: 'setTileColor', blockType: 'command', text: 'set [TYPE] tile color to [COLOR]', arguments: { TYPE: { type: 'string', menu: 'tileTypeMenu', defaultValue: 'light' }, COLOR: { type: 'color', defaultValue: '#F0D9B5' } } },
                     { opcode: 'setPieceStyle', blockType: 'command', text: 'show pieces via [STYLE]', arguments: { STYLE: { type: 'string', menu: 'styleMenu', defaultValue: 'emojis' } } },
@@ -490,7 +491,7 @@
                     { blockType: 'label', text: 'Advanced Stats' },
                     { opcode: 'getPieceCount', blockType: 'reporter', text: 'count of [PIECE_TYPE] pieces for [COLOR]', arguments: { PIECE_TYPE: { type: 'string', menu: 'pieceTypeMenu', defaultValue: 'all' }, COLOR: { type: 'string', menu: 'colorMenu', defaultValue: 'w' } } },
                     { opcode: 'getMaterialScore', blockType: 'reporter', text: 'material score for [COLOR]', arguments: { COLOR: { type: 'string', menu: 'colorMenu', defaultValue: 'w' } } },
-                    { opcode: 'getAttackersOfSquare', blockType: 'reporter', text: 'attackers of square [SQUARE] by [COLOR]', arguments: { SQUARE: { type: 'string', defaultValue: 'e4' }, COLOR: { type: 'string', menu: 'colorMenu', defaultValue: 'w' } } },
+                    { opcode: 'getAttackersOfSquare', hideFromPalette: true, blockType: 'reporter', text: 'attackers of square [SQUARE] by [COLOR]', arguments: { SQUARE: { type: 'string', defaultValue: 'e4' }, COLOR: { type: 'string', menu: 'colorMenu', defaultValue: 'w' } } },
                     { opcode: 'getPieceMoves', blockType: 'reporter', text: 'valid moves for piece at [SQUARE]', arguments: { SQUARE: { type: 'string', defaultValue: 'e2' } } },
                     { opcode: 'getPositionScore', blockType: 'reporter', text: 'position evaluation score' },
                     { opcode: 'getMoveHistory', blockType: 'reporter', text: 'get move history' }
@@ -504,7 +505,8 @@
                     tileTypeMenu: { items: ['light', 'dark'] },
                     styleMenu: { items: ['emojis', 'icons'] },
                     onOffMenu: { items: ['on', 'off'] },
-                    easingMenu: { items: ['linear', 'ease', 'ease-in', 'ease-out', 'ease-in-out'] }
+                    easingMenu: { items: ['linear', 'ease', 'ease-in', 'ease-out', 'ease-in-out'] },
+                    perspectiveMenu: { acceptReporters: true, items: ['white', 'black'] }
                 }
             };
         }
@@ -584,10 +586,10 @@
             this.boardEl.style.pointerEvents = 'auto';
             this.boardEl.style.backgroundColor = this.darkTileColor;
             this.boardEl.style.position = 'relative';
-            for (let r = 0; r < 8; r++) {
-                for (let c = 0; c < 8; c++) {
+            for (let r_disp = 0; r_disp < 8; r_disp++) {
+                for (let c_disp = 0; c_disp < 8; c_disp++) {
                     const sq = document.createElement('div');
-                    const isDark = (r + c) % 2 === 1;
+                    const isDark = (r_disp + c_disp) % 2 === 1;
                     sq.style.backgroundColor = isDark ? this.darkTileColor : this.lightTileColor;
                     sq.style.display = 'flex';
                     sq.style.justifyContent = 'center';
@@ -598,9 +600,11 @@
                     sq.style.boxSizing = 'border-box';
                     sq.style.overflow = 'hidden';
                     sq.style.lineHeight = '1';
-                    sq.dataset.r = r;
-                    sq.dataset.c = c;
-                    sq.onclick = (e) => this.handleSquareClick(r, c);
+                    sq.onclick = () => {
+                        const r_logic = this.flipped ? 7 - r_disp : r_disp;
+                        const c_logic = this.flipped ? 7 - c_disp : c_disp;
+                        this.handleSquareClick(r_logic, c_logic);
+                    };
                     this.squares.push(sq);
                     this.boardEl.appendChild(sq);
                 }
@@ -637,11 +641,13 @@
                 'P': '♟', 'N': '♞', 'B': '♝', 'R': '♜', 'Q': '♛', 'K': '♚',
                 'p': '♟', 'n': '♞', 'b': '♝', 'r': '♜', 'q': '♛', 'k': '♚'
             };
-            for (let r = 0; r < 8; r++) {
-                for (let c = 0; c < 8; c++) {
-                    const idx = r * 8 + c;
+            for (let r_disp = 0; r_disp < 8; r_disp++) {
+                for (let c_disp = 0; c_disp < 8; c_disp++) {
+                    const r_logic = this.flipped ? 7 - r_disp : r_disp;
+                    const c_logic = this.flipped ? 7 - c_disp : c_disp;
+                    const idx = r_disp * 8 + c_disp;
                     const sq = this.squares[idx];
-                    const piece = this.game.board[r][c];
+                    const piece = this.game.board[r_logic][c_logic];
                     if (this.pieceStyle === 'icons' && this.fontLoaded) {
                         sq.style.fontFamily = "'ChessMerida', sans-serif";
                         sq.textContent = piece === '.' ? '' : pieceSymbols[piece];
@@ -656,12 +662,12 @@
                         sq.style.color = this.game.isWhite(piece) ? '#ffffff' : '#000000';
                         if (this.game.isWhite(piece)) sq.style.textShadow = '0px 0px 2px black';
                     }
-                    const isDark = (r + c) % 2 === 1;
+                    const isDark = (r_logic + c_logic) % 2 === 1;
                     sq.style.backgroundColor = isDark ? this.darkTileColor : this.lightTileColor;
-                    if (this.selectedSquare && this.selectedSquare.r === r && this.selectedSquare.c === c) {
+                    if (this.selectedSquare && this.selectedSquare.r === r_logic && this.selectedSquare.c === c_logic) {
                         sq.style.backgroundColor = '#6a9c47';
                     }
-                    if (this.possibleMoveHighlights.some(m => m.toR === r && m.toC === c)) {
+                    if (this.possibleMoveHighlights.some(m => m.toR === r_logic && m.toC === c_logic)) {
                          sq.style.boxShadow = 'inset 0 0 10px rgba(0,0,0,0.5)';
                          if (piece === '.') {
                              sq.style.background = `radial-gradient(rgba(0,0,0,0.2) 19%, rgba(0,0,0,0) 20%)`;
@@ -674,7 +680,7 @@
                         sq.style.background = 'none';
                         sq.style.backgroundColor = isDark ? this.darkTileColor : this.lightTileColor;
                     }
-                    if (this.castleRookHighlight && this.castleRookHighlight.r === r && this.castleRookHighlight.c === c) {
+                    if (this.castleRookHighlight && this.castleRookHighlight.r === r_logic && this.castleRookHighlight.c === c_logic) {
                         sq.style.boxShadow = 'inset 0 0 10px rgba(0,0,255,0.5)';
                     }
                 }
@@ -689,11 +695,18 @@
             const boardHeight = this.boardEl.clientHeight;
             const sqW = boardWidth / 8;
             const sqH = boardHeight / 8;
-            const startX = fromC * sqW;
-            const startY = fromR * sqH;
-            const endX = toC * sqW;
-            const endY = toR * sqH;
-            const fromIdx = fromR * 8 + fromC;
+            
+            const fromR_disp = this.flipped ? 7 - fromR : fromR;
+            const fromC_disp = this.flipped ? 7 - fromC : fromC;
+            const toR_disp = this.flipped ? 7 - toR : toR;
+            const toC_disp = this.flipped ? 7 - toC : toC;
+            
+            const startX = fromC_disp * sqW;
+            const startY = fromR_disp * sqH;
+            const endX = toC_disp * sqW;
+            const endY = toR_disp * sqH;
+            
+            const fromIdx = fromR_disp * 8 + fromC_disp;
             const fromSq = this.squares[fromIdx];
             const pieceContent = fromSq.textContent;
             const pieceStyle = fromSq.style.cssText;
@@ -713,7 +726,7 @@
             ghost.style.alignItems = 'center';
             ghost.style.transition = `transform ${this.tweenDuration}s ${this.tweenEasing}`;
             this.boardEl.appendChild(ghost);
-            fromSq.style.color = 'transparent';
+            fromSq.textContent = '';
             fromSq.style.textShadow = 'none';
             let animationFinished = false;
             const onEnd = () => {
@@ -766,23 +779,22 @@
                     const alg = this.game.coordsToAlg(this.selectedSquare.r, this.selectedSquare.c) +
                                 this.game.coordsToAlg(finalMove.toR, finalMove.toC) +
                                 (finalMove.promotion ? finalMove.promotion : '');
+                    
+                    const fromR = this.selectedSquare.r;
+                    const fromC = this.selectedSquare.c;
+
+                    this.selectedSquare = null;
+                    this.possibleMoveHighlights = [];
+                    this.castleRookHighlight = null;
+                    this.updateUI();
+
                     if (this.tweenEnabled) {
-                        this.animatePiece(this.selectedSquare.r, this.selectedSquare.c, finalMove.toR, finalMove.toC, () => {
+                        this.animatePiece(fromR, fromC, finalMove.toR, finalMove.toC, () => {
                             this.game.move(alg);
-                            this.selectedSquare = null;
-                            this.possibleMoveHighlights = [];
-                            this.castleRookHighlight = null;
                             this.updateUI();
                         });
-                        this.selectedSquare = null;
-                        this.possibleMoveHighlights = [];
-                        this.castleRookHighlight = null;
-                        this.updateUI();
                     } else {
                         this.game.move(alg);
-                        this.selectedSquare = null;
-                        this.possibleMoveHighlights = [];
-                        this.castleRookHighlight = null;
                         this.updateUI();
                     }
                 } else {
@@ -806,7 +818,7 @@
             this.fontLoaded = true;
         }
         initializeBoard() {
-            this.game.reset();
+            this.game.reset(this.flipped ? 'b' : 'w');
             this.updateUI();
         }
         showBoard() { if (this.overlay) this.overlay.style.visibility = 'visible'; }
@@ -816,6 +828,10 @@
         setBoardSize(args) { this.boardSize = args.SIZE; this.updateLayout(); }
         setCustomBoardSize(args) { this.boardSize = 'custom'; this.customSize = Number(args.SIZE); this.updateLayout(); }
         toggleBoardInteractivity(args) { this.isInteractive = args.INTERACTIVE === 'true'; }
+        setPerspective(args) {
+            this.flipped = args.PERSPECTIVE === 'black';
+            this.updateUI();
+        }
         setTileColor(args) {
             if (args.TYPE === 'light') this.lightTileColor = args.COLOR;
             else this.darkTileColor = args.COLOR;
@@ -836,12 +852,18 @@
                     return new Promise(resolve => {
                         this.animatePiece(moveObj.fromR, moveObj.fromC, moveObj.toR, moveObj.toC, () => {
                             this.game.move(moveStr);
+                            this.selectedSquare = null;
+                            this.possibleMoveHighlights = [];
+                            this.castleRookHighlight = null;
                             this.updateUI();
                             resolve();
                         });
                     });
                 } else {
                     this.game.move(moveStr);
+                    this.selectedSquare = null;
+                    this.possibleMoveHighlights = [];
+                    this.castleRookHighlight = null;
                     this.updateUI();
                 }
             }

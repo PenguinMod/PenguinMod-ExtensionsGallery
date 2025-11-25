@@ -514,7 +514,7 @@
         }
         loadCpuEngine() {
             if (this.cpuEngineLoaded) return;
-            fetch('https://rawcdn.githack.com/Gen1xLol/testassets/refs/heads/main/lozza.js')
+            Scratch.fetch('https://rawcdn.githack.com/Gen1xLol/testassets/refs/heads/main/lozza.js')
                 .then(r => r.text())
                 .then(js => {
                     const blob = new Blob([js], {type: 'application/javascript'});
@@ -891,7 +891,7 @@
             if (args.SEARCH_MOVES && args.SEARCH_MOVES.trim() !== '') {
                 payload.searchmoves = args.SEARCH_MOVES;
             }
-            return fetch("https://chess-api.com/v1", {
+            return Scratch.fetch("https://chess-api.com/v1", {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json"

@@ -481,7 +481,8 @@
                     { opcode: 'isCpuEngineLoaded', blockType: 'Boolean', text: 'is CPU engine loaded?' },
                     { opcode: 'analyzeChessPositionLocal', blockType: 'reporter', text: 'analyze (CPU) position [FEN] depth [DEPTH]', arguments: { FEN: { type: 'string', defaultValue: 'current' }, DEPTH: { type: 'number', defaultValue: 10 } } },
                     { blockType: 'label', text: 'Information' },
-                    { opcode: 'isCheck', blockType: 'Boolean', text: 'is king in check?' },
+                    { opcode: 'isCheck', hideFromPalette: true, blockType: 'Boolean', text: 'is king in check?' },
+                    { opcode: 'isKingInCheckNew', blockType: 'Boolean', text: 'is [COLOR] king in check?', arguments: { COLOR: { type: 'string', menu: 'colorMenu', defaultValue: 'w' } } },
                     { opcode: 'getGameStatus', blockType: 'reporter', text: 'game status' },
                     { opcode: 'isGameOver', blockType: 'Boolean', text: 'is game over?' },
                     { opcode: 'getValidMoves', blockType: 'reporter', text: 'get all valid moves' },
@@ -901,6 +902,7 @@
             .catch(error => JSON.stringify({ error: "API Error: " + error.message }));
         }
         isCheck() { return this.game.isKingInCheck(this.game.turn); }
+        isKingInCheckNew(args) { return this.game.isKingInCheck(args.COLOR); }
         getGameStatus() { return this.game.getGameState(); }
         isGameOver() { return this.game.getGameState() !== 'active'; }
         getValidMoves() { return this.game.getValidMoves(true).join(','); }

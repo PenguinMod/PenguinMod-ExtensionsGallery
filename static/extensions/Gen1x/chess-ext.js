@@ -450,7 +450,7 @@
                 id: 'chessG1nX',
                 name: 'Chess Extension',
                 color1: '#B58863',
-                docsURI: "https://hackmd.io/@vBTXv9pwQ3GoeueFKGElEw/chess-ext-docs",
+                docsURI: "https://hackmd.io/@Gen1x01/chess-ext-docs",
                 blocks: [
                     { blockType: 'label', text: 'Board Management' },
                     { opcode: 'initializeBoard', blockType: 'command', text: 'initialize new chess game' },
@@ -1040,3 +1040,4 @@
     }
     Scratch.extensions.register(new ChessExtension());
 })(Scratch);
+

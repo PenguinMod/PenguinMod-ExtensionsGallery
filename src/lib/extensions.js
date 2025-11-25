@@ -259,7 +259,7 @@ export default [
         name: "Blobs",
         description: "An extension made for handling blobs which can be used to store files. Allows to easily make blobs for the Js extension",
         code: "Faunks/Blobs.js",
-        banner: "Faunks/Blobs.png",
+        banner: "Faunks/Blobs.avif",
         creator: "Faunks",
         isGitHub: true,
     },

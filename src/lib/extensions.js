@@ -6,6 +6,14 @@
 */
 export default [
     {
+        name: "CloudLink",
+        description: "A powerful WebSocket extension for Scratch. Allows for online connectivity to servers for things like multiplayer.",
+        code: "MikeDev101/cloudlink.js",
+        banner: "MikeDev101/cloudlink.svg",
+        creator: "MikeDev101",
+        isGitHub: true,
+    },
+    {
         name: "Pen+",
         description: "Extended pen section! Adds blocks for drawing triangles using textures and tints, drawing images and editing their pixels, etc.",
         code: "ObviousAlexC/PenPlus.js",
@@ -246,6 +254,14 @@ export default [
         banner: "DogeisCut/dogeiscutSet.svg",
         creator: "DogeisCut",
         isGitHub: true, 
+    },
+    {
+        name: "Blobs",
+        description: "An extension made for handling blobs which can be used to store files. Allows to easily make blobs for the Js extension",
+        code: "Faunks/Blobs.js",
+        banner: "Faunks/Blobs.png",
+        creator: "Faunks",
+        isGitHub: true,
     },
     {
         name: "Random Utilities",

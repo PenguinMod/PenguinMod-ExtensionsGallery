@@ -1,8 +1,11 @@
 <script>
+    let props = $props();
+
+    // Components
     import Footer from "$lib/Footer/Component.svelte";
 </script>
 
-<slot />
+{@render props.children?.()}
 
 <Footer>
     <br />
@@ -18,7 +21,7 @@
     <a href="https://scratchblocks.github.io/">scratchblocks</a>.
     <br />
 </Footer>
-<div style="height: 32px" />
+<div style="height: 32px"></div>
 
 <style>
     :global(body.dark-mode) {

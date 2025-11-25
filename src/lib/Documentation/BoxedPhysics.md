@@ -1,247 +1,247 @@
 # Boxed Physics
+<!-- Based on https://p7scratchextensions.pages.dev/ext/BoxedPhysics/doc.md but re-worked to be compatable with normal markdown parsers -->
+---
 
-> Boxed Physics is an extension for Scratch 3 that allows you to add 2D physics simulations to your Scratch projects. 
-> This documentation will guide you through the process of using Boxed Physics.
+Boxed Physics is an implementation of the Box2D physics engine that allows for the use of joints, springs, sliders, and other complex physics interactions within your projects. <br>
+This documentation will guide you through the process of using Boxed Physics.
 
-## Startup & world options
-When using the Boxed Physics extension, you always need to initialise the environment when starting the project. to do this, you can use the `Init World, scale 1m: [SCALE]  gravity: [GRAVITY]  scene: [SCENE]` block.
+---
+
+## Working with Worlds
+When using the Boxed Physics extension, you must initialize the physics environment before starting your project. To do this, use the `Make world, Scale 1m: [SCALE] Gravity: [GRAVITY] Wind: [WIND] Scene: [SCENE]` block.
+
+> Note: the environment is initialised to the default every time the project starts, but it's good practice to use this block every flag click anyways
+
+### Scene Types
+The scene type determines the containment type for your physics world:
+- **Semi-closed stage:** Prevents objects from leaving the bottom and sides of the stage but allows infinite upward movement.
+- **Boxed stage:** Fully contains objects within the stage, preventing them from leaving the top, bottom, or sides.
+- **Opened stage:** Only prevents objects from falling off the bottom.
+- **Nothing:** Removes all walls, allowing objects to move freely.
 
 ```scratch
-Init World, scale 1m: [50]  gravity: [-10]  scene: [boxed stage] :: #2cb0c0
+when gf clicked
+Make world, Scale 1m: [50] Gravity: [-10] Wind: [0] Scene: [semi-closed stage v] :: #2cb0c0
 ```
 
-Scene is the type of containment to keep objects within the stage:
- - boxed stage: Keeps sprites from going off the bottom and sides.
- - closed stage: Keeps sprites from going off the bottom, sides, or top.
- - opened stage: Keeps sprites from going off the bottom.
- - nothing: Removes all walls so objects can go wherever they want.
- - stage: a depricated option that is the same as boxed stage.
-
-You can move forward in time using the step simulation block. Run this in a loop to keep the physics going.
+### Changing World Options
+Once the world is created, you can modify gravity and wind dynamically without creating a new world.
 
 ```scratch
-Step Simulation :: #2cb0c0
-```
-
-This next block lets you set the physics options. You usually won't need to use this block.
-```scratch
-Set physics Position Iterations: (10) Velocity Iterations: (10) Continuous Physics: <true :: #5EC15D> Warm Starting: <true :: #5EC15D> :: #2cb0c0
-```
-
-You can also set the speed of the world with the set slow motion block.
-```scratch
-Set slow motion to (30) :: #2cb0c0
-```
-You can also get the slow motion value with the get slow motion block.
-```scratch
-(Slow motion :: #2cb0c0)
-```
-
-## Making objects
-
-Making objects requires that you define an object first, so running this does nothing on its own.
-
-```scratch
-Create Body [box] at x: (0)  y: (0)  dir: (90) :: #2cb0c0
-```
-
-Define an object type first, then the object itself. Now, you can place it in the world. <br>
-You can do the steps in any order, just Create the object body last.
-
-```scratch
-when green flag clicked
-Dеfine Type [Dynamic v]  Density (1)  Friction (0.5)  Bounce (0.2) :: #2cb0c0
-Dеfine Polygon, points: [0 50   40 -50   -40 -50] :: #2cb0c0
-Create Body [box] at x: (0)y: (0)  dir: (90) :: #2cb0c0
-```
-
-## Defining types
-
-Types allow you to make objects with spesific properties.
-
-```scratch
-Dеfine Type [Dynamic v]  Density (1)  Friction (0.5)  Bounce (0.2) :: #2cb0c0
-```
-
-## Making a box
-
-Making a box is simple, just define the box, then create the body.
-
-```scratch
-Dеfine Box, width: (100) height: (100) :: #2cb0c0
-Create Body [box] at x: (0)  y: (0)  dir: (90) :: #2cb0c0
-```
-
-## Making a circle
-
-Making a circle is just as simple, Use the code from the box, and replace it with the circle making block.
-
-```scratch
-Dеfine Circle, redius: (100) :: #2cb0c0
-Create Body [box] at x: (0)  y: (0)  dir: (90) :: #2cb0c0
-```
-
-## Making pollygons
-
-Thare are two ways of making a pollygon object. You can eather use the `Define pollygon as this costume` block, or the `Define Polygon, points: [POINTS]` block.
-
-`Define pollygon as this costume` lets you use the costume of a sprite to make a pollygon, while
-`Define Polygon, points: [POINTS]` lets you defide a pollygon manually.
-
-```scratch
-Dеfine pollygon as this costume :: #2cb0c0
-Create Body [box] at x: (0)  y: (0)  dir: (90) :: #2cb0c0
-```
-```scratch
-Dеfine Polygon, points: [0 50   40 -50   -40 -50] :: #2cb0c0
-Create Body [box] at x: (0)  y: (0)  dir: (90) :: #2cb0c0
-```
-
-Every point in a pollygon is seperated by 3 spaces. Every point has only one space from x to y.
-
-## Destroying objects
-
-You can destroy an object by simply providing its name into the destroy block.
-
-```scratch
-Destroy object [Object] :: #2cb0c0
-```
-
-## Updating collision
-
-You can make objects not collide with eachother using collision groups.
-
-The objects in here will be in their own no-collide group, and will collide with everything else.
-```scratch
-Disable collision between [Object1 Object2] :: #2cb0c0 // this will take the object out of any existing no-collide groups
-```
-
-You can also remove no-collide tags from objects
-
-```scratch
-Reset collision of objects [Object1 Object2] :: #2cb0c0
-```
-
-## Damping
-
-You can set the damping or the rotational damping of an object.
-
-```scratch
-Set [damping v] of object [Object] to (0.1) :: #2cb0c0
-```
-
-## Moving objects
-
-Thare are a two ways to move your objects. you can push them, or you can set their movement directly.
-
-You can push your objects using inpulses, or World Impulses.
-```scratch
-Apply [Impulse v] to object [Object] at x: (0)  y: (0)  power: (500)  dir: (90) :: #2cb0c0
-Apply Angular Impulse to object [Object] power: (-70) :: #2cb0c0
-```
-
-You can also set the velocity of an object directly, or remove it entirely.
-```scratch
-Set Velocity of [Object] to x (-2) y (5) dir (-10) :: #2cb0c0
-```
-```scratch
-Clear velocity of object [Object] :: #2cb0c0
-```
-
-While I'm at it, I might as well mention these blocks
-```scratch
-Move object [Object] to x (0) y (0) :: #2cb0c0
-```
-```scratch
-Set rotation of object [Object] to (90) :: #2cb0c0
-```
-
-## Object attributes
-
-You can get the attributes of any object using the `(get [thing] from [object])` block.
-
-```scratch
-(Get [Direction v] from [Object] :: #2cb0c0)
-```
-
-You can get the following from an object:
-- X
-- Y
-- Direction
-- X velocity
-- Y velocity
-- Directional velocity
-- Is awake?
-
-You can also get the object at any position with this:
-```scratch
-Get object at x: (0)  y: (0) :: #2cb0c0
-```
-
-## Making joints
-
-Joints are another thing built into Boxed Physics. Just like objects, they need to be defined before you can place them. 
-```scratch
-Create Joint [Joint] of type [Rotating v] between [Object1] at (0) (0) and [Object2] at (0) (0) :: #2cb0c0
-```
-Thare are Rotating, Spring, Weld, Slider, and Mouse jonts built into Boxed Physics, but more are on the way. <br>
-Thare are only two joints that need extra info to define them, being springs and sliders.
-
-## Making a spring
-
-Springs are made of three values: Length, Damping, and Frequency.
-```scratch
-Dеfine Spring, Length: (100)  Damping: (0.7)  Freq: (5) :: #2cb0c0
-```
-
-## Making a slider
-
-Sliders are another type of joint is a slider joint. Sliders are made with a direction, lower stop, and an upper stop.
-```scratch
-Dеfine Slider, Angle: (90) Lower stop: (-100) Upper stop: (100) :: #2cb0c0
-```
-
-## Editing joints
-
-You can edit joints using the `Set [attr] of [joint]` block to set attributes of joints. 
-```scratch
-Set [Max Torque v] of joint [Joint] to (0) :: #2cb0c0
-```
-You can set the following:
- - Motor On
- - Motor Speed
- - Max Torque
- - Limits On
- - Lower Limit
- - Upper 
-
-Getting joint attributes is just as easy.
-```scratch
-Get [Motor Speed v] of joint: [Joint] :: #2cb0c0
-```
-
-You can also delete joints.
-```scratch
-Destroy Joint [Joint] :: #2cb0c0
-```
-
-If you made a mouse joint, you can edit the target position with this block.
-```scratch
-Set Mouse Joint Target [Joint] to x: (0)  y: (0) :: #2cb0c0
-```
-
-## Example code
-
-```scratch
-when green flag clicked
-Init World, scale 1m: [50]  gravity: [-10]  scene: [boxed stage] :: #2cb0c0
-Dеfine Type [Dynamic v]  Density (1)  Friction (0.5)  Bounce (0.2) :: #2cb0c0
-Dеfine Polygon, points: [0 50   40 -50   -40 -50] :: #2cb0c0
-Create Body [tri] at x: (0)y: (0)  dir: (90) :: #2cb0c0
-Set Velocity of [tri] to x (-2) y (5) dir (-10) :: #2cb0c0
+when gf clicked
 forever
-  step simulation :: #2cb0c0
-  go to x: (Get [x v] from [tri] :: #2cb0c0) y: (Get [y v] from [tri] :: #2cb0c0)
-  point in direction (Get [Direction v] from [tri] :: #2cb0c0)
+    Set world options, Gravity: (-10) Wind: ((5) * ([sin v] of ((timer) * (70)))) :: #2cb0c0
 end
 ```
+
+Additionally, you can enable slow motion using the `Set slow motion to [VALUE]` block.
+
+---
+
+## Creating Your First Object
+Objects in Boxed Physics are invisible physics-based hitboxes. To add an object, define its shape and attributes, and then create it in the world.
+
+### Basic Box Example
+```scratch
+when gf clicked
+Dеfine Box, Width: [100] Height: [100] :: #2cb0c0
+Make object [Object1] at X: [0] y: [0] Dir: [90] :: #2cb0c0
+forever
+    Step Simulation :: #2cb0c0 //Remember to run this block every tick
+end
+```
+
+You can create multiple objects efficiently:
+```scratch
+when gf clicked
+Dеfine Box, Width: [100] Height: [100] :: #2cb0c0
+set [index v] to (0)
+repeat (4)
+    change [index v] by (1)
+    Make object (join [Object] (index)) at X: (pick random (-100) to (100)) y: (pick random (-100) to (100)) Dir: [90] :: #2cb0c0
+end
+```
+
+### Other Shapes
+
+#### Circles
+```scratch
+Dеfine Circle, Size: [100] :: #2cb0c0
+Make object [Object1] at X: [0] y: [0] Dir: [90] :: #2cb0c0
+```
+
+#### Polygons
+1. **Costume-based:** Directly convert the current costume into a polygon (no holes).
+2. **Point-based:** Define polygons with a list of coordinates.
+
+```scratch
+Dеfine polygon as this costume :: #2cb0c0
+Make object [Object2] at X: [50] y: [50] Dir: [0] :: #2cb0c0
+
+Dеfine polygon, Points: [0 50   40 -50   -40 -50] :: #2cb0c0 // Triangle
+Make object [Object3] at X: [0] y: [0] Dir: [90] :: #2cb0c0
+```
+
+> Point-based objects simply take an array of "x y" values seperated by 3 spaces. You can visualise any point-based polygon in [this demo](https://p7scratchextensions.pages.dev/view/demo?p=%2Fext%2FBoxedPhysics%2Fexamples%2FBoxedPhysics%20point%20render%20system.pmp).
+
+### Defining Base Attributes
+Customize objects with the `Define base` block:
+- **Type** Determines if the object is static or dynamic.
+- **Density, Friction, Bounce** Control physical properties like weight, surface interaction, and bounciness.
+
+```scratch
+when gf clicked //Super bouncy imovable triangle
+Dеfine polygon, Points: [0 50   40 -50   -40 -50] :: #2cb0c0
+Dеfine base, Type: [static v] Density: [0.1] Friction: [0.5] Bounce: [2] :: #2cb0c0
+Make object [Object1] at X: [0] y: [0] Dir: [90] :: #2cb0c0
+```
+
+---
+
+## Modifying Objects
+
+### Damping (air resistance)
+The damping of each object can also be changed with the `Set [BODYATTR] of object [NAME] to [VALUE]` block.
+
+```scratch
+when gf clicked
+Set [damping v] of object [Object1] to [0.1] :: #2cb0c0
+```
+
+### Destroying Objects
+You can delete individual objects or clear all objects at once.
+```scratch
+when I receive [Destroy Object1 v]
+Destroy object [Object1] :: #2cb0c0
+
+when I receive [Nuke everything! v]
+Destroy every object :: #2cb0c0 //This will also remove all joints
+```
+
+### Moving Objects
+
+#### Direct Movement
+```scratch
+Move object [Object1] to X: [50] Y: [50] :: #2cb0c0
+Set rotation of object [Object1] to [45] :: #2cb0c0
+```
+
+#### Velocity and Impulse
+Rotational impulses are simple, just a number for power, but positional impulses are a little more complex. <br>
+Positional impulses can be one of two types: `World Impulse` or `Impulse`.
+They both take a direction, and power, but they behave differently.
+The `Impulse` option is meant for quick movements (like jumping)
+while the `World Impulse` option is meant for movement over time (like pushing a wheel).
+
+```scratch
+Set Velocity of object [Object1] to X: [10] Y: [0] Dir: [0] :: #2cb0c0
+Apply Angular Impulse to object [Wheel1] power: [20] :: #2cb0c0
+```
+
+---
+
+## Handling Impacts
+Boxed Physics comes with a few blocks that can be used to handle impacts.
+
+### On impact
+When an object collides with another, this hat block is triggered.
+This simple block allows you to run code any time an object is hit.
+
+> Note: this block does not restart existing threads
+
+```scratch
+When [Object] has an impact :: #2cb0c0
+say [I HAVE BEEN HIT!]
+```
+
+You can also use a boolean version that returns true if an object had an impact during the last tick.
+
+```scratch
+when gf clicked
+wait until <[Object] had an impact :: #2cb0c0>
+say [I got hit during the last tick]
+```
+
+### What hit me?
+You can also check what objects are colliding with the `Get all objects touching [NAME]` block.
+This block simply lists all the names that hit the object.
+
+```scratch
+When [Object1] has an impact :: #2cb0c0
+say (join [I was hit by ] (Get all objects touching [Object1] :: #2cb0c0))
+```
+
+Or you can just get if the object is touching anyting if you don't care what was hit.
+
+```scratch
+when gf clicked
+forever
+    if <[Object] is touching anything :: #2cb0c0> then
+        say [AAAAAAAAAAAAAAAAAHHHHHHHHHHHHHH!!!!!!]
+    else
+        say []
+    end
+end
+```
+
+---
+
+## Making Joints
+Joints connect objects and enable complex interactions like wheels, sliders and more. <br>
+Here is a description of all joints in BoxedPhysics:
+
+**Rotating:** This joint lets you to join 2 objects togeather while keeping rotations
+
+**Weld:** This joint locks 2 objects togeather, making them act like one object
+
+**Spring:** This joint keeps 2 objects at a semi-fixed distance from eachother
+
+**Slider:** This joint forces an object to only move along the specified axis to the other object
+
+**Pin:** This joint takes an object and tries to move it to a position with a specified force. 
+This joint is the only joint to have the input position stay relative to the world instead of the object.<br>
+Creating pin joints uses its own block, instead of the create joint block
+
+
+```scratch
+Dеfine Spring, Length: [100] Damping: [0.7] Freq: [5] :: #2cb0c0
+Create Joint [Spring1] of type [Spring v] between [Object1] at [0] [0] and [Object2] at [0] [0] :: #2cb0c0
+```
+
+> Experiment with all the joint types in [this demo](https://studio.penguinmod.com/fullscreen.html?project_url=https://p7scratchextensions.pages.dev/ext/BoxedPhysics/examples/Joints.pmp) to see what they do.
+
+### Joint Properties
+- **Settable:** Motor On, Speed, Limits, Torque
+- **Gettable:** Angle, Speed, Torque, Tension
+
+---
+
+## Performance Options
+You can optimize your simulation by configuring iteration settings to allow for more objets with less lag, or have better physics with fewer objects. <br>
+While this doesn't visually change anything _(usually)_ it does change how performant things are, and you will notice that with bigger simulations.
+
+```scratch
+Set physics options, Position iterations: [10] Velocity iterations: [10] Continuous physics: <true :: #5EC15D> Warm starting: <true :: #5EC15D> :: #2cb0c0
+```
+
+---
+
+## Math Utilities
+Boxed Physics also includes some math blocks for convenience:
+- **Rotate a point:** Rotate a point around the origin (0, 0).
+- **Get rotation from:** Find the direction from one point to another.
+- **Magnitude:** Calculate the vector length.
+- **Distance:** Measure the distance between two points.
+
+```scratch
+(Get [x v] from point x [10] y [-10] rotated by [90] :: #2cb0c0)
+(Get rotation from x [0] y [0] to x [10] y [15] :: #2cb0c0)
+(Magnitude of x [5] y [3] :: #2cb0c0)
+(Distance between x [0] y [0] and x [-20] y [10] :: #2cb0c0)
+```
+
+---
+
+## Examples
+Need more help?
+Try some example projects [here](https://p7scratchextensions.pages.dev/ext/BoxedPhysics/examples).

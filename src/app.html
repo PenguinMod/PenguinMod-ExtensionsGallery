@@ -48,7 +48,7 @@
 	</body>
 	<script>
 		const body = document.getElementById("PAGE_BODY");
-		const loop = () => {
+		const darkModeUpdated = () => {
 			const darkmode = String(localStorage.getItem("pm:dark")) === "true";
 			body.setAttribute("class", darkmode ? "dark-mode" : "");
 			if (darkmode) {
@@ -57,7 +57,9 @@
 			}
 			body.style.background = "";
 		}
-		setInterval(loop, 100);
-		loop();
+        darkModeUpdated();
+        document.addEventListener("penguinmod-dark-updated", () => {
+            darkModeUpdated();
+        });
 	</script>
 </html>

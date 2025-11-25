@@ -1,5 +1,6 @@
 (function (Scratch) {
   let lastStatus = "", encodeMode = true;
+  let dangerousBlocksHidden = true;
 
   class GitPenguin {
     getInfo() {
@@ -30,8 +31,32 @@
               }
             }
           },
-          { blockType: Scratch.BlockType.LABEL, text: "File control" },
           {
+            opcode: "getStatus",
+            blockType: Scratch.BlockType.REPORTER,
+            text: "recent file status"
+          },
+          {
+            opcode: "toggleEncode",
+            blockType: Scratch.BlockType.COMMAND,
+            text: "toggle file encoding [TYPE]",
+            arguments: {
+              TYPE: {
+                type: Scratch.ArgumentType.STRING,
+                menu: "TOGGLE"
+              }
+            }
+          },
+          ...(dangerousBlocksHidden ? ["---"] : []),
+          { blockType: Scratch.BlockType.LABEL, text: "File Control", hideFromPalette: dangerousBlocksHidden },
+          {
+            blockType: Scratch.BlockType.BUTTON,
+            hideFromPalette: !dangerousBlocksHidden,
+            func: "showDangerousBlocks",
+            text: Scratch.translate("Show Potentially Dangerous Blocks")
+          },
+          {
+            hideFromPalette: dangerousBlocksHidden,
             opcode: "createFile",
             blockType: Scratch.BlockType.COMMAND,
             text: "create file [FILE] with content [CONTENT] in repository [REPO] of user [NAME] using token [TOKEN]",
@@ -59,6 +84,7 @@
             }
           },
           {
+            hideFromPalette: dangerousBlocksHidden,
             opcode: "editFileContent",
             blockType: Scratch.BlockType.COMMAND,
             text: "edit content of file [FILE] in repository [REPO] of user [NAME] to [CONTENT] using token [TOKEN]",
@@ -86,12 +112,7 @@
             }
           },
           {
-            opcode: "getStatus",
-            blockType: Scratch.BlockType.REPORTER,
-            text: "recent file status"
-          },
-          { blockType: Scratch.BlockType.LABEL, text: "DANGEROUS" },
-          {
+            hideFromPalette: dangerousBlocksHidden,
             opcode: "deleteFile",
             blockType: Scratch.BlockType.COMMAND,
             text: "delete file [FILE] from repository [REPO] of user [NAME] using token [TOKEN]",
@@ -114,22 +135,29 @@
               }
             }
           },
-          {
-            opcode: "toggleEncode",
-            blockType: Scratch.BlockType.COMMAND,
-            text: "toggle file encoding [TYPE]",
-            arguments: {
-              TYPE: {
-                type: Scratch.ArgumentType.STRING,
-                menu: "TOGGLE"
-              }
-            }
-          },
         ],
         menus: {
           TOGGLE: ["on", "off"]
         }
       };
+    }
+
+    showDangerousBlocks() {
+      const confirmationText = "I understand these blocks could compromise my account";
+      ScratchBlocks.prompt(
+        `WARNING: Anyone who has access to your GitHub token has control of your GitHub account. Depending on the access you gave your token, anyone can perform actions that can be used in a malicious way as if they were you. Never share your token in a public project. To reveal these blocks, type: '${confirmationText}'`,
+        "",
+        (answer) => {
+          if (answer.toLowerCase() !== confirmationText.toLowerCase()) {
+            if (answer) alert("Prompt answered incorrectly!");
+            return;
+          }
+
+          dangerousBlocksHidden = false;
+          Scratch.vm.extensionManager.refreshBlocks("gitpenguin");
+        },
+        "Danger Notice", "broadcast_msg"
+      );
     }
 
     async getFileContents({ FILE, REPO, NAME }) {

@@ -494,7 +494,8 @@
                     { opcode: 'getAttackersOfSquare', hideFromPalette: true, blockType: 'reporter', text: 'attackers of square [SQUARE] by [COLOR]', arguments: { SQUARE: { type: 'string', defaultValue: 'e4' }, COLOR: { type: 'string', menu: 'colorMenu', defaultValue: 'w' } } },
                     { opcode: 'getPieceMoves', blockType: 'reporter', text: 'valid moves for piece at [SQUARE]', arguments: { SQUARE: { type: 'string', defaultValue: 'e2' } } },
                     { opcode: 'getPositionScore', blockType: 'reporter', text: 'position evaluation score' },
-                    { opcode: 'getMoveHistory', blockType: 'reporter', text: 'get move history' }
+                    { opcode: 'getMoveHistory', blockType: 'reporter', text: 'get move history' },
+                    { opcode: 'getCapturedPieces', blockType: 'reporter', text: 'captured pieces by [COLOR]', arguments: { COLOR: { type: 'string', menu: 'colorMenu', defaultValue: 'w' } } }
                 ],
                 menus: {
                     positionMenu: { acceptReporters: false, items: ['center', 'topleft', 'topright', 'bottomleft', 'bottomright'] },
@@ -1037,8 +1038,38 @@
             return w - b;
         }
         getMoveHistory() { return this.game.history.join(','); }
+        getCapturedPieces(args) {
+            const color = args.COLOR;
+            const capturedColor = color === 'w' ? 'b' : 'w';
+            const pieceNames = { 'p': 'pawn', 'n': 'knight', 'b': 'bishop', 'r': 'rook', 'q': 'queen' };
+            const initialPiecesList = {
+                'w': ['R', 'N', 'B', 'Q', 'K', 'B', 'N', 'R', 'P', 'P', 'P', 'P', 'P', 'P', 'P', 'P'],
+                'b': ['r', 'n', 'b', 'q', 'k', 'b', 'n', 'r', 'p', 'p', 'p', 'p', 'p', 'p', 'p', 'p']
+            };
+            const initialPieces = initialPiecesList[capturedColor].slice();
+            const kingPiece = capturedColor === 'w' ? 'K' : 'k';
+            const kingIndex = initialPieces.indexOf(kingPiece);
+            if (kingIndex > -1) {
+                initialPieces.splice(kingIndex, 1);
+            }
+            const currentPieces = [];
+            for (let r = 0; r < 8; r++) {
+                for (let c = 0; c < 8; c++) {
+                    const piece = this.game.board[r][c];
+                    if (this.game.getColor(piece) === capturedColor) {
+                        currentPieces.push(piece);
+                    }
+                }
+            }
+            const capturedPieceChars = initialPieces;
+            for (const piece of currentPieces) {
+                const index = capturedPieceChars.indexOf(piece);
+                if (index > -1) {
+                    capturedPieceChars.splice(index, 1);
+                }
+            }
+            return JSON.stringify(capturedPieceChars.map(p => pieceNames[p.toLowerCase()]));
+        }
     }
     Scratch.extensions.register(new ChessExtension());
 })(Scratch);
-
-

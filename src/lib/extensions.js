@@ -6,14 +6,6 @@
 */
 export default [
     {
-        name: "CloudLink",
-        description: "A powerful WebSocket extension for Scratch. Allows for online connectivity to servers for things like multiplayer.",
-        code: "MikeDev101/cloudlink.js",
-        banner: "MikeDev101/cloudlink.svg",
-        creator: "MikeDev101",
-        isGitHub: true,
-    },
-    {
         name: "Pen+",
         description: "Extended pen section! Adds blocks for drawing triangles using textures and tints, drawing images and editing their pixels, etc.",
         code: "ObviousAlexC/PenPlus.js",

@@ -6,6 +6,14 @@
 */
 export default [
     {
+        name: "Blobs",
+        description: "An extension made for handling blobs which can be used to store files. Allows to easily make blobs for the Js extension",
+        code: "Faunks/Blobs.js",
+        banner: "Faunks/Blobs.png",
+        creator: "Faunks",
+        isGitHub: true,
+    },
+    {
         name: "CloudLink",
         description: "A powerful WebSocket extension for Scratch. Allows for online connectivity to servers for things like multiplayer.",
         code: "MikeDev101/cloudlink.js",

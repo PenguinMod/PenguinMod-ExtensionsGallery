@@ -72,7 +72,7 @@
             let ep = '-';
             if (this.enPassantTarget) {
                 const [r, c] = this.enPassantTarget;
-                const pawn = this.turn === 'w' ? 'p' : 'P';
+                const pawn = this.turn === 'w' ? 'P' : 'p';
                 const epRow = this.turn === 'w' ? r + 1 : r - 1;
                 const left = (c - 1 >= 0) && this.board[epRow][c - 1] === pawn;
                 const right = (c + 1 < 8) && this.board[epRow][c + 1] === pawn;

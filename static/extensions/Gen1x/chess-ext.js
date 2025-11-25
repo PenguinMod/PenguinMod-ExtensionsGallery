@@ -490,6 +490,7 @@
                     { opcode: 'getTurn', blockType: 'reporter', text: 'whose turn? (w/b)' },
                     { opcode: 'getPGN', blockType: 'reporter', text: 'get game PGN' },
                     { blockType: 'label', text: 'Advanced Stats' },
+                    { opcode: 'getPieceColorAtSquare', blockType: 'reporter', text: 'color of piece at [SQUARE]', arguments: { SQUARE: { type: 'string', defaultValue: 'e4' } } },
                     { opcode: 'getPieceCount', blockType: 'reporter', text: 'count of [PIECE_TYPE] pieces for [COLOR]', arguments: { PIECE_TYPE: { type: 'string', menu: 'pieceTypeMenu', defaultValue: 'all' }, COLOR: { type: 'string', menu: 'colorMenu', defaultValue: 'w' } } },
                     { opcode: 'getMaterialScore', blockType: 'reporter', text: 'material score for [COLOR]', arguments: { COLOR: { type: 'string', menu: 'colorMenu', defaultValue: 'w' } } },
                     { opcode: 'getAttackersOfSquare', hideFromPalette: true, blockType: 'reporter', text: 'attackers of square [SQUARE] by [COLOR]', arguments: { SQUARE: { type: 'string', defaultValue: 'e4' }, COLOR: { type: 'string', menu: 'colorMenu', defaultValue: 'w' } } },
@@ -977,6 +978,16 @@
             else if (['stalemate', 'threefold_repetition', 'fifty_move_rule', 'insufficient_material'].includes(status)) result = "1/2-1/2";
             return (pgn.trim() + " " + result).trim();
         }
+        getPieceColorAtSquare(args) {
+            const coords = this.game.algToCoords(args.SQUARE);
+            if (!coords || coords[0] < 0 || coords[0] > 7 || coords[1] < 0 || coords[1] > 7) {
+                return '';
+            }
+            const piece = this.game.board[coords[0]][coords[1]];
+            const color = this.game.getColor(piece);
+            return color === 'w' ? 'w' : (color === 'b' ? 'b' : '');
+        }
+
         getPieceCount(args) {
             let count = 0;
             for(let r=0; r<8; r++) {

@@ -818,7 +818,7 @@
             this.fontLoaded = true;
         }
         initializeBoard() {
-            this.game.reset(this.flipped ? 'b' : 'w');
+            this.game.reset('w');
             this.updateUI();
         }
         showBoard() { if (this.overlay) this.overlay.style.visibility = 'visible'; }
@@ -1040,4 +1040,5 @@
     }
     Scratch.extensions.register(new ChessExtension());
 })(Scratch);
+
 

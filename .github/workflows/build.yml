@@ -24,7 +24,7 @@ jobs:
       uses: actions/upload-pages-artifact@v3.0.1
       with:
         # Path of the directory containing the static assets.
-        path: build/
+        path: public/
   deploy:
     runs-on: ubuntu-latest
     needs: build

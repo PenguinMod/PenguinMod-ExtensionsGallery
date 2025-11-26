@@ -459,7 +459,8 @@
                     { opcode: 'hideBoard', blockType: 'command', text: 'hide chess board' },
                     { opcode: 'initializeDetector', blockType: 'Boolean', text: 'board initialized?' },
                     { blockType: 'label', text: 'Appearance & Settings' },
-                    { opcode: 'setBoardPosition', blockType: 'command', text: 'set board position to [POSITION]', arguments: { POSITION: { type: 'string', menu: 'positionMenu', defaultValue: 'center' } } },
+                    { opcode: 'setBoardPosition', blockType: 'command', text: 'set board position to [POSITION]', arguments: { POSITION: { type: 'string', menu: 'positionMenu', defaultValue: 'center' } }, hideFromPalette: true },
+                    { opcode: 'setBoardPositionNew', blockType: 'command', text: 'set board position to [POSITION]', arguments: { POSITION: { type: 'string', menu: 'positionMenuNew', defaultValue: 'center' } } },
                     { opcode: 'setBoardSize', blockType: 'command', text: 'set board size to [SIZE]', arguments: { SIZE: { type: 'string', menu: 'sizeMenu', defaultValue: 'medium' } } },
                     { opcode: 'setCustomBoardSize', blockType: 'command', text: 'set custom board size to [SIZE] pixels', arguments: { SIZE: { type: 'number', defaultValue: 300 } } },
                     { opcode: 'setPerspective', blockType: 'command', text: 'set perspective to [PERSPECTIVE]', arguments: { PERSPECTIVE: { type: 'string', menu: 'perspectiveMenu', defaultValue: 'white' } } },
@@ -483,7 +484,8 @@
                     { opcode: 'analyzeChessPositionLocal', blockType: 'reporter', text: 'analyze (CPU) position [FEN] depth [DEPTH]', arguments: { FEN: { type: 'string', defaultValue: 'current' }, DEPTH: { type: 'number', defaultValue: 10 } } },
                     { blockType: 'label', text: 'Information' },
                     { opcode: 'isCheck', hideFromPalette: true, blockType: 'Boolean', text: 'is king in check?' },
-                    { opcode: 'isKingInCheckNew', blockType: 'Boolean', text: 'is [COLOR] king in check?', arguments: { COLOR: { type: 'string', menu: 'colorMenu', defaultValue: 'w' } } },
+                    { opcode: 'isKingInCheckNew', blockType: 'Boolean', text: 'is [COLOR] king in check?', arguments: { COLOR: { type: 'string', menu: 'colorMenu', defaultValue: 'w' } }, hideFromPalette: true },
+                    { opcode: 'isKingInCheckNewNew', blockType: 'Boolean', text: 'is [COLOR] king in check?', arguments: { COLOR: { type: 'string', menu: 'colorMenuNew', defaultValue: 'white' } } },
                     { opcode: 'getGameStatus', blockType: 'reporter', text: 'game status' },
                     { opcode: 'isGameOver', blockType: 'Boolean', text: 'is game over?' },
                     { opcode: 'getValidMoves', blockType: 'reporter', text: 'get all valid moves' },
@@ -492,19 +494,25 @@
                     { opcode: 'getPGN', blockType: 'reporter', text: 'get game PGN' },
                     { blockType: 'label', text: 'Advanced Stats' },
                     { opcode: 'getPieceColorAtSquare', blockType: 'reporter', text: 'color of piece at [SQUARE]', arguments: { SQUARE: { type: 'string', defaultValue: 'e4' } } },
-                    { opcode: 'getPieceCount', blockType: 'reporter', text: 'count of [PIECE_TYPE] pieces for [COLOR]', arguments: { PIECE_TYPE: { type: 'string', menu: 'pieceTypeMenu', defaultValue: 'all' }, COLOR: { type: 'string', menu: 'colorMenu', defaultValue: 'w' } } },
-                    { opcode: 'getMaterialScore', blockType: 'reporter', text: 'material score for [COLOR]', arguments: { COLOR: { type: 'string', menu: 'colorMenu', defaultValue: 'w' } } },
+                    { opcode: 'getPieceCount', blockType: 'reporter', text: 'count of [PIECE_TYPE] pieces for [COLOR]', arguments: { PIECE_TYPE: { type: 'string', menu: 'pieceTypeMenu', defaultValue: 'all' }, COLOR: { type: 'string', menu: 'colorMenu', defaultValue: 'w' } }, hideFromPalette: true },
+                    { opcode: 'getPieceCountNew', blockType: 'reporter', text: 'count of [PIECE_TYPE] pieces for [COLOR]', arguments: { PIECE_TYPE: { type: 'string', menu: 'pieceTypeMenuNew', defaultValue: 'all' }, COLOR: { type: 'string', menu: 'colorMenuNew', defaultValue: 'white' } } },
+                    { opcode: 'getMaterialScore', blockType: 'reporter', text: 'material score for [COLOR]', arguments: { COLOR: { type: 'string', menu: 'colorMenu', defaultValue: 'w' } }, hideFromPalette: true },
+                    { opcode: 'getMaterialScoreNew', blockType: 'reporter', text: 'material score for [COLOR]', arguments: { COLOR: { type: 'string', menu: 'colorMenuNew', defaultValue: 'white' } } },
                     { opcode: 'getAttackersOfSquare', hideFromPalette: true, blockType: 'reporter', text: 'attackers of square [SQUARE] by [COLOR]', arguments: { SQUARE: { type: 'string', defaultValue: 'e4' }, COLOR: { type: 'string', menu: 'colorMenu', defaultValue: 'w' } } },
                     { opcode: 'getPieceMoves', blockType: 'reporter', text: 'valid moves for piece at [SQUARE]', arguments: { SQUARE: { type: 'string', defaultValue: 'e2' } } },
                     { opcode: 'getPositionScore', blockType: 'reporter', text: 'position evaluation score' },
                     { opcode: 'getMoveHistory', blockType: 'reporter', text: 'get move history' },
-                    { opcode: 'getCapturedPieces', blockType: 'reporter', text: 'captured pieces by [COLOR]', arguments: { COLOR: { type: 'string', menu: 'colorMenu', defaultValue: 'w' } } }
+                    { opcode: 'getCapturedPieces', blockType: 'reporter', text: 'captured pieces by [COLOR]', arguments: { COLOR: { type: 'string', menu: 'colorMenu', defaultValue: 'w' } }, hideFromPalette: true },
+                    { opcode: 'getCapturedPiecesNew', blockType: 'reporter', text: 'captured pieces by [COLOR]', arguments: { COLOR: { type: 'string', menu: 'colorMenuNew', defaultValue: 'white' } } }
                 ],
                 menus: {
                     positionMenu: { acceptReporters: false, items: ['center', 'topleft', 'topright', 'bottomleft', 'bottomright'] },
+                    positionMenuNew: { acceptReporters: false, items: ['center', 'top-left', 'top-right', 'bottom-left', 'bottom-right', 'center-left', 'center-top', 'center-right', 'center-bottom'] },
                     sizeMenu: { acceptReporters: false, items: ['small', 'medium', 'large', 'full'] },
                     pieceTypeMenu: { acceptReporters: false, items: ['all', 'p', 'n', 'b', 'r', 'q', 'k'] },
+                    pieceTypeMenuNew: { acceptReporters: false, items: ['all', 'pawn', 'knight', 'bishop', 'rook', 'queen', 'king'] },
                     colorMenu: { acceptReporters: false, items: ['w', 'b'] },
+                    colorMenuNew: { acceptReporters: false, items: ['white', 'black'] },
                     interactivityMenu: { items: ['true', 'false'] },
                     tileTypeMenu: { items: ['light', 'dark'] },
                     styleMenu: { items: ['emojis', 'icons'] },
@@ -515,8 +523,8 @@
             };
         }
         loadCpuEngine() {
-            if (this.cpuEngineLoaded) return;
-            Scratch.fetch('https://rawcdn.githack.com/Gen1xLol/testassets/refs/heads/main/lozza.js')
+            if (this.cpuEngineLoaded) return Promise.resolve();
+            return Scratch.fetch('https://rawcdn.githack.com/Gen1xLol/testassets/refs/heads/main/lozza.js')
                 .then(r => r.text())
                 .then(js => {
                     const blob = new Blob([js], {type: 'application/javascript'});
@@ -525,7 +533,10 @@
                     this.cpuWorker.postMessage('uci');
                     this.cpuEngineLoaded = true;
                 })
-                .catch(e => console.error("Failed to load Lozza engine", e));
+                .catch(e => {
+                    console.error("Failed to load Lozza engine", e);
+                    throw e;
+                });
         }
         isCpuEngineLoaded() { return this.cpuEngineLoaded; }
         handleCpuMessage(data) {
@@ -632,12 +643,20 @@
             this.boardEl.style.height = size + 'px';
             const fontSize = size / 10;
             this.squares.forEach(sq => sq.style.fontSize = fontSize + 'px');
-            this.overlay.style.justifyContent = 'center';
-            this.overlay.style.alignItems = 'center';
-            if (this.position === 'topleft') { this.overlay.style.justifyContent = 'flex-start'; this.overlay.style.alignItems = 'flex-start'; }
-            if (this.position === 'topright') { this.overlay.style.justifyContent = 'flex-end'; this.overlay.style.alignItems = 'flex-start'; }
-            if (this.position === 'bottomleft') { this.overlay.style.justifyContent = 'flex-start'; this.overlay.style.alignItems = 'flex-end'; }
-            if (this.position === 'bottomright') { this.overlay.style.justifyContent = 'flex-end'; this.overlay.style.alignItems = 'flex-end'; }
+
+            const pos = (this.position || 'center').replace(/[\s-]/g, '');
+
+            let justifyContent = 'center';
+            let alignItems = 'center';
+    
+            if (pos.includes('top')) alignItems = 'flex-start';
+            else if (pos.includes('bottom')) alignItems = 'flex-end';
+    
+            if (pos.includes('left')) justifyContent = 'flex-start';
+            else if (pos.includes('right')) justifyContent = 'flex-end';
+    
+            this.overlay.style.justifyContent = justifyContent;
+            this.overlay.style.alignItems = alignItems;
         }
         updateUI() {
             if (!this.boardEl) return;
@@ -744,11 +763,11 @@
             };
             ghost.addEventListener('transitionend', onEnd);
             setTimeout(onEnd, this.tweenDuration * 1000 + 50);
-            requestAnimationFrame(() => {
+            setTimeout(() => {
                 const deltaX = endX - startX;
                 const deltaY = endY - startY;
                 ghost.style.transform = `translate(${deltaX}px, ${deltaY}px)`;
-            });
+            }, 0);
         }
         handleSquareClick(r, c) {
             if (!this.isInteractive) return;
@@ -1084,6 +1103,39 @@
                 }
             }
             return JSON.stringify(capturedPieceChars.map(p => pieceNames[p.toLowerCase()]));
+        }
+
+        setBoardPositionNew(args) { this.position = args.POSITION; this.updateLayout(); }
+
+        isKingInCheckNewNew(args) {
+            const colorMap = { 'white': 'w', 'black': 'b' };
+            return this.game.isKingInCheck(colorMap[args.COLOR] || args.COLOR);
+        }
+
+        getPieceCountNew(args) {
+            const colorMap = { 'white': 'w', 'black': 'b' };
+            const pieceMap = { 'pawn': 'p', 'knight': 'n', 'bishop': 'b', 'rook': 'r', 'queen': 'q', 'king': 'k', 'all': 'all' };
+            const mappedArgs = {
+                COLOR: colorMap[args.COLOR] || args.COLOR,
+                PIECE_TYPE: pieceMap[args.PIECE_TYPE] || args.PIECE_TYPE
+            };
+            return this.getPieceCount(mappedArgs);
+        }
+
+        getMaterialScoreNew(args) {
+            const colorMap = { 'white': 'w', 'black': 'b' };
+            const mappedArgs = {
+                COLOR: colorMap[args.COLOR] || args.COLOR
+            };
+            return this.getMaterialScore(mappedArgs);
+        }
+
+        getCapturedPiecesNew(args) {
+            const colorMap = { 'white': 'w', 'black': 'b' };
+            const mappedArgs = {
+                COLOR: colorMap[args.COLOR] || args.COLOR
+            };
+            return this.getCapturedPieces(mappedArgs);
         }
     }
     Scratch.extensions.register(new ChessExtension());

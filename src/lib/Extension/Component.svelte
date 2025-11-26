@@ -4,7 +4,7 @@
     
     let props = $props();
     let name = $derived(props.name || "Test");
-    let image = $derived(props.image || "/images/example.avif");
+    let image = $derived(props.image || "/images/example");
     let url = $derived(props.url || "");
     let notes = $derived(props.notes || "");
     let creator = $derived(props.creator || "");
@@ -105,7 +105,17 @@
 </div>
 <div class="block">
     <div>
-        <img src={image} alt="Thumb" class="image" loading="lazy" />
+        {#if image.endsWith('.svg')}
+            <img src={image} alt="Thumb" class="image" loading="lazy" type="image/svg+xml" />
+        {/if}
+        {#if !image.endsWith('.svg')}
+            <picture>
+                <source srcset={`${image}.jxl`} type="image/jxl" />
+                <source srcset={`${image}.avif`} type="image/avif" />
+                <source srcset={`${image}.webp`} type="image/webp" />
+                <img srcset={`${image}.png`} type="image/png" alt="Thumb" class="image" loading="lazy" />
+            </picture>
+        {/if}
         <div class="title">
             {name}
             {#if unstable}

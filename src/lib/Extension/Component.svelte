@@ -107,8 +107,7 @@
     <div>
         {#if image.endsWith('.svg')}
             <img src={image} alt="Thumb" class="image" loading="lazy" type="image/svg+xml" />
-        {/if}
-        {#if !image.endsWith('.svg')}
+        {:else}
             <picture>
                 <source srcset={`${image}.jxl`} type="image/jxl" />
                 <source srcset={`${image}.avif`} type="image/avif" />

@@ -420,6 +420,7 @@
 	class ChessExtension {
         constructor() {
             this.game = new ChessLogic();
+            this.isBoardInitialized = false;
             this.overlay = null;
             this.boardEl = null;
             this.squares = [];
@@ -456,7 +457,7 @@
                     { opcode: 'initializeBoard', blockType: 'command', text: 'initialize new chess game' },
                     { opcode: 'showBoard', blockType: 'command', text: 'show chess board' },
                     { opcode: 'hideBoard', blockType: 'command', text: 'hide chess board' },
-                    { opcode: 'initializeDetector', blockType: 'Boolean', text: 'has the board loaded yet?' },
+                    { opcode: 'initializeDetector', blockType: 'Boolean', text: 'board initialized?' },
                     { blockType: 'label', text: 'Appearance & Settings' },
                     { opcode: 'setBoardPosition', blockType: 'command', text: 'set board position to [POSITION]', arguments: { POSITION: { type: 'string', menu: 'positionMenu', defaultValue: 'center' } } },
                     { opcode: 'setBoardSize', blockType: 'command', text: 'set board size to [SIZE]', arguments: { SIZE: { type: 'string', menu: 'sizeMenu', defaultValue: 'medium' } } },
@@ -822,11 +823,12 @@
         }
         initializeBoard() {
             this.game.reset('w');
+            this.isBoardInitialized = true;
             this.updateUI();
         }
         showBoard() { if (this.overlay) this.overlay.style.visibility = 'visible'; }
         hideBoard() { if (this.overlay) this.overlay.style.visibility = 'hidden'; }
-        initializeDetector() { return !!this.overlay; }
+        initializeDetector() { return this.isBoardInitialized; }
         setBoardPosition(args) { this.position = args.POSITION; this.updateLayout(); }
         setBoardSize(args) { this.boardSize = args.SIZE; this.updateLayout(); }
         setCustomBoardSize(args) { this.boardSize = 'custom'; this.customSize = Number(args.SIZE); this.updateLayout(); }

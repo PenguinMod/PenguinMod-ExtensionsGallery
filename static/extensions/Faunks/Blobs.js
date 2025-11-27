@@ -33,6 +33,31 @@
                   },
               },
           },
+          {
+              opcode: "readBlob",
+              blockType: Scratch.BlockType.REPORTER,
+              text: "read blob [URL] as a [TYPE]",
+              arguments: {
+                  URL: {
+                      type: Scratch.ArgumentType.STRING
+                  },
+                  TYPE: {
+                      type: Scratch.ArgumentType.STRING,
+                      defaultValue: "text/plain",
+                      menu: "types"
+                  }
+              },
+          },
+          {
+              opcode: "revokeBlob",
+              blockType: Scratch.BlockType.COMMAND,
+              text: "Revoke blob with the URL of [URL]",
+              arguments: {
+                  URL: {
+                      type: Scratch.ArgumentType.STRING
+                  }
+              },
+          },
         ]
         ,menus: {
           types: {
@@ -103,10 +128,36 @@
     }
 
     toBlob(args, util) {
-        const text = String(args.DATA);      // ensure it's a string (why can't it be just like python or smth)
+        const text = String(args.DATA); 
         const blob = new Blob([text], { type: args.TYPE });
         return URL.createObjectURL(blob);
-    } 
+    }
+    revokeBlob(args, util){
+        URL.revokeObjectURL(args.URL);
+    }
+    readBlob(args, util){
+      async function readBlobContent(blobUrl, mime) {
+        const response = await fetch(blobUrl);
+        const blob = await response.blob();
+
+        if (mime.startsWith("text/") || mime === "application/json") {
+            const text = await blob.text();
+            return mime === "application/json" ? JSON.parse(text) : text;
+        }
+
+        if (mime.startsWith("image/") ||
+            mime.startsWith("audio/") ||
+            mime.startsWith("video/") ||
+            mime === "application/octet-stream" ||
+            mime.startsWith("application/")
+        ) {
+            return await blob.arrayBuffer();
+        }
+
+        return await blob.arrayBuffer();
+    }
+    return readBlobContent(args.URL, args.TYPE)
+    }
   }
   Scratch.extensions.register(new faunks_Blobs());
 })(Scratch);

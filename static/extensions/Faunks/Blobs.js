@@ -135,29 +135,33 @@
     revokeBlob(args, util){
         URL.revokeObjectURL(args.URL);
     }
-    readBlob(args, util){
-      async function readBlobContent(blobUrl, mime) {
-        const response = await fetch(blobUrl);
+    readBlob(args, util) {
+    async function readBlobContent(url, mime) {
+        const response = await fetch(url);
         const blob = await response.blob();
+        
+        if (!url.startsWith("blob:")) return "";
+
+        if (blob.size === 0) return ""; // js for u TheShovel
 
         if (mime.startsWith("text/") || mime === "application/json") {
             const text = await blob.text();
-            return mime === "application/json" ? JSON.parse(text) : text;
+            return mime === "application/json" ? text : text;
         }
 
-        if (mime.startsWith("image/") ||
-            mime.startsWith("audio/") ||
-            mime.startsWith("video/") ||
-            mime === "application/octet-stream" ||
-            mime.startsWith("application/")
-        ) {
-            return await blob.arrayBuffer();
+        const buffer = await blob.arrayBuffer();
+        const bytes = new Uint8Array(buffer);
+
+        let binary = "";
+        for (let i = 0; i < bytes.length; i++) {
+            binary += String.fromCharCode(bytes[i]);
         }
 
-        return await blob.arrayBuffer();
+        return btoa(binary);
     }
-    return readBlobContent(args.URL, args.TYPE)
-    }
+
+    return readBlobContent(args.URL, args.TYPE);
+}
   }
   Scratch.extensions.register(new faunks_Blobs());
 })(Scratch);

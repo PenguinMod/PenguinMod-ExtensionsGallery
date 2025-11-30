@@ -264,6 +264,14 @@ export default [
         isGitHub: true, 
     },
     {
+        name: "Blobs",
+        description: "An extension made for handling blobs which can be used to store files. Allows to easily make blobs for the Js extension",
+        code: "Faunks/Blobs.js",
+        banner: "Faunks/Blobs.avif",
+        creator: "Faunks",
+        isGitHub: true,
+    },
+    {
         name: "Random Utilities",
         description: "Many blocks related to generating random values, including seed-based number generation, true number generation, UUID's, random strings, etc.",
         code: "Gen1x/random_utils.js",
@@ -457,7 +465,7 @@ export default [
     },
     {
         name: "Chess",
-        description: "A powerful extension about Chess. It allows to create a Chessboard, manage chess games, and use Stockfish 17 in your projects.",
+        description: "A powerful extension that lets you manage a chessboard, customize it, use Stockfish 17 (via API), a local chess engine (Lozza) and much, MUCH more!",
         code: "Gen1x/chess-ext.js",
         banner: "Gen1x/chess-ext.avif",
         creator: "G1nX",

@@ -467,7 +467,7 @@
 			let pitch = pitchRad * RAD2DEG;
 			
 			this.camera.rot.yaw = -yaw; 
-			this.camera.rot.pitch = Math.min(90, Math.max(-90, -pitch));
+			this.camera.rot.pitch = -Math.min(90, Math.max(-90, -pitch));
 			this._basisCache = null;
 		}
 

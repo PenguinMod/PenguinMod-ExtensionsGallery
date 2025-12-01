@@ -36,7 +36,7 @@
           {
               opcode: "readBlob",
               blockType: Scratch.BlockType.REPORTER,
-              text: "read blob [URL] as a [TYPE]",
+              text: "Read blob [URL] as a [TYPE]",
               arguments: {
                   URL: {
                       type: Scratch.ArgumentType.STRING
@@ -132,31 +132,34 @@
         const blob = new Blob([text], { type: args.TYPE });
         return URL.createObjectURL(blob);
     }
+    
     revokeBlob(args, util){
         URL.revokeObjectURL(args.URL);
     }
+
     readBlob(args, util) {
     async function readBlobContent(url, mime) {
+        
+        if (!url.startsWith("blob:")) return ""; // I WOULD return "Url Error", but it would make it a bit harder to track if an output has been returned or not
+
         const response = await fetch(url);
         const blob = await response.blob();
         
-        if (!url.startsWith("blob:")) return "";
 
         if (blob.size === 0) return ""; // js for u TheShovel
 
         if (mime.startsWith("text/") || mime === "application/json") {
-            const text = await blob.text();
-            return mime === "application/json" ? text : text;
+            return await blob.text();
         }
 
         const buffer = await blob.arrayBuffer();
-        const bytes = new Uint8Array(buffer);
-
-        let binary = "";
-        for (let i = 0; i < bytes.length; i++) {
-            binary += String.fromCharCode(bytes[i]);
+        const view = new DataView(buffer);
+        
+        let binary = ''; // = decoder.decode(bytes); Decoder doesn't work with btoa, and replacing it reduces efficiency.
+        
+        for (let i = 0; i < view.byteLength; i++) {
+          binary += String.fromCharCode(view.getUint8(i));
         }
-
         return btoa(binary);
     }
 

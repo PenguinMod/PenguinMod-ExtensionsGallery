@@ -140,7 +140,7 @@
     readBlob(args, util) {
     async function readBlobContent(url, mime) {
         
-        if (!url.startsWith("blob:")) return ""; // I WOULD return "Url Error", but it would make it a bit harder to track if an output has been returned or not
+        if (!url.startsWith("blob:")) throw new URIError("must be a blob url"); // Thanks
 
         const response = await fetch(url);
         const blob = await response.blob();

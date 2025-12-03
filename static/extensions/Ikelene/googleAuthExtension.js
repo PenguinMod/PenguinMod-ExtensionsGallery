@@ -69,7 +69,7 @@ class GoogleAuthExtension {
 
     login() {
         const clientId = '382430967410-3svk456rj8ntlu3d3gd9oma09i96cpr9.apps.googleusercontent.com';
-        const redirectUri = 'https://cadex.dev/google/googleLogin.php';
+        const redirectUri = 'https://ikelene.dev/google/googleLogin.php';
         const scope = 'profile email';
 
         // 🔥 Get the current domain to pass as "source"
@@ -86,7 +86,7 @@ class GoogleAuthExtension {
 
         // Listen for messages from the redirect page
         window.addEventListener('message', (event) => {
-            if (event.origin === 'https://cadex.dev') {
+            if (event.origin === 'https://ikelene.dev') {
                 const { accountName, fullName, profilePicture, userId, locale, emailVerified } = event.data;
                 this.accountName = accountName;
                 this.fullName = fullName;

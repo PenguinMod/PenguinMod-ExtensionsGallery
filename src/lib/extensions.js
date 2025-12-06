@@ -531,6 +531,15 @@ export default [
         creatorAlias: "gaimerI17",
         notes: "Extension thumbnail made by Dillon."
     },
+    {
+        name: "Input Validator",
+        description: "A set of blocks to verify conditions, check data types, and validate inputs easily.",
+        code: "logise/inputvalidator.js",
+        banner: "logise/verificator.png",
+        creator: "Logise1123",
+        isGitHub: true,
+        creatorAlias: "Logise",
+    },
     /* these extensions are completely dead as of now
     {
         name: "Online Captcha",

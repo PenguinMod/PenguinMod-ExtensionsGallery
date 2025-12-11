@@ -1,30 +1,32 @@
-PenguinMic — Real‑Time Audio Recorder
+PenguinMic Audio Recorder
 
 ---
 
 Welcome to PenguinMic!
-PenguinMic allows you to record, play, and share audio directly in PenguinMod.
+
+PenguinMic lets you record, play, and share audio directly in PenguinMod.
 
 ---
 
-How to Use
-1️⃣ Start recording
+Usage
+
+1️⃣ Record
 
 Block: start recording
 
-Starts capturing audio from your microphone.
+Starts recording audio from your microphone.
 
-Audio is stored as raw floats in memory.
+Audio is represented in memory as raw floats.
 
-If you’re already recording, this does nothing.
+Does nothing if already recording.
 
 2️⃣ Stop recording
 
 Block: stop recording
 
-Stops recording audio.
+Stop recording audio.
 
-Make sure to stop before playing or downloading your recording.
+Please make sure to stop before playing or downloading your recording.
 
 3️⃣ Play recording
 
@@ -32,7 +34,7 @@ Block: play recording
 
 Plays back everything you recorded.
 
-Must stop recording first before playback.
+Must stop recording first, prior to playback.
 
 4️⃣ Play samples
 
@@ -40,11 +42,11 @@ Block: play samples [SAMPLES]
 
 Plays an array of raw audio samples.
 
-SAMPLES can be:
+SAMPLES can be
 
 JSON array: [0.1, -0.2, 0.5]
 
-CSV string: 0.1,-0.2,0.5
+CSV string: 0.1, -0.2, 0.5
 
 Scratch list converted to string
 
@@ -54,11 +56,11 @@ Samples should be in the range -1 to 1.
 
 Block: mic sample
 
-Returns the latest single audio sample (float) from the mic in real time.
+Returns the newest single audio sample (float) from the mic in real time.
 
 6️⃣ Get recorded data
 
-Block: recorded data (json)
+Block: Recorded data (json)
 
 Returns your recording as a JSON array of floats.
 
@@ -70,21 +72,21 @@ Block: recording length (samples)
 
 Returns the number of audio samples in your current recording.
 
-8️⃣ Clear recording
+8️⃣ Recording clear
 
 Block: clear recording
 
-Clears the internal recording buffer, freeing memory.
+Clears the internal recording buffer and frees memory.
 
 9️⃣ Set max recording seconds
 
 Block: set max recording seconds to [SECONDS]
 
-Limits how long recordings can be (prevents huge memory usage).
+Limits how long recordings can be, prevents huge memory usage.
 
 Default is 30 seconds.
 
-🔟 Download WAV
+Download WAV
 
 Block: download recording (wav) [FILENAME]
 
@@ -94,8 +96,4 @@ Example: download recording (wav) "myvoice.wav"
 
 Tips
 
-For smooth playback, stop recording before calling play recording.
-
-If you only want a short clip, consider setting max seconds lower to save memory.
-
-Use get recorded data + play samples to share audio between projects.
+Stop recording before calling play recording for smooth playback. If you only need a short clip, consider setting max seconds to a lower value to save memory. Use get recorded data + play samples to share audio between projects.

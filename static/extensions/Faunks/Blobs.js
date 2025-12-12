@@ -33,6 +33,31 @@
                   },
               },
           },
+          {
+              opcode: "readBlob",
+              blockType: Scratch.BlockType.REPORTER,
+              text: "Read blob [URL] as a [TYPE]",
+              arguments: {
+                  URL: {
+                      type: Scratch.ArgumentType.STRING
+                  },
+                  TYPE: {
+                      type: Scratch.ArgumentType.STRING,
+                      defaultValue: "text/plain",
+                      menu: "types"
+                  }
+              },
+          },
+          {
+              opcode: "revokeBlob",
+              blockType: Scratch.BlockType.COMMAND,
+              text: "Revoke blob with the URL of [URL]",
+              arguments: {
+                  URL: {
+                      type: Scratch.ArgumentType.STRING
+                  }
+              },
+          },
         ]
         ,menus: {
           types: {
@@ -103,10 +128,43 @@
     }
 
     toBlob(args, util) {
-        const text = String(args.DATA);      // ensure it's a string (why can't it be just like python or smth)
+        const text = String(args.DATA); 
         const blob = new Blob([text], { type: args.TYPE });
         return URL.createObjectURL(blob);
-    } 
+    }
+    
+    revokeBlob(args, util){
+        URL.revokeObjectURL(args.URL);
+    }
+
+    readBlob(args, util) {
+    async function readBlobContent(url, mime) {
+        
+        if (!url.startsWith("blob:")) throw new URIError("must be a blob url"); // Thanks
+
+        const response = await fetch(url);
+        const blob = await response.blob();
+        
+
+        if (blob.size === 0) return ""; // js for u TheShovel
+
+        if (mime.startsWith("text/") || mime === "application/json") {
+            return await blob.text();
+        }
+
+        const buffer = await blob.arrayBuffer();
+        const view = new DataView(buffer);
+        
+        let binary = ''; // = decoder.decode(bytes); Decoder doesn't work with btoa, and replacing it reduces efficiency.
+        
+        for (let i = 0; i < view.byteLength; i++) {
+          binary += String.fromCharCode(view.getUint8(i));
+        }
+        return btoa(binary);
+    }
+
+    return readBlobContent(args.URL, args.TYPE);
+}
   }
   Scratch.extensions.register(new faunks_Blobs());
 })(Scratch);

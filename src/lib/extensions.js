@@ -542,6 +542,15 @@ export default [
         notes: "An expansion of a turbowarp extension",
         isGitHub: false,
     },
+    {
+        name: "Cryptography",
+        description: "Hash, encrypt and verify values using various algorithms. Actual security not guaranteed",
+        code: "gaimerI17/crypto.js",
+        banner: "gaimerI17/crypto.avif",
+        creator: "gaimerI",
+        isGitHub: true,
+        creatorAlias: "gaimerI17",
+    },
     /* these extensions are completely dead as of now
     {
         name: "Online Captcha",

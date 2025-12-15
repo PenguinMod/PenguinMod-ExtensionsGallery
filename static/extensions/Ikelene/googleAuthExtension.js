@@ -69,24 +69,19 @@ class GoogleAuthExtension {
 
     login() {
         const clientId = '382430967410-3svk456rj8ntlu3d3gd9oma09i96cpr9.apps.googleusercontent.com';
-        const redirectUri = 'https://cadex.dev/google/googleLogin.php';
+        const redirectUri = 'https://ikelene.dev/google/googleLogin.php';
         const scope = 'profile email';
 
-        // 🔥 Get the current domain to pass as "source"
         const sourceDomain = window.location.hostname;
 
-        // Encode sourceDomain in the "state" parameter
         const state = encodeURIComponent(JSON.stringify({ source: sourceDomain }));
 
-        // Build the OAuth URL
         const authUrl = `https://accounts.google.com/o/oauth2/v2/auth?response_type=code&client_id=${clientId}&redirect_uri=${encodeURIComponent(redirectUri)}&scope=${encodeURIComponent(scope)}&prompt=select_account&state=${state}`;
 
-        // Open the login popup
         this.authWindow = window.open(authUrl, 'Google Login', 'width=500,height=600');
 
-        // Listen for messages from the redirect page
         window.addEventListener('message', (event) => {
-            if (event.origin === 'https://cadex.dev') {
+            if (event.origin === 'https://ikelene.dev') {
                 const { accountName, fullName, profilePicture, userId, locale, emailVerified } = event.data;
                 this.accountName = accountName;
                 this.fullName = fullName;

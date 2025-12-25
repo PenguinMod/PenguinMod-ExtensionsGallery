@@ -241,7 +241,7 @@ export default [
     },
     {
         name: "Sets",
-        description: "Store non-repeating, unordered, data super efficently in sets.",
+        description: "Store non-repeating, unordered data super efficiently in sets.",
         code: "DogeisCut/dogeiscutSet.js",
         banner: "DogeisCut/dogeiscutSet.svg",
         creator: "DogeisCut",

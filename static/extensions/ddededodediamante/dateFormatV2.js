@@ -160,12 +160,13 @@
       return `${y}-${m}-${d} ${hh}:${mm}`;
     }
 
-    jwArrayHandler() {
-      return this.isValid() ? this._prettyShort() : "Invalid Date";
+    jwArrayHandler(expectsPlainString, context) {
+      return this.isValid() ? this._prettyShort() : "Invalid Date"; // always a string anyway
     }
-
-    dogeiscutObjectHandler() {
-      return this.toListItem();
+    
+    dogeiscutObjectHandler(expectsPlainString, context) {
+      if (expectsPlainString) return this.toString();
+      else return this.toListItem();
     }
   }
 

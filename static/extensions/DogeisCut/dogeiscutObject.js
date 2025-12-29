@@ -109,36 +109,8 @@
             return x
         }
 
-        toString() {
-            const stringify = (obj) => {
-                if (obj instanceof jwArray.Type) {
-                    return `[${obj.array.map(item => stringify(item)).join(",")}]`;
-                }
-                if (isArray(obj)) {
-                    return `[${obj.map(stringify).join(",")}]`;
-                }
-                if (obj instanceof dogeiscutObject.Type) {
-                    return obj.toString();
-                }
-                if (obj !== null && typeof obj === "object") {
-                    if (typeof obj.dogeiscutObjectHandler == "function") {
-                        return obj.dogeiscutObjectHandler()
-                    }
-                    if (typeof obj.jwArrayHandler == "function") {
-                        return obj.jwArrayHandler()
-                    }
-                    const entries = Object.entries(obj)
-                        .map(([key, value]) => `"${key.replace(/\\/g, "\\\\").replace(/"/g, '\\"')}":${stringify(value)}`)
-                        .join(",");
-                    return `{${entries}}`;
-                }
-                if (obj === null || obj === undefined) return "null";
-                if (typeof obj === "string") return JSON.stringify(obj);
-                if (typeof obj === "number" || typeof obj === "boolean") return obj.toString();
-                return "?";
-            };
-
-            return stringify(this.object);
+        toString(pretty = false) {
+            return JSON.stringify(this.object, null, pretty ? "\t" : null)
         }
 
         toVisualContent(border = '1px solid #ccc', keyBackground = '#f9f9f9', background = '#fff') {
@@ -295,7 +267,7 @@
                 Object.entries(this.object).map(([key, value]) => {
                     if (typeof value === "object" && value !== null) {
                         if (typeof value.toJSON === "function") return [key, value.toJSON()]
-                        if (typeof value.toString === "function") return [key, value.toString()]
+                        //if (typeof value.toString === "function") return [key, value.toString()]
                         return [key, JSON.stringify(value)]
                     }
                     return [key, value]
@@ -359,10 +331,7 @@
 
     class Extension {
         constructor() {
-            vm.runtime.registerCompiledExtensionBlocks('dogeiscutObject', this.getCompileInfo());
-
             vm.dogeiscutObject = dogeiscutObject
-
             vm.runtime.registerSerializer(
                 "dogeiscutObject",
                 v => {
@@ -400,6 +369,8 @@
 
             if (!vm.jwArray) vm.extensionManager.loadExtensionIdSync('jwArray')
             jwArray = vm.jwArray
+            
+            vm.runtime.registerCompiledExtensionBlocks('dogeiscutObject', this.getCompileInfo());
         }
 
         getInfo() {
@@ -453,6 +424,12 @@
                             ARRAY: jwArray.Argument
                         }
                     },
+                    // future idea
+                    // {
+                    //     opcode: 'fromLists',
+                    //     text: 'from lists keys: [KEY_LIST] values: [VALUE_LIST}',
+                    //     ...dogeiscutObject.Block,
+                    // },
                     '---',
                     {
                         opcode: 'currentObject',
@@ -464,21 +441,18 @@
                     {
                         opcode: 'builder',
                         text: 'object builder [CURRENT_OBJECT]',
-                        ...dogeiscutObject.Block,
+                        branches: [{}],
                         arguments: {
                             CURRENT_OBJECT: {
                                 fillIn: 'currentObject'
                             },
                         },
-                        branches: [{
-                            //accepts: 'dogeiscutObjectBuilder'
-                        }],
+                        ...dogeiscutObject.Block,
                     },
                     {
                         opcode: 'builderAppend',
                         text: 'append key [KEY] value [VALUE] to builder',
                         blockType: Scratch.BlockType.COMMAND,
-                        //notchAccepts: 'dogeiscutObjectBuilder',
                         arguments: {
                             KEY: {
                                 type: Scratch.ArgumentType.STRING,
@@ -496,7 +470,6 @@
                         opcode: 'builderAppendEmpty',
                         text: 'append key [KEY] to builder',
                         blockType: Scratch.BlockType.COMMAND,
-                        //notchAccepts: 'dogeiscutObjectBuilder',
                         arguments: {
                             KEY: {
                                 type: Scratch.ArgumentType.STRING,
@@ -509,7 +482,6 @@
                         opcode: 'builderSet',
                         text: 'set builder to [OBJECT]',
                         blockType: Scratch.BlockType.COMMAND,
-                        //notchAccepts: 'dogeiscutObjectBuilder',
                         arguments: {
                             OBJECT: dogeiscutObject.Argument
                         }
@@ -604,6 +576,19 @@
                     },
                     '---',
                     {
+                        opcode: 'toString',
+                        text: 'stringify [OBJECT] [FORMAT]',
+                        blockType: Scratch.BlockType.REPORTER,
+                        arguments: {
+                            OBJECT: dogeiscutObject.Argument,
+                            FORMAT: {
+                                menu: "stringifyFormat",
+                                defaultValue: "compact"
+                            }
+                        }
+                    },
+                    '---',
+                    {
                         opcode: 'keys',
                         text: 'keys of [OBJECT]',
                         arguments: {
@@ -670,34 +655,43 @@
                             }
                         }
                     },
-                ]
+                ],
+                menus: {
+                    list: {
+                        acceptReporters: false,
+                        items: "getLists",
+                    },
+                    stringifyFormat: {
+                        acceptReporters: false,
+                        items: [
+                            "compact",
+                            "pretty"
+                        ]
+                    }
+                }
             }
         }
 
         getCompileInfo() {
             return {
                 ir: {
-                    builder: (generator, block) => ({
-                        kind: 'input',
-                        substack: generator.descendSubstack(block, 'SUBSTACK')
-                    }),
+                    builder: (generator, block) => {
+                        generator.script.yields = true
+                        return {
+                            kind: 'input',
+                            substack: generator.descendSubstack(block, 'SUBSTACK')
+                        }
+                    }
                 },
                 js: {
                     builder: (node, compiler, imports) => {
                         const originalSource = compiler.source;
 
-                        compiler.source = '(yield* (function*() {';
-                        compiler.source += '    const __inner = (yield* (function*() {';
-                        compiler.source += `        thread._dogeiscutObjectBuilderIndex ??= [];`;
-                        compiler.source += `        thread._dogeiscutObjectBuilderIndex.push(Object.create(null));`;
+                        compiler.source = 'vm.dogeiscutObject.Type.toObject(yield* (function*() {';
+                        compiler.source += 'thread._dogeiscutObjectBuilderIndex ??= [];';
+                        compiler.source += 'thread._dogeiscutObjectBuilderIndex.push(Object.create(null));';
                         compiler.descendStack(node.substack, new imports.Frame(false, undefined, true));
-                        compiler.source += `        return new runtime.ext_dogeiscutObject.BuilderReturnValue(thread._dogeiscutObjectBuilderIndex.pop());`;
-                        compiler.source += '    })());';
-                        compiler.source += '    const __result = __inner;';
-                        compiler.source += '    if (!(__result instanceof runtime.ext_dogeiscutObject.BuilderReturnValue)) {';
-                        compiler.source += '        throw "Return statements are not supported in builders.";';
-                        compiler.source += '    }';
-                        compiler.source += '    return new runtime.vm.dogeiscutObject.Type(__result.value);';
+                        compiler.source += 'return thread._dogeiscutObjectBuilderIndex.pop();';
                         compiler.source += '})())';
 
                         const stackSource = compiler.source;
@@ -707,12 +701,6 @@
                 }
             };
         }
-
-        BuilderReturnValue = class {
-            constructor(value) {
-                this.value = value
-            }
-        } 
 
         /* Blocks */
 
@@ -745,11 +733,11 @@
             if (util.thread._dogeiscutObjectBuilderIndex && util.thread._dogeiscutObjectBuilderIndex.length > 0) {
                 return dogeiscutObject.Type.toObject(util.thread._dogeiscutObjectBuilderIndex[util.thread._dogeiscutObjectBuilderIndex.length-1])
             } else {
-                throw 'This block must be inside of a "string builder" block.';
+                throw 'This block must be inside of a "object builder" block.';
             }
         }
 
-        async builder({}, util) {
+        builder() {
             return 'noop'
         }
 
@@ -878,6 +866,12 @@
 
             Object.assign(TWO.object, Object.assign(Object.create(null), ONE.object))
             return TWO;
+        }
+
+        toString({OBJECT, FORMAT}) {
+            OBJECT = dogeiscutObject.Type.toObject(OBJECT, false);
+            
+            return OBJECT.toString(FORMAT === "pretty")
         }
 
         keys({ OBJECT }) {

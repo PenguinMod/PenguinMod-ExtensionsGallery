@@ -19,6 +19,8 @@ import PageNumberUtilities from "./NumberUtilities.md?raw";
 // PenguinAI
 import PagePenguinAI from "./PenguinAI.md?raw";
 
+import pangAI from "./PangAI.md?raw";
+
 // AuthPenguin
 import PageAuthPenguin from "./AuthPenguin.md?raw";
 
@@ -59,6 +61,9 @@ export default {
     // PenguinAI
     "PenguinAI": PagePenguinAI,
 
+    // PangAI
+    "PangAI": PagePangAI,
+    
     // AuthPenguin
     "AuthPenguin": PageAuthPenguin,
 

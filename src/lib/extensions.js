@@ -306,9 +306,9 @@ export default [
         creator: "oc9x97",
         isGitHub: true,
     },
-    {
+{
         name: "Pang AI",
-        description: "Advanced AI text and image generation with bot memory. powered by pollination.ai",
+        description: "Advanced AI text and image generation with bot memory. Supports OpenAI, Gemini, DeepSeek-R1, and Flux models.",
         code: "Seighsword/PangAI.js",
         banner: "Seighsword/PangAI.svg",
         creator: "Seigh_sword",

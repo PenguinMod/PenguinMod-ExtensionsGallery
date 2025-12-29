@@ -1,0 +1,132 @@
+// Name: Pang AI
+// ID: seighPangAI
+// Description: Advanced AI text and image generation with bot memory. 
+// By: Seigh_sword <https://github.com/Seigh-sword>
+
+// It took alot of time to put all of this together please approve this [where is the please emoji go... well umm please APPROVE THIS PLEASE😭😭
+
+(function(Scratch) {
+    'use strict';
+
+    const icon = "https://raw.githubusercontent.com/Seigh-sword/PangAI-GithubPage/refs/heads/main/assets/PangAI-Icon.png";
+    const blockColor = '#333466';
+
+    class PangAI {
+        constructor() {
+            this.bots = {}; 
+            this.textModel = 'openai';
+            this.imageModel = 'turbo';
+            this.temp = 1;
+            this.seed = Math.floor(Math.random() * 999999);
+            this.systemLog = "You are a helpful AI, who helps users";
+            this.attachedFile = "";
+        }
+
+        getInfo() {
+            return {
+                id: 'seighPangAI',
+                name: 'Pang AI',
+                menuIconURI: icon,
+                blockIconURI: icon,
+                color1: blockColor,
+                blocks: [
+                    { opcode: 'isReady', blockType: Scratch.BlockType.BOOLEAN, text: 'AI ready?' },
+                    { opcode: 'getCurrentModel', blockType: Scratch.BlockType.REPORTER, text: 'model?' },
+                    { opcode: 'getBotName', blockType: Scratch.BlockType.REPORTER, text: 'bot?' },
+                    { opcode: 'getMemory', blockType: Scratch.BlockType.REPORTER, text: 'memory' },
+                    '---',
+                    { opcode: 'createBot', blockType: Scratch.BlockType.COMMAND, text: 'create bot named [NAME]', arguments: { NAME: { type: Scratch.ArgumentType.STRING, defaultValue: 'PangBot' }}},
+                    { opcode: 'deleteBot', blockType: Scratch.BlockType.COMMAND, text: 'delete bot named [NAME]', arguments: { NAME: { type: Scratch.ArgumentType.STRING, defaultValue: 'PangBot' }}},
+                    { opcode: 'renameBot', blockType: Scratch.BlockType.COMMAND, text: 'rename bot [OLD] to [NEW]', arguments: { OLD: { type: Scratch.ArgumentType.STRING, defaultValue: 'Bot1' }, NEW: { type: Scratch.ArgumentType.STRING, defaultValue: 'PangBot' }}},
+                    '---',
+                    { opcode: 'setTextModel', blockType: Scratch.BlockType.COMMAND, text: 'set text model [MOD]', arguments: { MOD: { type: Scratch.ArgumentType.STRING, menu: 'textMenu' }}},
+                    { opcode: 'setImageModel', blockType: Scratch.BlockType.COMMAND, text: 'set image model [MOD]', arguments: { MOD: { type: Scratch.ArgumentType.STRING, menu: 'imageMenu' }}},
+                    '---',
+                    { opcode: 'simplePrompt', blockType: Scratch.BlockType.REPORTER, text: 'prompt [TEXT]', arguments: { TEXT: { type: Scratch.ArgumentType.STRING, defaultValue: 'Hello!' }}},
+                    { opcode: 'getImageUrl', blockType: Scratch.BlockType.REPORTER, text: 'get url for image prompt [TEXT]', arguments: { TEXT: { type: Scratch.ArgumentType.STRING, defaultValue: 'a penguin in space' }}},
+                    { opcode: 'attachFile', blockType: Scratch.BlockType.COMMAND, text: 'attach file url [URL]', arguments: { URL: { type: Scratch.ArgumentType.STRING, defaultValue: '' }}},
+                    '---',
+                    { opcode: 'setSystem', blockType: Scratch.BlockType.COMMAND, text: 'set system log [LOG]', arguments: { LOG: { type: Scratch.ArgumentType.STRING, defaultValue: 'You are a helpful assistant.' }}},
+                    { opcode: 'setContextText', blockType: Scratch.BlockType.REPORTER, text: 'set context [CTX] and prompt [TEXT]', arguments: { CTX: { type: Scratch.ArgumentType.STRING, defaultValue: 'Persona' }, TEXT: { type: Scratch.ArgumentType.STRING, defaultValue: 'Hello!' }}},
+                    { opcode: 'setContextImage', blockType: Scratch.BlockType.REPORTER, text: 'set context [CTX] and get url of image prompt [TEXT]', arguments: { CTX: { type: Scratch.ArgumentType.STRING, defaultValue: 'Anime' }, TEXT: { type: Scratch.ArgumentType.STRING, defaultValue: 'Penguin' }}},
+                    '---',
+                    { opcode: 'setTemp', blockType: Scratch.BlockType.COMMAND, text: 'set temperature [N]', arguments: { N: { type: Scratch.ArgumentType.NUMBER, defaultValue: 1.0 }}},
+                    { opcode: 'setSeed', blockType: Scratch.BlockType.COMMAND, text: 'set seed [N]', arguments: { N: { type: Scratch.ArgumentType.NUMBER, defaultValue: 12345 }}},
+                    { opcode: 'getSeed', blockType: Scratch.BlockType.REPORTER, text: 'seed' },
+                    { opcode: 'getTemp', blockType: Scratch.BlockType.REPORTER, text: 'temperature' }
+                ],
+                menus: {
+                    textMenu: { acceptReporters: true, items: ['openai', 'mistral', 'gemini', 'deepseek-r1', 'p1', 'llama'] },
+                    imageMenu: { acceptReporters: true, items: ['turbo', 'flux-pro', 'flux-realism', 'flux-anime', 'flux-3d', 'flux', 'any'] }
+                }
+            };
+        }
+
+        // The flux dosent work I dont know why well, becuase of pollination so, I think they will ffix it maybe...
+        isReady() { return true; }
+        getCurrentModel() { return `T:${this.textModel} | I:${this.imageModel}`; }
+        getBotName() { return Object.keys(this.bots)[0] || "None"; }
+        getMemory() { return JSON.stringify(this.bots); }
+        getSeed() { return this.seed; }
+        getTemp() { return this.temp; }
+
+        createBot({NAME}) { 
+            if (!this.bots[NAME]) this.bots[NAME] = []; 
+        }
+        deleteBot({NAME}) { delete this.bots[NAME]; }
+        renameBot({OLD, NEW}) { 
+            if(this.bots[OLD]) { 
+                this.bots[NEW] = this.bots[OLD]; 
+                delete this.bots[OLD]; 
+            }
+        }
+//TODO: fix this;
+      
+        setTextModel({MOD}) { this.textModel = MOD; }
+        setImageModel({MOD}) { this.imageModel = MOD; }
+        setTemp({N}) { this.temp = N; }
+        setSeed({N}) { this.seed = N; }
+        setSystem({LOG}) { this.systemLog = LOG; }
+        attachFile({URL}) { this.attachedFile = URL; }
+//fix what?
+        async simplePrompt({TEXT}) {
+            try {
+                const url = `https://text.pollinations.ai/${encodeURIComponent(TEXT)}?model=${this.textModel}&system=${encodeURIComponent(this.systemLog)}&seed=${this.seed}&temperature=${this.temp}`;
+                const r = await fetch(url);
+                if (!r.ok) return "Network error!! AI is sleeping?";
+                const res = await r.text();
+                
+                const botNames = Object.keys(this.bots);
+                if (botNames.length > 0) {
+                    this.bots[botNames[0]].push({ q: TEXT, a: res });
+                }
+                return res;
+            } catch (e) {
+                return "Error connecting to AI... try again later!!";
+            }
+        }
+
+        getImageUrl({TEXT}) {
+            try {
+                let url = `https://image.pollinations.ai/prompt/${encodeURIComponent(TEXT)}?model=${this.imageModel}&seed=${this.seed}&nologo=true`;
+                if (this.attachedFile) url += `&feed=${encodeURIComponent(this.attachedFile)}`;
+                return url;
+            } catch (err) {
+                return "url_error_check_prompt";
+            }
+        }
+
+        async setContextText({CTX, TEXT}) { 
+            return await this.simplePrompt({TEXT: `[Context: ${CTX}] ${TEXT}`}); 
+        }
+        
+        setContextImage({CTX, TEXT}) { 
+            return this.getImageUrl({TEXT: `${CTX}, ${TEXT}`}); 
+        }
+    }
+
+    Scratch.extensions.register(new PangAI());
+})(Scratch);
+
+// haha, hey creators now as you guys have looked trough this whole script... I hope you guys checked this whole script I SPENT 3 to 5 hours on this and I still dont know if there is a bug please fix it if you find one😭😭
+// ... WHERES MY KITCHEN GOO!!!... ohh its in the next... THE NEXT HOUSE!

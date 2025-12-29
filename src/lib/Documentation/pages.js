@@ -16,10 +16,11 @@ import PageTurboWeather from "./TurboWeather.md?raw";
 // Number Utilities
 import PageNumberUtilities from "./NumberUtilities.md?raw";
 
+//Pang AI
+import PagePangAI from "./PangAI.md?raw";
+
 // PenguinAI
 import PagePenguinAI from "./PenguinAI.md?raw";
-
-import pangAI from "./PangAI.md?raw";
 
 // AuthPenguin
 import PageAuthPenguin from "./AuthPenguin.md?raw";

@@ -80,15 +80,15 @@
                 delete this.bots[OLD]; 
             }
         }
-//TODO: fix this;
-      
+        //TODO: fix this;
+        //fix what?
         setTextModel({MOD}) { this.textModel = MOD; }
         setImageModel({MOD}) { this.imageModel = MOD; }
         setTemp({N}) { this.temp = N; }
         setSeed({N}) { this.seed = N; }
         setSystem({LOG}) { this.systemLog = LOG; }
         attachFile({URL}) { this.attachedFile = URL; }
-//fix what?
+
         async simplePrompt({TEXT}) {
             try {
                 const url = `https://text.pollinations.ai/${encodeURIComponent(TEXT)}?model=${this.textModel}&system=${encodeURIComponent(this.systemLog)}&seed=${this.seed}&temperature=${this.temp}`;

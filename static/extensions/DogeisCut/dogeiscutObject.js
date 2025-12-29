@@ -110,7 +110,7 @@
         }
 
         toString(pretty = false) {
-            return JSON.stringify(this.toJSON(), null, pretty ? "\t" : null)
+            return JSON.stringify(this.object, null, pretty ? "\t" : null)
         }
 
         toVisualContent(border = '1px solid #ccc', keyBackground = '#f9f9f9', background = '#fff') {
@@ -267,7 +267,7 @@
                 Object.entries(this.object).map(([key, value]) => {
                     if (typeof value === "object" && value !== null) {
                         if (typeof value.toJSON === "function") return [key, value.toJSON()]
-                        if (typeof value.toString === "function") return [key, value.toString()]
+                        //if (typeof value.toString === "function") return [key, value.toString()]
                         return [key, JSON.stringify(value)]
                     }
                     return [key, value]
@@ -331,10 +331,7 @@
 
     class Extension {
         constructor() {
-            vm.runtime.registerCompiledExtensionBlocks('dogeiscutObject', this.getCompileInfo());
-
             vm.dogeiscutObject = dogeiscutObject
-
             vm.runtime.registerSerializer(
                 "dogeiscutObject",
                 v => {
@@ -372,6 +369,8 @@
 
             if (!vm.jwArray) vm.extensionManager.loadExtensionIdSync('jwArray')
             jwArray = vm.jwArray
+            
+            vm.runtime.registerCompiledExtensionBlocks('dogeiscutObject', this.getCompileInfo());
         }
 
         getInfo() {
@@ -442,21 +441,18 @@
                     {
                         opcode: 'builder',
                         text: 'object builder [CURRENT_OBJECT]',
-                        ...dogeiscutObject.Block,
+                        branches: [{}],
                         arguments: {
                             CURRENT_OBJECT: {
                                 fillIn: 'currentObject'
                             },
                         },
-                        branches: [{
-                            //accepts: 'dogeiscutObjectBuilder'
-                        }],
+                        ...dogeiscutObject.Block,
                     },
                     {
                         opcode: 'builderAppend',
                         text: 'append key [KEY] value [VALUE] to builder',
                         blockType: Scratch.BlockType.COMMAND,
-                        //notchAccepts: 'dogeiscutObjectBuilder',
                         arguments: {
                             KEY: {
                                 type: Scratch.ArgumentType.STRING,
@@ -474,7 +470,6 @@
                         opcode: 'builderAppendEmpty',
                         text: 'append key [KEY] to builder',
                         blockType: Scratch.BlockType.COMMAND,
-                        //notchAccepts: 'dogeiscutObjectBuilder',
                         arguments: {
                             KEY: {
                                 type: Scratch.ArgumentType.STRING,
@@ -487,7 +482,6 @@
                         opcode: 'builderSet',
                         text: 'set builder to [OBJECT]',
                         blockType: Scratch.BlockType.COMMAND,
-                        //notchAccepts: 'dogeiscutObjectBuilder',
                         arguments: {
                             OBJECT: dogeiscutObject.Argument
                         }
@@ -681,16 +675,19 @@
         getCompileInfo() {
             return {
                 ir: {
-                    builder: (generator, block) => ({
-                        kind: 'input',
-                        substack: generator.descendSubstack(block, 'SUBSTACK')
-                    }),
+                    builder: (generator, block) => {
+                        generator.script.yields = true
+                        return {
+                            kind: 'input',
+                            substack: generator.descendSubstack(block, 'SUBSTACK')
+                        }
+                    }
                 },
                 js: {
                     builder: (node, compiler, imports) => {
                         const originalSource = compiler.source;
 
-                        compiler.source += 'new runtime.vm.dogeiscutObject.Type(yield* (function*() {';
+                        compiler.source = 'vm.dogeiscutObject.Type.toObject(yield* (function*() {';
                         compiler.source += 'thread._dogeiscutObjectBuilderIndex ??= [];';
                         compiler.source += 'thread._dogeiscutObjectBuilderIndex.push(Object.create(null));';
                         compiler.descendStack(node.substack, new imports.Frame(false, undefined, true));
@@ -740,7 +737,7 @@
             }
         }
 
-        async builder({}, util) {
+        builder() {
             return 'noop'
         }
 

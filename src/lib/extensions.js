@@ -306,15 +306,14 @@ export default [
         creator: "oc9x97",
         isGitHub: true,
     },
-
     {
         name: "Pang AI",
-        description: "Advance AI text,image generation with bot with a memory, Use OpenAI, Gemini, DeepSeek, and Flux models",
-        code: "https://raw.githubusercontent.com/Seigh-sword/PenguinMod-ExtensionsGallery/main/static/extensions/Seigh_sword/PangAI.js",
-        banner: "https://raw.githubusercontent.com/Seigh-sword/PangAI-GithubPage/refs/heads/main/assets/PangAI-Icon.png",
-        creator: "Seigh_sword"
+        description: "Advanced AI text and image generation with bot memory. powered by pollination.ai",
+        code: "Seighsword/PangAI.js",
+        banner: "Seighsword/PangAI.svg",
+        creator: "Seigh_sword",
+        documentation: "PangAI"
     },
-    
     {
         name: "TurboWeather",
         description: "Show weather and location data for any place in our world. Data that could be used for doxxing is deleted from results.",

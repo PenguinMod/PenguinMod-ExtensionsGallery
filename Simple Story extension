@@ -1,0 +1,60 @@
+(function (Scratch) {
+  'use strict';
+
+  class StoryWeaver {
+    getInfo() {
+      return {
+        id: 'bobo_storyweaver', // safe and valid
+        name: 'Story Weaver',
+        blocks: [
+          {
+            opcode: 'makeStory',
+            blockType: Scratch.BlockType.REPORTER,
+            text: 'generate a story'
+          }
+        ]
+      };
+    }
+
+    makeStory() {
+      const beginnings = [
+        'Once upon a time,',
+        'Long ago,',
+        'In a faraway kingdom,',
+        'On a stormy night,'
+      ];
+      const characters = [
+        'a brave knight',
+        'a clever fox',
+        'a young wizard',
+        'a fearless princess'
+      ];
+      const settings = [
+        'in a dark forest,',
+        'in a mystical village,',
+        'in a hidden castle,',
+        'on a distant island,'
+      ];
+      const events = [
+        'found a mysterious treasure,',
+        'fought a terrible dragon,',
+        'solved an ancient riddle,',
+        'discovered a secret portal,'
+      ];
+      const endings = [
+        'and they lived happily ever after.',
+        'but the secret remained hidden.',
+        'and peace returned to the land.',
+        'and a new adventure began.'
+      ];
+
+      function pickRandom(arr) {
+        return arr[Math.floor(Math.random() * arr.length)];
+      }
+
+      return `${pickRandom(beginnings)} ${pickRandom(characters)} ${pickRandom(settings)} ${pickRandom(events)} ${pickRandom(endings)}`;
+    }
+  }
+
+  Scratch.extensions.register(new StoryWeaver());
+})(Scratch);

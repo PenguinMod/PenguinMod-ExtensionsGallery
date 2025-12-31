@@ -113,7 +113,7 @@
             return JSON.stringify(this.object, null, pretty ? "\t" : null)
         }
 
-        toVisualContent(border = '1px solid #ccc', keyBackground = '#f9f9f9', background = '#fff') {
+        toVisualContent(border = '1px solid #77777777', keyBackground = '#77777724', background = '#ffffff00') {
             // wasnt sure how i wanted this to look so i have some customization
             const RENDER_ARRAYS_VISUALLY = true;
             const SHOW_ARRAY_INDEX_NUMBERS = false;

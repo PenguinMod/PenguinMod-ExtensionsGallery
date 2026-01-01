@@ -471,6 +471,14 @@ export default [
         creator: "G1nX",
     },
     {
+        name: "Server Storage",
+        description: "Similar to the server storage blocks in the 'Storage' extension, but with a better server uptime and non-global keys.\nDid you know the server is open source?",
+        code: "Ikelene/serverStorageExtension.js",
+        banner: "Ikelene/serverStorageIMG.avif",
+        creator: "Ikelene",
+        isGitHub: true,
+    },
+    {
         name: "Free Servers",
         description: "Here you can find a free server for your projects. And also check whether it is working now or not.\n\nЗдесь вы можете найти бесплатный сервер для своих проектов. А также проверить, работает он сейчас или нет.",
         code: "WAYLIVES/FreeServers.js",

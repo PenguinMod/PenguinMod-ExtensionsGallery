@@ -140,19 +140,6 @@ export default [
         documentation: "PenguinAI",
         unstableReason: "AI models can generate unintended or inappropriate output.\nSome AI models may also become temporarily inaccessible.\n\nUse at your own risk.",
     },
-/*
-    {
-        name: "Block AI",
-        description: "An AI powered chat bot to help you code in your projects.",
-        code: "TheShovel/blockAI.js",
-        banner: "TheShovel/thumbnail-blockAI.png",
-        creator: "TheShovel",
-        creatorAlias: "TheShovel",
-        isGitHub: true,
-        unstable: true,
-        unstableReason: "The AI model can generate inaccurate output and broken syntax!",
-    },
-*/
     {
         name: "PenguinHook",
         description: "Send Webhook requests, that can be Discord or any type of webhook.",
@@ -272,15 +259,6 @@ export default [
         banner: "NamelessCat/corsproxy.png",
         creator: "NamelessCat",
     },
-    // { // temporary due to licensing issues
-    //     name: "Extension Exposer",
-    //     description: "Access the raw functions from other extensions.",
-    //     code: "TheShovel/extexp.js",
-    //     banner: "TheShovel/placeholder-extexp.png",
-    //     creator: "TheShovel",
-    //     isGitHub: true,
-    //     note: "Some contributions by yuri-kiss :P",
-    // },
     {
         name: "Project Page",
         description: "Modify and affect the studio project page from the code. How annoying can an extension possibly be?",
@@ -297,14 +275,6 @@ export default [
         creator: "LilyMakesThings",
         isGitHub: false,
     },
-    // { // temporary due to licensing issues
-    //     name: "More Fields",
-    //     description: "Custom Field Types",
-    //     code: "Ashime/MoreFields.js",
-    //     banner: "0znzw/MoreFields.png",
-    //     creator: "yuri-kiss",
-    //     isGitHub: true,
-    // },
     {
         name: "Beepbox Player",
         description: "Play, edit, and read songs from any BeepBox mod directly from the URL or JSON!",
@@ -472,6 +442,15 @@ export default [
         creatorAlias: "gaimerI17",
         note: "Extension thumbnail made by Dillon."
     },
+    {
+        name: "Pointer Lock Pro",
+        description: "Locks and hides your pointer while recording your mouse movement—best to use in 3D games and custom camera systems.",
+        code: "supercodes_/pointerlockpro.js",
+        banner: "supercodes_/pointerlockpro.png",
+        creator: "supercodes_",
+        isGitHub: false,
+        isSandboxed: false,
+    },
     /* these extensions are completely dead as of now
     {
         name: "Online Captcha",
@@ -494,15 +473,6 @@ export default [
         code: "Gen1x/mouth_washer.js",
         banner: "Gen1x/mw-placeholder.png",
         creator: "G1nX",
-    },
-    {
-    name: "Pointer Lock Pro",
-    description: "Locks and hides your pointer while recording your mouse movement—best to use in 3D games and custom camera systems.",
-    code: "supercodes_/pointerlockpro.js",
-    banner: "pointerlockpro.png",
-    creator: "supercodes_",
-    isGitHub: false,
-    isSandboxed: false,
     },
     */
 ];

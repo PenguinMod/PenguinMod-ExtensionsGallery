@@ -501,7 +501,8 @@ export default [
     code: "supercodes_/pointerlockpro.js",
     banner: "pointerlockpro.png",
     creator: "supercodes_",
-    isGitHub: false 
+    isGitHub: false
+    isSandboxed: false
 },
     */
 ];

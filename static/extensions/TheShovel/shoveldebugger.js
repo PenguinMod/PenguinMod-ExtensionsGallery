@@ -288,6 +288,11 @@
         boxShadow: "0px 5px 25px 5px hsla(0, 0%, 0%, 0.15)",
       });
 
+      const resizeObserver = new ResizeObserver(() => {
+        this._updateVirtualScroll();
+      });
+      resizeObserver.observe(w);
+
       const header = document.createElement("div");
       Object.assign(header.style, {
         background: getComputedStyle(document.documentElement).getPropertyValue(
@@ -1832,12 +1837,14 @@ ${logHTML}
       );
       this.logContainer.innerHTML = "";
 
+      let currentTop = startIndex * this.averageEntryHeight;
+
       for (let i = startIndex; i < endIndex; i++) {
         const entry = this.logEntries[i];
         const div = document.createElement("div");
         Object.assign(div.style, {
           position: "absolute",
-          top: `${i * this.averageEntryHeight}px`,
+          top: `${currentTop}px`,
           left: "6px",
           right: "6px",
           whiteSpace: "pre-wrap",
@@ -1848,6 +1855,11 @@ ${logHTML}
         div.innerHTML = this._formatLogItem(entry.text);
 
         this.logContainer.appendChild(div);
+
+        div.style.width = "calc(100% - 12px)";
+        const rect = div.getBoundingClientRect();
+        const height = rect.height || this.averageEntryHeight;
+        currentTop += height;
       }
     }
 

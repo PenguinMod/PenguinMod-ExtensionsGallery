@@ -495,5 +495,13 @@ export default [
         banner: "Gen1x/mw-placeholder.png",
         creator: "G1nX",
     },
+    {
+    name: "Pointer Lock Pro",
+    description: "Locks and hides your pointer while recording your mouse movement—best to use in 3D games and custom camera systems.",
+    code: "supercodes_/pointerlockpro.js",
+    banner: "pointerlockpro.png",
+    creator: "supercodes_",
+    isGitHub: false 
+},
     */
 ];

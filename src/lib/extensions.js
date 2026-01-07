@@ -571,13 +571,13 @@ export default [
         banner: "Gen1x/mw-placeholder.avif",
         creator: "G1nX",
     },
-   {
+    {
     name: "Cursor Controls",
     description: "Blocks to lock the mouse pointer and track movement even when the cursor is hidden.",
     code: "codemaster/cursor-controls.js",
-    banner: "codemaster/cursor-controls.png",
+    banner: "codemaster/your-image-name.avif", // Make sure this matches your uploaded file name!
     creator: "codemaster",
     isGitHub: true,
-},
+    },
     */
 ];

@@ -575,7 +575,7 @@ export default [
     name: "Cursor Controls",
     description: "Lock and hide your mouse pointer with tracking your mouse movement best to use in 3d games.",
     code: "codemaster/cursor-controls.js",
-    banner: "codemaster/your-image-name.png",
+    banner: "codemaster/cursor-controls.png",
     creator: "codemaster",
     isGitHub: true,
     },

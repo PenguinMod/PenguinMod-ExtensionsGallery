@@ -573,9 +573,9 @@ export default [
     },
     {
     name: "Cursor Controls",
-    description: "Blocks to lock the mouse pointer and track movement even when the cursor is hidden.",
+    description: "Lock and hide your mouse pointer with tracking your mouse movement best to use in 3d games.",
     code: "codemaster/cursor-controls.js",
-    banner: "codemaster/your-image-name.avif", // Make sure this matches your uploaded file name!
+    banner: "codemaster/your-image-name.png",
     creator: "codemaster",
     isGitHub: true,
     },

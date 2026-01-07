@@ -11,7 +11,7 @@
     class CursorControls {
         getInfo() {
             return {
-                id: 'codemastercursorcontrols', 
+                id: 'moosanaeempclgtmcursorcontrols', 
                 name: 'Cursor Controls',
                 color1: '#4fc694',
                 blocks: [
@@ -59,13 +59,8 @@
             return !!document.pointerLockElement;
         }
 
-        getMovementX() {
-            return moveX;
-        }
-
-        getMovementY() {
-            return moveY;
-        }
+        getMovementX() { return moveX; }
+        getMovementY() { return moveY; }
     }
 
     document.addEventListener('mousemove', (e) => {

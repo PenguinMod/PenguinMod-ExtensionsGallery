@@ -571,13 +571,13 @@ export default [
         banner: "Gen1x/mw-placeholder.avif",
         creator: "G1nX",
     },
-    {
+   {
     name: "Cursor Controls",
-    description: "Lock and Hide your Pointer while tracking your mouse movement best to use on 3d games.",
+    description: "Blocks to lock the mouse pointer and track movement even when the cursor is hidden.",
     code: "codemaster/cursor-controls.js",
-    banner: "", 
+    banner: "codemaster/cursor-controls.png",
     creator: "codemaster",
     isGitHub: true,
-    },
+},
     */
 ];

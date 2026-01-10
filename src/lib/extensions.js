@@ -531,8 +531,8 @@ export default [
         creator: "moosanaeempc-lgtm",
         creatorAlias: "codemaster",
         isGitHub: true,
+        isUnsandboxed: true, 
     },
-    /* these extensions are completely dead as of now
     {
         name: "Online Captcha",
         description: "Protect your project with simple, easy to use captcha implementation. Fully client-side, bypass-proof captcha solution!",

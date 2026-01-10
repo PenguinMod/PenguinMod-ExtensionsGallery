@@ -2,8 +2,7 @@
     'use strict';
 
     if (!Scratch.extensions.unsandboxed) {
-        console.log('Cursor Controls: Running in sandboxed mode, attempting to reload unsandboxed...');
-        Scratch.extensions.unsandboxed = true; 
+        console.log('Cursor Controls: Attempting to reload unsandboxed...');
     }
 
     let moveX = 0;
@@ -15,7 +14,6 @@
                 id: 'moosanaeempclgtmcursorcontrols',
                 name: 'Cursor Controls',
                 color1: '#4fc694',
-                featured: true,
                 blocks: [
                     {
                         opcode: 'lockPointer',
@@ -47,7 +45,7 @@
         }
 
         lockPointer() {
-            const canvas = Scratch.renderer.canvas;
+            const canvas = document.querySelector('canvas') || (Scratch.renderer && Scratch.renderer.canvas);
             if (canvas) {
                 canvas.requestPointerLock();
             }
@@ -74,11 +72,18 @@
         }
     });
 
-    const runtime = Scratch.vm.runtime;
-    runtime.on('RUNTIME_STEP_END', () => {
-        moveX = 0;
-        moveY = 0;
-    });
+    const getData = () => {
+        const runtime = Scratch.vm ? Scratch.vm.runtime : Scratch.runtime;
+        if (runtime) {
+            runtime.on('RUNTIME_STEP_END', () => {
+                moveX = 0;
+                moveY = 0;
+            });
+        } else {
+            setTimeout(getData, 100);
+        }
+    };
+    getData();
 
     Scratch.extensions.register(new CursorControls());
 })(Scratch);

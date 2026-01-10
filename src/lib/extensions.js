@@ -555,5 +555,4 @@ export default [
         banner: "Gen1x/mw-placeholder.avif",
         creator: "G1nX",
     },
-    */
 ];

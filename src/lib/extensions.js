@@ -88,7 +88,7 @@ export default [
         banner: "pooiod/Dictation.svg",
         creator: "pooiod7",
     },
-        {
+    {
         name: "Doodle Recognition",
         description: "A implementation of Google's Quick Draw image vision model",
         code: "TheShovel/doodlerec.js",
@@ -96,7 +96,7 @@ export default [
         creator: "TheShovel",
         isGitHub: true,
     },
-            {
+    {
         name: "Stylus",
         description: "Get the pressure and tilt of a stylus or graphic tablet",
         code: "sourdoggy/stylus extension.js",
@@ -152,31 +152,6 @@ export default [
         banner: "dumzdev/removebgbanner.svg",
         creator: "dumzdev",
     },
-    /*{
-        name: "PenguinAI",
-        description: "Talk to AI! Use Models like DALL-E-3, GPT, LLama, Claude, and more!",
-        code: "MubiLop/penguingpt.js",
-        banner: "MubiLop/penguingpt.avif",
-        creator: "cicerorph",
-        creatorAlias: "MubiLop",
-        isGitHub: true,
-        unstable: true,
-        documentation: "PenguinAI",
-        unstableReason: "AI models can generate unintended or inappropriate output.\nSome AI models may also become temporarily inaccessible.\n\nUse at your own risk.",
-    },*/
-/*
-    {
-        name: "Block AI",
-        description: "An AI powered chat bot to help you code in your projects.",
-        code: "TheShovel/blockAI.js",
-        banner: "TheShovel/thumbnail-blockAI.avif",
-        creator: "TheShovel",
-        creatorAlias: "TheShovel",
-        isGitHub: true,
-        unstable: true,
-        unstableReason: "The AI model can generate inaccurate output and broken syntax!",
-    },
-*/
     {
         name: "PenguinHook",
         description: "Send Webhook requests, that can be Discord or any type of webhook.",
@@ -548,6 +523,15 @@ export default [
         isGitHub: true,
         creatorAlias: "gaimerI17",
     },
+    {
+        name: "Cursor Controls",
+        description: "Blocks to lock the mouse pointer and track movement even when the cursor is hidden.",
+        code: "codemaster/cursor-controls.js",
+        banner: "codemaster/cursor-controls.png",
+        creator: "moosanaeempc-lgtm",
+        creatorAlias: "codemaster",
+        isGitHub: true,
+    },
     /* these extensions are completely dead as of now
     {
         name: "Online Captcha",
@@ -570,15 +554,6 @@ export default [
         code: "Gen1x/mouth_washer.js",
         banner: "Gen1x/mw-placeholder.avif",
         creator: "G1nX",
-    },
-    {
-    name: "Cursor Controls",
-    description: "Lock and hide your pointer while recording your mouse movement best to use in 3d games.",
-    code: "codemaster/cursor-controls.js",
-    banner: "codemaster/cursor-controls.png",
-    creator: "moosanaeempc-lgtm",
-    creatorAlias: "codemaster",
-    isGitHub: true,
     },
     */
 ];

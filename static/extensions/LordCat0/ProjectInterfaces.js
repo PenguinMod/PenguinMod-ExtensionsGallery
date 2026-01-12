@@ -59,6 +59,7 @@
         return target.sprite.costumes[costumeIndex].asset.encodeDataURI()
     }
     const replaceElement = (oldElement, newElement, id) => {
+        newElement.dataset.id = id
         newElement.setAttribute("style", oldElement.getAttribute("style"))
         newElement.addEventListener("mouseover", () => metadata[id].hovered = true)
         newElement.addEventListener("mouseout", () => metadata[id].hovered = false)

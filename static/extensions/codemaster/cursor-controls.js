@@ -68,11 +68,13 @@
     document.addEventListener('mousemove', (e) => {
         if (document.pointerLockElement) {
             moveX += e.movementX;
+            // Scratch Y is positive UP, but Browser Y is positive DOWN. 
+            // We flip it so it feels natural in the editor.
             moveY += -e.movementY;
         }
     });
 
-    const getData = () => {
+    const setupReset = () => {
         const runtime = Scratch.vm ? Scratch.vm.runtime : Scratch.runtime;
         if (runtime) {
             runtime.on('RUNTIME_STEP_END', () => {
@@ -80,10 +82,10 @@
                 moveY = 0;
             });
         } else {
-            setTimeout(getData, 100);
+            setTimeout(setupReset, 100);
         }
     };
-    getData();
+    setupReset();
 
     Scratch.extensions.register(new CursorControls());
 })(Scratch);

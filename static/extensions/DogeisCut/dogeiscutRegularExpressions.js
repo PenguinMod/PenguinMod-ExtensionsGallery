@@ -72,7 +72,7 @@
             if (this.isValid) {
                 return Cast.toBoolean(this.expression.dotAll)
             }
-            return ""
+            return false
         }
         get flags() {
             if (this.isValid) {
@@ -84,8 +84,75 @@
             if (this.isValid) {
                 return Cast.toBoolean(this.expression.global)
             }
+            return false
+        }
+        get hasIndices() {
+            if (this.isValid) {
+                return Cast.toBoolean(this.expression.hasIndices)
+            }
+            return false
+        }
+        get ignoreCase() {
+            if (this.isValid) {
+                return Cast.toBoolean(this.expression.ignoreCase)
+            }
+            return false
+        }
+        get multiline() {
+            if (this.isValid) {
+                return Cast.toBoolean(this.expression.multiline)
+            }
+            return false
+        }
+        get source() {
+            if (this.isValid) {
+                return Cast.toString(this.expression.source)
+            }
             return ""
         }
+        get unicode() {
+            if (this.isValid) {
+                return Cast.toBoolean(this.expression.unicode)
+            }
+            return false
+        }
+        get unicodeSets() {
+            if (this.isValid) {
+                return Cast.toBoolean(this.expression.unicodeSets)
+            }
+            return false
+        }
+        get lastIndex() {
+            if (this.isValid) {
+                return Cast.toNumber(this.expression.lastIndex)
+            }
+            return 0
+        }
+
+        // depricated
+        // compile(pattern, flags) {
+        //     if (this.isValid) {
+        //         this.expression.compile(pattern, flags)
+        //     }
+        // }
+        exec(string) {
+            // returns an array or null. need arrays ext
+            // also this array aparently has additional properties.. i love js 
+            // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/RegExp/exec
+            if (this.isValid) {
+                return this.expression.exec(string)
+            }
+            return 0
+        }
+        test(string) {
+            if (this.isValid) {
+                return Cast.toBoolean(this.expression.test(string))
+            }
+            return false
+        }
+
+        // TODO: figure out search, split, replace, and match since those are string prototype functions, not in regex
+        // TODO: static properties/methods
     }
 
     const dogeiscutRegularExpression = {

@@ -68,8 +68,7 @@
     document.addEventListener('mousemove', (e) => {
         if (document.pointerLockElement) {
             moveX += e.movementX;
-            // Scratch Y is positive UP, but Browser Y is positive DOWN. 
-            // We flip it so it feels natural in the editor.
+            // Up is positive in Scratch, negative in Browser
             moveY += -e.movementY;
         }
     });

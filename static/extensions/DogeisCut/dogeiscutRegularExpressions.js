@@ -21,6 +21,24 @@
     const runtime = Scratch.vm.runtime;
     const SB = ScratchBlocks;
 
+    function span(text) {
+        let el = document.createElement('span')
+        el.innerHTML = text
+        el.style.display = 'hidden'
+        el.style.whiteSpace = 'nowrap'
+        el.style.width = '100%'
+        el.style.textAlign = 'center'
+        return el
+    }
+
+    const escapeHTML = unsafe => {
+        return unsafe
+            .replaceAll("&", "&amp;")
+            .replaceAll("<", "&lt;")
+            .replaceAll(">", "&gt;")
+            .replaceAll('"', "&quot;")
+            .replaceAll("'", "&#039;")
+    };
     
     class RegularExpressionType {
         customId = "dogeiscutRegularExpression"
@@ -33,36 +51,35 @@
             this.isValid = isValid
         }
 
-        static toRegularExpression(x) {
+        static toRegularExpression(pattern, flags) {
             try {
-                let exp = new RegExp(x)
-                return new RegularExpressionType(exp, true) 
-            } catch {
+                let expression = new RegExp(pattern, flags)
+                return new RegularExpressionType(expression, true) 
+            } catch (e) {
+                //console.log(e)
                 return new RegularExpressionType() 
             }
         }
 
-        static forRegularExpression(x) {
-        }
-
-        static display(x) {
-        }
-
-        jwArrayHandler() {
-            return ``
-        }
-
         toString() {
-            return ``
-        }
-        toJSON() {
-            return ``
+            if (this.isValid) {
+                return `/${this.source}/${this.flags}`
+            }
+            return "Invalid Regex"
         }
 
+        jwArrayHandler = () => this.toString()
         toMonitorContent = () => span(this.toString())
 
         toReporterContent() {
             let root = document.createElement('div')
+
+            root.style.display = 'flex'
+            root.style.flexDirection = 'column'
+            root.style.justifyContent = 'center'
+            root.style.fontWeight = 'bold'
+
+            root.appendChild(span(this.toString()))
 
             return root
         }
@@ -175,26 +192,26 @@
             return {
                 id: "dogeiscutRegularExpressions",
                 name: "Regular Expressions",
-                color1: "#cb3dff",
+                color1: "#913dff",
                 blocks: [
                     {
                         opcode: 'regex',
-                        text: 'regular expression [EXPRESSION]',
+                        text: 'regular expression [PATTERN]',
                         arguments: {
-                            EXPRESSION: {
+                            PATTERN: {
                                 type: ArgumentType.STRING,
-                                defaultValue: ".?*"
+                                defaultValue: ".*"
                             }
                         },
                         ...dogeiscutRegularExpression.Block
                     },
                     {
                         opcode: 'regexFlags',
-                        text: 'regular expression [EXPRESSION] with flags [FLAGS]',
+                        text: 'regular expression [PATTERN] with flags [FLAGS]',
                         arguments: {
-                            EXPRESSION: {
+                            PATTERN: {
                                 type: ArgumentType.STRING,
-                                defaultValue: ".?*"
+                                defaultValue: ".*"
                             },
                             FLAGS: {
                                 type: ArgumentType.STRING,
@@ -206,6 +223,16 @@
                 ],
                 menus: {}
             }
+        }
+
+        regex({ PATTERN }) {
+            PATTERN = Cast.toString(PATTERN)
+            return RegularExpressionType.toRegularExpression(PATTERN)
+        }
+        regexFlags({ PATTERN, FLAGS }) {
+            PATTERN = Cast.toString(PATTERN)
+            FLAGS = Cast.toString(FLAGS)
+            return RegularExpressionType.toRegularExpression(PATTERN, FLAGS)
         }
     }
 

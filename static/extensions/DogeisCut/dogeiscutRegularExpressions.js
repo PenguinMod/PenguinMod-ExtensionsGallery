@@ -46,16 +46,17 @@
         regex = /(?:)/
         isValid = false
 
-        constructor(regex = /(?:)/, isValid = false) {
+        constructor(regex = /(?:)/, isValid = false, lastIndex = 0) {
             this.regex = regex
             this.isValid = isValid
+            this.lastIndex = lastIndex
         }
 
         static toRegularExpression(x) {
             if (x instanceof RegularExpressionType) {
-                return new RegularExpressionType(x.regex, x.isValid)
+                return new RegularExpressionType(x.regex, x.isValid, x.lastIndex)
             }
-            if (x instanceof RegExp) return new RegularExpressionType(x, true)
+            if (x instanceof RegExp) return new RegularExpressionType(x, true, x.lastIndex)
             try {
                 let expression = new RegExp(x)
                 return new RegularExpressionType(expression, true) 
@@ -147,6 +148,11 @@
             }
             return 0
         }
+        set lastIndex(newLastIndex) {
+            if (this.isValid) {
+                this.regex.lastIndex = Cast.toNumber(newLastIndex)
+            }
+        }
 
         // depricated
         // compile(pattern, flags) {
@@ -175,10 +181,13 @@
                             newObj.indices.groups = vm.dogeiscutObject.Type.toObject(baseArray.indices.groups)
                         }
                     }
+                    newObj.regex = this
                     return vm.dogeiscutObject.Type.toObject(newObj)
                 }
             }
-            return ""
+            let newObj = Object.create(null);
+            newObj.regex = this
+            return newObj
         }
         test(string) {
             if (this.isValid) {
@@ -188,7 +197,7 @@
         }
 
         // TODO: static properties/methods
-        // TODO: handle lastIndex (RegularExpressionType should have it)
+        // last index stuff needs more work :/ trying to make it immutable but its difficult with the way this works
     }
 
     const dogeiscutRegularExpression = {
@@ -253,6 +262,7 @@
                             REGEX: dogeiscutRegularExpression.Argument
                         },
                     },
+                    '---',
                     //...(vm.runtime.ext_dogeiscutObject ? ['---'] : []),
                     {
                         opcode: 'exec',
@@ -266,6 +276,27 @@
                         },
                         hideFromPalette: !vm.runtime.ext_dogeiscutObject,
                         ...(vm.runtime.ext_dogeiscutObject ? vm.dogeiscutObject.Block : {}),
+                    },
+                    {
+                        opcode: 'getLastIndex',
+                        text: 'get last index of [REGEX]',
+                        blockType: BlockType.REPORTER,
+                        disableMonitor: true,
+                        arguments: {
+                            REGEX: dogeiscutRegularExpression.Argument,
+                        },
+                    },
+                    {
+                        opcode: 'setLastIndex',
+                        text: 'set last index of [REGEX] to [INDEX]',
+                        arguments: {
+                            REGEX: dogeiscutRegularExpression.Argument,
+                            INDEX: {
+                                type: ArgumentType.NUMBER,
+                                defaultValue: 0
+                            },
+                        },
+                        ...dogeiscutRegularExpression.Block
                     },
                     '---',
                     {
@@ -380,6 +411,18 @@
             STRING = Cast.toString(STRING)
             REGEX = RegularExpressionType.toRegularExpression(REGEX)
             return REGEX.exec(STRING)
+        }
+
+        getLastIndex({ REGEX }) {
+            REGEX = RegularExpressionType.toRegularExpression(REGEX)
+            return REGEX.lastIndex
+        }
+
+        setLastIndex({ REGEX, INDEX }) {
+            REGEX = RegularExpressionType.toRegularExpression(REGEX)
+            INDEX = Cast.toNumber(INDEX)
+            REGEX.lastIndex = INDEX
+            return REGEX
         }
 
         search({ STRING, REGEX }) {

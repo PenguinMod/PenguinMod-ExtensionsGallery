@@ -570,12 +570,11 @@ export default [
         code: "Gen1x/mouth_washer.js",
         banner: "Gen1x/mw-placeholder.avif",
         creator: "G1nX",
-    }, // 573行目
-  {
-    name: "AES Crypto",
-    description: "Encrypt and decrypt strings with a custom password. Supports Japanese characters (UTF-8).",
-    author: "2015kaito8169",
-    image: "/favicon.png",
-    extension: "/extensions/2015kaito8169/AES.js"
-  }
-]; // 583行目
+       {
+        name: "AES Crypto",
+        description: "Encrypt and decrypt strings with a custom password. Supports Japanese characters (UTF-8).",
+        code: "2015kaito8169/AES.js",
+        banner: "favicon.png",
+        creator: "2015kaito8169"
+    }
+];

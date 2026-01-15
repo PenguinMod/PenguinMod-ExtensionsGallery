@@ -564,7 +564,7 @@ export default [
         banner: "Gen1x/betterstorage.avif",
         creator: "G1nX",
     },
-        {
+    {
         name: "Mouth Washer",
         description: "Includes many utilities related to cleaning bad words, swearing and profanity. Thought of as an extra layer of security for filtering messages.\n\n(ft. violet and jwklong)",
         code: "Gen1x/mouth_washer.js",
@@ -576,6 +576,6 @@ export default [
         description: "Encrypt and decrypt strings with a custom password. Supports Japanese and English characters.",
         code: "2015kaito8169/AES.js",
         banner: "favicon.png",
-        creator: "2015kaito8169"
+        creator: "2015kaito8169",
     }
 ];

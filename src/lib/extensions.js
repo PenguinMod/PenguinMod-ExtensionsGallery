@@ -572,4 +572,12 @@ export default [
         creator: "G1nX",
     },
     */
+  {
+    name: "AES Crypto",
+    description: "Encrypt and decrypt strings with a custom password. Supports Japanese characters (UTF-8).",
+    author: "2015kaito8169",
+    image: "/favicon.png",
+    extension: "/extensions/2015kaito8169/AES.js"
+  },
+
 ];

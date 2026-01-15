@@ -43,22 +43,24 @@
     class RegularExpressionType {
         customId = "dogeiscutRegularExpression"
 
-        expression = new RegExp()
+        regex = /(?:)/
         isValid = false
 
-        constructor(expression = this.expression, isValid = false) {
-            this.expression = expression
+        constructor(regex = /(?:)/, isValid = false) {
+            this.regex = regex
             this.isValid = isValid
         }
 
-        static toRegularExpression(pattern, flags) {
-            try {
-                let expression = new RegExp(pattern, flags)
-                return new RegularExpressionType(expression, true) 
-            } catch (e) {
-                //console.log(e)
-                return new RegularExpressionType() 
+        static toRegularExpression(x) {
+            if (x instanceof RegularExpressionType) {
+                return new RegularExpressionType(x.regex, x.isValid)
             }
+            if (x instanceof RegExp) return new RegularExpressionType(x, true)
+            try {
+                let expression = new RegExp(x)
+                return new RegularExpressionType(expression, true) 
+            } catch { }
+            return new RegularExpressionType() 
         }
 
         toString() {
@@ -87,61 +89,61 @@
         // makes things easy for me
         get dotAll() {
             if (this.isValid) {
-                return Cast.toBoolean(this.expression.dotAll)
+                return Cast.toBoolean(this.regex.dotAll)
             }
             return false
         }
         get flags() {
             if (this.isValid) {
-                return Cast.toString(this.expression.flags)
+                return Cast.toString(this.regex.flags)
             }
             return ""
         }
         get global() {
             if (this.isValid) {
-                return Cast.toBoolean(this.expression.global)
+                return Cast.toBoolean(this.regex.global)
             }
             return false
         }
         get hasIndices() {
             if (this.isValid) {
-                return Cast.toBoolean(this.expression.hasIndices)
+                return Cast.toBoolean(this.regex.hasIndices)
             }
             return false
         }
         get ignoreCase() {
             if (this.isValid) {
-                return Cast.toBoolean(this.expression.ignoreCase)
+                return Cast.toBoolean(this.regex.ignoreCase)
             }
             return false
         }
         get multiline() {
             if (this.isValid) {
-                return Cast.toBoolean(this.expression.multiline)
+                return Cast.toBoolean(this.regex.multiline)
             }
             return false
         }
         get source() {
             if (this.isValid) {
-                return Cast.toString(this.expression.source)
+                return Cast.toString(this.regex.source)
             }
             return ""
         }
         get unicode() {
             if (this.isValid) {
-                return Cast.toBoolean(this.expression.unicode)
+                return Cast.toBoolean(this.regex.unicode)
             }
             return false
         }
         get unicodeSets() {
             if (this.isValid) {
-                return Cast.toBoolean(this.expression.unicodeSets)
+                return Cast.toBoolean(this.regex.unicodeSets)
             }
             return false
         }
         get lastIndex() {
             if (this.isValid) {
-                return Cast.toNumber(this.expression.lastIndex)
+                return Cast.toNumber(this.regex.lastIndex)
             }
             return 0
         }
@@ -149,7 +151,7 @@
         // depricated
         // compile(pattern, flags) {
         //     if (this.isValid) {
-        //         this.expression.compile(pattern, flags)
+        //         this.regex.compile(pattern, flags)
         //     }
         // }
         exec(string) {
@@ -157,56 +159,54 @@
             // also this array aparently has additional properties.. i love js 
             // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/RegExp/exec
             if (this.isValid) {
-                return this.expression.exec(string)
+                let baseArray = this.regex.exec(string)
+                if (baseArray) {
+                    let newObj = Object.create(null);
+                    newObj.array = vm.jwArray.Type.toArray([...baseArray])
+                    newObj.index = Cast.toNumber(baseArray.index)
+                    newObj.input = Cast.toString(baseArray.input)
+                    if (baseArray.groups) {
+                        newObj.groups = vm.dogeiscutObject.Type.toObject(baseArray.groups)
+                    }
+                    if (baseArray.indices) {
+                        newObj.indices = Object.create(null);
+                        newObj.indices.array = vm.jwArray.Type.toArray([...baseArray.indices])
+                        if (baseArray.indices.groups) {
+                            newObj.indices.groups = vm.dogeiscutObject.Type.toObject(baseArray.indices.groups)
+                        }
+                    }
+                    return vm.dogeiscutObject.Type.toObject(newObj)
+                }
             }
-            return 0
+            return ""
         }
         test(string) {
             if (this.isValid) {
-                return Cast.toBoolean(this.expression.test(string))
+                return Cast.toBoolean(this.regex.test(string))
             }
             return false
         }
 
-        // TODO: figure out search, split, replace, and match since those are string prototype functions, not in regex
         // TODO: static properties/methods
+        // TODO: handle lastIndex (RegularExpressionType should have it)
     }
 
     const dogeiscutRegularExpression = {
         Type: RegularExpressionType,
         Block: {
             blockType: BlockType.REPORTER,
-            blockShape: BlockShape.SQUARE,
+            blockShape: BlockShape.SCRAPPED,
             forceOutputType: "Regular Expression",
             disableMonitor: true
         },
         Argument: {
-            shape: BlockShape.SQUARE,
+            shape: BlockShape.SCRAPPED,
             exemptFromNormalization: true,
             check: ["Regular Expression"],
         },
     }
 
-    let jwArray = {
-        Type: class { constructor(array) {/* noop */} static toArray(x) {/* noop */} },
-        Block: {},
-        Argument: {}
-    }
-
-    let dogeiscutObject = {
-        Type: class { constructor(object) {/* noop */} static toObject(x) {/* noop */} },
-        Block: {},
-        Argument: {}
-    }
-    
     class Extension {
-        constructor() {
-            if (!vm.jwArray) vm.extensionManager.loadExtensionIdSync('jwArray')
-                jwArray = vm.jwArray
-            
-            if (!vm.dogeiscutObject) vm.extensionManager.loadExtensionIdSync('dogeiscutObject')
-                dogeiscutObject = vm.dogeiscutObject
-        }
         getInfo() {
             return {
                 id: "dogeiscutRegularExpressions",
@@ -241,6 +241,34 @@
                     },
                     '---',
                     {
+                        opcode: 'test',
+                        text: 'test [STRING] for [REGEX]',
+                        blockType: BlockType.BOOLEAN,
+                        disableMonitor: true,
+                        arguments: {
+                            STRING: {
+                                type: ArgumentType.STRING,
+                                defaultValue: "foo"
+                            },
+                            REGEX: dogeiscutRegularExpression.Argument
+                        },
+                    },
+                    //...(vm.runtime.ext_dogeiscutObject ? ['---'] : []),
+                    {
+                        opcode: 'exec',
+                        text: 'execute [REGEX] on [STRING]',
+                        arguments: {
+                            REGEX: dogeiscutRegularExpression.Argument,
+                            STRING: {
+                                type: ArgumentType.STRING,
+                                defaultValue: "foo"
+                            },
+                        },
+                        hideFromPalette: !vm.runtime.ext_dogeiscutObject,
+                        ...(vm.runtime.ext_dogeiscutObject ? vm.dogeiscutObject.Block : {}),
+                    },
+                    '---',
+                    {
                         opcode: 'search',
                         text: 'search [STRING] with [REGEX]',
                         blockType: BlockType.REPORTER,
@@ -253,6 +281,79 @@
                             REGEX: dogeiscutRegularExpression.Argument
                         },
                     },
+                    {
+                        opcode: 'split',
+                        text: 'split [STRING] by [REGEX]',
+                        arguments: {
+                            STRING: {
+                                type: ArgumentType.STRING,
+                                defaultValue: "foo"
+                            },
+                            REGEX: dogeiscutRegularExpression.Argument,
+                        },
+                        hideFromPalette: !vm.runtime.ext_jwArray,
+                        ...(vm.runtime.ext_jwArray ? vm.jwArray.Block : {}),
+                    },
+                    {
+                        opcode: 'replace',
+                        text: 'replace [REGEX] in [A] with [B]',
+                        blockType: BlockType.REPORTER,
+                        disableMonitor: true,
+                        arguments: {
+                            REGEX: dogeiscutRegularExpression.Argument,
+                            A: {
+                                type: ArgumentType.STRING,
+                                defaultValue: "foo"
+                            },
+                            B: {
+                                type: ArgumentType.STRING,
+                                defaultValue: "bar"
+                            },
+                        },
+                    },
+                    {
+                        opcode: 'replaceAll',
+                        text: 'replace all [REGEX] in [A] with [B]',
+                        blockType: BlockType.REPORTER,
+                        disableMonitor: true,
+                        arguments: {
+                            REGEX: dogeiscutRegularExpression.Argument,
+                            A: {
+                                type: ArgumentType.STRING,
+                                defaultValue: "foo"
+                            },
+                            B: {
+                                type: ArgumentType.STRING,
+                                defaultValue: "bar"
+                            },
+                        },
+                    },
+                    {
+                        opcode: 'match',
+                        text: 'match [REGEX] with [STRING]',
+                        arguments: {
+                            REGEX: dogeiscutRegularExpression.Argument,
+                            STRING: {
+                                type: ArgumentType.STRING,
+                                defaultValue: "foo"
+                            },
+                        },
+                        hideFromPalette: !vm.runtime.ext_jwArray,
+                        ...(vm.runtime.ext_jwArray ? vm.jwArray.Block : {}),
+                    },
+                    {
+                        opcode: 'matchAll',
+                        text: 'match all [REGEX] with [STRING]',
+                        arguments: {
+                            REGEX: dogeiscutRegularExpression.Argument,
+                            STRING: {
+                                type: ArgumentType.STRING,
+                                defaultValue: "foo"
+                            },
+                        },
+                        hideFromPalette: !vm.runtime.ext_jwArray,
+                        ...(vm.runtime.ext_jwArray ? vm.jwArray.Block : {}),
+                    },
                 ],
                 menus: {}
             }
@@ -260,12 +361,63 @@
 
         regex({ PATTERN }) {
             PATTERN = Cast.toString(PATTERN)
-            return RegularExpressionType.toRegularExpression(PATTERN)
+            return RegularExpressionType.toRegularExpression(new RegExp(PATTERN))
         }
+
         regexFlags({ PATTERN, FLAGS }) {
             PATTERN = Cast.toString(PATTERN)
             FLAGS = Cast.toString(FLAGS)
-            return RegularExpressionType.toRegularExpression(PATTERN, FLAGS)
+            return RegularExpressionType.toRegularExpression(new RegExp(PATTERN, FLAGS))
+        }
+
+        test({ STRING, REGEX }) {
+            STRING = Cast.toString(STRING)
+            REGEX = RegularExpressionType.toRegularExpression(REGEX)
+            return REGEX.test(STRING)
+        }
+
+        exec({ STRING, REGEX }) {
+            STRING = Cast.toString(STRING)
+            REGEX = RegularExpressionType.toRegularExpression(REGEX)
+            return REGEX.exec(STRING)
+        }
+
+        search({ STRING, REGEX }) {
+            STRING = Cast.toString(STRING)
+            REGEX = RegularExpressionType.toRegularExpression(REGEX)
+            return Cast.toNumber(STRING.search(REGEX.regex))
+        }
+
+        split({ REGEX, STRING }) {
+            REGEX = RegularExpressionType.toRegularExpression(REGEX)
+            STRING = Cast.toString(STRING)
+            return vm.jwArray.Type.toArray(STRING.split(REGEX.regex))
+        }
+
+        replace({ REGEX, A, B }) {
+            REGEX = RegularExpressionType.toRegularExpression(REGEX)
+            A = Cast.toString(A)
+            B = Cast.toString(B)
+            return Cast.toString(A.replace(REGEX.regex, B))
+        }
+
+        replaceAll({ REGEX, A, B }) {
+            REGEX = RegularExpressionType.toRegularExpression(REGEX)
+            A = Cast.toString(A)
+            B = Cast.toString(B)
+            return Cast.toString(A.replaceAll(REGEX.regex, B))
+        }
+
+        match({ REGEX, STRING }) {
+            REGEX = RegularExpressionType.toRegularExpression(REGEX)
+            STRING = Cast.toString(STRING)
+            return vm.jwArray.Type.toArray(STRING.match(REGEX.regex))
+        }
+
+        matchAll({ REGEX, STRING }) {
+            REGEX = RegularExpressionType.toRegularExpression(REGEX)
+            STRING = Cast.toString(STRING)
+            return vm.jwArray.Type.toArray(STRING.matchAll(REGEX.regex))
         }
     }
 

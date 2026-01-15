@@ -564,12 +564,12 @@ export default [
         banner: "Gen1x/betterstorage.avif",
         creator: "G1nX",
     },
-    {
+        {
         name: "Mouth Washer",
         description: "Includes many utilities related to cleaning bad words, swearing and profanity. Thought of as an extra layer of security for filtering messages.\n\n(ft. violet and jwklong)",
         code: "Gen1x/mouth_washer.js",
         banner: "Gen1x/mw-placeholder.avif",
-    　　creator: "G1nX",
+        creator: "G1nX",
     },
     {
         name: "AES Encryption",

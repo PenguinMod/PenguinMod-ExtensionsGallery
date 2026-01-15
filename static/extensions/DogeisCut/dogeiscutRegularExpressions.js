@@ -186,8 +186,27 @@
             check: ["Regular Expression"],
         },
     }
+
+    let jwArray = {
+        Type: class { constructor(array) {/* noop */} static toArray(x) {/* noop */} },
+        Block: {},
+        Argument: {}
+    }
+
+    let dogeiscutObject = {
+        Type: class { constructor(object) {/* noop */} static toObject(x) {/* noop */} },
+        Block: {},
+        Argument: {}
+    }
     
     class Extension {
+        constructor() {
+            if (!vm.jwArray) vm.extensionManager.loadExtensionIdSync('jwArray')
+                jwArray = vm.jwArray
+            
+            if (!vm.dogeiscutObject) vm.extensionManager.loadExtensionIdSync('dogeiscutObject')
+                dogeiscutObject = vm.dogeiscutObject
+        }
         getInfo() {
             return {
                 id: "dogeiscutRegularExpressions",
@@ -219,6 +238,20 @@
                             }
                         },
                         ...dogeiscutRegularExpression.Block
+                    },
+                    '---',
+                    {
+                        opcode: 'search',
+                        text: 'search [STRING] with [REGEX]',
+                        blockType: BlockType.REPORTER,
+                        disableMonitor: true,
+                        arguments: {
+                            STRING: {
+                                type: ArgumentType.STRING,
+                                defaultValue: "foo"
+                            },
+                            REGEX: dogeiscutRegularExpression.Argument
+                        },
                     },
                 ],
                 menus: {}

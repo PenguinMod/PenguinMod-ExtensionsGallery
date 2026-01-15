@@ -580,4 +580,3 @@ export default [
         creator: "2015kaito8169"
     }
 ];
-     

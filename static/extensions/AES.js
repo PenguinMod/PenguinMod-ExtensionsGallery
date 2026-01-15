@@ -5,7 +5,7 @@
     getInfo() {
       return {
         id: 'strongcryptoJP',
-        name: '日本語対応・暗号化',
+        name: 'AES',
         color1: '#4a4a4a',
         blocks: [
           {

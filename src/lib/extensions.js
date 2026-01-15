@@ -570,7 +570,9 @@ export default [
         code: "Gen1x/mouth_washer.js",
         banner: "Gen1x/mw-placeholder.avif",
         creator: "G1nX",
-            {
+            creator: "G1nX",
+    },
+    {
         name: "AES Encryption",
         description: "Encrypt and decrypt strings with a custom password. Supports Japanese and English characters.",
         code: "2015kaito8169/AES.js",
@@ -578,3 +580,4 @@ export default [
         creator: "2015kaito8169"
     }
 ];
+     

@@ -62,7 +62,10 @@
     }
 
     openLink(args) {
-      window.open(args.URL, '_blank');
+      // Improved opening method for Unsandboxed mode
+      if (typeof window !== 'undefined') {
+        window.open(args.URL, '_blank', 'noopener,noreferrer');
+      }
     }
 
     generateBarcode(args) {
@@ -106,7 +109,7 @@
     }
   }
 
-Scratch.extensions.register(new BarcodeExtension(), {
+  Scratch.extensions.register(new BarcodeExtension(), {
     useSandbox: false
   });
 })(Scratch);

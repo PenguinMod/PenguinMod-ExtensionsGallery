@@ -511,7 +511,7 @@ export default [
         creator: "Monochromasity",
         isGitHub: true,
     },
-        {
+            {
         name: "Cryptography",
         description: "Hash, encrypt and verify values using various algorithms. Actual security not guaranteed",
         code: "gaimerI17/crypto.js",
@@ -520,10 +520,10 @@ export default [
         isGitHub: true,
         creatorAlias: "gaimerI17",
     },
-
-{
-    name: "Online Captcha",
-　　description: "Protect your project with simple, easy to use captcha implementation. Fully client-side, bypass-proof captcha solution!",
+    /* these extensions are completely dead as of now */
+    {
+        name: "Online Captcha",
+        description: "Protect your project with simple, easy to use captcha implementation. Fully client-side, bypass-proof captcha solution!",
         code: "NotHouse/OnlineCaptcha.js",
         banner: "NotHouse/OnlineCaptcha-banner.avif",
         creator: "enderhacker",

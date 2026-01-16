@@ -511,35 +511,7 @@ export default [
         creator: "Monochromasity",
         isGitHub: true,
     },
-    {
-        name: "Paint Utils",
-        description: "A colour extension that lets you mix colours.",
-        code: "Fruits555000/PaintUtils.js",
-        banner: "Fruits555000/PaintUtils.svg",
-        creator: "Fruits555000",
-        isGitHub: true,
-    },
-    {
-        name: "Resolution",
-        description: "Provides utility blocks that simplify the creation of projects with dynamic resolution support.",
-        code: "DogeisCut/Resolution.js",
-        banner: "DogeisCut/Resolution.svg",
-        creator: "DogeisCut",
-        isGitHub: true, 
-        documentation: "Resolution",
-        notes: "Gallery banner by Dillon",
-    },
-    {
-        name: "Device Motion",
-        description: "Use Device Motion API to get rotation or movement of the device. Works best on mobile devices. \n Thumbnail by Dillon. ",
-        code: "gaimerI17/DeviceMotion.js",
-        banner: "gaimerI17/DeviceMotion.avif",
-        creator: "gaimerI",
-        isGitHub: true,
-        creatorAlias: "gaimerI17",
-        notes: "Extension thumbnail made by Dillon."
-    },
-    {
+        {
         name: "Cryptography",
         description: "Hash, encrypt and verify values using various algorithms. Actual security not guaranteed",
         code: "gaimerI17/crypto.js",
@@ -548,7 +520,7 @@ export default [
         isGitHub: true,
         creatorAlias: "gaimerI17",
     },
-    /* these extensions are completely dead as of now
+    /* these extensions are completely dead as of now */
     {
         name: "Online Captcha",
         description: "Protect your project with simple, easy to use captcha implementation. Fully client-side, bypass-proof captcha solution!",

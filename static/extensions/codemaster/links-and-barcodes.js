@@ -62,9 +62,13 @@
     }
 
     openLink(args) {
-      // Improved opening method for Unsandboxed mode
-      if (typeof window !== 'undefined') {
-        window.open(args.URL, '_blank', 'noopener,noreferrer');
+      // Try multiple ways to open the window safely
+      const url = args.URL;
+      if (typeof window !== 'undefined' && window.open) {
+         window.open(url, '_blank', 'noopener,noreferrer');
+      } else {
+         // Fallback if window.open is blocked
+         console.warn('Could not open link: Sandbox mode is active.');
       }
     }
 

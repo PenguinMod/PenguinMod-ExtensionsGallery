@@ -22,7 +22,10 @@
             blockType: Scratch.BlockType.COMMAND,
             text: 'open link [URL]',
             arguments: {
-              URL: { type: Scratch.ArgumentType.STRING, defaultValue: 'https://penguinmod.com' }
+              URL: { 
+                type: Scratch.ArgumentType.STRING, 
+                defaultValue: 'https://penguinmod.com' 
+              }
             }
           },
           {
@@ -62,13 +65,11 @@
     }
 
     openLink(args) {
-      // Try multiple ways to open the window safely
-      const url = args.URL;
       if (typeof window !== 'undefined' && window.open) {
-         window.open(url, '_blank', 'noopener,noreferrer');
+        window.open(args.URL, '_blank', 'noopener,noreferrer');
       } else {
-         // Fallback if window.open is blocked
-         console.warn('Could not open link: Sandbox mode is active.');
+        // Fallback for security/safety
+        Scratch.redirect(args.URL);
       }
     }
 
@@ -116,4 +117,5 @@
   Scratch.extensions.register(new BarcodeExtension(), {
     useSandbox: false
   });
+
 })(Scratch);

@@ -42,31 +42,88 @@
         customId = "dogeiscutRegularExpression"
 
         regex = /(?:)/
-        isValid = false
 
-        constructor(regex = /(?:)/, isValid = false, lastIndex = 0) {
+        constructor(regex = /(?:)/, lastIndex = 0) {
             this.regex = regex
-            this.isValid = isValid
             this.lastIndex = lastIndex
         }
 
         static toRegularExpression(x) {
+            if (x === null || x === undefined) return new RegularExpressionType()
+
+            if (x instanceof RegExp) return new RegularExpressionType(x, x.lastIndex)
+
             if (x instanceof RegularExpressionType) {
-                return new RegularExpressionType(x.regex, x.isValid, x.lastIndex)
+                return new RegularExpressionType(x.regex, x.lastIndex)
             }
-            if (x instanceof RegExp) return new RegularExpressionType(x, true, x.lastIndex)
+
+            if (typeof x === 'object') {
+                if ('pattern' in x && 'flags' in x) {
+                    
+                } else if ('PATTERN' in x && 'FLAGS' in x) {
+                    x = { pattern: String(x.PATTERN), flags: String(x.FLAGS) }
+                } else {
+                    try {
+                        x = { pattern: JSON.stringify(x), flags: "" }
+                    } catch {
+                        x = { pattern: String(x), flags: "" }
+                    }
+                }
+            } else if (Array.isArray(x)) {
+                if (x.length > 1) {
+                    x = { pattern: String(x[0]), flags: String(x[1]) }
+                } else {
+                    try {
+                        x = { pattern: JSON.stringify(x), flags: "" }
+                    } catch {
+                        x = { pattern: String(x), flags: "" }
+                    }
+                }
+            } else if (typeof x === 'string') {
+                const match = x.match(/^\/(.+)\/(\S*)$/);
+                if (match) {
+                    try {
+                        x = { pattern: x[1], flags: x[2] }
+                    } catch {
+                        try {
+                            x = { pattern: x[1], flags: "" }
+                        } catch {
+                            x = { pattern: x, flags: "" }
+                        }
+                    }
+                }
+            } else {
+                x = { pattern: String(x), flags: "" }
+            }
+
+            function filterRawFlags(rawFlags) {
+                if (rawFlags === "") {
+                    return rawFlags
+                }
+
+                const allowed = 'dgimsuvy';
+
+                let flagArray = [...new Set(rawFlags)].filter(f => allowed.includes(f))
+
+                if (flagArray.includes('v') && flagArray.includes('u')) {
+                    flagArray = flagArray.filter(f => f !== 'u');
+                }
+
+                return flagArray.join('');
+            }
+
             try {
-                let expression = new RegExp(x)
-                return new RegularExpressionType(expression, true) 
-            } catch { }
-            return new RegularExpressionType() 
+                return new RegularExpressionType(new RegExp(x.pattern, filterRawFlags(x.flags)));
+            } catch {}
+            try {
+                return new RegularExpressionType(new RegExp(RegExp.escape(x.pattern), filterRawFlags(x.flags)));
+            } catch {}
+            
+            return new RegularExpressionType() // abysmal failure :(
         }
 
         toString() {
-            if (this.isValid) {
-                return `/${this.source}/${this.flags}`
-            }
-            return "Invalid Regex"
+           return `/${this.source}/${this.flags}`
         }
 
         jwArrayHandler = () => this.toString()
@@ -80,115 +137,76 @@
             root.style.justifyContent = 'center'
             root.style.fontWeight = 'bold'
 
-            root.appendChild(span(this.toString()))
+            root.appendChild(span(escapeHTML(this.toString())))
 
             return root
         }
 
         // makes things easy for me
         get dotAll() {
-            if (this.isValid) {
-                return Cast.toBoolean(this.regex.dotAll)
-            }
-            return false
+            return Cast.toBoolean(this.regex.dotAll)
         }
         get flags() {
-            if (this.isValid) {
-                return Cast.toString(this.regex.flags)
-            }
-            return ""
+            return Cast.toString(this.regex.flags)
         }
         get global() {
-            if (this.isValid) {
-                return Cast.toBoolean(this.regex.global)
-            }
-            return false
+            return Cast.toBoolean(this.regex.global)
         }
         get hasIndices() {
-            if (this.isValid) {
-                return Cast.toBoolean(this.regex.hasIndices)
-            }
-            return false
+            return Cast.toBoolean(this.regex.hasIndices)
         }
         get ignoreCase() {
-            if (this.isValid) {
-                return Cast.toBoolean(this.regex.ignoreCase)
-            }
-            return false
+            return Cast.toBoolean(this.regex.ignoreCase)
         }
         get multiline() {
-            if (this.isValid) {
-                return Cast.toBoolean(this.regex.multiline)
-            }
-            return false
+            return Cast.toBoolean(this.regex.multiline)
         }
         get source() {
-            if (this.isValid) {
-                return Cast.toString(this.regex.source)
-            }
-            return ""
+            return Cast.toString(this.regex.source)
         }
         get unicode() {
-            if (this.isValid) {
-                return Cast.toBoolean(this.regex.unicode)
-            }
-            return false
+            return Cast.toBoolean(this.regex.unicode)
         }
         get unicodeSets() {
-            if (this.isValid) {
-                return Cast.toBoolean(this.regex.unicodeSets)
-            }
-            return false
+            return Cast.toBoolean(this.regex.unicodeSets)
         }
         get lastIndex() {
-            if (this.isValid) {
-                return Cast.toNumber(this.regex.lastIndex)
-            }
-            return 0
+            return Cast.toNumber(this.regex.lastIndex)
         }
         set lastIndex(newLastIndex) {
-            if (this.isValid) {
-                this.regex.lastIndex = Cast.toNumber(newLastIndex)
-            }
+            this.regex.lastIndex = Cast.toNumber(newLastIndex)
         }
 
         // depricated
         // compile(pattern, flags) {
-        //     if (this.isValid) {
-        //         this.regex.compile(pattern, flags)
-        //     }
+        //    this.regex.compile(pattern, flags)
         // }
         exec(string) {
             // returns an array or null. need arrays ext
             // also this array aparently has additional properties.. i love js 
             // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/RegExp/exec
-            if (this.isValid) {
-                let baseArray = this.regex.exec(string)
-                if (baseArray) {
-                    let newObj = Object.create(null);
-                    newObj.array = vm.jwArray.Type.toArray([...baseArray])
-                    newObj.index = Cast.toNumber(baseArray.index)
-                    newObj.input = Cast.toString(baseArray.input)
-                    if (baseArray.groups) {
-                        newObj.groups = vm.dogeiscutObject.Type.toObject(baseArray.groups)
-                    }
-                    if (baseArray.indices) {
-                        newObj.indices = Object.create(null);
-                        newObj.indices.array = vm.jwArray.Type.toArray([...baseArray.indices])
-                        if (baseArray.indices.groups) {
-                            newObj.indices.groups = vm.dogeiscutObject.Type.toObject(baseArray.indices.groups)
-                        }
-                    }
-                    return vm.dogeiscutObject.Type.toObject(newObj)
+            let baseArray = this.regex.exec(string)
+            if (baseArray) {
+                let newObj = Object.create(null);
+                newObj.array = vm.jwArray.Type.toArray([...baseArray])
+                newObj.index = Cast.toNumber(baseArray.index)
+                newObj.input = Cast.toString(baseArray.input)
+                if (baseArray.groups) {
+                    newObj.groups = vm.dogeiscutObject.Type.toObject(baseArray.groups)
                 }
+                if (baseArray.indices) {
+                    newObj.indices = Object.create(null);
+                    newObj.indices.array = vm.jwArray.Type.toArray([...baseArray.indices])
+                    if (baseArray.indices.groups) {
+                        newObj.indices.groups = vm.dogeiscutObject.Type.toObject(baseArray.indices.groups)
+                    }
+                }
+                return vm.dogeiscutObject.Type.toObject(newObj)
             }
             return "" //returning an empty object felt weird
         }
         test(string) {
-            if (this.isValid) {
-                return Cast.toBoolean(this.regex.test(string))
-            }
-            return false
+            return Cast.toBoolean(this.regex.test(string))
         }
 
         // TODO: static properties/methods
@@ -443,7 +461,7 @@
         regex({ PATTERN, FLAGS }) {
             PATTERN = Cast.toString(PATTERN)
             FLAGS = Cast.toString(FLAGS)
-            return RegularExpressionType.toRegularExpression(new RegExp(PATTERN, FLAGS))
+            return RegularExpressionType.toRegularExpression({ PATTERN, FLAGS })
         }
 
         test({ STRING, REGEX }) {

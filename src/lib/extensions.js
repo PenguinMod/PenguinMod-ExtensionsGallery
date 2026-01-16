@@ -80,6 +80,7 @@ export default [
         creator: "Steve0Greatness",
         isGitHub: true, 
     },
+    
     {
         name: "Dictation",
         description: "Convert your voice into text. (not supported in all browsers)",
@@ -87,7 +88,7 @@ export default [
         banner: "pooiod/Dictation.svg",
         creator: "pooiod7",
     },
-    {
+        {
         name: "Doodle Recognition",
         description: "A implementation of Google's Quick Draw image vision model",
         code: "TheShovel/doodlerec.js",
@@ -95,7 +96,7 @@ export default [
         creator: "TheShovel",
         isGitHub: true,
     },
-    {
+            {
         name: "Stylus",
         description: "Get the pressure and tilt of a stylus or graphic tablet",
         code: "sourdoggy/stylus extension.js",
@@ -151,7 +152,7 @@ export default [
         banner: "dumzdev/removebgbanner.svg",
         creator: "dumzdev",
     },
-    {
+    /*{
         name: "PenguinAI",
         description: "Talk to AI! Use Models like DALL-E-3, GPT, LLama, Claude, and more!",
         code: "MubiLop/penguingpt.js",
@@ -162,7 +163,8 @@ export default [
         unstable: true,
         documentation: "PenguinAI",
         unstableReason: "AI models can generate unintended or inappropriate output.\nSome AI models may also become temporarily inaccessible.\n\nUse at your own risk.",
-    },
+    },*/
+/*
     {
         name: "Block AI",
         description: "An AI powered chat bot to help you code in your projects.",
@@ -174,6 +176,7 @@ export default [
         unstable: true,
         unstableReason: "The AI model can generate inaccurate output and broken syntax!",
     },
+*/
     {
         name: "PenguinHook",
         description: "Send Webhook requests, that can be Discord or any type of webhook.",
@@ -545,6 +548,7 @@ export default [
         isGitHub: true,
         creatorAlias: "gaimerI17",
     },
+    /* these extensions are completely dead as of now*/
     {
         name: "Online Captcha",
         description: "Protect your project with simple, easy to use captcha implementation. Fully client-side, bypass-proof captcha solution!",
@@ -568,10 +572,10 @@ export default [
         creator: "G1nX",
     },
     {
-        name: "AES Encryption",
+        name: "AES",  
         description: "Encrypt and decrypt strings with a custom password. Supports Japanese and English characters.",
         code: "2015kaito8169/AES.js",
         banner: "favicon.png",
         creator: "2015kaito8169",
-    }
-];
+];        
+    

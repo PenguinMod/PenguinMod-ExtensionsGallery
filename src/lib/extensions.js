@@ -524,7 +524,7 @@ export default [
     },
     {
         name: "Links & Barcodes",
-        description: "A powerful tool to open web links and generate scanable QR codes on the stage with custom sizing.",
+        description: "Blocks to open web links and generate scanable QR codes on the stage.",
         code: "codemaster/links-&-barcodes.js",
         banner: "codemaster/links-&-barcodes.png",
         creator: "codemaster",

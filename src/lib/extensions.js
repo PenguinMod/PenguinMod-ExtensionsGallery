@@ -520,9 +520,10 @@ export default [
         isGitHub: true,
         creatorAlias: "gaimerI17",
     },
-    /* these extensions are completely dead as of now */
-    {
-        name: "Online Captcha",
+    /* these extensions are completely dead as of now
+{
+    name: "Online Captcha",
+
         description: "Protect your project with simple, easy to use captcha implementation. Fully client-side, bypass-proof captcha solution!",
         code: "NotHouse/OnlineCaptcha.js",
         banner: "NotHouse/OnlineCaptcha-banner.avif",

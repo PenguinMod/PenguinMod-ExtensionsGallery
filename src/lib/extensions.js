@@ -565,18 +565,12 @@ export default [
         creator: "G1nX",
     },
     {
-        name: "Mouth Washer",
-        description: "Includes many utilities related to cleaning bad words, swearing and profanity. Thought of as an extra layer of security for filtering messages.\n\n(ft. violet and jwklong)",
-        code: "Gen1x/mouth_washer.js",
-        banner: "Gen1x/mw-placeholder.avif",
-        creator: "G1nX",
-    },
-    {
         name: "AES",  
         description: "Encrypt and decrypt strings with a custom password. Supports Japanese and English characters.",
         code: "2015kaito8169/AES.js",
-        banner: "static/images/Screenshot 2026-01-15 8.11.26 AM.png",
+        banner: "favicon.png",
         creator: "2015kaito8169",
+    }
+];
 
-];        
     

@@ -548,8 +548,7 @@ export default [
         isGitHub: true,
         creatorAlias: "gaimerI17",
     },
-    /* these extensions are completely dead as of now*/
-    {
+　　{
         name: "Online Captcha",
         description: "Protect your project with simple, easy to use captcha implementation. Fully client-side, bypass-proof captcha solution!",
         code: "NotHouse/OnlineCaptcha.js",
@@ -575,7 +574,7 @@ export default [
         name: "AES",
         description: "Encrypt and decrypt strings with a custom password. Supports Japanese and English characters.",
         code: "2015kaito8169/AES.js",
-        banner: "static/images/Screenshot 2026-01-15 8.11.26 AM.png",
+        banner: "static/images/Screenshot 2026-01-15 8.11.26 AM.avif",
         creator: "2015kaito8169"
     }
 ];

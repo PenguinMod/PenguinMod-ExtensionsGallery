@@ -181,7 +181,6 @@
                             newObj.indices.groups = vm.dogeiscutObject.Type.toObject(baseArray.indices.groups)
                         }
                     }
-                    newObj.regex = this
                     return vm.dogeiscutObject.Type.toObject(newObj)
                 }
             }
@@ -470,7 +469,11 @@
             REGEX = RegularExpressionType.toRegularExpression(REGEX)
             A = Cast.toString(A)
             B = Cast.toString(B)
-            return Cast.toString(A.replaceAll(REGEX.regex, B))
+            try {
+                return Cast.toString(A.replaceAll(REGEX.regex, B))
+            } catch {
+                return vm.jwArray.Type.toArray([])
+            }
         }
 
         match({ REGEX, STRING }) {
@@ -482,7 +485,11 @@
         matchAll({ REGEX, STRING }) {
             REGEX = RegularExpressionType.toRegularExpression(REGEX)
             STRING = Cast.toString(STRING)
-            return vm.jwArray.Type.toArray(STRING.matchAll(REGEX.regex))
+            try {
+                return vm.jwArray.Type.toArray(STRING.matchAll(REGEX.regex))
+            } catch {
+                return vm.jwArray.Type.toArray([])
+            }
         }
     }
 

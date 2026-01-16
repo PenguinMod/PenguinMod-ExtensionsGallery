@@ -571,11 +571,11 @@ export default [
         banner: "Gen1x/mw-placeholder.avif",
         creator: "G1nX",
     },
-    {
+        {
         name: "AES",
         description: "Encrypt and decrypt strings with a custom password. Supports Japanese and English characters.",
         code: "2015kaito8169/AES.js",
-        banner: "favicon.avif",
+        banner: "aes-banner.avif",
         creator: "2015kaito8169"
     }
 ];

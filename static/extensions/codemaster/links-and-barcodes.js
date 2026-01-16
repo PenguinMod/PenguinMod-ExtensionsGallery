@@ -14,8 +14,8 @@
 
     getInfo() {
       return {
-        id: 'linksAndBarcodes',
-        name: 'Links and Barcodes',
+        id: 'moosanaeempcLinksAndBarcodes',
+        name: 'Links & Barcodes',
         blocks: [
           {
             opcode: 'openLink',
@@ -106,5 +106,7 @@
     }
   }
 
-  Scratch.extensions.register(new BarcodeExtension());
+  Scratch.extensions.register(new BarcodeExtension(), {
+    useSandbox: false
+  });
 })(Scratch);

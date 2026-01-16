@@ -577,6 +577,6 @@ export default [
         description: "Encrypt and decrypt strings with a custom password. Supports Japanese and English characters.",
         code: "2015kaito8169/AES.js",
         banner: "favicon.avif",
-　　　　 creator: "2015kaito8169"
+        creator: "2015kaito8169"
     }
 ];

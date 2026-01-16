@@ -547,7 +547,7 @@ export default [
         creator: "gaimerI",
         isGitHub: true,
         creatorAlias: "gaimerI17",
-       },
+    },
     /* these extensions are completely dead as of now */
     {
         name: "Online Captcha",

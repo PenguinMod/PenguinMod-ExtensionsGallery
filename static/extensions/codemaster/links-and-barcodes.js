@@ -106,7 +106,7 @@
     }
   }
 
-  Scratch.extensions.register(new BarcodeExtension(), {
+Scratch.extensions.register(new BarcodeExtension(), {
     useSandbox: false
   });
 })(Scratch);

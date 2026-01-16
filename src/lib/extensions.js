@@ -511,7 +511,7 @@ export default [
         creator: "Monochromasity",
         isGitHub: true,
     },
-            {
+    {
         name: "Cryptography",
         description: "Hash, encrypt and verify values using various algorithms. Actual security not guaranteed",
         code: "gaimerI17/crypto.js",
@@ -551,3 +551,4 @@ export default [
         creator: "2015kaito8169",
     }
 ];
+

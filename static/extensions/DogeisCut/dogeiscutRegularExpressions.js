@@ -186,8 +186,7 @@
                 }
             }
             let newObj = Object.create(null);
-            newObj.regex = this
-            return newObj
+            return vm.dogeiscutObject.Type.toObject(newObj)
         }
         test(string) {
             if (this.isValid) {
@@ -197,7 +196,6 @@
         }
 
         // TODO: static properties/methods
-        // last index stuff needs more work :/ trying to make it immutable but its difficult with the way this works
     }
 
     const dogeiscutRegularExpression = {
@@ -216,6 +214,18 @@
     }
 
     class Extension {
+        constructor() {
+            vm.dogeiscutRegularExpression = dogeiscutRegularExpression
+            vm.runtime.registerSerializer(
+                "dogeiscutRegularExpression", 
+                v => ({ source: v.source, flags: v.flags, lastIndex: v.lastIndex }), 
+                v => {
+                    let regex = new dogeiscutRegularExpression.Type.toRegularExpression(new RegExp(v.source, v.flags))
+                    regex.lastIndex = v.lastIndex
+                    return lastIndex
+                } 
+            );
+        }
         getInfo() {
             return {
                 id: "dogeiscutRegularExpressions",
@@ -296,7 +306,12 @@
                                 defaultValue: 0
                             },
                         },
+                        hideFromPalette: true,
                         ...dogeiscutRegularExpression.Block
+                    },
+                    {
+                        blockType: BlockType.XML,
+                        xml: `<block type="dogeiscutRegularExpressions_setLastIndex" ><value name="INDEX"><shadow type="math_whole_number" ><field name="NUM">0</field></shadow></value></block>`
                     },
                     '---',
                     {
@@ -385,6 +400,13 @@
                         hideFromPalette: !vm.runtime.ext_jwArray,
                         ...(vm.runtime.ext_jwArray ? vm.jwArray.Block : {}),
                     },
+                    //BLOCKS TODO:
+                    // sort them better
+                    // research more regex functions
+                    // static methods/properties
+                    // get source and get flags
+                    // dependancy disclaimers
+                    // toIndex mutability disclaimer
                 ],
                 menus: {}
             }

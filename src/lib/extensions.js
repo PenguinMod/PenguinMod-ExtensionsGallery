@@ -530,5 +530,6 @@ export default [
     creator: "moosanaeempc-lgtm",
     creatorAlias: "codemaster",
     isGitHub: true,
+    isUnsandboxed: true,
     },
 ];

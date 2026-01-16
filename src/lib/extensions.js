@@ -80,7 +80,6 @@ export default [
         creator: "Steve0Greatness",
         isGitHub: true, 
     },
-    
     {
         name: "Dictation",
         description: "Convert your voice into text. (not supported in all browsers)",
@@ -88,7 +87,7 @@ export default [
         banner: "pooiod/Dictation.svg",
         creator: "pooiod7",
     },
-        {
+    {
         name: "Doodle Recognition",
         description: "A implementation of Google's Quick Draw image vision model",
         code: "TheShovel/doodlerec.js",
@@ -96,7 +95,7 @@ export default [
         creator: "TheShovel",
         isGitHub: true,
     },
-            {
+    {
         name: "Stylus",
         description: "Get the pressure and tilt of a stylus or graphic tablet",
         code: "sourdoggy/stylus extension.js",
@@ -152,31 +151,6 @@ export default [
         banner: "dumzdev/removebgbanner.svg",
         creator: "dumzdev",
     },
-    /*{
-        name: "PenguinAI",
-        description: "Talk to AI! Use Models like DALL-E-3, GPT, LLama, Claude, and more!",
-        code: "MubiLop/penguingpt.js",
-        banner: "MubiLop/penguingpt.avif",
-        creator: "cicerorph",
-        creatorAlias: "MubiLop",
-        isGitHub: true,
-        unstable: true,
-        documentation: "PenguinAI",
-        unstableReason: "AI models can generate unintended or inappropriate output.\nSome AI models may also become temporarily inaccessible.\n\nUse at your own risk.",
-    },*/
-/*
-    {
-        name: "Block AI",
-        description: "An AI powered chat bot to help you code in your projects.",
-        code: "TheShovel/blockAI.js",
-        banner: "TheShovel/thumbnail-blockAI.avif",
-        creator: "TheShovel",
-        creatorAlias: "TheShovel",
-        isGitHub: true,
-        unstable: true,
-        unstableReason: "The AI model can generate inaccurate output and broken syntax!",
-    },
-*/
     {
         name: "PenguinHook",
         description: "Send Webhook requests, that can be Discord or any type of webhook.",
@@ -548,28 +522,13 @@ export default [
         isGitHub: true,
         creatorAlias: "gaimerI17",
     },
-    /* these extensions are completely dead as of now
     {
-        name: "Online Captcha",
-        description: "Protect your project with simple, easy to use captcha implementation. Fully client-side, bypass-proof captcha solution!",
-        code: "NotHouse/OnlineCaptcha.js",
-        banner: "NotHouse/OnlineCaptcha-banner.avif",
-        creator: "enderhacker",
+        name: "Links & Barcodes",
+        description: "A powerful tool to open web links and generate scanable QR codes on the stage with custom sizing.",
+        code: "codemaster/links-&-barcodes.js",
+        banner: "codemaster/links-&-barcodes.png",
+        creator: "codemaster",
+        creatorAlias: "moosanaeempc-lgtm",
         isGitHub: true,
     },
-    {
-        name: "Better Storage",
-        description: "Like PenguinMod's Storage Extension, but with a couple more features, and faster servers.",
-        code: "Gen1x/better_storage.js",
-        banner: "Gen1x/betterstorage.avif",
-        creator: "G1nX",
-    },
-    {
-        name: "Mouth Washer",
-        description: "Includes many utilities related to cleaning bad words, swearing and profanity. Thought of as an extra layer of security for filtering messages.\n\n(ft. violet and jwklong)",
-        code: "Gen1x/mouth_washer.js",
-        banner: "Gen1x/mw-placeholder.avif",
-        creator: "G1nX",
-    },
-    */
 ];

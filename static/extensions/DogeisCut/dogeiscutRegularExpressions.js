@@ -435,7 +435,7 @@
                         arguments: {
                             STRING: {
                                 type: ArgumentType.STRING,
-                                defaultValue: "/foo/"
+                                defaultValue: "(.*)"
                             },
                         },
                     },

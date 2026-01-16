@@ -3,6 +3,9 @@
 // Description: Create, modify, filter, and more with the new regular epression type.
 // By: DogeisCut <https://scratch.mit.edu/users/DogeisCut/>
 
+// TODO:
+// RegExp.escape polyfill
+
 (function(Scratch) {
     'use strict';
 
@@ -177,10 +180,6 @@
             this.regex.lastIndex = Cast.toNumber(newLastIndex)
         }
 
-        // depricated
-        // compile(pattern, flags) {
-        //    this.regex.compile(pattern, flags)
-        // }
         exec(string) {
             // returns an array or null. need arrays ext
             // also this array aparently has additional properties.. i love js 
@@ -428,12 +427,20 @@
                             REGEX: dogeiscutRegularExpression.Argument,
                         },
                     },
+                    '---',
+                    {
+                        opcode: 'escape',
+                        text: 'regex escape [STRING]',
+                        blockType: BlockType.REPORTER,
+                        arguments: {
+                            STRING: {
+                                type: ArgumentType.STRING,
+                                defaultValue: "/foo/"
+                            },
+                        },
+                    },
                     //BLOCKS TODO:
                     // sort them better
-                    // research more regex functions
-                    // static methods/properties
-                    // dependancy disclaimers
-                    // toIndex mutability disclaimer
                 ],
                 menus: {}
             }
@@ -542,6 +549,11 @@
         flagsOf({ REGEX }) {
             REGEX = RegularExpressionType.toRegularExpression(REGEX)
             return REGEX.flags
+        }
+
+        escape({ STRING }) {
+            STRING = Cast.toString(STRING)
+            return Cast.toString(RegExp.escape(STRING))
         }
     }
 

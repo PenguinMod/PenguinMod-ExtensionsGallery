@@ -248,6 +248,14 @@ export default [
         isGitHub: true, 
     },
     {
+        name: "Regular Expressions",
+        description: "Create, modify, filter, and more with the new regular epression type.",
+        code: "DogeisCut/dogeiscutRegularExpressions.js",
+        banner: "DogeisCut/dogeiscutRegularExpressions.svg",
+        creator: "DogeisCut",
+        isGitHub: true, 
+    },
+    {
         name: "Sets",
         description: "Store non-repeating, unordered data super efficiently in sets.",
         code: "DogeisCut/dogeiscutSet.js",

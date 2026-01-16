@@ -1,9 +1,7 @@
 // Name: Regular Expressions
 // ID: dogeiscutRegularExpressions
-// Description: No description provided.
+// Description: Create, modify, filter, and more with the new regular epression type.
 // By: DogeisCut <https://scratch.mit.edu/users/DogeisCut/>
-
-// TODO: buttons to enable objects and/or arrays support, which is saved in the project.
 
 (function(Scratch) {
     'use strict';
@@ -230,6 +228,7 @@
                 id: "dogeiscutRegularExpressions",
                 name: "Regular Expressions",
                 color1: "#913dff",
+                menuIconURI: "data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiIHN0YW5kYWxvbmU9Im5vIj8+CjwhRE9DVFlQRSBzdmcgUFVCTElDICItLy9XM0MvL0RURCBTVkcgMS4xLy9FTiIgImh0dHA6Ly93d3cudzMub3JnL0dyYXBoaWNzL1NWRy8xLjEvRFREL3N2ZzExLmR0ZCI+Cjxzdmcgd2lkdGg9IjEwMCUiIGhlaWdodD0iMTAwJSIgdmlld0JveD0iMCAwIDIwIDIwIiB2ZXJzaW9uPSIxLjEiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyIgeG1sbnM6eGxpbms9Imh0dHA6Ly93d3cudzMub3JnLzE5OTkveGxpbmsiIHhtbDpzcGFjZT0icHJlc2VydmUiIHhtbG5zOnNlcmlmPSJodHRwOi8vd3d3LnNlcmlmLmNvbS8iIHN0eWxlPSJmaWxsLXJ1bGU6ZXZlbm9kZDtjbGlwLXJ1bGU6ZXZlbm9kZDsiPgogICAgPGNpcmNsZSBjeD0iMTAiIGN5PSIxMCIgcj0iOSIgc3R5bGU9ImZpbGw6cmdiKDE0NSw2MSwyNTUpO3N0cm9rZTpyZ2IoMTE2LDQ4LDIwNCk7c3Ryb2tlLXdpZHRoOjJweDsiLz4KICAgIDxnIHRyYW5zZm9ybT0ibWF0cml4KDEuMDI2NDg2LDAsMCwxLjAyNjQ4NiwtMTk2LjE3NjEzMSwtMTM0Ljc4MjIzNykiPgogICAgICAgIDxwYXRoIGQ9Ik0xOTUuOTc4LDE0Ni42NzdDMTk1LjI0NCwxNDUuOTIzIDE5NC42OTQsMTQ1LjA3OCAxOTQuMzI5LDE0NC4xNEMxOTMuOTY0LDE0My4yMDMgMTkzLjc4MSwxNDIuMTcxIDE5My43ODEsMTQxLjA0NkMxOTMuNzgxLDEzOS45MjEgMTkzLjk2NCwxMzguODkgMTk0LjMyOSwxMzcuOTUzQzE5NC42OTQsMTM3LjAxNSAxOTUuMjQ0LDEzNi4xNjkgMTk1Ljk3OCwxMzUuNDE2TDE5Ni45MTYsMTM2LjU3QzE5Ni4zODUsMTM3LjE3NSAxOTUuOTg3LDEzNy44NDkgMTk1LjcyMywxMzguNTkxQzE5NS40NiwxMzkuMzM0IDE5NS4zMjgsMTQwLjE1MiAxOTUuMzI4LDE0MS4wNDZDMTk1LjMyOCwxNDEuOTQxIDE5NS40NiwxNDIuNzYgMTk1LjcyMywxNDMuNTA0QzE5NS45ODcsMTQ0LjI0OSAxOTYuMzg1LDE0NC45MjMgMTk2LjkxNiwxNDUuNTI5TDE5NS45NzgsMTQ2LjY3N1oiIHN0eWxlPSJmaWxsOndoaXRlO2ZpbGwtcnVsZTpub256ZXJvOyIvPgogICAgICAgIDxyZWN0IHg9IjE5Ny40NzIiIHk9IjE0My4yMzgiIHdpZHRoPSIxLjYwNSIgaGVpZ2h0PSIxLjYwNSIgc3R5bGU9ImZpbGw6d2hpdGU7ZmlsbC1ydWxlOm5vbnplcm87Ii8+CiAgICAgICAgPHBhdGggZD0iTTIwMS43MiwxMzguMjYzTDIwMi43MTEsMTM3LjU0OEwyMDQuMDI5LDEzOS4zNTlMMjAzLjAzOSwxNDAuMDhMMjAxLjcyLDEzOC4yNjNaTTIwMC40MDIsMTM5LjM1OUwyMDEuNzIsMTM3LjU0OEwyMDIuNzExLDEzOC4yNjNMMjAxLjM5MiwxNDAuMDhMMjAwLjQwMiwxMzkuMzU5Wk0xOTkuODkyLDEzNy43OTRMMjAwLjI3MywxMzYuNjI4TDIwMi40MDYsMTM3LjMyNkwyMDIuMDI1LDEzOC40ODZMMTk5Ljg5MiwxMzcuNzk0Wk0yMDEuNjAzLDEzNS42NjJMMjAyLjgyOCwxMzUuNjYyTDIwMi44MjgsMTM3LjkwNkwyMDEuNjAzLDEzNy45MDZMMjAxLjYwMywxMzUuNjYyWk0yMDIuMDI1LDEzNy4zMjZMMjA0LjE1OCwxMzYuNjI4TDIwNC41MzksMTM3Ljc5NEwyMDIuNDA2LDEzOC40ODZMMjAyLjAyNSwxMzcuMzI2WiIgc3R5bGU9ImZpbGw6d2hpdGU7ZmlsbC1ydWxlOm5vbnplcm87Ii8+CiAgICAgICAgPHBhdGggZD0iTTIwNC43OTcsMTQ1LjUyOUMyMDUuMzI4LDE0NC45MjMgMjA1LjcyNSwxNDQuMjQ5IDIwNS45ODksMTQzLjUwNEMyMDYuMjUzLDE0Mi43NiAyMDYuMzg1LDE0MS45NDEgMjA2LjM4NSwxNDEuMDQ2QzIwNi4zODUsMTQwLjE1MiAyMDYuMjUzLDEzOS4zMzQgMjA1Ljk4OSwxMzguNTkxQzIwNS43MjUsMTM3Ljg0OSAyMDUuMzI4LDEzNy4xNzUgMjA0Ljc5NywxMzYuNTdMMjA1LjczNCwxMzUuNDE2QzIwNi40NjgsMTM2LjE2OSAyMDcuMDE4LDEzNy4wMTUgMjA3LjM4NCwxMzcuOTUzQzIwNy43NDksMTM4Ljg5IDIwNy45MzEsMTM5LjkyMSAyMDcuOTMxLDE0MS4wNDZDMjA3LjkzMSwxNDIuMTcxIDIwNy43NDksMTQzLjIwMyAyMDcuMzg0LDE0NC4xNEMyMDcuMDE4LDE0NS4wNzggMjA2LjQ2OCwxNDUuOTIzIDIwNS43MzQsMTQ2LjY3N0wyMDQuNzk3LDE0NS41MjlaIiBzdHlsZT0iZmlsbDp3aGl0ZTtmaWxsLXJ1bGU6bm9uemVybzsiLz4KICAgIDwvZz4KPC9zdmc+Cg==",
                 blocks: [
                     {
                         opcode: 'regex',
@@ -237,7 +236,7 @@
                         arguments: {
                             PATTERN: {
                                 type: ArgumentType.STRING,
-                                defaultValue: ".*"
+                                defaultValue: "(.*)"
                             }
                         },
                         ...dogeiscutRegularExpression.Block
@@ -248,7 +247,7 @@
                         arguments: {
                             PATTERN: {
                                 type: ArgumentType.STRING,
-                                defaultValue: ".*"
+                                defaultValue: "(.*)"
                             },
                             FLAGS: {
                                 type: ArgumentType.STRING,

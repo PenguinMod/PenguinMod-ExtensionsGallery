@@ -258,10 +258,10 @@
                 "dogeiscutRegularExpression", 
                 v => ({ source: v.source, flags: v.flags, lastIndex: v.lastIndex }), 
                 v => {
-                    let regex = new dogeiscutRegularExpression.Type.toRegularExpression(new RegExp(v.source, v.flags))
+                    let regex = dogeiscutRegularExpression.Type.toRegularExpression(new RegExp(v.source, v.flags))
                     regex.lastIndex = v.lastIndex
-                    return lastIndex
-                } 
+                    return regex
+                }
             );
         }
         getInfo() {

@@ -5,6 +5,7 @@
 
 // TODO:
 // RegExp.escape polyfill
+// Custom block shape
 
 (function(Scratch) {
     'use strict';
@@ -268,6 +269,34 @@
                         },
                         ...dogeiscutRegularExpression.Block
                     },
+                    {
+                        opcode: 'escape',
+                        text: 'escape [STRING] for regex',
+                        blockType: BlockType.REPORTER,
+                        arguments: {
+                            STRING: {
+                                type: ArgumentType.STRING,
+                                defaultValue: "(.*)"
+                            },
+                        },
+                    },
+                    '---',
+                    {
+                        opcode: 'sourceOf',
+                        text: 'source of [REGEX]',
+                        blockType: BlockType.REPORTER,
+                        arguments: {
+                            REGEX: dogeiscutRegularExpression.Argument,
+                        },
+                    },
+                    {
+                        opcode: 'flagsOf',
+                        text: 'flags of [REGEX]',
+                        blockType: BlockType.REPORTER,
+                        arguments: {
+                            REGEX: dogeiscutRegularExpression.Argument,
+                        },
+                    },
                     '---',
                     {
                         opcode: 'test',
@@ -282,48 +311,6 @@
                             REGEX: dogeiscutRegularExpression.Argument
                         },
                     },
-                    '---',
-                    //...(vm.runtime.ext_dogeiscutObject ? ['---'] : []),
-                    {
-                        opcode: 'exec',
-                        text: 'execute [REGEX] on [STRING]',
-                        arguments: {
-                            REGEX: dogeiscutRegularExpression.Argument,
-                            STRING: {
-                                type: ArgumentType.STRING,
-                                defaultValue: "foo"
-                            },
-                        },
-                        hideFromPalette: !vm.runtime.ext_dogeiscutObject,
-                        ...(vm.runtime.ext_dogeiscutObject ? vm.dogeiscutObject.Block : {}),
-                    },
-                    {
-                        opcode: 'getLastIndex',
-                        text: 'get last index of [REGEX]',
-                        blockType: BlockType.REPORTER,
-                        disableMonitor: true,
-                        arguments: {
-                            REGEX: dogeiscutRegularExpression.Argument,
-                        },
-                    },
-                    {
-                        opcode: 'setLastIndex',
-                        text: 'set last index of [REGEX] to [INDEX]',
-                        arguments: {
-                            REGEX: dogeiscutRegularExpression.Argument,
-                            INDEX: {
-                                type: ArgumentType.NUMBER,
-                                defaultValue: 0
-                            },
-                        },
-                        hideFromPalette: true,
-                        ...dogeiscutRegularExpression.Block
-                    },
-                    {
-                        blockType: BlockType.XML,
-                        xml: `<block type="dogeiscutRegularExpressions_setLastIndex" ><value name="INDEX"><shadow type="math_whole_number" ><field name="NUM">0</field></shadow></value></block>`
-                    },
-                    '---',
                     {
                         opcode: 'search',
                         text: 'search [STRING] with [REGEX]',
@@ -337,19 +324,7 @@
                             REGEX: dogeiscutRegularExpression.Argument
                         },
                     },
-                    {
-                        opcode: 'split',
-                        text: 'split [STRING] by [REGEX]',
-                        arguments: {
-                            STRING: {
-                                type: ArgumentType.STRING,
-                                defaultValue: "foo"
-                            },
-                            REGEX: dogeiscutRegularExpression.Argument,
-                        },
-                        hideFromPalette: !vm.runtime.ext_jwArray,
-                        ...(vm.runtime.ext_jwArray ? vm.jwArray.Block : {}),
-                    },
+                    '---',
                     {
                         opcode: 'replace',
                         text: 'replace [REGEX] in [A] with [B]',
@@ -384,6 +359,20 @@
                             },
                         },
                     },
+                    '---',
+                    {
+                        opcode: 'split',
+                        text: 'split [STRING] by [REGEX]',
+                        arguments: {
+                            STRING: {
+                                type: ArgumentType.STRING,
+                                defaultValue: "foo"
+                            },
+                            REGEX: dogeiscutRegularExpression.Argument,
+                        },
+                        hideFromPalette: !vm.runtime.ext_jwArray,
+                        ...(vm.runtime.ext_jwArray ? vm.jwArray.Block : {}),
+                    },
                     {
                         opcode: 'match',
                         text: 'match [REGEX] with [STRING]',
@@ -412,35 +401,43 @@
                     },
                     '---',
                     {
-                        opcode: 'sourceOf',
-                        text: 'source of [REGEX]',
-                        blockType: BlockType.REPORTER,
+                        opcode: 'exec',
+                        text: 'execute [REGEX] on [STRING]',
                         arguments: {
                             REGEX: dogeiscutRegularExpression.Argument,
-                        },
-                    },
-                    {
-                        opcode: 'flagsOf',
-                        text: 'flags of [REGEX]',
-                        blockType: BlockType.REPORTER,
-                        arguments: {
-                            REGEX: dogeiscutRegularExpression.Argument,
-                        },
-                    },
-                    '---',
-                    {
-                        opcode: 'escape',
-                        text: 'regex escape [STRING]',
-                        blockType: BlockType.REPORTER,
-                        arguments: {
                             STRING: {
                                 type: ArgumentType.STRING,
-                                defaultValue: "(.*)"
+                                defaultValue: "foo"
                             },
                         },
+                        hideFromPalette: !vm.runtime.ext_dogeiscutObject,
+                        ...(vm.runtime.ext_dogeiscutObject ? vm.dogeiscutObject.Block : {}),
                     },
-                    //BLOCKS TODO:
-                    // sort them better
+                    {
+                        opcode: 'getLastIndex',
+                        text: 'get last index of [REGEX]',
+                        blockType: BlockType.REPORTER,
+                        disableMonitor: true,
+                        arguments: {
+                            REGEX: dogeiscutRegularExpression.Argument,
+                        },
+                    },
+                    {
+                        opcode: 'setLastIndex',
+                        text: 'set last index of [REGEX] to [INDEX]',
+                        arguments: {
+                            REGEX: dogeiscutRegularExpression.Argument,
+                            INDEX: {
+                                type: ArgumentType.NUMBER,
+                                defaultValue: 0
+                            },
+                        },
+                        hideFromPalette: true,
+                    },
+                    {
+                        blockType: BlockType.XML,
+                        xml: `<block type="dogeiscutRegularExpressions_setLastIndex" ><value name="INDEX"><shadow type="math_whole_number" ><field name="NUM">0</field></shadow></value></block>`
+                    },
                 ],
                 menus: {}
             }
@@ -492,7 +489,7 @@
             REGEX = RegularExpressionType.toRegularExpression(REGEX)
             INDEX = Cast.toNumber(INDEX)
             REGEX.lastIndex = INDEX
-            return REGEX
+            //return REGEX
         }
 
         search({ STRING, REGEX }) {

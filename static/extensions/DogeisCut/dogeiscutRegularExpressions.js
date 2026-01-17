@@ -271,13 +271,13 @@
                 color1: "#BB2EAD",
                 menuIconURI: "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHhtbG5zOnhsaW5rPSJodHRwOi8vd3d3LnczLm9yZy8xOTk5L3hsaW5rIiB4bWxuczpzZXJpZj0iaHR0cDovL3d3dy5zZXJpZi5jb20vIiB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiB2aWV3Qm94PSIwIDAgMjAgMjAiIHZlcnNpb249IjEuMSIgeG1sOnNwYWNlPSJwcmVzZXJ2ZSIgc3R5bGU9ImZpbGwtcnVsZTpldmVub2RkO2NsaXAtcnVsZTpldmVub2RkOyI+CiAgICA8Y2lyY2xlIGN4PSIxMCIgY3k9IjEwIiByPSI5IiBzdHlsZT0iZmlsbDogI0JCMkVBRDtzdHJva2U6ICM5NTI0OEE7c3Ryb2tlLXdpZHRoOjJweDsiLz4KICAgIDxnIHRyYW5zZm9ybT0ibWF0cml4KDEuMDI2NDg2LDAsMCwxLjAyNjQ4NiwtMTk2LjE3NjEzMSwtMTM0Ljc4MjIzNykiPgogICAgICAgIDxwYXRoIGQ9Ik0xOTUuOTc4LDE0Ni42NzdDMTk1LjI0NCwxNDUuOTIzIDE5NC42OTQsMTQ1LjA3OCAxOTQuMzI5LDE0NC4xNEMxOTMuOTY0LDE0My4yMDMgMTkzLjc4MSwxNDIuMTcxIDE5My43ODEsMTQxLjA0NkMxOTMuNzgxLDEzOS45MjEgMTkzLjk2NCwxMzguODkgMTk0LjMyOSwxMzcuOTUzQzE5NC42OTQsMTM3LjAxNSAxOTUuMjQ0LDEzNi4xNjkgMTk1Ljk3OCwxMzUuNDE2TDE5Ni45MTYsMTM2LjU3QzE5Ni4zODUsMTM3LjE3NSAxOTUuOTg3LDEzNy44NDkgMTk1LjcyMywxMzguNTkxQzE5NS40NiwxMzkuMzM0IDE5NS4zMjgsMTQwLjE1MiAxOTUuMzI4LDE0MS4wNDZDMTk1LjMyOCwxNDEuOTQxIDE5NS40NiwxNDIuNzYgMTk1LjcyMywxNDMuNTA0QzE5NS45ODcsMTQ0LjI0OSAxOTYuMzg1LDE0NC45MjMgMTk2LjkxNiwxNDUuNTI5TDE5NS45NzgsMTQ2LjY3N1oiIHN0eWxlPSJmaWxsOndoaXRlO2ZpbGwtcnVsZTpub256ZXJvOyIvPgogICAgICAgIDxyZWN0IHg9IjE5Ny40NzIiIHk9IjE0My4yMzgiIHdpZHRoPSIxLjYwNSIgaGVpZ2h0PSIxLjYwNSIgc3R5bGU9ImZpbGw6d2hpdGU7ZmlsbC1ydWxlOm5vbnplcm87Ii8+CiAgICAgICAgPHBhdGggZD0iTTIwMS43MiwxMzguMjYzTDIwMi43MTEsMTM3LjU0OEwyMDQuMDI5LDEzOS4zNTlMMjAzLjAzOSwxNDAuMDhMMjAxLjcyLDEzOC4yNjNaTTIwMC40MDIsMTM5LjM1OUwyMDEuNzIsMTM3LjU0OEwyMDIuNzExLDEzOC4yNjNMMjAxLjM5MiwxNDAuMDhMMjAwLjQwMiwxMzkuMzU5Wk0xOTkuODkyLDEzNy43OTRMMjAwLjI3MywxMzYuNjI4TDIwMi40MDYsMTM3LjMyNkwyMDIuMDI1LDEzOC40ODZMMTk5Ljg5MiwxMzcuNzk0Wk0yMDEuNjAzLDEzNS42NjJMMjAyLjgyOCwxMzUuNjYyTDIwMi44MjgsMTM3LjkwNkwyMDEuNjAzLDEzNy45MDZMMjAxLjYwMywxMzUuNjYyWk0yMDIuMDI1LDEzNy4zMjZMMjA0LjE1OCwxMzYuNjI4TDIwNC41MzksMTM3Ljc5NEwyMDIuNDA2LDEzOC40ODZMMjAyLjAyNSwxMzcuMzI2WiIgc3R5bGU9ImZpbGw6d2hpdGU7ZmlsbC1ydWxlOm5vbnplcm87Ii8+CiAgICAgICAgPHBhdGggZD0iTTIwNC43OTcsMTQ1LjUyOUMyMDUuMzI4LDE0NC45MjMgMjA1LjcyNSwxNDQuMjQ5IDIwNS45ODksMTQzLjUwNEMyMDYuMjUzLDE0Mi43NiAyMDYuMzg1LDE0MS45NDEgMjA2LjM4NSwxNDEuMDQ2QzIwNi4zODUsMTQwLjE1MiAyMDYuMjUzLDEzOS4zMzQgMjA1Ljk4OSwxMzguNTkxQzIwNS43MjUsMTM3Ljg0OSAyMDUuMzI4LDEzNy4xNzUgMjA0Ljc5NywxMzYuNTdMMjA1LjczNCwxMzUuNDE2QzIwNi40NjgsMTM2LjE2OSAyMDcuMDE4LDEzNy4wMTUgMjA3LjM4NCwxMzcuOTUzQzIwNy43NDksMTM4Ljg5IDIwNy45MzEsMTM5LjkyMSAyMDcuOTMxLDE0MS4wNDZDMjA3LjkzMSwxNDIuMTcxIDIwNy43NDksMTQzLjIwMyAyMDcuMzg0LDE0NC4xNEMyMDcuMDE4LDE0NS4wNzggMjA2LjQ2OCwxNDUuOTIzIDIwNS43MzQsMTQ2LjY3N0wyMDQuNzk3LDE0NS41MjlaIiBzdHlsZT0iZmlsbDp3aGl0ZTtmaWxsLXJ1bGU6bm9uemVybzsiLz4KICAgIDwvZz4KPC9zdmc+",
                 blocks: [
-                    {
-                        blockType: BlockType.BUTTON,
-                        text: '⚠ Add Missing Dependencies ⚠',
-                        func: "addDependencies",
-                        hideFromPalette: !!vm.runtime.ext_jwArray & !!vm.runtime.ext_dogeiscutObject,
-                    },
-                    ...(!vm.runtime.ext_jwArray || !vm.runtime.ext_dogeiscutObject ? ['---'] : []),
+                    // {
+                    //     blockType: BlockType.BUTTON,
+                    //     text: '⚠ Add Missing Dependencies ⚠',
+                    //     func: "addDependencies",
+                    //     hideFromPalette: !!vm.runtime.ext_jwArray & !!vm.runtime.ext_dogeiscutObject,
+                    // },
+                    // ...(!vm.runtime.ext_jwArray || !vm.runtime.ext_dogeiscutObject ? ['---'] : []),
                     {
                         opcode: 'regex',
                         text: 'regular expression [PATTERN] [FLAGS]',
@@ -577,6 +577,14 @@
             return Cast.toString(RegExp.escape(STRING))
         }
     }
+
+    (async () => {
+        if (!vm.runtime.ext_dogeiscutObjects) await vm.extensionManager.loadExtensionURL("https://extensions.penguinmod.com/extensions/DogeisCut/dogeiscutObject.js")
+        if (!vm.runtime.ext_jwArray) vm.extensionManager.loadExtensionIdSync('jwArray')
+        vm.runtime.requestBlocksUpdate()
+        vm.runtime.requestToolboxExtensionsUpdate()
+        vm.emitWorkspaceUpdate()
+    })()
 
     Scratch.extensions.register(new Extension());
 })(Scratch);

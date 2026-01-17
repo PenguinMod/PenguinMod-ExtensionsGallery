@@ -1,6 +1,6 @@
 // Name: Regular Expressions
 // ID: dogeiscutRegularExpressions
-// Description: Create, modify, filter, and more with the new regular epression type.
+// Description: Create, modify, filter, and more with the new regular expression type.
 // By: DogeisCut <https://scratch.mit.edu/users/DogeisCut/>
 
 (function(Scratch) {

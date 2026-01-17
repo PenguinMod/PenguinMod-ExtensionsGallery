@@ -249,7 +249,7 @@ export default [
     },
     {
         name: "Regular Expressions",
-        description: "Create, modify, filter, and more with the new regular epression type.",
+        description: "Create, modify, filter, and more with the new regular expression type.",
         code: "DogeisCut/dogeiscutRegularExpressions.js",
         banner: "DogeisCut/dogeiscutRegularExpressions.svg",
         creator: "DogeisCut",

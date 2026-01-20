@@ -113,3 +113,4 @@
   Scratch.extensions.register(new BarcodeExtension());
 
 })(Scratch);
+

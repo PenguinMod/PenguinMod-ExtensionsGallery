@@ -1,10 +1,6 @@
 (function(Scratch) {
   'use strict';
 
-  if (!Scratch.extensions.unsandboxed) {
-    throw new Error('Links & Barcodes must run unsandboxed! Please check "isUnsandboxed: true" in extensions.js');
-  }
-
   class BarcodeExtension {
     constructor() {
       this.activeBarcodes = [];
@@ -111,6 +107,4 @@
   }
 
   Scratch.extensions.register(new BarcodeExtension());
-
 })(Scratch);
-

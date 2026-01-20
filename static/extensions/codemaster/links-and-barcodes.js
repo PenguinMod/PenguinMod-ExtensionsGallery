@@ -1,6 +1,10 @@
 (function(Scratch) {
   'use strict';
 
+  if (!Scratch.extensions.unsandboxed) {
+    throw new Error('Links & Barcodes must run unsandboxed! Please check "isUnsandboxed: true" in extensions.js');
+  }
+
   class BarcodeExtension {
     constructor() {
       this.activeBarcodes = [];
@@ -22,10 +26,7 @@
             blockType: Scratch.BlockType.COMMAND,
             text: 'open link [URL]',
             arguments: {
-              URL: { 
-                type: Scratch.ArgumentType.STRING, 
-                defaultValue: 'https://penguinmod.com' 
-              }
+              URL: { type: Scratch.ArgumentType.STRING, defaultValue: 'https://penguinmod.com' }
             }
           },
           {
@@ -43,12 +44,7 @@
             blockType: Scratch.BlockType.COMMAND,
             text: 'set barcode size to [SIZE]',
             arguments: {
-              SIZE: { 
-                type: Scratch.ArgumentType.NUMBER, 
-                defaultValue: 100,
-                min: 5, 
-                max: 300
-              }
+              SIZE: { type: Scratch.ArgumentType.NUMBER, defaultValue: 100, min: 5, max: 300 }
             }
           },
           {
@@ -66,7 +62,6 @@
 
     openLink(args) {
       const url = args.URL;
-      // Using Scratch.openWindow is the most reliable way for unsandboxed extensions
       if (Scratch.openWindow) {
         Scratch.openWindow(url);
       } else {
@@ -115,8 +110,6 @@
     }
   }
 
-  Scratch.extensions.register(new BarcodeExtension(), {
-    useSandbox: false
-  });
+  Scratch.extensions.register(new BarcodeExtension());
 
 })(Scratch);

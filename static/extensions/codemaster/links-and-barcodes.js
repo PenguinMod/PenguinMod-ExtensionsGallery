@@ -65,11 +65,12 @@
     }
 
     openLink(args) {
-      if (typeof window !== 'undefined' && window.open) {
-        window.open(args.URL, '_blank', 'noopener,noreferrer');
+      const url = args.URL;
+      // Using Scratch.openWindow is the most reliable way for unsandboxed extensions
+      if (Scratch.openWindow) {
+        Scratch.openWindow(url);
       } else {
-        // Fallback for security/safety
-        Scratch.redirect(args.URL);
+        window.open(url, '_blank', 'noopener,noreferrer');
       }
     }
 

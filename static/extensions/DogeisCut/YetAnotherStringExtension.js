@@ -292,7 +292,7 @@
                         compiler.source += `    thread._dogeiscutyetanotherstringextensionBuilderIndex.push('');`;
                         compiler.descendStack(node.substack, new imports.Frame(false, undefined, true));
                         compiler.source += `    return thread._dogeiscutyetanotherstringextensionBuilderIndex.pop();`;
-                        compiler.source += '})());';
+                        compiler.source += '})())';
 
                         const stackSource = compiler.source;
                         compiler.source = originalSource;

@@ -1269,11 +1269,11 @@
         normal[2] * scale
       ];
 
-      const result = [
+      const result = JSON.stringify([
         source[0] - scaledNormal[0],
         source[1] - scaledNormal[1],
         source[2] - scaledNormal[2]
-      ];
+      ]);
       return axis === 'axis' ? result : this.reflectAcrossV3({ source: JSON.stringify(source), normal: JSON.stringify(normal) });
     }
     reflectAcrossV3({ source, normal }) {
@@ -1296,11 +1296,11 @@
         projection[2] * 2
       ];
 
-      return [
+      return JSON.stringify([
         doubleProjection[0] - source[0],
         doubleProjection[1] - source[1],
         doubleProjection[2] - source[2]
-      ];
+      ]);
     }
     rotateAroundPointV3({ a, b, yaw, pitch, roll }) {
       a = JSON.parse(a);
@@ -1622,10 +1622,10 @@
         normal[1] * scale
       ];
 
-      const result = [
+      const result = JSON.stringify([
         source[0] - scaledNormal[0],
         source[1] - scaledNormal[1]
-      ];
+      ]);
       
       return axis === 'axis' ? result : this.reflectAcrossV2({ source: JSON.stringify(source), normal: JSON.stringify(normal) });
     }
@@ -1647,10 +1647,10 @@
         projection[1] * 2
       ];
 
-      return [
+      return JSON.stringify([
         doubleProjection[0] - source[0],
         doubleProjection[1] - source[1]
-      ];
+      ]);
     }
     rotateAroundPointV2({ a, b, yaw }) {
       a = JSON.parse(a);

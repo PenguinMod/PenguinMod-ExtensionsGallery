@@ -1,29 +1,22 @@
 <script>
-    import { createEventDispatcher } from "svelte";
-
-    export let link = false;
-    export let label = "";
-    export let style = "";
-    export let noredirect = false;
-    export let classActor = "";
-    export let id = "";
-
-    const dispatch = createEventDispatcher();
-
-    function event(...args) {
-        dispatch("click", ...args);
-    }
+    let props = $props();
+    let link = $derived(props.link);
+    let label = $derived(props.label || "");
+    let style = $derived(props.style);
+    let noredirect = $derived(props.noredirect || false);
+    let classActor = $derived(props.classActor);
+    let id = $derived(props.id);
 </script>
 
 {#if !link}
     <button
         class={`button${classActor ? ` ca-${classActor}` : ""}`}
-        on:click={event}
+        onclick={props.onclick}
         {style}
         {id}
     >
         {@html label}
-        <slot />
+        {@render props.children?.()}
     </button>
 {:else}
     <a
@@ -32,9 +25,9 @@
         style="text-decoration: none;"
         class={`${classActor ? ` ca-${classActor}` : ""}`}
     >
-        <button class="button" on:click={event} {style} {id}>
+        <button class="button" onclick={props.onclick} {style} {id}>
             {@html label}
-            <slot />
+            {@render props.children?.()}
         </button>
     </a>
 {/if}

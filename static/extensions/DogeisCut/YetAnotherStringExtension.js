@@ -275,10 +275,13 @@
         getCompileInfo() {
             return {
                 ir: {
-                    builder: (generator, block) => ({
-                        kind: 'input',
-                        substack: generator.descendSubstack(block, 'SUBSTACK')
-                    }),
+                    builder: (generator, block) => {
+                        generator.script.yields = true
+                        return {
+                            kind: 'input',
+                            substack: generator.descendSubstack(block, 'SUBSTACK')
+                        }
+                    },
                 },
                 js: {
                     builder: (node, compiler, imports) => {

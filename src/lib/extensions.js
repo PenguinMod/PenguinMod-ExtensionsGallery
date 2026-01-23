@@ -581,10 +581,11 @@ export default [
     },
     */
     {
-     name: "Smoke Detector",
-    description: "Plays a beep every 30 seconds.",
-    code: "electricfuzzball_pm/firealarm.js",
-    banner: "electricfuzzball_pm/firealarm.svg",
-    creator: "ElectricFuzzball_PM", //hey look thats me!!
+        name: "Smoke Detector",
+        description: "Plays a beep every 30 seconds.",
+        code: "electricfuzzball_pm/firealarm.js",
+        banner: "electricfuzzball_pm/firealarm.svg",
+        creator: "ElectricFuzzball_PM" //hey look thats me!!
+        //Pluey has been implemented.
     }
 ];

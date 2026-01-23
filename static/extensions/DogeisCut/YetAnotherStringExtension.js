@@ -254,7 +254,7 @@
                         extensions: ["colours_operators"],
                     },
                     '---',
-                    {
+                    /*UNFINISHED {
                         opcode: 'multiline',
                         text: '[STRING]',
                         blockType: Scratch.BlockType.REPORTER,
@@ -267,7 +267,7 @@
                                 defaultValue: "Multiple\nLines!\nYay!"
                             }
                         }
-                    }
+                    }*/
                 ]
             }
         }
@@ -284,19 +284,12 @@
                     builder: (node, compiler, imports) => {
                         const originalSource = compiler.source;
 
-                        compiler.source = '(yield* (function*() {';
-                        compiler.source += '    const __inner = (yield* (function*() {';
-                        compiler.source += `        thread._dogeiscutyetanotherstringextensionBuilderIndex ??= [];`;
-                        compiler.source += `        thread._dogeiscutyetanotherstringextensionBuilderIndex.push('');`;
+                        compiler.source =  'Scratch.Cast.toString(yield* (function*() {';
+                        compiler.source += `    thread._dogeiscutyetanotherstringextensionBuilderIndex ??= [];`;
+                        compiler.source += `    thread._dogeiscutyetanotherstringextensionBuilderIndex.push('');`;
                         compiler.descendStack(node.substack, new imports.Frame(false, undefined, true));
-                        compiler.source += `        return new runtime.ext_dogeiscutyetanotherstringextension.BuilderReturnValue(thread._dogeiscutyetanotherstringextensionBuilderIndex.pop());`;
-                        compiler.source += '    })());';
-                        compiler.source += '    const __result = __inner;';
-                        compiler.source += '    if (!(__result instanceof runtime.ext_dogeiscutyetanotherstringextension.BuilderReturnValue)) {';
-                        compiler.source += '        throw "Return statements are not supported in builders.";';
-                        compiler.source += '    }';
-                        compiler.source += '    return __result.value;';
-                        compiler.source += '})())';
+                        compiler.source += `    return thread._dogeiscutyetanotherstringextensionBuilderIndex.pop();`;
+                        compiler.source += '})());';
 
                         const stackSource = compiler.source;
                         compiler.source = originalSource;
@@ -305,12 +298,6 @@
                 }
             };
         }
-
-        BuilderReturnValue = class {
-            constructor(value) {
-                this.value = value
-            }
-        } 
 
         currentString({}, util) {
             if (util.thread._dogeiscutyetanotherstringextensionBuilderIndex && util.thread._dogeiscutyetanotherstringextensionBuilderIndex.length > 0) {

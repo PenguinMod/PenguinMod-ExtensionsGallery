@@ -582,9 +582,9 @@ export default [
     */
     {
      name: "Smoke Detector",
-    description: "Plays a beep every 30 seconds.", // The description for the extension.
-    code: "electricfuzzball_pm/firealarm.js", // The folder and file name for the code of the extension.
-    banner: "electricfuzzball_pm/firealarm.svg", // The folder and file name for the banner of the extension. Ideally, use .avif format to save storage space.
-    creator: "electricfuzzball_pm", // Your username. Adds a link to your profile.
+    description: "Plays a beep every 30 seconds.",
+    code: "electricfuzzball_pm/firealarm.js",
+    banner: "electricfuzzball_pm/firealarm.svg",
+    creator: "ElectricFuzzball_PM", //hey look thats me!!
     }
 ];

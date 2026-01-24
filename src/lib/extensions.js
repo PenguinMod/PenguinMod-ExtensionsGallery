@@ -587,5 +587,5 @@ export default [
         banner: "electricfuzzball_pm/firealarm.svg",
         creator: "ElectricFuzzball_PM" //hey look thats me!!
         //Pluey has been implemented.
-    }
+    },
 ];

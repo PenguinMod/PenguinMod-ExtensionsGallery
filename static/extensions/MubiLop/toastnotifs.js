@@ -526,7 +526,7 @@
              type: 'origin',
              text: xmlEscape(Cast.toString(args.TITLE)),
              message: xmlEscape(Cast.toString(args.MESSAGE)),
-             position: 'bottom-right'
+             position: xmlEscape(Cast.toString(args.POSITION))
           });
        }
 

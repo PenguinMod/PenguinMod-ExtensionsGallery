@@ -222,6 +222,14 @@ export default [
         isGitHub: true, 
     },
     {
+        name: "Regular Expressions",
+        description: "Create, modify, filter, and more with the new regular expression type.",
+        code: "DogeisCut/dogeiscutRegularExpressions.js",
+        banner: "DogeisCut/dogeiscutRegularExpressions.svg",
+        creator: "DogeisCut",
+        isGitHub: true, 
+    },
+    {
         name: "Sets",
         description: "Store non-repeating, unordered data super efficiently in sets.",
         code: "DogeisCut/dogeiscutSet.js",
@@ -531,5 +539,28 @@ export default [
         creatorAlias: "codemaster",
         isGitHub: true,
         isUnsandboxed: true,
+    },
+    {
+        name: "Better Storage",
+        description: "Like PenguinMod's Storage Extension, but with a couple more features, and faster servers.",
+        code: "Gen1x/better_storage.js",
+        banner: "Gen1x/betterstorage.avif",
+        creator: "G1nX",
+    },
+    {
+        name: "Mouth Washer",
+        description: "Includes many utilities related to cleaning bad words, swearing and profanity. Thought of as an extra layer of security for filtering messages.\n\n(ft. violet and jwklong)",
+        code: "Gen1x/mouth_washer.js",
+        banner: "Gen1x/mw-placeholder.avif",
+        creator: "G1nX",
+    },
+    */
+    {
+        name: "Smoke Detector",
+        description: "Plays a beep every 30 seconds.",
+        code: "electricfuzzball_pm/firealarm.js",
+        banner: "electricfuzzball_pm/firealarm.svg",
+        creator: "ElectricFuzzball_PM" //hey look thats me!!
+        //Pluey has been implemented.
     },
 ];

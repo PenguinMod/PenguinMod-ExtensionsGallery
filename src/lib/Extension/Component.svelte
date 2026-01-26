@@ -1,10 +1,12 @@
 <script>
-    import stateSearchBar from '$lib/state/searchBar.svelte.js';
     import { onMount } from 'svelte';
-    
+    import { Tags } from "../extension-tags";
+    import stateSearchBar from '$lib/state/searchBar.svelte.js';
+
     let props = $props();
     let name = $derived(props.name || "Test");
     let image = $derived(props.image || "/images/example.avif");
+    let tags = $derived(props.tags || []);
     let url = $derived(props.url || "");
     let notes = $derived(props.notes || "");
     let creator = $derived(props.creator || "");
@@ -85,6 +87,19 @@
         });
     };
 
+    // tags that have banners
+    let displayedTags = $state([]);
+    onMount(() => {
+        displayedTags = [];
+        for (const tag of tags) {
+            const extensionTag = Tags.find(extTag => extTag.name === tag);
+            if (!extensionTag) continue;
+
+            if (extensionTag.banner) {
+                displayedTags.push(extensionTag);
+            }
+        }
+    });
     onMount(() => {
         document.addEventListener("penguinmod-recommendation-clicked", (event) => {
             const extCodeUrl = event.detail;
@@ -104,6 +119,18 @@
     <p>Copied to Clipboard!</p>
 </div>
 <div class="block">
+    {#each displayedTags as tag}
+        <div class="block-tag-banner">
+            <img
+                src={tag.banner}
+                alt={tag.alias || tag.name}
+                class="block-tag-banner-image"
+                loading="lazy"
+                data-pmelement="extimagetagbanner"
+            />
+        </div>
+    {/each}
+
     <div>
         <div class="image-container">
             <button
@@ -203,7 +230,6 @@
         z-index: 9000;
     }
     .copied:before {
-        content: "";
         position: absolute;
         top: 100%;
         left: calc(50% - 5px);
@@ -211,20 +237,25 @@
         border-top: 5px solid #23a559;
         border-left: 5px solid transparent;
         border-right: 5px solid transparent;
+
+        content: "";
     }
     .copied p {
         margin-block: 0;
     }
 
     .block {
+        position: relative;
         border: 1px solid rgba(0, 0, 0, 0.25);
-        border-radius: 6px;
+        max-width: calc(600px / 1.85);
         padding: 8px;
         margin: 4px;
-        max-width: calc(600px / 1.85);
+
         display: flex;
         flex-direction: column;
         justify-content: space-between;
+        
+        border-radius: 6px;
     }
     :global(body.dark-mode) .block {
         border-color: rgba(255, 255, 255, 0.75);
@@ -233,6 +264,22 @@
         display: flex;
         flex-direction: row;
         align-items: center;
+    }
+    .block-tag-banner {
+        position: absolute;
+        right: 0;
+        top: 0;
+
+        width: 72px;
+        height: 72px;
+
+        pointer-events: none;
+        user-select: none;
+        z-index: 52;
+    }
+    .block-tag-banner-image {
+        width: 100%;
+        height: 100%;
     }
 
     .image-container {

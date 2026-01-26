@@ -1,5 +1,6 @@
 <script>
     import { onMount } from 'svelte';
+    import { page } from '$app/stores';
     import { Tags } from "../extension-tags";
     import stateSearchBar from '$lib/state/searchBar.svelte.js';
 
@@ -12,6 +13,7 @@
     let creator = $derived(props.creator || "");
     let creatorAlias = $derived(props.creatorAlias);
     let documentation = $derived(props.documentation || "");
+    let example = $derived(props.example || "");
     let isGitHub = $derived(props.isGitHub || false);
     let unstable = $derived(props.unstable || false);
     let unstableReason = $derived(props.unstableReason || "This extension is unstable. Use at your own risk.");
@@ -31,7 +33,6 @@
 
     // used for search
     let relUrl = $derived(props.relUrl);
-
     const displayCopiedToClipboard = (x, y) => {
         if (!(copyButton && copyPrompt)) return;
         if ((typeof x !== 'number' || typeof y !== 'number')) {
@@ -174,6 +175,13 @@
         {/if}
         {#if notes && notes !== ""}
             <p class="notes">{notes}</p>
+        {/if}
+        {#if example}
+            <p>
+                <a href={`https://studio.penguinmod.com/editor.html?project_url=${encodeURIComponent(`${$page.url.origin}/examples/projects/${example}`)}`}>
+                    Example Project
+                </a>
+            </p>
         {/if}
         {#if documentation}
             <p>

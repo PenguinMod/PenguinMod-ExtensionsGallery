@@ -390,6 +390,17 @@
     .extension-list[data-filteropen="true"] {
         width: calc(100% - 20%);
     }
+    @media screen and (max-width: 920px) {
+        .extension-list-filters {
+            width: calc(100% - (16px + 16px + 2px));
+        }
+        .extension-list-bars {
+            flex-direction: column;
+        }
+        .extension-list[data-filteropen="true"] {
+            width: 100%;
+        }
+    }
 
     .no-exts {
         height: 1em;

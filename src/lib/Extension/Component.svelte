@@ -111,11 +111,11 @@
                 onclick={() => copyToClipboard(url)}
                 data-pmelement="imagecopy"
             >
-                Copy to clipboard
+                Copy Link
             </button>
             <img
                 src={image}
-                alt="Thumb"
+                alt={name}
                 class="image"
                 loading="lazy"
                 data-pmelement="extimage"
@@ -161,10 +161,10 @@
                 onclick={() => copyToClipboard(url)}
                 class="blue"
             >
-                Copy URL
+                Copy Link
             </button>
             <a href={baseUrl + url} target="_blank">
-                <button class="purple">View</button>
+                <button class="purple">Try it out</button>
             </a>
         </div>
     </div>

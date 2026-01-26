@@ -601,3 +601,4 @@ Contact me on Discord at gen1x_loll or on the PenguinMod server if it goes down 
 
     Scratch.extensions.register(new BettererStorage());
 })(Scratch);
+

@@ -21,6 +21,13 @@ export default [
         creator: "TheShovel",
     },
     {
+        name: "Storage Plus",
+        description: "Allows you to store data in many ways, including server storage. Featuring an extremely fast server using LMDB!",
+        code: "Gen1x/storage_plus.js",
+        banner: "Gen1x/storage_plus.avif",
+        creator: "G1nX",
+    },
+    {
         name: "MotionSprite",
         description: "An advanced math-based animation system",
         code: "TheShovel/qoan-renderer.js",

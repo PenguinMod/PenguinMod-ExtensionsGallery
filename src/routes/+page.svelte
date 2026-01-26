@@ -58,7 +58,18 @@
         </div>
         <div class="extension-list-rightbar">
             <div class="extension-list-controls">
-                <button>Open sidebar (temp name)</button>
+                <button>Show filters</button>
+                <label>
+                    Sort by
+                    <select>
+                        <option>recommended order</option>
+                        <option>reversed recommended order</option>
+                        <option>names A-Z</option>
+                        <option>names Z-A</option>
+                        <option>creators A-Z</option>
+                        <option>creators Z-A</option>
+                    </select>
+                </label>
             </div>
             <div class="extension-list">
                 <!-- This list can be modified in "src/lib/extensions.js" -->
@@ -137,7 +148,7 @@
     .no-exts {
         padding: 8px 32px;
         border: 1px solid rgba(0, 0, 0, 0.25);
-        
+
         border-radius: 4px;
     }
     :global(body.dark-mode) .no-exts {

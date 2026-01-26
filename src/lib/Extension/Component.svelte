@@ -356,13 +356,16 @@
     .unstable-message {
         display: none;
         position: absolute;
+        width: 250px;
+        padding: 8px;
+
         background: #000000de;
         font-size: medium;
         font-weight: normal;
-        padding: 8px;
         border-radius: 8px;
         white-space: pre-wrap;
-        width: 250px;
+
+        z-index: 60;
         user-select: text;
     }
     .unstable-warning:hover .unstable-message {

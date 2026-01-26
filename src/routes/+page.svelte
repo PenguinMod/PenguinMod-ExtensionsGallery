@@ -77,10 +77,19 @@
     let filterBarOpened = $state(false);
     let selectedSorting = $state("none");
     const tagsSelected = $state({});
+    const featuresSelected = $state({
+        documentation: "show",
+        exampleprojects: "show",
+        warnings: "show",
+    });
     const updateExtensionList = () => {
         shownExtensions = [...extensions]
             .filter(extension => searchable(extension.name).includes(stateSearchBar.query))
-            .filter(extension => Object.values(tagsSelected).some(bool => !!bool) ? (extension.tags || []).find(extTag => tagsSelected[extTag] === true) : true);
+            .filter(extension => Object.values(tagsSelected).some(bool => !!bool) ? (extension.tags || []).find(extTag => tagsSelected[extTag] === true) : true)
+            .filter(extension => featuresSelected.documentation === "exclusive" ? (!!extension.documentation) : (featuresSelected.documentation === "hide" ? !extension.documentation : true))
+            .filter(extension => featuresSelected.exampleprojects === "exclusive" ? (!!extension.example) : (featuresSelected.exampleprojects === "hide" ? !extension.example : true))
+            .filter(extension => featuresSelected.warnings === "exclusive" ? (!!extension.unstable) : (featuresSelected.warnings === "hide" ? !extension.unstable : true))
+            ;
 
         if (selectedSorting === "namedesc" || selectedSorting === "nameasce") {
             shownExtensions.sort((a, b) => a.name.localeCompare(b.name));
@@ -174,43 +183,43 @@
             <h2 style="margin-block-end:4px">Features</h2>
             <span class="extension-list-filters-label">Documentation</span>
             <label>
-                <input name="pm-filters-features-documentation" type="radio">
+                <input name="pm-filters-features-documentation" type="radio" onchange={updateExtensionList} bind:group={featuresSelected.documentation} value="show">
                 Show extensions with documentation
             </label>
             <label>
-                <input name="pm-filters-features-documentation" type="radio">
+                <input name="pm-filters-features-documentation" type="radio" onchange={updateExtensionList} bind:group={featuresSelected.documentation} value="exclusive">
                 Only show extensions with documentation
             </label>
             <label>
-                <input name="pm-filters-features-documentation" type="radio">
+                <input name="pm-filters-features-documentation" type="radio" onchange={updateExtensionList} bind:group={featuresSelected.documentation} value="hide">
                 Hide extensions with documentation
             </label>
 
             <span class="extension-list-filters-label">Example projects</span>
             <label>
-                <input name="pm-filters-features-exampleprojects" type="radio">
+                <input name="pm-filters-features-exampleprojects" type="radio" onchange={updateExtensionList} bind:group={featuresSelected.exampleprojects} value="show">
                 Show extensions with example projects
             </label>
             <label>
-                <input name="pm-filters-features-exampleprojects" type="radio">
+                <input name="pm-filters-features-exampleprojects" type="radio" onchange={updateExtensionList} bind:group={featuresSelected.exampleprojects} value="exclusive">
                 Only show extensions with example projects
             </label>
             <label>
-                <input name="pm-filters-features-exampleprojects" type="radio">
+                <input name="pm-filters-features-exampleprojects" type="radio" onchange={updateExtensionList} bind:group={featuresSelected.exampleprojects} value="hide">
                 Hide extensions with example projects
             </label>
             
             <span class="extension-list-filters-label">Warnings</span>
             <label>
-                <input name="pm-filters-features-warnings" type="radio">
+                <input name="pm-filters-features-warnings" type="radio" onchange={updateExtensionList} bind:group={featuresSelected.warnings} value="show">
                 Show extensions with warnings
             </label>
             <label>
-                <input name="pm-filters-features-warnings" type="radio">
+                <input name="pm-filters-features-warnings" type="radio" onchange={updateExtensionList} bind:group={featuresSelected.warnings} value="exclusive">
                 Only show extensions with warnings
             </label>
             <label>
-                <input name="pm-filters-features-warnings" type="radio">
+                <input name="pm-filters-features-warnings" type="radio" onchange={updateExtensionList} bind:group={featuresSelected.warnings} value="hide">
                 Hide extensions with warnings
             </label>
         </div>

@@ -30,9 +30,9 @@
 
         window.addEventListener("message", (e) => {
             try {
-                const successfulLoad = ExtensionLoader.handleWindowMessage(e);
-                if (successfulLoad) {
-                    const event = new CustomEvent("penguinmod-editor-extension-loaded");
+                const loadedExtensionId = ExtensionLoader.handleWindowMessage(e);
+                if (loadedExtensionId) {
+                    const event = new CustomEvent("penguinmod-editor-extension-loaded", { detail: loadedExtensionId });
                     document.dispatchEvent(event);
                 }
             } catch (err) {

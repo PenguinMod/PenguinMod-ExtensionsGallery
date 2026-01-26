@@ -13,7 +13,7 @@ class ExtensionLoader {
         }, origin);
     }
     static handleWindowMessage(e) {
-        // return false, invalid message, return true, success, throw error, something failed
+        // return false, invalid message; return extension "id", success; throw error, something failed
         const intendedOrigin = ExtensionLoader.getTargetOrigin();
         console.log('Recieved message from', e.origin, e);
 
@@ -38,7 +38,7 @@ class ExtensionLoader {
         // evil win
         if (eventData.type === 'success') {
             console.log('Loading extension was a success', eventData);
-            return true;
+            return eventData.extensionId;
         }
 
         // evil fail

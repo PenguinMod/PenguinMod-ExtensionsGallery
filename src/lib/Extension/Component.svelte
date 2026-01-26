@@ -114,6 +114,11 @@
         const event = new CustomEvent("penguinmod-editor-extension-load-failed", { detail: err });
         document.dispatchEvent(event);
     };
+    onMount(() => {
+        document.addEventListener("penguinmod-editor-extension-loaded", (event) => {
+            if (url === event.detail) displayBubbleMessage(addToProjectPrompt);
+        });
+    });
 
     // tags that have banners
     let displayedTags = $derived.by(() => {

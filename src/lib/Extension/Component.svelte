@@ -2,7 +2,9 @@
     import { onMount } from 'svelte';
     import { page } from '$app/stores';
     import { Tags } from "../extension-tags";
+    import stateApplication from '$lib/state/app.svelte.js';
     import stateSearchBar from '$lib/state/searchBar.svelte.js';
+    import ExtensionLoader from "$lib/extension-loader.js";
 
     let props = $props();
     let name = $derived(props.name || "Test");
@@ -18,27 +20,40 @@
     let unstable = $derived(props.unstable || false);
     let unstableReason = $derived(props.unstableReason || "This extension is unstable. Use at your own risk.");
 
+    // used for search
+    let relUrl = $derived(props.relUrl);
     const baseUrl = "https://studio.penguinmod.com/editor.html?extension=";
 
     /**
      * The button to copy the URL
      * @type {HTMLButtonElement}
      */
-    let copyButton;
+    let copyButton = $state(null);
+    /**
+     * The button to add the extension to the project
+     * @type {HTMLButtonElement?}
+     */
+    let addToProjectButton = $state(null);
     /**
      * The bubble with the copy message
      * @type {HTMLDivElement}
      */
     let copyPrompt;
+    /**
+     * The bubble with the "added to project" message
+     * @type {HTMLDivElement}
+     */
+    let addToProjectPrompt;
 
-    // used for search
-    let relUrl = $derived(props.relUrl);
-    const displayCopiedToClipboard = (x, y) => {
-        if (!(copyButton && copyPrompt)) return;
+    const displayBubbleMessage = (bubble, x, y) => {
+        let button = copyButton;
+        if (bubble === addToProjectPrompt) button = addToProjectButton;
+
+        if (!(bubble && button)) return;
         if ((typeof x !== 'number' || typeof y !== 'number')) {
             const scrollAmount = document.documentElement.scrollTop;
-            const rectButton = copyButton.getBoundingClientRect();
-            const rectPrompt = copyPrompt.getBoundingClientRect();
+            const rectButton = button.getBoundingClientRect();
+            const rectPrompt = bubble.getBoundingClientRect();
             if (typeof x !== 'number') {
                 x = rectButton.left + rectButton.width / 2 - rectPrompt.width / 2;
             }
@@ -46,11 +61,11 @@
                 y = rectButton.top + scrollAmount - (rectPrompt.height + 10);
             }
         }
-        copyPrompt.style.left = `${x}px`;
-        copyPrompt.style.top = `${y}px`;
+        bubble.style.left = `${x}px`;
+        bubble.style.top = `${y}px`;
 
         const animationDuration = 80;
-        copyPrompt.animate(
+        bubble.animate(
             [
                 {
                     opacity: 0,
@@ -66,7 +81,7 @@
         );
 
         setTimeout(() => {
-            copyPrompt.animate(
+            bubble.animate(
                 [
                     {
                         opacity: 1,
@@ -82,10 +97,22 @@
             );
         }, 1500);
     };
+    
     const copyToClipboard = (url, ...args) => {
         navigator.clipboard.writeText(url).then(() => {
-            displayCopiedToClipboard(...args);
+            displayBubbleMessage(copyPrompt, ...args);
         });
+    };
+    const loadIntoEditor = (url) => {
+        try {
+            ExtensionLoader.tryLoadExtension(url);
+        } catch (err) {
+            handleEditorLoadFail(err);
+        }
+    };
+    const handleEditorLoadFail = (err) => {
+        const event = new CustomEvent("penguinmod-editor-extension-load-failed", { detail: err });
+        document.dispatchEvent(event);
     };
 
     // tags that have banners
@@ -119,6 +146,9 @@
 <div bind:this={copyPrompt} class="copied" style="opacity: 0;">
     <p>Copied to Clipboard!</p>
 </div>
+<div bind:this={addToProjectPrompt} class="copied" style="opacity: 0;">
+    <p>Added to project!</p>
+</div>
 <div class="block">
     {#each displayedTags as tag}
         <div class="block-tag-banner">
@@ -134,13 +164,23 @@
 
     <div>
         <div class="image-container">
-            <button
-                class="image-copy"
-                onclick={() => copyToClipboard(url)}
-                data-pmelement="imagecopy"
-            >
-                Copy Link
-            </button>
+            {#if stateApplication.fromEditor}
+                <button
+                    class="image-copy"
+                    onclick={() => loadIntoEditor(url)}
+                    data-pmelement="imageaddtoproject"
+                >
+                    Add to Project
+                </button>
+            {:else}
+                <button
+                    class="image-copy"
+                    onclick={() => copyToClipboard(url)}
+                    data-pmelement="imagecopy"
+                >
+                    Copy Link
+                </button>
+            {/if}
             <img
                 src={image}
                 alt={name}
@@ -191,16 +231,36 @@
     </div>
     <div class="block-buttons">
         <div>
-            <button
-                bind:this={copyButton}
-                onclick={() => copyToClipboard(url)}
-                class="blue"
-            >
-                Copy Link
-            </button>
-            <a href={baseUrl + url} target="_blank">
-                <button class="purple">Try it out</button>
-            </a>
+            {#if stateApplication.fromEditor}
+                <button
+                    bind:this={addToProjectButton}
+                    onclick={() => loadIntoEditor(url)}
+                    class="blue"
+                >
+                    Add to Project
+                </button>
+                <button
+                    bind:this={copyButton}
+                    onclick={() => copyToClipboard(url)}
+                    class="purple"
+                >
+                    Copy
+                </button>
+            {:else}
+                <button
+                    bind:this={copyButton}
+                    onclick={() => copyToClipboard(url)}
+                    class="blue"
+                >
+                    Copy Link
+                </button>
+                <a
+                    href={baseUrl + url}
+                    target="_blank"
+                >
+                    <button class="purple">Try it out</button>
+                </a>
+            {/if}
         </div>
     </div>
 </div>

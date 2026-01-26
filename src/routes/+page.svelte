@@ -8,10 +8,13 @@
     import Footer from "$lib/Footer/Component.svelte";
     import Logo from "$lib/Logo/Component.svelte";
 
-    import stateSearchBar from '$lib/state/searchBar.svelte.js';
     import { Tags, makeDefaultTag } from "$lib/extension-tags.js";
+    import ExtensionLoader from "$lib/extension-loader.js";
+    import stateApplication from "$lib/state/app.svelte.js";
+    import stateSearchBar from '$lib/state/searchBar.svelte.js';
     import extensions from "$lib/extensions.js";
 
+    let messageHandlersAdded = false;
     const origin = $page.url.origin;
     const searchable = (text = '') => {
         text = String(text);
@@ -20,6 +23,34 @@
     const createExtUrl = (relativeUrl) => {
         return `${origin}/extensions/${relativeUrl}`;
     };
+    $effect(() => {
+        if (messageHandlersAdded) return;
+        if (!stateApplication.fromEditor) return;
+        console.log("Loaded from editor (supposedly)");
+
+        window.addEventListener("message", (e) => {
+            try {
+                const successfulLoad = ExtensionLoader.handleWindowMessage(e);
+                if (successfulLoad) {
+                    const event = new CustomEvent("penguinmod-editor-extension-loaded");
+                    document.dispatchEvent(event);
+                }
+            } catch (err) {
+                const event = new CustomEvent("penguinmod-editor-extension-load-failed", { detail: err });
+                document.dispatchEvent(event);
+            }
+        });
+        document.addEventListener("penguinmod-editor-extension-load-failed", (event) => {
+            const err = event.detail;
+            console.error("Error loading extension to editor;", err);
+
+            switch (err) {
+                default:
+                    alert("Failed to import the extension to your project!\nMake sure the \"Choose an Extension\" menu is still open in your project.");
+            }
+        });
+        messageHandlersAdded = true;
+    });
 
     // create the tag groups for the filter menu
     const tagGrouping = {};
@@ -127,12 +158,21 @@
 </div>
 <div class="buffer">
     <p>See some cool extensions made by other people here.</p>
-    <p>
-        To use some of these extensions in your projects, click the "Copy Link"
-        button on an extension and
-        <a href="/load" target="_blank">load it into PenguinMod,</a>
-        or click the "Try it out" button to create a new project with the extension.
-    </p>
+    {#if stateApplication.fromEditor}
+        <p>
+            To add an extension to your project, click the "Add to Project" button.
+            You can also click the "Copy" button and
+            <a href="/load" target="_blank">load it into PenguinMod</a>
+            if the former fails.
+        </p>
+    {:else}
+        <p>
+            To use some of these extensions in your projects, click the "Copy Link"
+            button on an extension and
+            <a href="/load" target="_blank">load it into PenguinMod,</a>
+            or click the "Try it out" button to create a new project with the extension.
+        </p>
+    {/if}
 </div>
 
 <div class="extension-list-controls">

@@ -105,7 +105,22 @@
 </div>
 <div class="block">
     <div>
-        <img src={image} alt="Thumb" class="image" loading="lazy" />
+        <div class="image-container">
+            <button
+                class="image-copy"
+                onclick={() => copyToClipboard(url)}
+                data-pmelement="imagecopy"
+            >
+                Copy to clipboard
+            </button>
+            <img
+                src={image}
+                alt="Thumb"
+                class="image"
+                loading="lazy"
+                data-pmelement="extimage"
+            />
+        </div>
         <div class="title">
             {name}
             {#if unstable}
@@ -156,6 +171,26 @@
 </div>
 
 <style>
+    button {
+        border: 1px solid rgba(0, 0, 0, 0.35);
+        padding: 4px 8px;
+        margin-left: 6px;
+        margin-right: 6px;
+
+        font-size: 24px;
+        border-radius: 4px;
+        color: white;
+        font-weight: bold;
+
+        cursor: pointer;
+    }
+    button:hover {
+        filter: brightness(1.1);
+    }
+    button:active {
+        filter: brightness(0.7);
+    }
+
     .copied {
         position: absolute;
         pointer-events: none;
@@ -200,12 +235,42 @@
         align-items: center;
     }
 
-    .image {
+    .image-container {
+        position: relative;
         width: calc(600px / 1.85);
         height: calc(300px / 1.85);
-        object-fit: cover;
+
         border-radius: 4px;
     }
+    .image {
+        width: 100%;
+        height: 100%;
+
+        object-fit: cover;
+    }
+    .image-copy {
+        position: absolute;
+        width: 100%;
+        height: 100%;
+        border: 0;
+        margin: 0;
+        padding: 0;
+
+        background: #11111166;
+        text-shadow: 2px 2px 10px black,
+            2px 2px 10px black,
+            2px 2px 10px black;
+        transition: opacity 0.1s;
+        opacity: 0;
+
+        user-select: none;
+        cursor: pointer;
+        z-index: 50;
+    }
+    .image-copy:hover {
+        opacity: 1;
+    }
+
     .title {
         margin-block: 6px;
 
@@ -221,24 +286,6 @@
     }
     .notes {
         white-space: pre-wrap;
-    }
-
-    button {
-        cursor: pointer;
-        font-size: 24px;
-        margin-left: 6px;
-        margin-right: 6px;
-        border: 1px solid rgba(0, 0, 0, 0.35);
-        border-radius: 4px;
-        padding: 4px 8px;
-        color: white;
-        font-weight: bold;
-    }
-    button:hover {
-        filter: brightness(1.1);
-    }
-    button:active {
-        filter: brightness(0.7);
     }
 
     .unstable-warning {

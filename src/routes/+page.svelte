@@ -43,36 +43,49 @@
 <div class="main">
     <p>See some cool extensions made by other people here.</p>
     <p>
-        To use some of these extensions in your projects, click the "Copy URL"
+        To use some of these extensions in your projects, click the "Copy Link"
         button on an extension and
         <a href="/load" target="_blank">load it into PenguinMod,</a>
-        or click the "View" button to create a new project with the extension.
+        or click the "Try it out" button to create a new project with the extension.
     </p>
 
-    <div class="extension-list">
-        <!-- This list can be modified in "src/lib/extensions.js" -->
-        {#each extensions as extension}
-            {#if searchable(extension.name).includes(stateSearchBar.query)}
-                <Extension
-                    name={extension.name}
-                    image={`/images/${extension.banner}`}
-                    creator={extension.creator}
-                    creatorAlias={extension.creatorAlias}
-                    url={createExtUrl(extension.code)}
-                    relUrl={extension.code}
-                    notes={extension.notes}
-                    documentation={extension.documentation}
-                    isGitHub={String(extension.isGitHub) === "true"}
-                    unstable={String(extension.unstable) === "true"}
-                    unstableReason={extension.unstableReason}
-                >
-                    {extension.description}
-                </Extension>
-            {/if}
-        {/each}
-        {#if showNoExtensionsFound}
-            <p class="no-exts">No extensions found under that search query.</p>
-        {/if}
+    <div class="extension-list-container">
+        <div class="extension-list-filters">
+            <button>Button</button>
+            <button>Button</button>
+            <button>Button</button>
+            <button>Button</button>
+        </div>
+        <div class="extension-list-rightbar">
+            <div class="extension-list-controls">
+                <button>Open sidebar (temp name)</button>
+            </div>
+            <div class="extension-list">
+                <!-- This list can be modified in "src/lib/extensions.js" -->
+                {#each extensions as extension}
+                    {#if searchable(extension.name).includes(stateSearchBar.query)}
+                        <Extension
+                            name={extension.name}
+                            image={`/images/${extension.banner}`}
+                            creator={extension.creator}
+                            creatorAlias={extension.creatorAlias}
+                            url={createExtUrl(extension.code)}
+                            relUrl={extension.code}
+                            notes={extension.notes}
+                            documentation={extension.documentation}
+                            isGitHub={String(extension.isGitHub) === "true"}
+                            unstable={String(extension.unstable) === "true"}
+                            unstableReason={extension.unstableReason}
+                        >
+                            {extension.description}
+                        </Extension>
+                    {/if}
+                {/each}
+                {#if showNoExtensionsFound}
+                    <p class="no-exts">No extensions found under that search query.</p>
+                {/if}
+            </div>
+        </div>
     </div>
 
     <p style="text-align: center;">
@@ -92,6 +105,7 @@
 
     .top {
         width: 100%;
+
         display: flex;
         flex-direction: column;
         align-items: center;
@@ -100,18 +114,21 @@
         display: flex;
         align-items: center;
         flex-direction: row;
+
         font-size: 1.35em;
     }
 
     .main {
         width: 80%;
         margin-left: 10%;
+
         display: flex;
         flex-direction: column;
     }
 
     .extension-list {
         width: 100%;
+
         display: flex;
         flex-direction: row;
         flex-wrap: wrap;
@@ -120,6 +137,7 @@
     .no-exts {
         padding: 8px 32px;
         border: 1px solid rgba(0, 0, 0, 0.25);
+        
         border-radius: 4px;
     }
     :global(body.dark-mode) .no-exts {

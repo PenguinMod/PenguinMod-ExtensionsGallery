@@ -2,6 +2,7 @@
     import { onMount } from 'svelte';
     import { page } from '$app/stores';
     import { browser } from "$app/environment";
+    import localforage from "localforage";
 
     // Components
     import Extension from "$lib/Extension/Component.svelte";
@@ -104,16 +105,48 @@
     });
 
     // searching & filtering
+    let hasStorageBeenLoaded = false;
     let shownExtensions = $state([]);
     let filterBarOpened = $state(false);
     let selectedSorting = $state("none");
+    let favoritedExtensions = $state([]);
     const tagsSelected = $state({});
     const featuresSelected = $state({
         documentation: "show",
         exampleprojects: "show",
         warnings: "show",
+        favorites: "show",
+        favoritessplit: true,
     });
+    const saveToStorage = async () => {
+        // NOTE: If saveToStorage gets called on the server then this will cause Vite to crash (so dont call it outside of any function)
+        await localforage.setItem("pm:filter-bar-open", $state.snapshot(filterBarOpened));
+        await localforage.setItem("pm:sorting", $state.snapshot(selectedSorting));
+        await localforage.setItem("pm:filters-tags", $state.snapshot(tagsSelected));
+        await localforage.setItem("pm:filters-features", $state.snapshot(featuresSelected));
+        await localforage.setItem("pm:favorites", $state.snapshot(favoritedExtensions));
+    };
+    const loadFromStorage = async () => {
+        const localFilterBarOpened = await localforage.getItem("pm:filter-bar-open");
+        const localSelectedSorting = await localforage.getItem("pm:sorting");
+        const localTagsSelected = await localforage.getItem("pm:filters-tags");
+        const localFeaturesSelected = await localforage.getItem("pm:filters-features");
+        const localFavoritedExtensions = await localforage.getItem("pm:favorites");
+        filterBarOpened = localFilterBarOpened;
+        selectedSorting = localSelectedSorting;
+        for (const key in localTagsSelected) {
+            tagsSelected[key] = localTagsSelected[key];
+        }
+        for (const key in localFeaturesSelected) {
+            featuresSelected[key] = localFeaturesSelected[key];
+        }
+        favoritedExtensions = localFavoritedExtensions;
+        
+        // reproececss
+        updateExtensionList();
+    };
     const updateExtensionList = () => {
+        // update the list
         shownExtensions = [...extensions]
             .filter(extension => searchable(extension.name).includes(stateSearchBar.query))
             .filter(extension => Object.values(tagsSelected).some(bool => !!bool) ? (extension.tags || []).find(extTag => tagsSelected[extTag] === true) : true)
@@ -131,6 +164,15 @@
         if (selectedSorting === "reversed" || selectedSorting === "nameasce" || selectedSorting === "creatorasce") {
             shownExtensions.reverse();
         }
+
+        // update localforage
+        if (hasStorageBeenLoaded) saveToStorage();
+    };
+    const clearTags = () => {
+        for (const key in tagsSelected) {
+            tagsSelected[key] = false;
+        }
+        updateExtensionList();
     };
     $effect(() => {
         // goive recommendatiaons based on the searched things
@@ -142,12 +184,16 @@
         const event = new CustomEvent("penguinmod-recommendations-updated");
         document.dispatchEvent(event);
     });
+    onMount(async () => {
+        await loadFromStorage();
+        hasStorageBeenLoaded = true;
+    });
     if (browser) {
         document.addEventListener("penguinmod-search-bar-input", () => {
             updateExtensionList();
         });
+        updateExtensionList();
     }
-    updateExtensionList();
 </script>
 
 <div class="top">
@@ -219,6 +265,9 @@
                     </label>
                 {/if}
             {/each}
+            <button class="extension-list-filters-clear" onclick={clearTags}>
+                Clear tags
+            </button>
 
             <h2 style="margin-block-end:4px">Features</h2>
             <span class="extension-list-filters-label">Documentation</span>
@@ -261,6 +310,25 @@
             <label>
                 <input name="pm-filters-features-warnings" type="radio" onchange={updateExtensionList} bind:group={featuresSelected.warnings} value="hide">
                 Hide extensions with warnings
+            </label>
+            
+            <span class="extension-list-filters-label">Favorites</span>
+            <label>
+                <input name="pm-filters-features-favorites" type="radio" onchange={updateExtensionList} bind:group={featuresSelected.favorites} value="show">
+                Show favorited extensions
+            </label>
+            <label>
+                <input name="pm-filters-features-favorites" type="radio" onchange={updateExtensionList} bind:group={featuresSelected.favorites} value="exclusive">
+                Only show favorited extensions
+            </label>
+            <label>
+                <input name="pm-filters-features-favorites" type="radio" onchange={updateExtensionList} bind:group={featuresSelected.favorites} value="hide">
+                Hide favorited extensions
+            </label>
+            <br>
+            <label>
+                <input type="checkbox" onchange={updateExtensionList} bind:checked={featuresSelected.favoritessplit}>
+                Separate favorited extensions
             </label>
         </div>
         <div class="extension-list" data-filteropen={filterBarOpened}>

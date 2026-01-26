@@ -1,7 +1,6 @@
    async getValAttr({
        KEY
    }) {
-       // ===== SERVER MODE =====
        if (storageMode === 'server') {
            try {
                const res = await Scratch.fetch(`${BASE_URL}/storage/attrs/${KEY}`);
@@ -25,7 +24,6 @@
            }
        }
 
-       // ===== LOCAL / INDEXEDDB =====
        const wrapper = await this._getWrapper(KEY);
 
        if (!wrapper) {
@@ -47,3 +45,4 @@
            type
        });
    }
+

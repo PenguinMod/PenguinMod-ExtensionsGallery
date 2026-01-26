@@ -1,4 +1,5 @@
 <script>
+    import { onMount } from 'svelte';
     import { page } from '$app/stores';
 
     // Components
@@ -7,6 +8,7 @@
     import Logo from "$lib/Logo/Component.svelte";
 
     import stateSearchBar from '$lib/state/searchBar.svelte.js';
+    import { Tags, makeDefaultTag } from "$lib/extension-tags.js";
     import extensions from "$lib/extensions.js";
 
     const origin = $page.url.origin;
@@ -17,6 +19,57 @@
     const createExtUrl = (relativeUrl) => {
         return `${origin}/extensions/${relativeUrl}`;
     };
+
+    // create the tag groups for the filter menu
+    const tagGrouping = {};
+    const tagsListShown = $state([]);
+    onMount(() => {
+        // first fill tagGrouping so we can group them together properly & sort them
+        let usedTags = [];
+        for (const extension of extensions) {
+            if (extension.tags) {
+                usedTags = [].concat(usedTags, extension.tags);
+            }
+        }
+        usedTags = [...new Set(usedTags)];
+        
+        // format them to be an object like extension-tags
+        const formattedTags = [];
+        for (const tag of usedTags) {
+            const extensionTag = Tags.find(extTag => extTag.name === tag);
+            const newTag = {
+                ...(makeDefaultTag()),
+                ...(extensionTag ? extensionTag : {}),
+                name: tag,
+            };
+            if (!newTag.alias) {
+                // make their alias just be the name with first letter capitalized
+                const fillerAlias = newTag.name.charAt(0).toUpperCase() + newTag.name.slice(1);
+                newTag.alias = fillerAlias;
+            }
+
+            formattedTags.push(newTag);
+        }
+        formattedTags.sort((a, b) => a.alias.localeCompare(b.alias));
+
+        // now group them
+        for (const tag of formattedTags) {
+            if (!tagGrouping[tag.group]) tagGrouping[tag.group] = [];
+            tagGrouping[tag.group].push(tag);
+        }
+
+        // now fill the list we catually render (use separator for splits between groups)
+        for (const group in tagGrouping) {
+            for (const tag of tagGrouping[group]) {
+                tagsListShown.push(tag);
+            }
+
+            const separator = makeDefaultTag();
+            separator.name = "separator";
+            tagsListShown.push(separator);
+        }
+        tagsListShown.pop();
+    });
 
     // searching & filtering
     let filterBarOpened = $state(false);
@@ -73,27 +126,16 @@
             
             <h2 style="margin-block-end:4px">Tags</h2>
             <!-- TODO: Make these based on whats in the extensions list, can use capital version of the name by default or the tag can be added to another list to give it an alias -->
-            <label>
-                <input type="checkbox">
-                Graphics
-            </label>
-            <label>
-                <input type="checkbox">
-                Sound
-            </label>
-            <label>
-                <input type="checkbox">
-                Math
-            </label>
-            <label>
-                <input type="checkbox">
-                Jokes
-            </label>
-            <hr>
-            <label>
-                <input type="checkbox">
-                Editor Addons
-            </label>
+            {#each tagsListShown as extensionTag}
+                {#if extensionTag.name === "separator"}
+                    <hr>
+                {:else}
+                    <label>
+                        <input type="checkbox">
+                        {extensionTag.alias}
+                    </label>
+                {/if}
+            {/each}
 
             <h2 style="margin-block-end:4px">Features</h2>
             <span class="extension-list-filters-label">Documentation</span>

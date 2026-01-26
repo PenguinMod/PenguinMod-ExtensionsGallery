@@ -3,6 +3,12 @@ NOTE: This file manages aliases & groupings for tags.
 To make a new tag or list it, add it to an extension in `extensions.js`
 */
 export const Tags = [
+    // reserved tags (dont add these to an extension)
+    {
+        name: "separator",
+    },
+
+    // extensiontypes
     {
         name: "new",
         banner: "/icons/tag-banners/new.svg",
@@ -24,6 +30,7 @@ export const Tags = [
         group: "extensiontypes",
     },
 
+    // any other misc ones that just need aliases
     {
         name: "customtype",
         alias: "New Block Type",
@@ -46,9 +53,11 @@ export const Tags = [
     },
 ];
 
-export const DefaultTag = {
-    name: "",
-    // alias: "",
-    // banner: "/icons/tag-banners/new.svg",
-    group: "ungrouped",
+export function makeDefaultTag() {
+    return {
+        name: "",
+        // alias: "",
+        // banner: "/icons/tag-banners/new.svg",
+        group: "ungrouped",
+    };
 };

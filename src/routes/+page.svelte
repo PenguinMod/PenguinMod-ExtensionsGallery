@@ -392,6 +392,7 @@
     }
 
     .no-exts {
+        height: 1em;
         padding: 8px 32px;
         border: 1px solid rgba(0, 0, 0, 0.25);
 

@@ -106,9 +106,17 @@
 </div>
 
 <div class="extension-list-controls">
-    <button onclick={() => { filterBarOpened = !filterBarOpened; }}>Show filters</button>
+    <button onclick={() => { filterBarOpened = !filterBarOpened; }}>
+        <img
+            src="/icons/filter.svg"
+            alt="Filters"
+        >
+    </button>
     <label>
-        Sort by
+        <img
+            src="/icons/sort.svg"
+            alt="Sort"
+        >
         <select>
             <option>recommended order</option>
             <option>reversed recommended order</option>
@@ -125,7 +133,6 @@
             <h1>Filters</h1>
             
             <h2 style="margin-block-end:4px">Tags</h2>
-            <!-- TODO: Make these based on whats in the extensions list, can use capital version of the name by default or the tag can be added to another list to give it an alias -->
             {#each tagsListShown as extensionTag}
                 {#if extensionTag.name === "separator"}
                     <hr>
@@ -264,10 +271,15 @@
         align-items: center;
     }
     .extension-list-controls button {
-        height: 100%;
+        width: 24px;
+        height: 24px;
         border: 0;
 
         cursor: pointer;
+    }
+    .extension-list-controls img {
+        width: 100%;
+        height: 100%;
     }
 
     .extension-list-container {
@@ -290,11 +302,14 @@
     .extension-list-filters {
         display: none;
         width: calc(20% - (16px + 16px + 2px));
-        border: 1px solid black;
+        border: 1px solid #333;
         margin: 8px;
         padding: 0px 8px;
 
         border-radius: 16px;
+    }
+    :global(body.dark-mode) .extension-list-filters {
+        border-color: white;
     }
     .extension-list-filters[data-filteropen="true"] {
         display: initial;

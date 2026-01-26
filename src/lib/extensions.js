@@ -12,7 +12,15 @@ export default [
         banner: "ObviousAlexC/PenPlus.svg",
         creator: "pinksheep2917",
     },
-        {
+    {
+        name: "Shovel Debugger",
+        description: "Shovel's improved and feature rich debugger!",
+        code: "TheShovel/shoveldebugger.js",
+        banner: "TheShovel/thumbnail-shoveldebugger.avif",
+        isGitHub: true,
+        creator: "TheShovel",
+    },
+    {
         name: "MotionSprite",
         description: "An advanced math-based animation system",
         code: "TheShovel/qoan-renderer.js",
@@ -240,12 +248,28 @@ export default [
         isGitHub: true, 
     },
     {
+        name: "Regular Expressions",
+        description: "Create, modify, filter, and more with the new regular expression type.",
+        code: "DogeisCut/dogeiscutRegularExpressions.js",
+        banner: "DogeisCut/dogeiscutRegularExpressions.svg",
+        creator: "DogeisCut",
+        isGitHub: true, 
+    },
+    {
         name: "Sets",
-        description: "Store non-repeating, unordered, data super efficently in sets.",
+        description: "Store non-repeating, unordered data super efficiently in sets.",
         code: "DogeisCut/dogeiscutSet.js",
         banner: "DogeisCut/dogeiscutSet.svg",
         creator: "DogeisCut",
         isGitHub: true, 
+    },
+    {
+        name: "Blobs",
+        description: "An extension made for handling blobs which can be used to store files. Allows to easily make blobs for the Js extension",
+        code: "Faunks/Blobs.js",
+        banner: "Faunks/Blobs.avif",
+        creator: "Faunks",
+        isGitHub: true,
     },
     {
         name: "Random Utilities",
@@ -338,14 +362,14 @@ export default [
         creator: "LilyMakesThings",
         isGitHub: false,
     },
-    // { // temporary due to licensing issues
-    //     name: "More Fields",
-    //     description: "Custom Field Types",
-    //     code: "Ashime/MoreFields.js",
-    //     banner: "0znzw/MoreFields.avif",
-    //     creator: "yuri-kiss",
-    //     isGitHub: true,
-    // },
+    {
+        name: "More Fields",
+        description: "Custom Field Types",
+        code: "Ashime/MoreFields.js",
+        banner: "0znzw/MoreFields.avif",
+        creator: "yuri-kiss",
+        isGitHub: true,
+    },
     {
         name: "Beepbox Player",
         description: "Play, edit, and read songs from any BeepBox mod directly from the URL or JSON!",
@@ -523,6 +547,15 @@ export default [
         creatorAlias: "gaimerI17",
         notes: "Extension thumbnail made by Dillon."
     },
+    {
+        name: "Cryptography",
+        description: "Hash, encrypt and verify values using various algorithms. Actual security not guaranteed",
+        code: "gaimerI17/crypto.js",
+        banner: "gaimerI17/crypto.avif",
+        creator: "gaimerI",
+        isGitHub: true,
+        creatorAlias: "gaimerI17",
+    },
     /* these extensions are completely dead as of now
     {
         name: "Online Captcha",
@@ -547,4 +580,12 @@ export default [
         creator: "G1nX",
     },
     */
+    {
+        name: "Smoke Detector",
+        description: "Plays a beep every 30 seconds.",
+        code: "electricfuzzball_pm/firealarm.js",
+        banner: "electricfuzzball_pm/firealarm.svg",
+        creator: "ElectricFuzzball_PM" //hey look thats me!!
+        //Pluey has been implemented.
+    },
 ];

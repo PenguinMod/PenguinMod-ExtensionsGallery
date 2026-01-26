@@ -112,11 +112,13 @@
             alt="Filters"
         >
     </button>
-    <label>
+    <div class="extension-list-controls-sorting-selector-image-container-div">
         <img
             src="/icons/sort.svg"
             alt="Sort"
         >
+    </div>
+    <label>
         <select>
             <option>recommended order</option>
             <option>reversed recommended order</option>
@@ -236,6 +238,8 @@
 
     label {
         display: block;
+
+        user-select: none;
     }
 
     .top {
@@ -263,23 +267,45 @@
 
     .extension-list-controls {
         width: 80%;
-        height: 24px;
+        height: 40px;
         margin-left: 10%;
 
         display: flex;
         flex-direction: row;
         align-items: center;
     }
+    .extension-list-controls-sorting-selector-image-container-div,
     .extension-list-controls button {
-        width: 24px;
-        height: 24px;
+        display: block;
+        width: 40px;
+        height: 40px;
         border: 0;
 
+        border-radius: 8px;
+        background: transparent;
+
         cursor: pointer;
+    }
+    .extension-list-controls button:active {
+        background-color: rgba(0, 0, 0, 0.125);
+    }
+    :global(body.dark-mode) .extension-list-controls button:active {
+        background-color: rgba(255, 255, 255, 0.125);
     }
     .extension-list-controls img {
         width: 100%;
         height: 100%;
+        
+        filter: brightness(0.2);
+    }
+    :global(body.dark-mode) .extension-list-controls img {
+        filter: brightness(1);
+    }
+    .extension-list-controls select {
+        height: 32px;
+        margin: 0 8px;
+
+        border-radius: 4px;
     }
 
     .extension-list-container {
@@ -302,14 +328,14 @@
     .extension-list-filters {
         display: none;
         width: calc(20% - (16px + 16px + 2px));
-        border: 1px solid #333;
+        border: 1px solid rgba(0, 0, 0, 0.25);
         margin: 8px;
         padding: 0px 8px;
 
         border-radius: 16px;
     }
     :global(body.dark-mode) .extension-list-filters {
-        border-color: white;
+        border-color: rgba(255, 255, 255, 0.75);
     }
     .extension-list-filters[data-filteropen="true"] {
         display: initial;

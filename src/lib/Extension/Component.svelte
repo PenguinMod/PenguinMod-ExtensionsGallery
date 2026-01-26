@@ -88,9 +88,8 @@
     };
 
     // tags that have banners
-    let displayedTags = $state([]);
-    onMount(() => {
-        displayedTags = [];
+    let displayedTags = $derived.by(() => {
+        const displayedTags = [];
         for (const tag of tags) {
             const extensionTag = Tags.find(extTag => extTag.name === tag);
             if (!extensionTag) continue;
@@ -99,6 +98,7 @@
                 displayedTags.push(extensionTag);
             }
         }
+        return displayedTags;
     });
     onMount(() => {
         document.addEventListener("penguinmod-recommendation-clicked", (event) => {

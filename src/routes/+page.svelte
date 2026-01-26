@@ -1,6 +1,7 @@
 <script>
     import { onMount } from 'svelte';
     import { page } from '$app/stores';
+    import { browser } from "$app/environment";
 
     // Components
     import Extension from "$lib/Extension/Component.svelte";
@@ -72,21 +73,41 @@
     });
 
     // searching & filtering
+    let shownExtensions = $state([]);
     let filterBarOpened = $state(false);
-    let showNoExtensionsFound = $state(false);
-    $effect(() => {
-        const matchingExts = extensions
-            .filter(extension => searchable(extension.name).includes(stateSearchBar.query));
-        showNoExtensionsFound = matchingExts.length <= 0;
+    let selectedSorting = $state("none");
+    const tagsSelected = $state({});
+    const updateExtensionList = () => {
+        shownExtensions = [...extensions]
+            .filter(extension => searchable(extension.name).includes(stateSearchBar.query))
+            .filter(extension => Object.values(tagsSelected).some(bool => !!bool) ? (extension.tags || []).find(extTag => tagsSelected[extTag] === true) : true);
 
+        if (selectedSorting === "namedesc" || selectedSorting === "nameasce") {
+            shownExtensions.sort((a, b) => a.name.localeCompare(b.name));
+        }
+        if (selectedSorting === "creatordesc" || selectedSorting === "creatorasce") {
+            shownExtensions.sort((a, b) => (a.creatorAlias || a.creator).localeCompare((b.creatorAlias || b.creator)));
+        }
+        if (selectedSorting === "reversed" || selectedSorting === "nameasce" || selectedSorting === "creatorasce") {
+            shownExtensions.reverse();
+        }
+    };
+    $effect(() => {
+        // goive recommendatiaons based on the searched things
         stateSearchBar.recommendations = [];
-        if (matchingExts.length <= 5 && !showNoExtensionsFound) {
-            stateSearchBar.recommendations = matchingExts.slice(0, 2);
+        if (stateSearchBar.query.length > 0 && shownExtensions.length <= 5 && shownExtensions.length > 0) {
+            stateSearchBar.recommendations = shownExtensions.slice(0, 2);
         }
         
         const event = new CustomEvent("penguinmod-recommendations-updated");
         document.dispatchEvent(event);
     });
+    if (browser) {
+        document.addEventListener("penguinmod-search-bar-input", () => {
+            updateExtensionList();
+        });
+    }
+    updateExtensionList();
 </script>
 
 <div class="top">
@@ -110,22 +131,22 @@
         <img
             src="/icons/filter.svg"
             alt="Filters"
-        >
+        />
     </button>
     <div class="extension-list-controls-sorting-selector-image-container-div">
         <img
             src="/icons/sort.svg"
             alt="Sort"
-        >
+        />
     </div>
     <label>
-        <select>
-            <option>recommended order</option>
-            <option>reversed recommended order</option>
-            <option>names A-Z</option>
-            <option>names Z-A</option>
-            <option>creators A-Z</option>
-            <option>creators Z-A</option>
+        <select bind:value={selectedSorting} onchange={updateExtensionList}>
+            <option value="none">Recommended order</option>
+            <option value="reversed">Reversed recommended order</option>
+            <option value="namedesc">Names from A-Z</option>
+            <option value="nameasce">Names from Z-A</option>
+            <option value="creatordesc">Creators from A-Z</option>
+            <option value="creatorasce">Creators from Z-A</option>
         </select>
     </label>
 </div>
@@ -137,10 +158,14 @@
             <h2 style="margin-block-end:4px">Tags</h2>
             {#each tagsListShown as extensionTag}
                 {#if extensionTag.name === "separator"}
-                    <hr>
+                    <hr />
                 {:else}
                     <label>
-                        <input type="checkbox">
+                        <input
+                            type="checkbox"
+                            bind:checked={tagsSelected[extensionTag.name]}
+                            onchange={updateExtensionList}
+                        />
                         {extensionTag.alias}
                     </label>
                 {/if}
@@ -191,29 +216,26 @@
         </div>
         <div class="extension-list" data-filteropen={filterBarOpened}>
             <!-- This list can be modified in "src/lib/extensions.js" -->
-            {#each extensions as extension}
-                {#if searchable(extension.name).includes(stateSearchBar.query)}
-                    <Extension
-                        name={extension.name}
-                        image={`/images/${extension.banner}`}
-                        tags={extension.tags}
-                        creator={extension.creator}
-                        creatorAlias={extension.creatorAlias}
-                        url={createExtUrl(extension.code)}
-                        relUrl={extension.code}
-                        notes={extension.notes}
-                        documentation={extension.documentation}
-                        isGitHub={String(extension.isGitHub) === "true"}
-                        unstable={String(extension.unstable) === "true"}
-                        unstableReason={extension.unstableReason}
-                    >
-                        {extension.description}
-                    </Extension>
-                {/if}
-            {/each}
-            {#if showNoExtensionsFound}
+            {#each shownExtensions as extension}
+                <Extension
+                    name={extension.name}
+                    image={`/images/${extension.banner}`}
+                    tags={extension.tags}
+                    creator={extension.creator}
+                    creatorAlias={extension.creatorAlias}
+                    url={createExtUrl(extension.code)}
+                    relUrl={extension.code}
+                    notes={extension.notes}
+                    documentation={extension.documentation}
+                    isGitHub={String(extension.isGitHub) === "true"}
+                    unstable={String(extension.unstable) === "true"}
+                    unstableReason={extension.unstableReason}
+                >
+                    {extension.description}
+                </Extension>
+            {:else}
                 <p class="no-exts">No extensions match your selected filters.</p>
-            {/if}
+            {/each}
         </div>
     </div>
 </div>

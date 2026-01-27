@@ -278,9 +278,7 @@
             const disclaimerText = `This extension, no matter how fancy it may look, IS NOT entirely secure, unless you're very very very smart.
 My API may go down at any time! (it's a personal server)
 
-Also, my server will log any interactions you have with it, for security reasons. It's
-basically anarchy, so I need to have some control over it. I probably won't act unless
-you're actively exploiting the server.
+Also, my server will log any interactions you have with it, for security reasons. It's basically anarchy, so I need to have some control over it. I probably won't act unless you're actively exploiting the server.
 
 Contact me on Discord at gen1x_loll or on the PenguinMod server if it goes down or you have any issues.`;
 

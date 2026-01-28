@@ -561,4 +561,14 @@ export default [
         banner: "electricfuzzball_pm/firealarm.svg",
         creator: "ElectricFuzzball_PM",
     },
+    {
+    name: "Joystick",
+    description: "Instead of making a joystick just upload the extension and make your games mobile friendly in seconds.",
+    code: "codemaster/joystick.js",
+    banner: "codemaster/joystick.png",
+    creator: "SuperCodes_",
+    creatorAlias: "codemaster",
+    isGitHub: true,
+    isUnsandboxed: true,
+    },
 ];

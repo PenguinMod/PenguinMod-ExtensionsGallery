@@ -116,18 +116,7 @@
                     "---",
                     {
                         blockType: Scratch.BlockType.LABEL,
-                        text: "Security"
-                    },
-                    {
-                        opcode: 'toggleLock',
-                        blockType: Scratch.BlockType.COMMAND,
-                        text: 'toggle lock on key [KEY] (Write Once)',
-                        arguments: {
-                            KEY: {
-                                type: Scratch.ArgumentType.STRING,
-                                defaultValue: 'username'
-                            }
-                        }
+                        text: "Debug"
                     },
                     {
                         opcode: 'getStatus',
@@ -493,43 +482,6 @@ Contact me on Discord at gen1x_loll or on the PenguinMod server if it goes down 
             return val !== null;
         }
 
-        async toggleLock({
-            KEY
-        }) {
-            if (storageMode === 'server') {
-                try {
-                    const res = await Scratch.fetch(`${BASE_URL}/storage/toggle-lock`, {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json'
-                        },
-                        body: JSON.stringify({
-                            key: KEY
-                        })
-                    });
-                    const data = await res.json();
-                    lastStatus = data.status || data.error || "Success";
-                } catch {
-                    lastStatus = "Connection Error";
-                }
-                return;
-            }
-
-            const existing = await this._getWrapper(KEY);
-            if (!existing) {
-                lastStatus = "Error: Key does not exist";
-                return;
-            }
-
-            if (existing.locked) {
-                lastStatus = "Key is already locked.";
-                return;
-            }
-
-            await this._setRaw(KEY, existing.value, true);
-            lastStatus = `Key "${KEY}" is now locked.`;
-        }
-
         async increment({
             KEY,
             NUM
@@ -602,3 +554,4 @@ Contact me on Discord at gen1x_loll or on the PenguinMod server if it goes down 
 
     Scratch.extensions.register(new BettererStorage());
 })(Scratch);
+

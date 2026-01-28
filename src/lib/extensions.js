@@ -21,6 +21,14 @@ export default [
         creator: "TheShovel",
     },
     {
+        name: "Server Storage",
+        description: "Similar to the server storage blocks in the 'Storage' extension, but with a better server uptime and non-global keys.\nDid you know the server is open source?",
+        code: "Ikelene/serverStorageExtension.js",
+        banner: "Ikelene/serverStorageIMG.avif",
+        creator: "Ikelene",
+        isGitHub: true,
+    },
+    {
         name: "Storage Plus",
         description: "A storage extension with many more features. Featuring server storage (with a fast server), local storage and more!",
         code: "Gen1x/storage_plus.js",

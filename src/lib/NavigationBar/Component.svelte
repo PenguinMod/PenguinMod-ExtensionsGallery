@@ -30,6 +30,9 @@
             .trim().toLowerCase();
 
         if (props.onsearch) props.onsearch(searchTerm);
+
+        const event = new CustomEvent("penguinmod-search-bar-input", { detail: searchTerm });
+        document.dispatchEvent(event);
     };
     const recommendationClicked = (extension) => {
         const event = new CustomEvent("penguinmod-recommendation-clicked", { detail: extension.code });

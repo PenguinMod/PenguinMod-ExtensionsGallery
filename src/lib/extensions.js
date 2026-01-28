@@ -595,4 +595,12 @@ export default [
         creator: "ElectricFuzzball_PM" //hey look thats me!!
         //Pluey has been implemented.
     },
+        {
+        name: "Stage Brah",
+        description: "Spawn Brah cats in your codespace!",
+        code: "electricfuzzball_pm/StageBrah.js",
+        banner: "electricfuzzball_pm/StageBrah.svg",
+        creator: "ElectricFuzzball_PM"
+        //:brah:
+    },
 ];

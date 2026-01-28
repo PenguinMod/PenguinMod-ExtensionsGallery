@@ -21,6 +21,13 @@ export default [
         creator: "TheShovel",
     },
     {
+        name: "Storage Plus",
+        description: "A storage extension with many more features. Featuring server storage (with a fast server), local storage and more!",
+        code: "Gen1x/storage_plus.js",
+        banner: "Gen1x/storage_plus.avif",
+        creator: "G1nX",
+    },
+    {
         name: "MotionSprite",
         description: "An advanced math-based animation system",
         code: "TheShovel/qoan-renderer.js",

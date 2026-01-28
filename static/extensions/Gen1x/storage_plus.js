@@ -27,7 +27,7 @@
         getInfo() {
             return {
                 id: 'g1nxBettererStorage',
-                name: 'Storage +',
+                name: 'Storage+',
                 color1: '#b19cd9',
                 color2: '#967bb6',
                 menuIconURI: stupiduri,
@@ -554,4 +554,5 @@ Contact me on Discord at gen1x_loll or on the PenguinMod server if it goes down 
 
     Scratch.extensions.register(new BettererStorage());
 })(Scratch);
+
 

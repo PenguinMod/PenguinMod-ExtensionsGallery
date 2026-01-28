@@ -23,6 +23,7 @@
       return {
         id: 'codemasterJoystick',
         name: 'Joystick',
+        isUnsandboxed: true,
         color1: '#3366ff',
         blocks: [
           { opcode: 'showJoystick', blockType: Scratch.BlockType.COMMAND, text: 'show joystick' },

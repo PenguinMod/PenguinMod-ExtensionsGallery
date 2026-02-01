@@ -603,4 +603,11 @@ export default [
         creator: "ElectricFuzzball_PM"
         //:brah:
     },
+        {
+        name: "MIDI Controller",
+        description: "Use a MIDI keyboard to interact with projects!",
+        code: "electricfuzzball_pm/MIDI.js",
+        banner: "electricfuzzball_pm/MIDI.svg",
+        creator: "ElectricFuzzball_PM"
+    },
 ];

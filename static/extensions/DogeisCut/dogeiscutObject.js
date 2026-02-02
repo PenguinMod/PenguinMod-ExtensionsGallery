@@ -110,7 +110,7 @@
         }
 
         toString(pretty = false) {
-            return JSON.stringify(this.object, null, pretty ? "\t" : null)
+            return JSON.stringify(this, null, pretty ? "\t" : null)
         }
 
         toVisualContent(border = '1px solid #77777777', keyBackground = '#77777724', background = '#ffffff00') {
@@ -267,7 +267,7 @@
                 Object.entries(this.object).map(([key, value]) => {
                     if (typeof value === "object" && value !== null) {
                         if (typeof value.toJSON === "function") return [key, value.toJSON()]
-                        //if (typeof value.toString === "function") return [key, value.toString()]
+                        if (typeof value.toString === "function") return [key, value.toString()]
                         return [key, JSON.stringify(value)]
                     }
                     return [key, value]

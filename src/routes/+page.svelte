@@ -5,7 +5,9 @@
     import localforage from "localforage";
 
     // Components
+    import ThreeStateCheckbox from "$lib/ThreeStateCheckbox/ThreeStateCheckbox.svelte";
     import Extension from "$lib/Extension/Component.svelte";
+    import Checkbox from "$lib/Checkbox/Checkbox.svelte";
     import Footer from "$lib/Footer/Component.svelte";
     import Logo from "$lib/Logo/Component.svelte";
 
@@ -112,12 +114,16 @@
     let favoritedExtensions = $state([]);
     const tagsSelected = $state({});
     const featuresSelected = $state({
-        documentation: "show",
-        exampleprojects: "show",
-        warnings: "show",
-        favorites: "show",
+        documentation: 0,
+        exampleprojects: 0,
+        warnings: 0,
+        favorites: 0,
         favoritessplit: true,
     });
+    const toggleFilterBar = () => {
+        filterBarOpened = !filterBarOpened;
+        saveToStorage();
+    };
     const saveToStorage = async () => {
         // NOTE: If saveToStorage gets called on the server then this will cause Vite to crash (so dont call it outside of any function)
         await localforage.setItem("pm:filter-bar-open", $state.snapshot(filterBarOpened));
@@ -150,9 +156,9 @@
         shownExtensions = [...extensions]
             .filter(extension => searchable(extension.name).includes(stateSearchBar.query))
             .filter(extension => Object.values(tagsSelected).some(bool => !!bool) ? (extension.tags || []).find(extTag => tagsSelected[extTag] === true) : true)
-            .filter(extension => featuresSelected.documentation === "exclusive" ? (!!extension.documentation) : (featuresSelected.documentation === "hide" ? !extension.documentation : true))
-            .filter(extension => featuresSelected.exampleprojects === "exclusive" ? (!!extension.example) : (featuresSelected.exampleprojects === "hide" ? !extension.example : true))
-            .filter(extension => featuresSelected.warnings === "exclusive" ? (!!extension.unstable) : (featuresSelected.warnings === "hide" ? !extension.unstable : true))
+            .filter(extension => featuresSelected.documentation === 1 ? (!!extension.documentation) : (featuresSelected.documentation === 2 ? !extension.documentation : true))
+            .filter(extension => featuresSelected.exampleprojects === 1 ? (!!extension.example) : (featuresSelected.exampleprojects === 2 ? !extension.example : true))
+            .filter(extension => featuresSelected.warnings === 1 ? (!!extension.unstable) : (featuresSelected.warnings === 2 ? !extension.unstable : true))
             ;
 
         if (selectedSorting === "namedesc" || selectedSorting === "nameasce") {
@@ -222,7 +228,7 @@
 </div>
 
 <div class="extension-list-controls">
-    <button onclick={() => { filterBarOpened = !filterBarOpened; }}>
+    <button onclick={toggleFilterBar}>
         <img
             src="/icons/filter.svg"
             alt="Filters"
@@ -256,80 +262,42 @@
                     <hr />
                 {:else}
                     <label>
-                        <input
-                            type="checkbox"
-                            bind:checked={tagsSelected[extensionTag.name]}
-                            onchange={updateExtensionList}
-                        />
+                        <Checkbox onchange={updateExtensionList} bind:checked={tagsSelected[extensionTag.name]} />
                         {extensionTag.alias}
                     </label>
                 {/if}
+            {:else} <!-- no tags -->
+                <p>No tags currently exist. Extension creators are encouraged to add some soon.</p>
             {/each}
             <button class="extension-list-filters-clear" onclick={clearTags}>
                 Clear tags
             </button>
 
             <h2 style="margin-block-end:4px">Features</h2>
-            <span class="extension-list-filters-label">Documentation</span>
             <label>
-                <input name="pm-filters-features-documentation" type="radio" onchange={updateExtensionList} bind:group={featuresSelected.documentation} value="show">
-                Show extensions with documentation
+                <ThreeStateCheckbox onchange={updateExtensionList} bind:value={featuresSelected.documentation} />
+                Extensions with documentation
             </label>
             <label>
-                <input name="pm-filters-features-documentation" type="radio" onchange={updateExtensionList} bind:group={featuresSelected.documentation} value="exclusive">
-                Only show extensions with documentation
+                <ThreeStateCheckbox onchange={updateExtensionList} bind:value={featuresSelected.exampleprojects} />
+                Extensions with example projects
             </label>
             <label>
-                <input name="pm-filters-features-documentation" type="radio" onchange={updateExtensionList} bind:group={featuresSelected.documentation} value="hide">
-                Hide extensions with documentation
-            </label>
-
-            <span class="extension-list-filters-label">Example projects</span>
-            <label>
-                <input name="pm-filters-features-exampleprojects" type="radio" onchange={updateExtensionList} bind:group={featuresSelected.exampleprojects} value="show">
-                Show extensions with example projects
+                <ThreeStateCheckbox onchange={updateExtensionList} bind:value={featuresSelected.warnings} />
+                Extensions with warnings
             </label>
             <label>
-                <input name="pm-filters-features-exampleprojects" type="radio" onchange={updateExtensionList} bind:group={featuresSelected.exampleprojects} value="exclusive">
-                Only show extensions with example projects
-            </label>
-            <label>
-                <input name="pm-filters-features-exampleprojects" type="radio" onchange={updateExtensionList} bind:group={featuresSelected.exampleprojects} value="hide">
-                Hide extensions with example projects
-            </label>
-            
-            <span class="extension-list-filters-label">Warnings</span>
-            <label>
-                <input name="pm-filters-features-warnings" type="radio" onchange={updateExtensionList} bind:group={featuresSelected.warnings} value="show">
-                Show extensions with warnings
-            </label>
-            <label>
-                <input name="pm-filters-features-warnings" type="radio" onchange={updateExtensionList} bind:group={featuresSelected.warnings} value="exclusive">
-                Only show extensions with warnings
-            </label>
-            <label>
-                <input name="pm-filters-features-warnings" type="radio" onchange={updateExtensionList} bind:group={featuresSelected.warnings} value="hide">
-                Hide extensions with warnings
-            </label>
-            
-            <span class="extension-list-filters-label">Favorites</span>
-            <label>
-                <input name="pm-filters-features-favorites" type="radio" onchange={updateExtensionList} bind:group={featuresSelected.favorites} value="show">
-                Show favorited extensions
-            </label>
-            <label>
-                <input name="pm-filters-features-favorites" type="radio" onchange={updateExtensionList} bind:group={featuresSelected.favorites} value="exclusive">
-                Only show favorited extensions
-            </label>
-            <label>
-                <input name="pm-filters-features-favorites" type="radio" onchange={updateExtensionList} bind:group={featuresSelected.favorites} value="hide">
-                Hide favorited extensions
+                <ThreeStateCheckbox onchange={updateExtensionList} bind:value={featuresSelected.favorites} />
+                Favorited extensions
             </label>
             <br>
             <label>
-                <input type="checkbox" onchange={updateExtensionList} bind:checked={featuresSelected.favoritessplit}>
+                <Checkbox onchange={updateExtensionList} bind:checked={featuresSelected.favoritessplitfavorites} />
                 Separate favorited extensions
             </label>
+
+            <!-- put some padding -->
+            <br>
         </div>
         <div class="extension-list" data-filteropen={filterBarOpened}>
             <!-- This list can be modified in "src/lib/extensions.js" -->
@@ -377,9 +345,15 @@
     }
 
     label {
-        display: block;
+        display: flex;
+        flex-direction: row;
+        align-items: center;
 
         user-select: none;
+    }
+    :global(*[data-penguinmodsvelteui-threestatecheckbox="true"]),
+    :global(*[data-penguinmodsvelteui-checkbox="true"]) {
+        margin-right: 4px !important;
     }
 
     .top {
@@ -486,6 +460,16 @@
 
         font-style: italic;
         opacity: 0.7;
+    }
+    .extension-list-filters-clear {
+        border-color: rgba(0, 0, 0, 0.25);
+        border-radius: 3px;
+        background: dodgerblue;
+        color: white;
+        font-weight: bold;
+        font-size: 16px;
+
+        cursor: pointer;
     }
     .extension-list {
         width: 100%;

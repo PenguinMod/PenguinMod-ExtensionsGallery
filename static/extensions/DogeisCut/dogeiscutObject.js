@@ -62,6 +62,14 @@
                 if (x instanceof jwArray.Type) {
                     return new ObjectType(Object.fromEntries(x.array.map((v,i)=>[i+1,v])))
                 }
+                if (vm.dogeiscutSet) {
+                    if (x instanceof vm.dogeiscutSet.Type) {
+                        return new ObjectType(Object.fromEntries(Array.from(x.set).map((v,i)=>[i+1,v])))
+                    }
+                }
+                if (x instanceof Set) {
+                    return new ObjectType(Object.fromEntries(Array.from(x).map((v,i)=>[i+1,v])))
+                }
                 if (isArray(x)) {
                     return new ObjectType(Object.fromEntries(x.map((v,i)=>[i+1,v])))
                 }

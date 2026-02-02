@@ -10,6 +10,115 @@
         throw new Error('\'Yet Another String Extension\' must run unsandboxed!');
     }
 
+    if (Scratch.gui) {
+        Scratch.gui.getBlockly().then(ScratchBlocks => {
+            function recursiveRender(block) {
+                if (!block) return;
+                while (block.parentBlock_ !== null) {
+                    if (block.parentBlock_ !== null) {
+                        block.render(false);
+                        block = block.parentBlock_;
+                    }
+                }
+                block.render(false);
+            }
+            ScratchBlocks.FieldCustom.registerInput(
+                "multiline",
+                (() => {
+                    const container = document.createElement('textarea');
+                    container.style.background = "#fff";
+                    container.style.color = "#404040";
+                    container.style.minWidth = "29px";
+                    container.style.minHeight = "27px";
+                    container.style.margin = "5px 0";
+                    container.style.padding = "5px";
+                    container.style.borderRadius = '8px';
+                    container.style.display = 'block';
+                    container.style.resize = "both";
+                    container.style.overflow = "auto";
+                    container.style.boxSizing = "border-box";
+
+                    document.body.appendChild(container);
+
+                    return container;
+                })(),
+                (field, input) => {
+                    if (!input) return;
+
+                    let value;
+                    try {
+                      value = JSON.parse(field.getValue());
+                    } catch {
+                        value = field.getValue();
+                    }
+                    let str = "";
+                    let width = 120;
+                    let height = 80;
+
+                    if (typeof value === "string") {
+                        str = value;
+                    } else if (value && typeof value === "object") {
+                        str = value['string'] || "";
+                        if (Array.isArray(value['size']) && value['size'].length === 2) {
+                            width = value['size'][0] || 120;
+                            height = value['size'][1] || 80;
+                        }
+                    }
+
+                    input.value = str;
+                    input.style.width = width + "px";
+                    input.style.height = height + "px";
+                    field.setValue(JSON.stringify({ 'string': str, 'size': [width, height] }));
+                    let isPaused = false;
+                    input.addEventListener("keydown", function(event) {
+                        if (event.key === "Tab") {
+                            event.preventDefault();
+
+                            let textarea = this;
+                            let cursorStart = textarea.selectionStart;
+                            let cursorEnd = textarea.selectionEnd;
+
+                            textarea.value =
+                                textarea.value.substring(0, cursorStart) +
+                                "\t" +
+                                textarea.value.substring(cursorEnd);
+
+                            textarea.selectionStart = textarea.selectionEnd = cursorStart + 1;
+                        }
+                    });
+                    const observer = new ResizeObserver(entries => {
+                        if (isPaused) return;
+                        for (const entry of entries) {
+                            isPaused = true;
+                            let { width, height } = entry.contentRect;
+                            //width = Math.max(100, width);
+                            //height = Math.max(32, height);
+
+                            const foreignObject = input.parentNode;
+                            foreignObject.setAttribute("width", width);
+                            foreignObject.setAttribute("height", height);
+
+                            field.size_.width = width + 15;
+                            field.size_.height = height + 25;
+                            input.style.border = `solid 1px ${field.sourceBlock_?.colourTertiary_}`;
+                            recursiveRender(field.sourceBlock_);
+                            requestAnimationFrame(() => { isPaused = false });
+                            field.setValue(JSON.stringify({ 'string': input.value, 'size': [width, height] }));
+                        }
+                    });
+
+                    observer.observe(input);
+
+                    input.addEventListener("change", () => {
+                        field.setValue(JSON.stringify({ 'string': input.value, 'size': [parseFloat(input.style.width), parseFloat(input.style.height)] }));
+                    })
+                },
+                (block) => { },
+                (block) => { }
+            );
+        });
+    }
+
     class YetAnotherStringExtension {
         constructor() {
             vm.runtime.registerCompiledExtensionBlocks('dogeiscutyetanotherstringextension', this.getCompileInfo());
@@ -144,6 +253,21 @@
                         },
                         extensions: ["colours_operators"],
                     },
+                    '---',
+                    /*UNFINISHED {
+                        opcode: 'multiline',
+                        text: '[STRING]',
+                        blockType: Scratch.BlockType.REPORTER,
+                        blockShape: Scratch.BlockShape.SQUARE,
+                        disableMonitor: true,
+                        arguments: {
+                            STRING: {
+                                type: Scratch.ArgumentType.CUSTOM,
+                                id: "multiline",
+                                defaultValue: "Multiple\nLines!\nYay!"
+                            }
+                        }
+                    }*/
                 ]
             }
         }
@@ -151,27 +275,23 @@
         getCompileInfo() {
             return {
                 ir: {
-                    builder: (generator, block) => ({
-                        kind: 'input',
-                        substack: generator.descendSubstack(block, 'SUBSTACK')
-                    }),
+                    builder: (generator, block) => {
+                        generator.script.yields = true
+                        return {
+                            kind: 'input',
+                            substack: generator.descendSubstack(block, 'SUBSTACK')
+                        }
+                    },
                 },
                 js: {
                     builder: (node, compiler, imports) => {
                         const originalSource = compiler.source;
 
-                        compiler.source = '(yield* (function*() {';
-                        compiler.source += '    const __inner = (yield* (function*() {';
-                        compiler.source += `        thread._dogeiscutyetanotherstringextensionBuilderIndex ??= [];`;
-                        compiler.source += `        thread._dogeiscutyetanotherstringextensionBuilderIndex.push('');`;
+                        compiler.source =  'Scratch.Cast.toString(yield* (function*() {';
+                        compiler.source += `    thread._dogeiscutyetanotherstringextensionBuilderIndex ??= [];`;
+                        compiler.source += `    thread._dogeiscutyetanotherstringextensionBuilderIndex.push('');`;
                         compiler.descendStack(node.substack, new imports.Frame(false, undefined, true));
-                        compiler.source += `        return new runtime.ext_dogeiscutyetanotherstringextension.BuilderReturnValue(thread._dogeiscutyetanotherstringextensionBuilderIndex.pop());`;
-                        compiler.source += '    })());';
-                        compiler.source += '    const __result = __inner;';
-                        compiler.source += '    if (!(__result instanceof runtime.ext_dogeiscutyetanotherstringextension.BuilderReturnValue)) {';
-                        compiler.source += '        throw "Return statements are not supported in builders.";';
-                        compiler.source += '    }';
-                        compiler.source += '    return __result.value;';
+                        compiler.source += `    return thread._dogeiscutyetanotherstringextensionBuilderIndex.pop();`;
                         compiler.source += '})())';
 
                         const stackSource = compiler.source;
@@ -181,12 +301,6 @@
                 }
             };
         }
-
-        BuilderReturnValue = class {
-            constructor(value) {
-                this.value = value
-            }
-        } 
 
         currentString({}, util) {
             if (util.thread._dogeiscutyetanotherstringextensionBuilderIndex && util.thread._dogeiscutyetanotherstringextensionBuilderIndex.length > 0) {
@@ -296,6 +410,16 @@
                 return '';
             }
             return STRING.repeat(Math.round(INT));
+        }
+
+        multiline({ STRING }) {
+            let value;
+            try {
+                value = JSON.parse(STRING)['string'];
+            } catch {
+                throw 'Failed to get multiline string, this should never happen!'
+            }
+            return value;
         }
             
     }

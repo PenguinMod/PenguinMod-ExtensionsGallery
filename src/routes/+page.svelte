@@ -45,7 +45,7 @@
     <p>
         To use some of these extensions in your projects, click the "Copy URL"
         button on an extension and
-        <a href="/load.html" target="_blank">load it into PenguinMod,</a>
+        <a href="/load" target="_blank">load it into PenguinMod,</a>
         or click the "View" button to create a new project with the extension.
     </p>
 

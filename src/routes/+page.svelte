@@ -111,7 +111,7 @@
     let shownExtensions = $state([]);
     let filterBarOpened = $state(false);
     let selectedSorting = $state("none");
-    let favoritedExtensions = $state([]);
+    let favoritedExtensions = $state({});
     const tagsSelected = $state({});
     const featuresSelected = $state({
         documentation: 0,
@@ -133,11 +133,11 @@
         await localforage.setItem("pm:favorites", $state.snapshot(favoritedExtensions));
     };
     const loadFromStorage = async () => {
-        const localFilterBarOpened = await localforage.getItem("pm:filter-bar-open");
-        const localSelectedSorting = await localforage.getItem("pm:sorting");
-        const localTagsSelected = await localforage.getItem("pm:filters-tags");
-        const localFeaturesSelected = await localforage.getItem("pm:filters-features");
-        const localFavoritedExtensions = await localforage.getItem("pm:favorites");
+        const localFilterBarOpened =     (await localforage.getItem("pm:filter-bar-open")) || false;
+        const localSelectedSorting =     (await localforage.getItem("pm:sorting")) || "none";
+        const localTagsSelected =        (await localforage.getItem("pm:filters-tags")) || {};
+        const localFeaturesSelected =    (await localforage.getItem("pm:filters-features")) || {};
+        const localFavoritedExtensions = (await localforage.getItem("pm:favorites")) || {};
         filterBarOpened = localFilterBarOpened;
         selectedSorting = localSelectedSorting;
         for (const key in localTagsSelected) {
@@ -146,7 +146,7 @@
         for (const key in localFeaturesSelected) {
             featuresSelected[key] = localFeaturesSelected[key];
         }
-        favoritedExtensions = localFavoritedExtensions;
+        favoritedExtensions = Array.isArray(localFavoritedExtensions) ? {} : localFavoritedExtensions;
         
         // reproececss
         updateExtensionList();
@@ -159,6 +159,7 @@
             .filter(extension => featuresSelected.documentation === 1 ? (!!extension.documentation) : (featuresSelected.documentation === 2 ? !extension.documentation : true))
             .filter(extension => featuresSelected.exampleprojects === 1 ? (!!extension.example) : (featuresSelected.exampleprojects === 2 ? !extension.example : true))
             .filter(extension => featuresSelected.warnings === 1 ? (!!extension.unstable) : (featuresSelected.warnings === 2 ? !extension.unstable : true))
+            .filter(extension => featuresSelected.favorites === 1 ? (!!(favoritedExtensions[extension.code])) : (featuresSelected.favorites === 2 ? !(favoritedExtensions[extension.code]) : true))
             ;
 
         if (selectedSorting === "namedesc" || selectedSorting === "nameasce") {
@@ -171,6 +172,13 @@
             shownExtensions.reverse();
         }
 
+        // split favorites
+        if (featuresSelected.favoritessplit) {
+            const notFavorites = shownExtensions.filter(extension => !(favoritedExtensions[extension.code]));
+            const favorites = shownExtensions.filter(extension => !!(favoritedExtensions[extension.code]));
+            shownExtensions = [].concat(favorites, notFavorites);
+        }
+
         // update localforage
         if (hasStorageBeenLoaded) saveToStorage();
     };
@@ -178,6 +186,12 @@
         for (const key in tagsSelected) {
             tagsSelected[key] = false;
         }
+        updateExtensionList();
+    };
+    const onFavoriteClicked = (relUrl) => {
+        favoritedExtensions[relUrl] = !favoritedExtensions[relUrl];
+        
+        // reproececss
         updateExtensionList();
     };
     $effect(() => {
@@ -267,10 +281,10 @@
                     </label>
                 {/if}
             {:else} <!-- no tags -->
-                <p>No tags currently exist. Extension creators are encouraged to add some soon.</p>
+                <p>No tags currently exist.</p>
             {/each}
             <button class="extension-list-filters-clear" onclick={clearTags}>
-                Clear tags
+                Clear selected tags
             </button>
 
             <h2 style="margin-block-end:4px">Features</h2>
@@ -292,7 +306,7 @@
             </label>
             <br>
             <label>
-                <Checkbox onchange={updateExtensionList} bind:checked={featuresSelected.favoritessplitfavorites} />
+                <Checkbox onchange={updateExtensionList} bind:checked={featuresSelected.favoritessplit} />
                 Separate favorited extensions
             </label>
 
@@ -316,6 +330,9 @@
                     isGitHub={String(extension.isGitHub) === "true"}
                     unstable={String(extension.unstable) === "true"}
                     unstableReason={extension.unstableReason}
+
+                    bind:favorited={favoritedExtensions[extension.code]}
+                    onfavoriteclicked={onFavoriteClicked}
                 >
                     {extension.description}
                 </Extension>

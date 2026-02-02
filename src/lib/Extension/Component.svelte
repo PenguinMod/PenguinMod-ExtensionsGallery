@@ -6,7 +6,10 @@
     import stateSearchBar from '$lib/state/searchBar.svelte.js';
     import ExtensionLoader from "$lib/extension-loader.js";
 
-    let props = $props();
+    let {
+        favorited = $bindable(),
+        ...props
+    } = $props();
     let name = $derived(props.name || "Test");
     let image = $derived(props.image || "/images/example.avif");
     let tags = $derived(props.tags || []);
@@ -201,6 +204,13 @@
                     <div class="unstable-message">{unstableReason}</div>
                 </button>
             {/if}
+            <button class="favorite-button" onclick={() => props?.onfavoriteclicked(relUrl)}>
+                {#if favorited}
+                    <img src="/icons/favorite-filled.svg" alt="Favorited" title="Favorited" />
+                {:else}
+                    <img src="/icons/favorite-outline.svg" alt="Favorite" title="Favorite" />
+                {/if}
+            </button>
         </div>
         <p class="description">
             {@render props.children?.()}
@@ -408,6 +418,7 @@
         white-space: pre-wrap;
     }
 
+    .favorite-button,
     .unstable-warning {
         position: relative;
         display: inline;
@@ -417,6 +428,8 @@
         margin: 0;
 
         background: transparent;
+    }
+    .unstable-warning {
         background-image: url('/icons/warning2.png');
         background-position: center;
         background-size: 80%;
@@ -446,6 +459,13 @@
     }
     .unstable-message:hover {
         cursor: auto;
+    }
+    .favorite-button img {
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 1.3em;
+        height: 1.3em;
     }
 
     .blue {

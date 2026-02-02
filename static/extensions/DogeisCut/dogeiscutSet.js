@@ -733,7 +733,7 @@
             ONE = dogeiscutSet.Type.toSet(ONE)
             TWO = dogeiscutSet.Type.toSet(TWO)
 
-            const logic = ONE.set.intersect(TWO.set);
+            const logic = ONE.set.intersection(TWO.set);
             return new dogeiscutSet.Type(logic)
         }
 

@@ -110,6 +110,7 @@
     let hasStorageBeenLoaded = false;
     let shownExtensions = $state([]);
     let filterBarOpened = $state(false);
+    let showingTestInNewProject = $state(false);
     let selectedSorting = $state("none");
     let favoritedExtensions = $state({});
     const tagsSelected = $state({});
@@ -124,21 +125,28 @@
         filterBarOpened = !filterBarOpened;
         saveToStorage();
     };
+    const toggleTestInNewProject = () => {
+        showingTestInNewProject = !showingTestInNewProject;
+        saveToStorage();
+    };
     const saveToStorage = async () => {
         // NOTE: If saveToStorage gets called on the server then this will cause Vite to crash (so dont call it outside of any function)
         await localforage.setItem("pm:filter-bar-open", $state.snapshot(filterBarOpened));
+        await localforage.setItem("pm:show-test-in-new", $state.snapshot(showingTestInNewProject));
         await localforage.setItem("pm:sorting", $state.snapshot(selectedSorting));
         await localforage.setItem("pm:filters-tags", $state.snapshot(tagsSelected));
         await localforage.setItem("pm:filters-features", $state.snapshot(featuresSelected));
         await localforage.setItem("pm:favorites", $state.snapshot(favoritedExtensions));
     };
     const loadFromStorage = async () => {
-        const localFilterBarOpened =     (await localforage.getItem("pm:filter-bar-open")) || false;
-        const localSelectedSorting =     (await localforage.getItem("pm:sorting")) || "none";
-        const localTagsSelected =        (await localforage.getItem("pm:filters-tags")) || {};
-        const localFeaturesSelected =    (await localforage.getItem("pm:filters-features")) || {};
-        const localFavoritedExtensions = (await localforage.getItem("pm:favorites")) || {};
+        const localFilterBarOpened =         (await localforage.getItem("pm:filter-bar-open")) || false;
+        const localShowingTestInNewProject = (await localforage.getItem("pm:show-test-in-new")) || false;
+        const localSelectedSorting =         (await localforage.getItem("pm:sorting")) || "none";
+        const localTagsSelected =            (await localforage.getItem("pm:filters-tags")) || {};
+        const localFeaturesSelected =        (await localforage.getItem("pm:filters-features")) || {};
+        const localFavoritedExtensions =     (await localforage.getItem("pm:favorites")) || {};
         filterBarOpened = localFilterBarOpened;
+        showingTestInNewProject = localShowingTestInNewProject;
         selectedSorting = localSelectedSorting;
         for (const key in localTagsSelected) {
             tagsSelected[key] = localTagsSelected[key];
@@ -246,16 +254,18 @@
         <img
             src="/icons/filter.svg"
             alt="Filters"
+            title="Filters"
         />
     </button>
     <div class="extension-list-controls-sorting-selector-image-container-div">
         <img
             src="/icons/sort.svg"
             alt="Sort"
+            title="Sort using the selector"
         />
     </div>
     <label>
-        <select bind:value={selectedSorting} onchange={updateExtensionList}>
+        <select title="Sort" bind:value={selectedSorting} onchange={updateExtensionList}>
             <option value="none">Recommended order</option>
             <option value="reversed">Reversed recommended order</option>
             <option value="namedesc">Names from A-Z</option>
@@ -264,6 +274,23 @@
             <option value="creatorasce">Creators from Z-A</option>
         </select>
     </label>
+    {#if stateApplication.fromEditor}
+        <button onclick={toggleTestInNewProject}>
+            {#if showingTestInNewProject}
+                <img
+                    src="/icons/test-enabled.svg"
+                    alt={'Currently showing "Test in New Project" link'}
+                    title={'Currently showing "Test in New Project" link'}
+                />
+            {:else}
+                <img
+                    src="/icons/test-disabled.svg"
+                    alt={'Currently hiding "Test in New Project" link'}
+                    title={'Currently hiding "Test in New Project" link'}
+                />
+            {/if}
+        </button>
+    {/if}
 </div>
 <div class="extension-list-container" data-filteropen={filterBarOpened}>
     <div class="extension-list-bars" data-filteropen={filterBarOpened}>
@@ -333,6 +360,7 @@
 
                     bind:favorited={favoritedExtensions[extension.code]}
                     onfavoriteclicked={onFavoriteClicked}
+                    showTestAlways={showingTestInNewProject}
                 >
                     {extension.description}
                 </Extension>

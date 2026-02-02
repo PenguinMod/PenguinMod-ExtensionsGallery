@@ -244,8 +244,19 @@
             </p>
         {/if}
     </div>
+    
     <div class="block-buttons">
-        <div>
+        {#if props.showTestAlways && stateApplication.fromEditor}
+            <p class="block-buttons-link">
+                <a
+                    href={baseUrl + url}
+                    target="_blank"
+                >
+                    Test in New Project
+                </a>
+            </p>
+        {/if}
+        <div class="block-buttons-bottom">
             {#if stateApplication.fromEditor}
                 <button
                     bind:this={addToProjectButton}
@@ -344,6 +355,14 @@
         border-color: rgba(255, 255, 255, 0.75);
     }
     .block-buttons {
+        display: flex;
+        flex-direction: column;
+    }
+    .block-buttons-link {
+        margin-block: 2px;
+        margin-block-end: 8px;
+    }
+    .block-buttons-bottom {
         display: flex;
         flex-direction: row;
         align-items: center;

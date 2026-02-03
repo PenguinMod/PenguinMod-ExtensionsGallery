@@ -442,7 +442,8 @@
 
         border-radius: 8px;
         background: transparent;
-
+    }
+    .extension-list-controls button {
         cursor: pointer;
     }
     .extension-list-controls button:active {

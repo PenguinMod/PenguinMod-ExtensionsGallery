@@ -40,6 +40,10 @@ export const Tags = [
         alias: "Generative AI",
     },
     {
+        name: "api",
+        alias: "API / Other websites",
+    },
+    {
         name: "ai",
         alias: "Algorithms and AI",
     },

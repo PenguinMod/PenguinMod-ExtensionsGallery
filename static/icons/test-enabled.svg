@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="-2 -2 52 52"
+width="48px" height="48px" style="stroke-width:4px;stroke-linecap:round">
+
+<!-- arrow -->
+<line x1="0"  x2="48" y1="24" y2="24" stroke="white" />
+<line x1="48" x2="32" y1="24" y2="34" stroke="white" />
+<line x1="48" x2="32" y1="24" y2="14" stroke="white" />
+
+<!-- box -->
+<polygon points="6,16 6,6 42,6 42,10
+                 42,10 42,6 6,6"
+style="fill:transparent;stroke:white;stroke-width:4px"
+/>
+<polygon points="6,32 6,42 42,42 42,38
+                 42,38 42,42 6,42 6,32"
+style="fill:transparent;stroke:white;stroke-width:4px"
+/>
+
+</svg>

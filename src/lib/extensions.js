@@ -264,7 +264,7 @@ export default [
         banner: "DogeisCut/dogeiscutRegularExpressions.svg",
         creator: "DogeisCut",
         isGitHub: true, 
-        tags: ["custom type", "strings", "regex", "text", "utility"]
+        tags: ["customtype", "strings", "regex", "text", "utility"]
     },
     {
         name: "Sets",
@@ -273,7 +273,7 @@ export default [
         banner: "DogeisCut/dogeiscutSet.svg",
         creator: "DogeisCut",
         isGitHub: true, 
-        tags: ["custom type", "sets", "data", "utility"]
+        tags: ["customtype", "sets", "data", "utility"]
     },
     {
         name: "Blobs",

@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 186" width="300px" height="186px" xmlns:bx="https://boxy-svg.com">
+  <defs>
+    <linearGradient id="gradient-1" bx:pinned="true">
+      <title>Fill</title>
+      <stop style="stop-color: rgb(255, 68, 118);" offset="0"></stop>
+      <stop style="stop-color: rgb(255, 54, 98);" offset="1"></stop>
+    </linearGradient>
+    <linearGradient id="gradient-0" bx:pinned="true">
+      <stop offset="0" style="stop-color: rgb(186, 38, 96);"></stop>
+      <stop offset="1" style="stop-color: rgb(172, 41, 79);"></stop>
+    </linearGradient>
+    <linearGradient id="gradient-1-0" href="#gradient-1" gradientUnits="userSpaceOnUse" x1="150" y1="9" x2="150" y2="177"></linearGradient>
+    <linearGradient id="gradient-0-0" href="#gradient-0" gradientUnits="userSpaceOnUse" x1="150" y1="0" x2="150" y2="186"></linearGradient>
+    <linearGradient gradientUnits="userSpaceOnUse" x1="150" y1="0" x2="150" y2="186" id="gradient-2">
+      <stop offset="0" style="stop-color: #bada55"></stop>
+      <stop offset="1" style="stop-color: #758d29"></stop>
+    </linearGradient>
+  </defs>
+  <rect width="300" height="186" style="paint-order: fill; fill-rule: nonzero; stroke-width: 1; fill: url(#gradient-0-0);"></rect>
+  <rect x="10" y="9" width="280" height="168" style="stroke-width: 1; fill: url(#gradient-1-0);"></rect>
+  <rect x="117.625" y="89" width="63.211" height="8" style="fill: rgb(255, 255, 255); stroke-width: 1;"></rect>
+  <ellipse style="stroke: rgb(255, 255, 255); stroke-width: 8; fill: none;" cx="100.643" cy="93" rx="17.054" ry="17.054"></ellipse>
+  <ellipse style="stroke: rgb(255, 255, 255); stroke-width: 8; fill: none;" cx="199.357" cy="93" rx="17.054" ry="17.054"></ellipse>
+  <path d="M 284.205 79.33 Q 287.381 73.702 290.556 79.33 L 305.377 105.595 Q 308.553 111.223 302.201 111.223 L 272.56 111.223 Q 266.208 111.223 269.384 105.595 Z" bx:shape="triangle 266.208 73.702 42.345 37.521 0.5 0.15 1@a0704526" style="fill: rgb(255, 255, 255); stroke: rgb(255, 255, 255); stroke-width: 8; stroke-linecap: round; transform-box: fill-box; transform-origin: 50% 50%;" transform="matrix(0, 1, -1, 0, -137.825005, -0.869479)"></path>
+</svg>

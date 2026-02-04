@@ -276,6 +276,16 @@ export default [
         tags: ["customtype", "sets", "data", "utility"]
     },
     {
+        name: "Iterators",
+        description: "Transform and iterate over different types of collections and more.",
+        code: "Div/divIterators.js",
+        banner: "Div/divIterators.svg",
+        creator: "Dicuo",
+        creatorAlias: "Div",
+        isGitHub: true,
+        tags: ["new", "customtype", "iterators", "data", "utility", "builder"]
+    },
+    {
         name: "Blobs",
         description: "An extension made for handling blobs which can be used to store files. Allows to easily make blobs for the Js extension",
         code: "Faunks/Blobs.js",

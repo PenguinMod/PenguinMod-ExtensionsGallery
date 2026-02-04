@@ -10,6 +10,8 @@
 
 // TODO:
 // turn keys values and entires of into a single block with a dropdown
+// setPrototypeOf is slow, create new objects where we can instead
+// maybe rewrite this entire thing cause a lot of code is leftover from when i wanted recursion and didnt know about null prototypes, and i overcomplicated a lot of stuff
 
 (function(Scratch) {
     'use strict';
@@ -84,7 +86,14 @@
 
             if (typeof x === "string") {
                 try {
-                    const parsed = JSON.parse(x)
+                    const parsed = JSON.parse(x, (key, value, context) => {
+                        if (typeof value === "object") {
+                            if (Object.getPrototypeOf(value) === defaultPrototype) {
+                                return Object.setPrototypeOf(value, null) // slow but im too lazy to do this proper right now
+                            }
+                        }
+                        return value
+                    })
                     if (isArray(parsed)) {
                         return new ObjectType(Object.fromEntries(parsed.map((v,i)=>[i+1,v])))
                     }
@@ -273,7 +282,8 @@
         toJSON() {
             return Object.fromEntries(
                 Object.entries(this.object).map(([key, value]) => {
-                    if (typeof value === "object" && value !== null) {
+                    let proto = Object.getPrototypeOf(value)
+                    if (typeof value === "object" && value !== null && (proto !== null && proto !== defaultPrototype /* < lazy fix */)) {
                         if (typeof value.toJSON === "function") return [key, value.toJSON()]
                         if (typeof value.toString === "function") return [key, value.toString()]
                         return [key, JSON.stringify(value)]

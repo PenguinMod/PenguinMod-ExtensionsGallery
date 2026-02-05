@@ -21,6 +21,13 @@ export default [
         creator: "TheShovel",
     },
     {
+        name: "Storage Plus",
+        description: "A storage extension with many more features. Featuring server storage (with a fast server), local storage and more!",
+        code: "Gen1x/storage_plus.js",
+        banner: "Gen1x/storage_plus.avif",
+        creator: "G1nX",
+    },
+    {
         name: "MotionSprite",
         description: "An advanced math-based animation system",
         code: "TheShovel/qoan-renderer.js",
@@ -80,6 +87,7 @@ export default [
         creator: "Steve0Greatness",
         isGitHub: true, 
     },
+    
     {
         name: "Dictation",
         description: "Convert your voice into text. (not supported in all browsers)",
@@ -87,7 +95,7 @@ export default [
         banner: "pooiod/Dictation.svg",
         creator: "pooiod7",
     },
-    {
+        {
         name: "Doodle Recognition",
         description: "A implementation of Google's Quick Draw image vision model",
         code: "TheShovel/doodlerec.js",
@@ -95,7 +103,7 @@ export default [
         creator: "TheShovel",
         isGitHub: true,
     },
-    {
+            {
         name: "Stylus",
         description: "Get the pressure and tilt of a stylus or graphic tablet",
         code: "sourdoggy/stylus extension.js",
@@ -151,6 +159,31 @@ export default [
         banner: "dumzdev/removebgbanner.svg",
         creator: "dumzdev",
     },
+    /*{
+        name: "PenguinAI",
+        description: "Talk to AI! Use Models like DALL-E-3, GPT, LLama, Claude, and more!",
+        code: "MubiLop/penguingpt.js",
+        banner: "MubiLop/penguingpt.avif",
+        creator: "cicerorph",
+        creatorAlias: "MubiLop",
+        isGitHub: true,
+        unstable: true,
+        documentation: "PenguinAI",
+        unstableReason: "AI models can generate unintended or inappropriate output.\nSome AI models may also become temporarily inaccessible.\n\nUse at your own risk.",
+    },*/
+/*
+    {
+        name: "Block AI",
+        description: "An AI powered chat bot to help you code in your projects.",
+        code: "TheShovel/blockAI.js",
+        banner: "TheShovel/thumbnail-blockAI.avif",
+        creator: "TheShovel",
+        creatorAlias: "TheShovel",
+        isGitHub: true,
+        unstable: true,
+        unstableReason: "The AI model can generate inaccurate output and broken syntax!",
+    },
+*/
     {
         name: "PenguinHook",
         description: "Send Webhook requests, that can be Discord or any type of webhook.",
@@ -187,6 +220,7 @@ export default [
         creator: "qxsck",
         isGitHub: true,
     },
+    /* Use the TurboWarp version. This one is outdated and broken.
     {
         name: "Format Numbers",
         description: "Format large numbers into AD standard, fixed decimal, comma separated, or scientific notation.",
@@ -196,6 +230,7 @@ export default [
         isGitHub: true, 
         notes: "Gallery banner by Dillon",
     },
+    */
     {
         name: "Date Format",
         description: "Manage, format and compare dates.",
@@ -220,6 +255,7 @@ export default [
         banner: "DogeisCut/YetAnotherStringExtension.svg",
         creator: "DogeisCut",
         isGitHub: true, 
+        tags: ["strings", "builder", "small", "text", "utility"]
     },
     {
         name: "Regular Expressions",
@@ -228,6 +264,7 @@ export default [
         banner: "DogeisCut/dogeiscutRegularExpressions.svg",
         creator: "DogeisCut",
         isGitHub: true, 
+        tags: ["customtype", "strings", "regex", "text", "utility"]
     },
     {
         name: "Sets",
@@ -236,6 +273,7 @@ export default [
         banner: "DogeisCut/dogeiscutSet.svg",
         creator: "DogeisCut",
         isGitHub: true, 
+        tags: ["customtype", "sets", "data", "utility"]
     },
     {
         name: "Blobs",
@@ -351,6 +389,7 @@ export default [
         banner: "DogeisCut/BeepBoxPlayer.svg",
         creator: "DogeisCut",
         isGitHub: true, 
+        tags: ["api", "music", "sounds", "ultrabox", "jummbox", "beepbox"]
     },
     {
         name: "Update File (Direct Access)",
@@ -510,6 +549,7 @@ export default [
         isGitHub: true, 
         documentation: "Resolution",
         notes: "Gallery banner by Dillon",
+        tags: ["graphics", "utility"]
     },
     {
         name: "Device Motion",
@@ -530,15 +570,14 @@ export default [
         isGitHub: true,
         creatorAlias: "gaimerI17",
     },
+    /* these extensions are completely dead as of now
     {
-        name: "Links & Barcodes",
-        description: "Blocks to open web links and generate scannable QR codes on the stage.",
-        code: "codemaster/links-and-barcodes.js",
-        banner: "codemaster/links-and-barcodes.png",
-        creator: "moosanaeempc-lgtm",
-        creatorAlias: "codemaster",
+        name: "Online Captcha",
+        description: "Protect your project with simple, easy to use captcha implementation. Fully client-side, bypass-proof captcha solution!",
+        code: "NotHouse/OnlineCaptcha.js",
+        banner: "NotHouse/OnlineCaptcha-banner.avif",
+        creator: "enderhacker",
         isGitHub: true,
-        isUnsandboxed: true,
     },
     {
         name: "Better Storage",
@@ -554,21 +593,48 @@ export default [
         banner: "Gen1x/mw-placeholder.avif",
         creator: "G1nX",
     },
+    */
     {
         name: "Smoke Detector",
         description: "Plays a beep every 30 seconds.",
         code: "electricfuzzball_pm/firealarm.js",
         banner: "electricfuzzball_pm/firealarm.svg",
-        creator: "ElectricFuzzball_PM",
+        creator: "ElectricFuzzball_PM" //hey look thats me!!
+        //Pluey has been implemented.
+    },
+        {
+        name: "Stage Brah",
+        description: "Spawn Brah cats in your codespace!",
+        code: "electricfuzzball_pm/StageBrah.js",
+        banner: "electricfuzzball_pm/StageBrah.svg",
+        creator: "ElectricFuzzball_PM"
+        //:brah:
+    },
+        {
+        name: "MIDI Controller",
+        description: "Use a MIDI keyboard to interact with projects!",
+        code: "electricfuzzball_pm/MIDI.js",
+        banner: "electricfuzzball_pm/MIDI.svg",
+        creator: "ElectricFuzzball_PM"
     },
     {
-    name: "Joystick",
-    description: "Instead of making a joystick just upload the extension and make your games mobile friendly in seconds.",
-    code: "codemaster/joystick.js",
-    banner: "codemaster/joystick.png",
-    creator: "SuperCodes_",
-    creatorAlias: "codemaster",
-    isGitHub: true,
-    isUnsandboxed: true,
+        name: "Links & Barcodes",
+        description: "Blocks to open web links and generate scannable QR codes on the stage.",
+        code: "codemaster/links-and-barcodes.js",
+        banner: "codemaster/links-and-barcodes.png",
+        creator: "moosanaeempc-lgtm",
+        creatorAlias: "codemaster",
+        isGitHub: true,
+        isUnsandboxed: true,
+    },
+    {
+        name: "Joystick",
+        description: "Instead of making a joystick just upload the extension and make your games mobile friendly in seconds.",
+        code: "codemaster/joystick.js",
+        banner: "codemaster/joystick.png",
+        creator: "moosanaeempc-lgtm",
+        creatorAlias: "codemaster",
+        isGitHub: true,
+        isUnsandboxed: true,
     },
 ];

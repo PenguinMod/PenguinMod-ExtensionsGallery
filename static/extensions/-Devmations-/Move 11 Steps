@@ -1,0 +1,30 @@
+(function (Scratch) {
+  'use strict';
+
+  class Extension {
+    getInfo() {
+      return {
+        id: 'thebestextensionofalltime',
+        name: 'Move 11 Steps',
+        color1: '#4C97FF',
+        blocks: [
+          {
+            opcode: 'mov11steps',
+            blockType: Scratch.BlockType.COMMAND,
+            text: 'move 11 steps'
+          }
+        ],
+      };
+    }
+  
+    mov11steps(args, utils) {
+      const target = utils.target;
+      if (!target) return;
+      const radians = (target.direction - 90) * (Math.PI / 180);
+      target.x += Math.cos(radians) * 11;
+      target.y -= Math.sin(radians) * 11;
+      target.setXY(target.x, target.y);
+    }
+  }
+  Scratch.extensions.register(new Extension());
+})(Scratch);

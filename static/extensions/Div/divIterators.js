@@ -164,10 +164,11 @@
         Iterables: {
             range(start, end) {
                 const advance = n => n + (start < end ? 1 : -1);
+                const finished = n => start < end ? (n >= end + 1) : (n <= end - 1)
                 return new IteratorType({kind: "Range", args: [start, end]},
                     {curr: start}, function*(state){
                     const {curr} = state;
-                    if(curr == advance(end)) return divIterator.Done()
+                    if(finished(curr)) return divIterator.Done()
                     state.curr = advance(curr);
                     return divIterator.Item(curr)
                 });
@@ -627,22 +628,6 @@
                     },
                     ...divIterator.Block
                 },
-                {
-                    opcode: 'iterCollectTo',
-                    text: '[ITER] finally collect to [TYPE]',
-                    arguments: {
-                        ITER: divIterator.Argument,
-                        TYPE: {
-                            type: Scratch.ArgumentType.STRING,
-                            menu: "fromIter",
-                            defaultValue: "Array"
-                        }
-                    },
-                    disableMonitor: true,
-                    blockType: BlockType.REPORTER,
-                    blockShape: BlockShape.ROUND,
-                    allowDropAnywhere: true,
-                },
 
                 '---',
                 {
@@ -817,6 +802,22 @@
                 {
                     blockType: BlockType.LABEL,
                     text: 'Iterator Terminators'
+                },
+                {
+                    opcode: 'iterCollectTo',
+                    text: '[ITER] finally collect to [TYPE]',
+                    arguments: {
+                        ITER: divIterator.Argument,
+                        TYPE: {
+                            type: Scratch.ArgumentType.STRING,
+                            menu: "fromIter",
+                            defaultValue: "Array"
+                        }
+                    },
+                    disableMonitor: true,
+                    blockType: BlockType.REPORTER,
+                    blockShape: BlockShape.ROUND,
+                    allowDropAnywhere: true,
                 },
                 {
                     opcode: 'iterTermCount',

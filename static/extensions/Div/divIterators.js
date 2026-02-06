@@ -164,7 +164,7 @@
         Iterables: {
             range(start, end) {
                 const advance = n => n + (start < end ? 1 : -1);
-                const finished = n => start < end ? (n >= end + 1) : (n <= end - 1)
+                const finished = n => start < end ? (n > end) : (n < end)
                 return new IteratorType({kind: "Range", args: [start, end]},
                     {curr: start}, function*(state){
                     const {curr} = state;

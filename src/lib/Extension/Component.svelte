@@ -348,7 +348,7 @@
         display: flex;
         flex-direction: column;
         justify-content: space-between;
-        
+
         border-radius: 6px;
     }
     :global(body.dark-mode) .block {

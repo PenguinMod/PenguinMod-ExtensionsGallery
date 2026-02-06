@@ -523,6 +523,8 @@
         display: flex;
         flex-direction: row;
         flex-wrap: wrap;
+        align-items: stretch;
+        align-content: flex-start;
         justify-content: center;
     }
     .extension-list[data-filteropen="true"] {

@@ -29,15 +29,20 @@ export const Tags = [
         alias: "Extension Collections",
         group: "extensiontypes",
     },
-
-    // any other misc ones that just need aliases
     {
         name: "customtype",
         alias: "New Block Type",
+        group: "extensiontypes",
     },
+
+    // any other misc ones that just need aliases
     {
         name: "genai",
         alias: "Generative AI",
+    },
+    {
+        name: "api",
+        alias: "API / Other websites",
     },
     {
         name: "ai",

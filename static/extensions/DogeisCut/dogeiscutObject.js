@@ -282,11 +282,13 @@
         toJSON() {
             return Object.fromEntries(
                 Object.entries(this.object).map(([key, value]) => {
-                    let proto = Object.getPrototypeOf(value)
-                    if (typeof value === "object" && value !== null && (proto !== null && proto !== defaultPrototype /* < lazy fix */)) {
-                        if (typeof value.toJSON === "function") return [key, value.toJSON()]
-                        if (typeof value.toString === "function") return [key, value.toString()]
-                        return [key, JSON.stringify(value)]
+                    if (typeof value === "object" && value !== null) {
+                        let proto = Object.getPrototypeOf(value)
+                        if (proto !== null && proto !== defaultPrototype /* < lazy fix */) {
+                            if (typeof value.toJSON === "function") return [key, value.toJSON()]
+                            if (typeof value.toString === "function") return [key, value.toString()]
+                            return [key, JSON.stringify(value)]
+                        }
                     }
                     return [key, value]
                 })

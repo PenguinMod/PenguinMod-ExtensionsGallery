@@ -420,11 +420,7 @@
                                 defaultValue: "foo"
                             },
                         },
-                        hideFromPalette: true,
-                        // ok so turns out match all returns an iterator and we kinda sorta dont have an extension to handle that so oops
-                        // hideFromPalette: !vm.runtime.ext_jwArray,
-
-                        // it's not even supposed to be an array but i kinda cant change it now
+                        hideFromPalette: !vm.runtime.ext_jwArray,
                         ...(vm.runtime.ext_jwArray ? vm.jwArray.Block : {}),
                     },
                     '---',
@@ -557,15 +553,14 @@
         }
 
         matchAll({ REGEX, STRING }) {
-            // ok so turns out match all returns an iterator and we kinda sorta dont have an extension to handle that so oops
-            throw new Error("Deprecated Block: match all")
-            /* REGEX = RegularExpressionType.toRegularExpression(REGEX)
+            // ok so turns out match all returns an iterator and we kinda sorta dont have an extension to handle that so im turning it into an array
+            REGEX = RegularExpressionType.toRegularExpression(REGEX)
             STRING = Cast.toString(STRING)
             try {
-                return vm.jwArray.Type.toArray(STRING.matchAll(REGEX.regex))
+                return vm.jwArray.Type.toArray([...STRING.matchAll(REGEX.regex)])
             } catch {
                 return ""
-            }*/
+            }
         } 
 
         sourceOf({ REGEX }) {

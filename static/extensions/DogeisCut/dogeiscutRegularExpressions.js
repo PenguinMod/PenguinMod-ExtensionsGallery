@@ -207,11 +207,7 @@
             this.regex.lastIndex = Cast.toNumber(newLastIndex)
         }
 
-        exec(string) {
-            // returns an array or null. need arrays ext
-            // also this array aparently has additional properties.. i love js 
-            // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/RegExp/exec
-            let baseArray = this.regex.exec(string)
+        static convertEvilArrayIHateToObject(baseArray) {
             if (baseArray) {
                 let newObj = Object.create(null);
                 newObj.array = vm.jwArray.Type.toArray([...baseArray])
@@ -229,7 +225,15 @@
                 }
                 return vm.dogeiscutObject.Type.toObject(newObj)
             }
-            return "" //returning an empty object felt weird
+            return ""
+        }
+
+        exec(string) {
+            // returns an array or null. need arrays ext
+            // also this array aparently has additional properties.. i love js 
+            // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/RegExp/exec
+            let baseArray = this.regex.exec(string)
+            return RegularExpressionType.convertEvilArrayIHateToObject(baseArray)
         }
         test(string) {
             return Cast.toBoolean(this.regex.test(string))
@@ -553,14 +557,15 @@
         }
 
         matchAll({ REGEX, STRING }) {
+            // ok so turns out match all returns an iterator and we kinda sorta dont have an extension to handle that so im turning it into an array
             REGEX = RegularExpressionType.toRegularExpression(REGEX)
             STRING = Cast.toString(STRING)
             try {
-                return vm.jwArray.Type.toArray(STRING.matchAll(REGEX.regex))
+                return vm.jwArray.Type.toArray([...STRING.matchAll(REGEX.regex)].map((x) => RegularExpressionType.convertEvilArrayIHateToObject(x)))
             } catch {
                 return ""
             }
-        }
+        } 
 
         sourceOf({ REGEX }) {
             REGEX = RegularExpressionType.toRegularExpression(REGEX)

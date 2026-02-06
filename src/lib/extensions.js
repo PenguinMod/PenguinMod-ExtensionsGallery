@@ -220,6 +220,7 @@ export default [
         creator: "qxsck",
         isGitHub: true,
     },
+    /* Use the TurboWarp version. This one is outdated and broken.
     {
         name: "Format Numbers",
         description: "Format large numbers into AD standard, fixed decimal, comma separated, or scientific notation.",
@@ -229,6 +230,7 @@ export default [
         isGitHub: true, 
         notes: "Gallery banner by Dillon",
     },
+    */
     {
         name: "Date Format",
         description: "Manage, format and compare dates.",
@@ -253,6 +255,7 @@ export default [
         banner: "DogeisCut/YetAnotherStringExtension.svg",
         creator: "DogeisCut",
         isGitHub: true, 
+        tags: ["strings", "builder", "small", "text", "utility"]
     },
     {
         name: "Regular Expressions",
@@ -261,6 +264,7 @@ export default [
         banner: "DogeisCut/dogeiscutRegularExpressions.svg",
         creator: "DogeisCut",
         isGitHub: true, 
+        tags: ["customtype", "strings", "regex", "text", "utility"]
     },
     {
         name: "Sets",
@@ -269,6 +273,7 @@ export default [
         banner: "DogeisCut/dogeiscutSet.svg",
         creator: "DogeisCut",
         isGitHub: true, 
+        tags: ["customtype", "sets", "data", "utility"]
     },
     {
         name: "Blobs",
@@ -384,6 +389,7 @@ export default [
         banner: "DogeisCut/BeepBoxPlayer.svg",
         creator: "DogeisCut",
         isGitHub: true, 
+        tags: ["api", "music", "sounds", "ultrabox", "jummbox", "beepbox"]
     },
     {
         name: "Update File (Direct Access)",
@@ -543,6 +549,7 @@ export default [
         isGitHub: true, 
         documentation: "Resolution",
         notes: "Gallery banner by Dillon",
+        tags: ["graphics", "utility"]
     },
     {
         name: "Device Motion",
@@ -594,5 +601,20 @@ export default [
         banner: "electricfuzzball_pm/firealarm.svg",
         creator: "ElectricFuzzball_PM" //hey look thats me!!
         //Pluey has been implemented.
+    },
+        {
+        name: "Stage Brah",
+        description: "Spawn Brah cats in your codespace!",
+        code: "electricfuzzball_pm/StageBrah.js",
+        banner: "electricfuzzball_pm/StageBrah.svg",
+        creator: "ElectricFuzzball_PM"
+        //:brah:
+    },
+        {
+        name: "MIDI Controller",
+        description: "Use a MIDI keyboard to interact with projects!",
+        code: "electricfuzzball_pm/MIDI.js",
+        banner: "electricfuzzball_pm/MIDI.svg",
+        creator: "ElectricFuzzball_PM"
     },
 ];

@@ -31,10 +31,11 @@
         consumed = 0
         done = false;
 
-        constructor(kind = "Empty", state = {}, next = function*() {return {value: undefined, done: true}}) {
+        constructor(kind = "Empty", state = {}, next = function*() {return {value: undefined, done: true}}, clonable = true) {
             this.kind = [].concat(kind);
             this.state = state;
             this.iterNext = next;
+            this.clonable = clonable;
         }
 
         jwArrayHandler() {
@@ -91,7 +92,7 @@
             return new IteratorType();
         }
 
-        chainIter(kind, state, next) {return new IteratorType(this.kind.concat(kind), state, next)}
+        chainIter(kind, state, next, clonable) {return new IteratorType(this.kind.concat(kind), state, next, clonable)}
 
         *next(thread, target, runtime, stage) {
             if(this.done) return divIterator.Done()
@@ -102,12 +103,41 @@
         }
 
         clone() {
+            if(!this.clonable) {
+                console.error(`Iterator chain '${this.getIterChain}' is not clonable. Use 'branch' instead, or check before cloning.`)
+                throw `Iterator chain '${this.getIterChain}' is not clonable.`
+            }
             const state = Object.fromEntries(Object.entries(this.state).map(([key, val]) => [key, 
                 val instanceof IteratorType ? val.clone() : val
             ]))
             const clone = new IteratorType(this.kind, state, this.iterNext);
             clone.consumed = this.consumed;
             return clone
+        }
+
+        branch(n) {
+            const buffers = Array(n).fill().map(() => []);
+            let done = false;
+            return buffers.map(buffer => this.chainIter({kind: "Branch", args: [n]},
+                {iter: this}, function*(state, thread, target, runtime, stage) {
+                    console.log(buffer);
+                    if(buffer.length > 0) return divIterator.Item(buffer.shift());
+                    if(done) return divIterator.Done();
+                    const item = yield* state.iter.next(thread, target, runtime, stage);
+                    done = item.done; if(item.done) return divIterator.Done() 
+                    buffers.forEach(b => b.push(item.value));
+                    return divIterator.Item(buffer.shift());
+                }
+            ), false);
+        }
+
+        // NOTE: Using this will give you unclonable iterators. Only use this
+        // if you can't or don't want to make your iterator clonable
+        fromNative(kind, itern, extra = function*(x) {return x}) {
+            if(typeof itern[Symbol.iterator] !== 'function') throw `${kind} is not a native iterator.`
+            if(typeof kind !== 'string' && typeof kind?.kind !== 'string' || !(kind?.args instanceof Array))
+                kind = 'Native'
+            return new IteratorType(kind, {}, () => extra(itern.next()), false)
         }
     }
 
@@ -134,7 +164,7 @@
         Iterables: {
             range(start, end) {
                 const advance = n => n + (start < end ? 1 : -1);
-                return new IteratorType("Range",
+                return new IteratorType({kind: "Range", args: [start, end]},
                     {curr: start}, function*(state){
                     const {curr} = state;
                     if(curr == advance(end)) return divIterator.Done()
@@ -177,7 +207,7 @@
                     if(item.done) return item
                     const mapped = yield* map(item.value, thread, target, runtime, stage);
                     return divIterator.Item(mapped)
-                })
+                }, iter.clonable)
             },
             keep(iter, pred) {
                 iter = IteratorType.toIterator(iter)
@@ -190,7 +220,7 @@
                         bool = yield* pred(item.value, thread, target, runtime, stage);
                         if(bool) return item
                     }
-                })
+                }, iter.clonable)
             },
 
             enum(iter) {
@@ -200,7 +230,7 @@
                     const item = yield* state.iter.next(thread, target, runtime, stage); 
                     if(item.done) return item
                     return divIterator.Item(new jwArray.Type([state.num++, item.value]))
-                })
+                }, iter.clonable)
             },
             cycle(iter) {
                 iter = IteratorType.toIterator(iter)
@@ -214,7 +244,7 @@
                     }
                     state.buffer.push(item)
                     return item;
-                })
+                }, iter.clonable)
             },
 
             take(iter, count) {
@@ -226,7 +256,7 @@
                     if(item.done) return item
                     state.count--;
                     return item;
-                })
+                }, iter.clonable)
             },
             skip(iter, count) {
                 iter = IteratorType.toIterator(iter)
@@ -238,7 +268,7 @@
                         state.count--;
                     }
                     return yield* state.iter.next(thread, target, runtime, stage)
-                })
+                }, iter.clonable)
             },
             stepBy(iter, step) {
                 iter = IteratorType.toIterator(iter)
@@ -253,7 +283,7 @@
                         if(item.done) return item
                     }
                     return yield* state.iter.next(thread, target, runtime, stage)
-                })
+                }, iter.clonable)
             },
 
             chain(iter1, iter2) {
@@ -264,7 +294,7 @@
                     const item1 = yield* state.iter1.next(thread, target, runtime, stage);
                     if(!item1.done) return item1
                     return yield* state.iter2.next(thread, target, runtime, stage)
-                })
+                }, iter1.clonable && iter2.clonable)
             },
             zip(iter1, iter2) {
                 iter1 = IteratorType.toIterator(iter1)
@@ -276,7 +306,7 @@
                     const item2 = yield* state.iter2.next(thread, target, runtime, stage);
                     if(item2.done) return item2
                     return divIterator.Item(new jwArray.Type([item1.value, item2.value]))
-                })
+                }, iter1.clonable && iter2.clonable)
             },
             cross(iter1, iter2) {
                 iter1 = IteratorType.toIterator(iter1)
@@ -301,7 +331,7 @@
                     }
                     state.buffer.push(item1.value)
                     return divIterator.Item(new jwArray.Type([item1.value, state.item2]));
-                })
+                }, iter1.clonable && iter2.clonable)
             },
             
             inspect(iter, inspect) {
@@ -313,7 +343,7 @@
                     if(item.done) return item
                     yield* inspect(item.value, thread, target, runtime, stage);
                     return item
-                })
+                }, iter.clonable)
             },
         },
         Terminators: {
@@ -533,6 +563,7 @@
                         ITER: divIterator.Argument
                     }
                 },
+                '---',
                 {
                     opcode: 'iterClone',
                     text: 'clone [ITER]',
@@ -540,6 +571,25 @@
                         ITER: divIterator.Argument
                     },
                     ...divIterator.Block
+                },
+                {
+                    opcode: 'iterClonable',
+                    text: '[ITER] is clonable?',
+                    disableMonitor: true,
+                    blockType: BlockType.BOOLEAN,
+                    allowDropAnywhere: true,
+                    arguments: {
+                        ITER: divIterator.Argument
+                    }
+                },
+                {
+                    opcode: 'iterBranch',
+                    text: 'branch [ITER] into [NUM] branches',
+                    arguments: {
+                        ITER: divIterator.Argument,
+                        NUM: {type: ArgumentType.NUMBER, defaultValue: 2}
+                    },
+                    ...jwArray.Block
                 },
                 '---',
                 {
@@ -1044,7 +1094,7 @@
                 
                 iterBuilder(node, compiler, imports) {
                     const state = compiler.descendInput(node.STATE).asUnknown();
-                    const next = descendSubstack(compiler, node.NEXT, new imports.Frame(false, "_divIterBuilder", true))
+                    const next = descendSubstack(compiler, node.NEXT, new imports.Frame(false, "_divIterBuilder"))
                         +`\nreturn vm.divIterator.Item("");\n`
                     return new imports.TypedInput(
                  /*js*/`vm.divIterator.Iterables.iterBuilder(\n`
@@ -1172,6 +1222,12 @@
         }
         iterClone({ITER}) {
             return IteratorType.toIterator(ITER).clone()
+        }
+        iterClonable({ITER}) {
+            return IteratorType.toIterator(ITER).clonable
+        }
+        iterBranch({ITER, NUM}) {
+            return new jwArray.Type(IteratorType.toIterator(ITER).branch(NUM))
         }
 
         iterTermForEach() {

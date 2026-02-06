@@ -1,41 +1,62 @@
 <script>
-    import stateSearchBar from '$lib/state/searchBar.svelte.js';
     import { onMount } from 'svelte';
-    
-    let props = $props();
+    import { page } from '$app/stores';
+    import { Tags } from "../extension-tags";
+    import stateApplication from '$lib/state/app.svelte.js';
+    import stateSearchBar from '$lib/state/searchBar.svelte.js';
+    import ExtensionLoader from "$lib/extension-loader.js";
+
+    let {
+        favorited = $bindable(),
+        ...props
+    } = $props();
     let name = $derived(props.name || "Test");
     let image = $derived(props.image || "/images/example.avif");
+    let tags = $derived(props.tags || []);
     let url = $derived(props.url || "");
     let notes = $derived(props.notes || "");
     let creator = $derived(props.creator || "");
     let creatorAlias = $derived(props.creatorAlias);
     let documentation = $derived(props.documentation || "");
+    let example = $derived(props.example || "");
     let isGitHub = $derived(props.isGitHub || false);
     let unstable = $derived(props.unstable || false);
     let unstableReason = $derived(props.unstableReason || "This extension is unstable. Use at your own risk.");
 
+    // used for search
+    let relUrl = $derived(props.relUrl);
     const baseUrl = "https://studio.penguinmod.com/editor.html?extension=";
 
     /**
      * The button to copy the URL
      * @type {HTMLButtonElement}
      */
-    let copyButton;
+    let copyButton = $state(null);
+    /**
+     * The button to add the extension to the project
+     * @type {HTMLButtonElement?}
+     */
+    let addToProjectButton = $state(null);
     /**
      * The bubble with the copy message
      * @type {HTMLDivElement}
      */
     let copyPrompt;
+    /**
+     * The bubble with the "added to project" message
+     * @type {HTMLDivElement}
+     */
+    let addToProjectPrompt;
 
-    // used for search
-    let relUrl = $derived(props.relUrl);
+    const displayBubbleMessage = (bubble, x, y) => {
+        let button = copyButton;
+        if (bubble === addToProjectPrompt) button = addToProjectButton;
 
-    const displayCopiedToClipboard = (x, y) => {
-        if (!(copyButton && copyPrompt)) return;
+        if (!(bubble && button)) return;
         if ((typeof x !== 'number' || typeof y !== 'number')) {
             const scrollAmount = document.documentElement.scrollTop;
-            const rectButton = copyButton.getBoundingClientRect();
-            const rectPrompt = copyPrompt.getBoundingClientRect();
+            const rectButton = button.getBoundingClientRect();
+            const rectPrompt = bubble.getBoundingClientRect();
             if (typeof x !== 'number') {
                 x = rectButton.left + rectButton.width / 2 - rectPrompt.width / 2;
             }
@@ -43,11 +64,11 @@
                 y = rectButton.top + scrollAmount - (rectPrompt.height + 10);
             }
         }
-        copyPrompt.style.left = `${x}px`;
-        copyPrompt.style.top = `${y}px`;
+        bubble.style.left = `${x}px`;
+        bubble.style.top = `${y}px`;
 
         const animationDuration = 80;
-        copyPrompt.animate(
+        bubble.animate(
             [
                 {
                     opacity: 0,
@@ -63,7 +84,7 @@
         );
 
         setTimeout(() => {
-            copyPrompt.animate(
+            bubble.animate(
                 [
                     {
                         opacity: 1,
@@ -79,12 +100,42 @@
             );
         }, 1500);
     };
+    
     const copyToClipboard = (url, ...args) => {
         navigator.clipboard.writeText(url).then(() => {
-            displayCopiedToClipboard(...args);
+            displayBubbleMessage(copyPrompt, ...args);
         });
     };
+    const loadIntoEditor = (url) => {
+        try {
+            ExtensionLoader.tryLoadExtension(url);
+        } catch (err) {
+            handleEditorLoadFail(err);
+        }
+    };
+    const handleEditorLoadFail = (err) => {
+        const event = new CustomEvent("penguinmod-editor-extension-load-failed", { detail: err });
+        document.dispatchEvent(event);
+    };
+    onMount(() => {
+        document.addEventListener("penguinmod-editor-extension-loaded", (event) => {
+            if (url === event.detail) displayBubbleMessage(addToProjectPrompt);
+        });
+    });
 
+    // tags that have banners
+    let displayedTags = $derived.by(() => {
+        const displayedTags = [];
+        for (const tag of tags) {
+            const extensionTag = Tags.find(extTag => extTag.name === tag);
+            if (!extensionTag) continue;
+
+            if (extensionTag.banner) {
+                displayedTags.push(extensionTag);
+            }
+        }
+        return displayedTags;
+    });
     onMount(() => {
         document.addEventListener("penguinmod-recommendation-clicked", (event) => {
             const extCodeUrl = event.detail;
@@ -103,9 +154,49 @@
 <div bind:this={copyPrompt} class="copied" style="opacity: 0;">
     <p>Copied to Clipboard!</p>
 </div>
+<div bind:this={addToProjectPrompt} class="copied" style="opacity: 0;">
+    <p>Added to project!</p>
+</div>
 <div class="block">
+    {#each displayedTags as tag}
+        <div class="block-tag-banner">
+            <img
+                src={tag.banner}
+                alt={tag.alias || tag.name}
+                class="block-tag-banner-image"
+                loading="lazy"
+                data-pmelement="extimagetagbanner"
+            />
+        </div>
+    {/each}
+
     <div>
-        <img src={image} alt="Thumb" class="image" loading="lazy" />
+        <div class="image-container">
+            {#if stateApplication.fromEditor}
+                <button
+                    class="image-copy"
+                    onclick={() => loadIntoEditor(url)}
+                    data-pmelement="imageaddtoproject"
+                >
+                    Add to Project
+                </button>
+            {:else}
+                <button
+                    class="image-copy"
+                    onclick={() => copyToClipboard(url)}
+                    data-pmelement="imagecopy"
+                >
+                    Copy Link
+                </button>
+            {/if}
+            <img
+                src={image}
+                alt={name}
+                class="image"
+                loading="lazy"
+                data-pmelement="extimage"
+            />
+        </div>
         <div class="title">
             {name}
             {#if unstable}
@@ -113,6 +204,13 @@
                     <div class="unstable-message">{unstableReason}</div>
                 </button>
             {/if}
+            <button class="favorite-button" onclick={() => props?.onfavoriteclicked(relUrl)}>
+                {#if favorited}
+                    <img src="/icons/favorite-filled.svg" alt="Favorited" title="Favorited" />
+                {:else}
+                    <img src="/icons/favorite-outline.svg" alt="Favorite" title="Favorite" />
+                {/if}
+            </button>
         </div>
         <p class="description">
             {@render props.children?.()}
@@ -133,29 +231,87 @@
         {#if notes && notes !== ""}
             <p class="notes">{notes}</p>
         {/if}
+        {#if example}
+            <p>
+                <a href={`https://studio.penguinmod.com/editor.html?project_url=${encodeURIComponent(`${$page.url.origin}/examples/projects/${example}`)}`}>
+                    Example Project
+                </a>
+            </p>
+        {/if}
         {#if documentation}
             <p>
                 <a href={`/docs/${documentation}`}>Extension Documentation</a>
             </p>
         {/if}
     </div>
+    
     <div class="block-buttons">
-        <div>
-            <button
-                bind:this={copyButton}
-                onclick={() => copyToClipboard(url)}
-                class="blue"
-            >
-                Copy URL
-            </button>
-            <a href={baseUrl + url} target="_blank">
-                <button class="purple">View</button>
-            </a>
+        {#if props.showTestAlways && stateApplication.fromEditor}
+            <p class="block-buttons-link">
+                <a
+                    href={baseUrl + url}
+                    target="_blank"
+                >
+                    Test in New Project
+                </a>
+            </p>
+        {/if}
+        <div class="block-buttons-bottom">
+            {#if stateApplication.fromEditor}
+                <button
+                    bind:this={addToProjectButton}
+                    onclick={() => loadIntoEditor(url)}
+                    class="blue"
+                >
+                    Add to Project
+                </button>
+                <button
+                    bind:this={copyButton}
+                    onclick={() => copyToClipboard(url)}
+                    class="purple"
+                >
+                    Copy
+                </button>
+            {:else}
+                <button
+                    bind:this={copyButton}
+                    onclick={() => copyToClipboard(url)}
+                    class="blue"
+                >
+                    Copy Link
+                </button>
+                <a
+                    href={baseUrl + url}
+                    target="_blank"
+                >
+                    <button class="purple">Try it out</button>
+                </a>
+            {/if}
         </div>
     </div>
 </div>
 
 <style>
+    button {
+        border: 1px solid rgba(0, 0, 0, 0.35);
+        padding: 4px 8px;
+        margin-left: 6px;
+        margin-right: 6px;
+
+        font-size: 24px;
+        border-radius: 4px;
+        color: white;
+        font-weight: bold;
+
+        cursor: pointer;
+    }
+    button:hover {
+        filter: brightness(1.1);
+    }
+    button:active {
+        filter: brightness(0.7);
+    }
+
     .copied {
         position: absolute;
         pointer-events: none;
@@ -168,7 +324,6 @@
         z-index: 9000;
     }
     .copied:before {
-        content: "";
         position: absolute;
         top: 100%;
         left: calc(50% - 5px);
@@ -176,36 +331,95 @@
         border-top: 5px solid #23a559;
         border-left: 5px solid transparent;
         border-right: 5px solid transparent;
+
+        content: "";
     }
     .copied p {
         margin-block: 0;
     }
 
     .block {
+        position: relative;
         border: 1px solid rgba(0, 0, 0, 0.25);
-        border-radius: 6px;
+        max-width: calc(600px / 1.85);
         padding: 8px;
         margin: 4px;
-        max-width: calc(600px / 1.85);
+
         display: flex;
         flex-direction: column;
         justify-content: space-between;
+        
+        border-radius: 6px;
     }
     :global(body.dark-mode) .block {
         border-color: rgba(255, 255, 255, 0.75);
     }
     .block-buttons {
         display: flex;
+        flex-direction: column;
+    }
+    .block-buttons-link {
+        margin-block: 2px;
+        margin-block-end: 8px;
+    }
+    .block-buttons-bottom {
+        display: flex;
         flex-direction: row;
         align-items: center;
     }
+    .block-tag-banner {
+        position: absolute;
+        right: 0;
+        top: 0;
 
-    .image {
+        width: 72px;
+        height: 72px;
+
+        pointer-events: none;
+        user-select: none;
+        z-index: 52;
+    }
+    .block-tag-banner-image {
+        width: 100%;
+        height: 100%;
+    }
+
+    .image-container {
+        position: relative;
         width: calc(600px / 1.85);
         height: calc(300px / 1.85);
-        object-fit: cover;
+
         border-radius: 4px;
     }
+    .image {
+        width: 100%;
+        height: 100%;
+
+        object-fit: cover;
+    }
+    .image-copy {
+        position: absolute;
+        width: 100%;
+        height: 100%;
+        border: 0;
+        margin: 0;
+        padding: 0;
+
+        background: #11111166;
+        text-shadow: 2px 2px 10px black,
+            2px 2px 10px black,
+            2px 2px 10px black;
+        transition: opacity 0.1s;
+        opacity: 0;
+
+        user-select: none;
+        cursor: pointer;
+        z-index: 50;
+    }
+    .image-copy:hover {
+        opacity: 1;
+    }
+
     .title {
         margin-block: 6px;
 
@@ -223,24 +437,7 @@
         white-space: pre-wrap;
     }
 
-    button {
-        cursor: pointer;
-        font-size: 24px;
-        margin-left: 6px;
-        margin-right: 6px;
-        border: 1px solid rgba(0, 0, 0, 0.35);
-        border-radius: 4px;
-        padding: 4px 8px;
-        color: white;
-        font-weight: bold;
-    }
-    button:hover {
-        filter: brightness(1.1);
-    }
-    button:active {
-        filter: brightness(0.7);
-    }
-
+    .favorite-button,
     .unstable-warning {
         position: relative;
         display: inline;
@@ -250,6 +447,8 @@
         margin: 0;
 
         background: transparent;
+    }
+    .unstable-warning {
         background-image: url('/icons/warning2.png');
         background-position: center;
         background-size: 80%;
@@ -262,13 +461,16 @@
     .unstable-message {
         display: none;
         position: absolute;
+        width: 250px;
+        padding: 8px;
+
         background: #000000de;
         font-size: medium;
         font-weight: normal;
-        padding: 8px;
         border-radius: 8px;
         white-space: pre-wrap;
-        width: 250px;
+
+        z-index: 60;
         user-select: text;
     }
     .unstable-warning:hover .unstable-message {
@@ -276,6 +478,13 @@
     }
     .unstable-message:hover {
         cursor: auto;
+    }
+    .favorite-button img {
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 1.3em;
+        height: 1.3em;
     }
 
     .blue {

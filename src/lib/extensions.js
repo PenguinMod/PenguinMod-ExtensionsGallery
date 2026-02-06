@@ -245,7 +245,7 @@ export default [
         description: "Use translation keys in your projects for multi-language support",
         code: "Embin/embintranslation.js",
         banner: "Embin/embintranslation.avif",
-        creator: "NotEmbin",
+        creator: "embinmc",
         isGitHub: true, 
         tags: ["data", "utility", "text", "strings"],
         creatorAlias: "Embin",

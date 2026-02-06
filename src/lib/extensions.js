@@ -237,6 +237,7 @@ export default [
         code: "ddededodediamante/dateFormatV2.js",
         banner: "ddededodediamante/dateFormat.svg",
         creator: "ddededodediamante",
+        tags: ["customtype", "utility", "small", "data", "time"],
         isGitHub: true,
     },
     {
@@ -246,6 +247,7 @@ export default [
         banner: "Embin/embintranslation.avif",
         creator: "NotEmbin",
         isGitHub: true, 
+        tags: ["data", "utility", "text", "strings"],
         creatorAlias: "Embin",
     },
     {
@@ -530,6 +532,7 @@ export default [
         code: "Monochromasity/howmanylines.js",
         banner: "Monochromasity/placeholder-howmanylines.avif",
         creator: "Monochromasity",
+        tags: ["small"],
         isGitHub: true,
     },
     {

@@ -615,7 +615,7 @@ export default [
         creator: "ElectricFuzzball_PM" //hey look thats me!!
         //Pluey has been implemented.
     },
-        {
+    {
         name: "Stage Brah",
         description: "Spawn Brah cats in your codespace!",
         code: "electricfuzzball_pm/StageBrah.js",
@@ -623,7 +623,7 @@ export default [
         creator: "ElectricFuzzball_PM"
         //:brah:
     },
-        {
+    {
         name: "MIDI Controller",
         description: "Use a MIDI keyboard to interact with projects!",
         code: "electricfuzzball_pm/MIDI.js",

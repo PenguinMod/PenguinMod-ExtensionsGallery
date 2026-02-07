@@ -298,6 +298,14 @@
                         ...dogeiscutRegularExpression.Block
                     },
                     {
+                        opcode: 'clone',
+                        text: 'clone [REGEX]',
+                        arguments: {
+                           REGEX: dogeiscutRegularExpression.Argument,
+                        },
+                        ...dogeiscutRegularExpression.Block
+                    },
+                    {
                         opcode: 'escape',
                         text: 'escape [STRING] for regex',
                         blockType: BlockType.REPORTER,
@@ -494,6 +502,13 @@
             PATTERN = Cast.toString(PATTERN)
             FLAGS = Cast.toString(FLAGS)
             return RegularExpressionType.toRegularExpression({ PATTERN, FLAGS })
+        }
+
+        clone({ REGEX }) {
+            REGEX = RegularExpressionType.toRegularExpression(REGEX)
+            let newRegex = RegularExpressionType.toRegularExpression({ PATTERN: REGEX.source, FLAGS: REGEX.flags })
+            newRegex.lastIndex = REGEX.lastIndex
+            return newRegex
         }
 
         test({ STRING, REGEX }) {

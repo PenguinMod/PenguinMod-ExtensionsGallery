@@ -630,7 +630,7 @@ export default [
         banner: "electricfuzzball_pm/MIDI.svg",
         creator: "ElectricFuzzball_PM"
     },
-     {
+    {
         name: "Links & Barcodes",
         description: "Blocks to open web links and generate scannable QR codes on the stage.",
         code: "codemaster/links-and-barcodes.js",

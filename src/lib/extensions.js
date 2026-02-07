@@ -630,4 +630,24 @@ export default [
         banner: "electricfuzzball_pm/MIDI.svg",
         creator: "ElectricFuzzball_PM"
     },
+     {
+        name: "Links & Barcodes",
+        description: "Blocks to open web links and generate scannable QR codes on the stage.",
+        code: "codemaster/links-and-barcodes.js",
+        banner: "codemaster/links-and-barcodes.png",
+        creator: "moosanaeempc-lgtm",
+        creatorAlias: "codemaster",
+        isGitHub: true,
+        isUnsandboxed: true,
+    },
+    {
+        name: "Joystick",
+        description: "Instead of making a joystick just upload the extension and make your games mobile friendly in seconds.",
+        code: "codemaster/joystick.js",
+        banner: "codemaster/joystick.png",
+        creator: "moosanaeempc-lgtm",
+        creatorAlias: "codemaster",
+        isGitHub: true,
+        isUnsandboxed: true,
+    },
 ];

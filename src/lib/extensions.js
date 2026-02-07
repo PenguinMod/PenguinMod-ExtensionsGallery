@@ -237,6 +237,7 @@ export default [
         code: "ddededodediamante/dateFormatV2.js",
         banner: "ddededodediamante/dateFormat.svg",
         creator: "ddededodediamante",
+        tags: ["customtype", "utility", "small", "data", "time"],
         isGitHub: true,
     },
     {
@@ -244,8 +245,9 @@ export default [
         description: "Use translation keys in your projects for multi-language support",
         code: "Embin/embintranslation.js",
         banner: "Embin/embintranslation.avif",
-        creator: "NotEmbin",
+        creator: "embinmc",
         isGitHub: true, 
+        tags: ["data", "utility", "text", "strings"],
         creatorAlias: "Embin",
     },
     {
@@ -274,6 +276,16 @@ export default [
         creator: "DogeisCut",
         isGitHub: true, 
         tags: ["customtype", "sets", "data", "utility"]
+    },
+    {
+        name: "Iterators",
+        description: "Transform and iterate over different types of collections and more.",
+        code: "Div/divIterators.js",
+        banner: "Div/divIterators.svg",
+        creator: "Dicuo",
+        creatorAlias: "Div",
+        isGitHub: true,
+        tags: ["new", "customtype", "iterators", "data", "utility", "builder"]
     },
     {
         name: "Blobs",
@@ -530,6 +542,7 @@ export default [
         code: "Monochromasity/howmanylines.js",
         banner: "Monochromasity/placeholder-howmanylines.avif",
         creator: "Monochromasity",
+        tags: ["small"],
         isGitHub: true,
     },
     {

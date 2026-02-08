@@ -432,8 +432,21 @@
                                 defaultValue: "foo"
                             },
                         },
-                        hideFromPalette: !vm.runtime.ext_jwArray,
-                        ...(vm.runtime.ext_jwArray ? vm.jwArray.Block : {}),
+                        hideFromPalette: !vm.runtime.ext_jwArray && vm.runtime.ext_divIterator,
+                        ...(vm.runtime.ext_jwArray && !vm.runtime.ext_divIterator ? vm.jwArray.Block : {}),
+                    },
+                    {
+                        opcode: 'matchAllIterator',
+                        text: 'match all [REGEX] with [STRING]',
+                        arguments: {
+                            REGEX: dogeiscutRegularExpression.Argument,
+                            STRING: {
+                                type: ArgumentType.STRING,
+                                defaultValue: "foo"
+                            },
+                        },
+                        hideFromPalette: !vm.runtime.ext_divIterator,
+                        ...(vm.runtime.ext_divIterator ? vm.divIterator.Block : {}),
                     },
                     '---',
                     {

@@ -3,16 +3,6 @@
 // Description: Store data efficiently in multi-purpose objects.
 // By: dogeiscut <https://scratch.mit.edu/users/dogeiscut/>
 
-// this was a nightmare to code
-
-// FUTURE UPDATE TODO:
-// - block toggle for the recursion stuff i had before (wouldn't save or display in bubbles though unless i figure that out)
-
-// TODO:
-// turn keys values and entires of into a single block with a dropdown
-// setPrototypeOf is slow, create new objects where we can instead
-// maybe rewrite this entire thing cause a lot of code is leftover from when i wanted recursion and didnt know about null prototypes, and i overcomplicated a lot of stuff
-
 (function(Scratch) {
     'use strict';
 
@@ -22,310 +12,8 @@
 
     const vm = Scratch.vm
 
-    const isArray = Array.isArray
-    const fnToString = Function.prototype.toString
-    const classRegex = /^class\s/
-    const hasOwn = Object.hasOwn;
-    const defaultPrototype = Object.getPrototypeOf({})
-
-    function isClassOrInstance(x) {
-        if (typeof x === "function") {
-            return classRegex.test(fnToString.call(x))
-        }
-        if (x && typeof x === "object") {
-            const ctor = x.constructor
-            return typeof ctor === "function" && classRegex.test(fnToString.call(ctor))
-        }
-        return false
-    }
-
     class ObjectType {
         customId = "dogeiscutObject"
-
-        constructor(object) {
-            if (object && typeof object === "object") {
-                this.object = { ...object }
-                Object.setPrototypeOf(this.object, null)
-            } else {
-                this.object = Object.create(null)
-            }
-        }
-
-        static toObject(x, copy = true) {
-            if (copy) {
-                if (x === "" || x === null || x === undefined) return new ObjectType()
-                if (x instanceof ObjectType) return new ObjectType(x.object)
-            } else {
-                if (x === "" || x === null || x === undefined) return ObjectType.blank
-                if (x instanceof ObjectType) return x
-            }
-
-            if (x && typeof x === "object") {
-                if (x instanceof jwArray.Type) {
-                    return new ObjectType(Object.fromEntries(x.array.map((v,i)=>[i+1,v])))
-                }
-                if (vm.dogeiscutSet) {
-                    if (x instanceof vm.dogeiscutSet.Type) {
-                        return new ObjectType(Object.fromEntries(Array.from(x.set).map((v,i)=>[i+1,v])))
-                    }
-                }
-                if (x instanceof Set) {
-                    return new ObjectType(Object.fromEntries(Array.from(x).map((v,i)=>[i+1,v])))
-                }
-                if (isArray(x)) {
-                    return new ObjectType(Object.fromEntries(x.map((v,i)=>[i+1,v])))
-                }
-                if (typeof x.toJSON == "function") {
-                    x = x.toJSON()
-                }
-                if (isClassOrInstance(x)) {
-                    return new ObjectType({ value: x })
-                }
-                return new ObjectType(Object.assign(Object.create(null), x))
-            }
-
-            if (typeof x === "string") {
-                try {
-                    const parsed = JSON.parse(x, (key, value, context) => {
-                        if (typeof value === "object") {
-                            if (Object.getPrototypeOf(value) === defaultPrototype) {
-                                return Object.setPrototypeOf(value, null) // slow but im too lazy to do this proper right now
-                            }
-                        }
-                        return value
-                    })
-                    if (isArray(parsed)) {
-                        return new ObjectType(Object.fromEntries(parsed.map((v,i)=>[i+1,v])))
-                    }
-                    if (parsed && typeof parsed === "object") {
-                        return new ObjectType(Object.assign(Object.create(null), parsed))
-                    }
-                } catch {}
-            }
-
-            return new ObjectType({ value: x })
-        }
-
-        jwArrayHandler() {
-            // not sure how i feel about this
-            return this.toVisualContent().outerHTML
-        }
-
-        dogeiscutObjectHandler() {
-            return this.toString()
-        }
-
-        static convertIfNeeded(x) {
-            if (x === null || typeof x !== "object") return x
-            if (x instanceof jwArray.Type || x instanceof dogeiscutObject.Type) return x
-
-            if (isArray(x)) return jwArray.Type.toArray(x)
-            const prototype = Object.getPrototypeOf(x)
-            if (!prototype || prototype === defaultPrototype) return dogeiscutObject.Type.toObject(x)
-
-            return x
-        }
-
-        toString(pretty = false) {
-            return JSON.stringify(this, null, pretty ? "\t" : null)
-        }
-
-        toVisualContent(border = '1px solid #77777777', keyBackground = '#77777724', background = '#ffffff00') {
-            // wasnt sure how i wanted this to look so i have some customization
-            const RENDER_ARRAYS_VISUALLY = true;
-            const SHOW_ARRAY_INDEX_NUMBERS = false;
-            const RENDER_STRING_VALUES_WITH_QUOTES = true;
-            const ENTRY_LIMIT = 1000;
-
-            function renderObject(obj) {
-                const table = document.createElement('table');
-                table.style.borderCollapse = 'collapse';
-                table.style.margin = '4px 0';
-                table.style.fontSize = '12px';
-
-                const entries = Object.entries(obj);
-                const limitedEntries = entries.slice(0, ENTRY_LIMIT);
-
-                for (const [key, value] of limitedEntries) {
-                    const row = document.createElement('tr');
-
-                    const keyCell = document.createElement('td');
-                    keyCell.textContent = key;
-                    keyCell.style.border = border;
-                    keyCell.style.padding = '2px 6px';
-                    keyCell.style.background = keyBackground;
-                    keyCell.style.fontWeight = 'bold';
-
-                    const valueCell = document.createElement('td');
-                    valueCell.style.border = border;
-                    valueCell.style.padding = '2px 6px';
-                    valueCell.style.background = background;
-
-                    if (typeof value === 'object' && value !== null) {
-                        if (value instanceof dogeiscutObject.Type) {
-                            valueCell.appendChild(renderObject(value.object));
-                        } else if (RENDER_ARRAYS_VISUALLY && (isArray(value) || (jwArray && value instanceof jwArray.Type))) {
-                            valueCell.appendChild(renderArray(isArray(value) ? value : (value.array || [])));
-                        } else if (typeof value.dogeiscutObjectHandler === "function") {
-                            valueCell.innerHTML = value.dogeiscutObjectHandler();
-                        } else if (typeof value.jwArrayHandler === "function") {
-                            valueCell.innerHTML = value.jwArrayHandler();
-                        } else {
-                            valueCell.appendChild(renderObject(value));
-                        }
-                    } else if (typeof value === "string" && RENDER_STRING_VALUES_WITH_QUOTES) {
-                        valueCell.textContent = `"${value}"`;
-                    } else if (value && typeof value.toString === "function" && value.toString !== Object.prototype.toString) {
-                        valueCell.textContent = value.toString();
-                    } else if (value === null || value === undefined) {
-                        valueCell.textContent = "null";
-                    } else {
-                        valueCell.textContent = String(value);
-                    }
-
-                    row.appendChild(keyCell);
-                    row.appendChild(valueCell);
-                    table.appendChild(row);
-                }
-
-                if (entries.length > ENTRY_LIMIT) {
-                    const moreRow = document.createElement('tr');
-                    const moreCell = document.createElement('td');
-                    moreCell.colSpan = 2;
-                    moreCell.textContent = `... ${entries.length - ENTRY_LIMIT} more entries`;
-                    moreCell.style.textAlign = 'center';
-                    moreCell.style.fontStyle = 'italic';
-                    moreRow.appendChild(moreCell);
-                    table.appendChild(moreRow);
-                }
-
-                return table;
-            }
-
-            function renderArray(arr) {
-                const arrTable = document.createElement('table');
-                arrTable.style.borderCollapse = 'collapse';
-                arrTable.style.margin = '2px 0';
-                arrTable.style.fontSize = '12px';
-                arrTable.style.background = background;
-                arrTable.style.border = border;
-
-                const limitedArray = arr.slice(0, ENTRY_LIMIT);
-
-                limitedArray.forEach((item, idx) => {
-                    const row = document.createElement('tr');
-
-                    if (SHOW_ARRAY_INDEX_NUMBERS) {
-                        const idxCell = document.createElement('td');
-                        idxCell.textContent = idx;
-                        idxCell.style.border = border;
-                        idxCell.style.padding = '2px 6px';
-                        idxCell.style.background = keyBackground;
-                        idxCell.style.fontWeight = 'bold';
-                        row.appendChild(idxCell);
-                    }
-
-                    const valCell = document.createElement('td');
-                    valCell.style.border = border;
-                    valCell.style.padding = '2px 6px';
-                    valCell.style.background = background;
-
-                    if (typeof item === 'object' && item !== null) {
-                        if (item instanceof dogeiscutObject.Type) {
-                            valCell.appendChild(renderObject(item.object));
-                        } else if (RENDER_ARRAYS_VISUALLY && (isArray(item) || (jwArray && item instanceof jwArray.Type))) {
-                            valCell.appendChild(renderArray(isArray(item) ? item : (item.array || [])));
-                        } else if (typeof item.dogeiscutObjectHandler === "function") {
-                            valCell.innerHTML = item.dogeiscutObjectHandler();
-                        } else if (typeof item.jwArrayHandler === "function") {
-                            valCell.innerHTML = item.jwArrayHandler();
-                        } else {
-                            valCell.appendChild(renderObject(item));
-                        }
-                    } else if (typeof item === "string" && RENDER_STRING_VALUES_WITH_QUOTES) {
-                        valCell.textContent = `"${item}"`;
-                    } else if (item && typeof item.toString === "function" && item.toString !== Object.prototype.toString) {
-                        valCell.textContent = item.toString();
-                    } else if (item === null || item === undefined) {
-                        valCell.textContent = "null";
-                    } else {
-                        valCell.textContent = String(item);
-                    }
-
-                    row.appendChild(valCell);
-                    arrTable.appendChild(row);
-                });
-
-                if (arr.length > ENTRY_LIMIT) {
-                    const moreRow = document.createElement('tr');
-                    const moreCell = document.createElement('td');
-                    moreCell.colSpan = SHOW_ARRAY_INDEX_NUMBERS ? 2 : 1;
-                    moreCell.textContent = `... ${arr.length - ENTRY_LIMIT} more items`;
-                    moreCell.style.textAlign = 'center';
-                    moreCell.style.fontStyle = 'italic';
-                    moreRow.appendChild(moreCell);
-                    arrTable.appendChild(moreRow);
-                }
-
-                return arrTable;
-            }
-
-            let root = document.createElement('div');
-            root.appendChild(renderObject(this.object));
-            return root;
-        }
-
-        toMonitorContent = () => this.toVisualContent('1px solid #fff', '#ffffff33', 'ffffff00')
-
-        toReporterContent = () => this.toVisualContent()
-
-        toJSON() {
-            return Object.fromEntries(
-                Object.entries(this.object).map(([key, value]) => {
-                    if (typeof value === "object" && value !== null) {
-                        let proto = Object.getPrototypeOf(value)
-                        if (proto !== null && proto !== defaultPrototype /* < lazy fix */) {
-                            if (typeof value.toJSON === "function") return [key, value.toJSON()]
-                            if (typeof value.toString === "function") return [key, value.toString()]
-                            return [key, JSON.stringify(value)]
-                        }
-                    }
-                    return [key, value]
-                })
-            )
-        }
-
-        // Runtime var support
-
-        get(key) {
-            if (typeof key !== "string" && typeof key !== "number") return undefined
-            return ObjectType.convertIfNeeded(this.object[key])
-        }
-
-        set(key, value) {
-            if (typeof key !== "string" && typeof key !== "number") return
-            this.object[key] = ObjectType.convertIfNeeded(value)
-        }
-
-        delete(key) {
-            if (typeof key !== "string" && typeof key !== "number") return
-            if (hasOwn(this.object, key)) {
-                delete this.object[key]
-            }
-        }
-
-        remove(key) {
-            this.delete(key)
-        }
-
-        has(key) {
-            if (typeof key !== "string" && typeof key !== "number") return false
-            return hasOwn(this.object, key)
-        }
-
-        // Optomizition thingy
-
-        static blank = new ObjectType()
     }
 
     const dogeiscutObject = {
@@ -343,47 +31,14 @@
         }
     }
 
-    let jwArray = {
-        Type: class { constructor(array) {/* noop */} static toArray(x) {/* noop */} },
-        Block: {},
-        Argument: {}
-    }
-
     class Extension {
         constructor() {
             vm.dogeiscutObject = dogeiscutObject
             vm.runtime.registerSerializer(
                 "dogeiscutObject",
                 v => {
-                    if (v instanceof dogeiscutObject.Type) {
-                        return {
-                            entries: Object.entries(v.object).map(([key, value]) => {
-                                if (typeof value === "object" && value !== null && value.customId) {
-                                    return {
-                                        key,
-                                        customType: true,
-                                        typeId: value.customId,
-                                        serialized: vm.runtime.serializers[value.customId].serialize(value)
-                                    };
-                                }
-                                return { key, value };
-                            })
-                        };
-                    }
-                    return null;
                 },
                 v => {
-                    try {
-                        const parsed = v.entries.map(entry => {
-                            if (entry.customType) {
-                                return [entry.key, vm.runtime.serializers[entry.typeId].deserialize(entry.serialized)];
-                            }
-                            return [entry.key, entry.value];
-                        });
-                        return new dogeiscutObject.Type(Object.fromEntries(parsed));
-                    } catch {
-                        return null;
-                    }
                 },
             );
 
@@ -413,29 +68,11 @@
                         arguments: {
                             VALUE: {
                                 type: Scratch.ArgumentType.STRING,
-                                defaultValue: "{\"foo\": \"bar\"}",
+                                defaultValue: '{"foo": "bar"}',
                                 exemptFromNormalization: true
                             }
                         }
                     },
-                    // can litterally just use a blank (set foo in () to bar)
-                    // {
-                    //     opcode: 'keyValue',
-                    //     text: 'key [KEY] value [VALUE]',
-                    //     ...dogeiscutObject.Block,
-                    //     arguments: {
-                    //         KEY: {
-                    //             type: Scratch.ArgumentType.STRING,
-                    //             defaultValue: "foo",
-                    //             exemptFromNormalization: true
-                    //         },
-                    //         VALUE: {
-                    //             type: Scratch.ArgumentType.STRING,
-                    //             defaultValue: "bar",
-                    //             exemptFromNormalization: true
-                    //         }
-                    //     }
-                    // },
                     {
                         opcode: 'fromEntries',
                         text: 'from entries [ARRAY]',
@@ -444,12 +81,6 @@
                             ARRAY: jwArray.Argument
                         }
                     },
-                    // future idea
-                    // {
-                    //     opcode: 'fromLists',
-                    //     text: 'from lists keys: [KEY_LIST] values: [VALUE_LIST}',
-                    //     ...dogeiscutObject.Block,
-                    // },
                     '---',
                     {
                         opcode: 'currentObject',
@@ -677,10 +308,6 @@
                     },
                 ],
                 menus: {
-                    list: {
-                        acceptReporters: false,
-                        items: "getLists",
-                    },
                     stringifyFormat: {
                         acceptReporters: false,
                         items: [
@@ -707,12 +334,7 @@
                     builder: (node, compiler, imports) => {
                         const originalSource = compiler.source;
 
-                        compiler.source = 'vm.dogeiscutObject.Type.toObject(yield* (function*() {';
-                        compiler.source += 'thread._dogeiscutObjectBuilderIndex ??= [];';
-                        compiler.source += 'thread._dogeiscutObjectBuilderIndex.push(Object.create(null));';
-                        compiler.descendStack(node.substack, new imports.Frame(false, undefined, true));
-                        compiler.source += 'return thread._dogeiscutObjectBuilderIndex.pop();';
-                        compiler.source += '})())';
+                        // new stuff here
 
                         const stackSource = compiler.source;
                         compiler.source = originalSource;
@@ -725,36 +347,18 @@
         /* Blocks */
 
         blank() {
-            return dogeiscutObject.Type.blank;
         }
 
         parse({ VALUE }) {
-            return dogeiscutObject.Type.toObject(VALUE);
         }
 
         keyValue({ KEY, VALUE }) {
-            const obj = Object.create(null);
-            obj[KEY] = VALUE;
-            return new dogeiscutObject.Type(obj);
         }
 
         fromEntries({ ARRAY }) {
-            ARRAY = jwArray.Type.toArray(ARRAY)
-
-            try {
-                return new dogeiscutObject.Type(Object.assign(Object.create(null),
-                    Object.fromEntries(ARRAY.array.map((value) => value.array ? value.array : value))
-                ))
-            } catch {}
-            return new dogeiscutObject.Type()
         }
 
         currentObject({}, util) {
-            if (util.thread._dogeiscutObjectBuilderIndex && util.thread._dogeiscutObjectBuilderIndex.length > 0) {
-                return dogeiscutObject.Type.toObject(util.thread._dogeiscutObjectBuilderIndex[util.thread._dogeiscutObjectBuilderIndex.length-1])
-            } else {
-                throw 'This block must be inside of a "object builder" block.';
-            }
         }
 
         builder() {
@@ -762,195 +366,59 @@
         }
 
         builderAppend({ KEY, VALUE }, util) {
-            if (util.thread._dogeiscutObjectBuilderIndex && util.thread._dogeiscutObjectBuilderIndex.length > 0) {
-                util.thread._dogeiscutObjectBuilderIndex[util.thread._dogeiscutObjectBuilderIndex.length-1][KEY] = VALUE
-            } else {
-                throw 'This block must be inside of a "object builder" block.';
-            }
         }
 
         builderAppendEmpty({ KEY }, util) {
-            if (util.thread._dogeiscutObjectBuilderIndex && util.thread._dogeiscutObjectBuilderIndex.length > 0) {
-                util.thread._dogeiscutObjectBuilderIndex[util.thread._dogeiscutObjectBuilderIndex.length - 1][KEY] = null;
-            } else {
-                throw 'This block must be inside of a "object builder" block.';
-            }
         }
 
         builderSet({ OBJECT }, util) {
-            OBJECT = dogeiscutObject.Type.toObject(OBJECT)
-
-            if (util.thread._dogeiscutObjectBuilderIndex && util.thread._dogeiscutObjectBuilderIndex.length > 0) {
-                util.thread._dogeiscutObjectBuilderIndex[util.thread._dogeiscutObjectBuilderIndex.length-1] = OBJECT.object
-            } else {
-                throw 'This block must be inside of a "object builder" block.';
-            }
         }
 
 
         get({ OBJECT, KEY }) {
-            OBJECT = dogeiscutObject.Type.toObject(OBJECT, false)
-
-            return hasOwn(OBJECT.object, KEY) ? dogeiscutObject.Type.convertIfNeeded(OBJECT.object[KEY]) : ""
         }
 
         getPath({ OBJECT, ARRAY }) {
-            OBJECT = dogeiscutObject.Type.toObject(OBJECT, false);
-            ARRAY = jwArray.Type.toArray(ARRAY);
-
-            let current = OBJECT.object;
-            for (const key of ARRAY.array) {
-                if (current instanceof dogeiscutObject.Type) {
-                    current = current.object
-                }
-                if (current && hasOwn(current, key)) {
-                    current = current[key];
-                } else {
-                    return "";
-                }
-            }
-            
-            return dogeiscutObject.Type.convertIfNeeded(current);
         }
 
         has({ OBJECT, KEY }) {
-            OBJECT = dogeiscutObject.Type.toObject(OBJECT, false)
-
-            return hasOwn(OBJECT.object, KEY)
         }
 
         set({ OBJECT, KEY, VALUE }) {
-            OBJECT = dogeiscutObject.Type.toObject(OBJECT);
-
-            OBJECT.object[KEY] = VALUE;
-            return OBJECT;
         }
 
         setPath({ OBJECT, ARRAY, VALUE }) {
-            OBJECT = dogeiscutObject.Type.toObject(OBJECT);
-            ARRAY = jwArray.Type.toArray(ARRAY);
-
-            let current = OBJECT.object;
-            for (let i = 0; i < ARRAY.array.length; i++) {
-                let key = ARRAY.array[i];
-
-                if (current instanceof dogeiscutObject.Type) {
-                    current = current.object;
-                } else if (current instanceof jwArray.Type) {
-                    current = current.array;
-                }
-
-                if (Array.isArray(current) && typeof key === "number") {
-                    key = key - 1;
-                }
-
-                if (i === ARRAY.array.length - 1) {
-                    current[key] = VALUE;
-                    return OBJECT;
-                }
-
-                let existing = current[key];
-                if (existing === undefined || existing === null || typeof existing !== "object") {
-                    current[key] = Object.create(null);
-                } else if (existing instanceof dogeiscutObject.Type) {
-                    current[key] = new dogeiscutObject.Type(
-                        Object.assign(Object.create(null), existing.object)
-                    );
-                } else if (existing instanceof jwArray.Type) {
-                    current[key] = new jwArray.Type(existing.array.slice());
-                } else {
-                    current[key] = Object.assign(
-                        Array.isArray(existing) ? [] : Object.create(null),
-                        existing
-                    );
-                }
-
-                current = current[key];
-            }
-
-            return OBJECT;
         }
 
         delete({ KEY, OBJECT }) {
-            OBJECT = dogeiscutObject.Type.toObject(OBJECT);
-
-            delete OBJECT.object[KEY];
-            return OBJECT;
         }
 
         merge({ ONE, TWO }) {
-            console.log(ONE)
-            console.log(TWO)
-            ONE = dogeiscutObject.Type.toObject(ONE);
-            TWO = dogeiscutObject.Type.toObject(TWO);
-
-            Object.assign(TWO.object, Object.assign(Object.create(null), ONE.object))
-            return TWO;
         }
 
         toString({OBJECT, FORMAT}) {
-            OBJECT = dogeiscutObject.Type.toObject(OBJECT, false);
-            
-            return OBJECT.toString(FORMAT === "pretty")
         }
 
         keys({ OBJECT }) {
-            OBJECT = dogeiscutObject.Type.toObject(OBJECT, false);
-
-            return new jwArray.Type(Object.keys(OBJECT.object));
         }
 
         values({ OBJECT }) {
-            OBJECT = dogeiscutObject.Type.toObject(OBJECT, false);
-
-            return new jwArray.Type(Object.values(OBJECT.object).map(dogeiscutObject.Type.convertIfNeeded));
         }
 
         entries({ OBJECT }) {
-            OBJECT = dogeiscutObject.Type.toObject(OBJECT, false);
-
-            return new jwArray.Type(Object.entries(OBJECT.object).map(([key, value]) => {
-                return new jwArray.Type([key, dogeiscutObject.Type.convertIfNeeded(value)]);
-            }));
         }
 
         is({ VALUE }) {
-            try {
-                const parsed = JSON.parse(VALUE);
-                return typeof parsed === 'object' && parsed !== null && !isArray(parsed);
-            } catch {
-                return false;
-            }
         }
 
         forEachK({}, util) {
-            let obj = util.thread.stackFrames[0].dogeiscutObject;
-            return obj ? dogeiscutObject.Type.convertIfNeeded(obj[0]) : "";
         }
 
         forEachV({}, util) {
-            let obj = util.thread.stackFrames[0].dogeiscutObject;
-            return obj ? dogeiscutObject.Type.convertIfNeeded(obj[1]) : "";
         }
 
         forEach({ OBJECT }, util) {
-            if (util.stackFrame.execute) {
-                util.stackFrame.index++;
-                const { index, entries } = util.stackFrame;
-                if (index > entries.length - 1) return;
-                util.thread.stackFrames[0].dogeiscutObject = entries[index];
-            } else {
-                OBJECT = dogeiscutObject.Type.toObject(OBJECT, false);
-                const entries = Object.entries(OBJECT.object).map(([key, value]) => {
-                    return [dogeiscutObject.Type.convertIfNeeded(key), dogeiscutObject.Type.convertIfNeeded(value)];
-                });
-                if (entries.length === 0) return;
-                util.stackFrame.entries = entries;
-                util.stackFrame.execute = true;
-                util.stackFrame.index = 0;
-                util.thread.stackFrames[0].dogeiscutObject = entries[0];
-            }
-            util.startBranch(1, true);
+            return 'noop'
         }
 
     }

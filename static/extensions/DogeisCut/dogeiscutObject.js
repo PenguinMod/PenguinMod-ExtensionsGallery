@@ -6,10 +6,10 @@
 // we usin maps 
 
 (function(Scratch) {
-    'use strict';
+    'use strict'
 
     if (!Scratch.extensions.unsandboxed) {
-        throw new Error('\'Objects\' must run unsandboxed!');
+        throw new Error('\'Objects\' must run unsandboxed!')
     }
 
     const BlockType = Scratch.BlockType
@@ -17,9 +17,9 @@
     const ArgumentType = Scratch.ArgumentType
     const TargetType = Scratch.TargetType
     const Cast = Scratch.Cast
-    const vm = Scratch.vm;
-    const runtime = Scratch.vm.runtime;
-    const SB = ScratchBlocks;
+    const vm = Scratch.vm
+    const runtime = Scratch.vm.runtime
+    const SB = ScratchBlocks
 
     /**
     * @param {number} x
@@ -41,7 +41,7 @@
             .replaceAll(">", "&gt;")
             .replaceAll('"', "&quot;")
             .replaceAll("'", "&#039;")
-    };
+    }
     
     function span(text) {
         let el = document.createElement('span')
@@ -55,11 +55,11 @@
 
     function isPlainObject(value) {
         if (typeof value !== 'object' || value === null) {
-            return false;
+            return false
         }
 
-        const prototype = Object.getPrototypeOf(value);
-        return (prototype === null || prototype === Object.prototype || Object.getPrototypeOf(prototype) === null) && !(Symbol.toStringTag in value) && !(Symbol.iterator in value);
+        const prototype = Object.getPrototypeOf(value)
+        return (prototype === null || prototype === Object.prototype || Object.getPrototypeOf(prototype) === null) && !(Symbol.toStringTag in value) && !(Symbol.iterator in value)
     }
 
     let jwArray = {
@@ -192,20 +192,20 @@
 
         static fromEntries(entries) {
             const normalize = (input) => {
-                const val = input instanceof jwArray.Type ? input.array : input;
+                const val = input instanceof jwArray.Type ? input.array : input
                 return (val != null && typeof val[Symbol.iterator] === 'function') 
                     ? [...val] 
-                    : [val];
-            };
+                    : [val]
+            }
 
-            const array = normalize(entries);
+            const array = normalize(entries)
 
             const processed = array
                 .map(v => normalize(v))
                 .filter(Array.isArray)
-                .map(([k, v]) => [Cast.toString(k), v]);
+                .map(([k, v]) => [Cast.toString(k), v])
 
-            return ObjectType.toObject(new Map(processed));
+            return ObjectType.toObject(new Map(processed))
         }
 
         get(key) {
@@ -214,27 +214,17 @@
         }
 
         getPath(path) {
-            // const normalize = (input) => {
-            //     if (input instanceof jwArray.Type) {
-            //         return input.array.map(v => normalize(v))
-            //     }
-            //     if (input instanceof ObjectType) {
-            //         return new Map(Array.from(input.map).map(([k, v]) => [Cast.toString(k), normalize(v)]))
-            //     }
-            //     return input
-            // }
-            // const array = normalize(path)
-            const array = path instanceof jwArray.Type ? path.array : path
+            const arrayPath = path instanceof jwArray.Type ? path.array : (path ? path : [])
             let val = ObjectType.forObject(this.map)
-            for (var i = 0; i < array.length; i++) {
-                const key = Cast.toString(array[i]);
+            for (var i = 0; i < arrayPath.length; i++) {
+                const key = Cast.toString(arrayPath[i])
                 if (this.has(key)) {
-                    val = val.get(key);
+                    val = val.get(key)
                 } else {
-                    return "";
+                    return ""
                 }
             }
-            return val;
+            return val
         }
 
         has(key) {
@@ -249,19 +239,26 @@
             return OBJECT
         }
 
-        // setPath(path) {
-        //     const array = path instanceof jwArray.Type ? path.array : path
-        //     let val = ObjectType.forObject(this.map.get(key))
-        //     for (var i = 0; i < array.length; i++) {
-        //         const key = Cast.toString(array[i]);
-        //         if (this.has(key)) {
-        //             val = val.get(key);
-        //         } else {
-        //             return "";
-        //         }
-        //     }
-        //     return val;
-        // }
+        setPath(path, value) {
+            const normalize = (input) => {
+                if (input instanceof jwArray.Type) {
+                    return input.array.map(v => normalize(v))
+                }
+                if (input instanceof ObjectType) {
+                    return new Map(Array.from(input.map).map(([k, v]) => [Cast.toString(k), normalize(v)]))
+                }
+                return input
+            }
+            const arrayPath = [...(path instanceof jwArray.Type ? path.array : (path ? path : []))]
+            let obj = normalize(this) ?? new Map()
+            arrayPath.reduce((map, key, i) => {
+                key = Cast.toString(key)
+                if (i === arrayPath.length - 1) map.set(key, value)
+                else map.set(key, map.has(key) ? map.get(key) : new Map())
+                return map.get(key)
+            }, obj)
+            return ObjectType.toObject(obj)
+        }
 
         delete(key) {
             key = Cast.toString(key)
@@ -270,8 +267,11 @@
             return OBJECT
         }
 
-        // merge(other) {
-        // }
+        merge(other) {
+            other = ObjectType.toObject(other, true)
+            const OBJECT = ObjectType.toObject(new Map(...this.map, ...other.map), true)
+            return OBJECT
+        }
 
         get keys() {
             return [...this.map.keys()]
@@ -310,12 +310,12 @@
                 },
                 v => {
                 },
-            );
+            )
 
             if (!vm.jwArray) vm.extensionManager.loadExtensionIdSync('jwArray')
             jwArray = vm.jwArray
             
-            vm.runtime.registerCompiledExtensionBlocks('dogeiscutObject', this.getCompileInfo());
+            vm.runtime.registerCompiledExtensionBlocks('dogeiscutObject', this.getCompileInfo())
         }
 
         getInfo() {
@@ -486,6 +486,7 @@
                         },
                         ...dogeiscutObject.Block,
                     },
+                    // IDEA: delete path from object
                     {
                         opcode: 'merge',
                         text: 'merge [ONE] into [TWO]',
@@ -533,12 +534,12 @@
                         },
                         ...jwArray.Block,
                     },
-                    "---",
+                    //"---",
                     {
                         opcode: 'is',
                         text: 'is [VALUE] an object?',
                         blockType: Scratch.BlockType.BOOLEAN,
-                        hideFromPalette: true, // deprecated
+                        hideFromPalette: true, // deprecated: theres a way to replicate this block behavior, and TW port is getting a typeof block 
                         arguments: {
                             VALUE: {
                                 type: Scratch.ArgumentType.STRING,
@@ -611,34 +612,34 @@
                 },
                 js: {
                     builder: (node, compiler, imports) => {
-                        const originalSource = compiler.source;
-                        compiler.source = 'vm.dogeiscutObject.Type.toObject(yield* (function*() {';
+                        const originalSource = compiler.source
+                        compiler.source = 'vm.dogeiscutObject.Type.toObject(yield* (function*() {'
                         compiler.source += `thread._dogeiscutObjectBuilderIndex ??= [];`
                         compiler.source += `thread._dogeiscutObjectBuilderIndex.push(new Map());`
-                        compiler.descendStack(node.substack, new imports.Frame(false, undefined, true));
+                        compiler.descendStack(node.substack, new imports.Frame(false, undefined, true))
                         compiler.source += `return thread._dogeiscutObjectBuilderIndex.pop();`
-                        compiler.source += '})())';
-                        const stackSource = compiler.source;
-                        compiler.source = originalSource;
-                        return new imports.TypedInput(stackSource, imports.TYPE_UNKNOWN);
+                        compiler.source += '})())'
+                        const stackSource = compiler.source
+                        compiler.source = originalSource
+                        return new imports.TypedInput(stackSource, imports.TYPE_UNKNOWN)
                     },
                     forEach: (node, compiler, imports) => {
-                        // const array = compiler.localVariables.next();
-                        // compiler.source += `let ${array} = vm.dogeiscutObject.Type.toObject(${compiler.descendInput(node.array).asUnknown()}, true).map;\n`
-                        // compiler.source += `thread._dogeiscutObjectForEach ??= [];\n`
-                        // const forIndex = compiler.localVariables.next();
-                        // compiler.source += `let ${forIndex} = thread._dogeiscutObjectForEach.push([]) - 1;\n`
-                        // const index = compiler.localVariables.next();
-                        // const output = compiler.localVariables.next();
-                        // compiler.source += `let ${output} = yield* (function* () {for (let ${index} in ${array}) {\n`
-                        // compiler.source += `thread._dogeiscutObjectForEach[${forIndex}] = [Number(${index}) + 1, ${array}[${index}]];\n`
-                        // compiler.descendStack(node.substack, new imports.Frame(true, undefined, true));
-                        // compiler.yieldLoop()
-                        // compiler.source += '}})();\n'
-                        // compiler.source += `thread._dogeiscutObjectForEach.pop();\n`
-                        // compiler.source += `if (${output} !== undefined) {\n`
-                        // compiler.source += `return ${output};\n`
-                        // compiler.source += `};\n`
+                        const map = compiler.localVariables.next();
+                        compiler.source += `let ${map} = vm.dogeiscutObject.Type.toObject(${compiler.descendInput(node.object).asUnknown()}, true).map;\n`
+                        compiler.source += `thread._dogeiscutObjectForEach ??= [];\n`
+                        const forIndex = compiler.localVariables.next();
+                        compiler.source += `let ${forIndex} = thread._dogeiscutObjectForEach.push([]) - 1;\n`
+                        const index = compiler.localVariables.next();
+                        const output = compiler.localVariables.next();
+                        compiler.source += `let ${output} = yield* (function* () {for (${index} of ${map}) {\n`
+                        compiler.source += `thread._dogeiscutObjectForEach[${forIndex}] = ${index};\n`
+                        compiler.descendStack(node.substack, new imports.Frame(true, undefined, true));
+                        compiler.yieldLoop()
+                        compiler.source += '}})();\n'
+                        compiler.source += `thread._dogeiscutObjectForEach.pop();\n`
+                        compiler.source += `if (${output} !== undefined) {\n`
+                        compiler.source += `return ${output};\n`
+                        compiler.source += `};\n`
                     },
                 }
             };
@@ -647,16 +648,16 @@
         /* Blocks */
 
         blank() {
-            return dogeiscutObject.Type.blank; 
+            return dogeiscutObject.Type.blank;
         }
 
         parse({ VALUE }) {
-            return dogeiscutObject.Type.toObject(VALUE);
+            return dogeiscutObject.Type.toObject(VALUE)
         }
 
         keyValue({ KEY, VALUE }) {
             KEY = Cast.toString(KEY)
-            return new dogeiscutObject.Type(new Map([[KEY, VALUE]]));
+            return new dogeiscutObject.Type(new Map([[KEY, VALUE]]))
         }
 
         fromEntries({ ARRAY }) {
@@ -717,6 +718,8 @@
         }
 
         setPath({ OBJECT, ARRAY, VALUE }) {
+            OBJECT = dogeiscutObject.Type.toObject(OBJECT)
+            return OBJECT.setPath(ARRAY, VALUE)
         }
 
         delete({ KEY, OBJECT }) {
@@ -725,43 +728,45 @@
         }
 
         merge({ ONE, TWO }) {
+            ONE = dogeiscutObject.Type.toObject(OBJECT, true)
+            return ONE.merge(TWO)
         }
 
         toString({ OBJECT, FORMAT }) {
-            OBJECT = dogeiscutObject.Type.toObject(OBJECT, true);
+            OBJECT = dogeiscutObject.Type.toObject(OBJECT, true)
             
             return OBJECT.toString(FORMAT === "pretty")
         }
 
         keys({ OBJECT }) {
-            OBJECT = dogeiscutObject.Type.toObject(OBJECT, true);
+            OBJECT = dogeiscutObject.Type.toObject(OBJECT, true)
 
             return jwArray.Type.toArray(OBJECT.keys)
         }
 
         values({ OBJECT }) {
-            OBJECT = dogeiscutObject.Type.toObject(OBJECT, true);
+            OBJECT = dogeiscutObject.Type.toObject(OBJECT, true)
 
             return jwArray.Type.toArray(OBJECT.values)
         }
 
         entries({ OBJECT }) {
-            OBJECT = dogeiscutObject.Type.toObject(OBJECT, true);
+            OBJECT = dogeiscutObject.Type.toObject(OBJECT, true)
 
             return jwArray.Type.toArray(OBJECT.entries.map(([key, value]) => jwArray.Type.toArray([key, value])))
         }
 
         is({ VALUE }) {
             try {
-                const parsed = JSON.parse(VALUE);
-                return typeof parsed === 'object' && parsed !== null && !Array.isArray(parsed);
+                const parsed = JSON.parse(VALUE)
+                return typeof parsed === 'object' && parsed !== null && !Array.isArray(parsed)
             } catch {
-                return false;
+                return false
             } 
         }
 
         forEachK({ }, util) {
-            return (util.thread._dogeiscutObjectForEach && util.thread._dogeiscutObjectForEach[util.thread._dogeiscutObjectForEach.length-1]) ? util.thread._dogeiscutObjectForEach[util.thread._dogeiscutObjectForEach.length-1][0] : 0
+            return (util.thread._dogeiscutObjectForEach && util.thread._dogeiscutObjectForEach[util.thread._dogeiscutObjectForEach.length-1]) ? util.thread._dogeiscutObjectForEach[util.thread._dogeiscutObjectForEach.length-1][0] : ""
         }
 
         forEachV({ }, util) {
@@ -774,5 +779,5 @@
 
     }
 
-    Scratch.extensions.register(new Extension());
-})(Scratch);
+    Scratch.extensions.register(new Extension())
+})(Scratch)

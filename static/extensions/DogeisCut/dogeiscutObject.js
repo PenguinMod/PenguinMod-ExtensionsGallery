@@ -3,6 +3,8 @@
 // Description: Store data efficiently in multi-purpose objects.
 // By: dogeiscut <https://scratch.mit.edu/users/dogeiscut/>
 
+// we usin maps 
+
 (function(Scratch) {
     'use strict';
 
@@ -10,10 +12,158 @@
         throw new Error('\'Objects\' must run unsandboxed!');
     }
 
-    const vm = Scratch.vm
+    const BlockType = Scratch.BlockType
+    const BlockShape = Scratch.BlockShape
+    const ArgumentType = Scratch.ArgumentType
+    const TargetType = Scratch.TargetType
+    const Cast = Scratch.Cast
+    const vm = Scratch.vm;
+    const runtime = Scratch.vm.runtime;
+    const SB = ScratchBlocks;
+
+    /**
+    * @param {number} x
+    * @returns {string}
+    */
+    function formatNumber(x) {
+        if (x >= 1e6) {
+            return x.toExponential(4)
+        } else {
+            x = Math.floor(x * 1000) / 1000
+            return x.toFixed(Math.min(3, (String(x).split('.')[1] || '').length))
+        }
+    }
+
+    const escapeHTML = unsafe => {
+        return unsafe
+            .replaceAll("&", "&amp;")
+            .replaceAll("<", "&lt;")
+            .replaceAll(">", "&gt;")
+            .replaceAll('"', "&quot;")
+            .replaceAll("'", "&#039;")
+    };
+    
+    function span(text) {
+        let el = document.createElement('span')
+        el.innerHTML = text
+        el.style.display = 'hidden'
+        el.style.whiteSpace = 'nowrap'
+        el.style.width = '100%'
+        el.style.textAlign = 'center'
+        return el
+    }
+
+    function isPlainObject(value) {
+        if (typeof value !== 'object' || value === null) {
+            return false;
+        }
+
+        const prototype = Object.getPrototypeOf(value);
+        return (prototype === null || prototype === Object.prototype || Object.getPrototypeOf(prototype) === null) && !(Symbol.toStringTag in value) && !(Symbol.iterator in value);
+    }
 
     class ObjectType {
         customId = "dogeiscutObject"
+
+        map = new Map() // evilally secretly uses maps instead of objects
+
+        constructor(map = new Map(), safe = false) {
+            this.map = safe ? map : new Map([...map.entries()].map(([key, value]) => {
+                if (value instanceof Array) return [Cast.toString(key), new vm.jwArray.ArrayType([...value])]
+                if (value instanceof Map) return [Cast.toString(key), new ObjectType(new Map(value))]
+                if (isPlainObject(value)) return [Cast.toString(key), new ObjectType(new Map(Object.entries(value)))]
+                return [Cast.toString(key), value]
+            }))
+        }
+
+        static toObject(x, readOnly = false) {
+            if (x instanceof ObjectType) return readOnly ? x : new ObjectType(new Map(x.map))
+            if (x instanceof Map) return readOnly ? new ObjectType(x) : new ObjectType(new Map([...x.entries()]))
+            if (x === "" || x === null) return new ObjectType(new Map())
+            if (typeof x == "object" && typeof x.toJSON == "function") {
+                let parsed = x.toJSON()
+                if (parsed instanceof Array) return new ObjectType(new Map(parsed.map((value, index) => [index + 1, value])))
+                if (isPlainObject(parsed)) return new ObjectType(new Map(Object.entries(parsed)))
+                return new ObjectType(new Map([["value", parsed]]))
+            }
+            try {
+                let parsed = JSON.parse(x)
+                if (parsed instanceof Array) return new ObjectType(new Map(parsed.map((value, index) => [index + 1, value])))
+                if (isPlainObject(parsed)) return new ObjectType(new Map(Object.entries(parsed)))
+            } catch {}
+            console.log(x)
+            return new ObjectType(new Map([["value", x]]))
+        }
+
+        static display(x) {
+            try {
+                switch (typeof x) {
+                    case "object":
+                        if (x === null) return "null"
+                        if (typeof x.dogeiscutObjectHandler == "function") {
+                            return x.dogeiscutObjectHandler()
+                        }
+                        if (typeof x.jwArrayHandler == "function") {
+                            return x.jwArrayHandler()
+                        }
+                        return "Object"
+                    case "undefined":
+                        return "null"
+                    case "number":
+                        return formatNumber(x)
+                    case "boolean":
+                        return x ? "true" : "false"
+                    case "string":
+                        return `"${escapeHTML(Cast.toString(x))}"`
+                }
+            } catch {}
+            return "?"
+        }
+
+        //placeholder
+        jwArrayHandler() {
+            return `Object<${formatNumber(this.size)}>`
+        }
+
+        toString(pretty = false) {
+            return JSON.stringify(this.toJSON(), null, pretty ? "\t" : null)
+        }
+
+        toJSON() {
+            return Object.fromEntries(this.entries.map(([key, value]) => {
+                if (typeof value == "object" && value !== null) {
+                    if (value.toJSON && typeof value.toJSON == "function") return [key, JSON.toJSON(value)]
+                    if (value.toString && typeof value.toString == "function") return [key, JSON.toString(value)]
+                    return [key, JSON.stringify(value)]
+                }
+                return [key, value]
+            }))
+        }
+
+        toMonitorContent = () => span(this.toString())
+
+        toReporterContent = () => span(this.toString())
+    
+        get entries() {
+            return [...this.map.entries()]
+        }
+
+        get size() {
+            return this.map.size
+        }
+
+        get(key) {
+            key = Cast.toString(key)
+            return this.map.has(key) ? this.map.get(key) : ""
+        }
+
+        set(key, value) {
+            key = Cast.toString(key)
+            return ObjectType.toObject(this.map).set(key, value)
+        }
+
+
+        static blank = new ObjectType()
     }
 
     const dogeiscutObject = {
@@ -29,6 +179,12 @@
             exemptFromNormalization: true,
             check: ["Object"]
         }
+    }
+
+    let jwArray = {
+        Type: class { constructor(array) {/* noop */} static toArray(x) {/* noop */} },
+        Block: {},
+        Argument: {}
     }
 
     class Extension {
@@ -347,12 +503,16 @@
         /* Blocks */
 
         blank() {
+            return dogeiscutObject.Type.blank; 
         }
 
         parse({ VALUE }) {
+            return dogeiscutObject.Type.toObject(VALUE);
         }
 
         keyValue({ KEY, VALUE }) {
+            KEY = Cast.toString(KEY)
+            return new dogeiscutObject.Type(new Map([[KEY, VALUE]])); 
         }
 
         fromEntries({ ARRAY }) {

@@ -71,22 +71,34 @@
     class ObjectType {
         customId = "dogeiscutObject"
 
-        map = new Map() // evilally secretly uses maps instead of objects
+        map = new Map()
 
         constructor(map = new Map(), safe = false) {
 
-            /* TEMPORARY: JW NEEDS TO REMOVE OR CHANGE A LINE FROM ARRAYS */
-            if (!safe && isPlainObject(map)) {
-                map = new Map(Object.entries(map))
+            
+            if (safe) {
+                this.map = map
+            } /* TEMPORARY: JW NEEDS TO REMOVE OR CHANGE A LINE FROM ARRAYS */ else {
+                if (isPlainObject(map)) map = new Map(Object.entries(map))
+                /* TEMPORARY END */
             }
-            /* TEMPORARY END */
+            
+            const newMap = new Map();
+            const source = (map instanceof Map) ? map : new Map(Object.entries(map));
 
-            this.map = safe ? map : new Map(Array.from(map.entries()).map(([key, value]) => {
-                if (value instanceof Map) return [Cast.toString(key), new ObjectType(new Map(value))]
-                if (isPlainObject(value)) return [Cast.toString(key), new ObjectType(new Map(Object.entries(value)))]
-                if (vm.jwArray && Array.isArray(value)) return [Cast.toString(key), jwArray.Type.toArray(value)]
-                return [Cast.toString(key), value]
-            }))
+            for (const [key, value] of source) {
+                const k = Cast.toString(key);
+                if (value instanceof ObjectType) {
+                    newMap.set(k, value);
+                } else if (value instanceof Map || isPlainObject(value)) {
+                    newMap.set(k, new ObjectType(value));
+                } else if (vm.jwArray && Array.isArray(value)) {
+                    newMap.set(k, jwArray.Type.toArray(value));
+                } else {
+                    newMap.set(k, value);
+                }
+            }
+            this.map = newMap;
         }
 
         static forObject(x) {
@@ -133,14 +145,17 @@
         }
 
         toJSON() {
-            return Object.fromEntries(this.entries.map(([key, value]) => {
-                if (typeof value == "object" && value !== null) {
-                    if (value.toJSON && typeof value.toJSON == "function") return [key, value.toJSON()]
-                    if (value.toString && typeof value.toString == "function") return [key, value.toString()]
-                    return [key, JSON.stringify(value)]
+            const result = Object.create(null)
+            for (const [key, value] of this.map) {
+                if (value && typeof value === 'object') {
+                    if (value instanceof ObjectType) result[key] = value.toJSON()
+                    else if (typeof value.toJSON === 'function') result[key] = value.toJSON()
+                    else result[key] = value
+                } else {
+                    result[key] = value
                 }
-                return [key, value]
-            }))
+            }
+            return result
         }
 
         toMonitorContent = () => span(this.toString())
@@ -233,38 +248,40 @@
         }
 
         set(key, value) {
-            key = Cast.toString(key)
-            const OBJECT = ObjectType.toObject(this.map)
-            OBJECT.map.set(key, value)
-            return OBJECT
+            const k = Cast.toString(key)
+            const newMap = new Map(this.map)
+            newMap.set(k, value)
+            return new ObjectType(newMap, true)
         }
 
         setPath(path, value) {
-            const normalize = (input) => {
-                if (input instanceof jwArray.Type) {
-                    return input.array.map(v => normalize(v))
+            const keys = path instanceof jwArray.Type ? path.array : (Array.isArray(path) ? path : [path]);
+            
+            const updateRecursive = (currentMap, index) => {
+                const key = Cast.toString(keys[index])
+                const newMap = new Map(currentMap)
+
+                if (index === keys.length - 1) {
+                    newMap.set(key, value);
+                } else {
+                    let nextNode = currentMap.get(key);
+                    if (!(nextNode instanceof ObjectType)) {
+                        nextNode = new ObjectType(new Map(), true)
+                    }
+                    newMap.set(key, updateRecursive(nextNode.map, index + 1));
                 }
-                if (input instanceof ObjectType) {
-                    return new Map(Array.from(input.map).map(([k, v]) => [Cast.toString(k), normalize(v)]))
-                }
-                return input
-            }
-            const arrayPath = [...(path instanceof jwArray.Type ? path.array : (path ? path : []))]
-            let obj = normalize(this) ?? new Map()
-            arrayPath.reduce((map, key, i) => {
-                key = Cast.toString(key)
-                if (i === arrayPath.length - 1) map.set(key, value)
-                else map.set(key, map.has(key) ? map.get(key) : new Map())
-                return map.get(key)
-            }, obj)
-            return ObjectType.toObject(obj)
+                return new ObjectType(newMap, true);
+            };
+
+            return updateRecursive(this.map, 0);
         }
 
         delete(key) {
-            key = Cast.toString(key)
-            const OBJECT = ObjectType.toObject(this.map)
-            OBJECT.map.delete(key)
-            return OBJECT
+            const k = Cast.toString(key)
+            if (!this.map.has(k)) return this
+            const newMap = new Map(this.map)
+            newMap.delete(k);
+            return new ObjectType(newMap, true)
         }
 
         merge(other) {
@@ -274,15 +291,15 @@
         }
 
         get keys() {
-            return [...this.map.keys()]
+            return Array.from(this.map.keys())
         }
 
         get values() {
-            return [...this.map.values()]
+            return Array.from(this.map.values())
         }
 
         get entries() {
-            return [...this.map.entries()]
+            return Array.from(this.map.entries())
         }
     }
 
@@ -606,11 +623,43 @@
         getCompileInfo() {
             return {
                 ir: {
+                    blank: (generator, block) => {
+                        return {
+                            kind: 'input',
+                        }
+                    },
+                    get: (generator, block) => {
+                        return {
+                            kind: 'input',
+                            object: generator.descendInputOfBlock(block, 'OBJECT'),
+                            key: generator.descendInputOfBlock(block, 'KEY'),
+                        }
+                    },
+                    parse: (generator, block) => {
+                        return {
+                            kind: 'input',
+                            value: generator.descendInputOfBlock(block, 'VALUE'),
+                        }
+                    },
+                    fromEntries: (generator, block) => {
+                        return {
+                            kind: 'input',
+                            array: generator.descendInputOfBlock(block, 'ARRAY'),
+                        }
+                    },
                     builder: (generator, block) => {
                         generator.script.yields = true
                         return {
                             kind: 'input',
                             substack: generator.descendSubstack(block, 'SUBSTACK')
+                        }
+                    },
+                    set: (generator, block) => {
+                        return {
+                            kind: 'input',
+                            object: generator.descendInputOfBlock(block, 'OBJECT'),
+                            key: generator.descendInputOfBlock(block, 'KEY'),
+                            value: generator.descendInputOfBlock(block, 'VALUE'),
                         }
                     },
                     forEach: (generator, block) => {
@@ -623,6 +672,22 @@
                     },
                 },
                 js: {
+                    blank: (node, compiler, imports) => {
+                        let source = `vm.dogeiscutObject.Type.blank`
+                        return new imports.TypedInput(source, imports.TYPE_UNKNOWN)
+                    },
+                    get: (node, compiler, imports) => {
+                        let source = `vm.dogeiscutObject.Type.toObject(${compiler.descendInput(node.object).asUnknown()}, true).get(${compiler.descendInput(node.key).asString()})`
+                        return new imports.TypedInput(source, imports.TYPE_UNKNOWN)
+                    },
+                    parse: (node, compiler, imports) => {
+                        let source = `vm.dogeiscutObject.Type.toObject(${compiler.descendInput(node.value).asUnknown()})`
+                        return new imports.TypedInput(source, imports.TYPE_UNKNOWN)
+                    },
+                    fromEntries: (node, compiler, imports) => {
+                        let source = `vm.dogeiscutObject.Type.fromEntries(vm.jwArray.Type.toArray(${compiler.descendInput(node.array).asUnknown()}))`
+                        return new imports.TypedInput(source, imports.TYPE_UNKNOWN)
+                    },
                     builder: (node, compiler, imports) => {
                         const originalSource = compiler.source
                         compiler.source = 'vm.dogeiscutObject.Type.toObject(yield* (function*() {'
@@ -634,6 +699,10 @@
                         const stackSource = compiler.source
                         compiler.source = originalSource
                         return new imports.TypedInput(stackSource, imports.TYPE_UNKNOWN)
+                    },
+                    set: (node, compiler, imports) => {
+                        let source = `vm.dogeiscutObject.Type.toObject(${compiler.descendInput(node.object).asUnknown()}).set(${compiler.descendInput(node.key).asString()}, ${compiler.descendInput(node.value).asUnknown()})`
+                        return new imports.TypedInput(source, imports.TYPE_UNKNOWN)
                     },
                     forEach: (node, compiler, imports) => {
                         const map = compiler.localVariables.next();
@@ -657,7 +726,8 @@
             };
         }
 
-        /* Blocks */
+        /* Non-compiled Blocks */
+        /* only here for reference ig */
 
         blank() {
             return dogeiscutObject.Type.blank;

@@ -269,7 +269,7 @@
 
         merge(other) {
             other = ObjectType.toObject(other, true)
-            const OBJECT = ObjectType.toObject(new Map(...this.map, ...other.map), true)
+            const OBJECT = ObjectType.toObject(new Map([...other.map, ...this.map]), true)
             return OBJECT
         }
 
@@ -306,10 +306,22 @@
             vm.dogeiscutObject = dogeiscutObject
             vm.runtime.registerSerializer(
                 "dogeiscutObject",
-                v => {
-                },
-                v => {
-                },
+                mapType => Object.fromEntries(Array.from(mapType.map).map(([key, value]) => {
+                    if (typeof value == "object" && value != null && value.customId) {
+                        return [String(key), {
+                            customType: true,
+                            typeId: value.customId,
+                            serialized: vm.runtime.serializers[value.customId].serialize(value)
+                        }];
+                    }
+                    return [String(key), value]
+                })),
+                object => new dogeiscutObject.Type(new Map(Object.entries(object).map(([key, value]) => {
+                    if (typeof value == "object" && value != null && value.customType) {
+                        return [String(key), vm.runtime.serializers[value.typeId].deserialize(value.serialized)]
+                    }
+                    return [String(key), value]
+                }))),
             )
 
             if (!vm.jwArray) vm.extensionManager.loadExtensionIdSync('jwArray')
@@ -728,7 +740,7 @@
         }
 
         merge({ ONE, TWO }) {
-            ONE = dogeiscutObject.Type.toObject(OBJECT, true)
+            ONE = dogeiscutObject.Type.toObject(ONE, true)
             return ONE.merge(TWO)
         }
 

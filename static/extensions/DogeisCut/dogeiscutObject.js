@@ -84,27 +84,9 @@
             this.map = safe ? map : new Map(Array.from(map.entries()).map(([key, value]) => {
                 if (value instanceof Map) return [Cast.toString(key), new ObjectType(new Map(value))]
                 if (isPlainObject(value)) return [Cast.toString(key), new ObjectType(new Map(Object.entries(value)))]
+                if (vm.jwArray && Array.isArray(value)) return [Cast.toString(key), jwArray.Type.toArray(value)]
                 return [Cast.toString(key), value]
             }))
-        }
-
-        static toObject(x, readOnly = false) {
-            if (x === "" || x === null || x === undefined) return new ObjectType(new Map())
-            if (x instanceof ObjectType) return readOnly ? x : new ObjectType(new Map(x.map))
-            if (x instanceof Map) return readOnly ? new ObjectType(x) : new ObjectType(new Map([...x.entries()]))
-            if (isPlainObject(x)) return new ObjectType(new Map(Object.entries(x)))
-            if (typeof x == "object" && typeof x.toJSON == "function") {
-                let parsed = x.toJSON()
-                if (parsed instanceof Array) return new ObjectType(new Map(parsed.map((value, index) => [index + 1, value])))
-                if (isPlainObject(parsed)) return new ObjectType(new Map(Object.entries(parsed)))
-                return new ObjectType(new Map([["value", parsed]]))
-            }
-            try {
-                let parsed = JSON.parse(x)
-                if (isPlainObject(parsed)) return new ObjectType(new Map(Object.entries(parsed)))
-            } catch {}
-            
-            return new ObjectType(new Map([["value", x]]))
         }
 
         static forObject(x) {
@@ -117,7 +99,7 @@
             try {
                 switch (typeof x) {
                     case "object":
-                        if (x === null) return "null"
+                        if (x === null || x === undefined) return "null"
                         if (typeof x.dogeiscutObjectHandler == "function") {
                             return x.dogeiscutObjectHandler()
                         }
@@ -180,34 +162,84 @@
 
             return root
         }
-    
-        get entries() {
-            return [...this.map.entries()]
-        }
 
         get size() {
             return this.map.size
         }
 
+        /* */
+
+        static blank = new ObjectType()
+
+        static toObject(x, readOnly = false) {
+            if (x === "" || x === null || x === undefined) return new ObjectType(new Map())
+            if (x instanceof ObjectType) return readOnly ? x : new ObjectType(new Map(x.map))
+            if (x instanceof Map) return readOnly ? new ObjectType(x) : new ObjectType(new Map([...x.entries()]))
+            if (isPlainObject(x)) return new ObjectType(new Map(Object.entries(x)))
+            if (typeof x == "object" && typeof x.toJSON == "function") {
+                let parsed = x.toJSON()
+                if (parsed instanceof Array) return new ObjectType(new Map(parsed.map((value, index) => [index + 1, value])))
+                if (isPlainObject(parsed)) return new ObjectType(new Map(Object.entries(parsed)))
+                return new ObjectType(new Map([["value", parsed]]))
+            }
+            try {
+                let parsed = JSON.parse(x)
+                if (isPlainObject(parsed)) return new ObjectType(new Map(Object.entries(parsed)))
+            } catch {}
+            
+            return new ObjectType(new Map([["value", x]]))
+        }
+
         static fromEntries(entries) {
-            // todo: make better and also fix keys being anything
-            try {
-                entries = [...(entries instanceof jwArray.Type ? entries.array : entries)]
-            } catch {
-                entries = [(entries instanceof jwArray.Type ? entries.array : entries)]
-            }
-            try {
-                entries = entries.map(v => [...(v instanceof jwArray.Type ? v.array : v)])
-            } catch {
-                entries = entries.map(v => [(v instanceof jwArray.Type ? v.array : v)])
-            }
-            entries = entries.filter(v => Array.isArray(v))
-            return ObjectType.toObject(new Map(entries))
+            const normalize = (input) => {
+                const val = input instanceof jwArray.Type ? input.array : input;
+                return (val != null && typeof val[Symbol.iterator] === 'function') 
+                    ? [...val] 
+                    : [val];
+            };
+
+            const array = normalize(entries);
+
+            const processed = array
+                .map(v => normalize(v))
+                .filter(Array.isArray)
+                .map(([k, v]) => [Cast.toString(k), v]);
+
+            return ObjectType.toObject(new Map(processed));
         }
 
         get(key) {
             key = Cast.toString(key)
-            return this.map.has(key) ? dogeiscutObject.Type.forObject(this.map.get(key)) : ""
+            return this.map.has(key) ? ObjectType.forObject(this.map.get(key)) : ""
+        }
+
+        getPath(path) {
+            // const normalize = (input) => {
+            //     if (input instanceof jwArray.Type) {
+            //         return input.array.map(v => normalize(v))
+            //     }
+            //     if (input instanceof ObjectType) {
+            //         return new Map(Array.from(input.map).map(([k, v]) => [Cast.toString(k), normalize(v)]))
+            //     }
+            //     return input
+            // }
+            // const array = normalize(path)
+            const array = path instanceof jwArray.Type ? path.array : path
+            let val = ObjectType.forObject(this.map)
+            for (var i = 0; i < array.length; i++) {
+                const key = Cast.toString(array[i]);
+                if (this.has(key)) {
+                    val = val.get(key);
+                } else {
+                    return "";
+                }
+            }
+            return val;
+        }
+
+        has(key) {
+            key = Cast.toString(key)
+            return this.map.has(key)
         }
 
         set(key, value) {
@@ -217,8 +249,41 @@
             return OBJECT
         }
 
+        // setPath(path) {
+        //     const array = path instanceof jwArray.Type ? path.array : path
+        //     let val = ObjectType.forObject(this.map.get(key))
+        //     for (var i = 0; i < array.length; i++) {
+        //         const key = Cast.toString(array[i]);
+        //         if (this.has(key)) {
+        //             val = val.get(key);
+        //         } else {
+        //             return "";
+        //         }
+        //     }
+        //     return val;
+        // }
 
-        static blank = new ObjectType()
+        delete(key) {
+            key = Cast.toString(key)
+            const OBJECT = ObjectType.toObject(this.map)
+            OBJECT.map.delete(key)
+            return OBJECT
+        }
+
+        // merge(other) {
+        // }
+
+        get keys() {
+            return [...this.map.keys()]
+        }
+
+        get values() {
+            return [...this.map.values()]
+        }
+
+        get entries() {
+            return [...this.map.entries()]
+        }
     }
 
     const dogeiscutObject = {
@@ -534,7 +599,15 @@
                             kind: 'input',
                             substack: generator.descendSubstack(block, 'SUBSTACK')
                         }
-                    }
+                    },
+                    forEach: (generator, block) => {
+                        generator.script.yields = true
+                        return {
+                            kind: 'stack',
+                            substack: generator.descendSubstack(block, 'SUBSTACK'),
+                            object: generator.descendInputOfBlock(block, 'OBJECT'),
+                        }
+                    },
                 },
                 js: {
                     builder: (node, compiler, imports) => {
@@ -548,7 +621,25 @@
                         const stackSource = compiler.source;
                         compiler.source = originalSource;
                         return new imports.TypedInput(stackSource, imports.TYPE_UNKNOWN);
-                    }
+                    },
+                    forEach: (node, compiler, imports) => {
+                        // const array = compiler.localVariables.next();
+                        // compiler.source += `let ${array} = vm.dogeiscutObject.Type.toObject(${compiler.descendInput(node.array).asUnknown()}, true).map;\n`
+                        // compiler.source += `thread._dogeiscutObjectForEach ??= [];\n`
+                        // const forIndex = compiler.localVariables.next();
+                        // compiler.source += `let ${forIndex} = thread._dogeiscutObjectForEach.push([]) - 1;\n`
+                        // const index = compiler.localVariables.next();
+                        // const output = compiler.localVariables.next();
+                        // compiler.source += `let ${output} = yield* (function* () {for (let ${index} in ${array}) {\n`
+                        // compiler.source += `thread._dogeiscutObjectForEach[${forIndex}] = [Number(${index}) + 1, ${array}[${index}]];\n`
+                        // compiler.descendStack(node.substack, new imports.Frame(true, undefined, true));
+                        // compiler.yieldLoop()
+                        // compiler.source += '}})();\n'
+                        // compiler.source += `thread._dogeiscutObjectForEach.pop();\n`
+                        // compiler.source += `if (${output} !== undefined) {\n`
+                        // compiler.source += `return ${output};\n`
+                        // compiler.source += `};\n`
+                    },
                 }
             };
         }
@@ -611,9 +702,13 @@
         }
 
         getPath({ OBJECT, ARRAY }) {
+            OBJECT = dogeiscutObject.Type.toObject(OBJECT, true)
+            return OBJECT.getPath(ARRAY)
         }
 
         has({ OBJECT, KEY }) {
+            OBJECT = dogeiscutObject.Type.toObject(OBJECT, true)
+            return OBJECT.has(KEY)
         }
 
         set({ OBJECT, KEY, VALUE }) {
@@ -625,6 +720,8 @@
         }
 
         delete({ KEY, OBJECT }) {
+            OBJECT = dogeiscutObject.Type.toObject(OBJECT)
+            return OBJECT.delete(KEY) 
         }
 
         merge({ ONE, TWO }) {
@@ -637,9 +734,15 @@
         }
 
         keys({ OBJECT }) {
+            OBJECT = dogeiscutObject.Type.toObject(OBJECT, true);
+
+            return jwArray.Type.toArray(OBJECT.keys)
         }
 
         values({ OBJECT }) {
+            OBJECT = dogeiscutObject.Type.toObject(OBJECT, true);
+
+            return jwArray.Type.toArray(OBJECT.values)
         }
 
         entries({ OBJECT }) {
@@ -657,10 +760,12 @@
             } 
         }
 
-        forEachK({}, util) {
+        forEachK({ }, util) {
+            return (util.thread._dogeiscutObjectForEach && util.thread._dogeiscutObjectForEach[util.thread._dogeiscutObjectForEach.length-1]) ? util.thread._dogeiscutObjectForEach[util.thread._dogeiscutObjectForEach.length-1][0] : 0
         }
 
-        forEachV({}, util) {
+        forEachV({ }, util) {
+            return (util.thread._dogeiscutObjectForEach && util.thread._dogeiscutObjectForEach[util.thread._dogeiscutObjectForEach.length-1]) ? util.thread._dogeiscutObjectForEach[util.thread._dogeiscutObjectForEach.length-1][1] : ""
         }
 
         forEach({ OBJECT }, util) {

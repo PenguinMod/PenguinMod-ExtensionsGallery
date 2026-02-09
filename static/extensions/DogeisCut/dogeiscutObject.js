@@ -62,14 +62,26 @@
         return (prototype === null || prototype === Object.prototype || Object.getPrototypeOf(prototype) === null) && !(Symbol.toStringTag in value) && !(Symbol.iterator in value);
     }
 
+    let jwArray = {
+        Type: class { constructor(array) {/* noop */} static toArray(x) {/* noop */} },
+        Block: {},
+        Argument: {}
+    }
+
     class ObjectType {
         customId = "dogeiscutObject"
 
         map = new Map() // evilally secretly uses maps instead of objects
 
         constructor(map = new Map(), safe = false) {
-            this.map = safe ? map : new Map([...map.entries()].map(([key, value]) => {
-                if (value instanceof Array) return [Cast.toString(key), new vm.jwArray.ArrayType([...value])]
+
+            /* TEMPORARY: JW NEEDS TO REMOVE OR CHANGE A LINE FROM ARRAYS */
+            if (!safe && isPlainObject(map)) {
+                map = new Map(Object.entries(map))
+            }
+            /* TEMPORARY END */
+
+            this.map = safe ? map : new Map(Array.from(map.entries()).map(([key, value]) => {
                 if (value instanceof Map) return [Cast.toString(key), new ObjectType(new Map(value))]
                 if (isPlainObject(value)) return [Cast.toString(key), new ObjectType(new Map(Object.entries(value)))]
                 return [Cast.toString(key), value]
@@ -77,9 +89,10 @@
         }
 
         static toObject(x, readOnly = false) {
+            if (x === "" || x === null || x === undefined) return new ObjectType(new Map())
             if (x instanceof ObjectType) return readOnly ? x : new ObjectType(new Map(x.map))
             if (x instanceof Map) return readOnly ? new ObjectType(x) : new ObjectType(new Map([...x.entries()]))
-            if (x === "" || x === null) return new ObjectType(new Map())
+            if (isPlainObject(x)) return new ObjectType(new Map(Object.entries(x)))
             if (typeof x == "object" && typeof x.toJSON == "function") {
                 let parsed = x.toJSON()
                 if (parsed instanceof Array) return new ObjectType(new Map(parsed.map((value, index) => [index + 1, value])))
@@ -88,11 +101,16 @@
             }
             try {
                 let parsed = JSON.parse(x)
-                if (parsed instanceof Array) return new ObjectType(new Map(parsed.map((value, index) => [index + 1, value])))
                 if (isPlainObject(parsed)) return new ObjectType(new Map(Object.entries(parsed)))
             } catch {}
-            console.log(x)
+            
             return new ObjectType(new Map([["value", x]]))
+        }
+
+        static forObject(x) {
+            if (x instanceof Map || isPlainObject(x)) return ObjectType.toObject(x)
+            if (vm.jwArray && Array.isArray(x)) return jwArray.Type.toArray(x)
+            return x
         }
 
         static display(x) {
@@ -105,6 +123,9 @@
                         }
                         if (typeof x.jwArrayHandler == "function") {
                             return x.jwArrayHandler()
+                        }
+                        if (x instanceof Array) {
+                            return "Array"
                         }
                         return "Object"
                     case "undefined":
@@ -132,8 +153,8 @@
         toJSON() {
             return Object.fromEntries(this.entries.map(([key, value]) => {
                 if (typeof value == "object" && value !== null) {
-                    if (value.toJSON && typeof value.toJSON == "function") return [key, JSON.toJSON(value)]
-                    if (value.toString && typeof value.toString == "function") return [key, JSON.toString(value)]
+                    if (value.toJSON && typeof value.toJSON == "function") return [key, value.toJSON()]
+                    if (value.toString && typeof value.toString == "function") return [key, value.toString()]
                     return [key, JSON.stringify(value)]
                 }
                 return [key, value]
@@ -142,7 +163,23 @@
 
         toMonitorContent = () => span(this.toString())
 
-        toReporterContent = () => span(this.toString())
+        toReporterContent() {
+            let root = document.createElement('div')
+            root.style.display = 'flex'
+            root.style.flexDirection = 'column'
+            root.style.justifyContent = 'center'
+
+            let objectDisplay = span(`{${Array.from(this.map).slice(0, 50).map(([key, value]) => `${String(key)}: ${ObjectType.display(value)}`).join(', ')}}`)
+            objectDisplay.style.overflow = "hidden"
+            objectDisplay.style.whiteSpace = "nowrap"
+            objectDisplay.style.textOverflow = "ellipsis"
+            objectDisplay.style.maxWidth = "256px"
+            root.appendChild(objectDisplay)
+
+            root.appendChild(span(`Size: ${this.size}`))
+
+            return root
+        }
     
         get entries() {
             return [...this.map.entries()]
@@ -152,14 +189,32 @@
             return this.map.size
         }
 
+        static fromEntries(entries) {
+            // todo: make better and also fix keys being anything
+            try {
+                entries = [...(entries instanceof jwArray.Type ? entries.array : entries)]
+            } catch {
+                entries = [(entries instanceof jwArray.Type ? entries.array : entries)]
+            }
+            try {
+                entries = entries.map(v => [...(v instanceof jwArray.Type ? v.array : v)])
+            } catch {
+                entries = entries.map(v => [(v instanceof jwArray.Type ? v.array : v)])
+            }
+            entries = entries.filter(v => Array.isArray(v))
+            return ObjectType.toObject(new Map(entries))
+        }
+
         get(key) {
             key = Cast.toString(key)
-            return this.map.has(key) ? this.map.get(key) : ""
+            return this.map.has(key) ? dogeiscutObject.Type.forObject(this.map.get(key)) : ""
         }
 
         set(key, value) {
             key = Cast.toString(key)
-            return ObjectType.toObject(this.map).set(key, value)
+            const OBJECT = ObjectType.toObject(this.map)
+            OBJECT.map.set(key, value)
+            return OBJECT
         }
 
 
@@ -179,12 +234,6 @@
             exemptFromNormalization: true,
             check: ["Object"]
         }
-    }
-
-    let jwArray = {
-        Type: class { constructor(array) {/* noop */} static toArray(x) {/* noop */} },
-        Block: {},
-        Argument: {}
     }
 
     class Extension {
@@ -424,6 +473,7 @@
                         opcode: 'is',
                         text: 'is [VALUE] an object?',
                         blockType: Scratch.BlockType.BOOLEAN,
+                        hideFromPalette: true, // deprecated
                         arguments: {
                             VALUE: {
                                 type: Scratch.ArgumentType.STRING,
@@ -489,9 +539,12 @@
                 js: {
                     builder: (node, compiler, imports) => {
                         const originalSource = compiler.source;
-
-                        // new stuff here
-
+                        compiler.source = 'vm.dogeiscutObject.Type.toObject(yield* (function*() {';
+                        compiler.source += `thread._dogeiscutObjectBuilderIndex ??= [];`
+                        compiler.source += `thread._dogeiscutObjectBuilderIndex.push(new Map());`
+                        compiler.descendStack(node.substack, new imports.Frame(false, undefined, true));
+                        compiler.source += `return thread._dogeiscutObjectBuilderIndex.pop();`
+                        compiler.source += '})())';
                         const stackSource = compiler.source;
                         compiler.source = originalSource;
                         return new imports.TypedInput(stackSource, imports.TYPE_UNKNOWN);
@@ -512,30 +565,49 @@
 
         keyValue({ KEY, VALUE }) {
             KEY = Cast.toString(KEY)
-            return new dogeiscutObject.Type(new Map([[KEY, VALUE]])); 
+            return new dogeiscutObject.Type(new Map([[KEY, VALUE]]));
         }
 
         fromEntries({ ARRAY }) {
+            ARRAY = jwArray.Type.toArray(ARRAY)
+            return dogeiscutObject.Type.fromEntries(ARRAY)
         }
 
-        currentObject({}, util) {
+        currentObject({ }, util) {
+            let bi = util.thread._dogeiscutObjectBuilderIndex ?? []
+            return bi[bi.length - 1] ? new dogeiscutObject.Type(bi[bi.length - 1]) : new dogeiscutObject.Type.blank;
         }
 
         builder() {
-            return 'noop'
+            throw "Failed to compile!"
         }
 
         builderAppend({ KEY, VALUE }, util) {
+            let bi = util.thread._dogeiscutObjectBuilderIndex ?? []
+            if (bi[bi.length-1]) {
+                bi[bi.length-1].set(Cast.toString(KEY), VALUE)
+            }
         }
 
         builderAppendEmpty({ KEY }, util) {
+            let bi = util.thread._dogeiscutObjectBuilderIndex ?? []
+            if (bi[bi.length-1]) {
+                bi[bi.length-1].set(Cast.toString(KEY), null)
+            }
         }
 
         builderSet({ OBJECT }, util) {
+            OBJECT = dogeiscutObject.Type.toObject(OBJECT)
+            let bi = util.thread._dogeiscutObjectBuilderIndex ?? []
+            if (bi[bi.length-1]) {
+                bi[bi.length-1] = new Map(OBJECT.map)
+            }
         }
 
 
         get({ OBJECT, KEY }) {
+            OBJECT = dogeiscutObject.Type.toObject(OBJECT, true)
+            return OBJECT.get(KEY)
         }
 
         getPath({ OBJECT, ARRAY }) {
@@ -545,6 +617,8 @@
         }
 
         set({ OBJECT, KEY, VALUE }) {
+            OBJECT = dogeiscutObject.Type.toObject(OBJECT)
+            return OBJECT.set(KEY, VALUE)
         }
 
         setPath({ OBJECT, ARRAY, VALUE }) {
@@ -556,7 +630,10 @@
         merge({ ONE, TWO }) {
         }
 
-        toString({OBJECT, FORMAT}) {
+        toString({ OBJECT, FORMAT }) {
+            OBJECT = dogeiscutObject.Type.toObject(OBJECT, true);
+            
+            return OBJECT.toString(FORMAT === "pretty")
         }
 
         keys({ OBJECT }) {
@@ -566,9 +643,18 @@
         }
 
         entries({ OBJECT }) {
+            OBJECT = dogeiscutObject.Type.toObject(OBJECT, true);
+
+            return jwArray.Type.toArray(OBJECT.entries.map(([key, value]) => jwArray.Type.toArray([key, value])))
         }
 
         is({ VALUE }) {
+            try {
+                const parsed = JSON.parse(VALUE);
+                return typeof parsed === 'object' && parsed !== null && !Array.isArray(parsed);
+            } catch {
+                return false;
+            } 
         }
 
         forEachK({}, util) {
@@ -578,7 +664,7 @@
         }
 
         forEach({ OBJECT }, util) {
-            return 'noop'
+            throw "Failed to compile!"
         }
 
     }

@@ -148,13 +148,13 @@
         Block: {
             blockType: BlockType.REPORTER,
             //blockShape: "divIterator", 
-            blockShape: vm.pmVersion ? BlockShape.ARROW : "divIterator",
+            blockShape: vm.runtime.pmVersion ? BlockShape.ARROW : "divIterator",
             forceOutputType: "Iterator",
             allowDropAnywhere: true,
             disableMonitor: true
         },
         Argument: {
-            shape: vm.pmVersion ? BlockShape.ARROW : "divIterator",
+            shape: vm.runtime.pmVersion ? BlockShape.ARROW : "divIterator",
             exemptFromNormalization: true,
             check: ["Iterator"]
         },
@@ -483,7 +483,7 @@
             vm.divFromIter ??= new Map()
 
             // If this isn't on the port, use a custom arrow shape
-            if(!vm.pmVersion) {
+            if(!vm.runtime.pmVersion) {
                 Scratch.gui.getBlockly().then(ScratchBlocks => {
                     ScratchBlocks.BlockSvg.registerCustomShape("divIterator", {
                         emptyInputPath: ScratchBlocks.BlockSvg.getInputShapeInfo_(Scratch.BlockShape.ARROW).path,// `m 16 0 h 15 q 3 0 5 2 l 8 8 q 3 3 3 4 v 4 q 0 1 -3 4 l -8 8 q -2 2 -5 2 h -15 h -11 c -2 0 -3 0 -4 -1 s -1 -3 0 -4 l 9 -9 v -4 l -8 -8 c -2 -2 -2 -4 -1 -5 s 2 -1 4 -1 h 11 z`,

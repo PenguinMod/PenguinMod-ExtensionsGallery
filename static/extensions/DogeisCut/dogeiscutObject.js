@@ -3,7 +3,10 @@
 // Description: Store data efficiently in multi-purpose objects.
 // By: dogeiscut <https://scratch.mit.edu/users/dogeiscut/>
 
-// we usin maps 
+// TODO:
+// - add delete path in object
+// - add merge path in object
+// - fix get path
 
 (function(Scratch) {
     'use strict'

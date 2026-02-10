@@ -230,7 +230,7 @@
 
         getPath(path) {
             const arrayPath = path instanceof jwArray.Type ? path.array : (path ? path : [])
-            let val = ObjectType.forObject(this.map)
+            let val = this.map
             for (var i = 0; i < arrayPath.length; i++) {
                 const key = Cast.toString(arrayPath[i])
                 if (this.has(key)) {
@@ -239,7 +239,7 @@
                     return ""
                 }
             }
-            return val
+            return ObjectType.forObject(val)
         }
 
         has(key) {
@@ -257,6 +257,8 @@
         setPath(path, value) {
             const keys = path instanceof jwArray.Type ? path.array : (Array.isArray(path) ? path : [path]);
             
+            if (path.length === 0) return this;
+
             const updateRecursive = (currentMap, index) => {
                 const key = Cast.toString(keys[index])
                 const newMap = new Map(currentMap)
@@ -468,6 +470,7 @@
                             OBJECT: dogeiscutObject.Argument,
                             KEY: {
                                 type: Scratch.ArgumentType.STRING,
+                                defaultValue: "foo"
                             }
                         }
                     },
@@ -628,13 +631,6 @@
                             kind: 'input',
                         }
                     },
-                    get: (generator, block) => {
-                        return {
-                            kind: 'input',
-                            object: generator.descendInputOfBlock(block, 'OBJECT'),
-                            key: generator.descendInputOfBlock(block, 'KEY'),
-                        }
-                    },
                     parse: (generator, block) => {
                         return {
                             kind: 'input',
@@ -654,12 +650,102 @@
                             substack: generator.descendSubstack(block, 'SUBSTACK')
                         }
                     },
+                    builderAppend: (generator, block) => {
+                        return {
+                            kind: 'stack',
+                            key: generator.descendInputOfBlock(block, 'KEY'),
+                            value: generator.descendInputOfBlock(block, 'VALUE'),
+                        }
+                    },
+                    builderAppendEmpty: (generator, block) => {
+                        return {
+                            kind: 'stack',
+                            key: generator.descendInputOfBlock(block, 'KEY'),
+                        }
+                    },
+                    builderSet: (generator, block) => {
+                        return {
+                            kind: 'stack',
+                            object: generator.descendInputOfBlock(block, 'OBJECT'),
+                        }
+                    },
+                    get: (generator, block) => {
+                        return {
+                            kind: 'input',
+                            object: generator.descendInputOfBlock(block, 'OBJECT'),
+                            key: generator.descendInputOfBlock(block, 'KEY'),
+                        }
+                    },
+                    getPath: (generator, block) => {
+                        return {
+                            kind: 'input',
+                            array: generator.descendInputOfBlock(block, 'ARRAY'),
+                            object: generator.descendInputOfBlock(block, 'OBJECT'),
+                        }
+                    },
+                    has: (generator, block) => {
+                        return {
+                            kind: 'input',
+                            key: generator.descendInputOfBlock(block, 'KEY'),
+                            object: generator.descendInputOfBlock(block, 'OBJECT'),
+                        }
+                    },
                     set: (generator, block) => {
                         return {
                             kind: 'input',
                             object: generator.descendInputOfBlock(block, 'OBJECT'),
                             key: generator.descendInputOfBlock(block, 'KEY'),
                             value: generator.descendInputOfBlock(block, 'VALUE'),
+                        }
+                    },
+                    setPath: (generator, block) => {
+                        return {
+                            kind: 'input',
+                            object: generator.descendInputOfBlock(block, 'OBJECT'),
+                            array: generator.descendInputOfBlock(block, 'ARRAY'),
+                            value: generator.descendInputOfBlock(block, 'VALUE'),
+                        }
+                    },
+                    merge: (generator, block) => {
+                        return {
+                            kind: 'input',
+                            one: generator.descendInputOfBlock(block, 'ONE'),
+                            two: generator.descendInputOfBlock(block, 'TWO'),
+                        }
+                    },
+                    toString: (generator, block) => {
+                        return {
+                            kind: 'input',
+                            object: generator.descendInputOfBlock(block, 'OBJECT'),
+                            format: block.fields.FORMAT.value
+                        }
+                    },
+                    keys: (generator, block) => {
+                        return {
+                            kind: 'input',
+                            object: generator.descendInputOfBlock(block, 'OBJECT'),
+                        }
+                    },
+                    values: (generator, block) => {
+                        return {
+                            kind: 'input',
+                            object: generator.descendInputOfBlock(block, 'OBJECT'),
+                        }
+                    },
+                    entries: (generator, block) => {
+                        return {
+                            kind: 'input',
+                            object: generator.descendInputOfBlock(block, 'OBJECT'),
+                        }
+                    },
+                    forEachK: (generator, block) => {
+                        return {
+                            kind: 'input',
+                        }
+                    },
+                    forEachV: (generator, block) => {
+                        return {
+                            kind: 'input',
                         }
                     },
                     forEach: (generator, block) => {
@@ -674,10 +760,6 @@
                 js: {
                     blank: (node, compiler, imports) => {
                         let source = `vm.dogeiscutObject.Type.blank`
-                        return new imports.TypedInput(source, imports.TYPE_UNKNOWN)
-                    },
-                    get: (node, compiler, imports) => {
-                        let source = `vm.dogeiscutObject.Type.toObject(${compiler.descendInput(node.object).asUnknown()}, true).get(${compiler.descendInput(node.key).asString()})`
                         return new imports.TypedInput(source, imports.TYPE_UNKNOWN)
                     },
                     parse: (node, compiler, imports) => {
@@ -700,8 +782,73 @@
                         compiler.source = originalSource
                         return new imports.TypedInput(stackSource, imports.TYPE_UNKNOWN)
                     },
+                    builderAppend: (node, compiler, imports) => {
+                        const bi = compiler.localVariables.next();
+                        compiler.source += `let ${bi} = thread._dogeiscutObjectBuilderIndex ?? [];\n`
+                        compiler.source += `if (${bi}[${bi}.length-1]) {;\n`
+                        compiler.source += `    ${bi}[${bi}.length-1].set(${compiler.descendInput(node.key).asString()}, ${compiler.descendInput(node.value).asUnknown()});\n`
+                        compiler.source += `}`
+                    },
+                    builderAppendEmpty: (node, compiler, imports) => {
+                        const bi = compiler.localVariables.next();
+                        compiler.source += `let ${bi} = thread._dogeiscutObjectBuilderIndex ?? [];\n`
+                        compiler.source += `if (${bi}[${bi}.length-1]) {;\n`
+                        compiler.source += `    ${bi}[${bi}.length-1].set(${compiler.descendInput(node.key).asString()}, null);\n`
+                        compiler.source += `}`
+                    },
+                    builderSet: (node, compiler, imports) => {
+                        const bi = compiler.localVariables.next();
+                        compiler.source += `let ${bi} = thread._dogeiscutObjectBuilderIndex ?? [];\n`
+                        compiler.source += `if (${bi}[${bi}.length-1]) {;\n`
+                        compiler.source += `    ${bi}[${bi}.length-1] = new Map(vm.dogeiscutObject.Type.toObject(${compiler.descendInput(node.object).asUnknown()}).map);\n`
+                        compiler.source += `}`
+                    },
+                    get: (node, compiler, imports) => {
+                        let source = `vm.dogeiscutObject.Type.toObject(${compiler.descendInput(node.object).asUnknown()}, true).get(${compiler.descendInput(node.key).asString()})`
+                        return new imports.TypedInput(source, imports.TYPE_UNKNOWN)
+                    },
+                    getPath: (node, compiler, imports) => {
+                        let source = `vm.dogeiscutObject.Type.toObject(${compiler.descendInput(node.object).asUnknown()}, true).getPath(vm.jwArray.Type.toArray(${compiler.descendInput(node.array).asUnknown()}))`
+                        return new imports.TypedInput(source, imports.TYPE_UNKNOWN)
+                    },
+                    has: (node, compiler, imports) => {
+                        let source = `vm.dogeiscutObject.Type.toObject(${compiler.descendInput(node.object).asUnknown()}, true).has(${compiler.descendInput(node.key).asString()})`
+                        return new imports.TypedInput(source, imports.TYPE_BOOLEAN)
+                    },
                     set: (node, compiler, imports) => {
                         let source = `vm.dogeiscutObject.Type.toObject(${compiler.descendInput(node.object).asUnknown()}).set(${compiler.descendInput(node.key).asString()}, ${compiler.descendInput(node.value).asUnknown()})`
+                        return new imports.TypedInput(source, imports.TYPE_UNKNOWN)
+                    },
+                    setPath: (node, compiler, imports) => {
+                        let source = `vm.dogeiscutObject.Type.toObject(${compiler.descendInput(node.object).asUnknown()}).setPath(vm.jwArray.Type.toArray(${compiler.descendInput(node.array).asUnknown()}), ${compiler.descendInput(node.value).asUnknown()})`
+                        return new imports.TypedInput(source, imports.TYPE_UNKNOWN)
+                    },
+                    merge: (node, compiler, imports) => {
+                        let source = `vm.dogeiscutObject.Type.toObject(${compiler.descendInput(node.one).asUnknown()}, true).merge(${compiler.descendInput(node.two).asUnknown()})`
+                        return new imports.TypedInput(source, imports.TYPE_UNKNOWN)
+                    },
+                    toString: (node, compiler, imports) => {
+                        let source = `vm.dogeiscutObject.Type.toObject(${compiler.descendInput(node.object).asUnknown()}, true).toString(${node.format === "pretty"})`
+                        return new imports.TypedInput(source, imports.TYPE_UNKNOWN)
+                    },
+                    keys: (node, compiler, imports) => {
+                        let source = `vm.jwArray.Type.toArray(vm.dogeiscutObject.Type.toObject(${compiler.descendInput(node.object).asUnknown()}, true).keys)`
+                        return new imports.TypedInput(source, imports.TYPE_UNKNOWN)
+                    },
+                    values: (node, compiler, imports) => {
+                        let source = `vm.jwArray.Type.toArray(vm.dogeiscutObject.Type.toObject(${compiler.descendInput(node.object).asUnknown()}, true).values)`
+                        return new imports.TypedInput(source, imports.TYPE_UNKNOWN)
+                    },
+                    entries: (node, compiler, imports) => {
+                        let source = `vm.jwArray.Type.toArray(vm.dogeiscutObject.Type.toObject(${compiler.descendInput(node.object).asUnknown()}, true).entries.map(([key, value]) => vm.jwArray.Type.toArray([key, value])))`
+                        return new imports.TypedInput(source, imports.TYPE_UNKNOWN)
+                    },
+                    forEachK: (node, compiler, imports) => {
+                        let source = `(thread._dogeiscutObjectForEach && thread._dogeiscutObjectForEach[thread._dogeiscutObjectForEach.length-1]) ? thread._dogeiscutObjectForEach[thread._dogeiscutObjectForEach.length-1][0] : ""`
+                        return new imports.TypedInput(source, imports.TYPE_UNKNOWN)
+                    },
+                    forEachV: (node, compiler, imports) => {
+                        let source = `(thread._dogeiscutObjectForEach && thread._dogeiscutObjectForEach[thread._dogeiscutObjectForEach.length-1]) ? thread._dogeiscutObjectForEach[thread._dogeiscutObjectForEach.length-1][1] : ""`
                         return new imports.TypedInput(source, imports.TYPE_UNKNOWN)
                     },
                     forEach: (node, compiler, imports) => {
@@ -801,6 +948,7 @@
 
         setPath({ OBJECT, ARRAY, VALUE }) {
             OBJECT = dogeiscutObject.Type.toObject(OBJECT)
+            ARRAY = jwArray.Type.toArray(ARRAY)
             return OBJECT.setPath(ARRAY, VALUE)
         }
 
@@ -839,6 +987,7 @@
         }
 
         is({ VALUE }) {
+            // haha you dont get compield ur a stoopid block
             try {
                 const parsed = JSON.parse(VALUE)
                 return typeof parsed === 'object' && parsed !== null && !Array.isArray(parsed)

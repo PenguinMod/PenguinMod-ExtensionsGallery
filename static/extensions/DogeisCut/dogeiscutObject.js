@@ -294,7 +294,7 @@
             return root
         }
 
-        toMonitorContent = () => {
+        toMonitorContent() {
             if (dogeiscutObject.tableDisplay.useForMonitors) {
                 return ObjectType.tableDisplay(this, '1px solid #fff', '#ffffff33', 'ffffff00')
             }
@@ -499,8 +499,8 @@
             
             if (dogeiscutObject.tableDisplay.patchArrays) {
                 // monitor patching doesnt work some some reason
-                if (dogeiscutObject.tableDisplay.useForMonitors) vm.jwArray.Type.prototype.toMonitorContent = function(){return ObjectType.tableDisplay(this, '1px solid #fff', '#ffffff33', 'ffffff00')}
-                if (dogeiscutObject.tableDisplay.useForReporters) vm.jwArray.Type.prototype.toReporterContent = function(){return ObjectType.tableDisplay(this)}
+                if (dogeiscutObject.tableDisplay.useForMonitors) jwArray.Type.prototype.toMonitorContent = function(){return ObjectType.tableDisplay(this, '1px solid #fff', '#ffffff33', 'ffffff00')}
+                if (dogeiscutObject.tableDisplay.useForReporters) jwArray.Type.prototype.toReporterContent = function(){return ObjectType.tableDisplay(this)}
             }
             
             vm.runtime.registerCompiledExtensionBlocks('dogeiscutObject', this.getCompileInfo())

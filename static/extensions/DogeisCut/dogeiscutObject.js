@@ -73,7 +73,8 @@
 
         constructor(map = new Map(), safe = false) {
 
-            
+            // Please avoid using `new ObjecType` or `new vm.dogeiscutObject.Type` at all when interfacing with this extension.
+            // Use `toObject` instead.
             if (safe) {
                 this.map = map
             } /* TEMPORARY: JW NEEDS TO REMOVE OR CHANGE A LINE FROM ARRAYS */ else {

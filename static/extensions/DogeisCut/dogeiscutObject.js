@@ -181,6 +181,10 @@
                 }
 
                 limitedArray.forEach((value, index) => {
+                    const centeringDiv = document.createElement('div')
+                    centeringDiv.style.display = 'flex'
+                    centeringDiv.style.justifyContent = 'center'
+
                     const row = document.createElement('tr')
 
                     const valueCell = document.createElement('td')
@@ -188,8 +192,9 @@
                     valueCell.style.padding = '2px 6px'
                     valueCell.style.background = background
 
-                    valueCell.innerHTML = render(value, border, keyBackground, background, entryLimit)
+                    centeringDiv.innerHTML = render(value, border, keyBackground, background, entryLimit)
 
+                    valueCell.appendChild(centeringDiv)
                     row.appendChild(valueCell)
                     table.appendChild(row)
                 })
@@ -228,6 +233,14 @@
                 }
 
                 limitedMap.forEach((value, key) => {
+                    const keyCenteringDiv = document.createElement('div')
+                    keyCenteringDiv.style.display = 'flex'
+                    keyCenteringDiv.style.justifyContent = 'center'
+
+                    const valueCenteringDiv = document.createElement('div')
+                    valueCenteringDiv.style.display = 'flex'
+                    valueCenteringDiv.style.justifyContent = 'center'
+
                     const row = document.createElement('tr')
 
                     const keyCell = document.createElement('td')
@@ -236,16 +249,18 @@
                     keyCell.style.background = keyBackground
                     keyCell.style.fontWeight = 'bold';
 
-                    keyCell.innerHTML = escapeHTML(String(key))
+                    keyCenteringDiv.innerHTML = escapeHTML(String(key))
 
                     const valueCell = document.createElement('td')
                     valueCell.style.border = border
                     valueCell.style.padding = '2px 6px'
                     valueCell.style.background = background
 
-                    valueCell.innerHTML = render(value, border, keyBackground, background)
+                    valueCenteringDiv.innerHTML = render(value, border, keyBackground, background)
 
+                    keyCell.appendChild(keyCenteringDiv)
                     row.appendChild(keyCell)
+                    valueCell.appendChild(valueCenteringDiv)
                     row.appendChild(valueCell)
                     table.appendChild(row)
                 })

@@ -108,9 +108,10 @@
 
         static display(x) {
             try {
+                const nullDraw = '<i style="opacity: 0.75;">null</i>'
                 switch (typeof x) {
                     case "object":
-                        if (x === null || x === undefined) return "null"
+                        if (x === null || x === undefined) return nullDraw
                         if (typeof x.dogeiscutObjectHandler == "function") {
                             return x.dogeiscutObjectHandler()
                         }
@@ -122,7 +123,7 @@
                         }
                         return "Object"
                     case "undefined":
-                        return "null"
+                        return nullDraw
                     case "number":
                         return formatNumber(x)
                     case "boolean":
@@ -173,9 +174,7 @@
                 const limitedArray = array.slice(0, entryLimit)
 
                 if (limitedArray.length === 0) {
-                    const text = span(escapeHTML("<Blank Array>"))
-                    text.style.fontStyle = 'italic';
-                    text.style.color = border
+                    const text = span(`<i style="opacity: 0.75;">${escapeHTML("<Blank Array>")}</i>`)
 
                     return text.outerHTML
                 }
@@ -225,9 +224,7 @@
                 const limitedMap = new Map(Array.from(map).slice(0, entryLimit))
 
                 if (limitedMap.size === 0) {
-                    const text = span(escapeHTML("<Blank Object>"))
-                    text.style.fontStyle = 'italic';
-                    text.style.color = border
+                    const text = span(`<i style="opacity: 0.75;">${escapeHTML("<Blank Object>")}</i>`)
 
                     return text.outerHTML
                 }
@@ -282,9 +279,10 @@
 
             const render = (x) => {
                 try {
+                    const nullDraw = '<i style="opacity: 0.75;">null</i>'
                     switch (typeof x) {
                         case "object":
-                            if (x === null || x === undefined) return "null"
+                            if (x === null || x === undefined) return nullDraw
                             if (x instanceof Array) {
                                 return renderArray(x)
                             }
@@ -299,7 +297,7 @@
                             }
                             return "Object"
                         case "undefined":
-                            return "null"
+                            return nullDraw
                         case "number":
                             return formatNumber(x)
                         case "boolean":

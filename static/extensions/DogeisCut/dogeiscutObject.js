@@ -175,8 +175,8 @@
                 table.style.background = background
                 table.style.border = border
 
-                if (array.size === 0) {
-                    const text = span(escapeHTML("<Empty Array>"))
+                if (array.length === 0) {
+                    const text = span(escapeHTML("<Blank Array>"))
                     text.style.fontStyle = 'italic';
                     text.style.color = border
 
@@ -209,7 +209,7 @@
                 table.style.border = border
 
                 if (map.size === 0) {
-                    const text = span(escapeHTML("<Empty Object>"))
+                    const text = span(escapeHTML("<Blank Object>"))
                     text.style.fontStyle = 'italic';
                     text.style.color = border
 
@@ -728,7 +728,7 @@
                         opcode: 'is',
                         text: 'is [VALUE] an object?',
                         blockType: Scratch.BlockType.BOOLEAN,
-                        hideFromPalette: true, // deprecated: theres a way to replicate this block behavior, and TW port is getting a typeof block 
+                        hideFromPalette: true, // deprecated: theres a way to replicate this specific block's behavior, and TW port is getting a typeof block 
                         arguments: {
                             VALUE: {
                                 type: Scratch.ArgumentType.STRING,

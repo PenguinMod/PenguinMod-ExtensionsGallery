@@ -147,7 +147,7 @@
         }
 
         // Convenience function for iterating over a primitive array
-        static overArray(arr, kind) {
+        static overArray(kind, arr) {
             return new IteratorType(kind,
                 {i: 0}, function*(state) {
                 return state.i >= arr.length 
@@ -175,13 +175,10 @@
                 return val.divIntoIterHandler(IteratorType, {Item: IteratorType.Item, Done: IteratorType.Done})
 
             if(["string", "number", "boolean"].includes(typeof val)) 
-                return IteratorType.overArray(Cast.toString(val), "String"); // also works on strings
+                return IteratorType.overArray("String", Cast.toString(val)); // also works on strings
             if(val instanceof jwArray.Type) 
-                return IteratorType.overArray(val.array, "Array");
+                return IteratorType.overArray("Array", val.array);
             return new IteratorType()
-        }
-        static iterBuilder(state, next) {
-            return new IteratorType("Custom", {state}, next)
         }
 
         // Adapters

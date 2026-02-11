@@ -1137,7 +1137,7 @@
                     },
                     size: (node, compiler, imports) => {
                         let source = `vm.dogeiscutObject.Type.toObject(${compiler.descendInput(node.object).asUnknown()}, true).size`
-                        return new imports.TypedInput(source, imports.TYPE_UNKNOWN)
+                        return new imports.TypedInput(source, imports.TYPE_NUMBER)
                     },
                     set: (node, compiler, imports) => {
                         let source = `vm.dogeiscutObject.Type.toObject(${compiler.descendInput(node.object).asUnknown()}).set(${compiler.descendInput(node.key).asString()}, ${compiler.descendInput(node.value).asUnknown()})`

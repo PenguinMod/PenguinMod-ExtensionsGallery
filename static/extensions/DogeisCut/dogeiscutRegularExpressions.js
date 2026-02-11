@@ -477,11 +477,11 @@
             let string ='Due to missing extensions, the blocks in this extension have been reduced.\n'
             string += 'By confirming this prompt, the following extensions will automatically be added for you:\n\n'
             if (!vm.runtime.ext_jwArray) string += '• Arrays by jwklong\n'
-            if (!vm.runtime.ext_dogeiscutObjects) string += '• Objects by DogeisCut\n'
+            if (!vm.runtime.ext_dogeiscutObject) string += '• Objects by DogeisCut\n'
             if (confirm(string)) {
                 // technically i only need to load objects since that will load arrays, but just in case
                 if (!vm.runtime.ext_jwArray) vm.extensionManager.loadExtensionIdSync('jwArray')
-                if (!vm.runtime.ext_dogeiscutObjects) await vm.extensionManager.loadExtensionURL("https://extensions.penguinmod.com/extensions/DogeisCut/dogeiscutObject.js")
+                if (!vm.runtime.ext_dogeiscutObject) await vm.extensionManager.loadExtensionURL("https://extensions.penguinmod.com/extensions/DogeisCut/dogeiscutObject.js")
                 vm.runtime.requestBlocksUpdate()
                 vm.runtime.requestToolboxExtensionsUpdate()
                 vm.emitWorkspaceUpdate()
@@ -584,7 +584,7 @@
     }
 
     (async () => {
-        if (!vm.runtime.ext_dogeiscutObjects) await vm.extensionManager.loadExtensionURL("https://extensions.penguinmod.com/extensions/DogeisCut/dogeiscutObject.js")
+        if (!vm.runtime.ext_dogeiscutObject) await vm.extensionManager.loadExtensionURL("https://extensions.penguinmod.com/extensions/DogeisCut/dogeiscutObject.js")
         if (!vm.runtime.ext_jwArray) vm.extensionManager.loadExtensionIdSync('jwArray')
         vm.runtime.requestBlocksUpdate()
         vm.runtime.requestToolboxExtensionsUpdate()

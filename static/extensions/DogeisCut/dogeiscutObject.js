@@ -488,6 +488,12 @@
         get entries() {
             return Array.from(this.map.entries())
         }
+
+        divIntoIterHandler(Iter) {
+            return Iter.overArray("Object", this.entries.map(([key, val]) =>
+                new jwArray.Type([key, ObjectType.forObject(val)])
+            ));
+        }
     }
 
     const dogeiscutObject = {
@@ -542,6 +548,14 @@
             }
             
             vm.runtime.registerCompiledExtensionBlocks('dogeiscutObject', this.getCompileInfo())
+
+            vm.divFromIter ??= new Map();
+            vm.divFromIter.set("Object", function*(...env) {
+                return ObjectType.fromEntries(yield* this.fold([], 
+                    function*(acc, item) {return [...acc, item]}, 
+                    ...env
+                ));
+            });
         }
 
         getInfo() {

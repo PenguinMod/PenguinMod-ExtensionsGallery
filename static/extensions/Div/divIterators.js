@@ -44,6 +44,9 @@
         toString() {
             return `${this.getIterKind()} Iterator`
         }
+        toJSON() {
+            return `[${this.toString()}]`
+        }
         toReporterContent() {
             const root = document.createElement('div');
             root.style.display = 'flex';
@@ -95,7 +98,7 @@
         chainIter(kind, state, next, clonable) {return new IteratorType(this.kind.concat(kind), state, next, clonable)}
 
         *next(thread, target, runtime, stage) {
-            if(this.done) return divIterator.Done()
+            if(this.done) return IteratorType.Done()
             const next = yield* this.iterNext.apply(this, [this.state, thread, target, runtime, stage]);
             if(next.done) this.done = true;
             else this.consumed++;
@@ -121,29 +124,259 @@
             return buffers.map(buffer => this.chainIter({kind: "Branch", args: [n]},
                 {iter: this}, function*(state, thread, target, runtime, stage) {
                     console.log(buffer);
-                    if(buffer.length > 0) return divIterator.Item(buffer.shift());
-                    if(done) return divIterator.Done();
+                    if(buffer.length > 0) return IteratorType.Item(buffer.shift());
+                    if(done) return IteratorType.Done();
                     const item = yield* state.iter.next(thread, target, runtime, stage);
-                    done = item.done; if(item.done) return divIterator.Done() 
+                    done = item.done; if(item.done) return IteratorType.Done() 
                     buffers.forEach(b => b.push(item.value));
-                    return divIterator.Item(buffer.shift());
+                    return IteratorType.Item(buffer.shift());
                 }
             ), false);
         }
 
+        static Item(value) {return {value, done: false}}
+        static Done() {return {value: undefined, done: true}}
+
         // NOTE: Using this will give you unclonable iterators. Only use this
         // if you can't or don't want to make your iterator clonable
-        fromNative(kind, itern, extra = function*(x) {return x}) {
+        static fromNative(kind, itern, extra = function*(x) {return x}) {
             if(typeof itern[Symbol.iterator] !== 'function') throw `${kind} is not a native iterator.`
             if(typeof kind !== 'string' && typeof kind?.kind !== 'string' || !(kind?.args instanceof Array))
                 kind = 'Native'
             return new IteratorType(kind, {}, () => extra(itern.next()), false)
         }
-    }
 
+        // Convenience function for iterating over a primitive array
+        static overArray(kind, arr) {
+            return new IteratorType(kind,
+                {i: 0}, function*(state) {
+                return state.i >= arr.length 
+                ? IteratorType.Done() 
+                : IteratorType.Item(arr[state.i++])
+            });
+        }
+
+        // -- Iterator functions and methods -- //
+        // Iterables
+        static range(start, end) {
+            const advance = n => n + (start < end ? 1 : -1);
+            const finished = n => start < end ? (n > end) : (n < end)
+            return new IteratorType({kind: "Range", args: [start, end]},
+                {curr: start}, function*(state){
+                const {curr} = state;
+                if(finished(curr)) return IteratorType.Done()
+                state.curr = advance(curr);
+                return IteratorType.Item(curr)
+            });
+        }
+        static iterOver(val) {
+            if(val instanceof IteratorType) return val
+            if(typeof val.divIntoIterHandler === "function") 
+                return val.divIntoIterHandler(IteratorType, {Item: IteratorType.Item, Done: IteratorType.Done})
+
+            if(["string", "number", "boolean"].includes(typeof val)) 
+                return IteratorType.overArray("String", Cast.toString(val)); // also works on strings
+            if(val instanceof jwArray.Type) 
+                return IteratorType.overArray("Array", val.array);
+            return new IteratorType()
+        }
+
+        // Adapters
+        map(map) {
+            return this.chainIter("Map", 
+                {iter: this}, function*(state, thread, target, runtime, stage) {
+                const {iter} = state;
+                const item = yield* iter.next(thread, target, runtime, stage)
+                if(item.done) return item
+                const mapped = yield* map(item.value, thread, target, runtime, stage);
+                return IteratorType.Item(mapped)
+            }, this.clonable)
+        }
+        keep(pred) {
+            return this.chainIter("Keep", 
+                {iter: this}, function*(state, thread, target, runtime, stage) {
+                let item, bool;
+                while(true) {
+                    item = yield* state.iter.next(thread, target, runtime, stage)
+                    if(item.done) return item
+                    bool = yield* pred(item.value, thread, target, runtime, stage);
+                    if(bool) return item
+                }
+            }, this.clonable)
+        }
+
+        enum() {
+            return this.chainIter("Enumerate",
+                {iter: this, num: 1}, function*(state, thread, target, runtime, stage) {
+                const item = yield* state.iter.next(thread, target, runtime, stage); 
+                if(item.done) return item
+                return IteratorType.Item(new jwArray.Type([state.num++, item.value]))
+            }, this.clonable)
+        }
+        cycle() {
+            return this.chainIter("Cycle", 
+                {iter: this, buffer: [], i: 0}, function*(state, thread, target, runtime, stage) {
+                const item = yield* state.iter.next(thread, target, runtime, stage);
+                if(item.done) {
+                    if(state.buffer.length == 0) return IteratorType.Done()
+                    state.i %= state.buffer.length
+                    return state.buffer[state.i++]
+                }
+                state.buffer.push(item)
+                return item;
+            }, this.clonable)
+        }
+
+        take(count) {
+            return this.chainIter({kind: "Take", args: [count]},
+                {iter: this, count}, function*(state, thread, target, runtime, stage) {
+                if(state.count <= 0) return IteratorType.Done()
+                const item = yield* state.iter.next(thread, target, runtime, stage);
+                if(item.done) return item
+                state.count--;
+                return item;
+            }, this.clonable)
+        }
+        skip(count) {
+            return iter.chainIter({kind: "Skip", args: [count]},
+                {iter: this, count}, function*(state, thread, target, runtime, stage) {
+                while(state.count > 0) {
+                    const item = yield* state.iter.next(thread, target, runtime, stage);
+                    if(item.done) return item
+                    state.count--;
+                }
+                return yield* state.iter.next(thread, target, runtime, stage)
+            }, this.clonable)
+        }
+        stepBy(step) {
+            return this.chainIter({kind: "StepBy", args: [step]},
+                {iter: this, first: true}, function*(state, thread, target, runtime, stage) {
+                if(state.first) {
+                    state.first = false;
+                    return yield* state.iter.next(thread, target, runtime, stage);
+                }
+                for(let i = 1; i < step; i++) {
+                    const item = yield* state.iter.next(thread, target, runtime, stage);
+                    if(item.done) return item
+                }
+                return yield* state.iter.next(thread, target, runtime, stage)
+            }, this.clonable)
+        }
+
+        chain(iter) {
+            if(!(iter instanceof IteratorType)) throw `Attempted to chain iterator with non-iterator: ${iter}`;
+            return this.chainIter({kind: "Chain", args: [iter]},
+                {iter1: this, iter2: iter}, function*(state, thread, target, runtime, stage) {
+                const item1 = yield* state.iter1.next(thread, target, runtime, stage);
+                if(!item1.done) return item1
+                return yield* state.iter2.next(thread, target, runtime, stage)
+            }, this.clonable && iter.clonable)
+        }
+        zip(iter) {
+            if(!(iter instanceof IteratorType)) throw `Attempted to zip iterator with non-iterator: ${iter}`;
+            return this.chainIter({kind: "Zip", args: [iter]},
+                {iter1: this, iter2: iter}, function*(state, thread, target, runtime, stage) {
+                const item1 = yield* state.iter1.next(thread, target, runtime, stage);
+                if(item1.done) return item1
+                const item2 = yield* state.iter2.next(thread, target, runtime, stage);
+                if(item2.done) return item2
+                return IteratorType.Item(new jwArray.Type([item1.value, item2.value]))
+            }, this.clonable && iter.clonable)
+        }
+        cross(iter) {
+            if(!(iter instanceof IteratorType)) throw `Attempted to cross iterator with non-iterator: ${iter}`;
+            return this.chainIter({kind: "Cross", args: [iter]},
+                {iter1: this, buffer: [], i: 0, iter2: iter, item2: null}, function*(state, thread, target, runtime, stage) {
+                const item1 = yield* state.iter1.next(thread, target, runtime, stage);
+                if(item1.done) {
+                    if(state.buffer.length == 0) return IteratorType.Done()
+                    state.i %= state.buffer.length
+                    if(state.i == 0) {
+                        const item2 = yield* state.iter2.next(thread, target, runtime, stage)
+                        if(item2.done) return IteratorType.Done()
+                        state.item2 = item2.value;
+                    }
+                    return IteratorType.Item(new jwArray.Type([state.buffer[state.i++], state.item2]))
+                }
+                if(state.item2 == null) {
+                    const item2 = yield* state.iter2.next(thread, target, runtime, stage)
+                    if(item2.done) return IteratorType.Done()
+                    state.item2 = item2.value;
+                }
+                state.buffer.push(item1.value)
+                return IteratorType.Item(new jwArray.Type([item1.value, state.item2]));
+            }, this.clonable && iter.clonable)
+        }
+            
+        inspect(inspect) {
+            return this.chainIter("Inspect", 
+                {iter: this}, function*(state, thread, target, runtime, stage) {
+                const {iter} = state;
+                const item = yield* iter.next(thread, target, runtime, stage)
+                if(item.done) return item
+                yield* inspect(item.value, thread, target, runtime, stage);
+                return item
+            }, this.clonable)
+        }
+
+        // Terminators
+        
+        // Unlike Iterables and Adapters which directly return iterators
+        // with no additional effects (yields), terminators are intended
+        // to be eagerly run so they will yield
+        *count(yieldLoop, thread, target, runtime, stage) {
+            for(let i = 0;; i++) {
+                const item = yield* this.next(thread, target, runtime, stage)
+                if(item.done) return i
+                yield* yieldLoop()
+            }
+        }
+
+        *fold(init, fold, yieldLoop, thread, target, runtime, stage) {
+            let acc = init
+            for(;;) {
+                const item = yield* this.next(thread, target, runtime, stage)
+                if(item.done) return acc
+                acc = yield* fold(acc, item.value, thread, target, runtime, stage)
+                yield* yieldLoop()
+            }
+        }
+        // Note that these short-circuit !!
+        *any(pred, yieldLoop, thread, target, runtime, stage) {
+            for(;;) {
+                const item = yield* this.next(thread, target, runtime, stage)
+                if(item.done) return false
+                if(yield* pred(item.value, thread, target, runtime, stage)) return true
+                yield* yieldLoop()
+            }
+        }
+        *all(pred, yieldLoop, thread, target, runtime, stage) {
+            for(;;) {
+                const item = yield* this.next(thread, target, runtime, stage)
+                if(item.done) return true
+                if(!(yield* pred(item.value, thread, target, runtime, stage))) return false
+                yield* yieldLoop()
+            }
+        }
+
+        *collectTo(type, yieldLoop, thread, target, runtime, stage) {
+            if(vm.divFromIter && typeof vm.divFromIter.get(type) === "function")
+                return yield* vm.divFromIter.get(type).apply(this, [yieldLoop, thread, target, runtime, stage])
+            switch (type) {
+                case "String":
+                    return yield* this.fold("", 
+                        function*(acc, item) {return acc + Cast.toString(item)}, 
+                        yieldLoop, thread, target, runtime, stage
+                    )
+                case "Array":
+                    return new jwArray.Type(yield* this.fold([], 
+                        function*(acc, item) {return [...acc, item]}, 
+                        yieldLoop, thread, target, runtime, stage
+                    ))
+            }
+        }
+    }
     const divIterator = {
-        Item: (value) => ({value, done: false}),
-        Done: () => ({value: undefined, done: true}),
         Type: IteratorType,
         Block: {
             blockType: BlockType.REPORTER,
@@ -157,265 +390,6 @@
             shape: vm.runtime.pmVersion ? BlockShape.ARROW : "divIterator",
             exemptFromNormalization: true,
             check: ["Iterator"]
-        },
-
-        // Extensions depending on Iterators may feel free to use
-        // Any of these :Fabrication: :dingly: :Fabrication: :Fabrication:
-        Iterables: {
-            range(start, end) {
-                const advance = n => n + (start < end ? 1 : -1);
-                const finished = n => start < end ? (n > end) : (n < end)
-                return new IteratorType({kind: "Range", args: [start, end]},
-                    {curr: start}, function*(state){
-                    const {curr} = state;
-                    if(finished(curr)) return divIterator.Done()
-                    state.curr = advance(curr);
-                    return divIterator.Item(curr)
-                });
-            },
-            iterOver(val) {
-                if(val instanceof IteratorType) return val
-                if(typeof val.divIntoIterHandler === "function") 
-                    return val.divIntoIterHandler(IteratorType, {Item: divIterator.Item, Done: divIterator.Done})
-                
-                const iterCommon = (val, kind) =>
-                    new IteratorType(kind,
-                    {i: 0}, function*(state) {
-                    return state.i >= val.length 
-                    ? divIterator.Done() 
-                    : divIterator.Item(val[state.i++])
-                });
-                if(["string", "number", "boolean"].includes(typeof val)) 
-                    return iterCommon(Cast.toString(val), "String");
-                if(val instanceof jwArray.Type) return iterCommon(val.array, "Array");
-                if(vm.dogeiscutObject && val instanceof vm.dogeiscutObject.Type)
-                    return iterCommon(Object.entries(val.object).map(([key, value]) => {
-                        return new jwArray.Type([key, vm.dogeiscutObject.Type.convertIfNeeded(value)]);
-                    }),"Object")
-                return new IteratorType()
-            },
-            iterBuilder(state, next) {
-                return new IteratorType("Custom", {state}, next)
-            }
-        },
-        Adapters: {
-            map(iter, map) {
-                iter = IteratorType.toIterator(iter)
-                return iter.chainIter("Map", 
-                    {iter}, function*(state, thread, target, runtime, stage) {
-                    const {iter} = state;
-                    const item = yield* iter.next(thread, target, runtime, stage)
-                    if(item.done) return item
-                    const mapped = yield* map(item.value, thread, target, runtime, stage);
-                    return divIterator.Item(mapped)
-                }, iter.clonable)
-            },
-            keep(iter, pred) {
-                iter = IteratorType.toIterator(iter)
-                return iter.chainIter("Keep", 
-                    {iter}, function*(state, thread, target, runtime, stage) {
-                    let item, bool;
-                    while(true) {
-                        item = yield* state.iter.next(thread, target, runtime, stage)
-                        if(item.done) return item
-                        bool = yield* pred(item.value, thread, target, runtime, stage);
-                        if(bool) return item
-                    }
-                }, iter.clonable)
-            },
-
-            enum(iter) {
-                iter = IteratorType.toIterator(iter)
-                return iter.chainIter("Enumerate",
-                    {iter, num: 1}, function*(state, thread, target, runtime, stage) {
-                    const item = yield* state.iter.next(thread, target, runtime, stage); 
-                    if(item.done) return item
-                    return divIterator.Item(new jwArray.Type([state.num++, item.value]))
-                }, iter.clonable)
-            },
-            cycle(iter) {
-                iter = IteratorType.toIterator(iter)
-                return iter.chainIter("Cycle", 
-                    {iter, buffer: [], i: 0}, function*(state, thread, target, runtime, stage) {
-                    const item = yield* state.iter.next(thread, target, runtime, stage);
-                    if(item.done) {
-                        if(state.buffer.length == 0) return divIterator.Done()
-                        state.i %= state.buffer.length
-                        return state.buffer[state.i++]
-                    }
-                    state.buffer.push(item)
-                    return item;
-                }, iter.clonable)
-            },
-
-            take(iter, count) {
-                iter = IteratorType.toIterator(iter)
-                return iter.chainIter({kind: "Take", args: [count]},
-                    {iter, count}, function*(state, thread, target, runtime, stage) {
-                    if(state.count <= 0) return divIterator.Done()
-                    const item = yield* state.iter.next(thread, target, runtime, stage);
-                    if(item.done) return item
-                    state.count--;
-                    return item;
-                }, iter.clonable)
-            },
-            skip(iter, count) {
-                iter = IteratorType.toIterator(iter)
-                return iter.chainIter({kind: "Skip", args: [count]},
-                    {iter, count}, function*(state, thread, target, runtime, stage) {
-                    while(state.count > 0) {
-                        const item = yield* state.iter.next(thread, target, runtime, stage);
-                        if(item.done) return item
-                        state.count--;
-                    }
-                    return yield* state.iter.next(thread, target, runtime, stage)
-                }, iter.clonable)
-            },
-            stepBy(iter, step) {
-                iter = IteratorType.toIterator(iter)
-                return iter.chainIter({kind: "StepBy", args: [step]},
-                    {iter, first: true}, function*(state, thread, target, runtime, stage) {
-                    if(state.first) {
-                        state.first = false;
-                        return yield* state.iter.next(thread, target, runtime, stage);
-                    }
-                    for(let i = 1; i < step; i++) {
-                        const item = yield* state.iter.next(thread, target, runtime, stage);
-                        if(item.done) return item
-                    }
-                    return yield* state.iter.next(thread, target, runtime, stage)
-                }, iter.clonable)
-            },
-
-            chain(iter1, iter2) {
-                iter1 = IteratorType.toIterator(iter1)
-                iter2 = IteratorType.toIterator(iter2)
-                return iter1.chainIter({kind: "Chain", args: [iter2]},
-                    {iter1, iter2}, function*(state, thread, target, runtime, stage) {
-                    const item1 = yield* state.iter1.next(thread, target, runtime, stage);
-                    if(!item1.done) return item1
-                    return yield* state.iter2.next(thread, target, runtime, stage)
-                }, iter1.clonable && iter2.clonable)
-            },
-            zip(iter1, iter2) {
-                iter1 = IteratorType.toIterator(iter1)
-                iter2 = IteratorType.toIterator(iter2)
-                return iter1.chainIter({kind: "Zip", args: [iter2]},
-                    {iter1, iter2}, function*(state, thread, target, runtime, stage) {
-                    const item1 = yield* state.iter1.next(thread, target, runtime, stage);
-                    if(item1.done) return item1
-                    const item2 = yield* state.iter2.next(thread, target, runtime, stage);
-                    if(item2.done) return item2
-                    return divIterator.Item(new jwArray.Type([item1.value, item2.value]))
-                }, iter1.clonable && iter2.clonable)
-            },
-            cross(iter1, iter2) {
-                iter1 = IteratorType.toIterator(iter1)
-                iter2 = IteratorType.toIterator(iter2)
-                return iter1.chainIter({kind: "Cross", args: [iter2]},
-                    {iter1, buffer: [], i: 0, iter2, item2: null}, function*(state, thread, target, runtime, stage) {
-                    const item1 = yield* state.iter1.next(thread, target, runtime, stage);
-                    if(item1.done) {
-                        if(state.buffer.length == 0) return divIterator.Done()
-                        state.i %= state.buffer.length
-                        if(state.i == 0) {
-                            const item2 = yield* state.iter2.next(thread, target, runtime, stage)
-                            if(item2.done) return divIterator.Done()
-                            state.item2 = item2.value;
-                        }
-                        return divIterator.Item(new jwArray.Type([state.buffer[state.i++], state.item2]))
-                    }
-                    if(state.item2 == null) {
-                        const item2 = yield* state.iter2.next(thread, target, runtime, stage)
-                        if(item2.done) return divIterator.Done()
-                        state.item2 = item2.value;
-                    }
-                    state.buffer.push(item1.value)
-                    return divIterator.Item(new jwArray.Type([item1.value, state.item2]));
-                }, iter1.clonable && iter2.clonable)
-            },
-            
-            inspect(iter, inspect) {
-                iter = IteratorType.toIterator(iter)
-                return iter.chainIter("Inspect", 
-                    {iter}, function*(state, thread, target, runtime, stage) {
-                    const {iter} = state;
-                    const item = yield* iter.next(thread, target, runtime, stage)
-                    if(item.done) return item
-                    yield* inspect(item.value, thread, target, runtime, stage);
-                    return item
-                }, iter.clonable)
-            },
-        },
-        Terminators: {
-            // Unlike Iterables and Adapters which directly return iterators
-            // with no additional effects (yields), terminators are intended
-            // to be eagerly run so they will yield
-            *count(iter, yieldLoop, thread, target, runtime, stage) {
-                iter = IteratorType.toIterator(iter)
-                for(let i = 0;; i++) {
-                    const item = yield* iter.next(thread, target, runtime, stage)
-                    if(item.done) return i
-                    yield* yieldLoop()
-                }
-            },
-
-            *fold(iter, init, fold, yieldLoop, thread, target, runtime, stage) {
-                iter = IteratorType.toIterator(iter)
-                let acc = init
-                for(;;) {
-                    const item = yield* iter.next(thread, target, runtime, stage)
-                    if(item.done) return acc
-                    acc = yield* fold(acc, item.value, thread, target, runtime, stage)
-                    yield* yieldLoop()
-                }
-            },
-            *any(iter, pred, yieldLoop, thread, target, runtime, stage) {
-                iter = IteratorType.toIterator(iter)
-                for(;;) {
-                    const item = yield* iter.next(thread, target, runtime, stage)
-                    if(item.done) return false
-                    if(yield* pred(item.value, thread, target, runtime, stage)) return true
-                    yield* yieldLoop()
-                }
-            },
-            *all(iter, pred, yieldLoop, thread, target, runtime, stage) {
-                iter = IteratorType.toIterator(iter)
-                for(;;) {
-                    const item = yield* iter.next(thread, target, runtime, stage)
-                    if(item.done) return true
-                    if(!(yield* pred(item.value, thread, target, runtime, stage))) return false
-                    yield* yieldLoop()
-                }
-            },
-            *collectTo(iter, type, yieldLoop, thread, target, runtime, stage) {
-                iter = IteratorType.toIterator(iter)
-                switch (type) {
-                    case "String":
-                        return yield* divIterator.Terminators.fold(iter, "", 
-                            function*(acc, item) {return acc + Cast.toString(item)}, 
-                            yieldLoop, thread, target, runtime, stage
-                        )
-                    case "Array":
-                        return new jwArray.Type(yield* divIterator.Terminators.fold(iter, [], 
-                            function*(acc, item) {return [...acc, item]}, 
-                            yieldLoop, thread, target, runtime, stage
-                        ))
-                    case "Object":
-                        const arr = new jwArray.Type(yield* divIterator.Terminators.fold(iter, [], 
-                            function*(acc, item) {return [...acc, item]}, 
-                            yieldLoop, thread, target, runtime, stage
-                        ))
-                        try {
-                            return new vm.dogeiscutObject.Type(Object.assign(Object.create(null),
-                                Object.fromEntries(arr.array.map((value) => value.array ? value.array : value))
-                            ))
-                        } catch {}
-                        return new vm.dogeiscutObject.Type()
-                }
-                if(vm.divFromIter && typeof vm.divFromIter.get(type) === "function")
-                    return yield* vm.divFromIter.get(type)(iter, yieldLoop, thread, target, runtime, stage)
-            }
         }
     }
 
@@ -552,6 +526,19 @@
                     allowDropAnywhere: true,
                     arguments: {
                         ITER: divIterator.Argument
+                    }
+                },
+                {
+                    opcode: 'iterIsIter',
+                    text: 'is [THING] an iterator?',
+                    disableMonitor: true,
+                    blockType: BlockType.BOOLEAN,
+                    allowDropAnywhere: true,
+                    arguments: {
+                        THING: {
+                            type: Scratch.ArgumentType.STRING,
+                            exemptFromNormalization: true
+                        }
                     }
                 },
                 {
@@ -889,7 +876,7 @@
         getFromIterMenu() {
             let more = []
             if(vm.divFromIter) more = [...vm.divFromIter.keys()]
-            return ["String", "Array", ...(vm.dogeiscutObject ? ["Object"] : []), ...more].map(s => ({
+            return ["String", "Array", /*...(vm.dogeiscutObject ? ["Object"] : []),*/ ...more].map(s => ({
                 text: s,
                 value: s,
             }))
@@ -1086,8 +1073,8 @@
                 iterCollectTo(node, compiler, imports) {
                     const iter = compiler.descendInput(node.ITER).asUnknown();
                     return new imports.TypedInput(
-                 /*js*/`(yield* vm.divIterator.Terminators.collectTo(\n`
-                      +`    ${iter}, '${node.TYPE}',\n`
+                 /*js*/`(yield* vm.divIterator.Type.toIterator(${iter}).collectTo(\n`
+                      +`    '${node.TYPE}',\n`
                       +`    function*() {${yieldLoop(compiler)}},\n`
                       +`thread, target, runtime, stage))\n`
                     , imports.TYPE_UNKNOWN)
@@ -1096,9 +1083,9 @@
                 iterBuilder(node, compiler, imports) {
                     const state = compiler.descendInput(node.STATE).asUnknown();
                     const next = descendSubstack(compiler, node.NEXT, new imports.Frame(false, "_divIterBuilder"))
-                        +`\nreturn vm.divIterator.Item("");\n`
+                        +`\nreturn vm.IteratorType.Item("");\n`
                     return new imports.TypedInput(
-                 /*js*/`vm.divIterator.Iterables.iterBuilder(\n`
+                 /*js*/`vm.divIterator.Type.iterBuilder(\n`
                       +`    ${state},\n`
                       +`    ${substackThunk(compiler, next, '_divIterState')}\n`
                       +`)\n`
@@ -1117,11 +1104,11 @@
                 iterBuilderItem(node, compiler, imports) {
                     if(!compiler.frames.some(f => f.parent === "_divIterBuilder")) return;
                     const item = compiler.descendInput(node.ITEM).asUnknown()
-                    compiler.source += `return vm.divIterator.Item(${item});`
+                    compiler.source += `return vm.IteratorType.Item(${item});`
                 },
                 iterBuilderDone(node, compiler, imports) {
                     if(!compiler.frames.some(f => f.parent === "_divIterBuilder")) return;
-                    compiler.source += `return vm.divIterator.Done();`
+                    compiler.source += `return vm.IteratorType.Done();`
                 },
 
                 iterAdapterMap(node, compiler, imports) {
@@ -1129,8 +1116,7 @@
                     const map = descendInput(compiler, node.MAP, new imports.Frame(true, "_divIterItem",))
                         .asUnknown();
                     return new imports.TypedInput(
-                 /*js*/`vm.divIterator.Adapters.map(\n`
-                      +`    ${iter},\n`
+                 /*js*/`vm.divIterator.Type.toIterator(${iter}).map(\n`
                       +`    ${inputThunk(compiler, map, '_divIterItem')}\n`
                       +`)\n`
                     , imports.TYPE_UNKNOWN)
@@ -1140,8 +1126,7 @@
                     const pred = descendInput(compiler, node.PRED, new imports.Frame(true, "_divIterItem"))
                         .asBoolean();
                     return new imports.TypedInput(
-                 /*js*/`vm.divIterator.Adapters.keep(\n`
-                      +`    ${iter},\n`
+                 /*js*/`vm.divIterator.Type.toIterator(${iter}).keep(\n`
                       +`    ${inputThunk(compiler, pred, '_divIterItem')}\n`
                       +`)\n`
                     , imports.TYPE_UNKNOWN)
@@ -1151,8 +1136,7 @@
                     const iter = compiler.descendInput(node.ITER).asUnknown();
                     const inspect = descendSubstack(compiler, node.INSPECT, new imports.Frame(false, "_divIterItem"));
                     return new imports.TypedInput(
-                 /*js*/`vm.divIterator.Adapters.inspect(\n`
-                      +`    ${iter},\n`
+                 /*js*/`vm.divIterator.Type.toIterator(${iter}).inspect(\n`
                       +`    ${substackThunk(compiler, inspect, '_divIterItem')}\n`
                       +`)\n`
                     , imports.TYPE_UNKNOWN)
@@ -1161,8 +1145,7 @@
                 iterTermCount(node, compiler, imports) {
                     const iter = compiler.descendInput(node.ITER).asUnknown();
                     return new imports.TypedInput(
-                 /*js*/`(yield* vm.divIterator.Terminators.count(\n`
-                      +`    ${iter},\n`
+                 /*js*/`(yield* vm.divIterator.Type.toIterator(${iter}).count(\n`
                       +`    function*() {${yieldLoop(compiler)}},\n`
                       +`thread, target, runtime, stage))\n`
                     , imports.TYPE_UNKNOWN)
@@ -1173,8 +1156,8 @@
                     const init = compiler.descendInput(node.INIT).asUnknown();
                     const fold = descendInput(compiler, node.FOLD, new imports.Frame(true, "_divIterAcc")).asUnknown();
                     return new imports.TypedInput(
-                 /*js*/`(yield* vm.divIterator.Terminators.fold(\n`
-                      +`    ${iter}, ${init},\n`
+                 /*js*/`(yield* vm.divIterator.Type.toIterator(${iter}).fold(\n`
+                      +`    ${init},\n`
                       +`    ${inputThunk(compiler, fold, '_divIterAcc, _divIterItem')},\n`
                       +`    function*() {${yieldLoop(compiler)}},\n`
                       +`thread, target, runtime, stage))\n`
@@ -1184,8 +1167,7 @@
                     const iter = compiler.descendInput(node.ITER).asUnknown();
                     const pred = descendInput(compiler, node.PRED, new imports.Frame(true, "_divIterItem")).asBoolean();
                     return new imports.TypedInput(
-                 /*js*/`(yield* vm.divIterator.Terminators.any(\n`
-                      +`    ${iter},\n`
+                 /*js*/`(yield* vm.divIterator.Type.toIterator(${iter}).any(\n`
                       +`    ${inputThunk(compiler, pred, '_divIterItem')},\n`
                       +`    function*() {${yieldLoop(compiler)}},\n`
                       +`thread, target, runtime, stage))\n`
@@ -1195,8 +1177,7 @@
                     const iter = compiler.descendInput(node.ITER).asUnknown();
                     const pred = descendInput(compiler, node.PRED, new imports.Frame(true, "_divIterItem")).asBoolean();
                     return new imports.TypedInput(
-                 /*js*/`(yield* vm.divIterator.Terminators.all(\n`
-                      +`    ${iter},\n`
+                 /*js*/`(yield* vm.divIterator.Type.toIterator(${iter}).all(\n`
                       +`    ${inputThunk(compiler, pred, '_divIterItem')},\n`
                       +`    function*() {${yieldLoop(compiler)}},\n`
                       +`thread, target, runtime, stage))\n`
@@ -1218,6 +1199,9 @@
         iterNext() {
             return "noop"
         }
+        iterIsIter({THING}) {
+            return THING instanceof IteratorType;
+        }
         iterDone({ITER}) {
             return IteratorType.toIterator(ITER).done
         }
@@ -1238,10 +1222,10 @@
         // Iterables
         // Note: set end to 1e308 for a practically infinite iterator.
         iterRange({START, END}) {
-            return divIterator.Iterables.range(START, END)
+            return IteratorType.range(START, END)
         }
         iterIterOver({VAL}) {
-            return divIterator.Iterables.iterOver(VAL)
+            return IteratorType.iterOver(VAL)
         }
         iterCollectTo() {
             return "noop"
@@ -1273,30 +1257,30 @@
         }
 
         iterAdapterEnum({ITER}) {
-            return divIterator.Adapters.enum(ITER)
+            return IteratorType.toIterator(ITER).enum()
         }
         iterAdapterCycle({ITER}) {
-            return divIterator.Adapters.cycle(ITER)
+            return IteratorType.toIterator(ITER).cycle()
         }
 
         iterAdapterTake({ITER, COUNT}) {
-            return divIterator.Adapters.take(ITER, COUNT)
+            return IteratorType.toIterator(ITER).take(COUNT)
         }
         iterAdapterSkip({ITER, COUNT}) {
-            return divIterator.Adapters.skip(ITER, COUNT)
+            return IteratorType.toIterator(ITER).skip(COUNT)
         }
         iterAdapterStepBy({ITER, STEP}) {
-            return divIterator.Adapters.stepBy(ITER, STEP)
+            return IteratorType.toIterator(ITER).stepBy(STEP)
         }
 
         iterAdapterChain({ITER1, ITER2}) {
-            return divIterator.Adapters.chain(ITER1, ITER2)
+            return IteratorType.toIterator(ITER1).chain(IteratorType.toIterator(ITER2))
         }
         iterAdapterZip({ITER1, ITER2}) {
-            return divIterator.Adapters.zip(ITER1, ITER2)
+            return IteratorType.toIterator(ITER1).zip(IteratorType.toIterator(ITER2))
         }
         iterAdapterCross({ITER1, ITER2}) {
-            return divIterator.Adapters.cross(ITER1, ITER2)
+            return IteratorType.toIterator(ITER1).cross(ITER2)
         }
         
         iterAdapterInspect() {

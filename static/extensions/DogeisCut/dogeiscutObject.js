@@ -156,13 +156,13 @@
             return result
         }
 
-        static tableDisplay(source, border = '1px solid #77777777', keyBackground = '#77777724', background = '#ffffff00') {
+        static tableDisplay(source, border = '1px solid #77777777', keyBackground = '#77777724', background = '#ffffff00', entryLimit = 1000) {
             let root = document.createElement('div')
             root.style.display = 'flex'
             root.style.flexDirection = 'column'
             root.style.justifyContent = 'center'
 
-            const renderArray = (array, border, keyBackground, background) => {
+            const renderArray = (array) => {
                 const table = document.createElement('table')
                 table.style.borderCollapse = 'collapse'
                 table.style.margin = '2px 0'
@@ -170,7 +170,9 @@
                 table.style.background = background
                 table.style.border = border
 
-                if (array.length === 0) {
+                const limitedArray = array.slice(0, entryLimit)
+
+                if (limitedArray.length === 0) {
                     const text = span(escapeHTML("<Blank Array>"))
                     text.style.fontStyle = 'italic';
                     text.style.color = border
@@ -178,7 +180,7 @@
                     return text.outerHTML
                 }
 
-                array.forEach((value, index) => {
+                limitedArray.forEach((value, index) => {
                     const row = document.createElement('tr')
 
                     const valueCell = document.createElement('td')
@@ -186,16 +188,28 @@
                     valueCell.style.padding = '2px 6px'
                     valueCell.style.background = background
 
-                    valueCell.innerHTML = render(value, border, keyBackground, background)
+                    valueCell.innerHTML = render(value, border, keyBackground, background, entryLimit)
 
                     row.appendChild(valueCell)
                     table.appendChild(row)
                 })
 
+                if (array.length > entryLimit) {
+                    const moreRow = document.createElement('tr')
+                    const moreCell = document.createElement('td')
+                    moreCell.colSpan = 2
+                    moreCell.textContent = `... ${array.length - entryLimit} more values`
+                    moreCell.style.textAlign = 'center'
+                    moreCell.style.fontStyle = 'italic'
+                    moreCell.style.color = border
+                    moreRow.appendChild(moreCell)
+                    table.appendChild(moreRow)
+                }
+
                 return table.outerHTML
             }
 
-            const renderMap = (map, border, keyBackground, background) => {
+            const renderMap = (map) => {
                 const table = document.createElement('table')
                 table.style.borderCollapse = 'collapse'
                 table.style.margin = '2px 0'
@@ -203,7 +217,9 @@
                 table.style.background = background
                 table.style.border = border
 
-                if (map.size === 0) {
+                const limitedMap = new Map(Array.from(map).slice(0, entryLimit))
+
+                if (limitedMap.size === 0) {
                     const text = span(escapeHTML("<Blank Object>"))
                     text.style.fontStyle = 'italic';
                     text.style.color = border
@@ -211,7 +227,7 @@
                     return text.outerHTML
                 }
 
-                map.forEach((value, key) => {
+                limitedMap.forEach((value, key) => {
                     const row = document.createElement('tr')
 
                     const keyCell = document.createElement('td')
@@ -233,20 +249,32 @@
                     row.appendChild(valueCell)
                     table.appendChild(row)
                 })
+
+                if (map.size > entryLimit) {
+                    const moreRow = document.createElement('tr')
+                    const moreCell = document.createElement('td')
+                    moreCell.colSpan = 2
+                    moreCell.textContent = `... ${map.size - entryLimit} more entries`
+                    moreCell.style.textAlign = 'center'
+                    moreCell.style.fontStyle = 'italic'
+                    moreCell.style.color = border
+                    moreRow.appendChild(moreCell)
+                    table.appendChild(moreRow)
+                }
                 
                 return table.outerHTML
             }
 
-            const render = (x, border, keyBackground, background) => {
+            const render = (x) => {
                 try {
                     switch (typeof x) {
                         case "object":
                             if (x === null || x === undefined) return "null"
                             if (x instanceof Array) {
-                                return renderArray(x, border, keyBackground, background)
+                                return renderArray(x)
                             }
                             if (x instanceof Map) {
-                                return renderMap(x, border, keyBackground, background)
+                                return renderMap(x)
                             }
                             if (typeof x.dogeiscutObjectHandler == "function") {
                                 return x.dogeiscutObjectHandler(x)

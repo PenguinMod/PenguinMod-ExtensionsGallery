@@ -133,7 +133,6 @@
             return "?"
         }
 
-        //placeholder
         jwArrayHandler() {
             return `Object<${formatNumber(this.size)}>`
         }
@@ -773,9 +772,9 @@
                     //"---",
                     {
                         opcode: 'is',
-                        text: 'is [VALUE] an object?',
+                        text: 'does [VALUE] parse as an object?',
                         blockType: Scratch.BlockType.BOOLEAN,
-                        hideFromPalette: true, // deprecated: theres a way to replicate this specific block's behavior, and TW port is getting a typeof block 
+                        hideFromPalette: true, // wont unhide it unless JW agrees to add something similar to arrays. Either way im not really a fan of this block
                         arguments: {
                             VALUE: {
                                 type: Scratch.ArgumentType.STRING,

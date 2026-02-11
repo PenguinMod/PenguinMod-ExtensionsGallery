@@ -573,6 +573,10 @@
                         switchText: 'blank object',
                         switches: [
                             {
+                                opcode: 'blank',
+                                isNoop: true
+                            },
+                            {
                                 opcode: 'parse',
                                 createArguments: {
                                     VALUE: '{"foo": "bar"}'
@@ -597,6 +601,10 @@
                         switches: [
                             {
                                 opcode: 'blank',
+                            },
+                            {
+                                opcode: 'parse',
+                                isNoop: true
                             },
                         ]
                     },
@@ -649,6 +657,10 @@
                         },
                         switches: [
                             {
+                                opcode: 'builderAppend',
+                                isNoop: true
+                            },
+                            {
                                 opcode: 'builderAppendEmpty',
                             },
                         ],
@@ -671,6 +683,10 @@
                                 createArguments: {
                                     VALUE: 'bar'
                                 }
+                            },
+                            {
+                                opcode: 'builderAppendEmpty',
+                                isNoop: true
                             },
                         ],
                     },
@@ -811,7 +827,7 @@
                         arguments: {
                             OBJECT: dogeiscutObject.Argument,
                         },
-                        switches: ["values", "entries"],
+                        switches: ["keys", "values", "entries"],
                         ...jwArray.Block,
                     },
                     {
@@ -821,7 +837,7 @@
                         arguments: {
                             OBJECT: dogeiscutObject.Argument,
                         },
-                        switches: ["keys", "entries"],
+                        switches: ["keys", "values", "entries"],
                         ...jwArray.Block,
                     },
                     {
@@ -831,7 +847,7 @@
                         arguments: {
                             OBJECT: dogeiscutObject.Argument,
                         },
-                        switches: ["keys", "values"],
+                        switches: ["keys", "values", "entries"],
                         ...jwArray.Block,
                     },
                     //"---",

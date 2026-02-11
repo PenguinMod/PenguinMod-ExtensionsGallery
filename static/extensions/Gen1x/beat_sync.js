@@ -173,13 +173,13 @@
                     {
                         opcode: 'whenFullBeat',
                         blockType: Scratch.BlockType.HAT,
-                        text: 'when full beat happen',
+                        text: 'when full beat happens',
                         isEdgeActivated: true
                     },
                     {
                         opcode: 'whenMeasureHappen',
                         blockType: Scratch.BlockType.HAT,
-                        text: 'when new measure start',
+                        text: 'when new measure starts',
                         isEdgeActivated: true
                     }
                 ],

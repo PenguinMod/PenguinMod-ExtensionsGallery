@@ -498,9 +498,13 @@
             jwArray = vm.jwArray
             
             if (dogeiscutObject.tableDisplay.patchArrays) {
-                // monitor patching doesnt work some some reason
-                if (dogeiscutObject.tableDisplay.useForMonitors) jwArray.Type.prototype.toMonitorContent = function(){return ObjectType.tableDisplay(this, '1px solid #fff', '#ffffff33', 'ffffff00')}
-                if (dogeiscutObject.tableDisplay.useForReporters) jwArray.Type.prototype.toReporterContent = function(){return ObjectType.tableDisplay(this)}
+                // `toMonitorContent` is a property instead of a method.
+                // line 136 https://github.com/PenguinMod/PenguinMod-Vm/blob/7dfe36cc301cc1e389800347fc376aab11caf2d9/src/extensions/jwArray/index.js#L136
+                // jw if you see this, do NOT use arrow functions/lambdas for class methods (like `toMonitorContent = () => span(this.toString())`), it makes them appear in instances.
+                // do `toMonitorContent() { return span(this.toString()) }, this creates it properly`
+                // if you do this, then I can properly patch this method....
+                jwArray.Type.prototype.toMonitorContent = function(){if (dogeiscutObject.tableDisplay.useForMonitors) return ObjectType.tableDisplay(this, '1px solid #fff', '#ffffff33', 'ffffff00')}
+                jwArray.Type.prototype.toReporterContent = function(){if (dogeiscutObject.tableDisplay.useForReporters) return ObjectType.tableDisplay(this)}
             }
             
             vm.runtime.registerCompiledExtensionBlocks('dogeiscutObject', this.getCompileInfo())

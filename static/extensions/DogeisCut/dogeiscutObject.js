@@ -347,11 +347,7 @@
             return root
         }
 
-        get size() {
-            return this.map.size
-        }
-
-        /* Stuff For Blocks Below Here */
+        /* API Methods, use these in blocks. */
 
         static blank = new ObjectType()
 
@@ -414,6 +410,10 @@
         has(key) {
             key = Cast.toString(key)
             return this.map.has(key)
+        }
+
+        get size() {
+            return this.map.size
         }
 
         set(key, value) {
@@ -738,6 +738,16 @@
                             }
                         }
                     },
+                    {
+                        opcode: 'size',
+                        text: 'size of [OBJECT]',
+                        switchText: 'size',
+                        blockType: Scratch.BlockType.REPORTER,
+                        allowDropAnywhere: true,
+                        arguments: {
+                            OBJECT: dogeiscutObject.Argument,
+                        }
+                    },
                     '---',
                     {
                         opcode: 'set',
@@ -978,6 +988,13 @@
                             object: generator.descendInputOfBlock(block, 'OBJECT'),
                         }
                     },
+                    size: (generator, block) => {
+                        return {
+                            kind: 'input',
+                            object: generator.descendInputOfBlock(block, 'OBJECT'),
+                            key: generator.descendInputOfBlock(block, 'KEY'),
+                        }
+                    },
                     set: (generator, block) => {
                         return {
                             kind: 'input',
@@ -1118,6 +1135,10 @@
                         let source = `vm.dogeiscutObject.Type.toObject(${compiler.descendInput(node.object).asUnknown()}, true).has(${compiler.descendInput(node.key).asString()})`
                         return new imports.TypedInput(source, imports.TYPE_BOOLEAN)
                     },
+                    size: (node, compiler, imports) => {
+                        let source = `vm.dogeiscutObject.Type.toObject(${compiler.descendInput(node.object).asUnknown()}, true).size`
+                        return new imports.TypedInput(source, imports.TYPE_UNKNOWN)
+                    },
                     set: (node, compiler, imports) => {
                         let source = `vm.dogeiscutObject.Type.toObject(${compiler.descendInput(node.object).asUnknown()}).set(${compiler.descendInput(node.key).asString()}, ${compiler.descendInput(node.value).asUnknown()})`
                         return new imports.TypedInput(source, imports.TYPE_UNKNOWN)
@@ -1236,7 +1257,6 @@
             }
         }
 
-
         get({ OBJECT, KEY }) {
             OBJECT = dogeiscutObject.Type.toObject(OBJECT, true)
             return OBJECT.get(KEY)
@@ -1250,6 +1270,11 @@
         has({ OBJECT, KEY }) {
             OBJECT = dogeiscutObject.Type.toObject(OBJECT, true)
             return OBJECT.has(KEY)
+        }
+
+        size({ OBJECT }) {
+            OBJECT = dogeiscutObject.Type.toObject(OBJECT, true)
+            return OBJECT.size
         }
 
         set({ OBJECT, KEY, VALUE }) {

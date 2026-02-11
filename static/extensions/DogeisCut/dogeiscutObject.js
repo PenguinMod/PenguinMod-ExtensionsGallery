@@ -291,7 +291,7 @@
                         case "string":
                             return `"${escapeHTML(Cast.toString(x))}"`
                     }
-                } catch(x) { throw x }
+                } catch {}
                 return "?"
             }
 

@@ -61,6 +61,13 @@ export default [
         unstableReason: "WebGPU is still experimental and not supported by all browsers and does not work when packaged to electron. Check compatibility at webgpu.io."
     },
     {
+        name: "Beat Sync",
+        description: "An extension designed to let you sync anything in your project to a musical beat, with incredible precision.",
+        code: "Gen1x/beat_sync.js",
+        banner: "Gen1x/beat_sync.avif",
+        creator: "G1nX",
+    },
+    {
         name: "Object",
         description: "Handle large JSON files at an extreme speed.",
         code: "skyhigh173/object.js",

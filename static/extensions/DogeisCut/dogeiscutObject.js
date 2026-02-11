@@ -537,7 +537,8 @@
             vm.dogeiscutObject = dogeiscutObject
             vm.runtime.registerSerializer(
                 "dogeiscutObject",
-                mapType => Object.fromEntries(Array.from(mapType.map).map(([key, value]) => {
+                // we save this as array entries so people cant spoof custom types
+                mapType => Array.from(mapType.map).map(([key, value]) => {
                     if (typeof value == "object" && value != null && value.customId) {
                         return [String(key), {
                             customType: true,
@@ -546,13 +547,19 @@
                         }];
                     }
                     return [String(key), value]
-                })),
-                object => new dogeiscutObject.Type(new Map(Object.entries(object).map(([key, value]) => {
-                    if (typeof value == "object" && value != null && value.customType) {
-                        return [String(key), vm.runtime.serializers[value.typeId].deserialize(value.serialized)]
+                }),
+                entries => {
+                    // this is here because for some reason i decided to do it like that in the old format
+                    if (entries.entries && Array.isArray(entries.entries)) { // this shouldn't trigger a false positive for a jwArray
+                        entries = entries.entries.map(({key, value}) => [key, value])
                     }
-                    return [String(key), value]
-                }))),
+                    return new dogeiscutObject.Type(new Map(entries.map(([key, value]) => {
+                        if (typeof value == "object" && value != null && value.customType) {
+                            return [String(key), vm.runtime.serializers[value.typeId].deserialize(value.serialized)]
+                        }
+                        return [String(key), value]
+                    })))
+                },
             )
 
             if (!vm.jwArray) vm.extensionManager.loadExtensionIdSync('jwArray')

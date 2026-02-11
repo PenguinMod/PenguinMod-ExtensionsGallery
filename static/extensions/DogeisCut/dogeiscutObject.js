@@ -161,9 +161,152 @@
             return result
         }
 
-        toMonitorContent = () => span(this.toString())
+        static tableDisplay(source, border = '1px solid #77777777', keyBackground = '#77777724', background = '#ffffff00') {
+            let root = document.createElement('div')
+            root.style.display = 'flex'
+            root.style.flexDirection = 'column'
+            root.style.justifyContent = 'center'
+
+            const renderArray = (array, border, keyBackground, background) => {
+                const table = document.createElement('table')
+                table.style.borderCollapse = 'collapse'
+                table.style.margin = '2px 0'
+                table.style.fontSize = '12px'
+                table.style.background = background
+                table.style.border = border
+
+                if (array.size === 0) {
+                    const text = span(escapeHTML("<Empty Array>"))
+                    text.style.fontStyle = 'italic';
+                    text.style.color = border
+
+                    return text.outerHTML
+                }
+
+                array.forEach((value, index) => {
+                    const row = document.createElement('tr')
+
+                    const valueCell = document.createElement('td')
+                    valueCell.style.border = border
+                    valueCell.style.padding = '2px 6px'
+                    valueCell.style.background = background
+
+                    valueCell.innerHTML = render(value, border, keyBackground, background)
+
+                    row.appendChild(valueCell)
+                    table.appendChild(row)
+                })
+
+                return table.outerHTML
+            }
+
+            const renderMap = (map, border, keyBackground, background) => {
+                const table = document.createElement('table')
+                table.style.borderCollapse = 'collapse'
+                table.style.margin = '2px 0'
+                table.style.fontSize = '12px'
+                table.style.background = background
+                table.style.border = border
+
+                if (map.size === 0) {
+                    const text = span(escapeHTML("<Empty Object>"))
+                    text.style.fontStyle = 'italic';
+                    text.style.color = border
+
+                    return text.outerHTML
+                }
+
+                map.forEach((value, key) => {
+                    const row = document.createElement('tr')
+
+                    const keyCell = document.createElement('td')
+                    keyCell.style.border = border
+                    keyCell.style.padding = '2px 6px'
+                    keyCell.style.background = keyBackground
+                    keyCell.style.fontWeight = 'bold';
+
+                    keyCell.innerHTML = escapeHTML(String(key))
+
+                    const valueCell = document.createElement('td')
+                    valueCell.style.border = border
+                    valueCell.style.padding = '2px 6px'
+                    valueCell.style.background = background
+
+                    valueCell.innerHTML = render(value, border, keyBackground, background)
+
+                    row.appendChild(keyCell)
+                    row.appendChild(valueCell)
+                    table.appendChild(row)
+                })
+                
+                return table.outerHTML
+            }
+
+            const render = (x, border, keyBackground, background) => {
+                try {
+                    switch (typeof x) {
+                        case "object":
+                            if (x === null || x === undefined) return "null"
+                            if (x instanceof Array) {
+                                return renderArray(x, border, keyBackground, background)
+                            }
+                            if (x instanceof Map) {
+                                return renderMap(x, border, keyBackground, background)
+                            }
+                            if (typeof x.dogeiscutObjectHandler == "function") {
+                                return x.dogeiscutObjectHandler(x)
+                            }
+                            if (typeof x.jwArrayHandler == "function") {
+                                return x.jwArrayHandler(x)
+                            }
+                            return "Object"
+                        case "undefined":
+                            return "null"
+                        case "number":
+                            return formatNumber(x)
+                        case "boolean":
+                            return x ? "true" : "false"
+                        case "string":
+                            return `"${escapeHTML(Cast.toString(x))}"`
+                    }
+                } catch(x) { throw x }
+                return "?"
+            }
+
+            const normalize = (input) => {
+                if (input instanceof jwArray.Type) {
+                    return input.array.map(v => normalize(v))
+                }
+                if (input instanceof ObjectType) {
+                    return new Map(Array.from(input.map).map(([k, v]) => [Cast.toString(k), normalize(v)]))
+                }
+                if (isPlainObject(input)) {
+                    return new Map(Object.entries(input).map(([k, v]) => [Cast.toString(k), normalize(v)]))
+                }
+                return input
+            }
+
+            source = normalize(source)
+
+            root.innerHTML = render(source, border, keyBackground, background)
+            root.appendChild(span(`${source instanceof Map ? "Size" : "Length"}: ${source.size ?? source.length}`))
+
+            return root
+        }
+
+        toMonitorContent = () => {
+            if (dogeiscutObject.tableDisplay.useForMonitors) {
+                return ObjectType.tableDisplay(this, '1px solid #fff', '#ffffff33', 'ffffff00')
+            }
+
+            span(this.toString())
+        }
 
         toReporterContent() {
+            if (dogeiscutObject.tableDisplay.useForReporters) {
+                return ObjectType.tableDisplay(this)
+            }
+
             let root = document.createElement('div')
             root.style.display = 'flex'
             root.style.flexDirection = 'column'
@@ -185,7 +328,7 @@
             return this.map.size
         }
 
-        /* */
+        /* Stuff For Blocks Below Here */
 
         static blank = new ObjectType()
 
@@ -320,6 +463,11 @@
             shape: Scratch.BlockShape.PLUS,
             exemptFromNormalization: true,
             check: ["Object"]
+        },
+        tableDisplay: {
+            useForMonitors: true,
+            useForReporters: true,
+            patchArrays: true
         }
     }
 
@@ -348,6 +496,12 @@
 
             if (!vm.jwArray) vm.extensionManager.loadExtensionIdSync('jwArray')
             jwArray = vm.jwArray
+            
+            if (dogeiscutObject.tableDisplay.patchArrays) {
+                // monitor patching doesnt work some some reason
+                if (dogeiscutObject.tableDisplay.useForMonitors) vm.jwArray.Type.prototype.toMonitorContent = function(){return ObjectType.tableDisplay(this, '1px solid #fff', '#ffffff33', 'ffffff00')}
+                if (dogeiscutObject.tableDisplay.useForReporters) vm.jwArray.Type.prototype.toReporterContent = function(){return ObjectType.tableDisplay(this)}
+            }
             
             vm.runtime.registerCompiledExtensionBlocks('dogeiscutObject', this.getCompileInfo())
         }

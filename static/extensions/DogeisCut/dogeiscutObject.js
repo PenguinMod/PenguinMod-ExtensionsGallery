@@ -555,11 +555,22 @@
                     {
                         opcode: 'blank',
                         text: 'blank object',
+                        switchText: 'blank object',
+                        switches: [
+                            {
+                                opcode: 'parse',
+                                createArguments: {
+                                    VALUE: '{"foo": "bar"}'
+                                }
+                            },
+                            // would like to put the builder and parse in here too but bad api
+                        ],
                         ...dogeiscutObject.Block
                     },
                     {
                         opcode: 'parse',
                         text: 'parse [VALUE] as object',
+                        switchText: 'parse',
                         ...dogeiscutObject.Block,
                         arguments: {
                             VALUE: {
@@ -567,11 +578,17 @@
                                 defaultValue: '{"foo": "bar"}',
                                 exemptFromNormalization: true
                             }
-                        }
+                        },
+                        switches: [
+                            {
+                                opcode: 'blank',
+                            },
+                        ]
                     },
                     {
                         opcode: 'fromEntries',
                         text: 'from entries [ARRAY]',
+                        switchText: 'from entries',
                         ...dogeiscutObject.Block,
                         arguments: {
                             ARRAY: jwArray.Argument
@@ -581,6 +598,7 @@
                     {
                         opcode: 'currentObject',
                         text: 'current object',
+                        switchText: 'current object',
                         hideFromPalette: true,
                         canDragDuplicate: true,
                         ...dogeiscutObject.Block,
@@ -588,6 +606,7 @@
                     {
                         opcode: 'builder',
                         text: 'object builder [CURRENT_OBJECT]',
+                        switchText: 'builder',
                         branches: [{}],
                         arguments: {
                             CURRENT_OBJECT: {
@@ -599,6 +618,7 @@
                     {
                         opcode: 'builderAppend',
                         text: 'append key [KEY] value [VALUE] to builder',
+                        switchText: 'append key value',
                         blockType: Scratch.BlockType.COMMAND,
                         arguments: {
                             KEY: {
@@ -611,11 +631,17 @@
                                 defaultValue: "bar",
                                 exemptFromNormalization: true
                             }
-                        }
+                        },
+                        switches: [
+                            {
+                                opcode: 'builderAppendEmpty',
+                            },
+                        ],
                     },
                     {
                         opcode: 'builderAppendEmpty',
                         text: 'append key [KEY] to builder',
+                        switchText: 'append key',
                         blockType: Scratch.BlockType.COMMAND,
                         arguments: {
                             KEY: {
@@ -623,11 +649,20 @@
                                 defaultValue: "foo",
                                 exemptFromNormalization: true
                             },
-                        }
+                        },
+                        switches: [
+                            {
+                                opcode: 'builderAppend',
+                                createArguments: {
+                                    VALUE: 'bar'
+                                }
+                            },
+                        ],
                     },
                     {
                         opcode: 'builderSet',
                         text: 'set builder to [OBJECT]',
+                        switchText: 'set builder',
                         blockType: Scratch.BlockType.COMMAND,
                         arguments: {
                             OBJECT: dogeiscutObject.Argument
@@ -637,6 +672,7 @@
                     {
                         opcode: 'get',
                         text: 'get [KEY] in [OBJECT]',
+                        switchText: 'get',
                         blockType: Scratch.BlockType.REPORTER,
                         allowDropAnywhere: true,
                         arguments: {
@@ -650,6 +686,7 @@
                     {
                         opcode: 'getPath',
                         text: 'get path [ARRAY] in [OBJECT]',
+                        switchText: 'get path',
                         blockType: Scratch.BlockType.REPORTER,
                         allowDropAnywhere: true,
                         arguments: {
@@ -660,6 +697,7 @@
                     {
                         opcode: 'has',
                         text: '[OBJECT] has key [KEY]',
+                        switchText: 'has',
                         blockType: Scratch.BlockType.BOOLEAN,
                         arguments: {
                             OBJECT: dogeiscutObject.Argument,
@@ -673,6 +711,7 @@
                     {
                         opcode: 'set',
                         text: 'set [KEY] in [OBJECT] to [VALUE]',
+                        switchText: 'set',
                         arguments: {
                             OBJECT: dogeiscutObject.Argument,
                             KEY: {
@@ -690,6 +729,7 @@
                     {
                         opcode: 'setPath',
                         text: 'set path [ARRAY] in [OBJECT] to [VALUE]',
+                        switchText: 'set path',
                         arguments: {
                             OBJECT: dogeiscutObject.Argument,
                             ARRAY: jwArray.Argument,
@@ -704,6 +744,7 @@
                     {
                         opcode: 'delete',
                         text: 'delete key [KEY] from [OBJECT]',
+                        switchText: 'delete',
                         arguments: {
                             OBJECT: dogeiscutObject.Argument,
                             KEY: {
@@ -716,6 +757,7 @@
                     {
                         opcode: 'deleteAtPath',
                         text: 'delete at path [ARRAY] from [OBJECT]',
+                        switchText: 'delete at path',
                         arguments: {
                             OBJECT: dogeiscutObject.Argument,
                             ARRAY: jwArray.Argument,
@@ -725,6 +767,7 @@
                     {
                         opcode: 'merge',
                         text: 'merge [ONE] into [TWO]',
+                        switchText: 'merge',
                         arguments: {
                             ONE: dogeiscutObject.Argument,
                             TWO: dogeiscutObject.Argument,
@@ -735,6 +778,7 @@
                     {
                         opcode: 'toString',
                         text: 'stringify [OBJECT] [FORMAT]',
+                        switchText: 'stringify',
                         blockType: Scratch.BlockType.REPORTER,
                         arguments: {
                             OBJECT: dogeiscutObject.Argument,
@@ -748,31 +792,38 @@
                     {
                         opcode: 'keys',
                         text: 'keys of [OBJECT]',
+                        switchText: 'keys of',
                         arguments: {
                             OBJECT: dogeiscutObject.Argument,
                         },
+                        switches: ["values", "entries"],
                         ...jwArray.Block,
                     },
                     {
                         opcode: 'values',
                         text: 'values of [OBJECT]',
+                        switchText: 'values of',
                         arguments: {
                             OBJECT: dogeiscutObject.Argument,
                         },
+                        switches: ["keys", "entries"],
                         ...jwArray.Block,
                     },
                     {
                         opcode: 'entries',
                         text: 'entries of [OBJECT]',
+                        switchText: 'entries of',
                         arguments: {
                             OBJECT: dogeiscutObject.Argument,
                         },
+                        switches: ["keys", "values"],
                         ...jwArray.Block,
                     },
                     //"---",
                     {
                         opcode: 'is',
                         text: 'does [VALUE] parse as an object?',
+                        switchText: 'parses as an object?',
                         blockType: Scratch.BlockType.BOOLEAN,
                         hideFromPalette: true, // wont unhide it unless JW agrees to add something similar to arrays. Either way im not really a fan of this block
                         arguments: {
@@ -787,6 +838,7 @@
                     {
                         opcode: 'forEachK',
                         text: 'key',
+                        switchText: 'key',
                         blockType: Scratch.BlockType.REPORTER,
                         hideFromPalette: true,
                         canDragDuplicate: true
@@ -794,6 +846,7 @@
                     {
                         opcode: 'forEachV',
                         text: 'value',
+                        switchText: 'value',
                         blockType: Scratch.BlockType.REPORTER,
                         hideFromPalette: true,
                         allowDropAnywhere: true,
@@ -802,6 +855,7 @@
                     {
                         opcode: 'forEach',
                         text: 'for [K] [V] of [OBJECT]',
+                        switchText: 'for key value',
                         blockType: Scratch.BlockType.LOOP,
                         arguments: {
                             OBJECT: dogeiscutObject.Argument,

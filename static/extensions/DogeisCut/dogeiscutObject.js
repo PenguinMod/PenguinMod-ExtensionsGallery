@@ -765,6 +765,7 @@
                         text: 'size of [OBJECT]',
                         switchText: 'size',
                         blockType: Scratch.BlockType.REPORTER,
+                        allowDropAnywhere: true,
                         arguments: {
                             OBJECT: dogeiscutObject.Argument,
                         }

@@ -3,11 +3,6 @@
 // Description: Store data efficiently in multi-purpose objects.
 // By: dogeiscut <https://scratch.mit.edu/users/dogeiscut/>
 
-// TODO:
-// - add delete path in object
-// - add merge path in object
-// - fix get path
-
 (function(Scratch) {
     'use strict'
 
@@ -375,11 +370,11 @@
         }
 
         getPath(path) {
-            const arrayPath = path instanceof jwArray.Type ? path.array : (path ? path : [])
-            let val = this.map
+            const arrayPath = path instanceof jwArray.Type ? path.array : (path ?? [])
+            let val = this
             for (var i = 0; i < arrayPath.length; i++) {
                 const key = Cast.toString(arrayPath[i])
-                if (this.has(key)) {
+                if (val.has(key)) {
                     val = val.get(key)
                 } else {
                     return ""
@@ -430,6 +425,23 @@
             const newMap = new Map(this.map)
             newMap.delete(k);
             return new ObjectType(newMap, true)
+        }
+
+        deleteAtPath(path) {
+            const arrayPath = path instanceof jwArray.Type ? path.array : (path ?? [])
+            let val = this
+            for (var i = 0; i < arrayPath.length; i++) {
+                const key = Cast.toString(arrayPath[i])
+                if (val.has(key)) {
+                    val = val.get(key)
+                    if (!(val instanceof ObjectType)) {
+                        val = new ObjectType(new Map(), true)
+                    }
+                } else if(index === arrayPath.length - 1) {
+                    return val.delete(key)
+                }
+            }
+            return val
         }
 
         merge(other) {
@@ -679,7 +691,15 @@
                         },
                         ...dogeiscutObject.Block,
                     },
-                    // IDEA: delete path from object
+                    {
+                        opcode: 'deleteAtPath',
+                        text: 'delete at path [ARRAY] from [OBJECT]',
+                        arguments: {
+                            OBJECT: dogeiscutObject.Argument,
+                            ARRAY: jwArray.Argument,
+                        },
+                        ...dogeiscutObject.Block,
+                    },
                     {
                         opcode: 'merge',
                         text: 'merge [ONE] into [TWO]',
@@ -867,6 +887,21 @@
                             value: generator.descendInputOfBlock(block, 'VALUE'),
                         }
                     },
+                    delete: (generator, block) => {
+                        return {
+                            kind: 'input',
+                            key: generator.descendInputOfBlock(block, 'KEY'),
+                            object: generator.descendInputOfBlock(block, 'OBJECT'),
+                        }
+                    },
+                    deleteAtPath: (generator, block) => {
+                        return {
+                            kind: 'input',
+                            object: generator.descendInputOfBlock(block, 'OBJECT'),
+                            array: generator.descendInputOfBlock(block, 'ARRAY'),
+                            value: generator.descendInputOfBlock(block, 'VALUE'),
+                        }
+                    },
                     merge: (generator, block) => {
                         return {
                             kind: 'input',
@@ -982,6 +1017,14 @@
                     },
                     setPath: (node, compiler, imports) => {
                         let source = `vm.dogeiscutObject.Type.toObject(${compiler.descendInput(node.object).asUnknown()}).setPath(vm.jwArray.Type.toArray(${compiler.descendInput(node.array).asUnknown()}), ${compiler.descendInput(node.value).asUnknown()})`
+                        return new imports.TypedInput(source, imports.TYPE_UNKNOWN)
+                    },
+                    delete: (node, compiler, imports) => {
+                        let source = `vm.dogeiscutObject.Type.toObject(${compiler.descendInput(node.object).asUnknown()}).delete(${compiler.descendInput(node.key).asString()})`
+                        return new imports.TypedInput(source, imports.TYPE_UNKNOWN)
+                    },
+                    deleteAtPath: (node, compiler, imports) => {
+                        let source = `vm.dogeiscutObject.Type.toObject(${compiler.descendInput(node.object).asUnknown()}).deleteAtPath(vm.jwArray.Type.toArray(${compiler.descendInput(node.array).asUnknown()}))`
                         return new imports.TypedInput(source, imports.TYPE_UNKNOWN)
                     },
                     merge: (node, compiler, imports) => {
@@ -1111,6 +1154,12 @@
             OBJECT = dogeiscutObject.Type.toObject(OBJECT)
             ARRAY = jwArray.Type.toArray(ARRAY)
             return OBJECT.setPath(ARRAY, VALUE)
+        }
+
+        deleteAtPath({ OBJECT, ARRAY }) {
+            OBJECT = dogeiscutObject.Type.toObject(OBJECT)
+            ARRAY = jwArray.Type.toArray(ARRAY)
+            return OBJECT.deleteAtPath(ARRAY)
         }
 
         delete({ KEY, OBJECT }) {

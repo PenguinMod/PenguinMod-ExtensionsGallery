@@ -70,7 +70,6 @@
 
         getAudioCtx() {
             if (this.audioCtx) {
-                if (this.audioCtx.state === 'suspended') this.audioCtx.resume();
                 return this.audioCtx;
             }
 

@@ -1083,9 +1083,9 @@
                 iterBuilder(node, compiler, imports) {
                     const state = compiler.descendInput(node.STATE).asUnknown();
                     const next = descendSubstack(compiler, node.NEXT, new imports.Frame(false, "_divIterBuilder"))
-                        +`\nreturn vm.IteratorType.Item("");\n`
+                        +`\nreturn vm.divIterator.Type.Item("");\n`
                     return new imports.TypedInput(
-                 /*js*/`vm.divIterator.Type.iterBuilder(\n`
+                 /*js*/`new vm.divIterator.Type("Custom",\n`
                       +`    ${state},\n`
                       +`    ${substackThunk(compiler, next, '_divIterState')}\n`
                       +`)\n`
@@ -1104,11 +1104,11 @@
                 iterBuilderItem(node, compiler, imports) {
                     if(!compiler.frames.some(f => f.parent === "_divIterBuilder")) return;
                     const item = compiler.descendInput(node.ITEM).asUnknown()
-                    compiler.source += `return vm.IteratorType.Item(${item});`
+                    compiler.source += `return vm.divIterator.Type.Item(${item});`
                 },
                 iterBuilderDone(node, compiler, imports) {
                     if(!compiler.frames.some(f => f.parent === "_divIterBuilder")) return;
-                    compiler.source += `return vm.IteratorType.Done();`
+                    compiler.source += `return vm.divIterator.Type.Done();`
                 },
 
                 iterAdapterMap(node, compiler, imports) {

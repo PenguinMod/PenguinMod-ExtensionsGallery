@@ -1,6 +1,8 @@
 (function(Scratch) {
     'use strict';
 
+    const isPenguinMod = Scratch.extensions.isPenguinMod;
+
     class BeatSync {
         constructor() {
             this.bpm = 120;
@@ -16,6 +18,54 @@
             this.pausedElapsed = 0;
 
             this.rafHandle = null;
+
+            this._loadAutoStart();
+        }
+
+        _loadAutoStart() {
+            if (!isPenguinMod) {
+                try {
+                    const vm = Scratch.vm;
+                    const storage = vm.runtime.extensionStorage?.beatSync;
+                    if (storage && typeof storage.autoStart === 'boolean') {
+                        this.autoStart = storage.autoStart;
+                    }
+                } catch (e) {
+                }
+            }
+        }
+
+        _saveAutoStart() {
+            if (!isPenguinMod) {
+                try {
+                    const vm = Scratch.vm;
+                    if (!vm.runtime.extensionStorage) {
+                        vm.runtime.extensionStorage = {};
+                    }
+                    if (!vm.runtime.extensionStorage.beatSync) {
+                        vm.runtime.extensionStorage.beatSync = {};
+                    }
+                    vm.runtime.extensionStorage.beatSync.autoStart = this.autoStart;
+                } catch (e) {
+                }
+            }
+        }
+
+        serialize() {
+            if (isPenguinMod) {
+                return {
+                    autoStart: this.autoStart
+                };
+            }
+            return {};
+        }
+
+        deserialize(data) {
+            if (isPenguinMod && data) {
+                if (typeof data.autoStart === 'boolean') {
+                    this.autoStart = data.autoStart;
+                }
+            }
         }
 
         getAudioCtx() {
@@ -33,7 +83,7 @@
                     vm?.audioEngine?.audioContext ||
                     null;
             } catch (e) {
-                /* ignore */ }
+            }
 
             this.audioCtx = scratchCtx || new(window.AudioContext || window.webkitAudioContext)();
             if (this.audioCtx.state === 'suspended') this.audioCtx.resume();
@@ -214,6 +264,7 @@
 
         setAutoStart(args) {
             this.autoStart = String(args.AUTO).toLowerCase() === 'true';
+            this._saveAutoStart();
         }
 
         startBeat() {

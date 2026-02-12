@@ -1197,11 +1197,11 @@
                         return new imports.TypedInput(source, imports.TYPE_UNKNOWN)
                     },
                     forEachK: (node, compiler, imports) => {
-                        let source = `(thread._dogeiscutObjectForEach && thread._dogeiscutObjectForEach[thread._dogeiscutObjectForEach.length-1]) ? thread._dogeiscutObjectForEach[thread._dogeiscutObjectForEach.length-1][0] : ""`
-                        return new imports.TypedInput(source, imports.TYPE_UNKNOWN)
+                        let source = `((thread._dogeiscutObjectForEach && thread._dogeiscutObjectForEach[thread._dogeiscutObjectForEach.length-1]) ? thread._dogeiscutObjectForEach[thread._dogeiscutObjectForEach.length-1][0] : "")`
+                        return new imports.TypedInput(source, imports.TYPE_STRING)
                     },
                     forEachV: (node, compiler, imports) => {
-                        let source = `(thread._dogeiscutObjectForEach && thread._dogeiscutObjectForEach[thread._dogeiscutObjectForEach.length-1]) ? thread._dogeiscutObjectForEach[thread._dogeiscutObjectForEach.length-1][1] : ""`
+                        let source = `((thread._dogeiscutObjectForEach && thread._dogeiscutObjectForEach[thread._dogeiscutObjectForEach.length-1]) ? vm.dogeiscutObject.Type.forObject(thread._dogeiscutObjectForEach[thread._dogeiscutObjectForEach.length-1][1]) : "")`
                         return new imports.TypedInput(source, imports.TYPE_UNKNOWN)
                     },
                     forEach: (node, compiler, imports) => {

@@ -139,7 +139,13 @@
                 id: 'beatSync',
                 name: 'Beat Sync',
                 color1: '#790612',
-                blocks: [{
+                blocks: [
+                    {
+                        opcode: 'toggleAutoStart',
+                        blockType: Scratch.BlockType.BUTTON,
+                        text: this.autoStart ? 'Auto start toggle: ON' : 'Auto start toggle: OFF'
+                    },                    
+                    {
                         opcode: 'setBPM',
                         blockType: Scratch.BlockType.COMMAND,
                         text: 'set BPM to [BPM]',
@@ -158,18 +164,6 @@
                             NUM: {
                                 type: Scratch.ArgumentType.NUMBER,
                                 defaultValue: 4
-                            }
-                        }
-                    },
-                    {
-                        opcode: 'setAutoStart',
-                        blockType: Scratch.BlockType.COMMAND,
-                        text: 'set auto start on project start [AUTO]',
-                        arguments: {
-                            AUTO: {
-                                type: Scratch.ArgumentType.STRING,
-                                menu: 'autoStartMenu',
-                                defaultValue: 'true'
                             }
                         }
                     },
@@ -241,12 +235,7 @@
                         isEdgeActivated: true
                     }
                 ],
-                menus: {
-                    autoStartMenu: {
-                        acceptReporters: true,
-                        items: ['true', 'false']
-                    }
-                }
+                menus: {}
             };
         }
 
@@ -262,9 +251,10 @@
             this.beatsPerMeasure = Math.max(1, Number(args.NUM));
         }
 
-        setAutoStart(args) {
-            this.autoStart = String(args.AUTO).toLowerCase() === 'true';
+        toggleAutoStart() {
+            this.autoStart = !this.autoStart;
             this._saveAutoStart();
+            Scratch.vm.extensionManager.refreshBlocks('beatSync');
         }
 
         startBeat() {

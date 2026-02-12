@@ -126,12 +126,12 @@
                     {
                         opcode: 'startBeat',
                         blockType: Scratch.BlockType.COMMAND,
-                        text: 'start beat sync'
+                        text: 'start syncing to beat'
                     },
                     {
                         opcode: 'stopBeat',
                         blockType: Scratch.BlockType.COMMAND,
-                        text: 'stop beat sync'
+                        text: 'stop syncing to beat'
                     },
                     {
                         opcode: 'resetBeat',

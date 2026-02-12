@@ -15,36 +15,38 @@
     const Cast = Scratch.Cast
     const vm = Scratch.vm;
 
-    if (ScratchBlocks) {
-        ScratchBlocks.BlockSvg.registerCustomShape(
-            "dogeiscutRegularExpressions-RegularExpression", {
-            emptyInputPath: "m 16 0 h 16 h 32 l -16 32 h -16 h -16 h -16 z",
-            emptyInputWidth: 16 * ScratchBlocks.BlockSvg.GRID_UNIT,
-            leftPath: (block) => {
-                const scale = block.height / 2;
-                const s = scale / 16;
-                return [
-                    `h ${-16 * s}`,
-                ];
-            },
-            rightPath: (block) => {
-                const scale = block.edgeShapeWidth_;
-                const s = scale / 16;
-                return [
-                    `h ${16 * s}`,
-                    `l ${-16 * s} ${32 * s}`,
-                    `h 0`,
-                    `h ${-16 * s}`,
-                ];
-            },
-            blockPaddingStart: (_, _2, _3, _4, row) => {
-                return (row.height - 16) / 2;
-            },
-            blockPaddingEnd: (_, _2, _3, _4, row) => {
-                return (row.height - 16) / 2;
+    if (Scratch.gui) {
+        Scratch.gui.getBlockly().then(ScratchBlocks => {
+            registerCustomShape(
+                "dogeiscutRegularExpressions-RegularExpression", {
+                emptyInputPath: "m 16 0 h 16 h 32 l -16 32 h -16 h -16 h -16 z",
+                emptyInputWidth: 16 * ScratchBlocks.BlockSvg.GRID_UNIT,
+                leftPath: (block) => {
+                    const scale = block.height / 2;
+                    const s = scale / 16;
+                    return [
+                        `h ${-16 * s}`,
+                    ];
+                },
+                rightPath: (block) => {
+                    const scale = block.edgeShapeWidth_;
+                    const s = scale / 16;
+                    return [
+                        `h ${16 * s}`,
+                        `l ${-16 * s} ${32 * s}`,
+                        `h 0`,
+                        `h ${-16 * s}`,
+                    ];
+                },
+                blockPaddingStart: (_, _2, _3, _4, row) => {
+                    return (row.height - 16) / 2;
+                },
+                blockPaddingEnd: (_, _2, _3, _4, row) => {
+                    return (row.height - 16) / 2;
+                }
             }
-        }
-        );
+            );
+        })
     }
 
     function span(text) {

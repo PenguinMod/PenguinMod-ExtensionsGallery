@@ -17,7 +17,7 @@
             this.startAudioTime = 0;
             this.pausedElapsed = 0;
 
-            this.rafHandle = null;
+            this.vmEventBound = false;
 
             this._loadAutoStart();
         }
@@ -101,27 +101,27 @@
         }
 
         tick() {
-            if (!this.isRunning) {
-                this.rafHandle = null;
-                return;
-            }
+            if (!this.isRunning) return;
             const elapsed = this.getElapsedSeconds();
             const secondsPerBeat = 60 / this.bpm;
             this.totalBeats = elapsed / secondsPerBeat;
             this.beatPosition = this.totalBeats % 1;
-            this.rafHandle = requestAnimationFrame(() => this.tick());
         }
 
-        startRaf() {
-            if (!this.rafHandle) {
-                this.rafHandle = requestAnimationFrame(() => this.tick());
-            }
-        }
+        setupVMEvents() {
+            if (this.vmEventBound) return;
+            this.vmEventBound = true;
 
-        stopRaf() {
-            if (this.rafHandle) {
-                cancelAnimationFrame(this.rafHandle);
-                this.rafHandle = null;
+            const vm = Scratch.vm;
+            
+            vm.on('BEFORE_EXECUTE', () => {
+                this.tick();
+            });
+
+            if (isPenguinMod) {
+                vm.runtime.on('RUNTIME_STEP_START', () => {
+                    this.tick();
+                });
             }
         }
 
@@ -260,7 +260,6 @@
             if (!this.isRunning) {
                 this.isRunning = true;
                 this.startAudioTime = this.getAudioCtx().currentTime;
-                this.startRaf();
             }
         }
 
@@ -268,7 +267,6 @@
             if (this.isRunning) {
                 this.pausedElapsed = this.getElapsedSeconds();
                 this.isRunning = false;
-                this.stopRaf();
             }
         }
 
@@ -338,6 +336,8 @@
     const extensionInstance = new BeatSync();
 
     const runtime = Scratch.vm.runtime;
+
+    extensionInstance.setupVMEvents();
 
     const originalGreenFlag = runtime.greenFlag;
     runtime.greenFlag = function() {

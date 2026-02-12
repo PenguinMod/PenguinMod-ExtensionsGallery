@@ -10,14 +10,8 @@
         throw new Error('\'Objects\' must run unsandboxed!')
     }
 
-    const BlockType = Scratch.BlockType
-    const BlockShape = Scratch.BlockShape
-    const ArgumentType = Scratch.ArgumentType
-    const TargetType = Scratch.TargetType
     const Cast = Scratch.Cast
     const vm = Scratch.vm
-    const runtime = Scratch.vm.runtime
-    const SB = ScratchBlocks
 
     /**
     * @param {number} x

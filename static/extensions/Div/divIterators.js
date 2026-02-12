@@ -238,7 +238,7 @@
             }, this.clonable)
         }
         skip(count) {
-            return iter.chainIter({kind: "Skip", args: [count]},
+            return this.chainIter({kind: "Skip", args: [count]},
                 {iter: this, count}, function*(state, thread, target, runtime, stage) {
                 while(state.count > 0) {
                     const item = yield* state.iter.next(thread, target, runtime, stage);

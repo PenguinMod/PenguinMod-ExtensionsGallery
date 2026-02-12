@@ -92,7 +92,7 @@
 
         getLatencySeconds() {
             const ctx = this.getAudioCtx();
-            return (ctx.outputLatency || 0);
+            return (ctx.baseLatency || 0) + (ctx.outputLatency || 0);
         }
 
         getElapsedSeconds() {

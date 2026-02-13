@@ -129,12 +129,12 @@
                 blocks: [
                     {
                         opcode: "ClearAll",
-                        text: "Clear all elements",
+                        text: "clear all elements",
                         blockType: Scratch.BlockType.COMMAND,
                     },
                     {
                         opcode: "Create",
-                        text: "Create [type] element with ID [id]",
+                        text: "create [type] element with id [id]",
                         blockType: Scratch.BlockType.COMMAND,
                         arguments: {
                             type: {
@@ -149,7 +149,7 @@
                     },
                     {
                         opcode: "Delete",
-                        text: "Delete element with ID [id]",
+                        text: "delete element with id [id]",
                         blockType: Scratch.BlockType.COMMAND,
                         arguments: {
                             id: {
@@ -160,7 +160,7 @@
                     },
                     {
                         opcode: "Visibility",
-                        text: "[menu] element with ID [id]",
+                        text: "[menu] element with id [id]",
                         blockType: Scratch.BlockType.COMMAND,
                         arguments: {
                             id: {
@@ -175,7 +175,7 @@
                     },
                     {
                         opcode: "ElementVisibility",
-                        text: "element with ID [id] is [status]",
+                        text: "element with id [id] is [status]",
                         blockType: Scratch.BlockType.BOOLEAN,
                         arguments: {
                             id: {
@@ -196,7 +196,7 @@
                     { blockType: Scratch.BlockType.LABEL, text: "Styling" },
                     {
                         opcode: "Position",
-                        text: "Set position of ID [id] to x: [x] y: [y]",
+                        text: "set position of id [id] to x [x] y [y]",
                         blockType: Scratch.BlockType.COMMAND,
                         arguments: {
                             id: {
@@ -215,7 +215,7 @@
                     },
                     {
                         opcode: "Direction",
-                        text: "Set direction of ID [id] to [dir]",
+                        text: "set direction of id [id] to [dir]",
                         blockType: Scratch.BlockType.COMMAND,
                         arguments: {
                             id: {
@@ -230,7 +230,7 @@
                     },
                     {
                         opcode: "Scale",
-                        text: "Set scale of ID [id] to width: [width]px height: [height]px",
+                        text: "set scale of id [id] to width [width]px height [height]px",
                         blockType: Scratch.BlockType.COMMAND,
                         arguments: {
                             id: {
@@ -249,7 +249,7 @@
                     },
                     {
                         opcode: "Layer",
-                        text: "Set layer of ID [id] to [layer]",
+                        text: "set layer of id [id] to [layer]",
                         blockType: Scratch.BlockType.COMMAND,
                         arguments: {
                             id: {
@@ -264,7 +264,7 @@
                     },
                     {
                         opcode: "Cursor",
-                        text: "Set hover cursor of ID [id] to [cursor]",
+                        text: "set hover cursor of id [id] to [cursor]",
                         blockType: Scratch.BlockType.COMMAND,
                         arguments: {
                             id: {
@@ -279,7 +279,7 @@
                     },
                     {
                         opcode: "Color",
-                        text: "Set color of ID [id] to [color]",
+                        text: "set color of id [id] to [color]",
                         blockType: Scratch.BlockType.COMMAND,
                         arguments: {
                             id: {
@@ -291,7 +291,7 @@
                     },
                     {
                         opcode: "BackgroundColor",
-                        text: "Set background color of ID [id] to [color]",
+                        text: "set background color of id [id] to [color]",
                         blockType: Scratch.BlockType.COMMAND,
                         arguments: {
                             id: {
@@ -303,7 +303,7 @@
                     },
                     {
                         opcode: "CustomCSS",
-                        text: "Set custom CSS of [id] to [css]",
+                        text: "set custom css of id [id] to [css]",
                         blockType: Scratch.BlockType.COMMAND,
                         arguments: {
                             id: {
@@ -318,7 +318,7 @@
                     },
                     {
                         opcode: "HtmlElement",
-                        text: "Create html element [htmltag] with ID [id]",
+                        text: "create html element [htmltag] with id [id]",
                         blockType: Scratch.BlockType.COMMAND,
                         arguments: {
                             id: {
@@ -334,7 +334,7 @@
                     "---",
                     {
                         opcode: "WhenClicked",
-                        text: "When ID [id] is clicked",
+                        text: "when id [id] is clicked",
                         blockType: Scratch.BlockType.HAT,
                         arguments: {
                             id: {
@@ -345,7 +345,7 @@
                     },
                     {
                         opcode: "Attribute",
-                        text: "[attr] of ID [id]",
+                        text: "[attr] of id [id]",
                         blockType: Scratch.BlockType.REPORTER,
                         arguments: {
                             attr: {
@@ -375,7 +375,7 @@
                     },
                     {
                         opcode: "LabelText",
-                        text: "Set label text with ID [id] to [text]",
+                        text: "set label text with id [id] to [text]",
                         arguments: {
                             text: {
                                 type: Scratch.ArgumentType.STRING,
@@ -390,7 +390,7 @@
                     },
                     {
                         opcode: "LabelAlign",
-                        text: "Set label alignment with ID [id] to [align]",
+                        text: "set label alignment with id [id] to [align]",
                         arguments: {
                             align: {
                                 type: Scratch.ArgumentType.STRING,
@@ -405,7 +405,7 @@
                     },
                     {
                         opcode: "LabelFontSize",
-                        text: "Set label font size with ID [id] to [size]px",
+                        text: "set label font size with id [id] to [size]px",
                         arguments: {
                             id: {
                                 type: Scratch.ArgumentType.STRING,
@@ -420,7 +420,7 @@
                     },
                     {
                         opcode: "LabelFont",
-                        text: "Set label font with ID [id] to [font]",
+                        text: "set label font with id [id] to [font]",
                         arguments: {
                             id: {
                                 type: Scratch.ArgumentType.STRING,
@@ -436,7 +436,7 @@
                     { blockType: Scratch.BlockType.LABEL, text: "Images" },
                     {
                         opcode: "ImageUrl",
-                        text: "Set image with ID [id] to url [url]",
+                        text: "set image with id [id] to url [url]",
                         blockType: Scratch.BlockType.COMMAND,
                         arguments: {
                             id: {
@@ -453,7 +453,7 @@
                     },
                     {
                         opcode: "ImageCostume",
-                        text: "Set image with ID [id] to costume [costume]",
+                        text: "set image with id [id] to costume [costume]",
                         blockType: Scratch.BlockType.COMMAND,
                         arguments: {
                             id: {
@@ -467,7 +467,7 @@
                     { blockType: Scratch.BlockType.LABEL, text: "Videos" },
                     {
                         opcode: "VideoSource",
-                        text: "Set video with ID [id] to url [url]",
+                        text: "set video with id [id] to url [url]",
                         arguments: {
                             id: {
                                 type: Scratch.ArgumentType.STRING,
@@ -483,7 +483,7 @@
                     },
                     {
                         opcode: "VideoControl",
-                        text: "[control] video with ID [id]",
+                        text: "[control] video with id [id]",
                         arguments: {
                             control: {
                                 type: Scratch.ArgumentType.STRING,
@@ -498,7 +498,7 @@
                     },
                     {
                         opcode: "VideoVolume",
-                        text: "Set volume of video [id] to [volume]%",
+                        text: "set volume of video [id] to [volume]%",
                         arguments: {
                             volume: {
                                 type: Scratch.ArgumentType.NUMBER,
@@ -513,7 +513,7 @@
                     },
                     {
                         opcode: "VideoLoop",
-                        text: "Set loop of video [id] to [toggle]",
+                        text: "set loop of video [id] to [toggle]",
                         arguments: {
                             id: {
                                 type: Scratch.ArgumentType.STRING,
@@ -528,7 +528,7 @@
                     },
                     {
                         opcode: "VideoHtmlControls",
-                        text: "Set video controls of ID [id] to [toggle]",
+                        text: "set video controls of id [id] to [toggle]",
                         arguments: {
                             id: {
                                 type: Scratch.ArgumentType.STRING,
@@ -544,7 +544,7 @@
                     { blockType: Scratch.BlockType.LABEL, text: "Inputs" },
                     {
                         opcode: "InputType",
-                        text: "Set input type of ID [id] to [input]",
+                        text: "set input type of id [id] to [input]",
                         arguments: {
                             id: {
                                 type: Scratch.ArgumentType.STRING,
@@ -559,7 +559,7 @@
                     },
                     {
                         opcode: "InputAccent",
-                        text: "Set input accent color of ID [id] to [color]",
+                        text: "set input accent color of id [id] to [color]",
                         arguments: {
                             id: {
                                 type: Scratch.ArgumentType.STRING,
@@ -571,7 +571,7 @@
                     },
                     {
                         opcode: "InputPlaceholder",
-                        text: "Set placeholder of ID [id] to [placeholder]",
+                        text: "set placeholder of id [id] to [placeholder]",
                         arguments: {
                             id: {
                                 type: Scratch.ArgumentType.STRING,
@@ -586,7 +586,7 @@
                     },
                     {
                         opcode: "InputSetValue",
-                        text: "Set value of ID [id] to [value]",
+                        text: "set value of id [id] to [value]",
                         arguments: {
                             id: {
                                 type: Scratch.ArgumentType.STRING,
@@ -601,7 +601,7 @@
                     },
                     {
                         opcode: "InputValue",
-                        text: "Value of input with ID [id]",
+                        text: "value of input with id [id]",
                         blockType: Scratch.BlockType.REPORTER,
                         arguments: {
                             id: {
@@ -613,7 +613,7 @@
                     },
                     {
                         opcode: "WhenInputChanged",
-                        text: "When input with ID [id] changed",
+                        text: "when input with id [id] changed",
                         blockType: Scratch.BlockType.HAT,
                         arguments: {
                             id: {
@@ -629,7 +629,7 @@
                     },
                     {
                         opcode: "ButtonText",
-                        text: "Set text of button [id] to [text]",
+                        text: "set text of button [id] to [text]",
                         arguments: {
                             id: {
                                 type: Scratch.ArgumentType.STRING,

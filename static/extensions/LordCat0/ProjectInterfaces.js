@@ -58,6 +58,7 @@
             reader.onerror = () => reject(reader.error);
         });
     };
+
     const datauriFromCostume = (costume, target) => {
         let costumeIndex = target.getCostumeIndexByName(costume);
         if (costumeIndex === -1) {
@@ -84,6 +85,7 @@
         }
         return target.sprite.costumes[costumeIndex].asset.encodeDataURI();
     };
+    
     const replaceElement = (oldElement, newElement, id) => {
         newElement.dataset.id = id;
         newElement.setAttribute("style", oldElement.getAttribute("style"));
@@ -112,12 +114,14 @@
         oldElement.replaceWith(newElement);
         return newElement;
     };
-    const fonts = [];
+
+    let fonts = [];
     document.fonts.ready.then(() => {
-        document.fonts.forEach((font) => fonts.push(font.family));
+        fonts = document.fonts.map(f => f.family);
     });
-    class lordcatprojectinterfaces {
-        getInfo() {
+
+    class ProjectInterfaces {
+        getInfo () {
             return {
                 id: "lordcatprojectinterfaces",
                 name: "Project interfaces",
@@ -721,12 +725,12 @@
                 },
             };
         }
-        tutorial() {
+        tutorial () {
             window.open(
                 "https://discord.com/channels/1033551490331197462/1390741725705797642/1390741725705797642",
             );
         }
-        FixPos(elementid) {
+        FixPos (elementid) {
             setTimeout(() => {
                 if (!elements[elementid]) {
                     return;
@@ -738,7 +742,7 @@
                 });
             }, 1); // Timeout needed because for some reason it wont run otherwise..
         }
-        FixTransform(elementid) {
+        FixTransform (elementid) {
             setTimeout(() => {
                 elements[elementid].style.transform =
                     elements[elementid].tagName === "SVG"
@@ -746,7 +750,7 @@
                         : `rotate(${metadata[elementid] - 90}deg)`;
             }, 1); // Timeout needed because for some reason it wont run otherwise..
         }
-        ClearAll() {
+        ClearAll () {
             Object.entries(elements).forEach(([id, element]) => {
                 if (
                     element.tagName === "INPUT" ||
@@ -761,7 +765,7 @@
             metadata = {};
             elementbox.innerHTML = "";
         }
-        Create(args) {
+        Create (args) {
             if (elements[args.id]) return;
             const element = document.createElement(lookup[args.type]);
             if (lookup[args.type] === "button") {
@@ -809,7 +813,7 @@
                 () => (metadata[args.id].clicked = true),
             );
         }
-        Position(args) {
+        Position (args) {
             if (!elements[args.id]) {
                 return;
             }
@@ -825,7 +829,7 @@
             metadata[args.id].x = args.x;
             metadata[args.id].y = args.y;
         }
-        Direction(args) {
+        Direction (args) {
             if (!elements[args.id]) {
                 return;
             }
@@ -833,7 +837,7 @@
             metadata[args.id].direction = args.dir;
             element.style.transform = `rotate(${args.dir - 90}deg)`;
         }
-        Scale(args) {
+        Scale (args) {
             if (!elements[args.id]) {
                 return;
             }
@@ -845,37 +849,39 @@
             element.style.objectFit = "fill";
             this.FixPos(args.id);
         }
-        Layer(args) {
+        Layer (args) {
             if (!elements[args.id]) {
                 return;
             }
             const element = elements[args.id];
             element.style.zIndex = args.layer;
         }
-        Cursor(args) {
+        Cursor (args) {
             if (!elements[args.id]) {
                 return;
             }
             const element = elements[args.id];
             element.style.cursor = args.cursor;
         }
-        Color(args) {
+        Color (args) {
             if (!elements[args.id]) {
                 return;
             }
             if (elements[args.id].tagName == "DIV") {
+                // If the element is a box, set it's background color instead
+                // This probably avoids some confusion with users
                 elements[args.id].style.backgroundColor = args.color;
-                return;
-            } // for people who are confused why 'color' doesnt work with div/box elements
-            elements[args.id].style.color = args.color;
+            } else {
+                elements[args.id].style.color = args.color;
+            }
         }
-        BackgroundColor(args) {
+        BackgroundColor (args) {
             if (!elements[args.id]) {
                 return;
             }
             elements[args.id].style.backgroundColor = args.color;
         }
-        CustomCSS(args) {
+        CustomCSS (args) {
             if (!elements[args.id]) {
                 return;
             }
@@ -889,7 +895,7 @@
             }
             style.textContent = `[data-id='${args.id}']{\n${lines.join(" !important;\n") + " !important"}\n}`;
         }
-        HtmlElement(args) {
+        HtmlElement (args) {
             if (elements[args.id]) return;
             const element = document.createElement(args.htmltag.toLowerCase());
             const boundingRect = element.getBoundingClientRect();
@@ -923,7 +929,7 @@
                 () => (metadata[args.id].clicked = true),
             );
         }
-        Attribute(args) {
+        Attribute (args) {
             const element = elements[args.id];
             if (!element) return;
             const meta = metadata[args.id];
@@ -950,13 +956,13 @@
                     return meta[args.attr.toLowerCase()];
             }
         }
-        IsHovered(args) {
+        IsHovered (args) {
             if (!elements[args.id]) {
                 return "";
             }
             return metadata[args.id].hovered;
         }
-        Delete(args) {
+        Delete (args) {
             const element = elements[args.id];
             if (!element) {
                 return;
@@ -972,50 +978,50 @@
             delete elements[args.id];
             delete metadata[args.id];
         }
-        Visibility(args) {
+        Visibility (args) {
             if (!elements[args.id]) {
                 return;
             }
             elements[args.id].hidden = args.menu === "Hide";
         }
-        ElementVisibility(args) {
+        ElementVisibility (args) {
             if (!elements[args.id]) return;
             return args.status === "Shown"
                 ? !elements[args.id].hidden
                 : !!elements[args.id].hidden;
         }
-        AllElements() {
+        AllElements () {
             return JSON.stringify(Object.keys(elements));
         }
-        LabelText(args) {
+        LabelText (args) {
             if (!elements[args.id] || elements[args.id].tagName != "SPAN") {
                 return;
             }
             elements[args.id].textContent = args.text;
             this.FixPos(args.id);
         }
-        LabelAlign(args) {
+        LabelAlign (args) {
             if (!elements[args.id] || elements[args.id].tagName != "SPAN") {
                 return;
             }
             elements[args.id].style.textAlign = args.align.toLowerCase();
             this.FixPos(args.id);
         }
-        LabelFontSize(args) {
+        LabelFontSize (args) {
             if (!elements[args.id] || elements[args.id].tagName != "SPAN") {
                 return;
             }
             elements[args.id].style.fontSize = `${args.size}px`;
             this.FixPos(args.id);
         }
-        LabelFont(args) {
+        LabelFont (args) {
             if (!elements[args.id] || elements[args.id].tagName != "SPAN") {
                 return;
             }
             elements[args.id].style.fontFamily = args.font;
             this.FixPos(args.id);
         }
-        ImageUrl(args) {
+        ImageUrl (args) {
             if (
                 !elements[args.id] ||
                 (elements[args.id].tagName != "IMG" &&
@@ -1032,7 +1038,7 @@
             elements[args.id].src = args.url;
             this.FixPos(args.id);
         }
-        ImageCostume(args, util) {
+        ImageCostume (args, util) {
             if (
                 !elements[args.id] ||
                 (elements[args.id].tagName != "IMG" &&
@@ -1061,7 +1067,7 @@
                         "image/svg+xml",
                     ).documentElement,
                     args.id,
-                ); //damn
+                );
             } else {
                 if (elements[args.id].tagName === "svg")
                     elements[args.id] = replaceElement(
@@ -1077,7 +1083,7 @@
             this.FixPos(args.id);
             this.FixTransform(args.id);
         }
-        InputType(args) {
+        InputType (args) {
             if (
                 !elements[args.id] ||
                 (elements[args.id].tagName != "INPUT" &&
@@ -1106,7 +1112,7 @@
             }
             this.FixPos(args.id);
         }
-        InputAccent(args) {
+        InputAccent (args) {
             if (
                 !elements[args.id] ||
                 (elements[args.id].tagName != "INPUT" &&
@@ -1116,7 +1122,7 @@
             }
             elements[args.id].style.accentColor = args.color;
         }
-        InputPlaceholder(args) {
+        InputPlaceholder (args) {
             if (
                 !elements[args.id] ||
                 (elements[args.id].tagName != "INPUT" &&
@@ -1126,7 +1132,7 @@
             }
             elements[args.id].setAttribute("placeholder", args.placeholder);
         }
-        InputSetValue(args) {
+        InputSetValue (args) {
             if (
                 !elements[args.id] ||
                 (elements[args.id].tagName != "INPUT" &&
@@ -1138,7 +1144,7 @@
                 elements[args.id].checked = Scratch.Cast.toBoolean(args.value);
             elements[args.id].value = args.value;
         }
-        async InputValue(args) {
+        async InputValue (args) {
             if (!elements[args.id] && inputhold[args.id])
                 return inputhold[args.id];
             const element = elements[args.id];
@@ -1153,7 +1159,7 @@
                 ? await datauri(element.files[0])
                 : element.value;
         }
-        WhenInputChanged(args, util) {
+        WhenInputChanged (args, util) {
             if (
                 !elements[args.id] ||
                 (elements[args.id].tagName != "INPUT" &&
@@ -1171,8 +1177,8 @@
             }
             return false;
         }
-        WhenClicked(args) {
-            //This isnt ideal, but its basically the only option we have
+        WhenClicked (args) {
+            // This isnt ideal, but its basically the only option we have
             if (!metadata[args.id]) return false;
             if (metadata[args.id].clicked) {
                 return new Promise((res, rej) => {
@@ -1184,13 +1190,13 @@
             }
             return false;
         }
-        VideoSource(args) {
+        VideoSource (args) {
             const element = elements[args.id];
             if (!element || element.tagName != "VIDEO") return;
             element.src = args.url;
             this.FixPos(args.id);
         }
-        VideoControl(args) {
+        VideoControl (args) {
             const element = elements[args.id];
             if (!element || element.tagName != "VIDEO") return;
             switch (args.control) {
@@ -1206,12 +1212,12 @@
                     break;
             }
         }
-        VideoVolume(args) {
+        VideoVolume (args) {
             const element = elements[args.id];
             if (!element || element.tagName != "VIDEO") return;
             element.volume = args.volume / 100;
         }
-        VideoHtmlControls(args) {
+        VideoHtmlControls (args) {
             const element = elements[args.id];
             if (!element || element.tagName != "VIDEO") return;
             switch (args.toggle) {
@@ -1223,12 +1229,12 @@
                     break;
             }
         }
-        VideoLoop(args) {
+        VideoLoop (args) {
             const element = elements[args.id];
             if (!element || element.tagName != "VIDEO") return;
             element.loop = args.toggle == "Enabled";
         }
-        ButtonText(args) {
+        ButtonText (args) {
             const element = elements[args.id];
             if (!element || element.tagName != "BUTTON") return;
             document.querySelector(
@@ -1237,5 +1243,5 @@
             this.FixPos(args.id);
         }
     }
-    Scratch.extensions.register(new lordcatprojectinterfaces());
+    Scratch.extensions.register(new ProjectInterfaces());
 })(Scratch);

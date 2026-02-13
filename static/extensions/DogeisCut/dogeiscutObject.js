@@ -545,8 +545,17 @@
                 entries => {
                     // this is here because for some reason i decided to do it like that in the old format
                     if (entries.entries && Array.isArray(entries.entries)) { // this shouldn't trigger a false positive for a jwArray
-                        entries = entries.entries.map(({key, value}) => [key, value])
+                        entries = entries.entries.map((entry) => {
+                            const key = entry.key
+                            if (entry.customType == true) {
+                                const value = { ...entry }
+                                delete value.key
+                                return [key, value]
+                            }
+                            return [key, entry.value]
+                        })
                     }
+                    // this is for converting from the new format
                     return new dogeiscutObject.Type(new Map(entries.map(([key, value]) => {
                         if (typeof value == "object" && value != null && value.customType) {
                             return [String(key), vm.runtime.serializers[value.typeId].deserialize(value.serialized)]

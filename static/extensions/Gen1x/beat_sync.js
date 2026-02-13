@@ -19,10 +19,10 @@
 
             this.vmEventBound = false;
 
-            this._loadAutoStart();
+            this.loadAutoStart();
         }
 
-        _loadAutoStart() {
+        loadAutoStart() {
             if (!isPenguinMod) {
                 try {
                     const vm = Scratch.vm;
@@ -35,7 +35,7 @@
             }
         }
 
-        _saveAutoStart() {
+        saveAutoStart() {
             if (!isPenguinMod) {
                 try {
                     const vm = Scratch.vm;
@@ -252,14 +252,15 @@
 
         toggleAutoStart() {
             this.autoStart = !this.autoStart;
-            this._saveAutoStart();
+            this.saveAutoStart();
             Scratch.vm.extensionManager.refreshBlocks('beatSync');
         }
 
         startBeat() {
             if (!this.isRunning) {
                 this.isRunning = true;
-                this.startAudioTime = this.getAudioCtx().currentTime;
+                const ctx = this.getAudioCtx();
+                this.startAudioTime = ctx.currentTime;
             }
         }
 
@@ -275,7 +276,8 @@
             this.totalBeats = 0;
             this.beatPosition = 0;
             if (this.isRunning) {
-                this.startAudioTime = this.getAudioCtx().currentTime;
+                const ctx = this.getAudioCtx();
+                this.startAudioTime = ctx.currentTime;
             }
         }
 
@@ -284,6 +286,7 @@
             const startBeat = Math.floor(this.totalBeats);
             return new Promise(resolve => {
                 const poll = () => {
+                    this.updateTime();
                     if (Math.floor(this.totalBeats) > startBeat) {
                         resolve();
                     } else {
@@ -331,29 +334,32 @@
             const beatInMeasure = this.totalBeats % this.beatsPerMeasure;
             return beatInMeasure < 0.5;
         }
+
+        onGreenFlag() {
+            this.resetBeat();
+            if (this.autoStart) {
+                this.startBeat();
+            }
+        }
+
+        onStopAll() {
+            this.stopBeat();
+            this.resetBeat();
+        }
     }
 
     const extensionInstance = new BeatSync();
-
     const runtime = Scratch.vm.runtime;
 
     extensionInstance.setupVMEvents();
 
-    const originalGreenFlag = runtime.greenFlag;
-    runtime.greenFlag = function() {
-        extensionInstance.resetBeat();
-        if (extensionInstance.autoStart) {
-            extensionInstance.startBeat();
-        }
-        return originalGreenFlag.apply(this, arguments);
-    };
+    runtime.on('PROJECT_START', () => {
+        extensionInstance.onGreenFlag();
+    });
 
-    const originalStopAll = runtime.stopAll;
-    runtime.stopAll = function() {
-        extensionInstance.stopBeat();
-        extensionInstance.resetBeat();
-        return originalStopAll.apply(this, arguments);
-    };
+    runtime.on('PROJECT_STOP_ALL', () => {
+        extensionInstance.onStopAll();
+    });
 
     Scratch.extensions.register(extensionInstance);
 })(Scratch);

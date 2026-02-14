@@ -49,6 +49,9 @@
     css.classList.add("LordCatInterfaces-Style");
     document.head.append(css);
 
+    const textDecoder = new TextDecoder("utf-8");
+    const domParser = new DOMParser();
+
     const datauri = (file) => {
         return new Promise((resolve, reject) => {
             if (!(file instanceof File)) resolve("");
@@ -117,7 +120,7 @@
 
     let fonts = [];
     document.fonts.ready.then(() => {
-        fonts = document.fonts.map(f => f.family);
+        fonts = Array.from(document.fonts.values()).map(f => f.family);
     });
 
     class ProjectInterfaces {
@@ -725,11 +728,6 @@
                 },
             };
         }
-        tutorial () {
-            window.open(
-                "https://discord.com/channels/1033551490331197462/1390741725705797642/1390741725705797642",
-            );
-        }
         FixPos (elementid) {
             setTimeout(() => {
                 if (!elements[elementid]) {
@@ -778,7 +776,7 @@
             element.style.pointerEvents = "auto";
             element.style.userSelect = "none";
             element.style.color = "black";
-            if (args.type == "Image") {
+            if (args.type === "Image") {
                 element.draggable = false;
             }
             elements[args.id] = element;
@@ -814,10 +812,10 @@
             );
         }
         Position (args) {
-            if (!elements[args.id]) {
+            const element = elements[args.id];
+            if (!element) {
                 return;
             }
-            const element = elements[args.id];
             if (element.tagName === "svg") {
                 const bbox = element.getBBox();
                 element.style.left = `${vm.runtime.stageWidth / 2 + args.x - bbox.width / 2}px`;
@@ -830,18 +828,18 @@
             metadata[args.id].y = args.y;
         }
         Direction (args) {
-            if (!elements[args.id]) {
+            const element = elements[args.id];
+            if (!element) {
                 return;
             }
-            const element = elements[args.id];
             metadata[args.id].direction = args.dir;
             element.style.transform = `rotate(${args.dir - 90}deg)`;
         }
         Scale (args) {
-            if (!elements[args.id]) {
+            const element = elements[args.id];
+            if (!element) {
                 return;
             }
-            const element = elements[args.id];
             element.style.width = `${args.width}px`;
             element.style.height = `${args.height}px`;
             metadata[args.id].width = args.width + "px";
@@ -850,42 +848,43 @@
             this.FixPos(args.id);
         }
         Layer (args) {
-            if (!elements[args.id]) {
+            const element = elements[args.id];
+            if (!element) {
                 return;
             }
-            const element = elements[args.id];
             element.style.zIndex = args.layer;
         }
         Cursor (args) {
-            if (!elements[args.id]) {
+            const element = elements[args.id];
+            if (!element) {
                 return;
             }
-            const element = elements[args.id];
             element.style.cursor = args.cursor;
         }
         Color (args) {
-            if (!elements[args.id]) {
+            const element = elements[args.id];
+            if (!element) {
                 return;
             }
-            if (elements[args.id].tagName == "DIV") {
+            if (element.tagName === "DIV") {
                 // If the element is a box, set it's background color instead
                 // This probably avoids some confusion with users
-                elements[args.id].style.backgroundColor = args.color;
+                element.style.backgroundColor = args.color;
             } else {
-                elements[args.id].style.color = args.color;
+                element.style.color = args.color;
             }
         }
         BackgroundColor (args) {
-            if (!elements[args.id]) {
+            const element = elements[args.id];
+            if (!element) {
                 return;
             }
-            elements[args.id].style.backgroundColor = args.color;
+            element.style.backgroundColor = args.color;
         }
         CustomCSS (args) {
             if (!elements[args.id]) {
                 return;
             }
-            const element = elements[args.id];
             let style = document.getElementById(`LCGuiStyle_${args.id}`);
             let lines = args.css.split(";");
             if (!style) {
@@ -979,102 +978,100 @@
             delete metadata[args.id];
         }
         Visibility (args) {
-            if (!elements[args.id]) {
+            const element = elements[args.id];
+            if (!element) {
                 return;
             }
-            elements[args.id].hidden = args.menu === "Hide";
+            element.hidden = args.menu === "Hide";
         }
         ElementVisibility (args) {
-            if (!elements[args.id]) return;
+            const element = elements[args.id];
+            if (!element) return;
             return args.status === "Shown"
-                ? !elements[args.id].hidden
-                : !!elements[args.id].hidden;
+                ? !element.hidden
+                : !!element.hidden;
         }
         AllElements () {
             return JSON.stringify(Object.keys(elements));
         }
         LabelText (args) {
-            if (!elements[args.id] || elements[args.id].tagName != "SPAN") {
+            const element = elements[args.id];
+            if (!element || element.tagName != "SPAN") {
                 return;
             }
-            elements[args.id].textContent = args.text;
+            element.textContent = args.text;
             this.FixPos(args.id);
         }
         LabelAlign (args) {
-            if (!elements[args.id] || elements[args.id].tagName != "SPAN") {
+            const element = elements[args.id];
+            if (!element || element.tagName !== "SPAN") {
                 return;
             }
-            elements[args.id].style.textAlign = args.align.toLowerCase();
+            element.style.textAlign = args.align.toLowerCase();
             this.FixPos(args.id);
         }
         LabelFontSize (args) {
-            if (!elements[args.id] || elements[args.id].tagName != "SPAN") {
+            const element = elements[args.id];
+            if (!element || element.tagName !== "SPAN") {
                 return;
             }
-            elements[args.id].style.fontSize = `${args.size}px`;
+            element.style.fontSize = `${args.size}px`;
             this.FixPos(args.id);
         }
         LabelFont (args) {
-            if (!elements[args.id] || elements[args.id].tagName != "SPAN") {
+            const element = elements[args.id];
+            if (!element || element.tagName !== "SPAN") {
                 return;
             }
-            elements[args.id].style.fontFamily = args.font;
+            element.style.fontFamily = args.font;
             this.FixPos(args.id);
         }
         ImageUrl (args) {
+            const element = elements[args.id];
             if (
-                !elements[args.id] ||
-                (elements[args.id].tagName != "IMG" &&
-                    elements[args.id].tagName != "svg")
-            ) {
-                return;
-            }
-            if (elements[args.id].tagName === "svg")
+                !element ||
+                (element.tagName !== "IMG" &&
+                    element.tagName !== "svg")
+            ) return;
+
+            if (element.tagName === "svg") {
                 elements[args.id] = replaceElement(
                     elements[args.id],
                     document.createElement("img"),
                     args.id,
                 );
+            }
             elements[args.id].src = args.url;
             this.FixPos(args.id);
         }
         ImageCostume (args, util) {
+            const element = elements[args.id];
             if (
-                !elements[args.id] ||
-                (elements[args.id].tagName != "IMG" &&
-                    elements[args.id].tagName != "svg")
-            ) {
-                return;
-            }
-            if (
-                util.target
-                    .getCostumes()
-                    .find((costume) => costume.name === args.costume)
-                    .dataFormat === "svg"
-            ) {
-                const decoder = new TextDecoder("utf-8");
-                const htmlparser = new DOMParser();
+                !element ||
+                (element.tagName != "IMG" &&
+                    element.tagName != "svg")
+            ) return;
+
+            const costume = util.target.getCostumes().find(c => c.name === args.costume);
+            if (!costume) return;
+
+            if (costume.dataFormat === "svg") {
                 elements[args.id] = replaceElement(
-                    elements[args.id],
-                    htmlparser.parseFromString(
-                        decoder.decode(
-                            util.target
-                                .getCostumes()
-                                .find(
-                                    (costume) => costume.name === args.costume,
-                                ).asset.data,
-                        ),
+                    element,
+                    domParser.parseFromString(
+                        textDecoder.decode(costume.asset.data),
                         "image/svg+xml",
                     ).documentElement,
                     args.id,
                 );
             } else {
-                if (elements[args.id].tagName === "svg")
+                if (element.tagName === "svg") {
                     elements[args.id] = replaceElement(
-                        elements[args.id],
+                        element,
                         document.createElement("img"),
                         args.id,
                     );
+                }
                 elements[args.id].src = datauriFromCostume(
                     args.costume,
                     util.target,
@@ -1084,27 +1081,28 @@
             this.FixTransform(args.id);
         }
         InputType (args) {
+            const element = elements[args.id];
             if (
-                !elements[args.id] ||
-                (elements[args.id].tagName != "INPUT" &&
-                    elements[args.id].tagName != "TEXTAREA")
-            ) {
-                return;
-            }
+                !element ||
+                (element.tagName != "INPUT" &&
+                    element.tagName != "TEXTAREA")
+            ) return;
+
             if (args.input === "Text Area") {
                 elements[args.id] = replaceElement(
-                    elements[args.id],
+                    element,
                     document.createElement("textarea"),
                     args.id,
                 );
                 elements[args.id].style.resize = "none";
             } else {
-                if (elements[args.id].tagName == "TEXTAREA")
+                if (element.tagName == "TEXTAREA") {
                     elements[args.id] = replaceElement(
-                        elements[args.id],
+                        element,
                         document.createElement("input"),
                         args.id,
                     );
+                }
                 elements[args.id].type = args.input;
                 if (args.input == "File") {
                     elements[args.id].value = null;
@@ -1113,92 +1111,95 @@
             this.FixPos(args.id);
         }
         InputAccent (args) {
-            if (
-                !elements[args.id] ||
-                (elements[args.id].tagName != "INPUT" &&
-                    elements[args.id].tagName != "TEXTAREA")
-            ) {
-                return;
-            }
-            elements[args.id].style.accentColor = args.color;
-        }
-        InputPlaceholder (args) {
-            if (
-                !elements[args.id] ||
-                (elements[args.id].tagName != "INPUT" &&
-                    elements[args.id].tagName != "TEXTAREA")
-            ) {
-                return;
-            }
-            elements[args.id].setAttribute("placeholder", args.placeholder);
-        }
-        InputSetValue (args) {
-            if (
-                !elements[args.id] ||
-                (elements[args.id].tagName != "INPUT" &&
-                    elements[args.id].tagName != "TEXTAREA")
-            ) {
-                return;
-            }
-            if (elements[args.id].type === "checkbox")
-                elements[args.id].checked = Scratch.Cast.toBoolean(args.value);
-            elements[args.id].value = args.value;
-        }
-        async InputValue (args) {
-            if (!elements[args.id] && inputhold[args.id])
-                return inputhold[args.id];
             const element = elements[args.id];
             if (
                 !element ||
-                (element.tagName != "INPUT" && element.tagName != "TEXTAREA")
-            )
-                return "";
-            if (!element && inputhold[args.id]) return inputhold[args.id];
-            if (element.type === "checkbox") return element.checked;
-            return element.type === "file"
-                ? await datauri(element.files[0])
-                : element.value;
+                (element.tagName != "INPUT" &&
+                    element.tagName != "TEXTAREA")
+            ) return;
+            element.style.accentColor = args.color;
+        }
+        InputPlaceholder (args) {
+            const element = elements[args.id];
+            if (
+                !element ||
+                (element.tagName !== "INPUT" &&
+                    element.tagName !== "TEXTAREA")
+            ) return;
+            element.setAttribute("placeholder", args.placeholder);
+        }
+        InputSetValue (args) {
+            const element = elements[args.id];
+            if (
+                !element ||
+                (element.tagName !== "INPUT" &&
+                    element.tagName !== "TEXTAREA")
+            ) return;
+
+            if (element.type === "checkbox") {
+                element.checked = Scratch.Cast.toBoolean(args.value);
+            } else {
+                element[args.id].value = args.value;
+            }
+        }
+        InputValue (args) {
+            const element = elements[args.id];
+            if (!element) {
+                if (
+                    inputhold[args.id] && (element.tagName !== "INPUT" && element.tagName !== "TEXTAREA")
+                ) {
+                    return inputhold[args.id];
+                } else {
+                    return "";
+                }
+            }
+            switch (element.type) {
+                case 'checkbox':
+                    return element.checked;
+                case 'file':
+                    return datauri(element.files[0]);
+                default:
+                    return element.value;
+            }
         }
         WhenInputChanged (args, util) {
+            const element = elements[args.id];
             if (
-                !elements[args.id] ||
-                (elements[args.id].tagName != "INPUT" &&
-                    elements[args.id].tagName != "TEXTAREA")
+                !element ||
+                (element.tagName !== "INPUT" &&
+                    element.tagName !== "TEXTAREA")
             )
                 return false;
-            const element = elements[args.id];
-            const value =
-                element.type === "checkbox" ? element.checked : element.value;
+
+            const value = Scratch.Cast.toString(element.type === "checkbox" ? element.checked : element.value);
             const blockId = util.thread.peekStack();
-            if (!lastValues[blockId]) lastValues[blockId] = value.toString();
-            if (lastValues[blockId] !== value.toString()) {
-                lastValues[blockId] = value.toString();
+
+            if (lastValues[blockId] !== value) {
+                lastValues[blockId] = value;
                 return true;
+            } else {
+                return false;
             }
-            return false;
         }
         WhenClicked (args) {
-            // This isnt ideal, but its basically the only option we have
             if (!metadata[args.id]) return false;
+
             if (metadata[args.id].clicked) {
-                return new Promise((res, rej) => {
-                    setTimeout(() => {
-                        metadata[args.id].clicked = false;
-                        res(true);
-                    }, 1);
-                });
+               metadata[args.id].clicked = false;
+               return true;
+            } else {
+                return false;
             }
-            return false;
         }
         VideoSource (args) {
             const element = elements[args.id];
-            if (!element || element.tagName != "VIDEO") return;
+            if (!element || element.tagName !== "VIDEO") return;
             element.src = args.url;
             this.FixPos(args.id);
         }
         VideoControl (args) {
             const element = elements[args.id];
-            if (!element || element.tagName != "VIDEO") return;
+            if (!element || element.tagName !== "VIDEO") return;
             switch (args.control) {
                 case "Play":
                     element.play();
@@ -1214,32 +1215,27 @@
         }
         VideoVolume (args) {
             const element = elements[args.id];
-            if (!element || element.tagName != "VIDEO") return;
+            if (!element || element.tagName !== "VIDEO") return;
             element.volume = args.volume / 100;
         }
         VideoHtmlControls (args) {
             const element = elements[args.id];
-            if (!element || element.tagName != "VIDEO") return;
-            switch (args.toggle) {
-                case "Enabled":
-                    element.setAttribute("controls", "true");
-                    break;
-                case "Disabled":
-                    element.removeAttribute("controls");
-                    break;
+            if (!element || element.tagName !== "VIDEO") return;
+            if (args.toggle === 'Enabled') {
+                element.setAttribute('controls', 'true');
+            } else {
+                element.removeAttribute('controls');
             }
         }
         VideoLoop (args) {
             const element = elements[args.id];
-            if (!element || element.tagName != "VIDEO") return;
+            if (!element || element.tagName !== "VIDEO") return;
             element.loop = args.toggle == "Enabled";
         }
         ButtonText (args) {
             const element = elements[args.id];
-            if (!element || element.tagName != "BUTTON") return;
-            document.querySelector(
-                `.LordCatInterfaces button[data-id="${args.id}"] span`,
-            ).textContent = args.text;
+            if (!element || element.tagName !== "BUTTON") return;
+            element.children[0].textContent = args.text;
             this.FixPos(args.id);
         }
     }

@@ -948,9 +948,17 @@
                         ? element.outerHTML
                         : element.src;
                 case "Width":
-                    return element.getBBox().width;
+                    if (element.tagName === 'SVG') {
+                        return element.getBBox().width;
+                    } else {
+                        return element.getBoundingClientRect().width;
+                    }
                 case "Height":
-                    return element.getBBox().height;
+                    if (element.tagName === 'SVG') {
+                        return element.getBBox().height;
+                    } else {
+                        return element.getBoundingClientRect().height;
+                    }
                 default:
                     return meta[args.attr.toLowerCase()];
             }

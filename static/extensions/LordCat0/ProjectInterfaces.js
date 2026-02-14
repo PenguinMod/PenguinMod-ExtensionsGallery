@@ -1147,7 +1147,7 @@
             if (element.type === "checkbox") {
                 element.checked = Scratch.Cast.toBoolean(args.value);
             } else {
-                element[args.id].value = args.value;
+                element.value = args.value;
             }
         }
         InputValue (args) {

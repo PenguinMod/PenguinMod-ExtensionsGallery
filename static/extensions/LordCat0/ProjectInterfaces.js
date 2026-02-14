@@ -592,6 +592,26 @@
                         blockIconURI: inputIcon,
                     },
                     {
+                        opcode: "InputMinMax",
+                        text: "set [type] of slider [id] to [value]",
+                        arguments: {
+                            type: {
+                                type: Scratch.ArgumentType.STRING,
+                                menu: 'MinMax',
+                                defaultValue: 'min'
+                            },
+                            id: {
+                                type: Scratch.ArgumentType.STRING,
+                                defaultValue: "My element"
+                            },
+                            value: {
+                                type: Scratch.ArgumentType.NUMBER,
+                                defaultValue: 100
+                            }
+                        },
+                        blockIconURI: inputIcon
+                    },
+                    {
                         opcode: "InputSetValue",
                         text: "set value of id [id] to [value]",
                         arguments: {
@@ -725,6 +745,10 @@
                         acceptReporters: false,
                         items: ["Shown", "Hidden"],
                     },
+                    MinMax: {
+                        acceptReporters: false,
+                        items: ['min', 'max']
+                    }
                 },
             };
         }
@@ -1176,8 +1200,7 @@
                 !element ||
                 (element.tagName !== "INPUT" &&
                     element.tagName !== "TEXTAREA")
-            )
-                return false;
+            ) return false;
 
             const value = Scratch.Cast.toString(element.type === "checkbox" ? element.checked : element.value);
             const blockId = util.thread.peekStack();
@@ -1187,6 +1210,20 @@
                 return true;
             } else {
                 return false;
+            }
+        }
+        InputMinMax (args) {
+            const element = elements[args.id];
+            if (
+                !element ||
+                element.tagName !== 'INPUT' ||
+                element.type !== 'range'
+            ) return;
+
+            if (args.type === 'max') {
+                element.setAttribute('max', args.value);
+            } else {
+                element.setAttribute('min', args.value);
             }
         }
         WhenClicked (args) {

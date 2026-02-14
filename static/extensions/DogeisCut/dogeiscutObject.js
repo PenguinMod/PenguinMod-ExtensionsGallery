@@ -1252,7 +1252,7 @@
 
         currentObject({ }, util) {
             let bi = util.thread._dogeiscutObjectBuilderIndex ?? []
-            return bi[bi.length - 1] ? new dogeiscutObject.Type(bi[bi.length - 1]) : new dogeiscutObject.Type.blank;
+            return bi[bi.length - 1] ? new dogeiscutObject.Type(bi[bi.length - 1]) : dogeiscutObject.Type.blank;
         }
 
         builder() {

@@ -637,4 +637,12 @@ export default [
         banner: "electricfuzzball_pm/MIDI.svg",
         creator: "ElectricFuzzball_PM"
     },
+    {
+        name: "HTML",
+        description: "Read HTML Data easily",
+        code: "dogstudiostuff/aHTML.js",
+        banner: "dogstudiostuff/aHTML.svg",
+        creator: "dogstudiostuff"
+    },
+    
 ];

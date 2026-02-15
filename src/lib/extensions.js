@@ -592,7 +592,7 @@ export default [
         description: "Plays a beep every 30 seconds.",
         code: "electricfuzzball_pm/firealarm.js",
         banner: "electricfuzzball_pm/firealarm.svg",
-        creator: "FloppyDisk_OSC",
+        creator: "FloppyDisk-OSC",
         isGitHub: true,
         creatorAlias: "ElectricFuzzball_PM"
     },
@@ -601,7 +601,7 @@ export default [
         description: "Spawn Brah cats in your codespace!",
         code: "electricfuzzball_pm/StageBrah.js",
         banner: "electricfuzzball_pm/StageBrah.svg",
-        creator: "FloppyDisk_OSC",
+        creator: "FloppyDisk-OSC",
         isGitHub: true,
         creatorAlias: "ElectricFuzzball_PM"
     },
@@ -610,7 +610,7 @@ export default [
         description: "Use a MIDI keyboard to interact with projects!",
         code: "electricfuzzball_pm/MIDI.js",
         banner: "electricfuzzball_pm/MIDI.svg",
-        creator: "FloppyDisk_OSC",
+        creator: "FloppyDisk-OSC",
         isGitHub: true,
         creatorAlias: "ElectricFuzzball_PM"
     },

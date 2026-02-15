@@ -622,7 +622,7 @@ export default [
         creator: "ElectricFuzzball_PM" //hey look thats me!!
         //Pluey has been implemented.
     },
-        {
+    {
         name: "Stage Brah",
         description: "Spawn Brah cats in your codespace!",
         code: "electricfuzzball_pm/StageBrah.js",
@@ -630,11 +630,31 @@ export default [
         creator: "ElectricFuzzball_PM"
         //:brah:
     },
-        {
+    {
         name: "MIDI Controller",
         description: "Use a MIDI keyboard to interact with projects!",
         code: "electricfuzzball_pm/MIDI.js",
         banner: "electricfuzzball_pm/MIDI.svg",
         creator: "ElectricFuzzball_PM"
+    },
+    {
+        name: "Links & Barcodes",
+        description: "Blocks to open web links and generate scannable QR codes on the stage.",
+        code: "codemaster/links-and-barcodes.js",
+        banner: "codemaster/links-and-barcodes.png",
+        creator: "moosanaeempc-lgtm",
+        creatorAlias: "codemaster",
+        isGitHub: true,
+        isUnsandboxed: true,
+    },
+    {
+        name: "Joystick",
+        description: "Instead of making a joystick just upload the extension and make your games mobile friendly in seconds.",
+        code: "codemaster/joystick.js",
+        banner: "codemaster/joystick.png",
+        creator: "moosanaeempc-lgtm",
+        creatorAlias: "codemaster",
+        isGitHub: true,
+        isUnsandboxed: true,
     },
 ];

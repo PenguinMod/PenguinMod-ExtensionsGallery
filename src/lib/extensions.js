@@ -587,27 +587,31 @@ export default [
         creator: "G1nX",
     },
     */
-    {
+        {
         name: "Smoke Detector",
         description: "Plays a beep every 30 seconds.",
         code: "electricfuzzball_pm/firealarm.js",
         banner: "electricfuzzball_pm/firealarm.svg",
-        creator: "ElectricFuzzball_PM" //hey look thats me!!
-        //Pluey has been implemented.
+        creator: "FloppyDisk_OSC",
+        isGitHub: true,
+        creatorAlias: "ElectricFuzzball_PM"
     },
         {
         name: "Stage Brah",
         description: "Spawn Brah cats in your codespace!",
         code: "electricfuzzball_pm/StageBrah.js",
         banner: "electricfuzzball_pm/StageBrah.svg",
-        creator: "ElectricFuzzball_PM"
-        //:brah:
+        creator: "FloppyDisk_OSC",
+        isGitHub: true,
+        creatorAlias: "ElectricFuzzball_PM"
     },
         {
         name: "MIDI Controller",
         description: "Use a MIDI keyboard to interact with projects!",
         code: "electricfuzzball_pm/MIDI.js",
         banner: "electricfuzzball_pm/MIDI.svg",
-        creator: "ElectricFuzzball_PM"
+        creator: "FloppyDisk_OSC",
+        isGitHub: true,
+        creatorAlias: "ElectricFuzzball_PM"
     },
 ];

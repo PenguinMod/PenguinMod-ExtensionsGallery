@@ -42,9 +42,9 @@
             return {
                 id: 'ikeleneServerStorage',
                 name: 'Server Storage',
-                color1: '#ff9bfd',
-                color2: '#ff9bfd',
-                color3: '#ff9bfd',
+                color1: '#ff6bfd',
+                color2: '#ff6bfd',
+                color3: '#ff6bfd',
                 docsURI: this.serverUrl + 'docs.html',
                 blocks: [
                     {

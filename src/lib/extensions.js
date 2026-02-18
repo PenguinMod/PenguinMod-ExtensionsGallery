@@ -649,4 +649,12 @@ export default [
         isGitHub: true,
         creatorAlias: "ElectricFuzzball_PM"
     },
+    {
+        name: "Soup Vectors",
+        description: "Vector math tools so you'll never need to do an arctangent ever again.",
+        code: "the-can-of-soup/soup_vectors.js",
+        banner: "the-can-of-soup/soup_vectors.svg",
+        creator: "ck10390",
+        isGitHub: false,
+    },
 ];

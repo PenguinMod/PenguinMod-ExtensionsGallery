@@ -13,7 +13,7 @@
     class PMCloudStorage {
         getInfo() {
             return {
-                id: 'PZPMSERVERSTORAGE',
+                id: 'playzstudiozpmserverstorage',
                 name: 'Playz PM Server Storage',
                 color1: '#ce00b9ff',
                 blocks: [

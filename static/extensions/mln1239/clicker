@@ -1,0 +1,288 @@
+(async function(Scratch) {
+    const variables = {};
+    const blocks = [];
+    const menus = {};
+
+
+    function doSound(ab, cd, runtime) {
+        const audioEngine = runtime.audioEngine;
+
+        const fetchAsArrayBufferWithTimeout = (url) =>
+            new Promise((resolve, reject) => {
+                const xhr = new XMLHttpRequest();
+                let timeout = setTimeout(() => {
+                    xhr.abort();
+                    reject(new Error("Timed out"));
+                }, 5000);
+                xhr.onload = () => {
+                    clearTimeout(timeout);
+                    if (xhr.status === 200) {
+                        resolve(xhr.response);
+                    } else {
+                        reject(new Error(`HTTP error ${xhr.status} while fetching ${url}`));
+                    }
+                };
+                xhr.onerror = () => {
+                    clearTimeout(timeout);
+                    reject(new Error(`Failed to request ${url}`));
+                };
+                xhr.responseType = "arraybuffer";
+                xhr.open("GET", url);
+                xhr.send();
+            });
+
+        const soundPlayerCache = new Map();
+
+        const decodeSoundPlayer = async (url) => {
+            const cached = soundPlayerCache.get(url);
+            if (cached) {
+                if (cached.sound) {
+                    return cached.sound;
+                }
+                throw cached.error;
+            }
+
+            try {
+                const arrayBuffer = await fetchAsArrayBufferWithTimeout(url);
+                const soundPlayer = await audioEngine.decodeSoundPlayer({
+                    data: {
+                        buffer: arrayBuffer,
+                    },
+                });
+                soundPlayerCache.set(url, {
+                    sound: soundPlayer,
+                    error: null,
+                });
+                return soundPlayer;
+            } catch (e) {
+                soundPlayerCache.set(url, {
+                    sound: null,
+                    error: e,
+                });
+                throw e;
+            }
+        };
+
+        const playWithAudioEngine = async (url, target) => {
+            const soundBank = target.sprite.soundBank;
+
+            let soundPlayer;
+            try {
+                const originalSoundPlayer = await decodeSoundPlayer(url);
+                soundPlayer = originalSoundPlayer.take();
+            } catch (e) {
+                console.warn(
+                    "Could not fetch audio; falling back to primitive approach",
+                    e
+                );
+                return false;
+            }
+
+            soundBank.addSoundPlayer(soundPlayer);
+            await soundBank.playSound(target, soundPlayer.id);
+
+            delete soundBank.soundPlayers[soundPlayer.id];
+            soundBank.playerTargets.delete(soundPlayer.id);
+            soundBank.soundEffects.delete(soundPlayer.id);
+
+            return true;
+        };
+
+        const playWithAudioElement = (url, target) =>
+            new Promise((resolve, reject) => {
+                const mediaElement = new Audio(url);
+
+                mediaElement.volume = target.volume / 100;
+
+                mediaElement.onended = () => {
+                    resolve();
+                };
+                mediaElement
+                    .play()
+                    .then(() => {
+                        // Wait for onended
+                    })
+                    .catch((err) => {
+                        reject(err);
+                    });
+            });
+
+        const playSound = async (url, target) => {
+            try {
+                if (!(await Scratch.canFetch(url))) {
+                    throw new Error(`Permission to fetch ${url} denied`);
+                }
+
+                const success = await playWithAudioEngine(url, target);
+                if (!success) {
+                    return await playWithAudioElement(url, target);
+                }
+            } catch (e) {
+                console.warn(`All attempts to play ${url} failed`, e);
+            }
+        };
+
+        playSound(ab, cd)
+    }
+
+    const ExtForge_Utils = {
+        // from https://jwklong.github.io/extforge
+        Broadcasts: new function() {
+            this.raw_ = {};
+            this.register = (name, blocks) => {
+                this.raw_[name] = blocks;
+            };
+            this.execute = async (name) => {
+                if (this.raw_[name]) {
+                    await this.raw_[name]();
+                };
+            };
+        }
+    }
+    class Extension {
+        getInfo() {
+            return {
+                "blockIconURI": "data:image/svg+xml;base64,PHN2ZyB2ZXJzaW9uPSIxLjEiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyIgeG1sbnM6eGxpbms9Imh0dHA6Ly93d3cudzMub3JnLzE5OTkveGxpbmsiIHdpZHRoPSI3OS43NzQ1NiIgaGVpZ2h0PSI2MS40OTI0OSIgdmlld0JveD0iMCwwLDc5Ljc3NDU2LDYxLjQ5MjQ5Ij48ZyB0cmFuc2Zvcm09InRyYW5zbGF0ZSgtMTgxLjgzNjQ3LC0xMjAuODY3OTQpIj48ZyBzdHJva2UtbWl0ZXJsaW1pdD0iMTAiPjxwYXRoIGQ9Ik0yMDYuMjg0NzgsMTU2LjI0NzA0bDI3LjE4NzU5LC05LjI4MTQyYzAsMCAyLjY4ODU0LDEyLjI3MzY4IC05Ljk2NjY2LDE2LjUyNTg4Yy0xMi4yMDc4Myw0LjEwMTg4IC0xNy4yMjA5MiwtNy4yNDQ0NiAtMTcuMjIwOTIsLTcuMjQ0NDZ6IiBmaWxsPSIjZmZmZmZmIiBzdHJva2U9Im5vbmUiIHN0cm9rZS13aWR0aD0iMC41Ii8+PHBhdGggZD0iTTIwMC4zODA0LDE1NS41NzcxOWMtMy40MjgyNywtMTAuMDM5OTQgMi4wMTkwNiwtMjAuOTg3OTUgMTIuMTY2OTUsLTI0LjQ1MzA5YzEwLjE0NzksLTMuNDY1MTQgMjEuMTUzNTUsMS44NjQ4IDI0LjU4MTgyLDExLjkwNDczYzMuNDI4MjcsMTAuMDM5OTQgLTIuMDE5MDYsMjAuOTg3OTYgLTEyLjE2Njk1LDI0LjQ1MzFjLTEwLjE0NzksMy40NjUxNCAtMjEuMTUzNTUsLTEuODY0NzkgLTI0LjU4MTgyLC0xMS45MDQ3M3pNMjIzLjQ4NTI4LDE2My40NDU4N2MxMi42NTUyLC00LjI1MjIgOS45NDUwOSwtMTYuNDUzMSA5Ljk0NTA5LC0xNi40NTMxbC0yNy4wOTU2Myw5LjI1MjE3YzAsMCA0Ljk0MjcxLDExLjMwMjgxIDE3LjE1MDU0LDcuMjAwOTN6TTIyNC4zNjI5OSwxNDMuODEwODJjMS4zNzI0NywtMC40Njg2NSAyLjEwOTE4LC0xLjk0OTMyIDEuNjQ1NTMsLTMuMzA3MThjLTAuNDYzNjYsLTEuMzU3ODYgLTEuOTUyMTMsLTIuMDc4NzEgLTMuMzI0NTgsLTEuNjEwMDZjLTEuMzcyNDcsMC40Njg2NSAtMi4xMDkxOCwxLjk0OTMyIC0xLjY0NTUzLDMuMzA3MThjMC40NjM2NiwxLjM1Nzg2IDEuOTUyMTMsMi4wNzg3MSAzLjMyNDU5LDEuNjEwMDZ6TTIxMC45NTg3MiwxNDguMzg3ODljMS4zNzI0NywtMC40Njg2NSAyLjEwOTE4LC0xLjk0OTMyIDEuNjQ1NTMsLTMuMzA3MThjLTAuNDYzNjYsLTEuMzU3ODYgLTEuOTUyMTMsLTIuMDc4NzEgLTMuMzI0NTksLTEuNjEwMDdjLTEuMzcyNDcsMC40Njg2NSAtMi4xMDkxOCwxLjk0OTMyIC0xLjY0NTUzLDMuMzA3MThjMC40NjM2NiwxLjM1Nzg2IDEuOTUyMTMsMi4wNzg3MSAzLjMyNDU5LDEuNjEwMDd6IiBmaWxsPSIjZmZjNTAwIiBzdHJva2U9IiMwMDAwMDAiIHN0cm9rZS13aWR0aD0iMiIvPjxwYXRoIGQ9Ik0yMDcuNTg2ODIsMTQ2Ljc5Mzk3Yy0wLjQ2MzY1LC0xLjM1Nzg2IDAuMzA0MjMsLTIuOTAyIDEuNjc2NjksLTMuMzcwNjVjMS4zNzI0NiwtMC40Njg2NSAyLjkyNDQsMC4yODMzNyAzLjM4ODA2LDEuNjQxMjJjMC40NjM2NSwxLjM1Nzg2IC0wLjMwNDIzLDIuOTAyMDEgLTEuNjc2NjksMy4zNzA2NWMtMS4zNzI0NiwwLjQ2ODY1IC0yLjkyNDQsLTAuMjgzMzcgLTMuMzg4MDYsLTEuNjQxMjN6IiBmaWxsPSIjMDAwMDAwIiBzdHJva2U9Im5vbmUiIHN0cm9rZS13aWR0aD0iMC41Ii8+PHBhdGggZD0iTTIyMC45OTEwOCwxNDIuMjE2OTFjLTAuNDYzNjUsLTEuMzU3ODYgMC4zMDQyMiwtMi45MDIwMSAxLjY3NjY5LC0zLjM3MDY1YzEuMzcyNDYsLTAuNDY4NjUgMi45MjQ0LDAuMjgzMzcgMy4zODgwNiwxLjY0MTIyYzAuNDYzNjUsMS4zNTc4NiAtMC4zMDQyMiwyLjkwMjAxIC0xLjY3NjY5LDMuMzcwNjVjLTEuMzcyNDYsMC40Njg2NSAtMi45MjQ0LC0wLjI4MzM3IC0zLjM4ODA2LC0xLjY0MTIyeiIgZmlsbD0iIzAwMDAwMCIgc3Ryb2tlPSJub25lIiBzdHJva2Utd2lkdGg9IjAuNSIvPjx0ZXh0IHRyYW5zZm9ybT0idHJhbnNsYXRlKDI0MS42NTQyLDE0MC44NTY5KSByb3RhdGUoMjMuODgyMzIpIHNjYWxlKDAuNSwwLjUpIiBmb250LXNpemU9IjQwIiB4bWw6c3BhY2U9InByZXNlcnZlIiBmaWxsPSIjMDAwMDAwIiBzdHJva2U9Im5vbmUiIHN0cm9rZS13aWR0aD0iMSIgZm9udC1mYW1pbHk9IlNhbnMgU2VyaWYiIGZvbnQtd2VpZ2h0PSJub3JtYWwiIHRleHQtYW5jaG9yPSJzdGFydCI+PHRzcGFuIHg9IjAiIGR5PSIwIj4kPC90c3Bhbj48L3RleHQ+PHRleHQgdHJhbnNmb3JtPSJ0cmFuc2xhdGUoMjA0LjgzODQyLDE3OS4xNDIwOCkgcm90YXRlKC0yMS42OTc2NSkgc2NhbGUoMC4yNzI3NiwwLjI3Mjc2KSIgZm9udC1zaXplPSI0MCIgeG1sOnNwYWNlPSJwcmVzZXJ2ZSIgZmlsbD0iIzAwMDAwMCIgc3Ryb2tlPSJub25lIiBzdHJva2Utd2lkdGg9IjEiIGZvbnQtZmFtaWx5PSJTYW5zIFNlcmlmIiBmb250LXdlaWdodD0ibm9ybWFsIiB0ZXh0LWFuY2hvcj0ic3RhcnQiPjx0c3BhbiB4PSIwIiBkeT0iMCI+JDwvdHNwYW4+PC90ZXh0Pjx0ZXh0IHRyYW5zZm9ybT0idHJhbnNsYXRlKDE4NC45ODgwNywxNzIuMzc4NjgpIHJvdGF0ZSgtNy42NzI0NSkgc2NhbGUoMC41LDAuNSkiIGZvbnQtc2l6ZT0iNDAiIHhtbDpzcGFjZT0icHJlc2VydmUiIGZpbGw9IiMwMDAwMDAiIHN0cm9rZT0ibm9uZSIgc3Ryb2tlLXdpZHRoPSIxIiBmb250LWZhbWlseT0iU2FucyBTZXJpZiIgZm9udC13ZWlnaHQ9Im5vcm1hbCIgdGV4dC1hbmNob3I9InN0YXJ0Ij48dHNwYW4geD0iMCIgZHk9IjAiPiQ8L3RzcGFuPjwvdGV4dD48cGF0aCBkPSJNMjQwLjA2MTk0LDE3OS40MzY0NWwtMy41NjY3MSwtNi40MzA5bC01Ljc0NDk4LDMuNjE0MzlsLTAuMjQ5OTUsLTIyLjAxMTg1bDE1LjIwMjY2LDE1LjQyMTk5bC01LjMxMjY2LDEuMTgyNTRsMy4yOTY1NCw2LjA1MjYzYzAsMCAwLjQyMjg1LDEuNDQzMzMgLTAuOTAxMDQsMi4yNjg2OWMtMS41ODA4OSwwLjk4NTYyIC0yLjcyMzg1LC0wLjA5NzUgLTIuNzIzODUsLTAuMDk3NXoiIGZpbGw9IiNmZmZmZmYiIHN0cm9rZT0iIzAwMDAwMCIgc3Ryb2tlLXdpZHRoPSIxIi8+PC9nPjwvZz48L3N2Zz48IS0tcm90YXRpb25DZW50ZXI6NTguMTYzNTI3MTQyODAxODo1OS4xMzIwNTY1NDYwMTcwNy0tPg==",
+                "menuIconURI": "data:image/svg+xml;base64,PHN2ZyB2ZXJzaW9uPSIxLjEiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyIgeG1sbnM6eGxpbms9Imh0dHA6Ly93d3cudzMub3JnLzE5OTkveGxpbmsiIHdpZHRoPSI0MC44MzE4NyIgaGVpZ2h0PSI0MC40MTkwNCIgdmlld0JveD0iMCwwLDQwLjgzMTg3LDQwLjQxOTA0Ij48ZyB0cmFuc2Zvcm09InRyYW5zbGF0ZSgtMjE5LjU4NDIsLTE1OS43OTA0OCkiPjxnIHN0cm9rZS1taXRlcmxpbWl0PSIxMCI+PGc+PHBhdGggZD0iTTIyNS45NDIyOSwxODIuNDcwMDdsMjguNzI3ODIsMC4xNDg4M2MwLDAgLTEuNDg1NjQsMTIuNDc2NTUgLTE0LjgzNTQ1LDEyLjM0Mjk1Yy0xMi44Nzc4OSwtMC4xMjg4OCAtMTMuODkyMzYsLTEyLjQ5MTc4IC0xMy44OTIzNiwtMTIuNDkxNzh6IiBmaWxsPSIjZmZmZmZmIiBzdHJva2U9Im5vbmUiIHN0cm9rZS13aWR0aD0iMC41Ii8+PHBhdGggZD0iTTIyMC41ODQyLDE3OS45MDA3OGMwLjA1NDIxLC0xMC42MDg5OCA4Ljc5MDkxLC0xOS4xNjQ4MyAxOS41MTM5NiwtMTkuMTEwMDRjMTAuNzIzMDYsMC4wNTQ3OSAxOS4zNzE4Niw4LjY5OTQ5IDE5LjMxNzY1LDE5LjMwODQ3Yy0wLjA1NDIxLDEwLjYwODk4IC04Ljc5MDkxLDE5LjE2NDg0IC0xOS41MTM5NiwxOS4xMTAwNWMtMTAuNzIzMDYsLTAuMDU0NzkgLTE5LjM3MTg2LC04LjY5OTQ4IC0xOS4zMTc2NSwtMTkuMzA4NDd6TTIzOS44MzAzMywxOTQuOTEyMDVjMTMuMzQ5ODEsMC4xMzM2IDE0Ljc5MTIsLTEyLjI4MTI3IDE0Ljc5MTIsLTEyLjI4MTI3bC0yOC42MzEzNSwtMC4xNDYzYzAsMCAwLjk2MjI3LDEyLjI5ODcgMTMuODQwMTUsMTIuNDI3NTd6TTI0Ny4wOTkzLDE3Ni42NTA5NWMxLjQ1MDI2LDAuMDA3NDEgMi42MzE4NCwtMS4xNDk3NCAyLjYzOTE4LC0yLjU4NDU1YzAuMDA3MzMsLTEuNDM0ODIgLTEuMTYyMzgsLTIuNjAzOTggLTIuNjEyNjMsLTIuNjExMzhjLTEuNDUwMjYsLTAuMDA3NDEgLTIuNjMxODQsMS4xNDk3NCAtMi42MzkxOCwyLjU4NDU1Yy0wLjAwNzMzLDEuNDM0ODIgMS4xNjIzOCwyLjYwMzk4IDIuNjEyNjMsMi42MTEzOXpNMjMyLjkzNTMsMTc2LjU3ODU4YzEuNDUwMjYsMC4wMDc0MSAyLjYzMTg0LC0xLjE0OTc0IDIuNjM5MTgsLTIuNTg0NTVjMC4wMDczMywtMS40MzQ4MiAtMS4xNjIzOCwtMi42MDM5OCAtMi42MTI2MywtMi42MTEzOWMtMS40NTAyNiwtMC4wMDc0MSAtMi42MzE4NCwxLjE0OTc0IC0yLjYzOTE4LDIuNTg0NTVjLTAuMDA3MzMsMS40MzQ4MiAxLjE2MjM4LDIuNjAzOTggMi42MTI2MywyLjYxMTM5eiIgZmlsbD0iI2ZmYzUwMCIgc3Ryb2tlPSIjMDAwMDAwIiBzdHJva2Utd2lkdGg9IjIiLz48cGF0aCBkPSJNMjMwLjI3MjY4LDE3My45NjY5MmMwLjAwNzM0LC0xLjQzNDgyIDEuMjM5MTksLTIuNjQxNyAyLjY4OTQ0LC0yLjYzNDI5YzEuNDUwMjUsMC4wMDc0MSAyLjY2OTcsMS4yMjY4MyAyLjY2MjM3LDIuNjYxNjRjLTAuMDA3MzQsMS40MzQ4MiAtMS4yMzkxOSwyLjY0MTcxIC0yLjY4OTQ0LDIuNjM0MjljLTEuNDUwMjUsLTAuMDA3NDEgLTIuNjY5NywtMS4yMjY4MyAtMi42NjIzNywtMi42NjE2NXoiIGZpbGw9IiMwMDAwMDAiIHN0cm9rZT0ibm9uZSIgc3Ryb2tlLXdpZHRoPSIwLjUiLz48cGF0aCBkPSJNMjQ0LjQzNjY2LDE3NC4wMzkzYzAuMDA3MzQsLTEuNDM0ODIgMS4yMzkxOCwtMi42NDE3MSAyLjY4OTQ0LC0yLjYzNDI5YzEuNDUwMjUsMC4wMDc0MSAyLjY2OTcsMS4yMjY4MyAyLjY2MjM3LDIuNjYxNjRjLTAuMDA3MzQsMS40MzQ4MiAtMS4yMzkxOCwyLjY0MTcxIC0yLjY4OTQ0LDIuNjM0MjljLTEuNDUwMjUsLTAuMDA3NDEgLTIuNjY5NywtMS4yMjY4MyAtMi42NjIzNywtMi42NjE2NHoiIGZpbGw9IiMwMDAwMDAiIHN0cm9rZT0ibm9uZSIgc3Ryb2tlLXdpZHRoPSIwLjUiLz48L2c+PC9nPjwvZz48L3N2Zz48IS0tcm90YXRpb25DZW50ZXI6MjAuNDE1ODA0MTYyNzg0NjY3OjIwLjIwOTUxODkzNTUzOTg3Ni0tPg==",
+                "id": "clickerid",
+                "name": "clicker",
+                "docsURI": "https://mln1239.github.io/Documentation/",
+                "color1": "#ae00ff",
+                "color2": "#8300bf",
+                "blocks": blocks,
+                "menus": menus
+            }
+        }
+    }
+    blocks.push({
+        opcode: `ad_c_P`,
+        blockType: Scratch.BlockType.BUTTON,
+        hideFromPalette: !(Scratch.extensions.isPenguinMod),
+        text: `add clicker`,
+    });
+    Extension.prototype[`ad_c_P`] = async (args, util) => {
+        variables['clicker'] = prompt('add block clicker') + ' PenguinMod'
+        if (confirm('realy!')) {
+            localStorage.setItem(variables['clicker'], 0)
+        };
+    };
+
+    blocks.push({
+        opcode: `dt_c_P`,
+        blockType: Scratch.BlockType.BUTTON,
+        hideFromPalette: !(Scratch.extensions.isPenguinMod),
+        text: `delete clicker`,
+    });
+    Extension.prototype[`dt_c_P`] = async (args, util) => {
+        variables['delete clicker'] = prompt('delete name') + ' PenguinMod'
+        if (confirm('realy!')) {
+            localStorage.removeItem(variables['delete clicker'])
+        };
+    };
+
+    blocks.push({
+        opcode: `delete all`,
+        blockType: Scratch.BlockType.BUTTON,
+        hideFromPalette: false,
+        text: `delete all`,
+    });
+    Extension.prototype[`delete all`] = async (args, util) => {
+        if (confirm('Realy!?')) {
+            localStorage.clear()
+        };
+    };
+
+    blocks.push({
+        blockType: Scratch.BlockType.LABEL,
+        hideFromPalette: false,
+        text: `clicker`,
+    });
+
+
+    blocks.push({
+        opcode: `name_clicker`,
+        blockType: Scratch.BlockType.REPORTER,
+        hideFromPalette: false,
+        text: `get clicker[1]`,
+        arguments: {
+            "1": {
+                type: Scratch.ArgumentType.STRING,
+                defaultValue: 'clicker',
+            },
+        },
+        disableMonitor: false
+    });
+    Extension.prototype[`name_clicker`] = async (args, util) => {
+        if (localStorage.getItem(args["1"] + ' PenguinMod') !== null) {
+            return args["1"] + ' PenguinMod'
+        };
+    };
+
+    +
+    +undefined;
+
+    blocks.push({
+        opcode: `set`,
+        blockType: Scratch.BlockType.COMMAND,
+        hideFromPalette: false,
+        text: `set clicker name[setc] to[number]`,
+        arguments: {
+            "number": {
+                type: Scratch.ArgumentType.NUMBER,
+                defaultValue: '0',
+            },
+            "setc": {
+                type: Scratch.ArgumentType.empty,
+            },
+        },
+        disableMonitor: true
+    });
+    Extension.prototype[`set`] = async (args, util) => {
+        if (localStorage.getItem(args["setc"]) !== null) {
+            localStorage.setItem(args["setc"], args["number"])
+        };
+    };
+
+    blocks.push({
+        opcode: `cha`,
+        blockType: Scratch.BlockType.COMMAND,
+        hideFromPalette: false,
+        text: `set clicker name[change] to[number2]`,
+        arguments: {
+            "number2": {
+                type: Scratch.ArgumentType.NUMBER,
+                defaultValue: '0',
+            },
+            "change": {
+                type: Scratch.ArgumentType.empty,
+            },
+        },
+        disableMonitor: true
+    });
+    Extension.prototype[`cha`] = async (args, util) => {
+        if (localStorage.getItem(args["change"]) !== null) {
+            localStorage.setItem(args["change"], (variables[args["change"]] + args["number2"]))
+        };
+    };
+
+    blocks.push({
+        opcode: `return`,
+        blockType: Scratch.BlockType.REPORTER,
+        hideFromPalette: false,
+        text: `return[rtn]`,
+        arguments: {
+            "rtn": {
+                type: Scratch.ArgumentType.empty,
+            },
+        },
+        disableMonitor: false
+    });
+    Extension.prototype[`return`] = async (args, util) => {
+        if (localStorage.getItem(args["rtn"]) !== null) {
+            return localStorage.getItem(args["rtn"])
+        };
+        return 'ERROR'
+    };
+
+    Scratch.extensions.register(new Extension());
+})(Scratch);

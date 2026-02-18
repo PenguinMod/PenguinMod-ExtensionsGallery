@@ -1,0 +1,168 @@
+/**
+ * Playz PM Server Storage - Created by Playz Studioz
+ * This extension allows users to connect to their own custom servers.
+ * Licensed under the MIT License
+ * Copyright (c) 2026 Playz Studioz
+ */
+
+(function(Scratch) {
+    'use strict';
+
+    let SERVER_URL = "https://unsainted-imperativally-magaly.ngrok-free.dev";
+
+    class PMCloudStorage {
+        getInfo() {
+            return {
+                id: 'playzstudiozpmserverstorage',
+                name: 'Playz PM Server Storage',
+                color1: '#ce00b9ff',
+                blocks: [
+                    {
+                        // This creates an actual UI button in the palette
+                        func: 'openDocs',
+                        blockType: Scratch.BlockType.BUTTON,
+                        text: 'Open Documentation'
+                    },
+                    "---",
+                    {
+                        opcode: 'connectToServer',
+                        blockType: Scratch.BlockType.COMMAND,
+                        text: 'connect to server [URL]',
+                        arguments: {
+                            URL: { type: Scratch.ArgumentType.STRING, defaultValue: 'https://unsainted-imperativally-magaly.ngrok-free.dev' }
+                        }
+                    },
+                    {
+                        opcode: 'serverRunning',
+                        blockType: Scratch.BlockType.BOOLEAN,
+                        text: 'server running?'
+                    },
+                    "---",
+                    {
+                        opcode: 'getVariable',
+                        blockType: Scratch.BlockType.REPORTER,
+                        text: 'get variable [KEY]',
+                        arguments: {
+                            KEY: { type: Scratch.ArgumentType.STRING, defaultValue: 'coins' }
+                        }
+                    },
+                    {
+                        opcode: 'setVariable',
+                        blockType: Scratch.BlockType.COMMAND,
+                        text: 'set variable [KEY] to [VALUE]',
+                        arguments: {
+                            KEY: { type: Scratch.ArgumentType.STRING, defaultValue: 'coins' },
+                            VALUE: { type: Scratch.ArgumentType.STRING, defaultValue: '100' }
+                        }
+                    },
+                    "---",
+                    {
+                        opcode: 'getList',
+                        blockType: Scratch.BlockType.REPORTER,
+                        text: 'get list [KEY]',
+                        arguments: {
+                            KEY: { type: Scratch.ArgumentType.STRING, defaultValue: 'myList' }
+                        }
+                    },
+                    {
+                        opcode: 'addToList',
+                        blockType: Scratch.BlockType.COMMAND,
+                        text: 'add [VALUE] to list [KEY]',
+                        arguments: {
+                            KEY: { type: Scratch.ArgumentType.STRING, defaultValue: 'myList' },
+                            VALUE: { type: Scratch.ArgumentType.STRING, defaultValue: 'item' }
+                        }
+                    },
+                    {
+                        opcode: 'clearList',
+                        blockType: Scratch.BlockType.COMMAND,
+                        text: 'delete all in list [KEY]',
+                        arguments: {
+                            KEY: { type: Scratch.ArgumentType.STRING, defaultValue: 'myList' }
+                        }
+                    }
+                ]
+            };
+        }
+
+        // This function is triggered when the BUTTON is clicked
+        openDocs() {
+            // Replace with your actual Google Doc ID
+            const docId = '1EwlmQJoAvs7tQYA9tJdrTdia8UR0YFOF1_W3emZG4Vc'; 
+            const url = `https://docs.google.com/document/d/${docId}/edit`;
+            window.open(url, '_blank');
+        }
+
+        getHeaders() {
+            return {
+                "Content-Type": "application/json",
+                "ngrok-skip-browser-warning": "true",
+                "Bypass-Tunnel-Reminder": "true"
+            };
+        }
+
+        connectToServer(args) {
+            let url = String(args.URL).trim();
+            if (url.endsWith('/')) {
+                url = url.slice(0, -1);
+            }
+            SERVER_URL = url;
+            console.log("PM Cloud Storage connected to:", SERVER_URL);
+        }
+
+        async serverRunning() {
+            try {
+                const res = await fetch(`${SERVER_URL}/health`, { headers: this.getHeaders() });
+                return res.ok;
+            } catch (e) { return false; }
+        }
+
+        async getVariable(args) {
+            try {
+                const res = await fetch(`${SERVER_URL}/get?key=${encodeURIComponent(args.KEY)}`, { headers: this.getHeaders() });
+                const data = await res.json();
+                return (data === null) ? "" : String(data);
+            } catch (e) { return ""; }
+        }
+
+        async setVariable(args) {
+            try {
+                await fetch(`${SERVER_URL}/set`, {
+                    method: "POST",
+                    headers: this.getHeaders(),
+                    body: JSON.stringify({ key: String(args.KEY), value: String(args.VALUE) })
+                });
+            } catch (e) {}
+        }
+
+        async getList(args) {
+            try {
+                const res = await fetch(`${SERVER_URL}/getList?key=${encodeURIComponent(args.KEY)}`, { headers: this.getHeaders() });
+                const data = await res.json();
+                return Array.isArray(data) ? JSON.stringify(data) : "[]";
+            } catch (e) { return "[]"; }
+        }
+
+        async addToList(args) {
+            try {
+                await fetch(`${SERVER_URL}/addToList`, {
+                    method: "POST",
+                    headers: this.getHeaders(),
+                    body: JSON.stringify({ key: String(args.KEY), value: String(args.VALUE) })
+                });
+            } catch (e) {}
+        }
+
+        async clearList(args) {
+            try {
+                await fetch(`${SERVER_URL}/clearList`, {
+                    method: "POST",
+                    headers: this.getHeaders(),
+                    body: JSON.stringify({ key: String(args.KEY) })
+                });
+            } catch (e) {}
+        }
+    }
+
+    Scratch.extensions.register(new PMCloudStorage());
+})(Scratch);

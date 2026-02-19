@@ -6,7 +6,7 @@
     }
     getInfo() {
       return {
-        id: "Abible",
+        id: "aBible",
         name: "Bible",
         color1: "#14d0ff",
         blocks: [

@@ -649,4 +649,14 @@ export default [
         isGitHub: true,
         creatorAlias: "ElectricFuzzball_PM"
     },
+        {
+        name: "Array Buffers",
+        description: "Read, parse, and write raw data efficiently using Array Buffers",
+        code: "AndrewGaming587/agBuffer.js",
+        banner: "AndrewGaming587/agBuffer.svg",
+        creator: "AndrewScripter587",
+        isGitHub: true,
+        tags: ["customtype","data","utility","new","large"],
+        creatorAlias: "AndrewGaming587"
+    },
 ];

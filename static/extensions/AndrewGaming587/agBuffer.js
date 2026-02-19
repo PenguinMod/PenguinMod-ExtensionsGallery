@@ -90,7 +90,7 @@
         }
         constructor(source, passthrough = true) { // Passthrough will return the source if the source is already an ArrayBufferType and passthrough is true, for optimization reasons
             if (source == undefined || source == null) source = 0;
-            if (passthrough && ("customId" in source && source.customId == "agBuffer")) return source;
+            if (passthrough && (typeof source == "object" && "customId" in source && source.customId == "agBuffer")) return source;
             if (source instanceof Array) {
                 // window.agBufferDebugLastType = "jsarray"
                 // Uint8Array conversion is necessary because ArrayBuffer constructor doesn't take normal arrays as input

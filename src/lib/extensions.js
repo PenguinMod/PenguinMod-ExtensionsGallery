@@ -649,4 +649,13 @@ export default [
         isGitHub: true,
         creatorAlias: "ElectricFuzzball_PM"
     },
+    {
+        name: "Bible",
+        description: "Fetch the bible!",
+        code: "dogstudiostuff/aBible.js",
+        banner: "dogstudiostuff/aBible.svg",
+        creator: "dogstudiostuff",
+        isGitHub: true,
+        creatorAlias: "a"
+    },
 ];

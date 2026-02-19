@@ -577,11 +577,11 @@
         }
 
         toArray({BUFFER}) {
-            if (args.BUFFER == undefined && !agBuffer.disableErrorHandling) return;
-            BUFFER = new ArrayBuffer(BUFFER)
-            const arrbuf = BUFFER;
+            if (BUFFER == undefined && !agBuffer.disableErrorHandling) return;
+            BUFFER = new ArrayBufferType(BUFFER)
             
-            return vm.jwArray.Type.toArray(Array.from(new Uint8Array(arrbuf.arrayBuffer)))
+            
+            return vm.jwArray.Type.toArray(Array.from(new Uint8Array(BUFFER.arrayBuffer)))
         }
         getValue(args) {
             if (args.BUFFER == undefined && !agBuffer.disableErrorHandling) return 0;

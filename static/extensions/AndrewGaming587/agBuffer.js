@@ -1,4 +1,4 @@
-
+// Notice: the reason I don't use instanceof for checking for my custom type is because it doesn't f**king work for some reason
 
 (async function(Scratch) {
     const {BlockType, BlockShape, ArgumentType, Cast, vm} = Scratch
@@ -28,14 +28,14 @@
             return this.arrayBuffer
         }
         jwArrayHandler() {
-            return `Array Buffer<${this.arrayBuffer.byteLength}>`
+            return `Buffer<${this.arrayBuffer.byteLength}>`
         }
         dogeiscutObjectHandler() {
             return `Array Buffer (Length: ${this.arrayBuffer.byteLength})`
         }
-        dogeiscutSetHandler() {
-            return `Buffer<${this.arrayBuffer.byteLength}>`
-        }
+        // dogeiscutSetHandler() {
+        //     return `Buffer<${this.arrayBuffer.byteLength}>`
+        // }
         toJSON() {
             return Array.from(new Uint8Array(this.arrayBuffer))
         }
@@ -76,9 +76,9 @@
                     root.appendChild(arrBufDisplay)
                 }
             } else {
-                let nullBuffer = span(`(Null Buffer)`)
-                nullBuffer.style.color = "#888888"
-                root.appendChild(nullBuffer)
+                let emptyBuffer = span(`(Empty Buffer)`)
+                emptyBuffer.style.color = "#888888"
+                root.appendChild(emptyBuffer)
             }
             let sizeDisplay = span(`Byte Length: ${length}`)
             sizeDisplay.style.fontSize = "12px"
@@ -88,34 +88,36 @@
         toString() {
             return JSON.stringify([...(new Uint8Array(this.arrayBuffer))]);
         }
-        constructor(source) {
+        constructor(source, passthrough = true) { // Passthrough will return the source if the source is already an ArrayBufferType and passthrough is true, for optimization reasons
+            if (source == undefined || source == null) source = 0;
+            if (passthrough && ("customId" in source && source.customId == "agBuffer")) return source;
             if (source instanceof Array) {
-                window.agBufferDebugLastType = "jsarray"
+                // window.agBufferDebugLastType = "jsarray"
                 // Uint8Array conversion is necessary because ArrayBuffer constructor doesn't take normal arrays as input
                 this.arrayBuffer = (new Uint8Array(source)).buffer 
             } else if (source instanceof vm.jwArray.Type) {
-                window.agBufferDebugLastType = "jwArray"
+                // window.agBufferDebugLastType = "jwArray"
                 // Same reason here
                 this.arrayBuffer = new Uint8Array(source.array).buffer
             } else if (typeof source == "number") {
-                window.agBufferDebugLastType = "length"
+                // window.agBufferDebugLastType = "length"
                 // no Uint8Array needed as the constructor can take (number) to create a blank arraybuffer of length (number)
                 this.arrayBuffer = new ArrayBuffer(source)
             } else if (source instanceof Uint8Array || (source.buffer && source.buffer instanceof ArrayBuffer)) {
-                window.agBufferDebugLastType = "typedarray"
+                // window.agBufferDebugLastType = "typedarray"
                 this.arrayBuffer = source.buffer
             } else if (source instanceof ArrayBuffer) {
-                window.agBufferDebugLastType = "jsarraybuffer"
+                // window.agBufferDebugLastType = "jsarraybuffer"
                 this.arrayBuffer = source
                 
             } else if (typeof source == "string" && (() => {try{return Array.isArray(JSON.parse(source))}catch{return false}})()) { // weird inline code to see if we can JSON.parse the string as array
-                window.agBufferDebugLastType = "json"
+                // window.agBufferDebugLastType = "json"
                 this.arrayBuffer = new Uint8Array(JSON.parse(source)).buffer
             } else if (typeof(source.toArrayBuffer) == "function") {
-                window.agBufferDebugLastType = "toArrayBuffer"
+                // window.agBufferDebugLastType = "toArrayBuffer"
                 this.arrayBuffer = source.toArrayBuffer()
             } else {
-                window.agBufferDebugLastType = "invalidBuffer"
+                // window.agBufferDebugLastType = "invalidBuffer"
                 this.arrayBuffer = new ArrayBuffer(0);
             }
             
@@ -123,7 +125,7 @@
             this.dataView = new DataView(this.arrayBuffer)
             // some debug code so I can debug what the heck the problem is from the console
             
-            window.agBufferDebug = this;
+            // window.agBufferDebug = this;
         }
     }
     const agBuffer = {
@@ -168,6 +170,7 @@
                 v => new ArrayBufferType(new Uint8Array([...v]))
             );
             vm.runtime.registerCompiledExtensionBlocks('agBuffer', this.getCompileInfo())
+            if (!vm.runtime.ext_jwArray) vm.extensionManager.loadExtensionIdSync('jwArray')
         }
         getInfo() {
             return {
@@ -479,7 +482,6 @@
                         VALUE: {type:ArgumentType.BOOLEAN}
                     },
                 },
-
                 ],
                 "menus":{
                     DATATYPES: {
@@ -554,6 +556,7 @@
         }
         builderAppendBuffer({VALUE}, util) {
             if ((VALUE == undefined || VALUE == null) && !agBuffer.disableErrorHandling) return;
+            VALUE = new ArrayBuffer(VALUE)
             let bi = util.thread._agBufferBuilderIndex ?? []
             if (bi[bi.length-1]) {
                 let buffer = bi[bi.length-1]
@@ -573,15 +576,18 @@
             }
         }
 
-        toArray(args) {
+        toArray({BUFFER}) {
             if (args.BUFFER == undefined && !agBuffer.disableErrorHandling) return;
-            const arrbuf = args.BUFFER;
+            BUFFER = new ArrayBuffer(BUFFER)
+            const arrbuf = BUFFER;
             
             return vm.jwArray.Type.toArray(Array.from(new Uint8Array(arrbuf.arrayBuffer)))
         }
         getValue(args) {
             if (args.BUFFER == undefined && !agBuffer.disableErrorHandling) return 0;
-            let buffer = args.BUFFER
+            
+            let buffer = new ArrayBufferType(args.BUFFER)
+            
             const type = args.TYPE
             const index = args.INDEX
             const endian = args.ENDIAN
@@ -616,7 +622,7 @@
         setValue(args) {
             if (args.BUFFER == undefined && !agBuffer.disableErrorHandling) return;
             
-            let buffer = args.BUFFER
+            let buffer = new ArrayBufferType(args.BUFFER)
             const type = args.TYPE
             const index = args.INDEX
             const endian = args.ENDIAN
@@ -677,6 +683,7 @@
         }
         getSize(args) {
             if (args.BUFFER == undefined && !agBuffer.disableErrorHandling) return 0;
+            args.BUFFER = new ArrayBufferType(args.BUFFER)
             if (!args.BUFFER.customId || args.BUFFER.customId != "agBuffer") return 0;
             return args.BUFFER.arrayBuffer.byteLength
         }
@@ -685,6 +692,7 @@
         }
         toString(args) {
             if (args.BUFFER == undefined && !agBuffer.disableErrorHandling) return "";
+            args.BUFFER = new ArrayBufferType(args.BUFFER)
             return new TextDecoder().decode(new Uint8Array(args.BUFFER.arrayBuffer))
         }
         fromBase64(args) {
@@ -693,7 +701,8 @@
         }
         toBase64(args) {
             if (args.BUFFER == undefined && !agBuffer.disableErrorHandling) return "";
-            const buffer = args.BUFFER
+
+            const buffer = new ArrayBufferType(args.BUFFER)
             return new Uint8Array(buffer.arrayBuffer).toBase64();
         }
         async fromUrl(args) {
@@ -704,19 +713,22 @@
         }
         toDataUrl(args) {
             if (args.BUFFER == undefined && !agBuffer.disableErrorHandling) return "";
-            const buffer = args.BUFFER
+            const buffer = new ArrayBufferType(args.BUFFER)
             return ("data:application/octet-stream;base64," + new Uint8Array(buffer.arrayBuffer).toBase64())
         }
         maxReporterLines(args) {
-            vm.agBuffer.maxReporterRows = args.LINES
+            vm.agBuffer.maxReporterRows = Cast.toNumber(args.LINES)
         }
         itemsOf(args) {
             if (args.BUFFER == undefined && !agBuffer.disableErrorHandling) return new ArrayBufferType(0);
+            args.BUFFER = new ArrayBufferType(args.BUFFER)
             return new agBuffer.Type(args.BUFFER.arrayBuffer.slice(args.MIN, args.MAX))
         }
         writeSubBuffer(args) {
-            if (args.BUFFER == undefined) return;
-            if (args.SUBBUFFER == undefined) return;
+            if (args.BUFFER == undefined && !agBuffer.disableErrorHandling) return;
+            if (args.SUBBUFFER == undefined && !agBuffer.disableErrorHandling) return;
+            args.BUFFER = new ArrayBufferType(args.BUFFER)
+            args.SUBBUFFER = new ArrayBufferType(args.SUBBUFFER)
             let buffer = args.BUFFER
             let subbuffer = args.SUBBUFFER
             let startindex = args.INDEX
@@ -727,7 +739,7 @@
         }
         writeAutoType(args) {
             if (args.BUFFER == undefined && !agBuffer.disableErrorHandling) return 0;
-            let buffer = args.BUFFER
+            let buffer = new ArrayBufferType(args.BUFFER)
             let value = args.VALUE
             let index = args.INDEX
             let endian = args.ENDIAN
@@ -738,27 +750,28 @@
         }
         resize(args) {
             if (args.BUFFER == undefined && !agBuffer.disableErrorHandling) return new ArrayBufferType(args.SIZE);
-            let buffer = args.BUFFER
-            let newSize = args.SIZE
+            let buffer = new ArrayBufferType(args.BUFFER)
+            let newSize = Cast.toNumber(args.SIZE)
             return new agBuffer.Type(buffer.arrayBuffer.transfer(newSize))
         }
         copy(args) {
             if (args.BUFFER == undefined && !agBuffer.disableErrorHandling) return new ArrayBufferType(0);
+            args.BUFFER = new ArrayBufferType(args.BUFFER)
             return new ArrayBufferType(args.BUFFER.arrayBuffer.transfer())
         }
         reverse(args) {
-            let buffer = args.BUFFER
+            let buffer = new ArrayBufferType(args.BUFFER)
             buffer.arrayBuffer = new Uint8Array(buffer.arrayBuffer).reverse().buffer
             buffer.dataView = new DataView(buffer.arrayBuffer)
         }
         reverseR(args) {
             if (args.BUFFER == undefined && !agBuffer.disableErrorHandling) return new ArrayBufferType(0);
-            let buffer = args.BUFFER
+            let buffer = new ArrayBufferType(args.BUFFER)
             return new ArrayBufferType(new Uint8Array(buffer.arrayBuffer).reverse())
         }
         stringify(args) {
             if (args.BUFFER == undefined && !agBuffer.disableErrorHandling) return "";
-            let buffer = args.BUFFER
+            let buffer = new ArrayBufferType(args.BUFFER)
             let mode = args.MODE
             switch (mode) {
                 case "array":
@@ -772,7 +785,7 @@
             }
         }
         errorHandling(args) {
-            agBuffer.disableErrorHandling = args.VALUE
+            agBuffer.disableErrorHandling = Cast.toBoolean(args.VALUE)
         }
         forEachV({}, util) {
             const pair = util.thread.stackFrames[0].agBuffer;
@@ -781,6 +794,7 @@
 
         forEach({BUFFER}, util) {
             if (BUFFER == undefined && !agBuffer.disableErrorHandling) return;
+            BUFFER = new ArrayBufferType(BUFFER)
             if (util.stackFrame.execute) {
                 const { entries, pointer } = util.stackFrame;
                 util.stackFrame.pointer++;
@@ -799,12 +813,7 @@
         }
 
     }
-    (async () => {
-        if (!vm.runtime.ext_jwArray) vm.extensionManager.loadExtensionIdSync('jwArray')
-        vm.runtime.requestBlocksUpdate()
-        vm.runtime.requestToolboxExtensionsUpdate()
-        vm.emitWorkspaceUpdate()
-    })()
+        
     vm.agBuffer = agBuffer
     let extension = new Extension();
     Scratch.extensions.register(extension);

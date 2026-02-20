@@ -446,6 +446,7 @@
                     allowDropAnywhere: true,
                     canDragDuplicate: true
                 },
+                "---",
                 {
                     opcode: 'forEach',
                     text: 'for each [BYTE] of [BUFFER]',
@@ -457,7 +458,52 @@
                         }
                     }
                 },
-  
+                "---",
+                {
+                    opcode: 'readerCurrentIndex',
+                    text: 'reader index',
+                    hideFromPalette: true,
+                    canDragDuplicate: true,
+                    blockType: BlockType.REPORTER
+                },
+
+                {
+                    opcode: 'reader',
+                    text: 'reader [BUFFER]',
+                    blockType: Scratch.BlockType.LOOP,
+                    hideFromPalette: true,
+                    arguments: {
+                        BUFFER: agBuffer.Argument,
+                        CURRENT: {
+                            fillIn: 'readerCurrentIndex'
+                        }
+
+                    }
+                },
+                {
+                    opcode: 'readerAppend',
+                    text: 'read [TYPE] value [ENDIAN] for parser',
+                    blockType: Scratch.BlockType.COMMAND,
+                    hideFromPalette: true,
+                    arguments: {
+                        TYPE:{
+                            menu:'DATATYPES',
+                            type: ArgumentType.STRING
+                        },
+                        ENDIAN: {
+                            type: ArgumentType.BOOLEAN
+                        }
+                    },
+                },
+                {
+                    opcode: 'readerAppendBuffer',
+                    text: 'read next [BYTES] for parser',
+                    blockType: Scratch.BlockType.COMMAND,
+                    hideFromPalette: true,
+                    arguments: {
+                        BYTES: {type: ArgumentType.NUMBER}
+                    },
+                },
                 {
                     blockType: BlockType.LABEL,
                     text: "Visual Blocks"
@@ -506,6 +552,13 @@
                             substack: generator.descendSubstack(block, 'SUBSTACK')
                         }
                     },
+                    reader: (generator, block) => {
+                        generator.script.yields = true
+                        return {
+                            kind: 'input',
+                            substack: generator.descendSubstack(block, 'SUBSTACK')
+                        }
+                    },
                 },
                 js: {
                     builder: (node, compiler, imports) => {
@@ -520,7 +573,21 @@
                         const stackSource = compiler.source;
                         compiler.source = originalSource;
                         return new imports.TypedInput(stackSource, imports.TYPE_UNKNOWN);
+                    },
+                    reader: (node, compiler, imports) => {
+                        const originalSource = compiler.source;
+                        compiler.source = 'vm.jwArray.Type.toArray(yield* (function*() {';
+                        compiler.source += `thread._agBufferReaderIndex ??= [];`
+                        compiler.source += `thread._agBufferReaderIndex.push({index:0,array:[],buffer:null});`
+                        //compiler.source += `try{} catch (err) {throw new Error("fancy error catch: " + err)};`
+                        compiler.descendStack(node.substack, new imports.Frame(false, undefined, true));
+                        compiler.source += `return thread._agBufferReaderIndex.pop().array;`
+                        compiler.source += '})())';
+                        const stackSource = compiler.source;
+                        compiler.source = originalSource;
+                        return new imports.TypedInput(stackSource, imports.TYPE_UNKNOWN);
                     }
+
                 }
             };
         }
@@ -556,7 +623,7 @@
         }
         builderAppendBuffer({VALUE}, util) {
             if ((VALUE == undefined || VALUE == null) && !agBuffer.disableErrorHandling) return;
-            VALUE = new ArrayBuffer(VALUE)
+            VALUE = new ArrayBufferType(VALUE)
             let bi = util.thread._agBufferBuilderIndex ?? []
             if (bi[bi.length-1]) {
                 let buffer = bi[bi.length-1]
@@ -811,7 +878,35 @@
 
             util.startBranch(1, true);
         }
+        readerCurrentIndex({}, util) {
+            let bi = util.thread._agBufferReaderIndex ?? []
+            return bi[bi.length-1] ? Cast.toNumber(bi[bi.length-1].index) : 0
+        }
 
+        reader() {
+            return 'noop'
+        }
+
+        readerAppend({TYPE,ENDIAN = false}, util) {
+            let bi = util.thread._agBufferReaderIndex ?? []
+            if (bi[bi.length-1]) {
+                let builder = bi[bi.length-1]
+                builder.array.push()
+
+            }
+        }
+        readerAppendBuffer({VALUE}, util) {
+            if ((VALUE == undefined || VALUE == null) && !agBuffer.disableErrorHandling) return;
+            VALUE = new ArrayBufferType(VALUE)
+            let bi = util.thread._agBufferReaderIndex ?? []
+            if (bi[bi.length-1]) {
+                let buffer = bi[bi.length-1]
+                let oldBufferLen = buffer.arrayBuffer.byteLength
+                let newBuffer;
+                bi[bi.length-1] = newBuffer = new ArrayBufferType(buffer.arrayBuffer.transfer(oldBufferLen + VALUE.arrayBuffer.byteLength))
+                this.writeSubBuffer({INDEX: oldBufferLen, SUBBUFFER: VALUE, BUFFER: newBuffer})
+            }
+        }
     }
         
     vm.agBuffer = agBuffer

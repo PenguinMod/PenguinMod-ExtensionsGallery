@@ -649,4 +649,13 @@ export default [
         isGitHub: true,
         creatorAlias: "ElectricFuzzball_PM"
     },
+    {
+        name: "Ultimate DB",
+        description: "Store data online with two methods",
+        code: "Somroti/UltimateDB.js",
+        banner: "Somroti/UltimateDB.png",
+        creator: "Somroti and Logise",
+        cratorAlias: "Somroti",
+        notes: "The banner was made by Logise"
+    },
 ];

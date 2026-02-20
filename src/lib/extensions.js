@@ -598,6 +598,18 @@ export default [
         isGitHub: true,
         creatorAlias: "gaimerI17",
     },
+    {
+    name: "Raycasting",
+    description: "Throw invisible rays and report information about the sprites it collided with. ",
+    code: "GatocDev/RayCasting.js",
+    banner: "GatocDev/RayCasting.png",
+    creator: "GatocDev",
+    
+    creatorAlias: "Gatoc_Dev", 
+    notes: "Thumbnail(s) by Steve0Greatness and NotDillon", // Optional. Allows you to note anyone else who helped you or any small info.
+    unstable: false, 
+    isGitHub: false,
+},
     /* these extensions are completely dead as of now
     {
         name: "Online Captcha",

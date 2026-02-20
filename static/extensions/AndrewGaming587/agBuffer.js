@@ -49,7 +49,7 @@
             let length = this.arrayBuffer.byteLength
             root.appendChild(span("Array Buffer:"))
             if (length > 0) {
-                let binaryHeader = span("--BINARY--" + " 00\u200901\u200902\u200903\u200904\u200905\u200906\u200907\u200908\u200909\u20090A\u20090B\u20090C\u20090D\u20090E\u20090F")
+                let binaryHeader = span("-BINARY-" + " 00\u200901\u200902\u200903\u200904\u200905\u200906\u200907\u200908\u200909\u20090A\u20090B\u20090C\u20090D\u20090E\u20090F")
                 binaryHeader.style.fontSize = "9px"
                 binaryHeader.style.textAlign = "left"
                 binaryHeader.style.backgroundColor = "#808080a4" 
@@ -58,7 +58,7 @@
                 binaryHeader.style.fontFamily = "monospace"
                 root.appendChild(binaryHeader)
                 for (let i = 0; i < Math.min(this.arrayBuffer.byteLength / 16, vm.agBuffer.maxReporterRows); i++) {
-                    let arrBufDisplay = span(`0x${(i * 16).toString(16).toUpperCase().padStart(8,"0")} ` + Array.from(new Uint8Array(this.arrayBuffer)).slice(i * 16,(i + 1) * 16).map(
+                    let arrBufDisplay = span(`0x${(i * 16).toString(16).toUpperCase().padStart(6,"0")} ` + Array.from(new Uint8Array(this.arrayBuffer)).slice(i * 16,(i + 1) * 16).map(
                         (num, index) => {
                             return num.toString(16).toUpperCase().padStart(2, '0');
                         }
@@ -68,7 +68,7 @@
                     // arrBufDisplay.style.textOverflow = "ellipsis"
                     // arrBufDisplay.style.maxWidth = "256px"
                     arrBufDisplay.style.fontSize = "9px"
-                    if (i % 2 == 1) arrBufDisplay.style.backgroundColor = "#88888835" 
+                    if (i % 2 == 1) arrBufDisplay.style.backgroundColor = "#88888845" 
                     else arrBufDisplay.style.backgroundColor = "#88888820"
                     arrBufDisplay.style.letterSpacing = "0px"
                     arrBufDisplay.style.textAlign = "left"

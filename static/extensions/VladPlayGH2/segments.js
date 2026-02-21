@@ -1,12 +1,12 @@
 // Name: Segments
-// ID: segments
+// ID: vpsegments
 // Description: Split text into various segments!
 // License: MIT AND MPL-2.0
 
 class segments {
     getInfo() {
         return {
-            id: 'segments',
+            id: 'vpsegments',
             name: 'Segments',
             color1: "#ff8080",
             blocks: [

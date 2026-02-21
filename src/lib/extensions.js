@@ -51,6 +51,13 @@ export default [
         creator: "pooiod7",
     },
     {
+        name: "Rect", // The name of the extension.
+        description: "Creates a Rectangle-Based object which you can grab positions of (Works with Vectors!)",
+        code: "IrshaadAli/static_Rect.js", // There exists a translated version too
+        banner: "IrshaadAli/Rect.svg", // Sorry - Don't know how to avif
+        creator: "Irshaad_Ali", // Had to create a new one
+    },
+    {
         name: "3D Math",
         description: "A handful of utilities for making your own sprite-based 3D engine.",
         code: "ObviousAlexC/3DMath.js",

@@ -1,5 +1,3 @@
-// Notice: the reason I don't use instanceof for checking for my custom type is because it doesn't f**king work for some reason
-
 (async function(Scratch) {
     const {BlockType, BlockShape, ArgumentType, Cast, vm} = Scratch
     const variables = {};
@@ -43,6 +41,7 @@
         customId = "agBuffer";
         toReporterContent() {
             let root = document.createElement('div')
+            root.style.maxWidth = "none" // Idk if this works i'm just trying stuff
             root.style.display = 'flex'
             root.style.flexDirection = 'column'
             root.style.justifyContent = 'center'
@@ -54,7 +53,7 @@
                 binaryHeader.style.textAlign = "left"
                 binaryHeader.style.backgroundColor = "#808080a4" 
                 binaryHeader.style.borderWidth = "3px"
-                binaryHeader.style.letterSpacing = "0px"
+                // binaryHeader.style.letterSpacing = "0px"
                 binaryHeader.style.fontFamily = "monospace"
                 root.appendChild(binaryHeader)
                 for (let i = 0; i < Math.min(this.arrayBuffer.byteLength / 16, vm.agBuffer.maxReporterRows); i++) {
@@ -62,15 +61,15 @@
                         (num, index) => {
                             return num.toString(16).toUpperCase().padStart(2, '0');
                         }
-                    ).join("\u2009"))
+                    ).join("\u2009").padEnd(16*3,"\u2009.."))
                     // arrBufDisplay.style.overflow = "hidden"
                     // arrBufDisplay.style.whiteSpace = "normal"
                     // arrBufDisplay.style.textOverflow = "ellipsis"
                     // arrBufDisplay.style.maxWidth = "256px"
                     arrBufDisplay.style.fontSize = "9px"
-                    if (i % 2 == 1) arrBufDisplay.style.backgroundColor = "#88888845" 
+                    if (i % 2 === 1) arrBufDisplay.style.backgroundColor = "#88888845" 
                     else arrBufDisplay.style.backgroundColor = "#88888820"
-                    arrBufDisplay.style.letterSpacing = "0px"
+                    // arrBufDisplay.style.letterSpacing = "0px"
                     arrBufDisplay.style.textAlign = "left"
                     arrBufDisplay.style.fontFamily = "monospace"
                     root.appendChild(arrBufDisplay)
@@ -89,7 +88,7 @@
             return JSON.stringify([...(new Uint8Array(this.arrayBuffer))]);
         }
         constructor(source, passthrough = true) { // Passthrough will return the source if the source is already an ArrayBufferType and passthrough is true, for optimization reasons
-            if (source == undefined || source == null) source = 0;
+            source ??= 0;
             if (passthrough && (typeof source == "object" && "customId" in source && source.customId == "agBuffer")) return source;
             if (source instanceof Array) {
                 // window.agBufferDebugLastType = "jsarray"
@@ -339,7 +338,7 @@
                     text: "[VALUE] is array buffer?",
                     blockType: BlockType.BOOLEAN,
                     arguments: {
-                        VALUE: {}
+                        VALUE: {exemptFromNormalization: true}
                     }
                 },
                 {
@@ -446,13 +445,26 @@
                     allowDropAnywhere: true,
                     canDragDuplicate: true
                 },
+                {
+                    opcode: 'forEachI',
+                    text: 'index',
+                    blockType: Scratch.BlockType.REPORTER,
+                    hideFromPalette: true,
+                    allowDropAnywhere: true,
+                    canDragDuplicate: true
+                },
+
                 "---",
                 {
                     opcode: 'forEach',
-                    text: 'for each [BYTE] of [BUFFER]',
+                    text: 'for each [INDEX], [BYTE] of [BUFFER]',
                     blockType: Scratch.BlockType.LOOP,
                     arguments: {
                         BUFFER: agBuffer.Argument,
+                        INDEX: {
+                            fillIn: 'forEachI'
+                        },
+
                         BYTE: {
                             fillIn: 'forEachV'
                         }
@@ -460,50 +472,17 @@
                 },
                 "---",
                 {
-                    opcode: 'readerCurrentIndex',
-                    text: 'reader index',
-                    hideFromPalette: true,
-                    canDragDuplicate: true,
-                    blockType: BlockType.REPORTER
-                },
-
-                {
-                    opcode: 'reader',
-                    text: 'reader [BUFFER]',
-                    blockType: Scratch.BlockType.LOOP,
-                    hideFromPalette: true,
+                    opcode: 'sizeOfType',
+                    text: 'size of [TYPE]',
+                    blockType: Scratch.BlockType.REPORTER,
                     arguments: {
-                        BUFFER: agBuffer.Argument,
-                        CURRENT: {
-                            fillIn: 'readerCurrentIndex'
+                        TYPE: {
+                            menu: 'DATATYPES',
+                            type: ArgumentType.STRING
                         }
-
                     }
                 },
-                {
-                    opcode: 'readerAppend',
-                    text: 'read [TYPE] value [ENDIAN] for parser',
-                    blockType: Scratch.BlockType.COMMAND,
-                    hideFromPalette: true,
-                    arguments: {
-                        TYPE:{
-                            menu:'DATATYPES',
-                            type: ArgumentType.STRING
-                        },
-                        ENDIAN: {
-                            type: ArgumentType.BOOLEAN
-                        }
-                    },
-                },
-                {
-                    opcode: 'readerAppendBuffer',
-                    text: 'read next [BYTES] for parser',
-                    blockType: Scratch.BlockType.COMMAND,
-                    hideFromPalette: true,
-                    arguments: {
-                        BYTES: {type: ArgumentType.NUMBER}
-                    },
-                },
+
                 {
                     blockType: BlockType.LABEL,
                     text: "Visual Blocks"
@@ -552,13 +531,6 @@
                             substack: generator.descendSubstack(block, 'SUBSTACK')
                         }
                     },
-                    reader: (generator, block) => {
-                        generator.script.yields = true
-                        return {
-                            kind: 'input',
-                            substack: generator.descendSubstack(block, 'SUBSTACK')
-                        }
-                    },
                 },
                 js: {
                     builder: (node, compiler, imports) => {
@@ -574,19 +546,6 @@
                         compiler.source = originalSource;
                         return new imports.TypedInput(stackSource, imports.TYPE_UNKNOWN);
                     },
-                    reader: (node, compiler, imports) => {
-                        const originalSource = compiler.source;
-                        compiler.source = 'vm.jwArray.Type.toArray(yield* (function*() {';
-                        compiler.source += `thread._agBufferReaderIndex ??= [];`
-                        compiler.source += `thread._agBufferReaderIndex.push({index:0,array:[],buffer:null});`
-                        //compiler.source += `try{} catch (err) {throw new Error("fancy error catch: " + err)};`
-                        compiler.descendStack(node.substack, new imports.Frame(false, undefined, true));
-                        compiler.source += `return thread._agBufferReaderIndex.pop().array;`
-                        compiler.source += '})())';
-                        const stackSource = compiler.source;
-                        compiler.source = originalSource;
-                        return new imports.TypedInput(stackSource, imports.TYPE_UNKNOWN);
-                    }
 
                 }
             };
@@ -622,7 +581,7 @@
             }
         }
         builderAppendBuffer({VALUE}, util) {
-            if ((VALUE == undefined || VALUE == null) && !agBuffer.disableErrorHandling) return;
+            if (!VALUE && !agBuffer.disableErrorHandling) return;
             VALUE = new ArrayBufferType(VALUE)
             let bi = util.thread._agBufferBuilderIndex ?? []
             if (bi[bi.length-1]) {
@@ -635,7 +594,7 @@
         }
 
         builderSet({BUFFER}, util) {
-            if ((BUFFER == undefined || BUFFER == null) && !agBuffer.disableErrorHandling) return;
+            if (!BUFFER && !agBuffer.disableErrorHandling) return;
             BUFFER = new ArrayBufferType(BUFFER)
             let bi = util.thread._agBufferBuilderIndex ?? []
             if (bi[bi.length-1]) {
@@ -644,14 +603,14 @@
         }
 
         toArray({BUFFER}) {
-            if (BUFFER == undefined && !agBuffer.disableErrorHandling) return;
+            if (!BUFFER && !agBuffer.disableErrorHandling) return;
             BUFFER = new ArrayBufferType(BUFFER)
             
             
             return vm.jwArray.Type.toArray(Array.from(new Uint8Array(BUFFER.arrayBuffer)))
         }
         getValue(args) {
-            if (args.BUFFER == undefined && !agBuffer.disableErrorHandling) return 0;
+            if (!args.BUFFER && !agBuffer.disableErrorHandling) return 0;
             
             let buffer = new ArrayBufferType(args.BUFFER)
             
@@ -687,7 +646,7 @@
             }
         }
         setValue(args) {
-            if (args.BUFFER == undefined && !agBuffer.disableErrorHandling) return;
+            if (!args.BUFFER && !agBuffer.disableErrorHandling) return;
             
             let buffer = new ArrayBufferType(args.BUFFER)
             const type = args.TYPE
@@ -741,15 +700,10 @@
             return this.bufferCheck(args.VALUE)
         }
         bufferCheck(value) {
-            if (value == undefined && !agBuffer.disableErrorHandling) return false;
-            try {
-                return (typeof value == "object" && "customId" in value && value.customId == "agBuffer") || value instanceof ArrayBufferType
-            } catch (error) {
-                return false
-            }
+            return value && value instanceof ArrayBufferType
         }
         getSize(args) {
-            if (args.BUFFER == undefined && !agBuffer.disableErrorHandling) return 0;
+            if (!args.BUFFER && !agBuffer.disableErrorHandling) return 0;
             args.BUFFER = new ArrayBufferType(args.BUFFER)
             if (!args.BUFFER.customId || args.BUFFER.customId != "agBuffer") return 0;
             return args.BUFFER.arrayBuffer.byteLength
@@ -758,7 +712,7 @@
             return new agBuffer.Type(new TextEncoder().encode(args.STRING))
         }
         toString(args) {
-            if (args.BUFFER == undefined && !agBuffer.disableErrorHandling) return "";
+            if (!args.BUFFER && !agBuffer.disableErrorHandling) return "";
             args.BUFFER = new ArrayBufferType(args.BUFFER)
             return new TextDecoder().decode(new Uint8Array(args.BUFFER.arrayBuffer))
         }
@@ -858,9 +812,13 @@
             const pair = util.thread.stackFrames[0].agBuffer;
             return pair ? pair[1] : "";
         }
+        forEachI({}, util) {
+            const pair = util.thread.stackFrames[0].agBuffer;
+            return pair ? pair[0] : "";
+        }
 
         forEach({BUFFER}, util) {
-            if (BUFFER == undefined && !agBuffer.disableErrorHandling) return;
+            if (!BUFFER && !agBuffer.disableErrorHandling) return;
             BUFFER = new ArrayBufferType(BUFFER)
             if (util.stackFrame.execute) {
                 const { entries, pointer } = util.stackFrame;
@@ -868,7 +826,7 @@
                 if (util.stackFrame.pointer >= entries.length) return;
                 util.thread.stackFrames[0].agBuffer = entries[util.stackFrame.pointer];
             } else {
-                const entries = [...new Uint8Array(BUFFER.arrayBuffer)].map(value => [value, value]);
+                const entries = [...new Uint8Array(BUFFER.arrayBuffer)].map((value,index) => [index, value]);
                 if (entries.length === 0) return;
                 util.stackFrame.entries = entries;
                 util.stackFrame.pointer = 0;
@@ -878,35 +836,10 @@
 
             util.startBranch(1, true);
         }
-        readerCurrentIndex({}, util) {
-            let bi = util.thread._agBufferReaderIndex ?? []
-            return bi[bi.length-1] ? Cast.toNumber(bi[bi.length-1].index) : 0
+        sizeOfType({TYPE}) {
+            return sizes[TYPE] ?? 0
         }
-
-        reader() {
-            return 'noop'
-        }
-
-        readerAppend({TYPE,ENDIAN = false}, util) {
-            let bi = util.thread._agBufferReaderIndex ?? []
-            if (bi[bi.length-1]) {
-                let builder = bi[bi.length-1]
-                builder.array.push()
-
-            }
-        }
-        readerAppendBuffer({VALUE}, util) {
-            if ((VALUE == undefined || VALUE == null) && !agBuffer.disableErrorHandling) return;
-            VALUE = new ArrayBufferType(VALUE)
-            let bi = util.thread._agBufferReaderIndex ?? []
-            if (bi[bi.length-1]) {
-                let buffer = bi[bi.length-1]
-                let oldBufferLen = buffer.arrayBuffer.byteLength
-                let newBuffer;
-                bi[bi.length-1] = newBuffer = new ArrayBufferType(buffer.arrayBuffer.transfer(oldBufferLen + VALUE.arrayBuffer.byteLength))
-                this.writeSubBuffer({INDEX: oldBufferLen, SUBBUFFER: VALUE, BUFFER: newBuffer})
-            }
-        }
+        
     }
         
     vm.agBuffer = agBuffer

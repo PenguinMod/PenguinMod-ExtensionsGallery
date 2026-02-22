@@ -145,6 +145,7 @@
                 if (value && typeof value === 'object') {
                     if (value instanceof ObjectType) result[key] = value.toJSON()
                     else if (typeof value.toJSON === 'function') result[key] = value.toJSON()
+                    else if (typeof value.toString === 'function') result[key] = value.toString()
                     else result[key] = value
                 } else {
                     result[key] = value

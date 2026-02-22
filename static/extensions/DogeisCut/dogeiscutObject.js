@@ -158,7 +158,6 @@
             let root = document.createElement('div')
             root.style.display = 'flex'
             root.style.flexDirection = 'column'
-            root.style.justifyContent = 'center'
 
             const renderArray = (array) => {
                 const table = document.createElement('table')

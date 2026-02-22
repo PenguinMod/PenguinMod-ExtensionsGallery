@@ -21,7 +21,7 @@
           {
               opcode: "toBlob",
               blockType: Scratch.BlockType.REPORTER,
-              text: "Turn [DATA] to a [TYPE] blob",
+              text: "Turn [DATA] from [ENCODING] to a [TYPE] blob",
               arguments: {
                   DATA: {
                       type: Scratch.ArgumentType.STRING
@@ -31,10 +31,49 @@
                       defaultValue: "text/plain",
                       menu: "types"
                   },
+                  ENCODING: {
+                      type: Scratch.ArgumentType.STRING,
+                      defaultValue: "b64",
+                      menu: "encodings",
+                  }
+              },
+          },
+          {
+              opcode: "readBlob",
+              blockType: Scratch.BlockType.REPORTER,
+              text: "Read blob [URL] as [ENCODING]",
+              arguments: {
+                  URL: {
+                      type: Scratch.ArgumentType.STRING
+                  },
+                  ENCODING: {
+                      type: Scratch.ArgumentType.STRING,
+                      defaultValue: "b64",
+                      menu: "encodings",
+                  }
+              },
+          },
+          {
+              opcode: "revokeBlob",
+              blockType: Scratch.BlockType.COMMAND,
+              text: "Revoke blob with the URL of [URL]",
+              arguments: {
+                  URL: {
+                      type: Scratch.ArgumentType.STRING
+                  }
               },
           },
         ]
         ,menus: {
+          encodings: {
+            acceptReporters: true,
+            items: [
+              { text: "Base64", value: "b64" },
+              { text: "Data URL", value: "dataurl" },
+              { text: "Plain Text", value: "plain" },
+              { text: "Byte Array", value: "array" }
+            ]
+          },
           types: {
             acceptReporters: true,
             items: [
@@ -102,11 +141,71 @@
       }
     }
 
-    toBlob(args, util) {
-        const text = String(args.DATA);      // ensure it's a string (why can't it be just like python or smth)
-        const blob = new Blob([text], { type: args.TYPE });
+    async toBlob(args, util) {
+        var part = args.DATA;
+        const encoding = args.ENCODING;
+
+        switch (encoding) {
+            case "array":
+                part = JSON.parse(args.DATA);
+                break;
+            case "b64":
+                var url = `data:application/octet-stream;base64,` + args.DATA;
+            case "dataurl":
+                var url = url ?? args.DATA;
+
+                if (!url.startsWith("data:")) throw new URIError("only data URLs are allowed to be resolved");
+              
+                part = await (await fetch(url)).bytes();
+                break;
+            default:
+                // Plain text used to be default behavior. I would've made it throw, otherwise.
+                break;
+        }
+
+        const blob = new Blob([part], { type: args.TYPE });
         return URL.createObjectURL(blob);
-    } 
+    }
+    
+    revokeBlob(args, util){
+        URL.revokeObjectURL(args.URL);
+    }
+
+    async readBlob(args, util) {
+        const url = args.URL;
+        const encoding = args.ENCODING;
+    
+        if (!url.startsWith("blob:")) throw new URIError("must be a blob url");
+
+        const response = await fetch(url);
+        const blob = await response.blob();
+        
+        if (blob.size === 0) switch (encoding) {
+          case "array": return "[]";
+          case "dataurl": return `data:${blob.type},`;
+          default: return "";
+        }
+
+
+        switch (encoding) {
+            case "plain": return await blob.text();
+            case "array": return JSON.stringify(Array.from(await blob.bytes()));
+            default:
+                const dataURL = await readBlobToDataURL(blob);
+                
+                if (encoding == "dataurl") return dataURL;
+                return dataURL.slice(dataURL.indexOf(",") + 1);
+        }
+    }
   }
+  
+  function readBlobToDataURL(blob) {
+    return new Promise(res => {
+      const reader = new FileReader();
+      reader.onload = e => res(e.target.result);
+      reader.readAsDataURL(blob);
+    });
+  }
+
   Scratch.extensions.register(new faunks_Blobs());
 })(Scratch);

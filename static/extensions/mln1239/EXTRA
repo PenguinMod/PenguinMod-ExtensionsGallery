@@ -1,0 +1,252 @@
+(async function(Scratch) {
+    const variables = {};
+    const blocks = [];
+    const menus = {};
+
+
+    function doSound(ab, cd, runtime) {
+        const audioEngine = runtime.audioEngine;
+
+        const fetchAsArrayBufferWithTimeout = (url) =>
+            new Promise((resolve, reject) => {
+                const xhr = new XMLHttpRequest();
+                let timeout = setTimeout(() => {
+                    xhr.abort();
+                    reject(new Error("Timed out"));
+                }, 5000);
+                xhr.onload = () => {
+                    clearTimeout(timeout);
+                    if (xhr.status === 200) {
+                        resolve(xhr.response);
+                    } else {
+                        reject(new Error(`HTTP error ${xhr.status} while fetching ${url}`));
+                    }
+                };
+                xhr.onerror = () => {
+                    clearTimeout(timeout);
+                    reject(new Error(`Failed to request ${url}`));
+                };
+                xhr.responseType = "arraybuffer";
+                xhr.open("GET", url);
+                xhr.send();
+            });
+
+        const soundPlayerCache = new Map();
+
+        const decodeSoundPlayer = async (url) => {
+            const cached = soundPlayerCache.get(url);
+            if (cached) {
+                if (cached.sound) {
+                    return cached.sound;
+                }
+                throw cached.error;
+            }
+
+            try {
+                const arrayBuffer = await fetchAsArrayBufferWithTimeout(url);
+                const soundPlayer = await audioEngine.decodeSoundPlayer({
+                    data: {
+                        buffer: arrayBuffer,
+                    },
+                });
+                soundPlayerCache.set(url, {
+                    sound: soundPlayer,
+                    error: null,
+                });
+                return soundPlayer;
+            } catch (e) {
+                soundPlayerCache.set(url, {
+                    sound: null,
+                    error: e,
+                });
+                throw e;
+            }
+        };
+
+        const playWithAudioEngine = async (url, target) => {
+            const soundBank = target.sprite.soundBank;
+
+            let soundPlayer;
+            try {
+                const originalSoundPlayer = await decodeSoundPlayer(url);
+                soundPlayer = originalSoundPlayer.take();
+            } catch (e) {
+                console.warn(
+                    "Could not fetch audio; falling back to primitive approach",
+                    e
+                );
+                return false;
+            }
+
+            soundBank.addSoundPlayer(soundPlayer);
+            await soundBank.playSound(target, soundPlayer.id);
+
+            delete soundBank.soundPlayers[soundPlayer.id];
+            soundBank.playerTargets.delete(soundPlayer.id);
+            soundBank.soundEffects.delete(soundPlayer.id);
+
+            return true;
+        };
+
+        const playWithAudioElement = (url, target) =>
+            new Promise((resolve, reject) => {
+                const mediaElement = new Audio(url);
+
+                mediaElement.volume = target.volume / 100;
+
+                mediaElement.onended = () => {
+                    resolve();
+                };
+                mediaElement
+                    .play()
+                    .then(() => {
+                        // Wait for onended
+                    })
+                    .catch((err) => {
+                        reject(err);
+                    });
+            });
+
+        const playSound = async (url, target) => {
+            try {
+                if (!(await Scratch.canFetch(url))) {
+                    throw new Error(`Permission to fetch ${url} denied`);
+                }
+
+                const success = await playWithAudioEngine(url, target);
+                if (!success) {
+                    return await playWithAudioElement(url, target);
+                }
+            } catch (e) {
+                console.warn(`All attempts to play ${url} failed`, e);
+            }
+        };
+
+        playSound(ab, cd)
+    }
+    class Extension {
+        getInfo() {
+            return {
+                "blockIconURI": "data:image/png;base64,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",
+                "id": "Eoias_ad",
+                "name": "EXTRA",
+                "color1": "#00c3ff",
+                "color2": "#0092bf",
+                "blocks": blocks,
+                "menus": menus
+            }
+        }
+    }
+    blocks.push({
+        opcode: "nt",
+        blockType: Scratch.BlockType.BOOLEAN,
+        text: "[nt][bl]",
+        arguments: {
+            "bl": {
+                type: Scratch.ArgumentType.BOOLEAN,
+            },
+            "nt": {
+                type: Scratch.ArgumentType.STRING,
+                menu: 'nt'
+            },
+        },
+        disableMonitor: true,
+        isEdgeActivated: false
+    });
+    Extension.prototype["nt"] = async (args, util) => {
+        return ((args["nt"] == 'not') ? !args["bl"] : !!args["bl"])
+    };
+
+    menus["nt"] = {
+        acceptReporters: false,
+        items: ('not,xnot' || "").split(',' || "")
+    }
+
+    blocks.push({
+        opcode: "color",
+        blockType: Scratch.BlockType.REPORTER,
+        text: "[cl]",
+        arguments: {
+            "cl": {
+                type: Scratch.ArgumentType.COLOR,
+                defaultValue: '#00c3ff',
+            },
+        },
+        disableMonitor: true,
+        isEdgeActivated: false
+    });
+    Extension.prototype["color"] = async (args, util) => {
+        return args["cl"]
+    };
+
+    blocks.push({
+        opcode: "swc",
+        blockType: Scratch.BlockType.REPORTER,
+        text: "switch[s] case[c] return[r] case[c2] return[r2] ",
+        arguments: {
+            "s": {
+                type: Scratch.ArgumentType.STRING,
+                defaultValue: 'Text',
+            },
+            "c": {
+                type: Scratch.ArgumentType.STRING,
+                defaultValue: '1',
+            },
+            "r": {
+                type: Scratch.ArgumentType.STRING,
+                defaultValue: '1',
+            },
+            "c2": {
+                type: Scratch.ArgumentType.STRING,
+                defaultValue: '2',
+            },
+            "r2": {
+                type: Scratch.ArgumentType.STRING,
+                defaultValue: '1',
+            },
+        },
+        disableMonitor: true,
+        isEdgeActivated: false
+    });
+    Extension.prototype["swc"] = async (args, util) => {
+        switch (args["s"]) {
+            case (args["c"]):
+                return args["r"]
+
+            case (args["c2"]):
+                return args["r2"]
+
+        };
+    };
+
+    blocks.push({
+        opcode: "retrun",
+        blockType: Scratch.BlockType.REPORTER,
+        text: "return",
+        arguments: {},
+        disableMonitor: true,
+        isEdgeActivated: false
+    });
+    Extension.prototype["retrun"] = async (args, util) => {
+        return variables['rtn']
+    };
+
+    blocks.push({
+        opcode: "ret",
+        blockType: Scratch.BlockType.COMMAND,
+        isTerminal: true,
+        text: "retrun[rtn]",
+        arguments: {
+            "rtn": {
+                type: Scratch.ArgumentType.STRING,
+            },
+        },
+        disableMonitor: true,
+        isEdgeActivated: false
+    });
+    Extension.prototype["ret"] = async (args, util) => {
+        variables['rtn'] = args["rtn"]
+    };
+
+    Scratch.extensions.register(new Extension());
+})(Scratch);

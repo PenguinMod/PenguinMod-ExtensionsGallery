@@ -57,11 +57,13 @@
                 binaryHeader.style.fontFamily = "monospace"
                 root.appendChild(binaryHeader)
                 for (let i = 0; i < Math.min(this.arrayBuffer.byteLength / 16, vm.agBuffer.maxReporterRows); i++) {
-                    let arrBufDisplay = span(`0x${(i * 16).toString(16).toUpperCase().padStart(6,"0")} ` + Array.from(new Uint8Array(this.arrayBuffer)).slice(i * 16,(i + 1) * 16).map(
-                        (num, index) => {
-                            return num.toString(16).toUpperCase().padStart(2, '0');
-                        }
-                    ).join("\u2009").padEnd(16*3,"\u2009.."))
+                    let arrBufDisplay = span(
+                        `0x${(i * 16).toString(16).toUpperCase().padStart(6,"0")} ` + Array.from(new Uint8Array(this.arrayBuffer)).slice(i * 16,(i + 1) * 16).map(
+                            (num, index) => {
+                                return num.toString(16).toUpperCase().padStart(2, '0');
+                            }
+                        ).join("\u2009")//.padEnd(16*3,"\u2009..")
+                    )
                     // arrBufDisplay.style.overflow = "hidden"
                     // arrBufDisplay.style.whiteSpace = "normal"
                     // arrBufDisplay.style.textOverflow = "ellipsis"
@@ -86,10 +88,10 @@
         }
         toString() {
             return JSON.stringify([...(new Uint8Array(this.arrayBuffer))]);
-        }
+        } 
         constructor(source, passthrough = true) { // Passthrough will return the source if the source is already an ArrayBufferType and passthrough is true, for optimization reasons
             source ??= 0;
-            if (passthrough && (typeof source == "object" && "customId" in source && source.customId == "agBuffer")) return source;
+            if (passthrough && ((typeof source == "object" && "customId" in source && source.customId == "agBuffer") || source instanceof ArrayBufferType)) return source;
             if (source instanceof Array) {
                 // window.agBufferDebugLastType = "jsarray"
                 // Uint8Array conversion is necessary because ArrayBuffer constructor doesn't take normal arrays as input
@@ -102,19 +104,27 @@
                 // window.agBufferDebugLastType = "length"
                 // no Uint8Array needed as the constructor can take (number) to create a blank arraybuffer of length (number)
                 this.arrayBuffer = new ArrayBuffer(source)
+            } else if (source instanceof DataView && passthrough) {
+                this.arrayBuffer = source.buffer
+                this.dataView = source
+                return
+            } else if (source instanceof DataView) {
+                this.arrayBuffer = source.buffer
             } else if (source instanceof Uint8Array || (source.buffer && source.buffer instanceof ArrayBuffer)) {
                 // window.agBufferDebugLastType = "typedarray"
                 this.arrayBuffer = source.buffer
             } else if (source instanceof ArrayBuffer) {
                 // window.agBufferDebugLastType = "jsarraybuffer"
                 this.arrayBuffer = source
-                
             } else if (typeof source == "string" && (() => {try{return Array.isArray(JSON.parse(source))}catch{return false}})()) { // weird inline code to see if we can JSON.parse the string as array
                 // window.agBufferDebugLastType = "json"
                 this.arrayBuffer = new Uint8Array(JSON.parse(source)).buffer
-            } else if (typeof(source.toArrayBuffer) == "function") {
+            } else if (typeof source.toArrayBuffer == "function") {
                 // window.agBufferDebugLastType = "toArrayBuffer"
                 this.arrayBuffer = source.toArrayBuffer()
+            } else if (typeof source == "string") {
+                // window.agBufferDebugLastType = "fromString"
+                this.arrayBuffer = new TextEncoder().encode(source).buffer;
             } else {
                 // window.agBufferDebugLastType = "invalidBuffer"
                 this.arrayBuffer = new ArrayBuffer(0);
@@ -360,7 +370,7 @@
                     ...vm.jwArray.Block,
                 },
                 {
-                    opcode: "toString",
+                    opcode: "stringify",
                     text: "array buffer [BUFFER] to string",
                     blockType: BlockType.REPORTER,
                     arguments: {
@@ -711,7 +721,7 @@
         fromString(args) {
             return new agBuffer.Type(new TextEncoder().encode(args.STRING))
         }
-        toString(args) {
+        stringify(args) {
             if (!args.BUFFER && !agBuffer.disableErrorHandling) return "";
             args.BUFFER = new ArrayBufferType(args.BUFFER)
             return new TextDecoder().decode(new Uint8Array(args.BUFFER.arrayBuffer))

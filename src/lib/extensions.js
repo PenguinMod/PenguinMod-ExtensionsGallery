@@ -51,6 +51,13 @@ export default [
         creator: "pooiod7",
     },
     {
+        name: "Lighting",
+        description: "A fast, powerful and easy-to-use lighting engine powered by WebGL!",
+        code: "Gen1x/lighting.js",
+        banner: "Gen1x/lighting.avif",
+        creator: "G1nX",
+    },
+    {
         name: "3D Math",
         description: "A handful of utilities for making your own sprite-based 3D engine.",
         code: "ObviousAlexC/3DMath.js",

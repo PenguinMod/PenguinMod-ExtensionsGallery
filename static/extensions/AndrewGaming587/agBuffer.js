@@ -1,5 +1,7 @@
 (async function(Scratch) {
-     
+    
+
+
     if (Scratch.gui) {
         Scratch.gui.getBlockly().then(ScratchBlocks => {
             ScratchBlocks.BlockSvg.registerCustomShape(
@@ -68,7 +70,15 @@
         toJSON() {
             return Array.from(new Uint8Array(this.arrayBuffer))
         }
-
+        divIntoIterHandler(Iter, {Item, Done}) {
+            const {arrayBuffer, dataView} = this;
+            return new Iter("ArrayBuffer",
+                {i: 0}, 
+                function*(state) {
+                    return state.i >= arrayBuffer.byteLength ? Done() : Item(dataView.getUint8(state.i++))
+                }
+            );
+        }
         customId = "agBuffer";
         toReporterContent() {
             let root = document.createElement('div')
@@ -168,8 +178,113 @@
             // window.agBufferDebug = this;
         }
     }
+    class ArrayBufferPointerType {
+        customId = "agBufferPointer"
+        buffer;
+        type;
+        index;
+        endian;
+        constructor(buffer,index,type,endian = false) {
+            this.buffer = buffer
+            this.index = index
+            this.endian = endian
+            this.type = type
+            
+        }
+        toArrayBuffer() {
+            return this.buffer
+        }
+        jwArrayHandler() {
+            return `BufferPTR:${this.type}@${"0x" + this.index.toString(16).padStart(8,"0")}`
+        }
+        dogeiscutObjectHandler() {
+            return `${this.type} Buffer Pointer @ ${"0x" + this.index.toString(16).padStart(8,"0")})`
+
+        }
+        toString() {
+            return this.getValue()
+        }
+        toReporterContent() {
+            let root = document.createElement('div')
+            root.style.maxWidth = "none"
+            root.style.display = 'flex'
+            root.style.flexDirection = 'column'
+            root.style.justifyContent = 'center'
+
+            root.appendChild(span("Buffer Pointer"))
+            root.appendChild(span(`Index: ${"0x" + this.index.toString(16).padStart(8,"0")}`))
+            root.appendChild(span(`Value: ${this.getValue()}`))
+            return root
+        }
+        getValue() {
+            switch (this.type) {
+                case "Uint8":
+                    return this.buffer.dataView.getUint8(this.index);
+                case "Int8":
+                    return this.buffer.dataView.getInt8(this.index);
+                case "Uint16":
+                    return this.buffer.dataView.getUint16(this.index,this.endian);
+                case "Int16":
+                    return this.buffer.dataView.getInt16(this.index,this.endian);
+                case "Uint32":
+                    return this.buffer.dataView.getUint32(this.index,this.endian);
+                case "Int32":
+                    return this.buffer.dataView.getInt32(this.index,this.endian);
+                case "Uint64":
+                    return this.buffer.dataView.getBigUint64(this.index,this.endian);
+                case "Int64":
+                    return this.buffer.dataView.getBigInt64(this.index,this.endian);
+                case "Float16":
+                    return this.buffer.dataView.getFloat16(this.index,this.endian);
+                case "Float32":
+                    return this.buffer.dataView.getFloat32(this.index,this.endian);
+                case "Float64":
+                    return this.buffer.dataView.getFloat64(this.index,this.endian);
+            }
+
+        }
+        setValue(value) {
+            switch (this.type) {
+                case "Uint8":
+                    this.buffer.dataView.setUint8(this.index,value);
+                    return;
+                case "Int8":
+                    this.buffer.dataView.setInt8(this.index,value);
+                    return;
+                case "Uint16":
+                    this.buffer.dataView.setUint16(this.index,value,this.endian);
+                    return;
+                case "Int16":
+                    this.buffer.dataView.setInt16(this.index,value,this.endian);
+                    return;
+                case "Uint32":
+                    this.buffer.dataView.setUint32(this.index,value,this.endian);
+                    return;
+                case "Int32":
+                    this.buffer.dataView.setInt32(this.index,value,this.endian);
+                    return;
+                case "Uint64":
+                    this.buffer.dataView.setBigUint64(this.index,BigInt(value),this.endian);
+                    return;
+                case "Int64":
+                    this.buffer.dataView.setBigInt64(this.index,BigInt(value),this.endian);
+                    return;
+                case "Float16":
+                    this.buffer.dataView.setFloat16(this.index,value,this.endian);
+                    return;
+                case "Float32":
+                    this.buffer.dataView.setFloat32(this.index,value,this.endian);
+                    return;
+                case "Float64":
+                    this.buffer.dataView.setFloat64(this.index,value,this.endian);
+                    return;
+            }
+
+        }
+    }
     const agBuffer = {
         Type: ArrayBufferType,
+        PointerType: ArrayBufferPointerType,
         Block: {
             blockType: BlockType.REPORTER,
             blockShape: BlockShape.SQUARE,
@@ -177,12 +292,24 @@
             forceOutputType: "ArrayBuffer",
             disableMonitor: true
         },
+        PointerBlock: {
+            blockType: BlockType.REPORTER,
+            forceOutputType: "ArrayBufferPointer",
+            disableMonitor: true
+        },
+
         Argument: {
             shape: BlockShape.SQUARE,
             //shape: "agBuffer-arrayBuffer",
             exemptFromNormalization: true,
             check: ["ArrayBuffer"]
         },
+        PointerArgument: {
+            //shape: "agBuffer-arrayBuffer",
+            exemptFromNormalization: true,
+            check: ["ArrayBufferPointer"]
+        },
+
         maxReporterRows: 10,
         disableErrorHandling: false
     }
@@ -211,8 +338,24 @@
                 v => Array.from(new Uint8Array(v.arrayBuffer)), 
                 v => new ArrayBufferType(new Uint8Array([...v]))
             );
+            // vm.runtime.registerSerializer(
+            //     "agBufferPointer",
+            //     v => v.getValue(), 
+            //     v => v
+            // );
+
             vm.runtime.registerCompiledExtensionBlocks('agBuffer', this.getCompileInfo())
             if (!vm.runtime.ext_jwArray) vm.extensionManager.loadExtensionIdSync('jwArray')
+
+                vm.divFromIter ??= new Map()
+                vm.divFromIter.set("Array Buffer", function*(...env) {
+                    return new ArrayBufferType(yield* this.fold([], 
+                        function*(acc, item) {return [...acc, item]}, 
+                        ...env
+                    ));
+                });
+            
+            
         }
         getInfo() {
             return {
@@ -539,6 +682,116 @@
                             menu: 'DATATYPES',
                             type: ArgumentType.STRING
                         }
+                    }
+                },
+                {
+                    blockType: BlockType.LABEL,
+                    text: "Buffer Pointers"
+                },
+                {
+                    opcode: 'createPointer',
+                    text: 'create [TYPE] pointer for [BUFFER] at [INDEX] [ENDIAN]',
+                    // blockType: BlockType.REPORTER,
+                    ...agBuffer.PointerBlock,
+                    arguments: {
+                        INDEX: {type: ArgumentType.NUMBER},
+                        ENDIAN: {type: ArgumentType.BOOLEAN},
+                        BUFFER: agBuffer.Argument,
+                        TYPE: {
+                            menu: 'DATATYPES',
+                            type: ArgumentType.STRING
+                        }
+                    }
+                },
+                {
+                    opcode: 'setPointer',
+                    text: 'set value of pointer [PTR] to [VALUE]',
+                    blockType: BlockType.COMMAND,
+                    arguments: {
+                        PTR: agBuffer.PointerArgument,
+                        VALUE: {type: ArgumentType.NUMBER}
+
+                    }
+                },
+                {
+                    opcode: 'setPointerIndex',
+                    text: 'set address of pointer [PTR] to [VALUE]',
+                    blockType: BlockType.COMMAND,
+                    arguments: {
+                        PTR: agBuffer.PointerArgument,
+                        VALUE: {type: ArgumentType.NUMBER}
+
+                    }
+                },
+                {
+                    opcode: 'setPointerEndian',
+                    text: 'set endian of pointer [PTR] to [VALUE]',
+                    blockType: BlockType.COMMAND,
+                    arguments: {
+                        PTR: agBuffer.PointerArgument,
+                        VALUE: {type: ArgumentType.BOOLEAN}
+
+                    }
+                },
+                {
+                    opcode: 'setPointerType',
+                    text: 'set type of pointer [PTR] to [VALUE]',
+                    blockType: BlockType.COMMAND,
+                    arguments: {
+                        PTR: agBuffer.PointerArgument,
+                        VALUE: {type: ArgumentType.STRING,menu:'DATATYPES'}
+
+                    }
+                },
+                {
+                    opcode: 'setPointerBuffer',
+                    text: 'set buffer of pointer [PTR] to [VALUE]',
+                    blockType: BlockType.COMMAND,
+                    arguments: {
+                        PTR: agBuffer.PointerArgument,
+                        VALUE: agBuffer.Argument
+
+                    }
+                },
+                "---",
+                {
+                    opcode: 'getPointer',
+                    text: 'get value of pointer [PTR]',
+                    blockType: BlockType.REPORTER,
+                    arguments: {
+                        PTR: agBuffer.PointerArgument
+                    }
+                },
+                {
+                    opcode: 'getPointerIndex',
+                    text: 'get address of pointer [PTR]',
+                    blockType: BlockType.REPORTER,
+                    arguments: {
+                        PTR: agBuffer.PointerArgument
+                    }
+                },
+                {
+                    opcode: 'getPointerType',
+                    text: 'get type of pointer [PTR]',
+                    blockType: BlockType.REPORTER,
+                    arguments: {
+                        PTR: agBuffer.PointerArgument
+                    }
+                },
+                {
+                    opcode: 'getPointerEndian',
+                    text: 'is pointer [PTR] little-endian?',
+                    blockType: BlockType.BOOLEAN,
+                    arguments: {
+                        PTR: agBuffer.PointerArgument
+                    }
+                },
+                {
+                    opcode: 'getPointerBuffer',
+                    text: 'get array buffer of pointer [PTR]',
+                    ...agBuffer.Block,
+                    arguments: {
+                        PTR: agBuffer.PointerArgument
                     }
                 },
 
@@ -904,7 +1157,55 @@
             this.setValue({INDEX:0,ENDIAN:false,VALUE:VALUE,TYPE:TYPE,BUFFER:buffer})
             return this.getValue({INDEX:0,ENDIAN:false,TYPE:TYPE,BUFFER:buffer})
         }
-        
+        createPointer({INDEX,BUFFER,ENDIAN,TYPE}) {
+            if (!BUFFER) return null;
+            INDEX = Cast.toNumber(INDEX)
+            ENDIAN = Cast.toBoolean(ENDIAN)
+            return new ArrayBufferPointerType(BUFFER,INDEX,TYPE,ENDIAN)
+        }
+        getPointer({PTR}) {
+            if (!PTR) return 0;
+            return PTR.getValue()
+        }
+        getPointerIndex({PTR}) {
+            if (!PTR) return 0;
+            return PTR.index
+        }
+        getPointerType({PTR}) {
+            if (!PTR) return "(invalid)";
+            return PTR.type
+        }
+        getPointerBuffer({PTR}) {
+            if (!PTR) return "(invalid)";
+            return PTR.buffer
+        }
+        getPointerEndian({PTR}) {
+            if (!PTR) return false;
+            return PTR.endian
+        }
+
+        setPointer({PTR,VALUE}) {
+            if (!PTR) return;
+            PTR.setValue(VALUE)
+        }
+        setPointerIndex({PTR,VALUE}) {
+            if (!PTR) return;
+            PTR.index = Cast.toNumber(VALUE)
+        }
+        setPointerType({PTR,VALUE}) {
+            if (!PTR) return;
+            PTR.type = VALUE
+        }
+        setPointerEndian({PTR,VALUE}) {
+            if (!PTR) return;
+            PTR.endian = Cast.toBoolean(VALUE)
+        }
+        setPointerBuffer({PTR,VALUE}) {
+            if (!PTR) return;
+            if (!VALUE) return;
+            PTR.buffer = new ArrayBufferType(VALUE,true)
+        }
+
     }
         
     vm.agBuffer = agBuffer

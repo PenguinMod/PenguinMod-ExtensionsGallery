@@ -1,4 +1,35 @@
 (async function(Scratch) {
+     
+    if (Scratch.gui) {
+        Scratch.gui.getBlockly().then(ScratchBlocks => {
+            ScratchBlocks.BlockSvg.registerCustomShape(
+                "agBuffer-arrayBuffer",{
+                    emptyInputPath: "m 31 0 h 10 h 10 a 4 4 0 0 1 4 4 h 7 l -7 7 v 10 l 7 7 h -7 a 4 4 0 0 1 -4 4 h -10 h -10 h -10 h -10 a 4 4 0 0 1 -4 -4 h -7 l 7 -7 v -10 l -7 -7 h 7 a 4 4 0 0 1 4 -4 z",
+                    emptyInputWidth: 16 * ScratchBlocks.BlockSvg.GRID_UNIT,
+                    leftPath: (block) => {
+                        console.log(block)
+                        const edgeWidth = block.height / 2;
+                        const s = edgeWidth / 16;
+                        const height = edgeWidth * 2
+                        return [
+                            `h ${-10 * s} h ${- 10 * s} a 4 4 0 0 1 -4 -4 h ${-7 * s} l ${7*s} ${-7*s} v ${-(height - (14 * s) - 8)} l ${-7 * s} ${-7 * s} h ${7 * s} a 4 4 0 0 1 4 -4 h ${20 * s}`
+                            // `a 4 4 0 0 1 -4 -4 h -7 l 7 -7 v -10 l -7 -7 h 7 a 4 4 0 0 1 4 -4`
+                        ];
+                    },
+                    rightPath: (block) => {
+                        const edgeWidth = block.height / 2;
+                        const s = edgeWidth / 16;
+                        const height = edgeWidth * 2
+                        return [
+                            `h ${10 * s} h ${10 * s} a 4 4 0 0 1 4 4 h ${7 * s} l ${-7 * s} ${7 * s} v ${(height - (14 * s) - 8)} l ${7 * s} ${7 * s} h ${-7 * s} a 4 4 0 0 1 -4 4 h ${-20 * s}`
+                            // `a 4 4 0 0 1 4 4 h 7 l -7 7 v 10 l 7 7 h -7 a 4 4 0 0 1 -4 4`
+                        ];
+                    }
+                }
+            );
+        })
+    }
+    
     const {BlockType, BlockShape, ArgumentType, Cast, vm} = Scratch
     const variables = {};
     
@@ -142,11 +173,13 @@
         Block: {
             blockType: BlockType.REPORTER,
             blockShape: BlockShape.SQUARE,
+            //blockShape: "agBuffer-arrayBuffer",
             forceOutputType: "ArrayBuffer",
             disableMonitor: true
         },
         Argument: {
             shape: BlockShape.SQUARE,
+            //shape: "agBuffer-arrayBuffer",
             exemptFromNormalization: true,
             check: ["ArrayBuffer"]
         },
@@ -480,12 +513,28 @@
                         }
                     }
                 },
-                "---",
+                {
+                    blockType: BlockType.LABEL,
+                    text: "Datatype Utilities"
+                },
+
                 {
                     opcode: 'sizeOfType',
                     text: 'size of [TYPE]',
                     blockType: Scratch.BlockType.REPORTER,
                     arguments: {
+                        TYPE: {
+                            menu: 'DATATYPES',
+                            type: ArgumentType.STRING
+                        }
+                    }
+                },
+                {
+                    opcode: 'cast',
+                    text: 'cast [VALUE] to [TYPE]',
+                    blockType: Scratch.BlockType.REPORTER,
+                    arguments: {
+                        VALUE: {type: ArgumentType.STRING},
                         TYPE: {
                             menu: 'DATATYPES',
                             type: ArgumentType.STRING
@@ -848,6 +897,12 @@
         }
         sizeOfType({TYPE}) {
             return sizes[TYPE] ?? 0
+        }
+        cast({VALUE,TYPE}) {
+            VALUE = Cast.toString(VALUE)
+            let buffer = new ArrayBufferType(Cast.toNumber(sizes[TYPE]))
+            this.setValue({INDEX:0,ENDIAN:false,VALUE:VALUE,TYPE:TYPE,BUFFER:buffer})
+            return this.getValue({INDEX:0,ENDIAN:false,TYPE:TYPE,BUFFER:buffer})
         }
         
     }

@@ -317,15 +317,16 @@ const isPenguinMod = Scratch.extensions.isPenguinMod === true;
 const isTurboWarp  = !isPenguinMod;
 
 const RENDER_DEFAULTS = {
-  shadowOpacity:   0.85,
-  ambient:         '#333333',
-  bloomAmount:     1.0,
-  bloomRadius:     0.32,
-  bloomThreshold:  0.0,
-  pixelated:       false,
-  pixelSize:       4,
-  contrast:        1.0,
-  colorTemp:       0.0,
+  shadowOpacity:        0.85,
+  ambient:              '#333333',
+  bloomAmount:          1.0,
+  bloomRadius:          0.32,
+  bloomThreshold:       0.0,
+  pixelated:            false,
+  pixelSize:            4,
+  contrast:             1.0,
+  colorTemp:            0.0,
+  resetLightsOnStart:   false,
 };
 
 class LightExtension {
@@ -335,13 +336,14 @@ class LightExtension {
     this.visible       = true;
     this.shadowOpacity = RENDER_DEFAULTS.shadowOpacity;
 
-    this.bloomAmount    = RENDER_DEFAULTS.bloomAmount;
-    this.bloomRadius    = RENDER_DEFAULTS.bloomRadius;
-    this.bloomThreshold = RENDER_DEFAULTS.bloomThreshold;
-    this.pixelated      = RENDER_DEFAULTS.pixelated;
-    this.pixelSize      = RENDER_DEFAULTS.pixelSize;
-    this.contrast       = RENDER_DEFAULTS.contrast;
-    this.colorTemp      = RENDER_DEFAULTS.colorTemp;
+    this.bloomAmount        = RENDER_DEFAULTS.bloomAmount;
+    this.bloomRadius        = RENDER_DEFAULTS.bloomRadius;
+    this.bloomThreshold     = RENDER_DEFAULTS.bloomThreshold;
+    this.pixelated          = RENDER_DEFAULTS.pixelated;
+    this.pixelSize          = RENDER_DEFAULTS.pixelSize;
+    this.contrast           = RENDER_DEFAULTS.contrast;
+    this.colorTemp          = RENDER_DEFAULTS.colorTemp;
+    this.resetLightsOnStart = RENDER_DEFAULTS.resetLightsOnStart;
 
     this._mode          = 'none';
     this._worker        = null;
@@ -365,7 +367,7 @@ class LightExtension {
     this._boundRender = this._render.bind(this);
 
     Scratch.vm.runtime.on('BEFORE_EXECUTE', this._boundRender);
-    Scratch.vm.runtime.on('PROJECT_START', () => this.clearLights());
+    Scratch.vm.runtime.on('PROJECT_START', () => { if (this.resetLightsOnStart) this.clearLights(); });
     this._loadRenderSettings();
   }
 
@@ -382,30 +384,32 @@ class LightExtension {
     }
 
     const snapshot = {
-      shadowOpacity:   this.shadowOpacity,
-      ambient:         this.ambient,
-      bloomAmount:     this.bloomAmount,
-      bloomRadius:     this.bloomRadius,
-      bloomThreshold:  this.bloomThreshold,
-      pixelated:       this.pixelated,
-      pixelSize:       this.pixelSize,
-      contrast:        this.contrast,
-      colorTemp:       this.colorTemp,
+      shadowOpacity:        this.shadowOpacity,
+      ambient:              this.ambient,
+      bloomAmount:          this.bloomAmount,
+      bloomRadius:          this.bloomRadius,
+      bloomThreshold:       this.bloomThreshold,
+      pixelated:            this.pixelated,
+      pixelSize:            this.pixelSize,
+      contrast:             this.contrast,
+      colorTemp:            this.colorTemp,
+      resetLightsOnStart:   this.resetLightsOnStart,
     };
 
     let pending = { ...snapshot };
 
     const applyPending = () => {
-      this.shadowOpacity   = pending.shadowOpacity;
-      this.ambient         = pending.ambient;
-      this._ambientRGB     = this.hexToRgb(pending.ambient);
-      this.bloomAmount     = pending.bloomAmount;
-      this.bloomRadius     = pending.bloomRadius;
-      this.bloomThreshold  = pending.bloomThreshold;
-      this.pixelated       = pending.pixelated;
-      this.pixelSize       = pending.pixelSize;
-      this.contrast        = pending.contrast;
-      this.colorTemp       = pending.colorTemp;
+      this.shadowOpacity        = pending.shadowOpacity;
+      this.ambient              = pending.ambient;
+      this._ambientRGB          = this.hexToRgb(pending.ambient);
+      this.bloomAmount          = pending.bloomAmount;
+      this.bloomRadius          = pending.bloomRadius;
+      this.bloomThreshold       = pending.bloomThreshold;
+      this.pixelated            = pending.pixelated;
+      this.pixelSize            = pending.pixelSize;
+      this.contrast             = pending.contrast;
+      this.colorTemp            = pending.colorTemp;
+      this.resetLightsOnStart   = pending.resetLightsOnStart;
       this._markDirty();
     };
 
@@ -425,16 +429,17 @@ class LightExtension {
           name: 'Cancel',
           role: 'cancel',
           callback: () => {
-            this.shadowOpacity  = snapshot.shadowOpacity;
-            this.ambient        = snapshot.ambient;
-            this._ambientRGB    = this.hexToRgb(snapshot.ambient);
-            this.bloomAmount    = snapshot.bloomAmount;
-            this.bloomRadius    = snapshot.bloomRadius;
-            this.bloomThreshold = snapshot.bloomThreshold;
-            this.pixelated      = snapshot.pixelated;
-            this.pixelSize      = snapshot.pixelSize;
-            this.contrast       = snapshot.contrast;
-            this.colorTemp      = snapshot.colorTemp;
+            this.shadowOpacity        = snapshot.shadowOpacity;
+            this.ambient              = snapshot.ambient;
+            this._ambientRGB          = this.hexToRgb(snapshot.ambient);
+            this.bloomAmount          = snapshot.bloomAmount;
+            this.bloomRadius          = snapshot.bloomRadius;
+            this.bloomThreshold       = snapshot.bloomThreshold;
+            this.pixelated            = snapshot.pixelated;
+            this.pixelSize            = snapshot.pixelSize;
+            this.contrast             = snapshot.contrast;
+            this.colorTemp            = snapshot.colorTemp;
+            this.resetLightsOnStart   = snapshot.resetLightsOnStart;
             this._markDirty();
           }
         }
@@ -565,6 +570,16 @@ class LightExtension {
     colorTempVal.style.minWidth = '90px';
     container.appendChild(makeRow('Color Temperature', colorTempSlider, colorTempVal));
 
+    const resetOnStartToggle = document.createElement('input');
+    resetOnStartToggle.type = 'checkbox';
+    resetOnStartToggle.checked = this.resetLightsOnStart;
+    resetOnStartToggle.style.cssText = 'width:17px;height:17px;cursor:pointer;accent-color:#4a9eff;';
+    resetOnStartToggle.addEventListener('change', () => {
+      pending.resetLightsOnStart = resetOnStartToggle.checked;
+      applyPending();
+    });
+    container.appendChild(makeRow('Reset Lights on Start', resetOnStartToggle));
+
     const resetBtn = document.createElement('button');
     resetBtn.textContent = 'Reset to Defaults';
     resetBtn.style.cssText = 'align-self:flex-start;margin-top:4px;padding:6px 14px;font-size:0.82rem;cursor:pointer;border-radius:4px;';
@@ -588,6 +603,7 @@ class LightExtension {
       contrastVal.textContent    = RENDER_DEFAULTS.contrast.toFixed(2);
       colorTempSlider.value      = Math.round(RENDER_DEFAULTS.colorTemp * 100);
       colorTempVal.textContent   = '0 (neutral)';
+      resetOnStartToggle.checked = RENDER_DEFAULTS.resetLightsOnStart;
       applyPending();
     });
     container.appendChild(resetBtn);
@@ -602,15 +618,16 @@ class LightExtension {
       if (!vm.runtime.extensionStorage) vm.runtime.extensionStorage = {};
       if (!vm.runtime.extensionStorage.simpleLighting) vm.runtime.extensionStorage.simpleLighting = {};
       Object.assign(vm.runtime.extensionStorage.simpleLighting, {
-        shadowOpacity:   this.shadowOpacity,
-        ambient:         this.ambient,
-        bloomAmount:     this.bloomAmount,
-        bloomRadius:     this.bloomRadius,
-        bloomThreshold:  this.bloomThreshold,
-        pixelated:       this.pixelated,
-        pixelSize:       this.pixelSize,
-        contrast:        this.contrast,
-        colorTemp:       this.colorTemp,
+        shadowOpacity:        this.shadowOpacity,
+        ambient:              this.ambient,
+        bloomAmount:          this.bloomAmount,
+        bloomRadius:          this.bloomRadius,
+        bloomThreshold:       this.bloomThreshold,
+        pixelated:            this.pixelated,
+        pixelSize:            this.pixelSize,
+        contrast:             this.contrast,
+        colorTemp:            this.colorTemp,
+        resetLightsOnStart:   this.resetLightsOnStart,
       });
     } catch (e) {}
   }
@@ -630,21 +647,23 @@ class LightExtension {
       if (typeof s.pixelSize      === 'number') this.pixelSize      = s.pixelSize;
       if (typeof s.contrast       === 'number') this.contrast       = s.contrast;
       if (typeof s.colorTemp      === 'number') this.colorTemp      = s.colorTemp;
+      if (typeof s.resetLightsOnStart === 'boolean') this.resetLightsOnStart = s.resetLightsOnStart;
     } catch (e) {}
   }
 
   serialize() {
     if (isPenguinMod) {
       return {
-        shadowOpacity:   this.shadowOpacity,
-        ambient:         this.ambient,
-        bloomAmount:     this.bloomAmount,
-        bloomRadius:     this.bloomRadius,
-        bloomThreshold:  this.bloomThreshold,
-        pixelated:       this.pixelated,
-        pixelSize:       this.pixelSize,
-        contrast:        this.contrast,
-        colorTemp:       this.colorTemp,
+        shadowOpacity:        this.shadowOpacity,
+        ambient:              this.ambient,
+        bloomAmount:          this.bloomAmount,
+        bloomRadius:          this.bloomRadius,
+        bloomThreshold:       this.bloomThreshold,
+        pixelated:            this.pixelated,
+        pixelSize:            this.pixelSize,
+        contrast:             this.contrast,
+        colorTemp:            this.colorTemp,
+        resetLightsOnStart:   this.resetLightsOnStart,
       };
     }
     return {};
@@ -661,12 +680,9 @@ class LightExtension {
       if (typeof data.pixelSize      === 'number') this.pixelSize      = data.pixelSize;
       if (typeof data.contrast       === 'number') this.contrast       = data.contrast;
       if (typeof data.colorTemp      === 'number') this.colorTemp      = data.colorTemp;
+      if (typeof data.resetLightsOnStart === 'boolean') this.resetLightsOnStart = data.resetLightsOnStart;
       this._markDirty();
     }
-  }
-
-  _findStageCanvas() {
-    return document.querySelector('[class*="stage_stage_"] canvas') || document.querySelector('canvas.sc-canvas');
   }
 
   attachToStage() {
@@ -674,7 +690,7 @@ class LightExtension {
 
     if (!this._docObserver) {
       this._docObserver = new MutationObserver(() => {
-        const stageCanvas = this._findStageCanvas();
+        const stageCanvas = document.querySelector('[class*="stage_stage_"] canvas');
         if (stageCanvas && stageCanvas.parentElement !== this._attachedParent) {
           this._tryAttach();
         }
@@ -684,7 +700,7 @@ class LightExtension {
   }
 
   _tryAttach() {
-    const stageCanvas = this._findStageCanvas();
+    const stageCanvas = document.querySelector('[class*="stage_stage_"] canvas');
     if (!stageCanvas) {
       setTimeout(() => this._tryAttach(), 500);
       return;
@@ -694,7 +710,7 @@ class LightExtension {
     this._attachedParent = canvasParent;
 
     const sortLayer = () => {
-      const currentParent = this._findStageCanvas()?.parentElement;
+      const currentParent = document.querySelector('[class*="stage_stage_"] canvas')?.parentElement;
       if (!currentParent) return;
 
       const monitorWrapper = currentParent.querySelector('[class*="monitor-wrapper_"]');
@@ -979,6 +995,11 @@ class LightExtension {
     this._markDirty();
   }
 
+  settingSetResetLightsOnStart(args) {
+    this.resetLightsOnStart = (Scratch.Cast.toString(args.STATE) === 'on');
+    this._saveRenderSettings();
+  }
+
   settingResetAll() {
     this.shadowOpacity  = RENDER_DEFAULTS.shadowOpacity;
     this.ambient        = RENDER_DEFAULTS.ambient;
@@ -988,8 +1009,9 @@ class LightExtension {
     this.bloomThreshold = RENDER_DEFAULTS.bloomThreshold;
     this.pixelated      = RENDER_DEFAULTS.pixelated;
     this.pixelSize      = RENDER_DEFAULTS.pixelSize;
-    this.contrast       = RENDER_DEFAULTS.contrast;
-    this.colorTemp      = RENDER_DEFAULTS.colorTemp;
+    this.contrast           = RENDER_DEFAULTS.contrast;
+    this.colorTemp          = RENDER_DEFAULTS.colorTemp;
+    this.resetLightsOnStart = RENDER_DEFAULTS.resetLightsOnStart;
     this._saveRenderSettings();
     this._markDirty();
   }
@@ -1005,7 +1027,8 @@ class LightExtension {
       case 'pixelated':      return this.pixelated ? 'on' : 'off';
       case 'pixelSize':      return this.pixelSize;
       case 'contrast':       return this.contrast;
-      case 'colorTemp':      return this.colorTemp;
+      case 'colorTemp':            return this.colorTemp;
+      case 'resetLightsOnStart':   return this.resetLightsOnStart ? 'on' : 'off';
       default:               return '';
     }
   }
@@ -1227,6 +1250,13 @@ class LightExtension {
           text:            'set color temperature to [VALUE]',
           arguments:       { VALUE: { type: Scratch.ArgumentType.NUMBER, defaultValue: 0.0 } }
         },
+        {
+          opcode:          'settingSetResetLightsOnStart',
+          blockType:       Scratch.BlockType.COMMAND,
+          hideFromPalette: isPenguinMod,
+          text:            'set reset lights on project start [STATE]',
+          arguments:       { STATE: { type: Scratch.ArgumentType.STRING, menu: 'onOffMenu' } }
+        },
         '---',
         {
           opcode:          'settingGet',
@@ -1249,7 +1279,7 @@ class LightExtension {
         onOffMenu:    { acceptReporters: false, items: ['on', 'off'] },
         settingMenu:  {
           acceptReporters: false,
-          items: ['shadowOpacity','ambient','bloomAmount','bloomRadius','bloomThreshold','pixelated','pixelSize','contrast','colorTemp']
+          items: ['shadowOpacity','ambient','bloomAmount','bloomRadius','bloomThreshold','pixelated','pixelSize','contrast','colorTemp','resetLightsOnStart']
         },
       }
     };

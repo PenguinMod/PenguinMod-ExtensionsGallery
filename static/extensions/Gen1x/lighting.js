@@ -76,8 +76,11 @@ vec3 spotRealistic(vec2 p, int i) {
   float arc    = u_ldim[i].w;
   float soft   = max(u_lcol[i].w, 0.10);
   float delta  = abs(mod(atan(toP.y, toP.x) - u_ldim[i].z + 3.14159265, 6.28318530) - 3.14159265);
-  float edgePx = d * sin(delta - arc);
   float softPx = max(soft * d, 1.5);
+
+  if (delta > arc + softPx / max(d, 0.001)) return vec3(0.0);
+
+  float edgePx = d * sin(delta - arc);
 
   if (edgePx > softPx) return vec3(0.0);
 
@@ -362,6 +365,7 @@ class LightExtension {
     this._boundRender = this._render.bind(this);
 
     Scratch.vm.runtime.on('BEFORE_EXECUTE', this._boundRender);
+    Scratch.vm.runtime.on('PROJECT_START', () => this.clearLights());
     this._loadRenderSettings();
   }
 
@@ -814,6 +818,10 @@ class LightExtension {
 
   _render() {
     if (this._mode === 'none' || !this._dirty) return;
+    const STATUS_PAUSED = Scratch.vm.exports.Thread.STATUS_PAUSED;
+    const threads = Scratch.vm.runtime.threads;
+    const paused = threads.length > 0 && threads.every(t => t.updateMonitor || t.executableHat || t.status === STATUS_PAUSED);
+    if (paused) return;
     this._dirty = false;
 
     const w  = Scratch.vm.runtime.stageWidth  || 480;
@@ -1035,8 +1043,8 @@ class LightExtension {
             ID:        { type: Scratch.ArgumentType.STRING, defaultValue: 'spot1' },
             X:         { type: Scratch.ArgumentType.NUMBER, defaultValue: 0 },
             Y:         { type: Scratch.ArgumentType.NUMBER, defaultValue: 50 },
-            DIRECTION: { type: Scratch.ArgumentType.NUMBER, defaultValue: 180 },
-            ANGLE:     { type: Scratch.ArgumentType.NUMBER, defaultValue: 40 },
+            DIRECTION: { type: Scratch.ArgumentType.ANGLE, defaultValue: 180 },
+            ANGLE:     { type: Scratch.ArgumentType.ANGLE, defaultValue: 40 },
             RADIUS:    { type: Scratch.ArgumentType.NUMBER, defaultValue: 200 },
             COLOR:     { type: Scratch.ArgumentType.COLOR,  defaultValue: '#ffffff' },
             SOFTNESS:  { type: Scratch.ArgumentType.NUMBER, defaultValue: 10 }

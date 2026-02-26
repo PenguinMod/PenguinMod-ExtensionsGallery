@@ -1023,7 +1023,7 @@ self.onmessage = ({ data: msg }) => {
                             }
                             this._displayCtx.imageSmoothingEnabled = false;
                             this._displayCtx.clearRect(0, 0, _bw, _bh);
-                            this._displayCtx.drawImage(this._lastGLBitmap, 0, 0);
+                            this._drawBitmapPixelated(this._displayCtx, this._lastGLBitmap, _bw, _bh);
                             this._applyCutouts(this._displayCtx, _w, _h, _bw, _bh);
                             if (this._nextRender) {
                                 const next = this._nextRender;
@@ -1178,9 +1178,8 @@ self.onmessage = ({ data: msg }) => {
                 const h = Scratch.vm.runtime.stageHeight || 360;
                 const dpr = window.devicePixelRatio || 1;
                 this._cachedNativeDpr = (ow / w) * dpr;
-                const pixScale = this.pixelated ? (1 / Math.max(1, this.pixelSize)) : 1;
-                this._cachedPw = Math.max(1, Math.round(w * this._cachedNativeDpr * pixScale));
-                this._cachedPh = Math.max(1, Math.round(h * this._cachedNativeDpr * pixScale));
+                this._cachedPw = Math.max(1, Math.round(w * this._cachedNativeDpr));
+                this._cachedPh = Math.max(1, Math.round(h * this._cachedNativeDpr));
             }
         }
 
@@ -1250,6 +1249,22 @@ self.onmessage = ({ data: msg }) => {
             }
 
             ctx.restore();
+        }
+
+        _drawBitmapPixelated(ctx, bitmap, pw, ph) {
+            if (!this.pixelated) {
+                ctx.drawImage(bitmap, 0, 0);
+                return;
+            }
+            const ps = Math.max(1, Math.round(this.pixelSize));
+            const sw = Math.max(1, Math.round(pw / ps));
+            const sh = Math.max(1, Math.round(ph / ps));
+            const tmp = new OffscreenCanvas(sw, sh);
+            const tc = tmp.getContext('2d');
+            tc.imageSmoothingEnabled = false;
+            tc.drawImage(bitmap, 0, 0, sw, sh);
+            ctx.imageSmoothingEnabled = false;
+            ctx.drawImage(tmp, 0, 0, pw, ph);
         }
 
         setSpriteExcluded(args) {
@@ -1326,15 +1341,13 @@ self.onmessage = ({ data: msg }) => {
             if (this._cachedPw === 0 && glCanvas && glCanvas.offsetWidth > 0) {
                 this._syncCanvasPosition();
             }
-            const pixScale = this.pixelated ? (1 / Math.max(1, this.pixelSize)) : 1;
-            const pw = this._cachedPw || Math.max(1, Math.round(w * Math.min(window.devicePixelRatio || 1, 3) * pixScale));
-            const ph = this._cachedPh || Math.max(1, Math.round(h * Math.min(window.devicePixelRatio || 1, 3) * pixScale));
+            const pw = this._cachedPw || Math.max(1, Math.round(w * Math.min(window.devicePixelRatio || 1, 3)));
+            const ph = this._cachedPh || Math.max(1, Math.round(h * Math.min(window.devicePixelRatio || 1, 3)));
 
 
 
-            const imgRendering = this.pixelated ? 'pixelated' : '';
-            if (this.canvas.style.imageRendering !== imgRendering) {
-                this.canvas.style.imageRendering = imgRendering;
+            if (this.canvas.style.imageRendering !== '') {
+                this.canvas.style.imageRendering = '';
             }
 
             if (this._mode === 'worker') {
@@ -1376,7 +1389,7 @@ self.onmessage = ({ data: msg }) => {
                     }
                     this._displayCtx.imageSmoothingEnabled = false;
                     this._displayCtx.clearRect(0, 0, pw, ph);
-                    this._displayCtx.drawImage(this._lastGLBitmap, 0, 0);
+                    this._drawBitmapPixelated(this._displayCtx, this._lastGLBitmap, pw, ph);
                     this._applyCutouts(this._displayCtx, w, h, pw, ph);
                 }
                 return;
@@ -1445,7 +1458,7 @@ self.onmessage = ({ data: msg }) => {
 
             this._displayCtx.imageSmoothingEnabled = false;
             this._displayCtx.clearRect(0, 0, pw, ph);
-            if (this._lastGLBitmap) this._displayCtx.drawImage(this._lastGLBitmap, 0, 0);
+            if (this._lastGLBitmap) this._drawBitmapPixelated(this._displayCtx, this._lastGLBitmap, pw, ph);
             this._applyCutouts(this._displayCtx, w, h, pw, ph);
         }
 

@@ -191,6 +191,9 @@
             this.type = type
             
         }
+        copy() {
+            return new ArrayBufferPointerType(this.buffer,this.index,this.type,this.endian)
+        }
         toArrayBuffer() {
             return this.buffer
         }
@@ -569,6 +572,29 @@
                         BUFFER: agBuffer.Argument
                     }
                 },
+                "---",
+                {
+                    opcode: "readNullTerminatedString",
+                    text: "read string at [INDEX] of [BUFFER]",
+                    blockType: BlockType.REPORTER,
+                    tooltip: "Specifically, strings are terminated by a 0x00 byte at the end of the string. If no such byte is found, this block retuns nothing.",
+                    arguments: {
+                        BUFFER: agBuffer.Argument,
+                        INDEX: {type: ArgumentType.NUMBER}
+                    }
+                },
+                {
+                    opcode: "writeNullTerminatedString",
+                    text: "write string [STRING] at [INDEX] of [BUFFER]",
+                    blockType: BlockType.COMMAND,
+                    tooltip: "Specifically, strings are terminated by a 0x00 byte at the end of the string. This block will add said 0x00 byte to the end of the string to allow it to parse correctly using the above block.",
+                    arguments: {
+                        BUFFER: agBuffer.Argument,
+                        INDEX: {type: ArgumentType.NUMBER},
+                        STRING: {type: ArgumentType.STRING}
+                    }
+                },
+
                 "---",
                 {
                     opcode: "itemsOf",
@@ -1157,6 +1183,28 @@
             this.setValue({INDEX:0,ENDIAN:false,VALUE:VALUE,TYPE:TYPE,BUFFER:buffer})
             return this.getValue({INDEX:0,ENDIAN:false,TYPE:TYPE,BUFFER:buffer})
         }
+
+        writeNullTerminatedString({STRING,BUFFER,INDEX}) {
+            if (BUFFER == undefined && !agBuffer.disableErrorHandling) return;
+            if (STRING == undefined && !agBuffer.disableErrorHandling) return;
+            BUFFER = new ArrayBufferType(BUFFER,true)
+            let stringBuffer = new TextEncoder().encode(STRING).buffer
+            stringBuffer = stringBuffer.transfer(stringBuffer.byteLength + 1)
+            let arr = new Uint8Array(stringBuffer)
+            arr.forEach((value, index) => {
+                BUFFER.dataView.setUint8(index + INDEX, value)
+            })
+
+        }
+        readNullTerminatedString({BUFFER,INDEX}) {
+            if (!BUFFER) return;
+            BUFFER = new ArrayBufferType(BUFFER,true)
+            let arr = new Uint8Array(BUFFER.arrayBuffer).slice(INDEX)
+            let len = arr.findIndex(v => v === 0)
+            if (len === -1) return ""; 
+            else return new TextDecoder().decode(arr.slice(0,len));
+        }
+
         createPointer({INDEX,BUFFER,ENDIAN,TYPE}) {
             if (!BUFFER) return null;
             INDEX = Cast.toNumber(INDEX)
@@ -1190,7 +1238,7 @@
         }
         setPointerIndex({PTR,VALUE}) {
             if (!PTR) return;
-            PTR.index = Cast.toNumber(VALUE)
+            PTR.index = Cast.toNumber(VALUE) % PTR.buffer.arrayBuffer.byteLength
         }
         setPointerType({PTR,VALUE}) {
             if (!PTR) return;
@@ -1204,6 +1252,10 @@
             if (!PTR) return;
             if (!VALUE) return;
             PTR.buffer = new ArrayBufferType(VALUE,true)
+        }
+
+        copyPointer({PTR}) {
+            return PTR.copy()
         }
 
     }

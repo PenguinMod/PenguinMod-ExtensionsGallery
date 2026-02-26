@@ -1590,7 +1590,7 @@ self.onmessage = ({ data: msg }) => {
                 blocks: [{
                         opcode: 'openRenderSettings',
                         blockType: Scratch.BlockType.BUTTON,
-                        hideFromPalette: isTurboWarp,
+                        hideFromPalette: false,
                         text: 'Render Settings'
                     },
                     {
@@ -1915,7 +1915,7 @@ self.onmessage = ({ data: msg }) => {
                     {
                         opcode: 'settingSetShadowOpacity',
                         blockType: Scratch.BlockType.COMMAND,
-                        hideFromPalette: isPenguinMod,
+                        hideFromPalette: false,
                         text: 'set shadow opacity to [OPACITY]',
                         arguments: {
                             OPACITY: {
@@ -1927,7 +1927,7 @@ self.onmessage = ({ data: msg }) => {
                     {
                         opcode: 'settingSetAmbient',
                         blockType: Scratch.BlockType.COMMAND,
-                        hideFromPalette: isPenguinMod,
+                        hideFromPalette: false,
                         text: 'set ambient color to [COLOR]',
                         arguments: {
                             COLOR: {
@@ -1943,7 +1943,7 @@ self.onmessage = ({ data: msg }) => {
                     {
                         opcode: 'settingSetBloomAmount',
                         blockType: Scratch.BlockType.COMMAND,
-                        hideFromPalette: isPenguinMod,
+                        hideFromPalette: false,
                         text: 'set bloom amount to [VALUE]',
                         arguments: {
                             VALUE: {
@@ -1955,7 +1955,7 @@ self.onmessage = ({ data: msg }) => {
                     {
                         opcode: 'settingSetBloomRadius',
                         blockType: Scratch.BlockType.COMMAND,
-                        hideFromPalette: isPenguinMod,
+                        hideFromPalette: false,
                         text: 'set bloom radius to [VALUE]',
                         arguments: {
                             VALUE: {
@@ -1967,7 +1967,7 @@ self.onmessage = ({ data: msg }) => {
                     {
                         opcode: 'settingSetBloomThreshold',
                         blockType: Scratch.BlockType.COMMAND,
-                        hideFromPalette: isPenguinMod,
+                        hideFromPalette: false,
                         text: 'set bloom threshold to [VALUE]',
                         arguments: {
                             VALUE: {
@@ -1983,7 +1983,7 @@ self.onmessage = ({ data: msg }) => {
                     {
                         opcode: 'settingSetPixelated',
                         blockType: Scratch.BlockType.COMMAND,
-                        hideFromPalette: isPenguinMod,
+                        hideFromPalette: false,
                         text: 'turn pixelated rendering [STATE]',
                         arguments: {
                             STATE: {
@@ -1995,7 +1995,7 @@ self.onmessage = ({ data: msg }) => {
                     {
                         opcode: 'settingSetPixelSize',
                         blockType: Scratch.BlockType.COMMAND,
-                        hideFromPalette: isPenguinMod,
+                        hideFromPalette: false,
                         text: 'set pixel size to [SIZE]',
                         arguments: {
                             SIZE: {
@@ -2011,7 +2011,7 @@ self.onmessage = ({ data: msg }) => {
                     {
                         opcode: 'settingSetContrast',
                         blockType: Scratch.BlockType.COMMAND,
-                        hideFromPalette: isPenguinMod,
+                        hideFromPalette: false,
                         text: 'set contrast to [VALUE]',
                         arguments: {
                             VALUE: {
@@ -2023,7 +2023,7 @@ self.onmessage = ({ data: msg }) => {
                     {
                         opcode: 'settingSetColorTemp',
                         blockType: Scratch.BlockType.COMMAND,
-                        hideFromPalette: isPenguinMod,
+                        hideFromPalette: false,
                         text: 'set color temperature to [VALUE]',
                         arguments: {
                             VALUE: {
@@ -2035,7 +2035,7 @@ self.onmessage = ({ data: msg }) => {
                     {
                         opcode: 'settingSetResetLightsOnStart',
                         blockType: Scratch.BlockType.COMMAND,
-                        hideFromPalette: isPenguinMod,
+                        hideFromPalette: false,
                         text: 'set reset lights on project start [STATE]',
                         arguments: {
                             STATE: {
@@ -2059,7 +2059,7 @@ self.onmessage = ({ data: msg }) => {
                     {
                         opcode: 'settingGet',
                         blockType: Scratch.BlockType.REPORTER,
-                        hideFromPalette: isPenguinMod,
+                        hideFromPalette: false,
                         text: 'get setting [SETTING]',
                         arguments: {
                             SETTING: {
@@ -2071,7 +2071,7 @@ self.onmessage = ({ data: msg }) => {
                     {
                         opcode: 'settingResetAll',
                         blockType: Scratch.BlockType.COMMAND,
-                        hideFromPalette: isPenguinMod,
+                        hideFromPalette: false,
                         text: 'reset all render settings to defaults'
                     },
                 ],

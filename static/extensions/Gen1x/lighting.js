@@ -372,6 +372,7 @@ self.onmessage = ({ data: msg }) => {
         contrast: 1.0,
         colorTemp: 0.0,
         resetLightsOnStart: false,
+        renderThread: 'worker',
     };
 
     class LightExtension {
@@ -389,6 +390,7 @@ self.onmessage = ({ data: msg }) => {
             this.contrast = RENDER_DEFAULTS.contrast;
             this.colorTemp = RENDER_DEFAULTS.colorTemp;
             this.resetLightsOnStart = RENDER_DEFAULTS.resetLightsOnStart;
+            this.renderThread = RENDER_DEFAULTS.renderThread;
 
             this.inclusionMode = 'Blacklist';
             this._inclusionList = [];
@@ -397,6 +399,8 @@ self.onmessage = ({ data: msg }) => {
             this._worker = null;
             this._workerReady = false;
             this._pendingRender = null;
+            this._workerBusy = false;
+            this._nextRender = null;
             this._displayCtx = null;
             this._gl = null;
             this._glState = null;
@@ -465,6 +469,7 @@ self.onmessage = ({ data: msg }) => {
                 contrast: this.contrast,
                 colorTemp: this.colorTemp,
                 resetLightsOnStart: this.resetLightsOnStart,
+                renderThread: this.renderThread,
                 inclusionMode: this.inclusionMode,
                 inclusionList: [...this._inclusionList],
             };
@@ -521,6 +526,10 @@ self.onmessage = ({ data: msg }) => {
                             this.contrast = snapshot.contrast;
                             this.colorTemp = snapshot.colorTemp;
                             this.resetLightsOnStart = snapshot.resetLightsOnStart;
+                            if (this.renderThread !== snapshot.renderThread) {
+                                this.renderThread = snapshot.renderThread;
+                                this._switchRenderThread(this.renderThread);
+                            }
                             this.inclusionMode = snapshot.inclusionMode;
                             this._inclusionList = [...snapshot.inclusionList];
                             this._markDirty();
@@ -670,6 +679,23 @@ self.onmessage = ({ data: msg }) => {
             });
             container.appendChild(makeRow('Reset Lights on Start', resetOnStartToggle));
 
+            const renderThreadSelect = document.createElement('select');
+            renderThreadSelect.style.cssText = 'flex:1;padding:4px 8px;border-radius:4px;font-size:0.85rem;cursor:pointer;';
+            ['worker', 'main'].forEach(opt => {
+                const o = document.createElement('option');
+                o.value = opt;
+                o.textContent = opt === 'worker' ? 'Worker Thread' : 'Main Thread';
+                if (this.renderThread === opt) o.selected = true;
+                renderThreadSelect.appendChild(o);
+            });
+            renderThreadSelect.addEventListener('change', () => {
+                pending.renderThread = renderThreadSelect.value;
+                this.renderThread = renderThreadSelect.value;
+                this._switchRenderThread(renderThreadSelect.value);
+                this._saveRenderSettings();
+            });
+            container.appendChild(makeRow('Render Thread', renderThreadSelect));
+
             const inclusionSection = document.createElement('div');
             inclusionSection.style.cssText = 'display:flex;flex-direction:column;gap:10px;padding:10px 14px 12px;background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.12);border-radius:8px;';
 
@@ -780,6 +806,12 @@ self.onmessage = ({ data: msg }) => {
                 colorTempSlider.value = Math.round(RENDER_DEFAULTS.colorTemp * 100);
                 colorTempVal.textContent = '0 (neutral)';
                 resetOnStartToggle.checked = RENDER_DEFAULTS.resetLightsOnStart;
+                renderThreadSelect.value = RENDER_DEFAULTS.renderThread;
+                if (this.renderThread !== RENDER_DEFAULTS.renderThread) {
+                    this.renderThread = RENDER_DEFAULTS.renderThread;
+                    this._switchRenderThread(this.renderThread);
+                    this._saveRenderSettings();
+                }
                 inclusionSelect.value = 'Blacklist';
                 updateInclusionDesc();
                 rebuildSpriteList();
@@ -812,6 +844,7 @@ self.onmessage = ({ data: msg }) => {
                     contrast: this.contrast,
                     colorTemp: this.colorTemp,
                     resetLightsOnStart: this.resetLightsOnStart,
+                    renderThread: this.renderThread,
                 });
             } catch (e) {}
         }
@@ -835,6 +868,10 @@ self.onmessage = ({ data: msg }) => {
                 if (typeof s.contrast === 'number') this.contrast = s.contrast;
                 if (typeof s.colorTemp === 'number') this.colorTemp = s.colorTemp;
                 if (typeof s.resetLightsOnStart === 'boolean') this.resetLightsOnStart = s.resetLightsOnStart;
+                if (typeof s.renderThread === 'string' && (s.renderThread === 'worker' || s.renderThread === 'main')) {
+                    this.renderThread = s.renderThread;
+                    this._switchRenderThread(this.renderThread);
+                }
             } catch (e) {}
         }
 
@@ -851,6 +888,7 @@ self.onmessage = ({ data: msg }) => {
                     contrast: this.contrast,
                     colorTemp: this.colorTemp,
                     resetLightsOnStart: this.resetLightsOnStart,
+                    renderThread: this.renderThread,
                     inclusionMode: this.inclusionMode,
                     inclusionList: [...this._inclusionList],
                 };
@@ -873,6 +911,10 @@ self.onmessage = ({ data: msg }) => {
                 if (typeof data.contrast === 'number') this.contrast = data.contrast;
                 if (typeof data.colorTemp === 'number') this.colorTemp = data.colorTemp;
                 if (typeof data.resetLightsOnStart === 'boolean') this.resetLightsOnStart = data.resetLightsOnStart;
+                if (typeof data.renderThread === 'string' && (data.renderThread === 'worker' || data.renderThread === 'main')) {
+                    this.renderThread = data.renderThread;
+                    this._switchRenderThread(this.renderThread);
+                }
                 if (typeof data.inclusionMode === 'string') this.inclusionMode = data.inclusionMode;
                 if (Array.isArray(data.inclusionList)) this._inclusionList = data.inclusionList;
                 this._markDirty();
@@ -960,10 +1002,12 @@ self.onmessage = ({ data: msg }) => {
                             this._mode = 'worker';
                             this._workerReady = true;
                             if (this._pendingRender) {
+                                this._workerBusy = true;
                                 this._worker.postMessage(this._pendingRender);
                                 this._pendingRender = null;
                             }
                         } else if (msg.type === 'frame') {
+                            this._workerBusy = false;
                             const bmp = msg.bitmap;
                             if (this._lastGLBitmap) this._lastGLBitmap.close();
                             this._lastGLBitmap = bmp;
@@ -981,6 +1025,12 @@ self.onmessage = ({ data: msg }) => {
                             this._displayCtx.clearRect(0, 0, _bw, _bh);
                             this._displayCtx.drawImage(this._lastGLBitmap, 0, 0);
                             this._applyCutouts(this._displayCtx, _w, _h, _bw, _bh);
+                            if (this._nextRender) {
+                                const next = this._nextRender;
+                                this._nextRender = null;
+                                this._workerBusy = true;
+                                this._worker.postMessage(next);
+                            }
                         } else if (msg.type === 'error') {
                             console.warn('LightExtension: worker GL error:', msg.message, 'falling back to main thread');
                             this._worker.terminate();
@@ -1046,6 +1096,40 @@ self.onmessage = ({ data: msg }) => {
                 console.error('LightExtension: WebGL2 unavailable:', e.message);
                 this._mode = 'none';
             }
+        }
+
+        _switchRenderThread(target) {
+            if (target === 'worker' && this._mode !== 'worker') {
+                if (this._gl) {
+                    this._gl = null;
+                    this._glState = null;
+                    this._glOffscreen = null;
+                }
+                if (this._worker) {
+                    this._worker.terminate();
+                    this._worker = null;
+                }
+                this._workerReady = false;
+                this._workerBusy = false;
+                this._nextRender = null;
+                this._pendingRender = null;
+                this._displayCtx = null;
+                this._mode = 'none';
+                this._init();
+            } else if (target === 'main' && this._mode !== 'main') {
+                if (this._worker) {
+                    this._worker.terminate();
+                    this._worker = null;
+                }
+                this._workerReady = false;
+                this._workerBusy = false;
+                this._nextRender = null;
+                this._pendingRender = null;
+                this._displayCtx = null;
+                this._mode = 'none';
+                this._initMainThread();
+            }
+            this._markDirty();
         }
 
         _getSpriteMenuItems() {
@@ -1276,7 +1360,12 @@ self.onmessage = ({ data: msg }) => {
                         colorTemp: this.colorTemp,
                     };
                     if (this._workerReady) {
-                        this._worker.postMessage(msg);
+                        if (this._workerBusy) {
+                            this._nextRender = msg;
+                        } else {
+                            this._workerBusy = true;
+                            this._worker.postMessage(msg);
+                        }
                     } else {
                         this._pendingRender = msg;
                     }
@@ -1434,6 +1523,8 @@ self.onmessage = ({ data: msg }) => {
             this.contrast = RENDER_DEFAULTS.contrast;
             this.colorTemp = RENDER_DEFAULTS.colorTemp;
             this.resetLightsOnStart = RENDER_DEFAULTS.resetLightsOnStart;
+            this.renderThread = RENDER_DEFAULTS.renderThread;
+            this._switchRenderThread(this.renderThread);
             this._saveRenderSettings();
             this._markDirty();
         }
@@ -1461,9 +1552,20 @@ self.onmessage = ({ data: msg }) => {
                     return this.colorTemp;
                 case 'resetLightsOnStart':
                     return this.resetLightsOnStart ? 'on' : 'off';
+                case 'renderThread':
+                    return this.renderThread;
                 default:
                     return '';
             }
+        }
+
+        setRenderThread(args) {
+            const t = Scratch.Cast.toString(args.THREAD);
+            if (t !== 'worker' && t !== 'main') return;
+            if (this.renderThread === t) return;
+            this.renderThread = t;
+            this._switchRenderThread(t);
+            this._saveRenderSettings();
         }
 
         getInfo() {
@@ -1929,6 +2031,17 @@ self.onmessage = ({ data: msg }) => {
                             }
                         }
                     },
+                    {
+                        opcode: 'setRenderThread',
+                        blockType: Scratch.BlockType.COMMAND,
+                        text: 'set render thread to [THREAD]',
+                        arguments: {
+                            THREAD: {
+                                type: Scratch.ArgumentType.STRING,
+                                menu: 'renderThreadMenu'
+                            }
+                        }
+                    },
                     '---',
                     {
                         opcode: 'settingGet',
@@ -1976,7 +2089,11 @@ self.onmessage = ({ data: msg }) => {
                     },
                     settingMenu: {
                         acceptReporters: false,
-                        items: ['shadowOpacity', 'ambient', 'bloomAmount', 'bloomRadius', 'bloomThreshold', 'pixelated', 'pixelSize', 'contrast', 'colorTemp', 'resetLightsOnStart']
+                        items: ['shadowOpacity', 'ambient', 'bloomAmount', 'bloomRadius', 'bloomThreshold', 'pixelated', 'pixelSize', 'contrast', 'colorTemp', 'resetLightsOnStart', 'renderThread']
+                    },
+                    renderThreadMenu: {
+                        acceptReporters: false,
+                        items: ['worker', 'main']
                     },
                 }
             };

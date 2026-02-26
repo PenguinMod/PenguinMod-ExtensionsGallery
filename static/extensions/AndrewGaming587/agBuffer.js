@@ -820,6 +820,16 @@
                         PTR: agBuffer.PointerArgument
                     }
                 },
+                {
+                    opcode: 'isPointer',
+                    text: 'is pointer [VALUE]?',
+                    blockType: BlockType.BOOLEAN,
+                    arguments: {
+                        PTR: {
+                            exemptFromNormalization: true
+                        }
+                    }
+                },
 
                 {
                     blockType: BlockType.LABEL,
@@ -1212,50 +1222,55 @@
             return new ArrayBufferPointerType(BUFFER,INDEX,TYPE,ENDIAN)
         }
         getPointer({PTR}) {
-            if (!PTR) return 0;
+            if (!PTR || !(PTR instanceof ArrayBufferPointerType)) return 0;
             return PTR.getValue()
         }
         getPointerIndex({PTR}) {
-            if (!PTR) return 0;
+            if (!PTR || !(PTR instanceof ArrayBufferPointerType)) return 0;
             return PTR.index
         }
         getPointerType({PTR}) {
-            if (!PTR) return "(invalid)";
+            if (!PTR || !(PTR instanceof ArrayBufferPointerType)) return "(invalid)";
             return PTR.type
         }
         getPointerBuffer({PTR}) {
-            if (!PTR) return "(invalid)";
+            if (!PTR || !(PTR instanceof ArrayBufferPointerType)) return "(invalid)";
             return PTR.buffer
         }
         getPointerEndian({PTR}) {
-            if (!PTR) return false;
+            if (!PTR || !(PTR instanceof ArrayBufferPointerType)) return false;
             return PTR.endian
         }
 
         setPointer({PTR,VALUE}) {
-            if (!PTR) return;
+            if (!PTR || !(PTR instanceof ArrayBufferPointerType)) return;
             PTR.setValue(VALUE)
         }
         setPointerIndex({PTR,VALUE}) {
-            if (!PTR) return;
+            if (!PTR || !(PTR instanceof ArrayBufferPointerType)) return;
             PTR.index = Cast.toNumber(VALUE) % PTR.buffer.arrayBuffer.byteLength
         }
         setPointerType({PTR,VALUE}) {
-            if (!PTR) return;
+            if (!PTR || !(PTR instanceof ArrayBufferPointerType)) return;
             PTR.type = VALUE
         }
         setPointerEndian({PTR,VALUE}) {
-            if (!PTR) return;
+            if (!PTR || !(PTR instanceof ArrayBufferPointerType)) return;
             PTR.endian = Cast.toBoolean(VALUE)
         }
         setPointerBuffer({PTR,VALUE}) {
-            if (!PTR) return;
-            if (!VALUE) return;
+            if (!PTR || !(PTR instanceof ArrayBufferPointerType)) return;
+            if (!VALUE || !(PTR instanceof ArrayBufferType)) return;
             PTR.buffer = new ArrayBufferType(VALUE,true)
         }
 
         copyPointer({PTR}) {
+            if (!PTR || !(PTR instanceof ArrayBufferPointerType)) return;
             return PTR.copy()
+        }
+
+        isPointer({VALUE}) {
+            return (!!VALUE && VALUE instanceof ArrayBufferPointerType)
         }
 
     }

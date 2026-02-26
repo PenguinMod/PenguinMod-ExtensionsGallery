@@ -666,32 +666,54 @@ class LightExtension {
   }
 
   attachToStage() {
+    this._tryAttach();
+
+    if (!this._docObserver) {
+      this._docObserver = new MutationObserver(() => {
+        const stageCanvas = document.querySelector('[class*="stage_stage_"] canvas');
+        if (stageCanvas && stageCanvas.parentElement !== this._attachedParent) {
+          this._tryAttach();
+        }
+      });
+      this._docObserver.observe(document.body, { childList: true, subtree: true });
+    }
+  }
+
+  _tryAttach() {
     const stageCanvas = document.querySelector('[class*="stage_stage_"] canvas');
     if (!stageCanvas) {
-      setTimeout(() => this.attachToStage(), 500);
+      setTimeout(() => this._tryAttach(), 500);
       return;
     }
 
     const canvasParent = stageCanvas.parentElement;
+    this._attachedParent = canvasParent;
 
     const sortLayer = () => {
-      const monitorWrapper  = canvasParent.querySelector('[class*="monitor-wrapper_"]');
-      const customOverlays  = canvasParent.querySelector('[class*="custom-overlays_"]');
+      const currentParent = document.querySelector('[class*="stage_stage_"] canvas')?.parentElement;
+      if (!currentParent) return;
+
+      const monitorWrapper = currentParent.querySelector('[class*="monitor-wrapper_"]');
+      const customOverlays = currentParent.querySelector('[class*="custom-overlays_"]');
       const targetReference = monitorWrapper || customOverlays;
 
       if (targetReference) {
         if (this.canvas.nextSibling !== targetReference) {
-          canvasParent.insertBefore(this.canvas, targetReference);
+          currentParent.insertBefore(this.canvas, targetReference);
         }
       } else {
-        if (this.canvas.parentElement !== canvasParent) {
-          canvasParent.appendChild(this.canvas);
+        if (this.canvas.parentElement !== currentParent) {
+          currentParent.appendChild(this.canvas);
         }
       }
     };
 
     sortLayer();
-    new MutationObserver(sortLayer).observe(canvasParent, { childList: true, subtree: false });
+
+    if (this._parentObserver) this._parentObserver.disconnect();
+    this._parentObserver = new MutationObserver(sortLayer);
+    this._parentObserver.observe(canvasParent, { childList: true, subtree: false });
+    this._markDirty();
   }
 
   _init() {
@@ -1354,5 +1376,4 @@ class LightExtension {
     this._markDirty();
   }
 }
-
-Scratch.extensions.register(new LightExtension());
+Scratch.extensions.register(new LightExtension())

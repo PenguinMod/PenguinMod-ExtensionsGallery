@@ -690,7 +690,7 @@ class LightExtension {
 
     if (!this._docObserver) {
       this._docObserver = new MutationObserver(() => {
-        const stageCanvas = document.querySelector('[class*="stage_stage_"] canvas');
+        const stageCanvas = document.querySelector('[class*="stage_stage_"] canvas, .sc-layers canvas.sc-canvas');
         if (stageCanvas && stageCanvas.parentElement !== this._attachedParent) {
           this._tryAttach();
         }
@@ -700,7 +700,7 @@ class LightExtension {
   }
 
   _tryAttach() {
-    const stageCanvas = document.querySelector('[class*="stage_stage_"] canvas');
+    const stageCanvas = document.querySelector('[class*="stage_stage_"] canvas, .sc-layers canvas.sc-canvas');
     if (!stageCanvas) {
       setTimeout(() => this._tryAttach(), 500);
       return;
@@ -710,12 +710,13 @@ class LightExtension {
     this._attachedParent = canvasParent;
 
     const sortLayer = () => {
-      const currentParent = document.querySelector('[class*="stage_stage_"] canvas')?.parentElement;
+      const currentParent = document.querySelector('[class*="stage_stage_"] canvas, .sc-layers canvas.sc-canvas')?.parentElement;
       if (!currentParent) return;
 
       const monitorWrapper = currentParent.querySelector('[class*="monitor-wrapper_"]');
       const customOverlays = currentParent.querySelector('[class*="custom-overlays_"]');
-      const targetReference = monitorWrapper || customOverlays;
+      const scratchOverlays = currentParent.querySelector('.scratch-render-overlays');
+      const targetReference = monitorWrapper || customOverlays || scratchOverlays;
 
       if (targetReference) {
         if (this.canvas.nextSibling !== targetReference) {

@@ -539,7 +539,7 @@ self.onmessage = ({ data: msg }) => {
             );
 
             const container = document.createElement('div');
-            container.style.cssText = 'display:flex;flex-direction:column;gap:16px;padding:8px 0 16px;font-family:sans-serif;max-height:400px;overflow-y:auto;';
+            container.style.cssText = 'display:flex;flex-direction:column;gap:12px;padding:12px 16px 20px;margin:8px;font-family:sans-serif;max-height:420px;overflow-y:auto;';
 
             const headerNote = document.createElement('div');
             headerNote.textContent = 'This menu is PenguinMod-exclusive. All settings are saved to your project!';
@@ -548,7 +548,7 @@ self.onmessage = ({ data: msg }) => {
 
             const makeRow = (labelText, inputEl, valueEl) => {
                 const row = document.createElement('div');
-                row.style.cssText = 'display:flex;align-items:center;gap:10px;';
+                row.style.cssText = 'display:flex;align-items:center;gap:12px;padding:4px 8px;';
                 const lbl = document.createElement('label');
                 lbl.textContent = labelText;
                 lbl.style.cssText = 'min-width:130px;font-size:0.88rem;font-weight:600;';
@@ -567,7 +567,7 @@ self.onmessage = ({ data: msg }) => {
                 sl.value = initVal;
                 sl.style.cssText = 'flex:1;cursor:pointer;';
                 const val = document.createElement('span');
-                val.style.cssText = 'min-width:56px;font-size:0.82rem;text-align:right;opacity:0.7;';
+                val.style.cssText = 'width:36px;font-size:0.82rem;text-align:right;opacity:0.7;flex-shrink:0;';
                 sl.addEventListener('input', () => {
                     val.textContent = onChange(sl.value);
                     applyPending();
@@ -614,10 +614,10 @@ self.onmessage = ({ data: msg }) => {
             container.appendChild(makeRow('Bloom Threshold', bloomThreshSlider, bloomThreshVal));
 
             const pixelSection = document.createElement('div');
-            pixelSection.style.cssText = 'display:flex;flex-direction:column;gap:10px;padding:10px 14px 12px;background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.12);border-radius:8px;';
+            pixelSection.style.cssText = 'display:flex;flex-direction:column;gap:6px;padding:12px 16px 14px;background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.12);border-radius:8px;';
 
             const pixelHeaderRow = document.createElement('div');
-            pixelHeaderRow.style.cssText = 'display:flex;align-items:center;gap:10px;';
+            pixelHeaderRow.style.cssText = 'display:flex;align-items:center;gap:12px;padding:2px 8px;';
             const pixelLabel = document.createElement('label');
             pixelLabel.textContent = 'Pixelated Rendering';
             pixelLabel.style.cssText = 'min-width:140px;font-size:0.88rem;font-weight:600;';
@@ -630,18 +630,17 @@ self.onmessage = ({ data: msg }) => {
             pixelSection.appendChild(pixelHeaderRow);
 
             const pixelSizeRow = document.createElement('div');
-            pixelSizeRow.style.cssText = `display:flex;align-items:center;gap:10px;margin-left:12px;opacity:${this.pixelated ? 1 : 0.35};transition:opacity 0.2s;pointer-events:${this.pixelated ? 'auto' : 'none'};`;
+            pixelSizeRow.style.cssText = `display:flex;align-items:center;gap:12px;padding:4px 8px;min-width:0;opacity:${this.pixelated ? 1 : 0.35};transition:opacity 0.2s;pointer-events:${this.pixelated ? 'auto' : 'none'};`;
             const pixelSizeLabel = document.createElement('label');
-            pixelSizeLabel.textContent = '\u21B3 Pixel Size';
-            pixelSizeLabel.style.cssText = 'min-width:128px;font-size:0.85rem;font-weight:500;opacity:0.85;';
-            const [pixelSizeSlider, pixelSizeVal] = makeSlider(1, 16, 1, this.pixelSize, v => {
+            pixelSizeLabel.textContent = `\u21B3 Pixel Size (${this.pixelSize}px)`;
+            pixelSizeLabel.style.cssText = 'min-width:130px;font-size:0.85rem;font-weight:500;opacity:0.85;white-space:nowrap;';
+            const [pixelSizeSlider] = makeSlider(1, 16, 1, this.pixelSize, v => {
                 pending.pixelSize = parseInt(v, 10);
+                pixelSizeLabel.textContent = `\u21B3 Pixel Size (${v}px)`;
                 return v + 'px';
             });
-            pixelSizeVal.textContent = this.pixelSize + 'px';
             pixelSizeRow.appendChild(pixelSizeLabel);
             pixelSizeRow.appendChild(pixelSizeSlider);
-            pixelSizeRow.appendChild(pixelSizeVal);
             pixelSection.appendChild(pixelSizeRow);
 
             pixelToggle.addEventListener('change', () => {
@@ -697,10 +696,10 @@ self.onmessage = ({ data: msg }) => {
             container.appendChild(makeRow('Render Thread', renderThreadSelect));
 
             const inclusionSection = document.createElement('div');
-            inclusionSection.style.cssText = 'display:flex;flex-direction:column;gap:10px;padding:10px 14px 12px;background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.12);border-radius:8px;';
+            inclusionSection.style.cssText = 'display:flex;flex-direction:column;gap:10px;padding:10px 16px 14px;background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.12);border-radius:8px;';
 
             const inclusionHeaderRow = document.createElement('div');
-            inclusionHeaderRow.style.cssText = 'display:flex;align-items:center;gap:10px;';
+            inclusionHeaderRow.style.cssText = 'display:flex;align-items:center;gap:12px;padding:2px 8px;';
             const inclusionLabel = document.createElement('label');
             inclusionLabel.textContent = 'Inclusion Mode';
             inclusionLabel.style.cssText = 'min-width:130px;font-size:0.88rem;font-weight:600;';
@@ -718,7 +717,7 @@ self.onmessage = ({ data: msg }) => {
             inclusionSection.appendChild(inclusionHeaderRow);
 
             const inclusionDesc = document.createElement('div');
-            inclusionDesc.style.cssText = 'font-size:0.78rem;opacity:0.6;margin-left:4px;';
+            inclusionDesc.style.cssText = 'font-size:0.78rem;opacity:0.6;padding:0 8px;';
             const updateInclusionDesc = () => {
                 inclusionDesc.textContent = inclusionSelect.value === 'Blacklist' ?
                     'Selected sprites will be excluded from lighting.' :
@@ -728,7 +727,7 @@ self.onmessage = ({ data: msg }) => {
             inclusionSection.appendChild(inclusionDesc);
 
             const spriteListContainer = document.createElement('div');
-            spriteListContainer.style.cssText = 'display:flex;flex-direction:column;gap:6px;max-height:150px;overflow-y:auto;margin-top:4px;';
+            spriteListContainer.style.cssText = 'display:flex;flex-direction:column;gap:6px;max-height:150px;overflow-y:auto;padding:4px 8px;';
 
             const allSprites = Scratch.vm.runtime.targets.filter(t => !t.isStage).map(t => t.sprite.name);
 
@@ -780,7 +779,7 @@ self.onmessage = ({ data: msg }) => {
 
             const resetBtn = document.createElement('button');
             resetBtn.textContent = 'Reset to Defaults';
-            resetBtn.style.cssText = 'align-self:flex-start;margin-top:4px;padding:6px 14px;font-size:0.82rem;cursor:pointer;border-radius:4px;';
+            resetBtn.style.cssText = 'align-self:flex-start;margin-top:4px;padding:7px 18px;font-size:0.82rem;cursor:pointer;border-radius:4px;';
             resetBtn.addEventListener('click', () => {
                 pending = {
                     ...RENDER_DEFAULTS,
@@ -798,7 +797,7 @@ self.onmessage = ({ data: msg }) => {
                 bloomThreshVal.textContent = RENDER_DEFAULTS.bloomThreshold.toFixed(2);
                 pixelToggle.checked = RENDER_DEFAULTS.pixelated;
                 pixelSizeSlider.value = RENDER_DEFAULTS.pixelSize;
-                pixelSizeVal.textContent = RENDER_DEFAULTS.pixelSize + 'px';
+                pixelSizeLabel.textContent = `\u21B3 Pixel Size (${RENDER_DEFAULTS.pixelSize}px)`;
                 pixelSizeRow.style.opacity = RENDER_DEFAULTS.pixelated ? '1' : '0.35';
                 pixelSizeRow.style.pointerEvents = RENDER_DEFAULTS.pixelated ? 'auto' : 'none';
                 contrastSlider.value = Math.round(RENDER_DEFAULTS.contrast * 100);

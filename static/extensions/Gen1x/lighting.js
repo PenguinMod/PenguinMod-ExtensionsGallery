@@ -1589,7 +1589,7 @@ self.onmessage = ({ data: msg }) => {
                 blocks: [{
                         opcode: 'openRenderSettings',
                         blockType: Scratch.BlockType.BUTTON,
-                        hideFromPalette: false,
+                        hideFromPalette: isTurboWarp,
                         text: 'Render Settings'
                     },
                     {

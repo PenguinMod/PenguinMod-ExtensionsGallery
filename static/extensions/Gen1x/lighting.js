@@ -665,12 +665,16 @@ class LightExtension {
     }
   }
 
+  _findStageCanvas() {
+    return document.querySelector('[class*="stage_stage_"] canvas') || document.querySelector('canvas.sc-canvas');
+  }
+
   attachToStage() {
     this._tryAttach();
 
     if (!this._docObserver) {
       this._docObserver = new MutationObserver(() => {
-        const stageCanvas = document.querySelector('[class*="stage_stage_"] canvas');
+        const stageCanvas = this._findStageCanvas();
         if (stageCanvas && stageCanvas.parentElement !== this._attachedParent) {
           this._tryAttach();
         }
@@ -680,7 +684,7 @@ class LightExtension {
   }
 
   _tryAttach() {
-    const stageCanvas = document.querySelector('[class*="stage_stage_"] canvas');
+    const stageCanvas = this._findStageCanvas();
     if (!stageCanvas) {
       setTimeout(() => this._tryAttach(), 500);
       return;
@@ -690,7 +694,7 @@ class LightExtension {
     this._attachedParent = canvasParent;
 
     const sortLayer = () => {
-      const currentParent = document.querySelector('[class*="stage_stage_"] canvas')?.parentElement;
+      const currentParent = this._findStageCanvas()?.parentElement;
       if (!currentParent) return;
 
       const monitorWrapper = currentParent.querySelector('[class*="monitor-wrapper_"]');
@@ -1376,4 +1380,5 @@ class LightExtension {
     this._markDirty();
   }
 }
-Scratch.extensions.register(new LightExtension())
+
+Scratch.extensions.register(new LightExtension());

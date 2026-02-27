@@ -542,7 +542,7 @@ self.onmessage = ({ data: msg }) => {
             container.style.cssText = 'display:flex;flex-direction:column;gap:12px;padding:12px 16px 20px;margin:8px;font-family:sans-serif;max-height:420px;overflow-y:auto;';
 
             const headerNote = document.createElement('div');
-            headerNote.textContent = 'This menu is PenguinMod-exclusive. All settings are saved to your project!';
+            headerNote.textContent = 'All settings are saved to your project!';
             headerNote.style.cssText = 'font-size:0.85rem;font-weight:600;color:#4a9eff;padding:6px 10px;background:rgba(74,158,255,0.1);border-radius:6px;border:1px solid rgba(74,158,255,0.3);';
             container.appendChild(headerNote);
 
@@ -925,7 +925,7 @@ self.onmessage = ({ data: msg }) => {
 
             if (!this._docObserver) {
                 this._docObserver = new MutationObserver(() => {
-                    const stageCanvas = document.querySelector('[class*="stage_stage_"] canvas, .sc-layers canvas.sc-canvas');
+                    const stageCanvas = Scratch.vm.renderer.canvas
                     if (stageCanvas && stageCanvas.parentElement !== this._attachedParent) {
                         this._tryAttach();
                     }
@@ -938,7 +938,7 @@ self.onmessage = ({ data: msg }) => {
         }
 
         _tryAttach() {
-            const stageCanvas = document.querySelector('[class*="stage_stage_"] canvas, .sc-layers canvas.sc-canvas');
+            const stageCanvas = Scratch.vm.renderer.canvas
             if (!stageCanvas) {
                 setTimeout(() => this._tryAttach(), 500);
                 return;
@@ -1255,7 +1255,8 @@ self.onmessage = ({ data: msg }) => {
                 ctx.drawImage(bitmap, 0, 0);
                 return;
             }
-            const ps = Math.max(1, Math.round(this.pixelSize));
+            const scale = this._cachedNativeDpr || 1;
+            const ps = Math.max(1, Math.round(this.pixelSize * scale));
             const sw = Math.max(1, Math.round(pw / ps));
             const sh = Math.max(1, Math.round(ph / ps));
             const tmp = new OffscreenCanvas(sw, sh);
@@ -1310,7 +1311,7 @@ self.onmessage = ({ data: msg }) => {
                 buf[c] = li.width || 0;
                 buf[c + 1] = li.height || 0;
                 buf[c + 2] = (li.direction - 90) * (Math.PI / 180);
-                buf[c + 3] = (li.arc / 2) * (Math.PI / 180);
+                buf[c + 3] = (Math.abs(li.arc) / 2) * (Math.PI / 180);
 
                 n++;
             }
@@ -1589,7 +1590,7 @@ self.onmessage = ({ data: msg }) => {
                 blocks: [{
                         opcode: 'openRenderSettings',
                         blockType: Scratch.BlockType.BUTTON,
-                        hideFromPalette: isTurboWarp,
+                        hideFromPalette: false,
                         text: 'Render Settings'
                     },
                     {
@@ -1683,7 +1684,7 @@ self.onmessage = ({ data: msg }) => {
                         arguments: {
                             ID: {
                                 type: Scratch.ArgumentType.STRING,
-                                defaultValue: 'light1'
+                                defaultValue: 'point1'
                             },
                             X: {
                                 type: Scratch.ArgumentType.NUMBER,
@@ -1718,7 +1719,7 @@ self.onmessage = ({ data: msg }) => {
                             },
                             Y: {
                                 type: Scratch.ArgumentType.NUMBER,
-                                defaultValue: 50
+                                defaultValue: 100
                             },
                             DIRECTION: {
                                 type: Scratch.ArgumentType.ANGLE,
@@ -1749,7 +1750,7 @@ self.onmessage = ({ data: msg }) => {
                         arguments: {
                             ID: {
                                 type: Scratch.ArgumentType.STRING,
-                                defaultValue: 'light1'
+                                defaultValue: 'area1'
                             },
                             X: {
                                 type: Scratch.ArgumentType.NUMBER,

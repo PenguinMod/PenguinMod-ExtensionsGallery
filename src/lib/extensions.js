@@ -56,6 +56,7 @@ export default [
         code: "Gen1x/lighting.js",
         banner: "Gen1x/lighting.avif",
         creator: "G1nX",
+        tags: ["new"],
     },
     {
         name: "3D Math",

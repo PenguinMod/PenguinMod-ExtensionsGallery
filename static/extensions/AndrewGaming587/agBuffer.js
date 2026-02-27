@@ -549,7 +549,7 @@
                     ...vm.jwArray.Block,
                 },
                 {
-                    opcode: "stringify",
+                    opcode: "bufferToString",
                     text: "array buffer [BUFFER] to string",
                     blockType: BlockType.REPORTER,
                     arguments: {
@@ -1059,7 +1059,7 @@
         fromString(args) {
             return new agBuffer.Type(new TextEncoder().encode(args.STRING))
         }
-        stringify(args) {
+        bufferToString(args) {
             if (!args.BUFFER && !agBuffer.disableErrorHandling) return "";
             args.BUFFER = new ArrayBufferType(args.BUFFER)
             return new TextDecoder().decode(new Uint8Array(args.BUFFER.arrayBuffer))

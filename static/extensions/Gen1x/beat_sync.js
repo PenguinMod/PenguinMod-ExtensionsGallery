@@ -204,6 +204,17 @@
                         blockType: Scratch.BlockType.COMMAND,
                         text: 'reset beat to 0'
                     },
+                    {
+                        opcode: 'seekToBeat',
+                        blockType: Scratch.BlockType.COMMAND,
+                        text: 'seek to beat [BEAT]',
+                        arguments: {
+                            BEAT: {
+                                type: Scratch.ArgumentType.NUMBER,
+                                defaultValue: 0
+                            }
+                        }
+                    },
                     '---',
                     {
                         opcode: 'waitUntilNextBeat',
@@ -389,6 +400,18 @@
                 this.pausedElapsed = this.getElapsedSeconds();
                 this.isRunning = false;
                 this._wasStopped = true;
+            }
+        }
+
+        seekToBeat(args) {
+            const beat = Number(args.BEAT);
+            const secondsPerBeat = 60 / this.bpm;
+            this.pausedElapsed = beat * secondsPerBeat;
+            this.totalBeats = beat;
+            this.beatPosition = beat % 1;
+            if (this.isRunning) {
+                const ctx = this.getAudioCtx();
+                this.startAudioTime = ctx.currentTime;
             }
         }
 

@@ -569,5 +569,15 @@
         extensionInstance.onStopAll();
     });
 
+    if (isPenguinMod) {
+        runtime.on('RUNTIME_PAUSED', () => {
+            extensionInstance.stopBeat();
+        });
+
+        runtime.on('RUNTIME_UNPAUSED', () => {
+            extensionInstance.startBeat();
+        });
+    }
+
     Scratch.extensions.register(extensionInstance);
 })(Scratch);

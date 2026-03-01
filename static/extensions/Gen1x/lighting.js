@@ -1178,10 +1178,26 @@ self.onmessage = ({ data: msg }) => {
         }
 
         _getSpriteMenuItems() {
+            const editingTarget = Scratch.vm.editingTarget;
+            const myselfName = (editingTarget && !editingTarget.isStage)
+                ? editingTarget.sprite.name
+                : null;
             const sprites = Scratch.vm.runtime.targets
-                .filter(t => !t.isStage)
+                .filter(t => !t.isStage && t.sprite.name !== myselfName)
                 .map(t => t.sprite.name);
-            return sprites.length > 0 ? sprites : [''];
+            const items = [{ text: 'myself', value: '_myself_' }];
+            for (const name of sprites) items.push({ text: name, value: name });
+            return items;
+        }
+
+        _resolveSpriteName(raw) {
+            if (Scratch.Cast.toString(raw) === '_myself_') {
+                const editingTarget = Scratch.vm.editingTarget;
+                if (editingTarget && !editingTarget.isStage) return editingTarget.sprite.name;
+                // fallback: use the current thread's target at runtime
+                return null;
+            }
+            return Scratch.Cast.toString(raw);
         }
 
         _setupResizeObserver() {
@@ -1314,7 +1330,7 @@ self.onmessage = ({ data: msg }) => {
         }
 
         setSpriteExcluded(args) {
-            const name = Scratch.Cast.toString(args.SPRITE);
+            const name = this._resolveSpriteName(args.SPRITE) || Scratch.Cast.toString(args.SPRITE);
             const state = Scratch.Cast.toString(args.STATE);
             if (state === 'excluded') {
                 this._excludedSprites.add(name);
@@ -1325,7 +1341,52 @@ self.onmessage = ({ data: msg }) => {
         }
 
         isSpriteExcluded(args) {
-            return this._excludedSprites.has(Scratch.Cast.toString(args.SPRITE));
+            const name = this._resolveSpriteName(args.SPRITE);
+            return this._excludedSprites.has(name || Scratch.Cast.toString(args.SPRITE));
+        }
+
+        spriteTouchingLight(args, util) {
+            const lightId = Scratch.Cast.toString(args.LIGHT);
+            const li = this.lights[lightId];
+            if (!li) return false;
+
+            // Resolve sprite name (handles "_myself_")
+            let spriteName = Scratch.Cast.toString(args.SPRITE);
+            if (spriteName === '_myself_') {
+                const t = util && util.target ? util.target : Scratch.vm.editingTarget;
+                spriteName = t ? t.sprite.name : null;
+            }
+            if (!spriteName) return false;
+
+            const target = Scratch.vm.runtime.targets.find(
+                t => !t.isStage && t.sprite.name === spriteName
+            );
+            if (!target) return false;
+
+            const sx = target.x;
+            const sy = target.y;
+            const lx = li.x;
+            const ly = li.y;
+
+            if (li.type === 'point') {
+                const dist = Math.sqrt((sx - lx) ** 2 + (sy - ly) ** 2);
+                return dist <= li.radius;
+            } else if (li.type === 'area') {
+                const hw = (li.width || 0) / 2;
+                const hh = (li.height || 0) / 2;
+                return sx >= lx - hw && sx <= lx + hw && sy >= ly - hh && sy <= ly + hh;
+            } else if (li.type === 'spot') {
+                const dx = sx - lx;
+                const dy = sy - ly;
+                const dist = Math.sqrt(dx * dx + dy * dy);
+                if (dist >= li.radius) return false;
+                const angle = Math.atan2(dy, dx);
+                // li.direction is Scratch degrees (0=up, clockwise), convert to math radians
+                const dirRad = (90 - li.direction) * (Math.PI / 180);
+                let delta = Math.abs(((angle - dirRad + Math.PI) % (2 * Math.PI)) - Math.PI);
+                return delta <= li.arc * (Math.PI / 180);
+            }
+            return false;
         }
 
         hexToRgb(hex) {
@@ -1820,6 +1881,21 @@ self.onmessage = ({ data: msg }) => {
                             SPRITE: {
                                 type: Scratch.ArgumentType.STRING,
                                 menu: 'spriteMenu'
+                            }
+                        }
+                    },
+                    {
+                        opcode: 'spriteTouchingLight',
+                        blockType: Scratch.BlockType.BOOLEAN,
+                        text: '[SPRITE] touching light [LIGHT]?',
+                        arguments: {
+                            SPRITE: {
+                                type: Scratch.ArgumentType.STRING,
+                                menu: 'spriteMenu'
+                            },
+                            LIGHT: {
+                                type: Scratch.ArgumentType.STRING,
+                                defaultValue: 'light1'
                             }
                         }
                     },

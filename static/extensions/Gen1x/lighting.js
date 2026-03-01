@@ -365,6 +365,7 @@ self.onmessage = ({ data: msg }) => {
 
     const RENDER_DEFAULTS = {
         shadowOpacity: 0.85,
+        bgOpacity: 1.0,
         ambient: '#333333',
         bloomAmount: 1.0,
         bloomRadius: 0.32,
@@ -385,6 +386,7 @@ self.onmessage = ({ data: msg }) => {
             this.ambient = RENDER_DEFAULTS.ambient;
             this.visible = true;
             this.shadowOpacity = RENDER_DEFAULTS.shadowOpacity;
+            this.bgOpacity = RENDER_DEFAULTS.bgOpacity;
 
             this.bloomAmount = RENDER_DEFAULTS.bloomAmount;
             this.bloomRadius = RENDER_DEFAULTS.bloomRadius;
@@ -452,7 +454,7 @@ self.onmessage = ({ data: msg }) => {
         async openRenderSettings() {
             const ScratchBlocks = window.ScratchBlocks;
             if (!ScratchBlocks || !ScratchBlocks.customPrompt) {
-                const op = parseFloat(prompt('Shadow Opacity (0-1):', this.shadowOpacity));
+                const op = parseFloat(prompt('Overlay Opacity (0-1):', this.shadowOpacity));
                 if (!isNaN(op)) this.shadowOpacity = Math.max(0, Math.min(1, op));
                 const amb = prompt('Ambient color (hex):', this.ambient);
                 if (amb) {
@@ -466,6 +468,7 @@ self.onmessage = ({ data: msg }) => {
 
             const snapshot = {
                 shadowOpacity: this.shadowOpacity,
+                bgOpacity: this.bgOpacity,
                 ambient: this.ambient,
                 bloomAmount: this.bloomAmount,
                 bloomRadius: this.bloomRadius,
@@ -489,6 +492,7 @@ self.onmessage = ({ data: msg }) => {
 
             const applyPending = () => {
                 this.shadowOpacity = pending.shadowOpacity;
+                this.bgOpacity = pending.bgOpacity;
                 this.ambient = pending.ambient;
                 this._ambientRGB = this.hexToRgb(pending.ambient);
                 this.bloomAmount = pending.bloomAmount;
@@ -526,6 +530,7 @@ self.onmessage = ({ data: msg }) => {
                         role: 'cancel',
                         callback: () => {
                             this.shadowOpacity = snapshot.shadowOpacity;
+                            this.bgOpacity = snapshot.bgOpacity;
                             this.ambient = snapshot.ambient;
                             this._ambientRGB = this.hexToRgb(snapshot.ambient);
                             this.bloomAmount = snapshot.bloomAmount;
@@ -592,7 +597,14 @@ self.onmessage = ({ data: msg }) => {
                 return (v / 100).toFixed(2);
             });
             shadowVal.textContent = this.shadowOpacity.toFixed(2);
-            container.appendChild(makeRow('Shadow Opacity', shadowSlider, shadowVal));
+            container.appendChild(makeRow('Overlay Opacity', shadowSlider, shadowVal));
+
+            const [bgOpacitySlider, bgOpacityVal] = makeSlider(0, 100, 1, Math.round(this.bgOpacity * 100), v => {
+                pending.bgOpacity = v / 100;
+                return (v / 100).toFixed(2);
+            });
+            bgOpacityVal.textContent = this.bgOpacity.toFixed(2);
+            container.appendChild(makeRow('Background Opacity', bgOpacitySlider, bgOpacityVal));
 
             const ambientInput = document.createElement('input');
             ambientInput.type = 'color';
@@ -812,6 +824,8 @@ self.onmessage = ({ data: msg }) => {
                 };
                 shadowSlider.value = Math.round(RENDER_DEFAULTS.shadowOpacity * 100);
                 shadowVal.textContent = RENDER_DEFAULTS.shadowOpacity.toFixed(2);
+                bgOpacitySlider.value = Math.round(RENDER_DEFAULTS.bgOpacity * 100);
+                bgOpacityVal.textContent = RENDER_DEFAULTS.bgOpacity.toFixed(2);
                 ambientInput.value = RENDER_DEFAULTS.ambient;
                 bloomSlider.value = Math.round(RENDER_DEFAULTS.bloomAmount * 100);
                 bloomVal.textContent = RENDER_DEFAULTS.bloomAmount.toFixed(2);
@@ -858,6 +872,7 @@ self.onmessage = ({ data: msg }) => {
                 if (!vm.runtime.extensionStorage.simpleLighting) vm.runtime.extensionStorage.simpleLighting = {};
                 Object.assign(vm.runtime.extensionStorage.simpleLighting, {
                     shadowOpacity: this.shadowOpacity,
+                    bgOpacity: this.bgOpacity,
                     ambient: this.ambient,
                     bloomAmount: this.bloomAmount,
                     bloomRadius: this.bloomRadius,
@@ -879,6 +894,7 @@ self.onmessage = ({ data: msg }) => {
                 const s = vm.runtime.extensionStorage?.simpleLighting;
                 if (!s) return;
                 if (typeof s.shadowOpacity === 'number') this.shadowOpacity = s.shadowOpacity;
+                if (typeof s.bgOpacity === 'number') this.bgOpacity = s.bgOpacity;
                 if (typeof s.ambient === 'string') {
                     this.ambient = s.ambient;
                     this._ambientRGB = this.hexToRgb(s.ambient);
@@ -902,6 +918,7 @@ self.onmessage = ({ data: msg }) => {
             if (isPenguinMod) {
                 return {
                     shadowOpacity: this.shadowOpacity,
+                    bgOpacity: this.bgOpacity,
                     ambient: this.ambient,
                     bloomAmount: this.bloomAmount,
                     bloomRadius: this.bloomRadius,
@@ -924,6 +941,7 @@ self.onmessage = ({ data: msg }) => {
         deserialize(data) {
             if (isPenguinMod && data) {
                 if (typeof data.shadowOpacity === 'number') this.shadowOpacity = data.shadowOpacity;
+                if (typeof data.bgOpacity === 'number') this.bgOpacity = data.bgOpacity;
                 if (typeof data.ambient === 'string') {
                     this.ambient = data.ambient;
                     this._ambientRGB = this.hexToRgb(data.ambient);
@@ -1481,6 +1499,16 @@ self.onmessage = ({ data: msg }) => {
                 this.canvas.style.imageRendering = '';
             }
 
+            const targetOpacity = String(this.shadowOpacity);
+            if (this.canvas.style.opacity !== targetOpacity) {
+                this.canvas.style.opacity = targetOpacity;
+            }
+
+            const targetBlend = this.bgOpacity < 0.01 ? 'screen' : 'multiply';
+            if (this.canvas.style.mixBlendMode !== targetBlend) {
+                this.canvas.style.mixBlendMode = targetBlend;
+            }
+
             if (this._mode === 'worker') {
                 const needsWorkerRender = this._dirty || (this.cameraFollow && isPenguinMod);
                 if (needsWorkerRender) {
@@ -1497,7 +1525,7 @@ self.onmessage = ({ data: msg }) => {
                         lightBuf: this._uboData,
                         n,
                         ambient: ambientRGB,
-                        opacity: this.shadowOpacity,
+                        opacity: this.bgOpacity,
                         bloomAmount: this.bloomAmount,
                         bloomRadius: this.bloomRadius,
                         bloomThreshold: this.bloomThreshold,
@@ -1567,7 +1595,7 @@ self.onmessage = ({ data: msg }) => {
                     gl.useProgram(prog);
                     gl.uniform2f(u.res, w, h);
                     gl.uniform3f(u.ambient, ambientRGB[0], ambientRGB[1], ambientRGB[2]);
-                    gl.uniform1f(u.opacity, this.shadowOpacity);
+                    gl.uniform1f(u.opacity, this.bgOpacity);
                     gl.uniform1i(u.nLights, n);
                     gl.uniform1f(u.bloomAmount, this.bloomAmount);
                     gl.uniform1f(u.bloomRadius, this.bloomRadius);
@@ -1600,6 +1628,12 @@ self.onmessage = ({ data: msg }) => {
 
         settingSetShadowOpacity(args) {
             this.shadowOpacity = Math.max(0, Math.min(1, Scratch.Cast.toNumber(args.OPACITY)));
+            this._saveRenderSettings();
+            this._markDirty();
+        }
+
+        settingSetBgOpacity(args) {
+            this.bgOpacity = Math.max(0, Math.min(1, Scratch.Cast.toNumber(args.OPACITY)));
             this._saveRenderSettings();
             this._markDirty();
         }
@@ -1662,6 +1696,7 @@ self.onmessage = ({ data: msg }) => {
 
         settingResetAll() {
             this.shadowOpacity = RENDER_DEFAULTS.shadowOpacity;
+            this.bgOpacity = RENDER_DEFAULTS.bgOpacity;
             this.ambient = RENDER_DEFAULTS.ambient;
             this._ambientRGB = this.hexToRgb(RENDER_DEFAULTS.ambient);
             this.bloomAmount = RENDER_DEFAULTS.bloomAmount;
@@ -1685,6 +1720,8 @@ self.onmessage = ({ data: msg }) => {
             switch (key) {
                 case 'shadowOpacity':
                     return this.shadowOpacity;
+                case 'bgOpacity':
+                    return this.bgOpacity;
                 case 'ambient':
                     return this.ambient;
                 case 'bloomAmount':
@@ -1880,11 +1917,22 @@ self.onmessage = ({ data: msg }) => {
                     {
                         opcode: 'setShadowOpacity',
                         blockType: Scratch.BlockType.COMMAND,
-                        text: 'set shadow opacity to [OPACITY]%',
+                        text: 'set overlay opacity to [OPACITY]%',
                         arguments: {
                             OPACITY: {
                                 type: Scratch.ArgumentType.NUMBER,
                                 defaultValue: 85
+                            }
+                        }
+                    },
+                    {
+                        opcode: 'setBgOpacity',
+                        blockType: Scratch.BlockType.COMMAND,
+                        text: 'set background opacity to [OPACITY]%',
+                        arguments: {
+                            OPACITY: {
+                                type: Scratch.ArgumentType.NUMBER,
+                                defaultValue: 100
                             }
                         }
                     },
@@ -2131,11 +2179,23 @@ self.onmessage = ({ data: msg }) => {
                         opcode: 'settingSetShadowOpacity',
                         blockType: Scratch.BlockType.COMMAND,
                         hideFromPalette: false,
-                        text: 'set shadow opacity to [OPACITY]',
+                        text: 'set overlay opacity to [OPACITY]',
                         arguments: {
                             OPACITY: {
                                 type: Scratch.ArgumentType.NUMBER,
                                 defaultValue: 0.85
+                            }
+                        }
+                    },
+                    {
+                        opcode: 'settingSetBgOpacity',
+                        blockType: Scratch.BlockType.COMMAND,
+                        hideFromPalette: false,
+                        text: 'set background opacity to [OPACITY]',
+                        arguments: {
+                            OPACITY: {
+                                type: Scratch.ArgumentType.NUMBER,
+                                defaultValue: 1.0
                             }
                         }
                     },
@@ -2321,7 +2381,7 @@ self.onmessage = ({ data: msg }) => {
                     },
                     settingMenu: {
                         acceptReporters: false,
-                        items: ['shadowOpacity', 'ambient', 'bloomAmount', 'bloomRadius', 'bloomThreshold', 'pixelated', 'pixelSize', 'contrast', 'colorTemp', 'resetLightsOnStart', 'renderThread', 'cameraFollow', 'cameraFollowName']
+                        items: ['shadowOpacity', 'bgOpacity', 'ambient', 'bloomAmount', 'bloomRadius', 'bloomThreshold', 'pixelated', 'pixelSize', 'contrast', 'colorTemp', 'resetLightsOnStart', 'renderThread', 'cameraFollow', 'cameraFollowName']
                     },
                     renderThreadMenu: {
                         acceptReporters: false,
@@ -2346,6 +2406,11 @@ self.onmessage = ({ data: msg }) => {
 
         setShadowOpacity(args) {
             this.shadowOpacity = Math.max(0, Math.min(100, Scratch.Cast.toNumber(args.OPACITY))) / 100;
+            this._markDirty();
+        }
+
+        setBgOpacity(args) {
+            this.bgOpacity = Math.max(0, Math.min(100, Scratch.Cast.toNumber(args.OPACITY))) / 100;
             this._markDirty();
         }
 

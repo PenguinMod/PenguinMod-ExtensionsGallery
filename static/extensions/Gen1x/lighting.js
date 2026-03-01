@@ -1194,7 +1194,6 @@ self.onmessage = ({ data: msg }) => {
             if (Scratch.Cast.toString(raw) === '_myself_') {
                 const editingTarget = Scratch.vm.editingTarget;
                 if (editingTarget && !editingTarget.isStage) return editingTarget.sprite.name;
-                // fallback: use the current thread's target at runtime
                 return null;
             }
             return Scratch.Cast.toString(raw);
@@ -1350,7 +1349,6 @@ self.onmessage = ({ data: msg }) => {
             const li = this.lights[lightId];
             if (!li) return false;
 
-            // Resolve sprite name (handles "_myself_")
             let spriteName = Scratch.Cast.toString(args.SPRITE);
             if (spriteName === '_myself_') {
                 const t = util && util.target ? util.target : Scratch.vm.editingTarget;
@@ -1381,7 +1379,6 @@ self.onmessage = ({ data: msg }) => {
                 const dist = Math.sqrt(dx * dx + dy * dy);
                 if (dist >= li.radius) return false;
                 const angle = Math.atan2(dy, dx);
-                // li.direction is Scratch degrees (0=up, clockwise), convert to math radians
                 const dirRad = (90 - li.direction) * (Math.PI / 180);
                 let delta = Math.abs(((angle - dirRad + Math.PI) % (2 * Math.PI)) - Math.PI);
                 return delta <= li.arc * (Math.PI / 180);

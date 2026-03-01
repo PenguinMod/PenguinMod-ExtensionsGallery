@@ -1194,6 +1194,7 @@ self.onmessage = ({ data: msg }) => {
             if (Scratch.Cast.toString(raw) === '_myself_') {
                 const editingTarget = Scratch.vm.editingTarget;
                 if (editingTarget && !editingTarget.isStage) return editingTarget.sprite.name;
+                
                 return null;
             }
             return Scratch.Cast.toString(raw);
@@ -1349,6 +1350,7 @@ self.onmessage = ({ data: msg }) => {
             const li = this.lights[lightId];
             if (!li) return false;
 
+            
             let spriteName = Scratch.Cast.toString(args.SPRITE);
             if (spriteName === '_myself_') {
                 const t = util && util.target ? util.target : Scratch.vm.editingTarget;
@@ -1379,6 +1381,7 @@ self.onmessage = ({ data: msg }) => {
                 const dist = Math.sqrt(dx * dx + dy * dy);
                 if (dist >= li.radius) return false;
                 const angle = Math.atan2(dy, dx);
+                
                 const dirRad = (90 - li.direction) * (Math.PI / 180);
                 let delta = Math.abs(((angle - dirRad + Math.PI) % (2 * Math.PI)) - Math.PI);
                 return delta <= li.arc * (Math.PI / 180);
@@ -1463,9 +1466,9 @@ self.onmessage = ({ data: msg }) => {
                 const cam = this._getCameraState();
                 if (cam) {
                     globalCamX = cam.pos[0];
-                    globalCamY = cam.pos[1];
-                    globalCamScale = cam.scale || 1;
-                    globalCamDirRad = cam.dir * (Math.PI / 180);
+                    globalCamY = -cam.pos[1];
+                    globalCamScale = 1 / (cam.scale || 1);
+                    globalCamDirRad = -cam.dir * (Math.PI / 180);
                 }
             }
 
@@ -1490,9 +1493,9 @@ self.onmessage = ({ data: msg }) => {
                         const cam = _resolveCamera(li.cameraOverride);
                         if (cam) {
                             camX = cam.pos[0];
-                            camY = cam.pos[1];
-                            camScale = cam.scale || 1;
-                            camDirRad = cam.dir * (Math.PI / 180);
+                            camY = -cam.pos[1];
+                            camScale = 1 / (cam.scale || 1);
+                            camDirRad = -cam.dir * (Math.PI / 180);
                         } else {
                             camX = 0; camY = 0; camScale = 1; camDirRad = 0;
                         }

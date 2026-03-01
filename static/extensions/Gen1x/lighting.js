@@ -376,6 +376,7 @@ self.onmessage = ({ data: msg }) => {
         resetLightsOnStart: false,
         renderThread: 'worker',
         cameraFollow: false,
+        cameraFollowName: 'default',
     };
 
     class LightExtension {
@@ -395,6 +396,7 @@ self.onmessage = ({ data: msg }) => {
             this.resetLightsOnStart = RENDER_DEFAULTS.resetLightsOnStart;
             this.renderThread = RENDER_DEFAULTS.renderThread;
             this.cameraFollow = RENDER_DEFAULTS.cameraFollow;
+            this.cameraFollowName = RENDER_DEFAULTS.cameraFollowName;
 
             this.inclusionMode = 'Blacklist';
             this._inclusionList = [];
@@ -475,6 +477,7 @@ self.onmessage = ({ data: msg }) => {
                 resetLightsOnStart: this.resetLightsOnStart,
                 renderThread: this.renderThread,
                 cameraFollow: this.cameraFollow,
+                cameraFollowName: this.cameraFollowName,
                 inclusionMode: this.inclusionMode,
                 inclusionList: [...this._inclusionList],
             };
@@ -497,6 +500,7 @@ self.onmessage = ({ data: msg }) => {
                 this.colorTemp = pending.colorTemp;
                 this.resetLightsOnStart = pending.resetLightsOnStart;
                 this.cameraFollow = pending.cameraFollow;
+                this.cameraFollowName = pending.cameraFollowName;
                 this.inclusionMode = pending.inclusionMode;
                 this._inclusionList = [...(pending.inclusionList || [])];
                 this._markDirty();
@@ -533,6 +537,7 @@ self.onmessage = ({ data: msg }) => {
                             this.colorTemp = snapshot.colorTemp;
                             this.resetLightsOnStart = snapshot.resetLightsOnStart;
                             this.cameraFollow = snapshot.cameraFollow;
+                            this.cameraFollowName = snapshot.cameraFollowName;
                             if (this.renderThread !== snapshot.renderThread) {
                                 this.renderThread = snapshot.renderThread;
                                 this._switchRenderThread(this.renderThread);
@@ -908,6 +913,7 @@ self.onmessage = ({ data: msg }) => {
                     resetLightsOnStart: this.resetLightsOnStart,
                     renderThread: this.renderThread,
                     cameraFollow: this.cameraFollow,
+                    cameraFollowName: this.cameraFollowName,
                     inclusionMode: this.inclusionMode,
                     inclusionList: [...this._inclusionList],
                 };
@@ -935,6 +941,7 @@ self.onmessage = ({ data: msg }) => {
                     this._switchRenderThread(this.renderThread);
                 }
                 if (typeof data.cameraFollow === 'boolean') this.cameraFollow = data.cameraFollow;
+                if (typeof data.cameraFollowName === 'string') this.cameraFollowName = data.cameraFollowName;
                 if (typeof data.inclusionMode === 'string') this.inclusionMode = data.inclusionMode;
                 if (Array.isArray(data.inclusionList)) this._inclusionList = data.inclusionList;
                 this._markDirty();
@@ -1313,7 +1320,7 @@ self.onmessage = ({ data: msg }) => {
             const runtime = Scratch.vm.runtime;
             if (typeof runtime.getCamera !== 'function') return null;
             try {
-                return runtime.getCamera('default');
+                return runtime.getCamera(this.cameraFollowName || 'default');
             } catch (e) {
                 return null;
             }
@@ -1321,6 +1328,11 @@ self.onmessage = ({ data: msg }) => {
 
         setCameraFollow(args) {
             this.cameraFollow = Scratch.Cast.toString(args.STATE) === 'on';
+            this._markDirty();
+        }
+
+        setCameraFollowName(args) {
+            this.cameraFollowName = Scratch.Cast.toString(args.NAME) || 'default';
             this._markDirty();
         }
 
@@ -1598,6 +1610,7 @@ self.onmessage = ({ data: msg }) => {
             this.colorTemp = RENDER_DEFAULTS.colorTemp;
             this.resetLightsOnStart = RENDER_DEFAULTS.resetLightsOnStart;
             this.cameraFollow = RENDER_DEFAULTS.cameraFollow;
+            this.cameraFollowName = RENDER_DEFAULTS.cameraFollowName;
             this.renderThread = RENDER_DEFAULTS.renderThread;
             this._switchRenderThread(this.renderThread);
             this._saveRenderSettings();
@@ -1631,6 +1644,8 @@ self.onmessage = ({ data: msg }) => {
                     return this.renderThread;
                 case 'cameraFollow':
                     return this.cameraFollow ? 'on' : 'off';
+                case 'cameraFollowName':
+                    return this.cameraFollowName;
                 default:
                     return '';
             }
@@ -1722,6 +1737,18 @@ self.onmessage = ({ data: msg }) => {
                             STATE: {
                                 type: Scratch.ArgumentType.STRING,
                                 menu: 'onOffMenu'
+                            }
+                        }
+                    },
+                    {
+                        opcode: 'setCameraFollowName',
+                        blockType: Scratch.BlockType.COMMAND,
+                        hideFromPalette: !isPenguinMod,
+                        text: 'set camera to follow [NAME]',
+                        arguments: {
+                            NAME: {
+                                type: Scratch.ArgumentType.STRING,
+                                defaultValue: 'default'
                             }
                         }
                     },
@@ -2183,7 +2210,7 @@ self.onmessage = ({ data: msg }) => {
                     },
                     settingMenu: {
                         acceptReporters: false,
-                        items: ['shadowOpacity', 'ambient', 'bloomAmount', 'bloomRadius', 'bloomThreshold', 'pixelated', 'pixelSize', 'contrast', 'colorTemp', 'resetLightsOnStart', 'renderThread', 'cameraFollow']
+                        items: ['shadowOpacity', 'ambient', 'bloomAmount', 'bloomRadius', 'bloomThreshold', 'pixelated', 'pixelSize', 'contrast', 'colorTemp', 'resetLightsOnStart', 'renderThread', 'cameraFollow', 'cameraFollowName']
                     },
                     renderThreadMenu: {
                         acceptReporters: false,

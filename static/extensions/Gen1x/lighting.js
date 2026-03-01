@@ -1,9 +1,6 @@
 (function(Scratch) {
     'use strict';
 
-    const MAX_LIGHTS = 32;
-    const UBO_FLOATS = MAX_LIGHTS * 12;
-
     const VERT_SRC = `#version 300 es
 precision highp float;
 in  vec2 a_pos;
@@ -16,7 +13,6 @@ void main() {
     const FRAG_SRC = `#version 300 es
 precision highp float;
 
-#define MAX_LIGHTS ${MAX_LIGHTS}
 #define POINT  0
 #define SPOT   1
 #define AREA   2
@@ -24,21 +20,20 @@ precision highp float;
 in  vec2 v_uv;
 out vec4 o_color;
 
-uniform vec2  u_res;
-uniform vec3  u_ambient;
-uniform float u_opacity;
-uniform int   u_nLights;
-uniform float u_bloomAmount;
-uniform float u_bloomRadius;
-uniform float u_bloomThreshold;
-uniform float u_contrast;
-uniform float u_colorTemp;
+uniform vec2      u_res;
+uniform vec3      u_ambient;
+uniform float     u_opacity;
+uniform int       u_nLights;
+uniform float     u_bloomAmount;
+uniform float     u_bloomRadius;
+uniform float     u_bloomThreshold;
+uniform float     u_contrast;
+uniform float     u_colorTemp;
+uniform sampler2D u_lightTex;
 
-layout(std140) uniform Lights {
-  vec4 u_lpostype[MAX_LIGHTS];
-  vec4 u_lcol    [MAX_LIGHTS];
-  vec4 u_ldim    [MAX_LIGHTS];
-};
+vec4 lt_postype(int i) { return texelFetch(u_lightTex, ivec2(0, i), 0); }
+vec4 lt_col    (int i) { return texelFetch(u_lightTex, ivec2(1, i), 0); }
+vec4 lt_dim    (int i) { return texelFetch(u_lightTex, ivec2(2, i), 0); }
 
 float smoothstep3(float e0, float e1, float x) {
   float t = clamp((x - e0) / max(e1 - e0, 1e-5), 0.0, 1.0);
@@ -55,11 +50,12 @@ float pointFalloff(float t) {
 }
 
 vec3 pointRealistic(vec2 p, int i) {
-  float d = length(p - u_lpostype[i].xy);
-  float R = u_lpostype[i].w;
+  vec4 pt = lt_postype(i);
+  float d = length(p - pt.xy);
+  float R = pt.w;
   if (d >= R) return vec3(0.0);
 
-  vec3  rgb    = u_lcol[i].xyz;
+  vec3  rgb    = lt_col(i).xyz;
   float outer  = pointFalloff(d / R);
   float bT     = clamp(d / (R * u_bloomRadius), 0.0, 1.0);
   float rawA   = (bT < 0.4) ? mix(0.90, 0.40, bT / 0.4) : mix(0.40, 0.00, (bT - 0.4) / 0.6);
@@ -69,14 +65,17 @@ vec3 pointRealistic(vec2 p, int i) {
 }
 
 vec3 spotRealistic(vec2 p, int i) {
-  vec2  toP = p - u_lpostype[i].xy;
+  vec4 pt   = lt_postype(i);
+  vec4 col  = lt_col(i);
+  vec4 dim  = lt_dim(i);
+  vec2  toP = p - pt.xy;
   float d   = length(toP);
-  float R   = u_lpostype[i].w;
+  float R   = pt.w;
   if (d >= R) return vec3(0.0);
 
-  float arc    = u_ldim[i].w;
-  float soft   = max(u_lcol[i].w, 0.10);
-  float delta  = abs(mod(atan(toP.y, toP.x) - u_ldim[i].z + 3.14159265, 6.28318530) - 3.14159265);
+  float arc    = dim.w;
+  float soft   = max(col.w, 0.10);
+  float delta  = abs(mod(atan(toP.y, toP.x) - dim.z + 3.14159265, 6.28318530) - 3.14159265);
   float softPx = max(soft * d, 1.5);
 
   if (delta > arc + softPx / max(d, 0.001)) return vec3(0.0);
@@ -96,7 +95,7 @@ vec3 spotRealistic(vec2 p, int i) {
   else if (t < 0.88) radial = mix(0.14, 0.04, (t - 0.70) / 0.18);
   else               radial = mix(0.04, 0.00, (t - 0.88) / 0.12);
 
-  vec3  rgb   = u_lcol[i].xyz;
+  vec3  rgb   = col.xyz;
   float nearT = clamp(d / (R * 0.14), 0.0, 1.0);
   float hazeT = smoothstep3(arc * 0.72, arc, delta);
   float hazeA = hazeT * (1.0 - smoothstep(arc, arc + soft, delta)) * radial * 0.20;
@@ -114,12 +113,15 @@ float areaFalloff(float t) {
 }
 
 vec3 areaRealistic(vec2 p, int i) {
-  vec2  hd  = abs(p - u_lpostype[i].xy) - vec2(u_ldim[i].x * 0.5, u_ldim[i].y * 0.5);
+  vec4 pt   = lt_postype(i);
+  vec4 col  = lt_col(i);
+  vec4 dim  = lt_dim(i);
+  vec2  hd  = abs(p - pt.xy) - vec2(dim.x * 0.5, dim.y * 0.5);
   float sdf = length(max(hd, 0.0)) + min(max(hd.x, hd.y), 0.0);
-  float soft = u_lcol[i].w;
+  float soft = col.w;
   float a    = (sdf <= 0.0) ? 0.95 : (sdf >= soft) ? 0.0 : areaFalloff(sdf / soft);
-  vec3  rgb  = u_lcol[i].xyz;
-  float bA   = clamp(1.0 - length(p - u_lpostype[i].xy) / max(max(u_ldim[i].x, u_ldim[i].y) * 1.8, 1.0), 0.0, 1.0) * 0.12;
+  vec3  rgb  = col.xyz;
+  float bA   = clamp(1.0 - length(p - pt.xy) / max(max(dim.x, dim.y) * 1.8, 1.0), 0.0, 1.0) * 0.12;
 
   return rgb * a + mix(rgb, vec3(1.0), 0.3) * bA;
 }
@@ -128,9 +130,8 @@ void main() {
   vec2 pos = vec2(v_uv.x, 1.0 - v_uv.y) * u_res;
   vec4 acc = vec4(u_ambient * u_opacity, u_opacity);
 
-  for (int i = 0; i < MAX_LIGHTS; i++) {
-    if (i >= u_nLights) break;
-    int  lt = int(u_lpostype[i].z);
+  for (int i = 0; i < u_nLights; i++) {
+    int  lt = int(lt_postype(i).z);
     vec3 lc = (lt == POINT) ? pointRealistic(pos, i)
             : (lt == SPOT)  ? spotRealistic(pos, i)
                             : areaRealistic(pos, i);
@@ -151,12 +152,10 @@ void main() {
     const WORKER_SRC = `
 'use strict';
 
-const MAX_LIGHTS = ${MAX_LIGHTS};
-const UBO_FLOATS = ${UBO_FLOATS};
 const VERT_SRC   = ${JSON.stringify(VERT_SRC)};
 const FRAG_SRC   = ${JSON.stringify(FRAG_SRC)};
 
-let gl, prog, vao, u, ubo, oc;
+let gl, prog, vao, u, lightTex, oc;
 
 function compile(type, src) {
   const s = gl.createShader(type);
@@ -188,13 +187,12 @@ function init(w, h) {
   gl.enableVertexAttribArray(loc);
   gl.vertexAttribPointer(loc, 2, gl.FLOAT, false, 0, 0);
 
-  ubo = gl.createBuffer();
-  gl.bindBuffer(gl.UNIFORM_BUFFER, ubo);
-  gl.bufferData(gl.UNIFORM_BUFFER, UBO_FLOATS * 4, gl.DYNAMIC_DRAW);
-
-  const blockIdx = gl.getUniformBlockIndex(prog, 'Lights');
-  gl.uniformBlockBinding(prog, blockIdx, 0);
-  gl.bindBufferBase(gl.UNIFORM_BUFFER, 0, ubo);
+  lightTex = gl.createTexture();
+  gl.bindTexture(gl.TEXTURE_2D, lightTex);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
 
   u = {
     res:            gl.getUniformLocation(prog, 'u_res'),
@@ -206,6 +204,7 @@ function init(w, h) {
     bloomThreshold: gl.getUniformLocation(prog, 'u_bloomThreshold'),
     contrast:       gl.getUniformLocation(prog, 'u_contrast'),
     colorTemp:      gl.getUniformLocation(prog, 'u_colorTemp'),
+    lightTex:       gl.getUniformLocation(prog, 'u_lightTex'),
   };
 
   gl.enable(gl.BLEND);
@@ -234,12 +233,12 @@ function render(d) {
     gl.enableVertexAttribArray(loc);
     gl.vertexAttribPointer(loc, 2, gl.FLOAT, false, 0, 0);
 
-    ubo = gl.createBuffer();
-    gl.bindBuffer(gl.UNIFORM_BUFFER, ubo);
-    gl.bufferData(gl.UNIFORM_BUFFER, UBO_FLOATS * 4, gl.DYNAMIC_DRAW);
-    const blockIdx = gl.getUniformBlockIndex(prog, 'Lights');
-    gl.uniformBlockBinding(prog, blockIdx, 0);
-    gl.bindBufferBase(gl.UNIFORM_BUFFER, 0, ubo);
+    lightTex = gl.createTexture();
+    gl.bindTexture(gl.TEXTURE_2D, lightTex);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
 
     u = {
       res:            gl.getUniformLocation(prog, 'u_res'),
@@ -251,6 +250,7 @@ function render(d) {
       bloomThreshold: gl.getUniformLocation(prog, 'u_bloomThreshold'),
       contrast:       gl.getUniformLocation(prog, 'u_contrast'),
       colorTemp:      gl.getUniformLocation(prog, 'u_colorTemp'),
+      lightTex:       gl.getUniformLocation(prog, 'u_lightTex'),
     };
 
     gl.enable(gl.BLEND);
@@ -274,8 +274,10 @@ function render(d) {
     gl.uniform1f(u.colorTemp,        d.colorTemp  ?? 0.0);
 
     if (d.n > 0) {
-      gl.bindBuffer(gl.UNIFORM_BUFFER, ubo);
-      gl.bufferSubData(gl.UNIFORM_BUFFER, 0, d.lightBuf, 0, UBO_FLOATS);
+      gl.activeTexture(gl.TEXTURE0);
+      gl.bindTexture(gl.TEXTURE_2D, lightTex);
+      gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA32F, 3, d.n, 0, gl.RGBA, gl.FLOAT, d.lightBuf);
+      gl.uniform1i(u.lightTex, 0);
     }
 
     gl.bindVertexArray(vao);
@@ -326,13 +328,12 @@ self.onmessage = ({ data: msg }) => {
         gl.enableVertexAttribArray(loc);
         gl.vertexAttribPointer(loc, 2, gl.FLOAT, false, 0, 0);
 
-        const ubo = gl.createBuffer();
-        gl.bindBuffer(gl.UNIFORM_BUFFER, ubo);
-        gl.bufferData(gl.UNIFORM_BUFFER, UBO_FLOATS * 4, gl.DYNAMIC_DRAW);
-
-        const blockIdx = gl.getUniformBlockIndex(prog, 'Lights');
-        gl.uniformBlockBinding(prog, blockIdx, 0);
-        gl.bindBufferBase(gl.UNIFORM_BUFFER, 0, ubo);
+        const lightTex = gl.createTexture();
+        gl.bindTexture(gl.TEXTURE_2D, lightTex);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
 
         const uf = name => gl.getUniformLocation(prog, name);
         const u = {
@@ -345,6 +346,7 @@ self.onmessage = ({ data: msg }) => {
             bloomThreshold: uf('u_bloomThreshold'),
             contrast: uf('u_contrast'),
             colorTemp: uf('u_colorTemp'),
+            lightTex: uf('u_lightTex'),
         };
 
         gl.enable(gl.BLEND);
@@ -354,7 +356,7 @@ self.onmessage = ({ data: msg }) => {
             prog,
             vao,
             u,
-            ubo
+            lightTex
         };
     }
 
@@ -363,6 +365,7 @@ self.onmessage = ({ data: msg }) => {
 
     const RENDER_DEFAULTS = {
         shadowOpacity: 0.85,
+        bgOpacity: 1.0,
         ambient: '#333333',
         bloomAmount: 1.0,
         bloomRadius: 0.32,
@@ -373,6 +376,8 @@ self.onmessage = ({ data: msg }) => {
         colorTemp: 0.0,
         resetLightsOnStart: false,
         renderThread: 'worker',
+        cameraFollow: false,
+        cameraFollowName: 'default',
     };
 
     class LightExtension {
@@ -381,6 +386,7 @@ self.onmessage = ({ data: msg }) => {
             this.ambient = RENDER_DEFAULTS.ambient;
             this.visible = true;
             this.shadowOpacity = RENDER_DEFAULTS.shadowOpacity;
+            this.bgOpacity = RENDER_DEFAULTS.bgOpacity;
 
             this.bloomAmount = RENDER_DEFAULTS.bloomAmount;
             this.bloomRadius = RENDER_DEFAULTS.bloomRadius;
@@ -391,6 +397,8 @@ self.onmessage = ({ data: msg }) => {
             this.colorTemp = RENDER_DEFAULTS.colorTemp;
             this.resetLightsOnStart = RENDER_DEFAULTS.resetLightsOnStart;
             this.renderThread = RENDER_DEFAULTS.renderThread;
+            this.cameraFollow = RENDER_DEFAULTS.cameraFollow;
+            this.cameraFollowName = RENDER_DEFAULTS.cameraFollowName;
 
             this.inclusionMode = 'Blacklist';
             this._inclusionList = [];
@@ -414,7 +422,7 @@ self.onmessage = ({ data: msg }) => {
             this._cachedPh = 0;
             this._cachedNativeDpr = 0;
 
-            this._uboData = new Float32Array(UBO_FLOATS);
+            this._uboData = null;
             this._ambientRGB = this.hexToRgb(this.ambient);
 
             this.canvas = document.createElement('canvas');
@@ -446,7 +454,7 @@ self.onmessage = ({ data: msg }) => {
         async openRenderSettings() {
             const ScratchBlocks = window.ScratchBlocks;
             if (!ScratchBlocks || !ScratchBlocks.customPrompt) {
-                const op = parseFloat(prompt('Shadow Opacity (0-1):', this.shadowOpacity));
+                const op = parseFloat(prompt('Overlay Opacity (0-1):', this.shadowOpacity));
                 if (!isNaN(op)) this.shadowOpacity = Math.max(0, Math.min(1, op));
                 const amb = prompt('Ambient color (hex):', this.ambient);
                 if (amb) {
@@ -460,6 +468,7 @@ self.onmessage = ({ data: msg }) => {
 
             const snapshot = {
                 shadowOpacity: this.shadowOpacity,
+                bgOpacity: this.bgOpacity,
                 ambient: this.ambient,
                 bloomAmount: this.bloomAmount,
                 bloomRadius: this.bloomRadius,
@@ -470,6 +479,8 @@ self.onmessage = ({ data: msg }) => {
                 colorTemp: this.colorTemp,
                 resetLightsOnStart: this.resetLightsOnStart,
                 renderThread: this.renderThread,
+                cameraFollow: this.cameraFollow,
+                cameraFollowName: this.cameraFollowName,
                 inclusionMode: this.inclusionMode,
                 inclusionList: [...this._inclusionList],
             };
@@ -481,6 +492,7 @@ self.onmessage = ({ data: msg }) => {
 
             const applyPending = () => {
                 this.shadowOpacity = pending.shadowOpacity;
+                this.bgOpacity = pending.bgOpacity;
                 this.ambient = pending.ambient;
                 this._ambientRGB = this.hexToRgb(pending.ambient);
                 this.bloomAmount = pending.bloomAmount;
@@ -491,6 +503,8 @@ self.onmessage = ({ data: msg }) => {
                 this.contrast = pending.contrast;
                 this.colorTemp = pending.colorTemp;
                 this.resetLightsOnStart = pending.resetLightsOnStart;
+                this.cameraFollow = pending.cameraFollow;
+                this.cameraFollowName = pending.cameraFollowName;
                 this.inclusionMode = pending.inclusionMode;
                 this._inclusionList = [...(pending.inclusionList || [])];
                 this._markDirty();
@@ -516,6 +530,7 @@ self.onmessage = ({ data: msg }) => {
                         role: 'cancel',
                         callback: () => {
                             this.shadowOpacity = snapshot.shadowOpacity;
+                            this.bgOpacity = snapshot.bgOpacity;
                             this.ambient = snapshot.ambient;
                             this._ambientRGB = this.hexToRgb(snapshot.ambient);
                             this.bloomAmount = snapshot.bloomAmount;
@@ -526,6 +541,8 @@ self.onmessage = ({ data: msg }) => {
                             this.contrast = snapshot.contrast;
                             this.colorTemp = snapshot.colorTemp;
                             this.resetLightsOnStart = snapshot.resetLightsOnStart;
+                            this.cameraFollow = snapshot.cameraFollow;
+                            this.cameraFollowName = snapshot.cameraFollowName;
                             if (this.renderThread !== snapshot.renderThread) {
                                 this.renderThread = snapshot.renderThread;
                                 this._switchRenderThread(this.renderThread);
@@ -580,7 +597,14 @@ self.onmessage = ({ data: msg }) => {
                 return (v / 100).toFixed(2);
             });
             shadowVal.textContent = this.shadowOpacity.toFixed(2);
-            container.appendChild(makeRow('Shadow Opacity', shadowSlider, shadowVal));
+            container.appendChild(makeRow('Overlay Opacity', shadowSlider, shadowVal));
+
+            const [bgOpacitySlider, bgOpacityVal] = makeSlider(0, 100, 1, Math.round(this.bgOpacity * 100), v => {
+                pending.bgOpacity = v / 100;
+                return (v / 100).toFixed(2);
+            });
+            bgOpacityVal.textContent = this.bgOpacity.toFixed(2);
+            container.appendChild(makeRow('Background Opacity', bgOpacitySlider, bgOpacityVal));
 
             const ambientInput = document.createElement('input');
             ambientInput.type = 'color';
@@ -677,6 +701,18 @@ self.onmessage = ({ data: msg }) => {
                 applyPending();
             });
             container.appendChild(makeRow('Reset Lights on Start', resetOnStartToggle));
+
+            if (isPenguinMod) {
+                const cameraFollowToggle = document.createElement('input');
+                cameraFollowToggle.type = 'checkbox';
+                cameraFollowToggle.checked = this.cameraFollow;
+                cameraFollowToggle.style.cssText = 'width:17px;height:17px;cursor:pointer;accent-color:#4a9eff;';
+                cameraFollowToggle.addEventListener('change', () => {
+                    pending.cameraFollow = cameraFollowToggle.checked;
+                    applyPending();
+                });
+                container.appendChild(makeRow('Follow PM Camera', cameraFollowToggle));
+            }
 
             const renderThreadSelect = document.createElement('select');
             renderThreadSelect.style.cssText = 'flex:1;padding:4px 8px;border-radius:4px;font-size:0.85rem;cursor:pointer;';
@@ -788,6 +824,8 @@ self.onmessage = ({ data: msg }) => {
                 };
                 shadowSlider.value = Math.round(RENDER_DEFAULTS.shadowOpacity * 100);
                 shadowVal.textContent = RENDER_DEFAULTS.shadowOpacity.toFixed(2);
+                bgOpacitySlider.value = Math.round(RENDER_DEFAULTS.bgOpacity * 100);
+                bgOpacityVal.textContent = RENDER_DEFAULTS.bgOpacity.toFixed(2);
                 ambientInput.value = RENDER_DEFAULTS.ambient;
                 bloomSlider.value = Math.round(RENDER_DEFAULTS.bloomAmount * 100);
                 bloomVal.textContent = RENDER_DEFAULTS.bloomAmount.toFixed(2);
@@ -834,6 +872,7 @@ self.onmessage = ({ data: msg }) => {
                 if (!vm.runtime.extensionStorage.simpleLighting) vm.runtime.extensionStorage.simpleLighting = {};
                 Object.assign(vm.runtime.extensionStorage.simpleLighting, {
                     shadowOpacity: this.shadowOpacity,
+                    bgOpacity: this.bgOpacity,
                     ambient: this.ambient,
                     bloomAmount: this.bloomAmount,
                     bloomRadius: this.bloomRadius,
@@ -855,6 +894,7 @@ self.onmessage = ({ data: msg }) => {
                 const s = vm.runtime.extensionStorage?.simpleLighting;
                 if (!s) return;
                 if (typeof s.shadowOpacity === 'number') this.shadowOpacity = s.shadowOpacity;
+                if (typeof s.bgOpacity === 'number') this.bgOpacity = s.bgOpacity;
                 if (typeof s.ambient === 'string') {
                     this.ambient = s.ambient;
                     this._ambientRGB = this.hexToRgb(s.ambient);
@@ -878,6 +918,7 @@ self.onmessage = ({ data: msg }) => {
             if (isPenguinMod) {
                 return {
                     shadowOpacity: this.shadowOpacity,
+                    bgOpacity: this.bgOpacity,
                     ambient: this.ambient,
                     bloomAmount: this.bloomAmount,
                     bloomRadius: this.bloomRadius,
@@ -888,6 +929,8 @@ self.onmessage = ({ data: msg }) => {
                     colorTemp: this.colorTemp,
                     resetLightsOnStart: this.resetLightsOnStart,
                     renderThread: this.renderThread,
+                    cameraFollow: this.cameraFollow,
+                    cameraFollowName: this.cameraFollowName,
                     inclusionMode: this.inclusionMode,
                     inclusionList: [...this._inclusionList],
                 };
@@ -898,6 +941,7 @@ self.onmessage = ({ data: msg }) => {
         deserialize(data) {
             if (isPenguinMod && data) {
                 if (typeof data.shadowOpacity === 'number') this.shadowOpacity = data.shadowOpacity;
+                if (typeof data.bgOpacity === 'number') this.bgOpacity = data.bgOpacity;
                 if (typeof data.ambient === 'string') {
                     this.ambient = data.ambient;
                     this._ambientRGB = this.hexToRgb(data.ambient);
@@ -914,6 +958,8 @@ self.onmessage = ({ data: msg }) => {
                     this.renderThread = data.renderThread;
                     this._switchRenderThread(this.renderThread);
                 }
+                if (typeof data.cameraFollow === 'boolean') this.cameraFollow = data.cameraFollow;
+                if (typeof data.cameraFollowName === 'string') this.cameraFollowName = data.cameraFollowName;
                 if (typeof data.inclusionMode === 'string') this.inclusionMode = data.inclusionMode;
                 if (Array.isArray(data.inclusionList)) this._inclusionList = data.inclusionList;
                 this._markDirty();
@@ -1132,10 +1178,25 @@ self.onmessage = ({ data: msg }) => {
         }
 
         _getSpriteMenuItems() {
+            const editingTarget = Scratch.vm.editingTarget;
+            const myselfName = (editingTarget && !editingTarget.isStage)
+                ? editingTarget.sprite.name
+                : null;
             const sprites = Scratch.vm.runtime.targets
-                .filter(t => !t.isStage)
+                .filter(t => !t.isStage && t.sprite.name !== myselfName)
                 .map(t => t.sprite.name);
-            return sprites.length > 0 ? sprites : [''];
+            const items = [{ text: 'myself', value: '_myself_' }];
+            for (const name of sprites) items.push({ text: name, value: name });
+            return items;
+        }
+
+        _resolveSpriteName(raw) {
+            if (Scratch.Cast.toString(raw) === '_myself_') {
+                const editingTarget = Scratch.vm.editingTarget;
+                if (editingTarget && !editingTarget.isStage) return editingTarget.sprite.name;
+                return null;
+            }
+            return Scratch.Cast.toString(raw);
         }
 
         _setupResizeObserver() {
@@ -1268,7 +1329,7 @@ self.onmessage = ({ data: msg }) => {
         }
 
         setSpriteExcluded(args) {
-            const name = Scratch.Cast.toString(args.SPRITE);
+            const name = this._resolveSpriteName(args.SPRITE) || Scratch.Cast.toString(args.SPRITE);
             const state = Scratch.Cast.toString(args.STATE);
             if (state === 'excluded') {
                 this._excludedSprites.add(name);
@@ -1279,7 +1340,50 @@ self.onmessage = ({ data: msg }) => {
         }
 
         isSpriteExcluded(args) {
-            return this._excludedSprites.has(Scratch.Cast.toString(args.SPRITE));
+            const name = this._resolveSpriteName(args.SPRITE);
+            return this._excludedSprites.has(name || Scratch.Cast.toString(args.SPRITE));
+        }
+
+        spriteTouchingLight(args, util) {
+            const lightId = Scratch.Cast.toString(args.LIGHT);
+            const li = this.lights[lightId];
+            if (!li) return false;
+
+            let spriteName = Scratch.Cast.toString(args.SPRITE);
+            if (spriteName === '_myself_') {
+                const t = util && util.target ? util.target : Scratch.vm.editingTarget;
+                spriteName = t ? t.sprite.name : null;
+            }
+            if (!spriteName) return false;
+
+            const target = Scratch.vm.runtime.targets.find(
+                t => !t.isStage && t.sprite.name === spriteName
+            );
+            if (!target) return false;
+
+            const sx = target.x;
+            const sy = target.y;
+            const lx = li.x;
+            const ly = li.y;
+
+            if (li.type === 'point') {
+                const dist = Math.sqrt((sx - lx) ** 2 + (sy - ly) ** 2);
+                return dist <= li.radius;
+            } else if (li.type === 'area') {
+                const hw = (li.width || 0) / 2;
+                const hh = (li.height || 0) / 2;
+                return sx >= lx - hw && sx <= lx + hw && sy >= ly - hh && sy <= ly + hh;
+            } else if (li.type === 'spot') {
+                const dx = sx - lx;
+                const dy = sy - ly;
+                const dist = Math.sqrt(dx * dx + dy * dy);
+                if (dist >= li.radius) return false;
+                const angle = Math.atan2(dy, dx);
+                const dirRad = (90 - li.direction) * (Math.PI / 180);
+                let delta = Math.abs(((angle - dirRad + Math.PI) % (2 * Math.PI)) - Math.PI);
+                return delta <= li.arc * (Math.PI / 180);
+            }
+            return false;
         }
 
         hexToRgb(hex) {
@@ -1287,33 +1391,136 @@ self.onmessage = ({ data: msg }) => {
             return m ? [parseInt(m[1], 16) / 255, parseInt(m[2], 16) / 255, parseInt(m[3], 16) / 255] : [1, 1, 1];
         }
 
+        _getCameraState() {
+            return this._getCameraStateByName(this.cameraFollowName || 'default');
+        }
+
+        _getCameraStateByName(name) {
+            if (!isPenguinMod) return null;
+            const runtime = Scratch.vm.runtime;
+            if (typeof runtime.getCamera !== 'function') return null;
+            try {
+                return runtime.getCamera(name);
+            } catch (e) {
+                return null;
+            }
+        }
+
+        setCameraFollow(args) {
+            this.cameraFollow = Scratch.Cast.toString(args.STATE) === 'on';
+            this._markDirty();
+        }
+
+        setCameraFollowName(args) {
+            this.cameraFollowName = Scratch.Cast.toString(args.NAME) || 'default';
+            this._markDirty();
+        }
+
+        setLightCameraFollow(args) {
+            const id = Scratch.Cast.toString(args.ID);
+            const state = Scratch.Cast.toString(args.STATE);
+            if (!this.lights[id]) return;
+            if (state === 'none') {
+                this.lights[id].cameraOverride = 'none';
+            } else if (state === 'global') {
+                this.lights[id].cameraOverride = null;
+            } else if (state === 'custom') {
+                if (this.lights[id].cameraOverride === null || this.lights[id].cameraOverride === 'none') {
+                    this.lights[id].cameraOverride = this.cameraFollowName || 'default';
+                }
+            }
+            this._markDirty();
+        }
+
+        setLightCameraName(args) {
+            const id = Scratch.Cast.toString(args.ID);
+            const name = Scratch.Cast.toString(args.NAME) || 'default';
+            if (!this.lights[id]) return;
+            this.lights[id].cameraOverride = name;
+            this._markDirty();
+        }
+
+        getLightCameraFollow(args) {
+            const id = Scratch.Cast.toString(args.ID);
+            if (!this.lights[id]) return '';
+            const ov = this.lights[id].cameraOverride;
+            if (ov === null || ov === undefined) return 'global';
+            if (ov === 'none') return 'none';
+            return ov;
+        }
+
         _fillUBOData(w, h) {
+            const lights = Object.values(this.lights);
+            const n = lights.length;
+            const needed = n * 12;
+            if (!this._uboData || this._uboData.length < needed) {
+                this._uboData = new Float32Array(Math.max(needed, 12));
+            }
             const buf = this._uboData;
-            let n = 0;
 
-            for (const li of Object.values(this.lights)) {
-                if (n >= MAX_LIGHTS) break;
+            let globalCamX = 0, globalCamY = 0, globalCamScale = 1, globalCamDirRad = 0;
+            if (this.cameraFollow && isPenguinMod) {
+                const cam = this._getCameraState();
+                if (cam) {
+                    globalCamX = cam.pos[0];
+                    globalCamY = cam.pos[1];
+                    globalCamScale = cam.scale || 1;
+                    globalCamDirRad = cam.dir * (Math.PI / 180);
+                }
+            }
 
-                const a = n * 4;
-                const b = 128 + n * 4;
-                const c = 256 + n * 4;
+            const _camCache = {};
+            const _resolveCamera = (name) => {
+                if (_camCache[name] !== undefined) return _camCache[name];
+                const cam = this._getCameraStateByName(name);
+                _camCache[name] = cam;
+                return cam;
+            };
 
-                buf[a] = li.x + w * 0.5;
-                buf[a + 1] = h * 0.5 - li.y;
-                buf[a + 2] = li.ltype;
-                buf[a + 3] = li.radius || 0;
+            for (let i = 0; i < n; i++) {
+                const li = lights[i];
+                const base = i * 12;
 
-                buf[b] = li.cr;
-                buf[b + 1] = li.cg;
-                buf[b + 2] = li.cb;
-                buf[b + 3] = li.softness || 0;
+                let camX = globalCamX, camY = globalCamY, camScale = globalCamScale, camDirRad = globalCamDirRad;
 
-                buf[c] = li.width || 0;
-                buf[c + 1] = li.height || 0;
-                buf[c + 2] = (li.direction - 90) * (Math.PI / 180);
-                buf[c + 3] = (Math.abs(li.arc) / 2) * (Math.PI / 180);
+                if (isPenguinMod && li.cameraOverride !== undefined && li.cameraOverride !== null) {
+                    if (li.cameraOverride === 'none') {
+                        camX = 0; camY = 0; camScale = 1; camDirRad = 0;
+                    } else {
+                        const cam = _resolveCamera(li.cameraOverride);
+                        if (cam) {
+                            camX = cam.pos[0];
+                            camY = cam.pos[1];
+                            camScale = cam.scale || 1;
+                            camDirRad = cam.dir * (Math.PI / 180);
+                        } else {
+                            camX = 0; camY = 0; camScale = 1; camDirRad = 0;
+                        }
+                    }
+                }
 
-                n++;
+                const cosA = Math.cos(-camDirRad);
+                const sinA = Math.sin(-camDirRad);
+
+                let lx = li.x - camX;
+                let ly = li.y - camY;
+                const rx = (lx * cosA - ly * sinA) / camScale;
+                const ry = (lx * sinA + ly * cosA) / camScale;
+
+                buf[base]      = rx + w * 0.5;
+                buf[base + 1]  = h * 0.5 - ry;
+                buf[base + 2]  = li.ltype;
+                buf[base + 3]  = (li.radius || 0) / camScale;
+
+                buf[base + 4]  = li.cr;
+                buf[base + 5]  = li.cg;
+                buf[base + 6]  = li.cb;
+                buf[base + 7]  = li.softness || 0;
+
+                buf[base + 8]  = (li.width || 0) / camScale;
+                buf[base + 9]  = (li.height || 0) / camScale;
+                buf[base + 10] = (li.direction - 90) * (Math.PI / 180) - camDirRad;
+                buf[base + 11] = (Math.abs(li.arc) / 2) * (Math.PI / 180);
             }
 
             return n;
@@ -1327,7 +1534,7 @@ self.onmessage = ({ data: msg }) => {
             if (this._mode === 'none') return;
 
             const hasCutouts = this._getEffectiveExclusionSet().size > 0;
-            const needsFrame = this._dirty || hasCutouts;
+            const needsFrame = this._dirty || hasCutouts || (this.cameraFollow && isPenguinMod);
             if (!needsFrame) return;
 
             this._syncCanvasPosition();
@@ -1350,8 +1557,19 @@ self.onmessage = ({ data: msg }) => {
                 this.canvas.style.imageRendering = '';
             }
 
+            const targetOpacity = String(this.shadowOpacity);
+            if (this.canvas.style.opacity !== targetOpacity) {
+                this.canvas.style.opacity = targetOpacity;
+            }
+
+            const targetBlend = this.bgOpacity < 0.01 ? 'screen' : 'multiply';
+            if (this.canvas.style.mixBlendMode !== targetBlend) {
+                this.canvas.style.mixBlendMode = targetBlend;
+            }
+
             if (this._mode === 'worker') {
-                if (this._dirty) {
+                const needsWorkerRender = this._dirty || (this.cameraFollow && isPenguinMod);
+                if (needsWorkerRender) {
                     this._dirty = false;
                     const n = this._fillUBOData(w, h);
                     const ambientRGB = this._ambientRGB;
@@ -1365,7 +1583,7 @@ self.onmessage = ({ data: msg }) => {
                         lightBuf: this._uboData,
                         n,
                         ambient: ambientRGB,
-                        opacity: this.shadowOpacity,
+                        opacity: this.bgOpacity,
                         bloomAmount: this.bloomAmount,
                         bloomRadius: this.bloomRadius,
                         bloomThreshold: this.bloomThreshold,
@@ -1382,7 +1600,9 @@ self.onmessage = ({ data: msg }) => {
                     } else {
                         this._pendingRender = msg;
                     }
-                } else if (hasCutouts && this._lastGLBitmap && this._lastBitmapPw === pw && this._lastBitmapPh === ph) {
+                }
+
+                if (hasCutouts && this._lastGLBitmap && this._lastBitmapPw === pw && this._lastBitmapPh === ph) {
                     if (this.canvas.width !== pw || this.canvas.height !== ph) {
                         this.canvas.width = pw;
                         this.canvas.height = ph;
@@ -1412,7 +1632,7 @@ self.onmessage = ({ data: msg }) => {
                 this.canvas.height = ph;
             }
 
-            if (this._dirty) {
+            if (this._dirty || (this.cameraFollow && isPenguinMod)) {
                 this._dirty = false;
                 const n = this._fillUBOData(w, h);
                 const ambientRGB = this._ambientRGB;
@@ -1422,7 +1642,7 @@ self.onmessage = ({ data: msg }) => {
                     prog,
                     vao,
                     u,
-                    ubo
+                    lightTex
                 } = this._glState;
 
                 gl.viewport(0, 0, pw, ph);
@@ -1433,7 +1653,7 @@ self.onmessage = ({ data: msg }) => {
                     gl.useProgram(prog);
                     gl.uniform2f(u.res, w, h);
                     gl.uniform3f(u.ambient, ambientRGB[0], ambientRGB[1], ambientRGB[2]);
-                    gl.uniform1f(u.opacity, this.shadowOpacity);
+                    gl.uniform1f(u.opacity, this.bgOpacity);
                     gl.uniform1i(u.nLights, n);
                     gl.uniform1f(u.bloomAmount, this.bloomAmount);
                     gl.uniform1f(u.bloomRadius, this.bloomRadius);
@@ -1442,8 +1662,10 @@ self.onmessage = ({ data: msg }) => {
                     gl.uniform1f(u.colorTemp, this.colorTemp);
 
                     if (n > 0) {
-                        gl.bindBuffer(gl.UNIFORM_BUFFER, ubo);
-                        gl.bufferSubData(gl.UNIFORM_BUFFER, 0, this._uboData, 0, UBO_FLOATS);
+                        gl.activeTexture(gl.TEXTURE0);
+                        gl.bindTexture(gl.TEXTURE_2D, lightTex);
+                        gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA32F, 3, n, 0, gl.RGBA, gl.FLOAT, this._uboData);
+                        gl.uniform1i(u.lightTex, 0);
                     }
 
                     gl.bindVertexArray(vao);
@@ -1464,6 +1686,12 @@ self.onmessage = ({ data: msg }) => {
 
         settingSetShadowOpacity(args) {
             this.shadowOpacity = Math.max(0, Math.min(1, Scratch.Cast.toNumber(args.OPACITY)));
+            this._saveRenderSettings();
+            this._markDirty();
+        }
+
+        settingSetBgOpacity(args) {
+            this.bgOpacity = Math.max(0, Math.min(1, Scratch.Cast.toNumber(args.OPACITY)));
             this._saveRenderSettings();
             this._markDirty();
         }
@@ -1526,6 +1754,7 @@ self.onmessage = ({ data: msg }) => {
 
         settingResetAll() {
             this.shadowOpacity = RENDER_DEFAULTS.shadowOpacity;
+            this.bgOpacity = RENDER_DEFAULTS.bgOpacity;
             this.ambient = RENDER_DEFAULTS.ambient;
             this._ambientRGB = this.hexToRgb(RENDER_DEFAULTS.ambient);
             this.bloomAmount = RENDER_DEFAULTS.bloomAmount;
@@ -1536,6 +1765,8 @@ self.onmessage = ({ data: msg }) => {
             this.contrast = RENDER_DEFAULTS.contrast;
             this.colorTemp = RENDER_DEFAULTS.colorTemp;
             this.resetLightsOnStart = RENDER_DEFAULTS.resetLightsOnStart;
+            this.cameraFollow = RENDER_DEFAULTS.cameraFollow;
+            this.cameraFollowName = RENDER_DEFAULTS.cameraFollowName;
             this.renderThread = RENDER_DEFAULTS.renderThread;
             this._switchRenderThread(this.renderThread);
             this._saveRenderSettings();
@@ -1547,6 +1778,8 @@ self.onmessage = ({ data: msg }) => {
             switch (key) {
                 case 'shadowOpacity':
                     return this.shadowOpacity;
+                case 'bgOpacity':
+                    return this.bgOpacity;
                 case 'ambient':
                     return this.ambient;
                 case 'bloomAmount':
@@ -1567,6 +1800,10 @@ self.onmessage = ({ data: msg }) => {
                     return this.resetLightsOnStart ? 'on' : 'off';
                 case 'renderThread':
                     return this.renderThread;
+                case 'cameraFollow':
+                    return this.cameraFollow ? 'on' : 'off';
+                case 'cameraFollowName':
+                    return this.cameraFollowName;
                 default:
                     return '';
             }
@@ -1644,6 +1881,95 @@ self.onmessage = ({ data: msg }) => {
                             }
                         }
                     },
+                    {
+                        opcode: 'spriteTouchingLight',
+                        blockType: Scratch.BlockType.BOOLEAN,
+                        text: '[SPRITE] touching light [LIGHT]?',
+                        arguments: {
+                            SPRITE: {
+                                type: Scratch.ArgumentType.STRING,
+                                menu: 'spriteMenu'
+                            },
+                            LIGHT: {
+                                type: Scratch.ArgumentType.STRING,
+                                defaultValue: 'light1'
+                            }
+                        }
+                    },
+                    '---',
+                    {
+                        blockType: Scratch.BlockType.LABEL,
+                        text: 'Stage Camera extension required:'
+                    },
+                    {
+                        opcode: 'setCameraFollow',
+                        blockType: Scratch.BlockType.COMMAND,
+                        hideFromPalette: !isPenguinMod,
+                        text: 'set camera follow [STATE]',
+                        arguments: {
+                            STATE: {
+                                type: Scratch.ArgumentType.STRING,
+                                menu: 'onOffMenu'
+                            }
+                        }
+                    },
+                    {
+                        opcode: 'setCameraFollowName',
+                        blockType: Scratch.BlockType.COMMAND,
+                        hideFromPalette: !isPenguinMod,
+                        text: 'set camera to follow [NAME]',
+                        arguments: {
+                            NAME: {
+                                type: Scratch.ArgumentType.STRING,
+                                defaultValue: 'default'
+                            }
+                        }
+                    },
+                    '---',
+                    {
+                        opcode: 'setLightCameraFollow',
+                        blockType: Scratch.BlockType.COMMAND,
+                        hideFromPalette: !isPenguinMod,
+                        text: 'set light [ID] camera follow [STATE]',
+                        arguments: {
+                            ID: {
+                                type: Scratch.ArgumentType.STRING,
+                                defaultValue: 'light1'
+                            },
+                            STATE: {
+                                type: Scratch.ArgumentType.STRING,
+                                menu: 'lightCameraFollowMenu'
+                            }
+                        }
+                    },
+                    {
+                        opcode: 'setLightCameraName',
+                        blockType: Scratch.BlockType.COMMAND,
+                        hideFromPalette: !isPenguinMod,
+                        text: 'set light [ID] to follow camera [NAME]',
+                        arguments: {
+                            ID: {
+                                type: Scratch.ArgumentType.STRING,
+                                defaultValue: 'light1'
+                            },
+                            NAME: {
+                                type: Scratch.ArgumentType.STRING,
+                                defaultValue: 'default'
+                            }
+                        }
+                    },
+                    {
+                        opcode: 'getLightCameraFollow',
+                        blockType: Scratch.BlockType.REPORTER,
+                        hideFromPalette: !isPenguinMod,
+                        text: 'light [ID] camera follow',
+                        arguments: {
+                            ID: {
+                                type: Scratch.ArgumentType.STRING,
+                                defaultValue: 'light1'
+                            }
+                        }
+                    },
                     '---',
                     '---',
                     {
@@ -1664,11 +1990,22 @@ self.onmessage = ({ data: msg }) => {
                     {
                         opcode: 'setShadowOpacity',
                         blockType: Scratch.BlockType.COMMAND,
-                        text: 'set shadow opacity to [OPACITY]%',
+                        text: 'set overlay opacity to [OPACITY]%',
                         arguments: {
                             OPACITY: {
                                 type: Scratch.ArgumentType.NUMBER,
                                 defaultValue: 85
+                            }
+                        }
+                    },
+                    {
+                        opcode: 'setBgOpacity',
+                        blockType: Scratch.BlockType.COMMAND,
+                        text: 'set background opacity to [OPACITY]%',
+                        arguments: {
+                            OPACITY: {
+                                type: Scratch.ArgumentType.NUMBER,
+                                defaultValue: 100
                             }
                         }
                     },
@@ -1855,7 +2192,6 @@ self.onmessage = ({ data: msg }) => {
                             }
                         }
                     },
-                    '---',
                     {
                         blockType: Scratch.BlockType.LABEL,
                         text: 'Read Lights'
@@ -1908,19 +2244,31 @@ self.onmessage = ({ data: msg }) => {
                         text: 'clear all lights'
                     },
                     '---',
-                    ...(isTurboWarp ? [{
+                    {
                         blockType: Scratch.BlockType.LABEL,
                         text: 'Render Settings'
-                    }] : []),
+                    },
                     {
                         opcode: 'settingSetShadowOpacity',
                         blockType: Scratch.BlockType.COMMAND,
                         hideFromPalette: false,
-                        text: 'set shadow opacity to [OPACITY]',
+                        text: 'set overlay opacity to [OPACITY]',
                         arguments: {
                             OPACITY: {
                                 type: Scratch.ArgumentType.NUMBER,
                                 defaultValue: 0.85
+                            }
+                        }
+                    },
+                    {
+                        opcode: 'settingSetBgOpacity',
+                        blockType: Scratch.BlockType.COMMAND,
+                        hideFromPalette: false,
+                        text: 'set background opacity to [OPACITY]',
+                        arguments: {
+                            OPACITY: {
+                                type: Scratch.ArgumentType.NUMBER,
+                                defaultValue: 1.0
                             }
                         }
                     },
@@ -2100,9 +2448,13 @@ self.onmessage = ({ data: msg }) => {
                         acceptReporters: false,
                         items: ['on', 'off']
                     },
+                    lightCameraFollowMenu: {
+                        acceptReporters: false,
+                        items: ['global', 'none', 'custom']
+                    },
                     settingMenu: {
                         acceptReporters: false,
-                        items: ['shadowOpacity', 'ambient', 'bloomAmount', 'bloomRadius', 'bloomThreshold', 'pixelated', 'pixelSize', 'contrast', 'colorTemp', 'resetLightsOnStart', 'renderThread']
+                        items: ['shadowOpacity', 'bgOpacity', 'ambient', 'bloomAmount', 'bloomRadius', 'bloomThreshold', 'pixelated', 'pixelSize', 'contrast', 'colorTemp', 'resetLightsOnStart', 'renderThread', 'cameraFollow', 'cameraFollowName']
                     },
                     renderThreadMenu: {
                         acceptReporters: false,
@@ -2127,6 +2479,11 @@ self.onmessage = ({ data: msg }) => {
 
         setShadowOpacity(args) {
             this.shadowOpacity = Math.max(0, Math.min(100, Scratch.Cast.toNumber(args.OPACITY))) / 100;
+            this._markDirty();
+        }
+
+        setBgOpacity(args) {
+            this.bgOpacity = Math.max(0, Math.min(100, Scratch.Cast.toNumber(args.OPACITY))) / 100;
             this._markDirty();
         }
 

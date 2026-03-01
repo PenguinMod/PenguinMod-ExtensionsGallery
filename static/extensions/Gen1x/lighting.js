@@ -1989,10 +1989,10 @@ self.onmessage = ({ data: msg }) => {
                         text: 'clear all lights'
                     },
                     '---',
-                    ...(isTurboWarp ? [{
+                    {
                         blockType: Scratch.BlockType.LABEL,
                         text: 'Render Settings'
-                    }] : []),
+                    },
                     {
                         opcode: 'settingSetShadowOpacity',
                         blockType: Scratch.BlockType.COMMAND,

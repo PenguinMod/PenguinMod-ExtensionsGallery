@@ -1316,11 +1316,15 @@ self.onmessage = ({ data: msg }) => {
         }
 
         _getCameraState() {
+            return this._getCameraStateByName(this.cameraFollowName || 'default');
+        }
+
+        _getCameraStateByName(name) {
             if (!isPenguinMod) return null;
             const runtime = Scratch.vm.runtime;
             if (typeof runtime.getCamera !== 'function') return null;
             try {
-                return runtime.getCamera(this.cameraFollowName || 'default');
+                return runtime.getCamera(name);
             } catch (e) {
                 return null;
             }
@@ -1336,6 +1340,39 @@ self.onmessage = ({ data: msg }) => {
             this._markDirty();
         }
 
+        setLightCameraFollow(args) {
+            const id = Scratch.Cast.toString(args.ID);
+            const state = Scratch.Cast.toString(args.STATE);
+            if (!this.lights[id]) return;
+            if (state === 'none') {
+                this.lights[id].cameraOverride = 'none';
+            } else if (state === 'global') {
+                this.lights[id].cameraOverride = null;
+            } else if (state === 'custom') {
+                if (this.lights[id].cameraOverride === null || this.lights[id].cameraOverride === 'none') {
+                    this.lights[id].cameraOverride = this.cameraFollowName || 'default';
+                }
+            }
+            this._markDirty();
+        }
+
+        setLightCameraName(args) {
+            const id = Scratch.Cast.toString(args.ID);
+            const name = Scratch.Cast.toString(args.NAME) || 'default';
+            if (!this.lights[id]) return;
+            this.lights[id].cameraOverride = name;
+            this._markDirty();
+        }
+
+        getLightCameraFollow(args) {
+            const id = Scratch.Cast.toString(args.ID);
+            if (!this.lights[id]) return '';
+            const ov = this.lights[id].cameraOverride;
+            if (ov === null || ov === undefined) return 'global';
+            if (ov === 'none') return 'none';
+            return ov;
+        }
+
         _fillUBOData(w, h) {
             const lights = Object.values(this.lights);
             const n = lights.length;
@@ -1345,23 +1382,49 @@ self.onmessage = ({ data: msg }) => {
             }
             const buf = this._uboData;
 
-            let camX = 0, camY = 0, camScale = 1, camDirRad = 0;
+            let globalCamX = 0, globalCamY = 0, globalCamScale = 1, globalCamDirRad = 0;
             if (this.cameraFollow && isPenguinMod) {
                 const cam = this._getCameraState();
                 if (cam) {
-                    camX = cam.pos[0];
-                    camY = cam.pos[1];
-                    camScale = cam.scale || 1;
-                    camDirRad = cam.dir * (Math.PI / 180);
+                    globalCamX = cam.pos[0];
+                    globalCamY = cam.pos[1];
+                    globalCamScale = cam.scale || 1;
+                    globalCamDirRad = cam.dir * (Math.PI / 180);
                 }
             }
 
-            const cosA = Math.cos(-camDirRad);
-            const sinA = Math.sin(-camDirRad);
+            const _camCache = {};
+            const _resolveCamera = (name) => {
+                if (_camCache[name] !== undefined) return _camCache[name];
+                const cam = this._getCameraStateByName(name);
+                _camCache[name] = cam;
+                return cam;
+            };
 
             for (let i = 0; i < n; i++) {
                 const li = lights[i];
                 const base = i * 12;
+
+                let camX = globalCamX, camY = globalCamY, camScale = globalCamScale, camDirRad = globalCamDirRad;
+
+                if (isPenguinMod && li.cameraOverride !== undefined && li.cameraOverride !== null) {
+                    if (li.cameraOverride === 'none') {
+                        camX = 0; camY = 0; camScale = 1; camDirRad = 0;
+                    } else {
+                        const cam = _resolveCamera(li.cameraOverride);
+                        if (cam) {
+                            camX = cam.pos[0];
+                            camY = cam.pos[1];
+                            camScale = cam.scale || 1;
+                            camDirRad = cam.dir * (Math.PI / 180);
+                        } else {
+                            camX = 0; camY = 0; camScale = 1; camDirRad = 0;
+                        }
+                    }
+                }
+
+                const cosA = Math.cos(-camDirRad);
+                const sinA = Math.sin(-camDirRad);
 
                 let lx = li.x - camX;
                 let ly = li.y - camY;
@@ -1753,6 +1816,51 @@ self.onmessage = ({ data: msg }) => {
                         }
                     },
                     '---',
+                    {
+                        opcode: 'setLightCameraFollow',
+                        blockType: Scratch.BlockType.COMMAND,
+                        hideFromPalette: !isPenguinMod,
+                        text: 'set light [ID] camera follow [STATE]',
+                        arguments: {
+                            ID: {
+                                type: Scratch.ArgumentType.STRING,
+                                defaultValue: 'light1'
+                            },
+                            STATE: {
+                                type: Scratch.ArgumentType.STRING,
+                                menu: 'lightCameraFollowMenu'
+                            }
+                        }
+                    },
+                    {
+                        opcode: 'setLightCameraName',
+                        blockType: Scratch.BlockType.COMMAND,
+                        hideFromPalette: !isPenguinMod,
+                        text: 'set light [ID] to follow camera [NAME]',
+                        arguments: {
+                            ID: {
+                                type: Scratch.ArgumentType.STRING,
+                                defaultValue: 'light1'
+                            },
+                            NAME: {
+                                type: Scratch.ArgumentType.STRING,
+                                defaultValue: 'default'
+                            }
+                        }
+                    },
+                    {
+                        opcode: 'getLightCameraFollow',
+                        blockType: Scratch.BlockType.REPORTER,
+                        hideFromPalette: !isPenguinMod,
+                        text: 'light [ID] camera follow',
+                        arguments: {
+                            ID: {
+                                type: Scratch.ArgumentType.STRING,
+                                defaultValue: 'light1'
+                            }
+                        }
+                    },
+                    '---',
                     '---',
                     {
                         blockType: Scratch.BlockType.LABEL,
@@ -1963,7 +2071,6 @@ self.onmessage = ({ data: msg }) => {
                             }
                         }
                     },
-                    '---',
                     {
                         blockType: Scratch.BlockType.LABEL,
                         text: 'Read Lights'
@@ -2207,6 +2314,10 @@ self.onmessage = ({ data: msg }) => {
                     onOffMenu: {
                         acceptReporters: false,
                         items: ['on', 'off']
+                    },
+                    lightCameraFollowMenu: {
+                        acceptReporters: false,
+                        items: ['global', 'none', 'custom']
                     },
                     settingMenu: {
                         acceptReporters: false,

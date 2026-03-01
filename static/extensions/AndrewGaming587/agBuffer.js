@@ -216,7 +216,8 @@
 
             root.appendChild(span("Buffer Pointer"))
             root.appendChild(span(`Index: ${"0x" + this.index.toString(16).padStart(8,"0")}`))
-            root.appendChild(span(`Value: ${this.getValue()}`))
+            root.appendChild(span(`Value: ${this.type == "void" ? "N/A" : this.getValue()}`))
+            root.appendChild(span(`Type: ${["Uint8","Int8","void"].includes(this.type) ? "" : (this.endian ? "Little-Endian " : "Big-Endian ")}${this.type}`))
             return root
         }
         getValue() {
@@ -243,6 +244,8 @@
                     return this.buffer.dataView.getFloat32(this.index,this.endian);
                 case "Float64":
                     return this.buffer.dataView.getFloat64(this.index,this.endian);
+                case "void":
+                    if (!agBuffer.disableErrorHandling) return null; else throw new TypeError("Cannot read a value from a void pointer");
             }
 
         }
@@ -281,6 +284,8 @@
                 case "Float64":
                     this.buffer.dataView.setFloat64(this.index,value,this.endian);
                     return;
+                case "void":
+                    if (!agBuffer.disableErrorHandling) return; else throw new TypeError("Cannot write a value to a void pointer");
             }
 
         }
@@ -297,6 +302,7 @@
         },
         PointerBlock: {
             blockType: BlockType.REPORTER,
+            blockShape: BlockShape.ARROW,
             forceOutputType: "ArrayBufferPointer",
             disableMonitor: true
         },
@@ -308,7 +314,7 @@
             check: ["ArrayBuffer"]
         },
         PointerArgument: {
-            //shape: "agBuffer-arrayBuffer",
+            shape: BlockShape.ARROW,
             exemptFromNormalization: true,
             check: ["ArrayBufferPointer"]
         },
@@ -724,7 +730,7 @@
                         ENDIAN: {type: ArgumentType.BOOLEAN},
                         BUFFER: agBuffer.Argument,
                         TYPE: {
-                            menu: 'DATATYPES',
+                            menu: 'POINTER_TYPES',
                             type: ArgumentType.STRING
                         }
                     }
@@ -765,7 +771,7 @@
                     blockType: BlockType.COMMAND,
                     arguments: {
                         PTR: agBuffer.PointerArgument,
-                        VALUE: {type: ArgumentType.STRING,menu:'DATATYPES'}
+                        VALUE: {type: ArgumentType.STRING,menu:'POINTER_TYPES'}
 
                     }
                 },
@@ -830,6 +836,16 @@
                         }
                     }
                 },
+                {
+                    opcode: 'pointerAsType',
+                    text: '[PTR] as [TYPE] pointer [ENDIAN]',
+                    ...agBuffer.PointerBlock,
+                    arguments: {
+                        PTR: agBuffer.PointerArgument,
+                        TYPE: {type: ArgumentType.STRING,menu:'POINTER_TYPES'},
+                        ENDIAN: {type: ArgumentType.BOOLEAN}
+                    }
+                },
 
                 {
                     blockType: BlockType.LABEL,
@@ -861,6 +877,11 @@
                         acceptReporters: true,
                         items: ["Uint8","Uint16","Uint32","Uint64","Int8","Int16","Int32","Int64","Float16","Float32","Float64"]
                     },
+                    POINTER_TYPES: {
+                        acceptReporters: true,
+                        items: ["Uint8","Uint16","Uint32","Uint64","Int8","Int16","Int32","Int64","Float16","Float32","Float64","void"]
+                    },
+
                     STRINGIFYMODE: {
                         acceptReporters: false,
                         items: ["array","bytes","binary"]
@@ -1271,6 +1292,13 @@
 
         isPointer({VALUE}) {
             return (!!VALUE && VALUE instanceof ArrayBufferPointerType)
+        }
+
+        pointerAsType({PTR,TYPE,ENDIAN = false}) {
+            if (!PTR || !(PTR instanceof ArrayBufferPointerType)) return null;
+            ENDIAN = Cast.toBoolean(ENDIAN)
+            TYPE = Cast.toString(TYPE)
+            return new ArrayBufferPointerType(PTR.buffer,PTR.index,TYPE,ENDIAN)
         }
 
     }

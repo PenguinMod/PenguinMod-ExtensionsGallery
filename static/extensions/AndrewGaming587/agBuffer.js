@@ -347,11 +347,11 @@
                 v => Array.from(new Uint8Array(v.arrayBuffer)), 
                 v => new ArrayBufferType(new Uint8Array([...v]))
             );
-            // vm.runtime.registerSerializer(
-            //     "agBufferPointer",
-            //     v => v.getValue(), 
-            //     v => v
-            // );
+            vm.runtime.registerSerializer(
+                "agBufferPointer",
+                v => v.getValue(), 
+                v => v
+            );
 
             vm.runtime.registerCompiledExtensionBlocks('agBuffer', this.getCompileInfo())
             if (!vm.runtime.ext_jwArray) vm.extensionManager.loadExtensionIdSync('jwArray')
@@ -834,6 +834,16 @@
                         PTR: {
                             exemptFromNormalization: true
                         }
+                    }
+                },
+                {
+                    opcode: 'copyPointer',
+                    text: 'copy pointer [PTR]',
+                    ...agBuffer.PointerBlock,
+                    arguments: {
+                        PTR: agBuffer.PointerArgument,
+                        TYPE: {type: ArgumentType.STRING,menu:'POINTER_TYPES'},
+                        ENDIAN: {type: ArgumentType.BOOLEAN}
                     }
                 },
                 {

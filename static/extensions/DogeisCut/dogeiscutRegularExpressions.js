@@ -298,6 +298,14 @@
                         ...dogeiscutRegularExpression.Block
                     },
                     {
+                        opcode: 'clone',
+                        text: 'clone [REGEX]',
+                        arguments: {
+                           REGEX: dogeiscutRegularExpression.Argument,
+                        },
+                        ...dogeiscutRegularExpression.Block
+                    },
+                    {
                         opcode: 'escape',
                         text: 'escape [STRING] for regex',
                         blockType: BlockType.REPORTER,
@@ -424,8 +432,21 @@
                                 defaultValue: "foo"
                             },
                         },
-                        hideFromPalette: !vm.runtime.ext_jwArray,
-                        ...(vm.runtime.ext_jwArray ? vm.jwArray.Block : {}),
+                        hideFromPalette: !vm.runtime.ext_jwArray && vm.runtime.ext_divIterator,
+                        ...(vm.runtime.ext_jwArray && !vm.runtime.ext_divIterator ? vm.jwArray.Block : {}),
+                    },
+                    {
+                        opcode: 'matchAllIterator',
+                        text: 'match all [REGEX] with [STRING]',
+                        arguments: {
+                            REGEX: dogeiscutRegularExpression.Argument,
+                            STRING: {
+                                type: ArgumentType.STRING,
+                                defaultValue: "foo"
+                            },
+                        },
+                        hideFromPalette: !vm.runtime.ext_divIterator,
+                        ...(vm.runtime.ext_divIterator ? vm.divIterator.Block : {}),
                     },
                     '---',
                     {
@@ -494,6 +515,13 @@
             PATTERN = Cast.toString(PATTERN)
             FLAGS = Cast.toString(FLAGS)
             return RegularExpressionType.toRegularExpression({ PATTERN, FLAGS })
+        }
+
+        clone({ REGEX }) {
+            REGEX = RegularExpressionType.toRegularExpression(REGEX)
+            let newRegex = RegularExpressionType.toRegularExpression({ PATTERN: REGEX.source, FLAGS: REGEX.flags })
+            newRegex.lastIndex = REGEX.lastIndex
+            return newRegex
         }
 
         test({ STRING, REGEX }) {

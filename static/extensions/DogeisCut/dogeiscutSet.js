@@ -10,6 +10,8 @@
         throw new Error('\'Sets\' must run unsandboxed!');
     }
 
+    let setLimit = 2 ** 32 - 1
+
     // credit to sharpool because jwklong stole the for each code from his extension haha he's soo evil
     // credit to jwklong because i stole the array type code from his extension haha im soo evil
 
@@ -45,6 +47,114 @@
         return el
     }
 
+    // polyfills
+
+    if (!Set.prototype.union) {
+        Set.prototype.union = function union(iterableValue) {
+            const resultSet = new Set(this)
+            for (const elementValue of iterableValue) {
+                resultSet.add(elementValue)
+            }
+            return resultSet
+        }
+    }
+
+    if (!Set.prototype.difference) {
+        Set.prototype.difference = function difference(iterableValue) {
+            const iterableSet = new Set(iterableValue)
+            const resultSet = new Set()
+            for (const elementValue of this) {
+                if (!iterableSet.has(elementValue)) {
+                    resultSet.add(elementValue)
+                }
+            }
+            return resultSet
+        }
+    }
+
+    if (!Set.prototype.intersection) {
+        Set.prototype.intersection = function intersection(iterableValue) {
+            const iterableSet = new Set(iterableValue)
+            const resultSet = new Set()
+            for (const elementValue of this) {
+                if (iterableSet.has(elementValue)) {
+                    resultSet.add(elementValue)
+                }
+            }
+            return resultSet
+        }
+    }
+
+    if (!Set.prototype.symmetricDifference) {
+        Set.prototype.symmetricDifference = function symmetricDifference(iterableValue) {
+            const iterableSet = new Set(iterableValue)
+            const resultSet = new Set()
+
+            for (const elementValue of this) {
+                if (!iterableSet.has(elementValue)) {
+                    resultSet.add(elementValue)
+                }
+            }
+
+            for (const elementValue of iterableSet) {
+                if (!this.has(elementValue)) {
+                    resultSet.add(elementValue)
+                }
+            }
+
+            return resultSet
+        }
+    }
+
+    if (!Set.prototype.isSubsetOf) {
+        Set.prototype.isSubsetOf = function isSubsetOf(iterableValue) {
+            const iterableSet = new Set(iterableValue)
+            for (const elementValue of this) {
+                if (!iterableSet.has(elementValue)) {
+                    return false
+                }
+            }
+            return true
+        }
+    }
+
+    if (!Set.prototype.isSupersetOf) {
+        Set.prototype.isSupersetOf = function isSupersetOf(iterableValue) {
+            const iterableSet = new Set(iterableValue)
+            for (const elementValue of iterableSet) {
+                if (!this.has(elementValue)) {
+                    return false
+                }
+            }
+            return true
+        }
+    }
+
+    if (!Set.prototype.isDisjointFrom) {
+        Set.prototype.isDisjointFrom = function isDisjointFrom(iterableValue) {
+            const iterableSet = new Set(iterableValue)
+            for (const elementValue of this) {
+                if (iterableSet.has(elementValue)) {
+                    return false
+                }
+            }
+            return true
+        }
+    }
+
+    function isObject(x) {
+        const fnToString = Function.prototype.toString
+        const classRegex = /^class\s/
+        if (typeof x === "function") {
+            return !classRegex.test(fnToString.call(x))
+        }
+        if (x !== null && typeof x === "object") {
+            const ctor = x.constructor
+            return !(typeof ctor === "function" && classRegex.test(fnToString.call(ctor)))
+        }
+        return false
+    }
+
     class SetType {
         customId = "dogeiscutSet"
 
@@ -64,8 +174,15 @@
         static toSet(x) {
             if (x instanceof SetType) return new SetType([...x.set])
             if (x instanceof Set) return new SetType([...x])
-            if (x instanceof Array) return new SetType(Set([...x]))
+            if (vm.jwArray && x instanceof vm.jwArray.Type) return new SetType(new Set([...x.array]))
+            if (x instanceof Array) return new SetType(new Set([...x]))
             if (x === "" || x === null || x === undefined) return new SetType([])
+            if (typeof x == "object" && typeof x.toJSON == "function") {
+                let parsed = x.toJSON()
+                if (parsed instanceof Array) return new SetType(new Set(parsed))
+                if (isObject(parsed)) return new SetType(new Set(Object.values(parsed)))
+                return new SetType(new Set([parsed]))
+            }
             try {
                 let parsed = JSON.parse(x)
                 if (parsed instanceof Array) return new SetType(parsed)
@@ -75,6 +192,10 @@
 
         static forSet(x) {
             if (x instanceof SetType) return new SetType(x.set)
+            if (x instanceof Set) return new SetType(x)
+            if (vm.jwArray && x instanceof vm.jwArray.Type) return new vm.jwArray.Type([...x.array])
+            if (vm.jwArray && x instanceof Array) return new vm.jwArray.Type([...x.array])
+            if (vm.dogeiscutObject && isObject(x)) return new vm.dogeiscutObject.Type({...x})
             return x
         }
 
@@ -83,11 +204,11 @@
                 switch (typeof x) {
                     case "object":
                         if (x === null) return "null"
-                        if (typeof x.jwArrayHandler == "function") {
-                            return x.jwArrayHandler()
-                        }
                         if (typeof x.dogeiscutSetHandler == "function") {
                             return x.dogeiscutSetHandler()
+                        }
+                        if (typeof x.jwArrayHandler == "function") {
+                            return x.jwArrayHandler()
                         }
                         return "Object"
                     case "undefined":
@@ -111,9 +232,20 @@
             return `Set<${formatNumber(this.set.size)}>`
         }
 
-        toString() {
-            return `Set: {${JSON.stringify(Array.from(this.set)).slice(1, -1)}}`
+        toString(pretty = false) {
+            return JSON.stringify(Array.from(this.set), null, pretty ? "\t" : null)
         }
+        toJSON() {
+            return Array.from(this.set).map(v => {
+                if (typeof v == "object" && v !== null) {
+                    if (v.toJSON && typeof v.toJSON == "function") return v.toJSON()
+                    if (v.toString && typeof v.toString == "function") return v.toString()
+                    return JSON.stringify(v)
+                }
+                return v
+            })
+        }
+        
         toMonitorContent = () => span(this.toString())
 
         toReporterContent() {
@@ -231,10 +363,21 @@
                     },
                     "---",
                     {
+                        opcode: 'builderCurrent',
+                        text: 'current set',
+                        hideFromPalette: true,
+                        canDragDuplicate: true,
+                        ...dogeiscutSet.Block
+                    },
+                    {
                         opcode: 'builder',
-                        text: 'set builder',
-                        branches: [{
-                        }],
+                        text: 'set builder [SHADOW]',
+                        branches: [{}],
+                        arguments: {
+                            SHADOW: {
+                                fillIn: 'builderCurrent'
+                            }
+                        },
                         ...dogeiscutSet.Block
                     },
                     {
@@ -249,6 +392,14 @@
                             }
                         },
                     },
+                    {
+                        opcode: 'builderSet',
+                        text: 'set builder to [SET]',
+                        blockType: Scratch.BlockType.COMMAND,
+                        arguments: {
+                            SET: dogeiscutSet.Argument
+                        }
+                    },
                     "---",
                     {
                         opcode: 'has',
@@ -260,6 +411,33 @@
                                 type: Scratch.ArgumentType.STRING,
                                 exemptFromNormalization: true
                             }
+                        }
+                    },
+                    {
+                        opcode: 'isSubsetOf',
+                        text: 'is [ONE] a subset of [TWO]?',
+                        blockType: Scratch.BlockType.BOOLEAN,
+                        arguments: {
+                            ONE: dogeiscutSet.Argument,
+                            TWO: dogeiscutSet.Argument,
+                        }
+                    },
+                    {
+                        opcode: 'isSupersetOf',
+                        text: 'is [ONE] a superset of [TWO]?',
+                        blockType: Scratch.BlockType.BOOLEAN,
+                        arguments: {
+                            ONE: dogeiscutSet.Argument,
+                            TWO: dogeiscutSet.Argument,
+                        }
+                    },
+                    {
+                        opcode: 'isDisjointFrom',
+                        text: 'is [ONE] disjoint from [TWO]?',
+                        blockType: Scratch.BlockType.BOOLEAN,
+                        arguments: {
+                            ONE: dogeiscutSet.Argument,
+                            TWO: dogeiscutSet.Argument,
                         }
                     },
                     {
@@ -325,6 +503,15 @@
                         },
                         ...dogeiscutSet.Block
                     },
+                    {
+                        opcode: 'symmetricDifference',
+                        text: 'symmetric difference [ONE] with [TWO]',
+                        arguments: {
+                            ONE: dogeiscutSet.Argument,
+                            TWO: dogeiscutSet.Argument
+                        },
+                        ...dogeiscutSet.Block
+                    },
                     "---",
                     {
                         opcode: 'flat',
@@ -337,6 +524,19 @@
                             }
                         },
                         ...dogeiscutSet.Block
+                    },
+                    "---",
+                    {
+                        opcode: 'toString',
+                        text: 'stringify [SET] [FORMAT]',
+                        blockType: Scratch.BlockType.REPORTER,
+                        arguments: {
+                            SET: dogeiscutSet.Argument,
+                            FORMAT: {
+                                menu: "stringifyFormat",
+                                defaultValue: "compact"
+                            }
+                        }
                     },
                     "---",
                     {
@@ -370,6 +570,13 @@
                         acceptReporters: false,
                         items: "getLists",
                     },
+                    stringifyFormat: {
+                        acceptReporters: false,
+                        items: [
+                            "compact",
+                            "pretty"
+                        ]
+                    }
                 }
             };
         }
@@ -377,19 +584,22 @@
         getCompileInfo() {
             return {
                 ir: {
-                    builder: (generator, block) => ({
-                        kind: 'input',
-                        substack: generator.descendSubstack(block, 'SUBSTACK')
-                    }),
+                    builder: (generator, block) => {
+                        generator.script.yields = true
+                        return {
+                            kind: 'input',
+                            substack: generator.descendSubstack(block, 'SUBSTACK')
+                        }
+                    },
                 },
                 js: {
                     builder: (node, compiler, imports) => {
                         const originalSource = compiler.source;
-                        compiler.source = '(yield* (function*() {';
+                        compiler.source = 'vm.dogeiscutSet.Type.toSet(yield* (function*() {';
                         compiler.source += `thread._dogeiscutSetBuilderIndex ??= [];`
                         compiler.source += `thread._dogeiscutSetBuilderIndex.push([]);`
                         compiler.descendStack(node.substack, new imports.Frame(false, undefined, true));
-                        compiler.source += `return new runtime.vm.dogeiscutSet.Type(thread._dogeiscutSetBuilderIndex.pop());`
+                        compiler.source += `return thread._dogeiscutSetBuilderIndex.pop();`
                         compiler.source += '})())';
                         const stackSource = compiler.source;
                         compiler.source = originalSource;
@@ -427,13 +637,27 @@
             return dogeiscutSet.Type.toSet(INPUT)
         }
 
+        builderCurrent({}, util) {
+            let bi = util.thread._dogeiscutSetBuilderIndex ?? []
+            return bi[bi.length-1] ? new dogeiscutSet.Type(bi[bi.length-1]) : new dogeiscutSet.Type([], true)
+        }
+
         builder() {
             return 'noop'
         }
 
         builderAppend({VALUE}, util) {
-            if (util.thread._dogeiscutSetBuilderIndex && util.thread._dogeiscutSetBuilderIndex.length > 0) {
-                util.thread._dogeiscutSetBuilderIndex[util.thread._dogeiscutSetBuilderIndex.length-1].push(VALUE)
+            let bi = util.thread._dogeiscutSetBuilderIndex ?? []
+            if (bi[bi.length-1]) {
+                bi[bi.length-1].push(VALUE)
+            }
+        }
+
+        builderSet({SET}, util) {
+            SET = dogeiscutSet.Type.toSet(SET)
+            let bi = util.thread._dogeiscutSetBuilderIndex ?? []
+            if (bi[bi.length-1]) {
+                bi[bi.length-1] = [...Array.from(SET.set)]
             }
         }
 
@@ -441,6 +665,35 @@
             SET = dogeiscutSet.Type.toSet(SET)
 
             return SET.set.has(VALUE)
+        }
+
+        isSubsetOf({ONE, TWO}) {
+            ONE = dogeiscutSet.Type.toSet(ONE)
+            TWO = dogeiscutSet.Type.toSet(TWO)
+
+            return ONE.set.isSubsetOf(TWO.set);
+        }
+
+        isSupersetOf({ONE, TWO}) {
+            ONE = dogeiscutSet.Type.toSet(ONE)
+            TWO = dogeiscutSet.Type.toSet(TWO)
+
+            return ONE.set.isSupersetOf(TWO.set);
+        }
+
+        isDisjointFrom({ONE, TWO}) {
+            ONE = dogeiscutSet.Type.toSet(ONE)
+            TWO = dogeiscutSet.Type.toSet(TWO)
+
+            return ONE.set.isDisjointFrom(TWO.set);
+        }
+        
+        symmetricDifference({ONE, TWO}) {
+            ONE = dogeiscutSet.Type.toSet(ONE)
+            TWO = dogeiscutSet.Type.toSet(TWO)
+
+            const logic = ONE.set.symmetricDifference(TWO.set);
+            return new dogeiscutSet.Type(logic)
         }
 
         size({SET}) {
@@ -472,24 +725,24 @@
             ONE = dogeiscutSet.Type.toSet(ONE)
             TWO = dogeiscutSet.Type.toSet(TWO)
 
-            const union = new Set([...ONE.set, ...TWO.set]);
-            return new dogeiscutSet.Type(union)
+            const logic = ONE.set.union(TWO.set);
+            return new dogeiscutSet.Type(logic)
         }
 
         intersect({ONE, TWO}) {
             ONE = dogeiscutSet.Type.toSet(ONE)
             TWO = dogeiscutSet.Type.toSet(TWO)
 
-            const intersection = new Set([...ONE.set].filter(x => TWO.set.has(x)));
-            return new dogeiscutSet.Type(intersection)
+            const logic = ONE.set.intersection(TWO.set);
+            return new dogeiscutSet.Type(logic)
         }
 
         difference({ ONE, TWO }) {
             ONE = dogeiscutSet.Type.toSet(ONE)
             TWO = dogeiscutSet.Type.toSet(TWO)
 
-            const difference = new Set([...ONE.set].filter(x => !TWO.set.has(x)));
-            return new dogeiscutSet.Type(difference)
+            const logic = ONE.set.difference(TWO.set);
+            return new dogeiscutSet.Type(logic)
         }
 
         flat({SET, DEPTH}) {
@@ -497,6 +750,12 @@
             DEPTH = Scratch.Cast.toNumber(DEPTH)
 
             return SET.flat(DEPTH)
+        }
+
+        toString({SET, FORMAT}) {
+            SET = dogeiscutSet.Type.toSet(SET)
+            
+            return SET.toString(FORMAT === "pretty")
         }
 
         forEachV({}, util) {

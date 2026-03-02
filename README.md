@@ -223,6 +223,8 @@ Each extension is incased in `{}` brackets. Look below on how to copy it.
     documentation: "page-name", // This is the page name for the documentation you created.
 
     // These next ones are optional. You can choose not to include them.
+    tags: ["new", "graphics"], // Optional. A list of tags to add to your extension. You can put anything here, but it may be adjusted later.
+    example: "Username/extension.pmp", // Optional. An example project to show off how to use the extension.
     creatorAlias: "Joe", // Optional. This will not change the creator link, but change the name that links to it.
     notes: "Additional help by someguy", // Optional. Allows you to note anyone else who helped you or any small info.
     unstable: false, // Optional. Will add a warning message that your extension is unstable.

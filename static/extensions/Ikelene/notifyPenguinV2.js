@@ -25,8 +25,11 @@
                     {
                         opcode: 'registerDevice',
                         blockType: Scratch.BlockType.COMMAND,
-                        text: 'register this device for notifications as [USER]',
-                        arguments: { USER: { type: Scratch.ArgumentType.STRING, defaultValue: 'Player1' } }
+                        text: 'register this device for [PROJECTNAME] notifications as [USER]',
+                        arguments: { 
+                            PROJECTNAME: { type: Scratch.ArgumentType.STRING, defaultValue: 'My Game' },
+                            USER: { type: Scratch.ArgumentType.STRING, defaultValue: 'Player1' } 
+                        }
                     },
                     {
                         opcode: 'openSettings',
@@ -66,7 +69,6 @@
                 const top = (window.screen.height / 2) - (height / 2);
                 
                 const popup = window.open(`${this.apiUrl}/subscribe.html`, 'Push Registration', `width=${width},height=${height},top=${top},left=${left}`);
-
                 if (!popup) return reject(new Error("Popup blocked."));
 
                 const listener = (event) => {
@@ -80,7 +82,6 @@
                         }
                     }
                 };
-
                 window.addEventListener('message', listener);
             });
         }
@@ -92,6 +93,7 @@
                     method: 'POST',
                     body: JSON.stringify({
                         project_id: this.getProjectId(),
+                        project_name: Scratch.Cast.toString(args.PROJECTNAME),
                         username: args.USER,
                         subscription: subscription
                     }),

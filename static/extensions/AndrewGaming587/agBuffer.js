@@ -349,7 +349,7 @@
             );
             vm.runtime.registerSerializer(
                 "agBufferPointer",
-                v => v.getValue(), 
+                v => v.type == "void" ? "Void pointers do not serialize" : v.getValue(), 
                 v => v
             );
 

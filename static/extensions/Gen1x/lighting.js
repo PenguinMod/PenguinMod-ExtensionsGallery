@@ -1466,9 +1466,9 @@ self.onmessage = ({ data: msg }) => {
                 const cam = this._getCameraState();
                 if (cam) {
                     globalCamX = cam.pos[0];
-                    globalCamY = -cam.pos[1];
+                    globalCamY = cam.pos[1];
                     globalCamScale = 1 / (cam.scale || 1);
-                    globalCamDirRad = -cam.dir * (Math.PI / 180);
+                    globalCamDirRad = cam.dir * (Math.PI / 180);
                 }
             }
 
@@ -1493,17 +1493,17 @@ self.onmessage = ({ data: msg }) => {
                         const cam = _resolveCamera(li.cameraOverride);
                         if (cam) {
                             camX = cam.pos[0];
-                            camY = -cam.pos[1];
+                            camY = cam.pos[1];
                             camScale = 1 / (cam.scale || 1);
-                            camDirRad = -cam.dir * (Math.PI / 180);
+                            camDirRad = cam.dir * (Math.PI / 180);
                         } else {
                             camX = 0; camY = 0; camScale = 1; camDirRad = 0;
                         }
                     }
                 }
 
-                const cosA = Math.cos(-camDirRad);
-                const sinA = Math.sin(-camDirRad);
+                const cosA = Math.cos(camDirRad);
+                const sinA = Math.sin(camDirRad);
 
                 let lx = li.x - camX;
                 let ly = li.y - camY;
@@ -1522,7 +1522,7 @@ self.onmessage = ({ data: msg }) => {
 
                 buf[base + 8]  = (li.width || 0) / camScale;
                 buf[base + 9]  = (li.height || 0) / camScale;
-                buf[base + 10] = (li.direction - 90) * (Math.PI / 180) - camDirRad;
+                buf[base + 10] = (li.direction - 90) * (Math.PI / 180) + camDirRad;
                 buf[base + 11] = (Math.abs(li.arc) / 2) * (Math.PI / 180);
             }
 

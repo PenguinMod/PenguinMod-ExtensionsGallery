@@ -1522,7 +1522,7 @@ self.onmessage = ({ data: msg }) => {
 
                 buf[base + 8]  = (li.width || 0) / camScale;
                 buf[base + 9]  = (li.height || 0) / camScale;
-                buf[base + 10] = (li.direction - 90) * (Math.PI / 180) + camDirRad;
+                buf[base + 10] = (li.direction - 90) * (Math.PI / 180) - camDirRad;
                 buf[base + 11] = (Math.abs(li.arc) / 2) * (Math.PI / 180);
             }
 

@@ -1288,12 +1288,14 @@ self.onmessage = ({ data: msg }) => {
             return items;
         }
 
-        _resolveMyself(raw, util) {
-            if (Scratch.Cast.toString(raw) === '_myself_') {
-                const t = util.target;
+        _resolveTarget(spriteName, util) {
+            if (spriteName === '_myself_') {
+                const t = (util && util.target) ? util.target : null;
                 return (t && !t.isStage) ? t : null;
             }
-            return null;
+            return Scratch.vm.runtime.targets.find(
+                t => !t.isStage && t.sprite.name === spriteName
+            ) || null;
         }
 
         _setupResizeObserver() {
@@ -1490,7 +1492,7 @@ self.onmessage = ({ data: msg }) => {
 
         setSpriteExcluded(args, util) {
             const state = Scratch.Cast.toString(args.STATE);
-            const myselfTarget = this._resolveMyself(args.SPRITE, util);
+            const myselfTarget = this._resolveTarget(Scratch.Cast.toString(args.SPRITE), util);
             if (myselfTarget) {
                 if (state === 'excluded') {
                     this._excludedTargetIds.add(myselfTarget.id);
@@ -1511,7 +1513,7 @@ self.onmessage = ({ data: msg }) => {
         }
 
         isSpriteExcluded(args, util) {
-            const myselfTarget = this._resolveMyself(args.SPRITE, util);
+            const myselfTarget = this._resolveTarget(Scratch.Cast.toString(args.SPRITE), util);
             if (myselfTarget) {
                 return this._excludedTargetIds.has(myselfTarget.id);
             }

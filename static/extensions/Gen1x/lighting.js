@@ -439,6 +439,10 @@ self.onmessage = ({ data: msg }) => {
 
             this._boundRender = this._render.bind(this);
             this._boundSyncPos = () => {
+                
+                if (!this.canvas.isConnected) {
+                    this._tryAttach();
+                }
                 this._syncCanvasPosition();
                 this._markDirty();
                 this._render();
@@ -1074,8 +1078,14 @@ self.onmessage = ({ data: msg }) => {
 
             if (!this._docObserver) {
                 this._docObserver = new MutationObserver(() => {
-                    const stageCanvas = Scratch.vm.renderer.canvas
-                    if (stageCanvas && stageCanvas.parentElement !== this._attachedParent) {
+                    const stageCanvas = Scratch.vm.renderer.canvas;
+                    
+                    
+                    
+                    if (
+                        (stageCanvas && stageCanvas.parentElement !== this._attachedParent) ||
+                        !this.canvas.isConnected
+                    ) {
                         this._tryAttach();
                     }
                 });
@@ -1097,7 +1107,12 @@ self.onmessage = ({ data: msg }) => {
             this._attachedParent = canvasParent;
 
             const sortLayer = () => {
-                const currentParent = document.querySelector('[class*="stage_stage_"] canvas, .sc-layers canvas.sc-canvas')?.parentElement;
+                
+                
+                
+                const stageEl = Scratch.vm.renderer.canvas;
+                const currentParent = (stageEl && stageEl.parentElement)
+                    || document.querySelector('[class*="stage_stage_"] canvas, .sc-layers canvas.sc-canvas')?.parentElement;
                 if (!currentParent) return;
 
                 const monitorWrapper = currentParent.querySelector('[class*="monitor-wrapper_"]');
@@ -1319,15 +1334,41 @@ self.onmessage = ({ data: msg }) => {
         _syncCanvasPosition() {
             const renderer = Scratch.vm.runtime.renderer;
             const glCanvas = renderer && renderer._gl && renderer._gl.canvas;
-            if (!glCanvas) return;
+            if (!glCanvas) {
+                
+                if (!this._syncRetryPending) {
+                    this._syncRetryPending = true;
+                    setTimeout(() => {
+                        this._syncRetryPending = false;
+                        this._tryAttach();
+                        this._syncCanvasPosition();
+                        this._markDirty();
+                    }, 200);
+                }
+                return;
+            }
+
             const cs = this.canvas.style;
-            const l = glCanvas.offsetLeft + 'px';
-            const t = glCanvas.offsetTop + 'px';
-            const W = glCanvas.offsetWidth + 'px';
+
+            
+            
+            const parent = this.canvas.parentElement;
+            let l, t;
+            if (parent) {
+                const parentRect = parent.getBoundingClientRect();
+                const glRect = glCanvas.getBoundingClientRect();
+                l = (glRect.left - parentRect.left) + 'px';
+                t = (glRect.top  - parentRect.top)  + 'px';
+            } else {
+                l = glCanvas.offsetLeft + 'px';
+                t = glCanvas.offsetTop  + 'px';
+            }
+
+            const W = glCanvas.offsetWidth  + 'px';
             const H = glCanvas.offsetHeight + 'px';
-            if (cs.left !== l) cs.left = l;
-            if (cs.top !== t) cs.top = t;
-            if (cs.width !== W) cs.width = W;
+            if (cs.left   !== l) cs.left   = l;
+            if (cs.top    !== t) cs.top    = t;
+            if (cs.width  !== W) cs.width  = W;
             if (cs.height !== H) cs.height = H;
 
             if (this._syncLoadingOverlay) this._syncLoadingOverlay();

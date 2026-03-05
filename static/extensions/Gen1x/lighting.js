@@ -415,6 +415,7 @@ self.onmessage = ({ data: msg }) => {
             this._dirty = true;
             this._excludedNames = new Set();
             this._excludedTargetIds = new Set();
+            this._includedTargetIds = new Set();
             this._costumeImageCache = new Map();
             this._lastGLBitmap = null;
             this._lastBitmapPw = 0;
@@ -456,6 +457,9 @@ self.onmessage = ({ data: msg }) => {
                 const liveIds = new Set(Scratch.vm.runtime.targets.map(t => t.id));
                 for (const id of this._excludedTargetIds) {
                     if (!liveIds.has(id)) this._excludedTargetIds.delete(id);
+                }
+                for (const id of this._includedTargetIds) {
+                    if (!liveIds.has(id)) this._includedTargetIds.delete(id);
                 }
                 this._markDirty();
             });
@@ -776,7 +780,7 @@ self.onmessage = ({ data: msg }) => {
             const spriteListContainer = document.createElement('div');
             spriteListContainer.style.cssText = 'display:flex;flex-direction:column;gap:6px;max-height:150px;overflow-y:auto;padding:4px 8px;';
 
-            const allSprites = Scratch.vm.runtime.targets.filter(t => !t.isStage).map(t => t.sprite.name);
+            const allSprites = [...new Set(Scratch.vm.runtime.targets.filter(t => !t.isStage && t.isOriginal).map(t => t.sprite.name))];
 
             const rebuildSpriteList = () => {
                 spriteListContainer.innerHTML = '';
@@ -978,6 +982,7 @@ self.onmessage = ({ data: msg }) => {
         }
 
         _createLoadingOverlay(totalSteps) {
+            if (Scratch.vm.runtime.isPackaged) return;
             const overlay = document.createElement('div');
             overlay.style.cssText =
                 'position:absolute;pointer-events:none;z-index:1;display:flex;flex-direction:column;' +
@@ -1377,6 +1382,11 @@ self.onmessage = ({ data: msg }) => {
                 }
             }
 
+            for (const id of this._includedTargetIds) {
+                const t = Scratch.vm.runtime.targets.find(t => t.id === id);
+                if (t) result.delete(t);
+            }
+
             return result;
         }
 
@@ -1392,23 +1402,31 @@ self.onmessage = ({ data: msg }) => {
             const scaleX = pw / glCanvas.offsetWidth;
             const scaleY = ph / glCanvas.offsetHeight;
 
-            for (const target of effectiveExclusions) {
-                if (!target || !target.visible || target.drawableID == null) continue;
+            const allTargets = Scratch.vm.runtime.targets.filter(t => !t.isStage);
+
+            const drawList = renderer._drawList;
+            const drawOrder = drawList
+                ? new Map(drawList.map((id, idx) => [id, idx]))
+                : null;
+
+            const getLayerIndex = t =>
+                drawOrder && t.drawableID != null
+                    ? (drawOrder.get(t.drawableID) ?? -1)
+                    : -1;
+
+            const sortedExclusions = [...effectiveExclusions].sort(
+                (a, b) => getLayerIndex(a) - getLayerIndex(b)
+            );
+
+            const extractSprite = target => {
+                if (!target || !target.visible || target.drawableID == null) return null;
                 try {
                     const extracted = renderer.extractDrawableScreenSpace(target.drawableID);
-                    if (!extracted) continue;
-
+                    if (!extracted) return null;
                     const imageData = extracted.imageData || extracted.data;
-                    if (!imageData || imageData.width <= 0 || imageData.height <= 0) continue;
-
+                    if (!imageData || imageData.width <= 0 || imageData.height <= 0) return null;
                     const { x, y, width, height } = extracted;
-                    if (width <= 0 || height <= 0) continue;
-
-                    const dx = x * scaleX;
-                    const dy = y * scaleY;
-                    const dw = width * scaleX;
-                    const dh = height * scaleY;
-
+                    if (width <= 0 || height <= 0) return null;
                     const iw = imageData.width;
                     const ih = imageData.height;
                     const raw = imageData.data;
@@ -1422,17 +1440,43 @@ self.onmessage = ({ data: msg }) => {
                         straight[i + 2] = Math.min(255, raw[i + 2] * inv);
                         straight[i + 3] = a;
                     }
-
                     const src = new OffscreenCanvas(iw, ih);
                     src.getContext('2d').putImageData(new ImageData(straight, iw, ih), 0, 0);
+                    return { src, x: x * scaleX, y: y * scaleY, w: width * scaleX, h: height * scaleY, layerIdx: getLayerIndex(target) };
+                } catch (e) { return null; }
+            };
 
-                    ctx.save();
-                    ctx.globalCompositeOperation = 'destination-out';
-                    ctx.imageSmoothingEnabled = true;
-                    ctx.imageSmoothingQuality = 'high';
-                    ctx.drawImage(src, dx, dy, dw, dh);
-                    ctx.restore();
-                } catch (e) {}
+            for (const target of sortedExclusions) {
+                const sprite = extractSprite(target);
+                if (!sprite) continue;
+
+                const maskCanvas = new OffscreenCanvas(pw, ph);
+                const maskCtx = maskCanvas.getContext('2d');
+
+                maskCtx.drawImage(sprite.src, sprite.x, sprite.y, sprite.w, sprite.h);
+
+                const aboveTargets = allTargets.filter(t =>
+                    t.visible &&
+                    t.drawableID != null &&
+                    !effectiveExclusions.has(t) &&
+                    getLayerIndex(t) > sprite.layerIdx
+                );
+
+                if (aboveTargets.length > 0) {
+                    maskCtx.globalCompositeOperation = 'destination-out';
+                    for (const above of aboveTargets) {
+                        const aboveSprite = extractSprite(above);
+                        if (!aboveSprite) continue;
+                        maskCtx.drawImage(aboveSprite.src, aboveSprite.x, aboveSprite.y, aboveSprite.w, aboveSprite.h);
+                    }
+                }
+
+                ctx.save();
+                ctx.globalCompositeOperation = 'destination-out';
+                ctx.imageSmoothingEnabled = true;
+                ctx.imageSmoothingQuality = 'high';
+                ctx.drawImage(maskCanvas, 0, 0);
+                ctx.restore();
             }
         }
 
@@ -1459,8 +1503,10 @@ self.onmessage = ({ data: msg }) => {
             if (myselfTarget) {
                 if (state === 'excluded') {
                     this._excludedTargetIds.add(myselfTarget.id);
+                    this._includedTargetIds.delete(myselfTarget.id);
                 } else {
                     this._excludedTargetIds.delete(myselfTarget.id);
+                    this._includedTargetIds.add(myselfTarget.id);
                 }
             } else {
                 const name = Scratch.Cast.toString(args.SPRITE);
@@ -1700,8 +1746,6 @@ self.onmessage = ({ data: msg }) => {
             }
             const pw = this._cachedPw || Math.max(1, Math.round(w * Math.min(window.devicePixelRatio || 1, 3)));
             const ph = this._cachedPh || Math.max(1, Math.round(h * Math.min(window.devicePixelRatio || 1, 3)));
-
-
 
             if (this.canvas.style.imageRendering !== '') {
                 this.canvas.style.imageRendering = '';

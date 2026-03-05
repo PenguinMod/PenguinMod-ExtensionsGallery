@@ -1288,16 +1288,7 @@ self.onmessage = ({ data: msg }) => {
             return items;
         }
 
-        _resolveSpriteName(raw, util) {
-            if (Scratch.Cast.toString(raw) === '_myself_') {
-                const t = util.target;
-                if (t && !t.isStage) return t.sprite.name;
-                return null;
-            }
-            return Scratch.Cast.toString(raw);
-        }
-
-        _resolveMyselfTarget(raw, util) {
+        _resolveMyself(raw, util) {
             if (Scratch.Cast.toString(raw) === '_myself_') {
                 const t = util.target;
                 return (t && !t.isStage) ? t : null;
@@ -1499,7 +1490,7 @@ self.onmessage = ({ data: msg }) => {
 
         setSpriteExcluded(args, util) {
             const state = Scratch.Cast.toString(args.STATE);
-            const myselfTarget = this._resolveMyselfTarget(args.SPRITE, util);
+            const myselfTarget = this._resolveMyself(args.SPRITE, util);
             if (myselfTarget) {
                 if (state === 'excluded') {
                     this._excludedTargetIds.add(myselfTarget.id);
@@ -1520,11 +1511,11 @@ self.onmessage = ({ data: msg }) => {
         }
 
         isSpriteExcluded(args, util) {
-            const myselfTarget = this._resolveMyselfTarget(args.SPRITE, util);
+            const myselfTarget = this._resolveMyself(args.SPRITE, util);
             if (myselfTarget) {
                 return this._excludedTargetIds.has(myselfTarget.id);
             }
-            const name = this._resolveSpriteName(args.SPRITE, util) || Scratch.Cast.toString(args.SPRITE);
+            const name = myselfTarget ? myselfTarget.sprite.name : Scratch.Cast.toString(args.SPRITE);
             return this._excludedNames.has(name);
         }
 

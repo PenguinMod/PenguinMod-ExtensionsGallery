@@ -1078,7 +1078,7 @@ self.onmessage = ({ data: msg }) => {
 
             if (!this._docObserver) {
                 this._docObserver = new MutationObserver(() => {
-                    const stageCanvas = Scratch.vm.renderer.canvas;
+                    const stageCanvas = Scratch.renderer.canvas;
                     
                     
                     
@@ -1097,7 +1097,7 @@ self.onmessage = ({ data: msg }) => {
         }
 
         _tryAttach() {
-            const stageCanvas = Scratch.vm.renderer.canvas
+            const stageCanvas = Scratch.renderer.canvas
             if (!stageCanvas) {
                 setTimeout(() => this._tryAttach(), 500);
                 return;
@@ -1110,7 +1110,7 @@ self.onmessage = ({ data: msg }) => {
                 
                 
                 
-                const stageEl = Scratch.vm.renderer.canvas;
+                const stageEl = Scratch.renderer.canvas;
                 const currentParent = (stageEl && stageEl.parentElement)
                     || document.querySelector('[class*="stage_stage_"] canvas, .sc-layers canvas.sc-canvas')?.parentElement;
                 if (!currentParent) return;
@@ -1316,8 +1316,8 @@ self.onmessage = ({ data: msg }) => {
         _setupResizeObserver() {
             if (this._resizeObserver) this._resizeObserver.disconnect();
 
-            const renderer = Scratch.vm.runtime.renderer;
-            const glCanvas = renderer && renderer._gl && renderer._gl.canvas;
+            const renderer = Scratch.renderer;
+            const glCanvas = Scratch.renderer.canvas;
             if (!glCanvas) {
                 setTimeout(() => this._setupResizeObserver(), 200);
                 return;
@@ -1332,8 +1332,8 @@ self.onmessage = ({ data: msg }) => {
         }
 
         _syncCanvasPosition() {
-            const renderer = Scratch.vm.runtime.renderer;
-            const glCanvas = renderer && renderer._gl && renderer._gl.canvas;
+            const renderer = Scratch.renderer;
+            const glCanvas = Scratch.renderer.canvas;
             if (!glCanvas) {
                 
                 if (!this._syncRetryPending) {
@@ -1353,10 +1353,10 @@ self.onmessage = ({ data: msg }) => {
             
             
             const parent = this.canvas.parentElement;
+            const glRect = glCanvas.getBoundingClientRect();
             let l, t;
             if (parent) {
                 const parentRect = parent.getBoundingClientRect();
-                const glRect = glCanvas.getBoundingClientRect();
                 l = (glRect.left - parentRect.left) + 'px';
                 t = (glRect.top  - parentRect.top)  + 'px';
             } else {
@@ -1364,8 +1364,8 @@ self.onmessage = ({ data: msg }) => {
                 t = glCanvas.offsetTop  + 'px';
             }
 
-            const W = glCanvas.offsetWidth  + 'px';
-            const H = glCanvas.offsetHeight + 'px';
+            const W = Math.ceil(glRect.width)  + 'px';
+            const H = Math.ceil(glRect.height) + 'px';
             if (cs.left   !== l) cs.left   = l;
             if (cs.top    !== t) cs.top    = t;
             if (cs.width  !== W) cs.width  = W;
@@ -1427,10 +1427,10 @@ self.onmessage = ({ data: msg }) => {
         _applyCutouts(ctx, w, h, pw, ph) {
             const effectiveExclusions = this._getEffectiveExclusionSet();
             if (effectiveExclusions.size === 0) return;
-            const renderer = Scratch.vm.runtime.renderer;
+            const renderer = Scratch.renderer;
             if (!renderer || typeof renderer.extractDrawableScreenSpace !== 'function') return;
 
-            const glCanvas = renderer._gl && renderer._gl.canvas;
+            const glCanvas = Scratch.renderer.canvas;
             if (!glCanvas) return;
 
             const scaleX = pw / glCanvas.offsetWidth;
@@ -1762,8 +1762,8 @@ self.onmessage = ({ data: msg }) => {
             const w = Scratch.vm.runtime.stageWidth || 480;
             const h = Scratch.vm.runtime.stageHeight || 360;
 
-            const renderer = Scratch.vm.runtime.renderer;
-            const glCanvas = renderer && renderer._gl && renderer._gl.canvas;
+            const renderer = Scratch.renderer;
+            const glCanvas = Scratch.renderer.canvas;
 
             if (this._cachedPw === 0 && glCanvas && glCanvas.offsetWidth > 0) {
                 this._syncCanvasPosition();

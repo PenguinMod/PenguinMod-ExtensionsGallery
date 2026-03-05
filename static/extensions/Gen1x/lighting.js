@@ -2717,6 +2717,7 @@ self.onmessage = ({ data: msg }) => {
 
         createPointLight(args) {
             const id = Scratch.Cast.toString(args.ID);
+            if (id === 'ALL') return;
             const li = {
                 type: 'point',
                 ltype: 0,
@@ -2737,6 +2738,7 @@ self.onmessage = ({ data: msg }) => {
 
         createSpotLight(args) {
             const id = Scratch.Cast.toString(args.ID);
+            if (id === 'ALL') return;
             const li = {
                 type: 'spot',
                 ltype: 1,
@@ -2757,6 +2759,7 @@ self.onmessage = ({ data: msg }) => {
 
         createAreaLight(args) {
             const id = Scratch.Cast.toString(args.ID);
+            if (id === 'ALL') return;
             const li = {
                 type: 'area',
                 ltype: 2,

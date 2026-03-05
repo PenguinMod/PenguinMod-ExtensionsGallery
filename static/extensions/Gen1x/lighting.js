@@ -978,6 +978,7 @@ self.onmessage = ({ data: msg }) => {
         }
 
         _createLoadingOverlay(totalSteps) {
+            if (Scratch.vm.runtime.isPackaged) return;
             const overlay = document.createElement('div');
             overlay.style.cssText =
                 'position:absolute;pointer-events:none;z-index:1;display:flex;flex-direction:column;' +
@@ -1707,8 +1708,6 @@ self.onmessage = ({ data: msg }) => {
             }
             const pw = this._cachedPw || Math.max(1, Math.round(w * Math.min(window.devicePixelRatio || 1, 3)));
             const ph = this._cachedPh || Math.max(1, Math.round(h * Math.min(window.devicePixelRatio || 1, 3)));
-
-
 
             if (this.canvas.style.imageRendering !== '') {
                 this.canvas.style.imageRendering = '';

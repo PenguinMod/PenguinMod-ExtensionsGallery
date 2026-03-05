@@ -982,7 +982,7 @@ self.onmessage = ({ data: msg }) => {
         }
 
         _createLoadingOverlay(totalSteps) {
-            if (Scratch.vm.runtime.isPackaged) return;
+            if (typeof scaffolding !== "undefined") return;
             const overlay = document.createElement('div');
             overlay.style.cssText =
                 'position:absolute;pointer-events:none;z-index:1;display:flex;flex-direction:column;' +
@@ -2335,6 +2335,11 @@ self.onmessage = ({ data: msg }) => {
                         text: 'Modify Lights'
                     },
                     {
+                        opcode: 'allLightsHint',
+                        blockType: Scratch.BlockType.BUTTON,
+                        text: 'Using "ALL" as light ID'
+                    },
+                    {
                         opcode: 'setLightProp',
                         blockType: Scratch.BlockType.COMMAND,
                         text: 'set [PROP] of light [ID] to [VAL]',
@@ -2409,6 +2414,11 @@ self.onmessage = ({ data: msg }) => {
                     {
                         blockType: Scratch.BlockType.LABEL,
                         text: 'Read Lights'
+                    },
+                    {
+                        opcode: 'getLightIds',
+                        blockType: Scratch.BlockType.REPORTER,
+                        text: 'all light IDs'
                     },
                     {
                         opcode: 'getLightProp',
@@ -2768,43 +2778,59 @@ self.onmessage = ({ data: msg }) => {
         setLightProp(args) {
             const id = Scratch.Cast.toString(args.ID);
             const prop = Scratch.Cast.toString(args.PROP);
-            if (this.lights[id]) {
-                this.lights[id][prop] = Scratch.Cast.toNumber(args.VAL);
-                this._markDirty();
+            const ids = id === 'ALL' ? Object.keys(this.lights) : [id];
+            for (const k of ids) {
+                if (this.lights[k]) this.lights[k][prop] = Scratch.Cast.toNumber(args.VAL);
             }
+            if (ids.length) this._markDirty();
         }
 
         changeLightProp(args) {
             const id = Scratch.Cast.toString(args.ID);
             const prop = Scratch.Cast.toString(args.PROP);
-            if (this.lights[id]) {
-                this.lights[id][prop] += Scratch.Cast.toNumber(args.VAL);
-                this._markDirty();
+            const ids = id === 'ALL' ? Object.keys(this.lights) : [id];
+            for (const k of ids) {
+                if (this.lights[k]) this.lights[k][prop] += Scratch.Cast.toNumber(args.VAL);
             }
+            if (ids.length) this._markDirty();
         }
 
         setLightXY(args) {
             const id = Scratch.Cast.toString(args.ID);
-            if (this.lights[id]) {
-                this.lights[id].x = +args.X;
-                this.lights[id].y = +args.Y;
-                this._markDirty();
+            const ids = id === 'ALL' ? Object.keys(this.lights) : [id];
+            for (const k of ids) {
+                if (this.lights[k]) {
+                    this.lights[k].x = +args.X;
+                    this.lights[k].y = +args.Y;
+                }
             }
+            if (ids.length) this._markDirty();
         }
 
         setLightColor(args) {
             const id = Scratch.Cast.toString(args.ID);
-            if (this.lights[id]) {
-                this.lights[id].color = Scratch.Cast.toString(args.COLOR);
-                this._cacheRGB(this.lights[id], this.lights[id].color);
-                this._markDirty();
+            const ids = id === 'ALL' ? Object.keys(this.lights) : [id];
+            for (const k of ids) {
+                if (this.lights[k]) {
+                    this.lights[k].color = Scratch.Cast.toString(args.COLOR);
+                    this._cacheRGB(this.lights[k], this.lights[k].color);
+                }
             }
+            if (ids.length) this._markDirty();
         }
 
         getLightProp(args) {
             const id = Scratch.Cast.toString(args.ID);
             const prop = Scratch.Cast.toString(args.PROP);
             return this.lights[id] ? (this.lights[id][prop] ?? '') : '';
+        }
+
+        getLightIds() {
+            return JSON.stringify(Object.keys(this.lights));
+        }
+
+        allLightsHint() {
+            alert('set the light ID field to "ALL" to apply any change to every light on the scene at once!');
         }
 
         lightExists(args) {

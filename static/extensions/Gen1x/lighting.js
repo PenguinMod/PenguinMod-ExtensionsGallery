@@ -1521,16 +1521,6 @@ self.onmessage = ({ data: msg }) => {
             return this._excludedNames.has(name);
         }
 
-        _resolveTarget(spriteName, util) {
-            if (spriteName === '_myself_') {
-                const t = (util && util.target) ? util.target : null;
-                return (t && !t.isStage) ? t : null;
-            }
-            return Scratch.vm.runtime.targets.find(
-                t => !t.isStage && t.sprite.name === spriteName
-            ) || null;
-        }
-
         _checkTouchingLight(target, li, sensitivity) {
             const s = Math.min(100, Math.max(0, sensitivity)) / 100;
             const sx = target.x;

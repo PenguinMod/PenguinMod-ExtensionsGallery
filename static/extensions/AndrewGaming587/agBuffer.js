@@ -1221,8 +1221,7 @@
             return this.getValue({INDEX:0,ENDIAN:false,TYPE:TYPE,BUFFER:buffer})
         }
         writeNullTerminatedString({STRING,BUFFER,INDEX}) {
-            if (BUFFER == undefined && !agBuffer.disableErrorHandling) return;
-            if (STRING == undefined && !agBuffer.disableErrorHandling) return;
+            if ((BUFFER == undefined || STRING == undefined) && !agBuffer.disableErrorHandling) return;
             BUFFER = new ArrayBufferType(BUFFER,true)
             let stringBuffer = new TextEncoder().encode(STRING).buffer
             stringBuffer = stringBuffer.transfer(stringBuffer.byteLength + 1)

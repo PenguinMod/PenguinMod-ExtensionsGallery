@@ -1,7 +1,4 @@
 (async function(Scratch) {
-    
-
-
     if (Scratch.gui) {
         Scratch.gui.getBlockly().then(ScratchBlocks => {
             ScratchBlocks.BlockSvg.registerCustomShape(
@@ -9,7 +6,6 @@
                     emptyInputPath: "m 31 0 h 10 h 10 a 4 4 0 0 1 4 4 h 7 l -7 7 v 10 l 7 7 h -7 a 4 4 0 0 1 -4 4 h -10 h -10 h -10 h -10 a 4 4 0 0 1 -4 -4 h -7 l 7 -7 v -10 l -7 -7 h 7 a 4 4 0 0 1 4 -4 z",
                     emptyInputWidth: 16 * ScratchBlocks.BlockSvg.GRID_UNIT,
                     leftPath: (block) => {
-                        console.log(block)
                         const edgeWidth = block.height / 2;
                         const s = edgeWidth / 16;
                         const height = edgeWidth * 2
@@ -1224,7 +1220,6 @@
             this.setValue({INDEX:0,ENDIAN:false,VALUE:VALUE,TYPE:TYPE,BUFFER:buffer})
             return this.getValue({INDEX:0,ENDIAN:false,TYPE:TYPE,BUFFER:buffer})
         }
-
         writeNullTerminatedString({STRING,BUFFER,INDEX}) {
             if (BUFFER == undefined && !agBuffer.disableErrorHandling) return;
             if (STRING == undefined && !agBuffer.disableErrorHandling) return;
@@ -1235,7 +1230,6 @@
             arr.forEach((value, index) => {
                 BUFFER.dataView.setUint8(index + INDEX, value)
             })
-
         }
         readNullTerminatedString({BUFFER,INDEX}) {
             if (!BUFFER) return;
@@ -1245,7 +1239,6 @@
             if (len === -1) return ""; 
             else return new TextDecoder().decode(arr.slice(0,len));
         }
-
         createPointer({INDEX,BUFFER,ENDIAN,TYPE}) {
             if (!BUFFER) return null;
             INDEX = Cast.toNumber(INDEX)
@@ -1296,12 +1289,12 @@
         }
 
         copyPointer({PTR}) {
-            if (!PTR || !(PTR instanceof ArrayBufferPointerType)) return;
+            if (!PTR || !(PTR instanceof ArrayBufferPointerType)) return new ArrayBufferPointerType(new ArrayBufferType(0),0,undefined,false);
             return PTR.copy()
         }
 
         isPointer({VALUE}) {
-            return (!!VALUE && VALUE instanceof ArrayBufferPointerType)
+            return (VALUE instanceof ArrayBufferPointerType)
         }
 
         pointerAsType({PTR,TYPE,ENDIAN = false}) {

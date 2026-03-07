@@ -230,7 +230,7 @@
                                 defaultValue: "My element",
                             },
                             dir: {
-                                type: Scratch.ArgumentType.NUMBER,
+                                type: Scratch.ArgumentType.ANGLE,
                                 defaultValue: 90,
                             },
                         },

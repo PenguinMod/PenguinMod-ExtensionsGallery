@@ -667,4 +667,16 @@ export default [
         tags: ["customtype","data","utility","new","large"],
         creatorAlias: "AndrewGaming587"
     },
+    {
+    name: "PatternOS",
+    description: "High-performance neural, statistical, and behavioral analysis engine for real-time pattern detection.",
+    code: "alekhyo-0812/patternOS.js",
+    banner: "alekhyo-0812/patternOS.png",
+    creator: "alekhyo-0812",
+    tags: ["data", "analysis", "ai", "math", "security"],
+    creatorAlias: "Alekhyo Biswas",
+    notes: "Official Documentation: https://alekhyo-biswas.github.io/PatternOS-docs/",
+    unstable: false,
+    isGitHub: false
+}
 ];

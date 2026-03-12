@@ -69,7 +69,11 @@
       if (min === max) return min;
       try {
         const controller = new AbortController();
-        const timeout = setTimeout(() => controller.abort(), 3000);
+        const timeout = setTimeout(() => {
+          controller.abort();
+          console.warn('[INSERT TIMEOUT ERRROR]');
+          return 0
+        }, 3000);
 
         const response = await fetch(
           'https://api.quantumnumbers.anu.edu.au?length=1&type=uint8',
@@ -82,7 +86,7 @@
         );
         clearTimeout(timeout);
         const json = await response.json();
-        const quantumValue = json.data[0] / 256;
+        const quantumValue = json.data[0] / 255;
 
         return Math.floor(min + quantumValue * (max - min + 1));
 

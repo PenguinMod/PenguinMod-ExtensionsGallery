@@ -1,9 +1,17 @@
 (function (Scratch) {
   'use strict';
-
-  let apikey = '';
-
   class Extension {
+    constructor() {
+      this.apikey = ''
+    }
+    serialize() {
+      return {
+        apikey: this.apikey
+      };
+    }
+    deserialize(data) {
+      this.apikey = data?.apikey || '';
+    }
     getInfo() {
       return {
         id: 'anuqrngisfreakingawesome',
@@ -13,6 +21,11 @@
           {
             opcode: 'how2getapikey',
             text: 'How To Get An Api Key',
+            blockType: Scratch.BlockType.BUTTON
+          },
+          {
+            opcode: 'setapikey',
+            text: 'Set Api Key',
             blockType: Scratch.BlockType.BUTTON
           },
           {
@@ -29,17 +42,6 @@
                 defaultValue: 10
               }
             }
-          },
-          {
-            opcode: 'setapikey',
-            text: 'Set Api Key To [APIKEY]',
-            blockType: Scratch.BlockType.COMMAND,
-            arguments: {
-              APIKEY: {
-                type: Scratch.ArgumentType.STRING,
-                defaultValue: 'Insert Api Key'
-              }
-            }
           }
         ]
       };
@@ -53,8 +55,9 @@
         "3. Open your Dashboard or Account page.\n\n" +
         "4. Locate your API Key section.\n\n" +
         "5. Copy your Free API Key.\n\n" +
-        "6. Paste it into the 'Set Api Key' block.\n\n" +
-        "Pro Tip: Try Encoding Your Api Key Cuz In A Site Where Seeing The Code Of Projects Is As Easy As A Click Of A Button... You Will Need It"
+        "6. Click On 'Set API Key' Button.\n\n" +
+        "7. Paste Your Api Key.\n\n" +
+        "8. Click On Ok"
       );
     }
 
@@ -72,7 +75,7 @@
           'https://api.quantumnumbers.anu.edu.au?length=1&type=uint8',
           {
             headers: {
-              'x-api-key': apikey
+              'x-api-key': this.apikey
             },
             signal: controller.signal
           }
@@ -84,13 +87,13 @@
         return Math.floor(min + quantumValue * (max - min + 1));
 
       } catch (error) {
-        console.warn("Quantum API failed, using Math.random()", error);
-        return Math.floor(min + Math.random() * (max - min + 1));
+        console.warn("Quantum API failed, Error:", error);
+        return 0;
       }
     }
 
-    setapikey(args) {
-      apikey = args.APIKEY;
+    setapikey() {
+      this.apikey = prompt('Insert Api Key');
     }
   }
 

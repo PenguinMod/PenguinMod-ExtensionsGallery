@@ -2,15 +2,15 @@
   'use strict';
   class Extension {
     constructor() {
-      this.apikey = ''
+      let apikey = ''
     }
     serialize() {
       return {
-        apikey: this.apikey
+        apikey: apikey
       };
     }
     deserialize(data) {
-      this.apikey = data?.apikey || '';
+      apikey = data?.apikey || '';
     }
     getInfo() {
       return {
@@ -97,7 +97,7 @@
     }
 
     setapikey() {
-      this.apikey = prompt('Insert Api Key');
+      apikey = prompt('Insert Api Key');
     }
   }
 

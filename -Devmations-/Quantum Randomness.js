@@ -72,7 +72,6 @@
         const timeout = setTimeout(() => {
           controller.abort();
           console.warn('[INSERT TIMEOUT ERRROR]');
-          return 0
         }, 3000);
 
         const response = await fetch(
@@ -91,8 +90,8 @@
         return Math.floor(min + quantumValue * (max - min + 1));
 
       } catch (error) {
+        clearTimeout(timeout);
         console.warn("Quantum API failed, Error:", error);
-        return 0;
       }
     }
 

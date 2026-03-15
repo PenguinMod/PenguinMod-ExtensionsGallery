@@ -288,6 +288,16 @@ export default [
         tags: ["new", "customtype", "iterators", "data", "utility", "builder"]
     },
     {
+        name: "Algebraic Effects",
+        description: "Intercept custom actions in your scripts to pause, resume, or redirect their flow using modular handlers.",
+        code: "Div/divAlgEffects.js",
+        banner: "Div/divAlgEffects.svg",
+        creator: "Dicuo",
+        creatorAlias: "Div",
+        isGitHub: true,
+        tags: ["new", "effects", "control", "data", "utility"]
+    },
+    {
         name: "Blobs",
         description: "An extension made for handling blobs which can be used to store files. Allows to easily make blobs for the Js extension",
         code: "Faunks/Blobs.js",

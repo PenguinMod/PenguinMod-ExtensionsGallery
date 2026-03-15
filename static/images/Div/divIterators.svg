@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 150" width="300px" height="186px" xmlns:bx="https://boxy-svg.com">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 150" width="300px" height="150px" xmlns:bx="https://boxy-svg.com">
   <defs>
     <linearGradient id="gradient-0-0" href="#gradient-0" gradientUnits="userSpaceOnUse" x1="150" y1="0" x2="150" y2="186" gradientTransform="matrix(1, 0, 0, 0.806452, 0, 0)"/>
     <linearGradient id="gradient-0" bx:pinned="true">

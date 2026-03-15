@@ -11,43 +11,43 @@
     }
 
     const BlockType = Scratch.BlockType
-    const BlockShape = Scratch.BlockShape
     const ArgumentType = Scratch.ArgumentType
-    const TargetType = Scratch.TargetType
     const Cast = Scratch.Cast
     const vm = Scratch.vm;
-    const runtime = Scratch.vm.runtime;
-    const SB = ScratchBlocks;
 
-    SB.BlockSvg.registerCustomShape(
-        "dogeiscutRegularExpressions-RegularExpression", {
-            emptyInputPath: "m 16 0 h 16 h 32 l -16 32 h -16 h -16 h -16 z",
-            emptyInputWidth: 16 * ScratchBlocks.BlockSvg.GRID_UNIT,
-            leftPath: (block) => {
-                const scale = block.height / 2;
-                const s = scale / 16;
-                return [
-                    `h ${-16 * s}`,
-                ];
-            },
-             rightPath: (block) => {
-                const scale = block.edgeShapeWidth_;
-                const s = scale / 16;
-                return [
-                    `h ${16 * s}`,
-                    `l ${-16 * s} ${32 * s}`,
-                    `h 0`,
-                    `h ${-16 * s}`,
-                ];
-            },
-            blockPaddingStart: (_, _2, _3, _4, row) => {
-                return (row.height - 16) / 2;
-            },
-            blockPaddingEnd: (_, _2, _3, _4, row) => {
-                return (row.height - 16) / 2;
-            }
-        }
-    );
+    if (Scratch.gui) {
+        Scratch.gui.getBlockly().then(ScratchBlocks => {
+            ScratchBlocks.BlockSvg.registerCustomShape(
+                "dogeiscutRegularExpressions-RegularExpression",{
+                    emptyInputPath: "m 16 0 h 16 h 32 l -16 32 h -16 h -16 h -16 z",
+                    emptyInputWidth: 16 * ScratchBlocks.BlockSvg.GRID_UNIT,
+                    leftPath: (block) => {
+                        const scale = block.height / 2;
+                        const s = scale / 16;
+                        return [
+                            `h ${-16 * s}`,
+                        ];
+                    },
+                    rightPath: (block) => {
+                        const scale = block.edgeShapeWidth_;
+                        const s = scale / 16;
+                        return [
+                            `h ${16 * s}`,
+                            `l ${-16 * s} ${32 * s}`,
+                            `h 0`,
+                            `h ${-16 * s}`,
+                        ];
+                    },
+                    blockPaddingStart: (_, _2, _3, _4, row) => {
+                        return (row.height - 16) / 2;
+                    },
+                    blockPaddingEnd: (_, _2, _3, _4, row) => {
+                        return (row.height - 16) / 2;
+                    }
+                }
+            );
+        })
+    }
 
     function span(text) {
         let el = document.createElement('span')
@@ -477,11 +477,11 @@
             let string ='Due to missing extensions, the blocks in this extension have been reduced.\n'
             string += 'By confirming this prompt, the following extensions will automatically be added for you:\n\n'
             if (!vm.runtime.ext_jwArray) string += '• Arrays by jwklong\n'
-            if (!vm.runtime.ext_dogeiscutObjects) string += '• Objects by DogeisCut\n'
+            if (!vm.runtime.ext_dogeiscutObject) string += '• Objects by DogeisCut\n'
             if (confirm(string)) {
                 // technically i only need to load objects since that will load arrays, but just in case
                 if (!vm.runtime.ext_jwArray) vm.extensionManager.loadExtensionIdSync('jwArray')
-                if (!vm.runtime.ext_dogeiscutObjects) await vm.extensionManager.loadExtensionURL("https://extensions.penguinmod.com/extensions/DogeisCut/dogeiscutObject.js")
+                if (!vm.runtime.ext_dogeiscutObject) await vm.extensionManager.loadExtensionURL("https://extensions.penguinmod.com/extensions/DogeisCut/dogeiscutObject.js")
                 vm.runtime.requestBlocksUpdate()
                 vm.runtime.requestToolboxExtensionsUpdate()
                 vm.emitWorkspaceUpdate()
@@ -584,7 +584,7 @@
     }
 
     (async () => {
-        if (!vm.runtime.ext_dogeiscutObjects) await vm.extensionManager.loadExtensionURL("https://extensions.penguinmod.com/extensions/DogeisCut/dogeiscutObject.js")
+        if (!vm.runtime.ext_dogeiscutObject) await vm.extensionManager.loadExtensionURL("https://extensions.penguinmod.com/extensions/DogeisCut/dogeiscutObject.js")
         if (!vm.runtime.ext_jwArray) vm.extensionManager.loadExtensionIdSync('jwArray')
         vm.runtime.requestBlocksUpdate()
         vm.runtime.requestToolboxExtensionsUpdate()

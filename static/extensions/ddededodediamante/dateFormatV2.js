@@ -32,7 +32,7 @@
     "November",
     "December",
   ];
-  const pad = (n) => String(n).padStart(2, "0");
+  const pad = n => String(n).padStart(2, "0");
 
   const ddeDateFormat = {
     BlockOutput: {
@@ -46,20 +46,21 @@
     },
   };
 
+  function element(tag, text, styles = {}) {
+    const element = document.createElement(tag);
+    if (text != null) element.innerText = text;
+    Object.assign(element.style, styles);
+    return element;
+  }
+
   class ddeDateType {
     constructor(dateInput) {
-      if (dateInput instanceof Date) {
-        this._date = dateInput;
-      } else if (dateInput instanceof ddeDateType) {
-        this._date = dateInput._date;
-      } else if (
-        typeof dateInput === "number" ||
-        typeof dateInput === "string"
-      ) {
-        this._date = new Date(dateInput);
-      } else {
-        this._date = new Date(NaN);
-      }
+      this._date =
+        dateInput instanceof Date
+          ? dateInput
+          : dateInput instanceof ddeDateType
+            ? dateInput._date
+            : new Date(dateInput ?? NaN);
       this.customId = "ddeDateFormat.date";
     }
 
@@ -72,41 +73,44 @@
     getTime() {
       return this._date.getTime();
     }
+    valueOf() {
+      return this.getTime();
+    }
 
     toString() {
       return this.isValid() ? this._date.toISOString() : "Invalid Date";
     }
 
     toReporterContent() {
-      const container = document.createElement("span");
-      container.style.display = "flex";
-      container.style.flexDirection = "column";
-      container.style.alignItems = "center";
-      container.style.gap = "0.3em";
+      const container = element("span", null, {
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center",
+        gap: "0.3em",
+      });
 
       if (this.isValid()) {
-        const pretty = document.createElement("span");
-        pretty.innerText = this._prettyShort();
-        pretty.style.fontWeight = "500";
-        pretty.style.fontStyle = "italic";
+        const pretty = element("span", this._prettyShort(), {
+          fontWeight: "500",
+          fontStyle: "italic",
+        });
         container.appendChild(pretty);
 
-        const detail = document.createElement("span");
-        detail.innerText = `(${this._date.toLocaleDateString(undefined, {
-          weekday: "short",
-          year: "numeric",
-          month: "short",
-          day: "numeric",
-        })})`;
-        detail.style.opacity = "0.7";
-        detail.style.fontSize = "0.85em";
+        const detail = element(
+          "span",
+          this._date.toLocaleDateString(undefined, {
+            weekday: "short",
+            year: "numeric",
+            month: "short",
+            day: "numeric",
+          }),
+          {
+            fontSize: "0.85em",
+          },
+        );
         container.appendChild(detail);
-
-        container.title = this.toString();
       } else {
-        const invalid = document.createElement("span");
-        invalid.innerText = "Invalid Date";
-        invalid.style.fontStyle = "italic";
+        const invalid = element("span", "Invalid Date", { fontStyle: "italic" });
         container.appendChild(invalid);
       }
 
@@ -114,26 +118,30 @@
     }
 
     toMonitorContent() {
-      const wrap = document.createElement("div");
-      wrap.style.display = "flex";
-      wrap.style.flexDirection = "column";
-
-      const top = document.createElement("div");
-      top.innerText = this.isValid() ? this._prettyShort() : "Invalid Date";
-
-      const sub = document.createElement("small");
-      sub.innerText = this.isValid() ? this.toString() : "";
-      sub.style.opacity = "0.7";
+      const wrap = element("div", null, {
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center",
+      });
+      const top = element(
+        "div",
+        this.isValid() ? this._prettyShort() : "Invalid Date",
+        {},
+      );
+      const sub = element("small", this.isValid() ? this.toString() : "", {
+        opacity: "0.7",
+      });
 
       wrap.append(top, sub);
       return wrap;
     }
 
     toListItem() {
-      const span = document.createElement("span");
-      span.innerText = this.isValid() ? this.toString() : "Invalid Date";
-      span.style.fontStyle = "italic";
-      span.title = this.toString();
+      const span = element(
+        "span",
+        this.isValid() ? this._prettyShort() : "Invalid Date",
+        { fontStyle: "italic" },
+      );
       return span;
     }
 
@@ -162,10 +170,6 @@
 
     jwArrayHandler() {
       return this.isValid() ? this._prettyShort() : "Invalid Date";
-    }
-
-    dogeiscutObjectHandler() {
-      return this.toListItem();
     }
   }
 
@@ -207,7 +211,33 @@
     const tokenList = Object.keys(tokens).sort((a, b) => b.length - a.length);
     const regex = new RegExp(`(${tokenList.join("|")})`, "g");
 
-    return String(format || "").replace(regex, (match) => tokens[match]());
+    return String(format || "").replace(regex, match => tokens[match]());
+  }
+
+  function formatRelativeDate(d) {
+    const now = new Date();
+    const diffMs = d.getTime() - now.getTime();
+    const past = diffMs < 0;
+    const absMs = Math.abs(diffMs);
+
+    const units = {
+      year: 31536000000,
+      month: 2592000000,
+      day: 86400000,
+      hour: 3600000,
+      minute: 60000,
+      second: 1000,
+    };
+
+    for (const [name, ms] of Object.entries(units)) {
+      const value = Math.floor(absMs / ms);
+      if (value >= 1) {
+        const label = value === 1 ? name : name + "s";
+        return past ? `${value} ${label} ago` : `in ${value} ${label}`;
+      }
+    }
+
+    return "just now";
   }
 
   function addToDate(d, amount, unit) {
@@ -242,8 +272,7 @@
   }
 
   function diffDates(d1, d2, unit) {
-    if (isNaN(d1?.getTime()) || isNaN(d2?.getTime()))
-      throw new Error("Invalid Date");
+    if (isNaN(d1?.getTime()) || isNaN(d2?.getTime())) throw new Error("Invalid Date");
 
     const ms = d1.getTime() - d2.getTime();
     const absMs = Math.abs(ms);
@@ -261,8 +290,7 @@
         return Math.floor(absMs / 86400000);
       case "months":
         return Math.abs(
-          (d1.getFullYear() - d2.getFullYear()) * 12 +
-            (d1.getMonth() - d2.getMonth())
+          (d1.getFullYear() - d2.getFullYear()) * 12 + (d1.getMonth() - d2.getMonth()),
         );
       case "years":
         return Math.abs(d1.getFullYear() - d2.getFullYear());
@@ -274,19 +302,15 @@
   if (isPM)
     Scratch.vm.runtime.registerSerializer(
       ddeDateType.prototype.customId,
-      (i) => {
+      i => {
         if (i instanceof ddeDateType) return { dateString: i._date };
       },
-      (i) => {
+      i => {
         if (i.dateString) return new ddeDateType(i.dateString);
-      }
+      },
     );
 
   class ddeDateExtension {
-    constructor() {
-      this.isValidDate = (d) => d instanceof ddeDateType && d.isValid();
-    }
-
     getInfo() {
       return {
         id: "ddeDateFormatV2",
@@ -336,12 +360,26 @@
             },
           },
           {
+            opcode: "extraFormatDate",
+            blockType: Scratch.BlockType.REPORTER,
+            text: "format [date] as [type]",
+            arguments: {
+              date: ddeDateFormat.Argument,
+              type: {
+                type: Scratch.ArgumentType.STRING,
+                menu: "extraFormats",
+              },
+            },
+          },
+          /* replaced with extraFormatDate */
+          {
             opcode: "isoFormatDate",
             blockType: Scratch.BlockType.REPORTER,
             text: "format [date] as ISO string",
             arguments: {
               date: ddeDateFormat.Argument,
             },
+            hideFromPalette: true,
           },
           { blockType: Scratch.BlockType.LABEL, text: "Comparisons" },
           {
@@ -381,7 +419,7 @@
           {
             opcode: "diffDate",
             blockType: Scratch.BlockType.REPORTER,
-            text: "difference between [date1] and [date2] in [unit]",
+            text: "get [unit] between [date1] and [date2]",
             arguments: {
               date1: ddeDateFormat.Argument,
               date2: ddeDateFormat.Argument,
@@ -397,7 +435,7 @@
               part: { type: Scratch.ArgumentType.STRING, menu: "dateParts" },
               date: ddeDateFormat.Argument,
             },
-            hideFromPalette: true
+            hideFromPalette: true,
           },
           {
             opcode: "getDatePartNew",
@@ -456,6 +494,7 @@
               { text: "hours", value: "hour" },
               { text: "day (week)", value: "weekday" },
               { text: "day (month)", value: "date" },
+              { text: "day (year)", value: "day-year" },
               { text: "month", value: "month" },
               { text: "year", value: "year" },
               { text: "time", value: "time" },
@@ -490,6 +529,13 @@
               "leap year",
             ],
           },
+          extraFormats: {
+            acceptReporters: true,
+            items: [
+              { text: "relative", value: "relative" },
+              { text: "ISO string", value: "iso" },
+            ],
+          },
         },
       };
     }
@@ -499,8 +545,7 @@
     }
 
     toNativeDate(input) {
-      if (input instanceof ddeDateType && input.isValid())
-        return input.toDate();
+      if (input instanceof ddeDateType && input.isValid()) return input.toDate();
       const d = this.toDateType(input);
       return d.toDate();
     }
@@ -514,10 +559,7 @@
     }
 
     formatDate({ date, format }) {
-      return formatDate(
-        this.toNativeDate(date),
-        format || "dddd, MMMM D, YYYY"
-      );
+      return formatDate(this.toNativeDate(date), format || "dddd, MMMM D, YYYY");
     }
 
     localeFormatDate({ date, type }) {
@@ -534,6 +576,20 @@
       });
     }
 
+    extraFormatDate({ date, type }) {
+      const d = this.toNativeDate(date);
+      if (isNaN(d.getTime())) throw new Error("Invalid Date");
+
+      switch (type) {
+        case "relative":
+          return formatRelativeDate(d);
+        case "iso":
+          return d.toISOString();
+      }
+
+      return d.getTime();
+    }
+
     isoFormatDate({ date }) {
       const d = this.toNativeDate(date);
       if (isNaN(d.getTime())) throw new Error("Invalid Date");
@@ -543,8 +599,7 @@
     compareDate({ date1, date2, operation }) {
       const d1 = this.toNativeDate(date1);
       const d2 = this.toNativeDate(date2);
-      if (isNaN(d1.getTime()) || isNaN(d2.getTime()))
-        throw new Error("Invalid Date");
+      if (isNaN(d1.getTime()) || isNaN(d2.getTime())) throw new Error("Invalid Date");
 
       switch (operation) {
         case "after":
@@ -579,6 +634,9 @@
           return d.getDay();
         case "date":
           return d.getDate();
+        case "day-year":
+          const start = new Date(d.getFullYear(), 0, 1);
+          return Math.floor((d - start) / 86400000) + 1;
         case "month":
           return d.getMonth() + 1;
         case "year":
@@ -607,6 +665,8 @@
           return d.getUTCDay();
         case "date":
           return d.getUTCDate();
+        case "day-year":
+          throw new Error("Please use the new block for this operation.");
         case "month":
           return d.getUTCMonth() + 1;
         case "year":
@@ -623,11 +683,7 @@
     }
 
     diffDate({ date1, date2, unit }) {
-      return diffDates(
-        this.toNativeDate(date1),
-        this.toNativeDate(date2),
-        unit
-      );
+      return diffDates(this.toNativeDate(date1), this.toNativeDate(date2), unit);
     }
 
     setDatePart({ part, date, value }) {
@@ -657,6 +713,12 @@
         case "date":
           newDate.setDate(v);
           break;
+        case "day-year": {
+          const start = new Date(newDate.getFullYear(), 0, 1);
+          start.setDate(start.getDate() + (v - 1));
+          newDate.setTime(start.getTime());
+          break;
+        }
         case "month":
           newDate.setMonth(v - 1);
           break;

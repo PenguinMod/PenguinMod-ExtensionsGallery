@@ -282,9 +282,9 @@
                     //     blockType: BlockType.BUTTON,
                     //     text: '⚠ Add Missing Dependencies ⚠',
                     //     func: "addDependencies",
-                    //     hideFromPalette: !!vm.runtime.ext_jwArray & !!vm.runtime.ext_dogeiscutObject,
+                    //     hideFromPalette: !!vm.jwArray & !!vm.dogeiscutObject,
                     // },
-                    // ...(!vm.runtime.ext_jwArray || !vm.runtime.ext_dogeiscutObject ? ['---'] : []),
+                    // ...(!vm.jwArray || !vm.dogeiscutObject ? ['---'] : []),
                     {
                         opcode: 'regex',
                         text: 'regular expression [PATTERN] [FLAGS]',
@@ -401,8 +401,8 @@
                             },
                             REGEX: dogeiscutRegularExpression.Argument,
                         },
-                        hideFromPalette: !vm.runtime.ext_jwArray,
-                        ...(vm.runtime.ext_jwArray ? vm.jwArray.Block : {}),
+                        hideFromPalette: !vm.jwArray,
+                        ...(vm.jwArray ? vm.jwArray.Block : {}),
                     },
                     {
                         opcode: 'match',
@@ -414,8 +414,8 @@
                                 defaultValue: "foo"
                             },
                         },
-                        hideFromPalette: !vm.runtime.ext_jwArray,
-                        ...(vm.runtime.ext_jwArray ? vm.jwArray.Block : {}),
+                        hideFromPalette: !vm.jwArray,
+                        ...(vm.jwArray ? vm.jwArray.Block : {}),
                     },
                     {
                         opcode: 'matchAll',
@@ -427,8 +427,8 @@
                                 defaultValue: "foo"
                             },
                         },
-                        hideFromPalette: !vm.runtime.ext_jwArray,
-                        ...(vm.runtime.ext_jwArray ? vm.jwArray.Block : {}),
+                        hideFromPalette: !vm.jwArray,
+                        ...(vm.jwArray ? vm.jwArray.Block : {}),
                     },
                     '---',
                     {
@@ -479,12 +479,12 @@
         async addDependencies() {
             let string ='Due to missing extensions, the blocks in this extension have been reduced.\n'
             string += 'By confirming this prompt, the following extensions will automatically be added for you:\n\n'
-            if (!vm.runtime.ext_jwArray) string += '• Arrays by jwklong\n'
-            if (!vm.runtime.ext_dogeiscutObject) string += '• Objects by DogeisCut\n'
+            if (!vm.jwArray) string += '• Arrays by jwklong\n'
+            if (!vm.dogeiscutObject) string += '• Objects by DogeisCut\n'
             if (confirm(string)) {
                 // technically i only need to load objects since that will load arrays, but just in case
-                if (!vm.runtime.ext_jwArray) vm.extensionManager.loadExtensionIdSync('jwArray')
-                if (!vm.runtime.ext_dogeiscutObject) await vm.extensionManager.loadExtensionURL("https://extensions.penguinmod.com/extensions/DogeisCut/dogeiscutObject.js")
+                if (!vm.jwArray) vm.extensionManager.loadExtensionIdSync('jwArray')
+                if (!vm.dogeiscutObject) await vm.extensionManager.loadExtensionURL("https://extensions.penguinmod.com/extensions/DogeisCut/dogeiscutObject.js")
                 vm.runtime.requestBlocksUpdate()
                 vm.runtime.requestToolboxExtensionsUpdate()
                 vm.emitWorkspaceUpdate()
@@ -587,8 +587,8 @@
     }
 
     (async () => {
-        if (!vm.runtime.ext_dogeiscutObject) await vm.extensionManager.loadExtensionURL("https://extensions.penguinmod.com/extensions/DogeisCut/dogeiscutObject.js")
-        if (!vm.runtime.ext_jwArray) vm.extensionManager.loadExtensionIdSync('jwArray')
+        if (!vm.dogeiscutObject) await vm.extensionManager.loadExtensionURL("https://extensions.penguinmod.com/extensions/DogeisCut/dogeiscutObject.js")
+        if (!vm.jwArray) vm.extensionManager.loadExtensionIdSync('jwArray')
         vm.runtime.requestBlocksUpdate()
         vm.runtime.requestToolboxExtensionsUpdate()
         vm.emitWorkspaceUpdate()

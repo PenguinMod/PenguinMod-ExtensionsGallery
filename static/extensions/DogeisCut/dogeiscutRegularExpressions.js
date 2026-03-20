@@ -11,14 +11,16 @@
     }
 
     const BlockType = Scratch.BlockType
+    const BlockShape = Scratch.BlockShape
     const ArgumentType = Scratch.ArgumentType
     const Cast = Scratch.Cast
     const vm = Scratch.vm;
 
-    if (Scratch.gui) {
-        Scratch.gui.getBlockly().then(ScratchBlocks => {
-            ScratchBlocks.BlockSvg.registerCustomShape(
-                "dogeiscutRegularExpressions-RegularExpression",{
+    if (!vm.runtime.pmVersion) {
+        if (Scratch.gui) {
+            Scratch.gui.getBlockly().then(ScratchBlocks => {
+                ScratchBlocks.BlockSvg.registerCustomShape(
+                    "dogeiscutRegularExpressions-RegularExpression", {
                     emptyInputPath: "m 16 0 h 16 h 32 l -16 32 h -16 h -16 h -16 z",
                     emptyInputWidth: 16 * ScratchBlocks.BlockSvg.GRID_UNIT,
                     leftPath: (block) => {
@@ -45,8 +47,9 @@
                         return (row.height - 16) / 2;
                     }
                 }
-            );
-        })
+                );
+            })
+        }
     }
 
     function span(text) {
@@ -244,12 +247,12 @@
         Type: RegularExpressionType,
         Block: {
             blockType: BlockType.REPORTER,
-            blockShape: 'dogeiscutRegularExpressions-RegularExpression',
+            blockShape: vm.runtime.pmVersion ? BlockShape.SLANTED : 'dogeiscutRegularExpressions-RegularExpression',
             forceOutputType: "Regular Expression",
             disableMonitor: true
         },
         Argument: {
-            shape: 'dogeiscutRegularExpressions-RegularExpression',
+            shape: vm.runtime.pmVersion ? BlockShape.SLANTED : 'dogeiscutRegularExpressions-RegularExpression',
             exemptFromNormalization: true,
             check: ["Regular Expression"],
         },
@@ -438,8 +441,8 @@
                                 defaultValue: "foo"
                             },
                         },
-                        hideFromPalette: !vm.runtime.ext_dogeiscutObject,
-                        ...(vm.runtime.ext_dogeiscutObject ? vm.dogeiscutObject.Block : {}),
+                        hideFromPalette: !vm.dogeiscutObject,
+                        ...(vm.dogeiscutObject ? vm.dogeiscutObject.Block : {}),
                     },
                     {
                         opcode: 'getLastIndex',

@@ -1,4 +1,19 @@
 (async function (Scratch) {
+  let socket = null;
+
+  let serverURL = "";
+  let myId = "";
+
+  let players = {};        // id -> player data
+  let playerList = [];     // array of IDs
+  let sharedVars = {};     // global shared variables
+  let lobbies = {};        // lobby storage (optional)
+
+  let lastMsg = "";
+  let lastSender = "";
+
+  let currentLobbyName = "";
+  
   class MultiplayerCore {
     getInfo() {
       return {

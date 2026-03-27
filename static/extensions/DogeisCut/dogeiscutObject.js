@@ -407,7 +407,7 @@
             let val = this
             for (var i = 0; i < arrayPath.length; i++) {
                 const key = Cast.toString(arrayPath[i])
-                if (val.has(key)) {
+                if (val instanceof ObjectType && val.has(key)) {
                     val = val.get(key)
                 } else {
                     return ""

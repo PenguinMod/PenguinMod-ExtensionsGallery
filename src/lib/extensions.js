@@ -677,4 +677,12 @@ export default [
         tags: ["customtype","data","utility","new","large"],
         creatorAlias: "AndrewGaming587"
     },
+    {
+        name: "Soup Vectors",
+        description: "Vector math tools so you'll never need to do an arctangent ever again.",
+        code: "the-can-of-soup/soup_vectors.js",
+        banner: "the-can-of-soup/soup_vectors.svg",
+        creator: "ck10390",
+        isGitHub: false,
+    },
 ];

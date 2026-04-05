@@ -677,4 +677,12 @@ export default [
         tags: ["customtype","data","utility","new","large"],
         creatorAlias: "AndrewGaming587"
     },
+    {
+        name: "HTML",
+        description: "Read HTML Data easily",
+        code: "dogstudiostuff/aHTML.js",
+        banner: "dogstudiostuff/aHTML.svg",
+        creator: "dogstudiostuff"
+    },
+    
 ];

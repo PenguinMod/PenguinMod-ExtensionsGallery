@@ -1,0 +1,105 @@
+(function(Scratch) {
+  'use strict';
+
+  class BabysSystemMonitor {
+    getInfo() {
+      return {
+        id: 'babyssystemmonitor', // Your unique extension ID
+        name: 'System Monitor',
+        color1: '#00cc99',
+        blocks: [
+          // --- GPU Info Blocks ---
+          {
+            opcode: 'getGPURenderer',
+            blockType: Scratch.BlockType.REPORTER,
+            text: 'GPU name'
+          },
+          {
+            opcode: 'getEquivalent',
+            blockType: Scratch.BlockType.REPORTER,
+            text: 'equivalent of [GPU_NAME]',
+            arguments: {
+              GPU_NAME: {
+                type: Scratch.ArgumentType.STRING,
+                defaultValue: 'NVIDIA GeForce GTX 1080'
+              }
+            }
+          },
+          // --- Network Blocks ---
+          {
+            opcode: 'getConnectionType',
+            blockType: Scratch.BlockType.REPORTER,
+            text: 'connection type'
+          },
+          {
+            opcode: 'getDownlinkSpeed',
+            blockType: Scratch.BlockType.REPORTER,
+            text: 'estimated speed (Mbps)'
+          },
+          {
+            opcode: 'isOnline',
+            blockType: Scratch.BlockType.BOOLEAN,
+            text: 'is online?'
+          }
+        ]
+      };
+    }
+
+    // --- GPU Logic ---
+    getGPURenderer() {
+      const canvas = document.createElement('canvas');
+      const gl = canvas.getContext('webgl') || canvas.getContext('experimental-webgl');
+      if (!gl) return 'WebGL not supported';
+      
+      const debugInfo = gl.getExtension('WEBGL_debug_renderer_info');
+      if (!debugInfo) return 'Privacy settings blocking GPU info';
+      
+      return gl.getParameter(debugInfo.UNMASKED_RENDERER_WEBGL);
+    }
+
+    getEquivalent(args) {
+      const name = args.GPU_NAME.toUpperCase();
+      const numMatch = name.match(/\d+/);
+      const modelNum = numMatch ? parseInt(numMatch[0]) : 0;
+
+      // Logic for Laptops / Integrated
+      if (name.includes('INTEL') || name.includes('IRIS') || name.includes('UHD') || name.includes('MOBILE') || name.includes('LAPTOP') || name.includes('GRAPHICS')) {
+        return "4070 TI";
+      }
+
+      // NVIDIA Logic
+      if (name.includes('NVIDIA') || name.includes('GEFORCE')) {
+        if (name.includes('RTX') && modelNum >= 3000) return "5090";
+        if (name.includes('RTX') || (name.includes('GTX') && modelNum >= 1000)) return "4070 TI";
+        return "Riva TNT 2"; 
+      }
+
+      // AMD Logic
+      if (name.includes('AMD') || name.includes('RADEON')) {
+        if (name.includes('RX') && modelNum >= 6000) return "5090";
+        if (name.includes('RX') || name.includes('VEGA')) return "4070 TI";
+        return "ATI Rage Pro";
+      }
+
+      return "Generic VGA";
+    }
+
+    // --- Network Logic ---
+    getConnectionType() {
+      const conn = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
+      return conn ? (conn.type || "unknown") : "unsupported";
+    }
+
+    getDownlinkSpeed() {
+      const conn = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
+      return conn ? conn.downlink : 0;
+    }
+
+    isOnline() {
+      return navigator.onLine;
+    }
+  }
+
+  // Register the extension with PenguinMod
+  Scratch.extensions.register(new BabysSystemMonitor());
+})(Scratch);

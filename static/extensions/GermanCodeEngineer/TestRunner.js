@@ -1,6 +1,6 @@
 // Name: Test Runner
 // ID: gceTestRunner
-// Description: A testing framework for PenguinMod: Test that blocks behaves as expected. Provides good error messages and error traceback.
+// Description: A testing framework for PenguinMod: Test that blocks behave as expected. Provides good error messages and error traceback.
 // By: GermanCodeEngineer <https://github.com/GermanCodeEngineer/>
 // License: MIT
 // Made for PenguinMod

@@ -424,19 +424,21 @@ class TestRunner {
             },
             assertThrows: (node, compiler, imports) => {
                 const errLocal = compiler.localVariables.next()
+                const catchLocal = compiler.localVariables.next()
                 compiler.source += `let ${errLocal};\n`
                 compiler.source += `try {\n`
                 addSubstackCode(compiler, node.SUBSTACK, imports)
-                compiler.source += `} catch (${errLocal}) {}\n`
+                compiler.source += `} catch (${catchLocal}) { ${errLocal} = ${catchLocal}; }\n`
                 compiler.source += `if (!${errLocal}) throw new ${EXTENSION_PREFIX}.TestError("Expected exception but none was thrown");\n`
             },
             assertThrowsContains: (node, compiler, imports) => {
                 const errLocal = compiler.localVariables.next()
+                const catchLocal = compiler.localVariables.next()
                 const expectedLocal = compiler.localVariables.next()
                 compiler.source += `let ${errLocal};\n`
                 compiler.source += `try {\n`
                 addSubstackCode(compiler, node.SUBSTACK, imports)
-                compiler.source += `} catch (${errLocal}) {}\n`
+                compiler.source += `} catch (${catchLocal}) { ${errLocal} = ${catchLocal}; }\n`
                 compiler.source += `const ${expectedLocal} = ${compiler.descendInput(node.MSG).asString()};\n`
                 compiler.source += `if (!${errLocal}) throw new ${EXTENSION_PREFIX}.TestError("Expected exception but none was thrown");\n`
                 compiler.source += `if (!${EXTENSION_PREFIX}.TestError.errorContainsMsg(${errLocal}, ${expectedLocal})) `+
@@ -444,10 +446,11 @@ class TestRunner {
             },
             assertDoesNotThrow: (node, compiler, imports) => {
                 const errLocal = compiler.localVariables.next()
+                const catchLocal = compiler.localVariables.next()
                 compiler.source += `let ${errLocal};\n`
                 compiler.source += `try {\n`
                 addSubstackCode(compiler, node.SUBSTACK, imports)
-                compiler.source += `} catch (${errLocal}) {}\n`
+                compiler.source += `} catch (${catchLocal}) { ${errLocal} = ${catchLocal}; }\n`
                 compiler.source += `if (${errLocal}) throw ${EXTENSION_PREFIX}._errorWithCause(\`Unexpected exception: \${${EXTENSION_PREFIX}._errorMessage(${errLocal})}\`, ${errLocal});\n`
             },
             failTest: (node, compiler) => {

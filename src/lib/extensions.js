@@ -91,7 +91,7 @@ export default [
         creator: "skyhigh173",
         isGitHub: true,
     },
-    {
+    /*{
         name: "Scope Variable",
         description: "Manage your variables in a block-like structure.",
         code: "0znzw/ScopeVars.js",
@@ -100,7 +100,7 @@ export default [
         isGitHub: true,
         unstable: true,
         unstableReason: "This extension uses unstable techniques that may not always work.",
-    },
+    },*/
     {
         name: "Extra Timers",
         description: "Allows for the creation and management of additional timer blocks.",

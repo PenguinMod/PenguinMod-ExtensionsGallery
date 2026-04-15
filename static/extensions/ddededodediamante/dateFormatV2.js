@@ -54,6 +54,8 @@
   }
 
   class ddeDateType {
+    customId = "ddeDateFormat.date"
+
     constructor(dateInput) {
       this._date =
         dateInput instanceof Date
@@ -61,7 +63,6 @@
           : dateInput instanceof ddeDateType
             ? dateInput._date
             : new Date(dateInput ?? NaN);
-      this.customId = "ddeDateFormat.date";
     }
 
     isValid() {
@@ -301,7 +302,7 @@
 
   if (isPM)
     Scratch.vm.runtime.registerSerializer(
-      ddeDateType.prototype.customId,
+      "ddeDateFormat.date",
       i => {
         if (i instanceof ddeDateType) return { dateString: i._date };
       },

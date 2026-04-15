@@ -13,41 +13,44 @@
     const BlockType = Scratch.BlockType
     const BlockShape = Scratch.BlockShape
     const ArgumentType = Scratch.ArgumentType
-    const TargetType = Scratch.TargetType
     const Cast = Scratch.Cast
     const vm = Scratch.vm;
-    const runtime = Scratch.vm.runtime;
-    const SB = ScratchBlocks;
 
-    SB.BlockSvg.registerCustomShape(
-        "dogeiscutRegularExpressions-RegularExpression", {
-            emptyInputPath: "m 16 0 h 16 h 32 l -16 32 h -16 h -16 h -16 z",
-            emptyInputWidth: 16 * ScratchBlocks.BlockSvg.GRID_UNIT,
-            leftPath: (block) => {
-                const scale = block.height / 2;
-                const s = scale / 16;
-                return [
-                    `h ${-16 * s}`,
-                ];
-            },
-             rightPath: (block) => {
-                const scale = block.edgeShapeWidth_;
-                const s = scale / 16;
-                return [
-                    `h ${16 * s}`,
-                    `l ${-16 * s} ${32 * s}`,
-                    `h 0`,
-                    `h ${-16 * s}`,
-                ];
-            },
-            blockPaddingStart: (_, _2, _3, _4, row) => {
-                return (row.height - 16) / 2;
-            },
-            blockPaddingEnd: (_, _2, _3, _4, row) => {
-                return (row.height - 16) / 2;
-            }
+    if (!vm.runtime.pmVersion) {
+        if (Scratch.gui) {
+            Scratch.gui.getBlockly().then(ScratchBlocks => {
+                ScratchBlocks.BlockSvg.registerCustomShape(
+                    "dogeiscutRegularExpressions-RegularExpression", {
+                    emptyInputPath: "m 16 0 h 16 h 32 l -16 32 h -16 h -16 h -16 z",
+                    emptyInputWidth: 16 * ScratchBlocks.BlockSvg.GRID_UNIT,
+                    leftPath: (block) => {
+                        const scale = block.height / 2;
+                        const s = scale / 16;
+                        return [
+                            `h ${-16 * s}`,
+                        ];
+                    },
+                    rightPath: (block) => {
+                        const scale = block.edgeShapeWidth_;
+                        const s = scale / 16;
+                        return [
+                            `h ${16 * s}`,
+                            `l ${-16 * s} ${32 * s}`,
+                            `h 0`,
+                            `h ${-16 * s}`,
+                        ];
+                    },
+                    blockPaddingStart: (_, _2, _3, _4, row) => {
+                        return (row.height - 16) / 2;
+                    },
+                    blockPaddingEnd: (_, _2, _3, _4, row) => {
+                        return (row.height - 16) / 2;
+                    }
+                }
+                );
+            })
         }
-    );
+    }
 
     function span(text) {
         let el = document.createElement('span')
@@ -244,12 +247,12 @@
         Type: RegularExpressionType,
         Block: {
             blockType: BlockType.REPORTER,
-            blockShape: 'dogeiscutRegularExpressions-RegularExpression',
+            blockShape: vm.runtime.pmVersion ? BlockShape.SLANTED : 'dogeiscutRegularExpressions-RegularExpression',
             forceOutputType: "Regular Expression",
             disableMonitor: true
         },
         Argument: {
-            shape: 'dogeiscutRegularExpressions-RegularExpression',
+            shape: vm.runtime.pmVersion ? BlockShape.SLANTED : 'dogeiscutRegularExpressions-RegularExpression',
             exemptFromNormalization: true,
             check: ["Regular Expression"],
         },
@@ -279,9 +282,9 @@
                     //     blockType: BlockType.BUTTON,
                     //     text: '⚠ Add Missing Dependencies ⚠',
                     //     func: "addDependencies",
-                    //     hideFromPalette: !!vm.runtime.ext_jwArray & !!vm.runtime.ext_dogeiscutObject,
+                    //     hideFromPalette: !!vm.jwArray & !!vm.dogeiscutObject,
                     // },
-                    // ...(!vm.runtime.ext_jwArray || !vm.runtime.ext_dogeiscutObject ? ['---'] : []),
+                    // ...(!vm.jwArray || !vm.dogeiscutObject ? ['---'] : []),
                     {
                         opcode: 'regex',
                         text: 'regular expression [PATTERN] [FLAGS]',
@@ -398,8 +401,8 @@
                             },
                             REGEX: dogeiscutRegularExpression.Argument,
                         },
-                        hideFromPalette: !vm.runtime.ext_jwArray,
-                        ...(vm.runtime.ext_jwArray ? vm.jwArray.Block : {}),
+                        hideFromPalette: !vm.jwArray,
+                        ...(vm.jwArray ? vm.jwArray.Block : {}),
                     },
                     {
                         opcode: 'match',
@@ -411,8 +414,8 @@
                                 defaultValue: "foo"
                             },
                         },
-                        hideFromPalette: !vm.runtime.ext_jwArray,
-                        ...(vm.runtime.ext_jwArray ? vm.jwArray.Block : {}),
+                        hideFromPalette: !vm.jwArray,
+                        ...(vm.jwArray ? vm.jwArray.Block : {}),
                     },
                     {
                         opcode: 'matchAll',
@@ -424,8 +427,8 @@
                                 defaultValue: "foo"
                             },
                         },
-                        hideFromPalette: !vm.runtime.ext_jwArray,
-                        ...(vm.runtime.ext_jwArray ? vm.jwArray.Block : {}),
+                        hideFromPalette: !vm.jwArray,
+                        ...(vm.jwArray ? vm.jwArray.Block : {}),
                     },
                     '---',
                     {
@@ -438,8 +441,8 @@
                                 defaultValue: "foo"
                             },
                         },
-                        hideFromPalette: !vm.runtime.ext_dogeiscutObject,
-                        ...(vm.runtime.ext_dogeiscutObject ? vm.dogeiscutObject.Block : {}),
+                        hideFromPalette: !vm.dogeiscutObject,
+                        ...(vm.dogeiscutObject ? vm.dogeiscutObject.Block : {}),
                     },
                     {
                         opcode: 'getLastIndex',
@@ -476,12 +479,12 @@
         async addDependencies() {
             let string ='Due to missing extensions, the blocks in this extension have been reduced.\n'
             string += 'By confirming this prompt, the following extensions will automatically be added for you:\n\n'
-            if (!vm.runtime.ext_jwArray) string += '• Arrays by jwklong\n'
-            if (!vm.runtime.ext_dogeiscutObjects) string += '• Objects by DogeisCut\n'
+            if (!vm.jwArray) string += '• Arrays by jwklong\n'
+            if (!vm.dogeiscutObject) string += '• Objects by DogeisCut\n'
             if (confirm(string)) {
                 // technically i only need to load objects since that will load arrays, but just in case
-                if (!vm.runtime.ext_jwArray) vm.extensionManager.loadExtensionIdSync('jwArray')
-                if (!vm.runtime.ext_dogeiscutObjects) await vm.extensionManager.loadExtensionURL("https://extensions.penguinmod.com/extensions/DogeisCut/dogeiscutObject.js")
+                if (!vm.jwArray) vm.extensionManager.loadExtensionIdSync('jwArray')
+                if (!vm.dogeiscutObject) await vm.extensionManager.loadExtensionURL("https://extensions.penguinmod.com/extensions/DogeisCut/dogeiscutObject.js")
                 vm.runtime.requestBlocksUpdate()
                 vm.runtime.requestToolboxExtensionsUpdate()
                 vm.emitWorkspaceUpdate()
@@ -584,8 +587,8 @@
     }
 
     (async () => {
-        if (!vm.runtime.ext_dogeiscutObjects) await vm.extensionManager.loadExtensionURL("https://extensions.penguinmod.com/extensions/DogeisCut/dogeiscutObject.js")
-        if (!vm.runtime.ext_jwArray) vm.extensionManager.loadExtensionIdSync('jwArray')
+        if (!vm.dogeiscutObject) await vm.extensionManager.loadExtensionURL("https://extensions.penguinmod.com/extensions/DogeisCut/dogeiscutObject.js")
+        if (!vm.jwArray) vm.extensionManager.loadExtensionIdSync('jwArray')
         vm.runtime.requestBlocksUpdate()
         vm.runtime.requestToolboxExtensionsUpdate()
         vm.emitWorkspaceUpdate()

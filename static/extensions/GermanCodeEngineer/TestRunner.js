@@ -86,26 +86,66 @@ class TestError extends Error {
     }
 }
 
+
 class TypeChecker {
-    static _isVMType(value, vmExtensionKey) {
-        if (!isRuntimeEnv) return false
-        const vmExtension = Scratch.vm[vmExtensionKey]
-        if (!vmExtension || !vmExtension.Type) return false
-        return value instanceof vmExtension.Type
+    // All custom types (using `customId`) one can get from a reporter in PM
+    // (PenguinMod-Vm, PenguinMod-ExtensionsGallery, SharkPools-Extensions) (as of 14.04.2026)
+    // agBuffer (AndrewGaming587)
+    // agBufferPointer (AndrewGaming587)
+    // canvasData (RedMan13)
+    // ddeDateFormat (ddededodediamante)
+    // ddeDateFormatV2 (ddededodediamante)
+    // divEffect (Div)
+    // divIterator (Div)
+    // dogeiscutObject (DogeisCut)
+    // dogeiscutRegularExpression (DogeisCut)
+    // dogeiscutSet (DogeisCut)
+    // externaltimer (steve0greatness)
+    // jwArray (jwklong)
+    // jwColor (jwklong)
+    // jwDate (jwklong)
+    // jwLambda (jwklong)
+    // jwNum (jwklong)
+    // jwTarget (jwklong)
+    // jwVector (jwklong)
+    // jwXML (jwklong)
+    // paintUtilsColour (Fruits555000)
+
+    static is_agBuffer = TypeChecker._createVMTypeCheck("agBuffer")
+    static is_agBufferPointer = TypeChecker._createVMTypeCheck("agBuffer", "PointerType")
+    
+    /**
+     * @param {*} value
+     * @returns {boolean}
+     */
+    static is_canvasData(value) {
+        TypeChecker._assertRuntimeEnv()
+        if (!runtime._extensionVariables) return false
+        const type = runtime._extensionVariables.canvas
+        if (!type) return false
+        return value instanceof type
     }
 
-    // There are three date extensions: jwklong and two by dde
-    static _isDdeDate(value) {
+    /**
+     * @param {*} value
+     * @returns {boolean}
+     */
+    static is_ddeDateFormat(value) {
+        TypeChecker._assertRuntimeEnv()
         if (runtime.ext_ddeDateFormat) {
             try {
                 const dateType = Object.getPrototypeOf(runtime.ext_ddeDateFormat.currentDate())
                 if (value instanceof dateType) return true
             } catch {}
         }
-        return false
     }
-
-    static _isDdeDateV2(value) {
+    
+    /**
+     * @param {*} value
+     * @returns {boolean}
+     */
+    static is_ddeDateFormatV2(value) {
+        TypeChecker._assertRuntimeEnv()
         if (runtime.ext_ddeDateFormatV2) {
             try {
                 const dateType = Object.getPrototypeOf(runtime.ext_ddeDateFormatV2.currentDate())
@@ -115,45 +155,136 @@ class TypeChecker {
         return false
     }
 
+    static is_divEffect = TypeChecker._createVMTypeCheck("divAlgEffects", "Effect")
+    static is_divIterator = TypeChecker._createVMTypeCheck("divIterator")
+    static is_dogeiscutObject = TypeChecker._createVMTypeCheck("dogeiscutObject", null, "Object extension was not loaded properly.")
+    static is_dogeiscutRegularExpression = TypeChecker._createVMTypeCheck("dogeiscutRegularExpression")
+    static is_dogeiscutSet = TypeChecker._createVMTypeCheck("dogeiscutSet")
+
+    /**
+     * @param {*} value
+     * @returns {boolean}
+     */
+    static is_externaltimer(value) {
+        TypeChecker._assertRuntimeEnv()
+        if (!runtime._extensionVariables) return false
+        const type = runtime._extensionVariables.externaltimer
+        if (!type) return false
+        return value instanceof type
+    }
+
+    static is_jwArray = TypeChecker._createVMTypeCheck("jwArray", null, "Array extension was not loaded properly.")
+    static is_jwColor = TypeChecker._createVMTypeCheck("jwColor")
+    static is_jwDate = TypeChecker._createVMTypeCheck("jwDate")
+    static is_jwLambda = TypeChecker._createVMTypeCheck("jwLambda")
+    static is_jwNum = TypeChecker._createVMTypeCheck("jwNum")
+    static is_jwTarget = TypeChecker._createVMTypeCheck("jwTargets")
+    static is_jwVector = TypeChecker._createVMTypeCheck("jwVector")
+    static is_jwXML = TypeChecker._createVMTypeCheck("jwXML")
+    
+    /**
+     * @param {*} value
+     * @returns {boolean}
+     */
+    static is_paintUtilsColour(value) {
+        TypeChecker._assertRuntimeEnv()
+        if (!runtime.ext_fruitsPaintUtils || typeof runtime.ext_fruitsPaintUtils.getColour !== "function") return false
+
+        try {
+            const proto = Object.getPrototypeOf(runtime.ext_fruitsPaintUtils.getColour({COLOUR_NAME: "orange"}))
+            return value instanceof proto
+        } catch {
+            return false
+        }
+    }
+
+
+
+    static _assertRuntimeEnv() {
+        if (!isRuntimeEnv) {
+            throw new Error("Type checking for extension types is not available in a non-runtime environment.")
+        }
+    }
+
+    /**
+     * @param {string} typeId
+     * @param {?string} overrideTypeProperty
+     * @param {string} [errMsg] - optional error message if type missing
+     * @returns {(value: *) => boolean}
+     */
+    static _createVMTypeCheck(typeId, overrideTypeProperty = null, typeMissingErrorMsg = null) {
+        return function isType(value) {
+            if (!isRuntimeEnv) return false
+            const typeInfo = Scratch.vm[typeId]
+            if (!typeInfo) {
+                if (typeMissingErrorMsg) throw new Error(typeMissingErrorMsg)
+                return false
+            }
+
+            let typeClass
+            try {
+                typeClass = overrideTypeProperty ? typeInfo[overrideTypeProperty] : typeInfo.Type
+            } catch {
+                if (typeMissingErrorMsg) throw new Error(typeMissingErrorMsg)
+                return false
+            }
+            return value instanceof typeClass
+        }
+    }
+
+    /**
+     * @param {*} value
+     * @returns {boolean}
+     */
+    static isClassicScratchValue(value) {
+        return ((value === undefined) || (value === null) ||
+        (typeof value === "boolean") || (typeof value === "number") || (typeof value === "string"))
+    }
+
+    /**
+     * @param {*} value
+     * @returns {string}
+     */
     static stringTypeof(value) {
+        // Common/Safe JS data types
         if (value === undefined) return "JavaScript Undefined"
         if (value === null) return "JavaScript Null"
         if (typeof value === "boolean") return "Boolean"
         if (typeof value === "number") return "Number"
         if (typeof value === "string") return "String"
 
-        /*
-         * All custom types one can get from a reporter in PM
-         * (PenguinMod-Vm, PenguinMod-ExtensionsGallery) (as of 28.10.2025)
-         * - Array
-         * - Object
-         * - Date
-         * - Set
-         * - Lambda
-         * - Color
-         * - UnlimitedNum (really Num, to avoid confusion)
-         * - Target
-         * - XML
-         */
-        if (TypeChecker._isVMType(value, "jwArray")) return "Array (jwklong)"
-        if (TypeChecker._isVMType(value, "dogeiscutObject")) return "Object (dogeiscut)"
-        if (TypeChecker._isVMType(value, "jwDate")) return "Date (jwklong)"
-        if (TypeChecker._isDdeDate(value)) return "Date (old by dde)"
-        if (TypeChecker._isDdeDateV2(value)) return "Date (new by dde)"
-        if (TypeChecker._isVMType(value, "dogeiscutSet")) return "Set (dogeiscut)"
-        if (TypeChecker._isVMType(value, "jwLambda")) return "Lambda (jwklong)"
-        if (TypeChecker._isVMType(value, "jwColor")) return "Color (jwklong)"
-        if (TypeChecker._isVMType(value, "jwNum")) return "Unlimited Number (jwklong)"
-        if (TypeChecker._isVMType(value, "jwTargets")) return "Target (jwklong)"
-        if (TypeChecker._isVMType(value, "jwXML")) return "XML (jwklong)"
+        // Custom Extension Types 
+        if (TypeChecker.is_agBuffer(value)) return "Buffer (AndrewGaming587)"
+        if (TypeChecker.is_agBufferPointer(value)) return "Buffer Pointer (AndrewGaming587)"
+        if (TypeChecker.is_ddeDateFormat(value)) return "Date (Old Version) (ddededodediamante)"
+        if (TypeChecker.is_ddeDateFormatV2(value)) return "Date (ddededodediamante)"
+        if (TypeChecker.is_divEffect(value)) return "Effect (Div)"
+        if (TypeChecker.is_divIterator(value)) return "Iterator (Div)"
+        if (TypeChecker.is_dogeiscutObject(value)) return "Object (DogeisCut)"
+        if (TypeChecker.is_dogeiscutRegularExpression(value)) return "Regular Expression (DogeisCut)"
+        if (TypeChecker.is_dogeiscutSet(value)) return "Set (DogeisCut)"
+        if (TypeChecker.is_externaltimer(value)) return "External Timer (steve0greatness)"
+        if (TypeChecker.is_jwArray(value)) return "Array (jwklong)"
+        if (TypeChecker.is_jwColor(value)) return "Color (jwklong)"
+        if (TypeChecker.is_jwDate(value)) return "Date (jwklong)"
+        if (TypeChecker.is_jwLambda(value)) return "Lambda (jwklong)"
+        if (TypeChecker.is_jwNum(value)) return "Number (jwklong)"
+        if (TypeChecker.is_jwTarget(value)) return "Target (jwklong)"
+        if (TypeChecker.is_jwVector(value)) return "Vector (jwklong)"
+        if (TypeChecker.is_jwXML(value)) return "XML (jwklong)"
+        if (TypeChecker.is_canvasData(value)) return "Canvas (RedMan13)"
+        if (TypeChecker.is_paintUtilsColour(value)) return "Paint Utils Colour (Fruits555000)"
 
+        // Rare/Overlapping JS data types
         if (typeof value === "bigint") return "JavaScript BigInt"
         if (typeof value === "symbol") return "JavaScript Symbol"
         if (typeof value === "function") return "JavaScript Function"
         if (typeof value === "object") return "JavaScript Object (generic)"
-        return "Unknown (very rare)"
+
+        return "Unknown (rare)"
     }
 }
+
 
 class TestRunner {
     constructor () {
@@ -349,24 +480,34 @@ class TestRunner {
                         "Boolean",
                         "Number",
                         "String",
+
+                        "Buffer (AndrewGaming587)",
+                        "Buffer Pointer (AndrewGaming587)",
+                        "Date (Old Version) (ddededodediamante)",
+                        "Date (ddededodediamante)",
+                        "Effect (Div)",
+                        "Iterator (Div)",
+                        "Object (DogeisCut)",
+                        "Regular Expression (DogeisCut)",
+                        "Set (DogeisCut)",
+                        "External Timer (steve0greatness)",
                         "Array (jwklong)",
-                        "Object (dogeiscut)",
-                        "Date (jwklong)",
-                        "Date (old by dde)",
-                        "Date (new by dde)",
-                        "Set (dogeiscut)",
-                        "Lambda (jwklong)",
                         "Color (jwklong)",
-                        "Unlimited Number (jwklong)",
+                        "Date (jwklong)",
+                        "Lambda (jwklong)",
+                        "Number (jwklong)",
                         "Target (jwklong)",
                         "XML (jwklong)",
+                        "Canvas (RedMan13)",
+                        "Paint Utils Colour (Fruits555000)",
+                        
                         "JavaScript Undefined",
                         "JavaScript Null",
                         "JavaScript BigInt",
                         "JavaScript Symbol",
                         "JavaScript Function",
-                        "JavaScript Object",
-                        "Unknown (Very Rare)"
+                        "JavaScript Object (generic)",
+                        "Unknown (rare)"
                     ]
                 }
             }

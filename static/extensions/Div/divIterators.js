@@ -16,9 +16,9 @@
     const menuIconURI = "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyMCAyMCIgd2lkdGg9IjIwcHgiIGhlaWdodD0iMjBweCIgeG1sbnM6Yng9Imh0dHBzOi8vYm94eS1zdmcuY29tIj4KICA8ZGVmcz4KICAgIDxsaW5lYXJHcmFkaWVudCBpZD0iZ3JhZGllbnQtMCIgYng6cGlubmVkPSJ0cnVlIj4KICAgICAgPHRpdGxlPkZpbGw8L3RpdGxlPgogICAgICA8c3RvcCBvZmZzZXQ9IjAiIHN0eWxlPSJzdG9wLWNvbG9yOiByZ2IoMjU1LCA2OCwgMTE4KTsiPjwvc3RvcD4KICAgICAgPHN0b3Agb2Zmc2V0PSIxIiBzdHlsZT0ic3RvcC1jb2xvcjogcmdiKDI1NSwgNTQsIDk4KTsiPjwvc3RvcD4KICAgIDwvbGluZWFyR3JhZGllbnQ+CiAgICA8bGluZWFyR3JhZGllbnQgaWQ9ImdyYWRpZW50LTAtMCIgaHJlZj0iI2dyYWRpZW50LTAiIGdyYWRpZW50VW5pdHM9InVzZXJTcGFjZU9uVXNlIiB4MT0iMTAiIHkxPSIxIiB4Mj0iMTAiIHkyPSIxOSI+PC9saW5lYXJHcmFkaWVudD4KICAgIDxsaW5lYXJHcmFkaWVudCBpZD0iZ3JhZGllbnQtMSIgYng6cGlubmVkPSJ0cnVlIj4KICAgICAgPHN0b3Agb2Zmc2V0PSIwIiBzdHlsZT0ic3RvcC1jb2xvcjogcmdiKDE4NiwgMzgsIDk2KTsiPjwvc3RvcD4KICAgICAgPHN0b3Agb2Zmc2V0PSIxIiBzdHlsZT0ic3RvcC1jb2xvcjogcmdiKDE3MiwgNDEsIDc5KTsiPjwvc3RvcD4KICAgIDwvbGluZWFyR3JhZGllbnQ+CiAgICA8bGluZWFyR3JhZGllbnQgaWQ9ImdyYWRpZW50LTEtMCIgaHJlZj0iI2dyYWRpZW50LTEiIGdyYWRpZW50VW5pdHM9InVzZXJTcGFjZU9uVXNlIiB4MT0iMTAiIHkxPSIwIiB4Mj0iMTAiIHkyPSIyMCI+PC9saW5lYXJHcmFkaWVudD4KICA8L2RlZnM+CiAgPGVsbGlwc2Ugc3R5bGU9InN0cm9rZS13aWR0aDogMTsgZmlsbDogdXJsKCNncmFkaWVudC0xLTApOyIgY3g9IjEwIiBjeT0iMTAiIHJ4PSIxMCIgcnk9IjEwIiB0cmFuc2Zvcm09Im1hdHJpeCgwLjk5OTk5OTk5OTk5OTk5OTksIDAsIDAsIDAuOTk5OTk5OTk5OTk5OTk5OSwgLTMuNTUyNzEzNjc4ODAwNTAxZS0xNSwgLTEuNzc2MzU2ODM5NDAwMjUwNWUtMTUpIj48L2VsbGlwc2U+CiAgPGVsbGlwc2Ugc3R5bGU9InN0cm9rZS13aWR0aDogMTsgZmlsbDogdXJsKCNncmFkaWVudC0wLTApOyIgY3g9IjEwIiBjeT0iMTAiIHJ4PSI5IiByeT0iOSIgdHJhbnNmb3JtPSJtYXRyaXgoMC45OTk5OTk5OTk5OTk5OTk5LCAwLCAwLCAwLjk5OTk5OTk5OTk5OTk5OTksIC0zLjU1MjcxMzY3ODgwMDUwMWUtMTUsIC0xLjc3NjM1NjgzOTQwMDI1MDVlLTE1KSI+PC9lbGxpcHNlPgogIDxyZWN0IHg9IjYuMjI4IiB5PSI5LjU1IiB3aWR0aD0iNy40ODMiIGhlaWdodD0iMC45MDEiIHN0eWxlPSJmaWxsOiByZ2IoMjU1LCAyNTUsIDI1NSk7IHN0cm9rZS13aWR0aDogMC4xMTM7Ij48L3JlY3Q+CiAgPGVsbGlwc2Ugc3R5bGU9InN0cm9rZTogcmdiKDI1NSwgMjU1LCAyNTUpOyBzdHJva2Utd2lkdGg6IDAuOTAxOyBmaWxsOiBub25lOyIgY3g9IjQuNDQzIiBjeT0iMTAiIHJ4PSIxLjkyIiByeT0iMS45MiI+PC9lbGxpcHNlPgogIDxlbGxpcHNlIHN0eWxlPSJzdHJva2U6IHJnYigyNTUsIDI1NSwgMjU1KTsgc3Ryb2tlLXdpZHRoOiAwLjkwMTsgZmlsbDogbm9uZTsiIGN4PSIxNS41NTciIGN5PSIxMCIgcng9IjEuOTIiIHJ5PSIxLjkyIj48L2VsbGlwc2U+CiAgPHBhdGggZD0iTSAzMS45OTkgOC45MzIgUSAzMi4zNTcgOC4yOTggMzIuNzE1IDguOTMyIEwgMzQuMzgzIDExLjg4OSBRIDM0Ljc0MSAxMi41MjMgMzQuMDI2IDEyLjUyMyBMIDMwLjY4OCAxMi41MjMgUSAyOS45NzMgMTIuNTIzIDMwLjMzMSAxMS44ODkgWiIgYng6c2hhcGU9InRyaWFuZ2xlIDI5Ljk3MyA4LjI5OCA0Ljc2OCA0LjIyNSAwLjUgMC4xNSAxQDY4NjMxOGZkIiBzdHlsZT0iZmlsbDogcmdiKDI1NSwgMjU1LCAyNTUpOyBzdHJva2U6IHJnYigyNTUsIDI1NSwgMjU1KTsgc3Ryb2tlLXdpZHRoOiAwLjkwMTsgc3Ryb2tlLWxpbmVjYXA6IHJvdW5kOyB0cmFuc2Zvcm0tYm94OiBmaWxsLWJveDsgdHJhbnNmb3JtLW9yaWdpbjogNTAlIDUwJTsiIHRyYW5zZm9ybT0ibWF0cml4KDAsIDEsIC0xLCAwLCAtMjIuNDA3MDA1LCAtMC41NjkwMzUpIj48L3BhdGg+Cjwvc3ZnPg=="
     const arrowURI = "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxNS44OTMiIGhlaWdodD0iMTUuODkzIiB2aWV3Qm94PSIwIDAgMTUuODkzIDE1Ljg5MyI+PHBhdGggZD0iTTkuMDIxIDEyLjI5NHYtMi4xMDdsLTYuODM5LS45MDVDMS4zOTggOS4xODQuODQ2IDguNDg2Ljk2MiA3LjcyN2MuMDktLjYxMi42MDMtMS4wOSAxLjIyLTEuMTY0bDYuODM5LS45MDVWMy42YzAtLjU4Ni43MzItLjg2OSAxLjE1Ni0uNDY0bDQuNTc2IDQuMzQ1YS42NDMuNjQzIDAgMCAxIDAgLjkxOGwtNC41NzYgNC4zNmMtLjQyNC40MDQtMS4xNTYuMTEtMS4xNTYtLjQ2NSIgZmlsbD0ibm9uZSIgc3Ryb2tlLW9wYWNpdHk9Ii4xNSIgc3Ryb2tlPSIjMDAwIiBzdHJva2Utd2lkdGg9IjEuNzUiLz48cGF0aCBkPSJNOS4wMjEgMTIuMjk0di0yLjEwN2wtNi44MzktLjkwNUMxLjM5OCA5LjE4NC44NDYgOC40ODYuOTYyIDcuNzI3Yy4wOS0uNjEyLjYwMy0xLjA5IDEuMjItMS4xNjRsNi44MzktLjkwNVYzLjZjMC0uNTg2LjczMi0uODY5IDEuMTU2LS40NjRsNC41NzYgNC4zNDVhLjY0My42NDMgMCAwIDEgMCAuOTE4bC00LjU3NiA0LjM2Yy0uNDI0LjQwNC0xLjE1Ni4xMS0xLjE1Ni0uNDY1IiBmaWxsPSIjZmZmIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiLz48cGF0aCBkPSJNMCAxNS44OTJWMGgxNS44OTJ2MTUuODkyeiIgZmlsbD0ibm9uZSIvPjwvc3ZnPg==";
 
-    function span(text) {
+    function span(text, isHTML = false) {
         let el = document.createElement('span')
-        el.innerText = text
+        if (isHTML) { el.innerHTML = text } else { el.innerText = text }
         el.style.display = 'hidden'
         el.style.whiteSpace = 'nowrap'
         el.style.width = '100%'
@@ -51,7 +51,7 @@
             const root = document.createElement('div');
             root.style.display = 'flex';
             root.style.flexDirection = 'column';
-            const s = span(`${this.getIterChain()} Iterator`); s.style.fontStyle = "italic";
+            const s = span(`${this.getIterChain(true)} Iterator`, true); s.style.fontStyle = "italic";
             root.appendChild(s);
             if(this.consumed > 0 || this.done) {
                 let text = ''
@@ -65,7 +65,7 @@
             const root = document.createElement('div');
             root.style.display = 'flex';
             root.style.flexDirection = 'column';
-            const s = span(`${this.getIterKind()} Iterator`); s.style.fontStyle = "italic";
+            const s = span(`${this.getIterKind(true)} Iterator`, true); s.style.fontStyle = "italic";
             root.appendChild(s);
             if(this.consumed > 0 || this.done) {
                 let text = ''
@@ -76,18 +76,25 @@
             return root;
         }
 
-        getIterChain() {
+        getIterChain(isHTML = false) {
             return this.kind
-            .map(k => typeof k === "string" ? k
-                : k.kind && k.args ? `${k.kind}(${
-                    k.args.map(i => i instanceof IteratorType ? i.getIterChain() : i.toString()).join(",")
-                })`
-                : ""
-            ).join("↦")
+            .map(k => typeof k === "string" ? (isHTML ? escapeHTML(k) : k)
+                : k.kind ? (
+                    k.args ? `${isHTML ? (k.kindHTML ?? escapeHTML(k.kind)) : k.kind}(${
+                        k.args.map(i => i instanceof IteratorType ? i.getIterChain(isHTML)
+                            : isHTML ? escapeHTML(i.toString())
+                            : i.toString()
+                        ).join(",")
+                    })`
+                    : isHTML ? (k.kindHTML ?? escapeHTML(k.kind))
+                    : k.kind
+                ) : ""
+            ).join(isHTML ? "&RightTeeArrow;" : "↦")
         }
-        getIterKind() {
+        getIterKind(isHTML = false) {
             const kind = this.kind[this.kind.length-1]
-            return typeof kind === "string" ? kind : kind.kind ?? ''
+            if (typeof kind === "string") return isHTML ? escapeHTML(kind) : kind
+            return isHTML ? (kind.kindHTML ?? escapeHTML(kind.kind ?? "")) : kind.kind ?? ""
         }
 
         static toIterator(x) {
@@ -107,8 +114,8 @@
 
         clone() {
             if(!this.clonable) {
-                console.error(`Iterator chain '${this.getIterChain}' is not clonable. Use 'branch' instead, or check before cloning.`)
-                throw `Iterator chain '${this.getIterChain}' is not clonable.`
+                console.error(`Iterator chain '${this.getIterChain()}' is not clonable. Use 'branch' instead, or check before cloning.`)
+                throw `Iterator chain '${this.getIterChain()}' is not clonable.`
             }
             const state = Object.fromEntries(Object.entries(this.state).map(([key, val]) => [key, 
                 val instanceof IteratorType ? val.clone() : val
@@ -180,6 +187,9 @@
                 return IteratorType.overArray("Array", val.array);
             return new IteratorType()
         }
+        static iterBuilder(state, next) {
+            return new IteratorType("Custom", {state}, next)
+        }
 
         // Adapters
         map(map) {
@@ -238,7 +248,7 @@
             }, this.clonable)
         }
         skip(count) {
-            return this.chainIter({kind: "Skip", args: [count]},
+            return iter.chainIter({kind: "Skip", args: [count]},
                 {iter: this, count}, function*(state, thread, target, runtime, stage) {
                 while(state.count > 0) {
                     const item = yield* state.iter.next(thread, target, runtime, stage);
@@ -1083,10 +1093,10 @@
                 iterBuilder(node, compiler, imports) {
                     const state = compiler.descendInput(node.STATE).asUnknown();
                     const next = descendSubstack(compiler, node.NEXT, new imports.Frame(false, "_divIterBuilder"))
-                        +`\nreturn vm.divIterator.Type.Item("");\n`
+                        +`\nreturn vm.IteratorType.Item("");\n`
                     return new imports.TypedInput(
-                 /*js*/`new vm.divIterator.Type("Custom",\n`
-                      +`    {state: ${state}},\n`
+                 /*js*/`vm.divIterator.Type.iterBuilder(\n`
+                      +`    ${state},\n`
                       +`    ${substackThunk(compiler, next, '_divIterState')}\n`
                       +`)\n`
                     , imports.TYPE_UNKNOWN)
@@ -1104,11 +1114,11 @@
                 iterBuilderItem(node, compiler, imports) {
                     if(!compiler.frames.some(f => f.parent === "_divIterBuilder")) return;
                     const item = compiler.descendInput(node.ITEM).asUnknown()
-                    compiler.source += `return vm.divIterator.Type.Item(${item});`
+                    compiler.source += `return vm.IteratorType.Item(${item});`
                 },
                 iterBuilderDone(node, compiler, imports) {
                     if(!compiler.frames.some(f => f.parent === "_divIterBuilder")) return;
-                    compiler.source += `return vm.divIterator.Type.Done();`
+                    compiler.source += `return vm.IteratorType.Done();`
                 },
 
                 iterAdapterMap(node, compiler, imports) {

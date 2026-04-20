@@ -1086,7 +1086,7 @@
                         +`\nreturn vm.divIterator.Type.Item("");\n`
                     return new imports.TypedInput(
                  /*js*/`new vm.divIterator.Type("Custom",\n`
-                      +`    ${state},\n`
+                      +`    {state: ${state}},\n`
                       +`    ${substackThunk(compiler, next, '_divIterState')}\n`
                       +`)\n`
                     , imports.TYPE_UNKNOWN)

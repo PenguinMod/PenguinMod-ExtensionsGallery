@@ -113,7 +113,7 @@ class TypeChecker {
 
     static is_agBuffer = TypeChecker._createVMTypeCheck("agBuffer")
     static is_agBufferPointer = TypeChecker._createVMTypeCheck("agBuffer", "PointerType")
-    
+
     /**
      * @param {*} value
      * @returns {boolean}
@@ -134,12 +134,12 @@ class TypeChecker {
         TypeChecker._assertRuntimeEnv()
         if (runtime.ext_ddeDateFormat) {
             try {
-                const dateType = Object.getPrototypeOf(runtime.ext_ddeDateFormat.currentDate())
+                const dateType = Object.getPrototypeOf(runtime.ext_ddeDateFormat.currentDate()).constructor
                 if (value instanceof dateType) return true
             } catch {}
         }
     }
-    
+
     /**
      * @param {*} value
      * @returns {boolean}
@@ -148,7 +148,7 @@ class TypeChecker {
         TypeChecker._assertRuntimeEnv()
         if (runtime.ext_ddeDateFormatV2) {
             try {
-                const dateType = Object.getPrototypeOf(runtime.ext_ddeDateFormatV2.currentDate())
+                const dateType = Object.getPrototypeOf(runtime.ext_ddeDateFormatV2.currentDate()).constructor
                 if (value instanceof dateType) return true
             } catch {}
         }
@@ -181,7 +181,7 @@ class TypeChecker {
     static is_jwTarget = TypeChecker._createVMTypeCheck("jwTargets")
     static is_jwVector = TypeChecker._createVMTypeCheck("jwVector")
     static is_jwXML = TypeChecker._createVMTypeCheck("jwXML")
-    
+
     /**
      * @param {*} value
      * @returns {boolean}
@@ -253,7 +253,7 @@ class TypeChecker {
         if (typeof value === "number") return "Number"
         if (typeof value === "string") return "String"
 
-        // Custom Extension Types 
+        // Custom Extension Types
         if (TypeChecker.is_agBuffer(value)) return "Buffer (AndrewGaming587)"
         if (TypeChecker.is_agBufferPointer(value)) return "Buffer Pointer (AndrewGaming587)"
         if (TypeChecker.is_ddeDateFormat(value)) return "Date (Old Version) (ddededodediamante)"
@@ -437,6 +437,16 @@ class TestRunner {
                         EXPECTED: { type: ArgumentType.STRING, menu: 'expectedType' }
                     }
                 },
+                {
+                    opcode: 'assertCustomIdType',
+                    blockType: BlockType.COMMAND,
+                    text: 'assert custom id of [VALUE] is [EXPECTED]',
+                    tooltip: 'Checks the `customID` property of a PM custom type. This also supports custom types from uncommon or new extensions.',
+                    arguments: {
+                        VALUE: commonArguments.allowAnything,
+                        EXPECTED: { type: ArgumentType.STRING, defaultValue: 'jwArray' }
+                    }
+                },
                 "---",
                 {
                     opcode: 'assertThrows',
@@ -475,7 +485,7 @@ class TestRunner {
             ],
             menus: {
                 expectedType: {
-                    acceptReporters: false,
+                    acceptReporters: true,
                     items: [
                         "Boolean",
                         "Number",
@@ -500,7 +510,7 @@ class TestRunner {
                         "XML (jwklong)",
                         "Canvas (RedMan13)",
                         "Paint Utils Colour (Fruits555000)",
-                        
+
                         "JavaScript Undefined",
                         "JavaScript Null",
                         "JavaScript BigInt",
@@ -691,12 +701,32 @@ class TestRunner {
     }
 
     /** @param {Object} args */
+    assertCustomIdType ({VALUE, EXPECTED}) {
+        const expectedType = Cast.toString(EXPECTED)
+        let customId
+        if (typeof VALUE === "object") {
+            if (VALUE && typeof VALUE.customId === "string") {
+                customId = VALUE.customId
+            } else {
+                customId = "<invalid-custom-id>"
+            }
+        } else {
+            customId = "<not-an-object>"
+        }
+        if (customId !== expectedType) {
+            throw new TestError(
+                `Assertion failed: expected custom id ${quote(expectedType)} but got ${quote(customId)} for value ${quote(VALUE)}`
+            )
+        }
+    }
+
+    /** @param {Object} args */
     failTest ({MSG}) {
         throw new TestError(`Test failed: ${Cast.toString(MSG)}`)
     }
 
 
-    
+
     /**
      * @param {*} error
      * @returns {string}
@@ -747,7 +777,7 @@ class TestRunner {
      * @returns {TestError}
      */
     _errorWithCause (message, cause, scopePrefix = null, actualMessage = null) {
-        return new TestError(message, { 
+        return new TestError(message, {
             cause,
             scopePrefix,
             actualMessage: TestError.preserveActualMessage(actualMessage, cause)

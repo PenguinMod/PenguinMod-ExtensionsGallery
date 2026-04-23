@@ -88,7 +88,7 @@ class TestError extends Error {
 
 
 class TypeChecker {
-    // All custom types (using `customId`) one can get from a reporter in PM
+    // All custom types (using `customId`) in PM (you can access most from a reporter)
     // (PenguinMod-Vm, PenguinMod-ExtensionsGallery, SharkPools-Extensions) (as of 14.04.2026)
     // agBuffer (AndrewGaming587)
     // agBufferPointer (AndrewGaming587)
@@ -188,10 +188,8 @@ class TypeChecker {
      */
     static is_paintUtilsColour(value) {
         TypeChecker._assertRuntimeEnv()
-        if (!runtime.ext_fruitsPaintUtils || typeof runtime.ext_fruitsPaintUtils.getColour !== "function") return false
-
         try {
-            const proto = Object.getPrototypeOf(runtime.ext_fruitsPaintUtils.getColour({COLOUR_NAME: "orange"}))
+            const proto = Object.getPrototypeOf(runtime.ext_fruitsPaintUtils.getColour({COLOUR_NAME: "orange"})).constructor
             return value instanceof proto
         } catch {
             return false
@@ -208,8 +206,8 @@ class TypeChecker {
 
     /**
      * @param {string} typeId
-     * @param {?string} overrideTypeProperty
-     * @param {string} [errMsg] - optional error message if type missing
+     * @param {?string} [overrideTypeProperty]
+     * @param {?string} [errMsg] - optional error message if type missing
      * @returns {(value: *) => boolean}
      */
     static _createVMTypeCheck(typeId, overrideTypeProperty = null, typeMissingErrorMsg = null) {
@@ -230,15 +228,6 @@ class TypeChecker {
             }
             return value instanceof typeClass
         }
-    }
-
-    /**
-     * @param {*} value
-     * @returns {boolean}
-     */
-    static isClassicScratchValue(value) {
-        return ((value === undefined) || (value === null) ||
-        (typeof value === "boolean") || (typeof value === "number") || (typeof value === "string"))
     }
 
     /**
@@ -446,7 +435,7 @@ class TestRunner {
                         VALUE: commonArguments.allowAnything,
                         EXPECTED: { type: ArgumentType.STRING, defaultValue: 'jwArray' }
                     }
-                },
+                },                
                 "---",
                 {
                     opcode: 'assertThrows',
@@ -486,6 +475,7 @@ class TestRunner {
             menus: {
                 expectedType: {
                     acceptReporters: true,
+                    acceptReporters: true,
                     items: [
                         "Boolean",
                         "Number",
@@ -507,6 +497,7 @@ class TestRunner {
                         "Lambda (jwklong)",
                         "Number (jwklong)",
                         "Target (jwklong)",
+                        "Vector (jwklong)",
                         "XML (jwklong)",
                         "Canvas (RedMan13)",
                         "Paint Utils Colour (Fruits555000)",
@@ -795,9 +786,9 @@ class TestRunner {
 }
 
 const testRunnerInstance = new TestRunner()
+const runtime = Scratch.vm.runtime
 
 if (isRuntimeEnv) {
-    const runtime = Scratch.vm.runtime
     const oldConvertBlock = runtime._convertBlockForScratchBlocks.bind(runtime)
     if (!oldConvertBlock.tooltipImplementationAdded) {
         /**

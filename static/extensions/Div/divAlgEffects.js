@@ -75,11 +75,6 @@
 
         // descendStack override (can be switched with a new one)
         descendStack(old, nodes, frame) {
-            console.log(
-                this,
-                nodes,
-                frame
-            )
             if(this.script.yields && this.frames.length == 0) {
                 if(this.isProcedure) this.source += 'return '
                 this.source += 'yield* vm.divAlgEffects.effRun(function*(){\n'

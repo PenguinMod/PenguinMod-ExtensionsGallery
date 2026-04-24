@@ -82,7 +82,7 @@
             const source = (map instanceof Map) ? map : new Map(Object.entries(map));
 
             for (const [key, value] of source) {
-                const k = Cast.toString(key);
+                const k = ObjectType.forKey(key);
                 if (value instanceof ObjectType) {
                     newMap.set(k, value);
                 } else if (value instanceof Map || isPlainObject(value)) {
@@ -125,7 +125,9 @@
                     case "boolean":
                         return x ? "true" : "false"
                     case "string":
-                        return `"${escapeHTML(Cast.toString(x))}"`
+                    return `"${escapeHTML(Cast.toString(x))}"`
+                    case "symbol":
+                        return `<i style="opacity: 0.5;">${escapeHTML(x.description)}</i>`
                 }
             } catch {}
             return "?"
@@ -242,7 +244,7 @@
                     keyCell.style.background = keyBackground
                     keyCell.style.fontWeight = 'bold';
 
-                    keyCenteringDiv.innerHTML = escapeHTML(String(key))
+                    keyCenteringDiv.innerHTML = renderKey(key)
 
                     const valueCell = document.createElement('td')
                     valueCell.style.border = border
@@ -273,6 +275,13 @@
                 return table.outerHTML
             }
 
+            const renderKey = (x) => {
+                if (typeof x === "symbol") {
+                    return `<i style="opacity: 0.5;">${escapeHTML(x.description)}</i>`
+                }
+                return escapeHTML(String(x))
+            }
+
             const render = (x) => {
                 try {
                     const nullDraw = '<i style="opacity: 0.75;">null</i>'
@@ -300,6 +309,8 @@
                             return x ? "true" : "false"
                         case "string":
                             return `"${escapeHTML(Cast.toString(x))}"`
+                        case "symbol":
+                            return `<i style="opacity: 0.5;">${escapeHTML(x.description)}</i>`
                     }
                 } catch {}
                 return "?"
@@ -310,10 +321,10 @@
                     return input.array.map(v => normalize(v))
                 }
                 if (input instanceof ObjectType) {
-                    return new Map(Array.from(input.map).map(([k, v]) => [Cast.toString(k), normalize(v)]))
+                    return new Map(Array.from(input.map).map(([k, v]) => [ObjectType.forKey(k), normalize(v)]))
                 }
                 if (isPlainObject(input)) {
-                    return new Map(Object.entries(input).map(([k, v]) => [Cast.toString(k), normalize(v)]))
+                    return new Map(Object.entries(input).map(([k, v]) => [ObjectType.forKey(k), normalize(v)]))
                 }
                 return input
             }
@@ -356,6 +367,15 @@
             return root
         }
 
+        static forKey(x) {
+            switch (typeof x) {
+                case "symbol":
+                    return x
+                default:
+                    return Cast.toString(x)   
+            }
+        }
+
         /* API Methods, use these in blocks. */
 
         static blank = new ObjectType()
@@ -392,13 +412,13 @@
             const processed = array
                 .map(v => normalize(v))
                 .filter(Array.isArray)
-                .map(([k, v]) => [Cast.toString(k), v])
+                .map(([k, v]) => [ObjectType.forKey(k), v === undefined ? null : v])
 
             return ObjectType.toObject(new Map(processed))
         }
 
         get(key) {
-            key = Cast.toString(key)
+            key = ObjectType.forKey(key)
             return this.map.has(key) ? ObjectType.forObject(this.map.get(key)) : ""
         }
 
@@ -406,7 +426,7 @@
             const arrayPath = path instanceof jwArray.Type ? path.array : (path ?? [])
             let val = this
             for (var i = 0; i < arrayPath.length; i++) {
-                const key = Cast.toString(arrayPath[i])
+                const key = ObjectType.forKey(arrayPath[i])
                 if (val instanceof ObjectType && val.has(key)) {
                     val = val.get(key)
                 } else {
@@ -417,7 +437,7 @@
         }
 
         has(key) {
-            key = Cast.toString(key)
+            key = ObjectType.forKey(key)
             return this.map.has(key)
         }
 
@@ -426,7 +446,7 @@
         }
 
         set(key, value) {
-            const k = Cast.toString(key)
+            const k = ObjectType.forKey(key)
             const newMap = new Map(this.map)
             newMap.set(k, value)
             return new ObjectType(newMap, true)
@@ -438,7 +458,7 @@
             if (path.length === 0) return this;
 
             const updateRecursive = (currentMap, index) => {
-                const key = Cast.toString(keys[index])
+                const key = ObjectType.forKey(keys[index])
                 const newMap = new Map(currentMap)
 
                 if (index === keys.length - 1) {
@@ -457,7 +477,7 @@
         }
 
         delete(key) {
-            const k = Cast.toString(key)
+            const k = ObjectType.forKey(key)
             if (!this.map.has(k)) return this
             const newMap = new Map(this.map)
             newMap.delete(k);
@@ -465,20 +485,26 @@
         }
 
         deleteAtPath(path) {
-            const arrayPath = path instanceof jwArray.Type ? path.array : (path ?? [])
-            let val = this
-            for (var i = 0; i < arrayPath.length; i++) {
-                const key = Cast.toString(arrayPath[i])
-                if (val.has(key)) {
-                    val = val.get(key)
-                    if (!(val instanceof ObjectType)) {
-                        val = new ObjectType(new Map(), true)
+            const keys = path instanceof jwArray.Type ? path.array : (Array.isArray(path) ? path : [path]);
+            
+            if (path.length === 0) return this;
+
+            const updateRecursive = (currentMap, index) => {
+                const key = ObjectType.forKey(keys[index])
+                const newMap = new Map(currentMap)
+
+                if (index === keys.length - 1) {
+                    newMap.delete(key);
+                } else {
+                    let nextNode = currentMap.get(key);
+                    if (nextNode instanceof ObjectType) {
+                        newMap.set(key, updateRecursive(nextNode.map, index + 1));
                     }
-                } else if(index === arrayPath.length - 1) {
-                    return val.delete(key)
                 }
-            }
-            return val
+                return new ObjectType(newMap, true);
+            };
+
+            return updateRecursive(this.map, 0);
         }
 
         merge(other) {
@@ -532,7 +558,9 @@
             vm.runtime.registerSerializer(
                 "dogeiscutObject",
                 // we save this as array entries so people cant spoof custom types
-                mapType => Array.from(mapType.map).map(([key, value]) => {
+                mapType => Array.from(mapType.map).filter(([key, value]) => { 
+                    return !(typeof key === "symbol") // begone foul symbols
+                }).map(([key, value]) => {
                     if (typeof value == "object" && value != null && value.customId) {
                         return [String(key), {
                             customType: true,
@@ -932,6 +960,26 @@
                             }
                         }
                     },
+                    // these are debug blocks and will NOT be actually added 
+                    // '---',
+                    // {
+                    //     opcode: 'symbol',
+                    //     text: 'symbol [SYMBOL]',
+                    //     switchText: 'symbol',
+                    //     blockType: Scratch.BlockType.REPORTER,
+                    //     arguments: {
+                    //         SYMBOL: {
+                    //             type: Scratch.ArgumentType.STRING,
+                    //             defaultValue: 'key',
+                    //             exemptFromNormalization: true
+                    //         }
+                    //     },
+                    // },
+                    // {
+                    //     opcode: 'symbolkeytest',
+                    //     text: 'symbol key',
+                    //     ...dogeiscutObject.Block,
+                    // },
                 ],
                 menus: {
                     stringifyFormat: {
@@ -1231,6 +1279,7 @@
 
         /* Non-compiled Blocks */
         /* only here for reference ig */
+        /* despite the fact i use Object.forKey for all of these but the compiled blocks just stringify */
 
         blank() {
             return dogeiscutObject.Type.blank;
@@ -1241,7 +1290,7 @@
         }
 
         keyValue({ KEY, VALUE }) {
-            KEY = Cast.toString(KEY)
+            KEY = ObjectType.forKey(KEY)
             return new dogeiscutObject.Type(new Map([[KEY, VALUE]]))
         }
 
@@ -1262,14 +1311,14 @@
         builderAppend({ KEY, VALUE }, util) {
             let bi = util.thread._dogeiscutObjectBuilderIndex ?? []
             if (bi[bi.length-1]) {
-                bi[bi.length-1].set(Cast.toString(KEY), VALUE)
+                bi[bi.length-1].set(ObjectType.forKey(KEY), VALUE)
             }
         }
 
         builderAppendEmpty({ KEY }, util) {
             let bi = util.thread._dogeiscutObjectBuilderIndex ?? []
             if (bi[bi.length-1]) {
-                bi[bi.length-1].set(Cast.toString(KEY), null)
+                bi[bi.length-1].set(ObjectType.forKey(KEY), null)
             }
         }
 
@@ -1372,6 +1421,14 @@
 
         forEach({ OBJECT }, util) {
             throw "Failed to compile!"
+        }
+
+        symbol({ SYMBOL }) {
+            return Symbol(SYMBOL)
+        }
+
+        symbolkeytest() {
+            return new dogeiscutObject.Type(new Map([[Symbol("key"), "value"]]))
         }
 
     }

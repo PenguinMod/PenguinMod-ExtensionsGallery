@@ -75,6 +75,11 @@
 
         // descendStack override (can be switched with a new one)
         descendStack(old, nodes, frame) {
+            console.log(
+                this,
+                nodes,
+                frame
+            )
             if(this.script.yields && this.frames.length == 0) {
                 if(this.isProcedure) this.source += 'return '
                 this.source += 'yield* vm.divAlgEffects.effRun(function*(){\n'
@@ -356,8 +361,12 @@
                       handlers = compiler.localVariables.next(),
                            res = compiler.localVariables.next();
                     const substack1 = descendSubstack(node.SUBSTACK1, compiler, new imports.Frame(false, null, true));
+                    const effName = (eff) => {
+                        const key = compiler.descendInput(eff).asString();
+                        return eff.kind == "constant" ? key : `[${key}]`
+                    }
                     const effCases = node.effCases.map(({eff, handler}) =>
-                     /*js*/`${compiler.descendInput(eff).asString()}: function*(divEffData, divEffResume, divEffRehandle) {\n`
+                     /*js*/`${effName(eff)}: function*(divEffData, divEffResume, divEffRehandle) {\n`
                           +`    ${descendSubstack(handler, compiler, new imports.Frame(false, "divAlgEffects.effHandlerCase", true))};\n`
                           +`},`
                     ).join("");
@@ -385,7 +394,8 @@
                     /*js*/`yield divEffResume(${compiler.descendInput(node.DATA).asUnknown()}, false);`
                 },
                 effResumeRet(node, compiler, imports) {
-                    if(!compiler.frames.some(f => f.parent === "divAlgEffects.effHandlerCase")) return;
+                    if(!compiler.frames.some(f => f.parent === "divAlgEffects.effHandlerCase")) 
+                        return new imports.TypedInput(`""`, imports.TYPE_UNKNOWN);
                     return new imports.TypedInput(
                         /*js*/`yield divEffResume(${compiler.descendInput(node.DATA).asUnknown()}, false)`,
                         imports.TYPE_UNKNOWN);

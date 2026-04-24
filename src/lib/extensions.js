@@ -84,6 +84,15 @@ export default [
         creator: "G1nX",
     },
     {
+        name: "NotifyPenguin V2",
+        description: "Allows sending real time & scheduled notifications to desktops and mobile devices!",
+        code: "Ikelene/notifyPenguinV2.js",
+        banner: "Ikelene/NotifyPenguinV2Banner.webp",
+        creator: "Ikelene",
+        isGitHub: true, 
+        tags: ["api", "notifications", "messaging"]
+    },
+    {
         name: "Object",
         description: "Handle large JSON files at an extreme speed.",
         code: "skyhigh173/object.js",
@@ -125,6 +134,17 @@ export default [
         banner: "TheShovel/thumbnail-doodlerec.avif",
         creator: "TheShovel",
         isGitHub: true,
+    },
+    {
+        name: "Internet Radio",
+        description: "Internet Radio allows you to stream live audio from thousands of internet radio stations while providing data to create music visualizers or anything in-between.",
+        code: "Ikelene/internetRadio.js",
+        banner: "Ikelene/internetRadio.svg",
+        creator: "Ikelene",
+        isGitHub: true, 
+        unstable: true,
+        unstableReason: "Some radio stations / URLs may not work due to CORS or not supporting a proper audio format.\nThis is normal, do not report it.",
+        tags: ["api", "music", "sounds", "visualizer", "radio"]
     },
             {
         name: "Stylus",

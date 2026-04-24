@@ -434,7 +434,7 @@ export default [
         banner: "DogeisCut/BeepBoxPlayer.svg",
         creator: "DogeisCut",
         isGitHub: true, 
-        tags: ["api", "music", "sounds", "ultrabox", "jummbox", "beepbox"]
+        tags: ["api", "music", "sounds"]
     },
     {
         name: "Update File (Direct Access)",

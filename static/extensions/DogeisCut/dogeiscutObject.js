@@ -1279,6 +1279,7 @@
 
         /* Non-compiled Blocks */
         /* only here for reference ig */
+        /* despite the fact i use Object.forKey for all of these but the compiled blocks just stringify */
 
         blank() {
             return dogeiscutObject.Type.blank;

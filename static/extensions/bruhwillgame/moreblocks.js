@@ -3,7 +3,7 @@
 
 
     if (!Scratch.extensions.unsandboxed) {
-        alert("This extension needs to be unsandboxed to run!")
+        alert("run without sandbox to use")
         return
     }
 
@@ -71,7 +71,7 @@
     class Extension {
         getInfo() {
             return {
-                "id": "37373636",
+                "id": "bruhwillgamemoreblocks",
                 "name": "More blocks ",
                 "color1": "#0800ff",
                 "blocks": [{

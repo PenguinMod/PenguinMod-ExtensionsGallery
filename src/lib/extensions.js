@@ -677,4 +677,14 @@ export default [
         tags: ["customtype","data","utility","new","large"],
         creatorAlias: "AndrewGaming587"
     },
+        {
+        name: "Eruda",
+        description: adev tools for mobile extension development",
+        code: "Tringlyman/tringlymanEruda.js",
+        banner: " Tringlyman/tringlymanEruda.svg",
+        creator: "tringlyman",
+        isGitHub: true,
+        tags: ["new", "small", "mobile", "development"],
+        creatorAlias: "tringlyman",
+    },
 ];

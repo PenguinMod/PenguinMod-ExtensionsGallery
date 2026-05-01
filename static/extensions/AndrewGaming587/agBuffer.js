@@ -1480,7 +1480,8 @@
                         let datatype = compiler.descendInput(node.datatype).asString();
                         let buffer = compiler.descendInput(node.buffer).asUnknown();
                         let index = compiler.descendInput(node.index).asNumber();
-                        let endian = compiler.descendInput(node.datatype).asBoolean();
+                        let endian = compiler.descendInput(node.endian).asBoolean();
+                        //  console.log(endian)
                         let value = compiler.descendInput(node.value).asUnknown();
                         // compiler.source += '(function(buffer, index, endian, datatype = null) {'
                         // compiler.source += `let buffer = ${buffer};`

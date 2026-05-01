@@ -1,3 +1,5 @@
+
+
 (async function(Scratch) {
     if (Scratch.gui) {
         Scratch.gui.getBlockly().then(ScratchBlocks => {
@@ -51,6 +53,13 @@
     class ArrayBufferType {
         arrayBuffer;
         dataView;
+        
+        static cast(obj) {
+            if (obj instanceof ArrayBufferType) return obj
+            else if (obj instanceof ArrayBufferPointerType) return obj.buffer
+            else return new ArrayBufferType(obj)
+        }
+
         toArrayBuffer() {
             return this.arrayBuffer
         }
@@ -128,7 +137,7 @@
         } 
         constructor(source, passthrough = true) { // Passthrough will return the source if the source is already an ArrayBufferType and passthrough is true, for optimization reasons
             source ??= 0;
-            if (passthrough && ((typeof source == "object" && "customId" in source && source.customId == "agBuffer") || source instanceof ArrayBufferType)) return source;
+            if (passthrough && ((typeof source === "object" && "customId" in source && source.customId === "agBuffer") || source instanceof ArrayBufferType)) return source;
             if (source instanceof Array) {
                 // window.agBufferDebugLastType = "jsarray"
                 // Uint8Array conversion is necessary because ArrayBuffer constructor doesn't take normal arrays as input
@@ -137,7 +146,7 @@
                 // window.agBufferDebugLastType = "jwArray"
                 // Same reason here
                 this.arrayBuffer = new Uint8Array(source.array).buffer
-            } else if (typeof source == "number") {
+            } else if (typeof source === "number") {
                 // window.agBufferDebugLastType = "length"
                 // no Uint8Array needed as the constructor can take (number) to create a blank arraybuffer of length (number)
                 this.arrayBuffer = new ArrayBuffer(source)
@@ -153,13 +162,13 @@
             } else if (source instanceof ArrayBuffer) {
                 // window.agBufferDebugLastType = "jsarraybuffer"
                 this.arrayBuffer = source
-            } else if (typeof source == "string" && (() => {try{return Array.isArray(JSON.parse(source))}catch{return false}})()) { // weird inline code to see if we can JSON.parse the string as array
+            } else if (typeof source === "string" && (() => {try{return Array.isArray(JSON.parse(source))}catch{return false}})()) { // weird inline code to see if we can JSON.parse the string as array
                 // window.agBufferDebugLastType = "json"
                 this.arrayBuffer = new Uint8Array(JSON.parse(source)).buffer
-            } else if (typeof source.toArrayBuffer == "function") {
+            } else if (typeof source.toArrayBuffer === "function") {
                 // window.agBufferDebugLastType = "toArrayBuffer"
                 this.arrayBuffer = source.toArrayBuffer()
-            } else if (typeof source == "string") {
+            } else if (typeof source === "string") {
                 // window.agBufferDebugLastType = "fromString"
                 this.arrayBuffer = new TextEncoder().encode(source).buffer;
             } else {
@@ -173,6 +182,170 @@
             
             // window.agBufferDebug = this;
         }
+        get(type = "Uint8",index,endian = false) {
+            switch (type) {
+                case "Uint8":
+                    return this.dataView.getUint8(index);
+                case "Int8":
+                    return this.dataView.getInt8(index);
+                case "Uint16":
+                    return this.dataView.getUint16(index,endian);
+                case "Int16":
+                    return this.dataView.getInt16(index,endian);
+                case "Uint32":
+                    return this.dataView.getUint32(index,endian);
+                case "Int32":
+                    return this.dataView.getInt32(index,endian);
+                case "Uint64":
+                    return ArrayBufferType.wrapBigInts(this.dataView.getBigUint64(index,endian));
+                case "Int64":
+                    return ArrayBufferType.wrapBigInts(this.dataView.getBigInt64(index,endian));
+                case "Float16":
+                    return this.dataView.getFloat16(index,endian);
+                case "Float32":
+                    return this.dataView.getFloat32(index,endian);
+                case "Float64":
+                    return this.dataView.getFloat64(index,endian);
+                default:
+                    throw new TypeError(`Unknown Type: ${type}`);
+                    // new DataView(new ArrayBuffer(32)).getUint32(0)
+            }
+
+        }
+        static wrapBigInts(bi) {
+            // a method to let js BigInts not break everything ever either by converting it to a jwInt if the extension is added, or making it a string otherwise.
+            if (typeof bi != "bigint") return bi;
+            return vm.jwInt ? new vm.jwInt.Type(bi) : bi.toString()
+        }
+
+        static handleWrappedBigInts(bi) {
+            if (vm.jwInt && bi instanceof vm.jwInt.Type) return bi.number;
+            if (typeof bi === "bigint") return bi;
+            return BigInt(bi);
+        }
+        set(type = "Uint8",index,value,endian = false) {
+            let buffer = this;
+            // console.log(type)
+            // console.log(index)
+            // console.log(endian)
+            // console.log(value)
+            switch (type) {
+                case "Uint8":
+                    buffer.dataView.setUint8(index,value);
+                    return;
+                case "Int8":
+                    buffer.dataView.setInt8(index,value);
+                    return;
+                case "Uint16":
+                    buffer.dataView.setUint16(index,value,endian);
+                    return;
+                case "Int16":
+                    buffer.dataView.setInt16(index,value,endian);
+                    return;
+                case "Uint32":
+                    buffer.dataView.setUint32(index,value,endian);
+                    return;
+                case "Int32":
+                    buffer.dataView.setInt32(index,value,endian);
+                    return;
+                case "Uint64":
+                    buffer.dataView.setBigUint64(index,ArrayBufferType.handleWrappedBigInts(value),endian);
+                    return;
+                case "Int64":
+                    buffer.dataView.setBigInt64(index,ArrayBufferType.handleWrappedBigInts(value),endian);
+                    return;
+                case "Float16":
+                    buffer.dataView.setFloat16(index,value,endian);
+                    return;
+                case "Float32":
+                    buffer.dataView.setFloat32(index,value,endian);
+                    return;
+                case "Float64":
+                    buffer.dataView.setFloat64(index,value,endian);
+                    return;
+                default:
+                    throw new TypeError(`Unknown Type: ${type}`);
+            }
+
+        }
+        writeSubBuffer(subbuffer,startindex) {
+            if (subbuffer === undefined && !agBuffer.disableErrorHandling) return;
+            subbuffer = new ArrayBufferType(subbuffer)
+            let buffer = this
+            let arr = new Uint8Array(subbuffer.arrayBuffer)
+            arr.forEach((value, index) => {
+                buffer.dataView.setUint8(index + startindex, value)
+            })
+        }
+        toTypedArray(type) {
+            let array = [];
+            let buf = this.itemsOf(0,Math.floor(this.arrayBuffer.byteLength / sizes[type]) * sizes[type]).arrayBuffer
+            switch (type) {
+                case "Uint8":
+                    array = new Uint8Array(buf); break;
+                case "Int8":
+                    array = new Int8Array(buf); break;
+                case "Uint16":
+                    array = new Uint16Array(buf); break;
+                case "Int16":
+                    array = new Int16Array(buf); break;
+                case "Uint32":
+                    array = new Uint32Array(buf); break;
+                case "Int32":
+                    array = new Int32Array(buf); break;
+                case "Uint64":
+                    array = new BigUint64Array(buf); break;
+                case "Int64":
+                    array = new BigInt64Array(buf); break;
+                case "Float16":
+                    array = new Float16Array(buf); break;
+                case "Float32":
+                    array = new Float32Array(buf); break;
+                case "Float64":
+                    array = new Float64Array(buf); break;
+                default:
+                    if (agBuffer.disableErrorHandling) {return new Uint8Array(0)} else {throw new TypeError(type + " is not a valid array type!");}
+
+            }
+            
+            return array;
+        }
+        itemsOf(min, max) {
+            return new agBuffer.Type(this.arrayBuffer.slice(min,max))
+        }
+        clone() {
+            return new ArrayBufferType(this.arrayBuffer.slice())
+        }
+        resizeAsNew(size) {
+            return new ArrayBufferType(this.arrayBuffer.slice().transfer(size))
+        }
+        resize(size) {
+            this.arrayBuffer = this.arrayBuffer.transfer(size)
+        }
+
+        reverse() {
+            this.arrayBuffer = new Uint8Array(this.arrayBuffer).reverse().buffer
+        }
+        reverseAsNew() {
+            return new ArrayBufferType(new Uint8Array(this.arrayBuffer).reverse())
+        }
+
+        readString(index) {
+            let arr = new Uint8Array(this.arrayBuffer).slice(index)
+            let len = arr.findIndex(v => v === 0)
+            if (len === -1) return ""; 
+            else return new TextDecoder().decode(arr.slice(0,len));
+        }
+
+        writeString(index,string) {
+            let stringBuffer = new TextEncoder().encode(string).buffer
+            stringBuffer = stringBuffer.transfer(stringBuffer.byteLength + 1)
+            let arr = new Uint8Array(stringBuffer)
+            arr.forEach((value, idx) => {
+                this.dataView.setUint8(idx + index, value)
+            })
+
+        }
     }
     class ArrayBufferPointerType {
         customId = "agBufferPointer"
@@ -180,12 +353,18 @@
         type;
         index;
         endian;
-        constructor(buffer,index,type,endian = false) {
+        constructor(buffer = new ArrayBufferType(16),index = 0,type = "Uint8",endian = false) {
             this.buffer = buffer
             this.index = index
             this.endian = endian
             this.type = type
             
+        }
+
+        static tryConvertToPointer(object) {
+            if (object instanceof ArrayBufferPointerType) return object;
+            if (object instanceof ArrayBufferType) return new ArrayBufferPointerType(object);
+            return new ArrayBufferPointerType()
         }
         copy() {
             return new ArrayBufferPointerType(this.buffer,this.index,this.type,this.endian)
@@ -212,80 +391,41 @@
 
             root.appendChild(span("Buffer Pointer"))
             root.appendChild(span(`Index: ${"0x" + this.index.toString(16).padStart(8,"0")}`))
-            root.appendChild(span(`Value: ${this.type == "void" ? "N/A" : this.getValue()}`))
+            try {
+                root.appendChild(span(`Value: ${this.type === "void" ? "N/A" : this.getValue()}`))
+            } catch (e) {
+                root.appendChild(span(`Value: ??`))
+            }
             root.appendChild(span(`Type: ${["Uint8","Int8","void"].includes(this.type) ? "" : (this.endian ? "Little-Endian " : "Big-Endian ")}${this.type}`))
             return root
         }
         getValue() {
-            switch (this.type) {
-                case "Uint8":
-                    return this.buffer.dataView.getUint8(this.index);
-                case "Int8":
-                    return this.buffer.dataView.getInt8(this.index);
-                case "Uint16":
-                    return this.buffer.dataView.getUint16(this.index,this.endian);
-                case "Int16":
-                    return this.buffer.dataView.getInt16(this.index,this.endian);
-                case "Uint32":
-                    return this.buffer.dataView.getUint32(this.index,this.endian);
-                case "Int32":
-                    return this.buffer.dataView.getInt32(this.index,this.endian);
-                case "Uint64":
-                    return this.buffer.dataView.getBigUint64(this.index,this.endian);
-                case "Int64":
-                    return this.buffer.dataView.getBigInt64(this.index,this.endian);
-                case "Float16":
-                    return this.buffer.dataView.getFloat16(this.index,this.endian);
-                case "Float32":
-                    return this.buffer.dataView.getFloat32(this.index,this.endian);
-                case "Float64":
-                    return this.buffer.dataView.getFloat64(this.index,this.endian);
-                case "void":
-                    if (!agBuffer.disableErrorHandling) return null; else throw new TypeError("Cannot read a value from a void pointer");
+            try {
+                return this.buffer.get(this.type,this.index % this.buffer.arrayBuffer.byteLength,this.endian)
+            } catch {
+                return 0
             }
-
         }
         setValue(value) {
-            switch (this.type) {
-                case "Uint8":
-                    this.buffer.dataView.setUint8(this.index,value);
-                    return;
-                case "Int8":
-                    this.buffer.dataView.setInt8(this.index,value);
-                    return;
-                case "Uint16":
-                    this.buffer.dataView.setUint16(this.index,value,this.endian);
-                    return;
-                case "Int16":
-                    this.buffer.dataView.setInt16(this.index,value,this.endian);
-                    return;
-                case "Uint32":
-                    this.buffer.dataView.setUint32(this.index,value,this.endian);
-                    return;
-                case "Int32":
-                    this.buffer.dataView.setInt32(this.index,value,this.endian);
-                    return;
-                case "Uint64":
-                    this.buffer.dataView.setBigUint64(this.index,BigInt(value),this.endian);
-                    return;
-                case "Int64":
-                    this.buffer.dataView.setBigInt64(this.index,BigInt(value),this.endian);
-                    return;
-                case "Float16":
-                    this.buffer.dataView.setFloat16(this.index,value,this.endian);
-                    return;
-                case "Float32":
-                    this.buffer.dataView.setFloat32(this.index,value,this.endian);
-                    return;
-                case "Float64":
-                    this.buffer.dataView.setFloat64(this.index,value,this.endian);
-                    return;
-                case "void":
-                    if (!agBuffer.disableErrorHandling) return; else throw new TypeError("Cannot write a value to a void pointer");
-            }
-
+            try {
+                this.buffer.set(this.type, this.index % this.buffer.arrayBuffer.byteLength, value, this.endian)
+            } catch {}
         }
     }
+    const sizes = {
+        Uint8:1,
+        Int8:1,
+        Uint16:2,
+        Int16:2,
+        Uint32:4,
+        Int32:4,
+        Uint64:8,
+        Int64:8,
+        Float16:2,
+        Float32:4,
+        Float64:8
+    }
+
     const agBuffer = {
         Type: ArrayBufferType,
         PointerType: ArrayBufferPointerType,
@@ -302,7 +442,6 @@
             forceOutputType: "ArrayBufferPointer",
             disableMonitor: true
         },
-
         Argument: {
             shape: BlockShape.SQUARE,
             //shape: "agBuffer-arrayBuffer",
@@ -314,26 +453,13 @@
             exemptFromNormalization: true,
             check: ["ArrayBufferPointer"]
         },
-
+        sizes: sizes,
         maxReporterRows: 10,
-        disableErrorHandling: false
+        disableErrorHandling: false,
     }
     if (!Scratch.extensions.unsandboxed) {
         alert("This extension needs to be unsandboxed to run!")
         return
-    }
-    const sizes = {
-        Uint8:1,
-        Int8:1,
-        Uint16:2,
-        Int16:2,
-        Uint32:4,
-        Int32:4,
-        Uint64:8,
-        Int64:8,
-        Float16:2,
-        Float32:4,
-        Float64:8
     }
 
     class Extension {
@@ -345,7 +471,7 @@
             );
             vm.runtime.registerSerializer(
                 "agBufferPointer",
-                v => v.type == "void" ? "Void pointers do not serialize" : v.getValue(), 
+                v => v.type === "void" ? "Void pointers do not serialize" : v.getValue(), 
                 v => v
             );
 
@@ -551,6 +677,17 @@
                     ...vm.jwArray.Block,
                 },
                 {
+                    opcode: "toTypedArray",
+                    text: "convert [BUFFER] to [TYPE] typed array",
+                    blockType: "reporter",
+                    arguments: {
+                        BUFFER: agBuffer.Argument,
+                        TYPE: {type: ArgumentType.STRING, menu: 'DATATYPES'}
+                    },
+                    ...vm.jwArray.Block,
+                },
+
+                {
                     opcode: "bufferToString",
                     text: "array buffer [BUFFER] to string",
                     blockType: BlockType.REPORTER,
@@ -579,7 +716,7 @@
                     opcode: "readNullTerminatedString",
                     text: "read string at [INDEX] of [BUFFER]",
                     blockType: BlockType.REPORTER,
-                    tooltip: "Specifically, strings are terminated by a 0x00 byte at the end of the string. If no such byte is found, this block retuns nothing.",
+                    
                     arguments: {
                         BUFFER: agBuffer.Argument,
                         INDEX: {type: ArgumentType.NUMBER}
@@ -589,7 +726,7 @@
                     opcode: "writeNullTerminatedString",
                     text: "write string [STRING] at [INDEX] of [BUFFER]",
                     blockType: BlockType.COMMAND,
-                    tooltip: "Specifically, strings are terminated by a 0x00 byte at the end of the string. This block will add said 0x00 byte to the end of the string to allow it to parse correctly using the above block.",
+                    
                     arguments: {
                         BUFFER: agBuffer.Argument,
                         INDEX: {type: ArgumentType.NUMBER},
@@ -611,13 +748,23 @@
                 "---",
                 {
                     opcode: "resize",
-                    text: "resize [BUFFER] to [SIZE] bytes",
+                    text: "resize [BUFFER] to [SIZE] bytes as new",
                     ...agBuffer.Block,
                     arguments: {
                         BUFFER: agBuffer.Argument,
                         SIZE: {type: ArgumentType.NUMBER}
                     }
                 },
+                {
+                    opcode: "resizeInst",
+                    text: "resize [BUFFER] to [SIZE] bytes",
+                    blockType: BlockType.COMMAND,
+                    arguments: {
+                        BUFFER: agBuffer.Argument,
+                        SIZE: {type: ArgumentType.NUMBER}
+                    }
+                },
+
                 {
                     opcode: "copy",
                     text: "copy [BUFFER]",
@@ -824,7 +971,7 @@
                 },
                 {
                     opcode: 'isPointer',
-                    text: 'is pointer [VALUE]?',
+                    text: 'is pointer [PTR]?',
                     blockType: BlockType.BOOLEAN,
                     arguments: {
                         PTR: {
@@ -865,14 +1012,15 @@
                         LINES: {type:ArgumentType.NUMBER}
                     }
                 },
-                {
-                    blockType: BlockType.LABEL,
-                    text: "Danger Zone"
-                },
+                // {
+                //     blockType: BlockType.LABEL,
+                //     text: "Danger Zone"
+                // },
                 {
                     opcode: "errorHandling",
                     text: "set disable error prevention to [VALUE]",
                     blockType: BlockType.COMMAND,
+                    hideFromPalette: true,
                     arguments: {
                         VALUE: {type:ArgumentType.BOOLEAN}
                     },
@@ -906,11 +1054,339 @@
                             substack: generator.descendSubstack(block, 'SUBSTACK')
                         }
                     },
+                    newBuffer: (generator, block) => {
+                        return {
+                            kind: 'input',
+                            size: generator.descendInputOfBlock(block, 'LENGTH')
+                        }
+                    },
+                    createPointer: (generator, block) => {
+                        return {
+                            kind: 'input',
+                            index: generator.descendInputOfBlock(block, 'INDEX'),
+                            buffer: generator.descendInputOfBlock(block, 'BUFFER'),
+                            endian: generator.descendInputOfBlock(block, 'ENDIAN'),
+                            datatype: generator.descendInputOfBlock(block, 'TYPE'),
+                        }
+                    },
+
+                    bufferOf: (generator, block) => {
+                        return {
+                            kind: 'input',
+                            value: generator.descendInputOfBlock(block, 'VALUE')
+                        }
+                    },
+                    toDataUrl: (generator, block) => {
+                        return {
+                            kind: 'input',
+                            buffer: generator.descendInputOfBlock(block, 'BUFFER')
+                        }
+                    },
+                    getValue: (generator, block) => {
+                        generator.script.yields = true
+                        return {
+                            
+                            kind: 'input',
+                            buffer: generator.descendInputOfBlock(block, 'BUFFER'),
+                            index: generator.descendInputOfBlock(block, 'INDEX'),
+                            datatype: generator.descendInputOfBlock(block, 'TYPE'),
+                            endian: generator.descendInputOfBlock(block, 'ENDIAN'),
+                        }
+                    },
+                    setValue: (generator, block) => {
+                        generator.script.yields = true
+                        return {
+                            kind: 'stack',
+                            buffer: generator.descendInputOfBlock(block, 'BUFFER'),
+                            index: generator.descendInputOfBlock(block, 'INDEX'),
+                            datatype: generator.descendInputOfBlock(block, 'TYPE'),
+                            endian: generator.descendInputOfBlock(block, 'ENDIAN'),
+                            value: generator.descendInputOfBlock(block, 'VALUE'),
+                        }
+                    },
+                    writeSubBuffer: (generator, block) => {
+                        return {
+                            kind: 'stack',
+                            buffer: generator.descendInputOfBlock(block, 'BUFFER'),
+                            index: generator.descendInputOfBlock(block, 'INDEX'),
+                            subbuffer: generator.descendInputOfBlock(block, 'SUBBUFFER')
+                        }
+                    },
+
+                    toArray: (generator, block) => {
+                        return {
+                            kind: 'input',
+                            buffer: generator.descendInputOfBlock(block, 'BUFFER')
+                        }
+                    },
+                    builderCurrent: (generator, block) => {
+                        return {
+                            kind: 'input',
+                            // buffer: generator.descendInputOfBlock(block, 'BUFFER')
+                        }
+                    },
+                    builderAppend: (generator, block) => {
+                        return {
+                            kind: 'stack',
+                            value: generator.descendInputOfBlock(block, 'VALUE'),
+                            datatype: generator.descendInputOfBlock(block, 'TYPE'),
+                            endian: generator.descendInputOfBlock(block, 'ENDIAN'),
+                        }
+                    },
+                    builderSet: (generator, block) => {
+                        return {
+                            kind: 'stack',
+                            buffer: generator.descendInputOfBlock(block, 'BUFFER'),
+                        }
+                    },
+                    builderAppendBuffer: (generator, block) => {
+                        return {
+                            kind: 'stack',
+                            buffer: generator.descendInputOfBlock(block, 'VALUE')
+                            
+                        }
+                    },
+                    toTypedArray: (generator, block) => {
+                        return {
+                            kind: 'input',
+                            buffer: generator.descendInputOfBlock(block, 'BUFFER'),
+                            datatype: generator.descendInputOfBlock(block, 'TYPE'),
+                        }
+                    },
+                    sizeOfType: (generator, block) => {
+                        return {
+                            kind: 'input',
+                            datatype: generator.descendInputOfBlock(block, 'TYPE'),
+                        }
+                    },
+                    fromString: (generator, block) => {
+                        return {
+                            kind: 'input',
+                            string: generator.descendInputOfBlock(block, 'STRING')
+                        }
+                    },
+                    bufferToString: (generator, block) => {
+                        return {
+                            kind: 'input',
+                            buffer: generator.descendInputOfBlock(block, 'BUFFER')
+                        }
+                    },
+                    fromBase64: (generator, block) => {
+                        return {
+                            kind: 'input',
+                            base64: generator.descendInputOfBlock(block, 'BASE64')
+                        }
+                    },
+                    toBase64: (generator, block) => {
+                        return {
+                            kind: 'input',
+                            buffer: generator.descendInputOfBlock(block, 'BUFFER')
+                        }
+                    },
+                    copy: (generator, block) => {
+                        return {
+                            kind: 'input',
+                            buffer: generator.descendInputOfBlock(block, 'BUFFER')
+                        }
+                    },
+                    resize: (generator, block) => {
+                        return {
+                            kind: 'input',
+                            buffer: generator.descendInputOfBlock(block, 'BUFFER'),
+                            size: generator.descendInputOfBlock(block, 'SIZE'),
+                        }
+                    },
+                    resizeInst: (generator, block) => {
+                        return {
+                            kind: 'stack',
+                            buffer: generator.descendInputOfBlock(block, 'BUFFER'),
+                            size: generator.descendInputOfBlock(block, 'SIZE'),
+                        }
+                    },
+
+                    getSize: (generator, block) => {
+                        return {
+                            kind: 'input',
+                            buffer: generator.descendInputOfBlock(block, 'BUFFER'),
+                        }
+                    },
+
+                    isBuffer: (generator, block) => {
+                        return {
+                            kind: 'input',
+                            buffer: generator.descendInputOfBlock(block, 'BUFFER'),
+                        }
+                    },
+                    reverse: (generator, block) => {
+                        return {
+                            kind: 'stack',
+                            buffer: generator.descendInputOfBlock(block, 'BUFFER'),
+                        }
+                    },
+                    reverseR: (generator, block) => {
+                        return {
+                            kind: 'input',
+                            buffer: generator.descendInputOfBlock(block, 'BUFFER'),
+                        }
+                    },
+                    toDataUrl: (generator, block) => {
+                        return {
+                            kind: 'input',
+                            buffer: generator.descendInputOfBlock(block, 'BUFFER'),
+                        }
+                    },
+                    readNullTerminatedString: (generator, block) => {
+                        return {
+                            kind: 'input',
+                            buffer: generator.descendInputOfBlock(block, 'BUFFER'),
+                            index: generator.descendInputOfBlock(block, 'INDEX'),
+                        }
+                    },
+                    writeNullTerminatedString: (generator, block) => {
+                        return {
+                            kind: 'stack',
+                            buffer: generator.descendInputOfBlock(block, 'BUFFER'),
+                            index: generator.descendInputOfBlock(block, 'INDEX'),
+                            string: generator.descendInputOfBlock(block, 'STRING'),
+                        }
+                    },
+                    itemsOf: (generator, block) => {
+                        return {
+                            kind: 'input',
+                            buffer: generator.descendInputOfBlock(block, 'BUFFER'),
+                            min: generator.descendInputOfBlock(block, 'MIN'),
+                            max: generator.descendInputOfBlock(block, 'MAX'),
+                        }
+                    },
+                    forEach: (generator, block) => {
+                        return {
+                            kind: 'stack',
+                            buffer: generator.descendInputOfBlock(block, 'BUFFER'),
+                            substack: generator.descendSubstack(block,'SUBSTACK'),
+                            
+                        }
+                    },
+                    forEachI: (generator, block) => {
+                        return {
+                            kind: 'input',
+                        }
+                    },
+                    forEachV: (generator, block) => {
+                        return {
+                            kind: 'input',
+                        }
+                    },
+                    isPointer: (generator, block) => {
+                        return {
+                            kind: 'input',
+                            value: generator.descendInputOfBlock(block,'PTR')
+                        }
+                    },
+                    getPointer: (generator, block) => {
+                        return {
+                            kind: 'input',
+                            pointer: generator.descendInputOfBlock(block,'PTR')
+                        }
+                    },
+                    getPointerIndex: (generator, block) => {
+                        return {
+                            kind: 'input',
+                            pointer: generator.descendInputOfBlock(block,'PTR')
+                        }
+                    },
+                    getPointerType: (generator, block) => {
+                        return {
+                            kind: 'input',
+                            pointer: generator.descendInputOfBlock(block,'PTR')
+                        }
+                    },
+                    getPointerEndian: (generator, block) => {
+                        return {
+                            kind: 'input',
+                            pointer: generator.descendInputOfBlock(block,'PTR')
+                        }
+                    },
+                    getPointerBuffer: (generator, block) => {
+                        return {
+                            kind: 'input',
+                            pointer: generator.descendInputOfBlock(block,'PTR')
+                        }
+                    },
+                    setPointer: (generator, block) => {
+                        return {
+                            kind: 'stack',
+                            pointer: generator.descendInputOfBlock(block,'PTR'),
+                            value: generator.descendInputOfBlock(block,'VALUE')
+                        }
+                    },
+                    setPointerIndex: (generator, block) => {
+                        return {
+                            kind: 'stack',
+                            pointer: generator.descendInputOfBlock(block,'PTR'),
+                            value: generator.descendInputOfBlock(block,'VALUE')
+                        }
+                    },
+                    setPointerType: (generator, block) => {
+                        return {
+                            kind: 'stack',
+                            pointer: generator.descendInputOfBlock(block,'PTR'),
+                            value: generator.descendInputOfBlock(block,'VALUE')
+                        }
+                    },
+                    setPointerEndian: (generator, block) => {
+                        return {
+                            kind: 'stack',
+                            pointer: generator.descendInputOfBlock(block,'PTR'),
+                            value: generator.descendInputOfBlock(block,'VALUE')
+                        }
+                    },
+                    setPointerBuffer: (generator, block) => {
+                        return {
+                            kind: 'stack',
+                            pointer: generator.descendInputOfBlock(block,'PTR'),
+                            value: generator.descendInputOfBlock(block,'VALUE')
+                        }
+                    },
+                    pointerAsType: (generator, block) => {
+                        generator.script.yields = true
+                        return {
+                            kind: 'input',
+                            pointer: generator.descendInputOfBlock(block,'PTR'),
+                            datatype: generator.descendInputOfBlock(block,'TYPE'),
+                            endian: generator.descendInputOfBlock(block,'ENDIAN'),
+                        }
+                    },
+                    copyPointer: (generator, block) => {
+                        return {
+                            kind: 'input',
+                            pointer: generator.descendInputOfBlock(block,'PTR')
+                        }
+                    },
+                    stringify: (generator, block) => {
+                        return {
+                            kind: 'input',
+                            buffer: generator.descendInputOfBlock(block,'BUFFER'),
+                            mode: block.fields.MODE.value
+                        }
+                    },
+
+
+                    // cast: (generator, block) => {
+                    //     generator.script.yields = true  
+                    //     return {
+                    //         kind: 'input',
+                    //         datatype: generator.descendInputOfBlock(block, 'TYPE'),
+                    //         value: generator.descendInputOfBlock(block, 'VALUE'),
+                    //     }
+                    // },
+
+
+
                 },
                 js: {
                     builder: (node, compiler, imports) => {
                         const originalSource = compiler.source;
-                        compiler.source = 'new vm.agBuffer.Type(yield* (function*() {';
+                        compiler.source = 'vm.agBuffer.Type.cast(yield* (function*() {';
                         compiler.source += `thread._agBufferBuilderIndex ??= [];`
                         compiler.source += `thread._agBufferBuilderIndex.push(new vm.agBuffer.Type(0));`
                         //compiler.source += `try{} catch (err) {throw new Error("fancy error catch: " + err)};`
@@ -921,6 +1397,382 @@
                         compiler.source = originalSource;
                         return new imports.TypedInput(stackSource, imports.TYPE_UNKNOWN);
                     },
+                    newBuffer: (node, compiler, imports) => {
+                        const originalSource = compiler.source;
+                        compiler.source = `new vm.agBuffer.Type(${compiler.descendInput(node.size).asNumber()})`
+                        const stackSource = compiler.source;
+                        compiler.source = originalSource;
+                        return new imports.TypedInput(stackSource, imports.TYPE_UNKNOWN);
+                    },
+                    bufferOf: (node, compiler, imports) => {
+                        const originalSource = compiler.source;
+                        compiler.source = `new vm.agBuffer.Type(${compiler.descendInput(node.value).asUnknown()})`
+                        const stackSource = compiler.source;
+                        compiler.source = originalSource;
+                        return new imports.TypedInput(stackSource, imports.TYPE_UNKNOWN);
+                    },
+                    toDataUrl: (node, compiler, imports) => {
+                        const originalSource = compiler.source;
+                        compiler.source = `("data:application/octet-stream;base64," + new Uint8Array(vm.agBuffer.Type.cast(${compiler.descendInput(node.buffer).asUnknown()}).arrayBuffer).toBase64())`
+                        const stackSource = compiler.source;
+                        compiler.source = originalSource;
+                        return new imports.TypedInput(stackSource, imports.TYPE_STRING);
+                    },
+                    getValue: (node, compiler, imports) => {
+                        const originalSource = compiler.source;
+                        let datatype = compiler.descendInput(node.datatype).asString();
+                        let buffer = compiler.descendInput(node.buffer).asUnknown();
+                        let index = compiler.descendInput(node.index).asNumber();
+                        let endian = compiler.descendInput(node.datatype).asBoolean();
+                        compiler.source = 'yield* (function*(buffer, index, endian, datatype = null) {'
+                        // compiler.source += `let buffer = ${buffer};`
+                        // console.log(datatype)
+                        let isConst = false
+                        // console.log(datatype)
+                        switch (datatype) {
+                            case '"Uint8"':
+                                compiler.source += `return ((buffer instanceof vm.agBuffer.Type) ? buffer.dataView.getUint8(index) : 0);`
+                                break;
+                            case '"Int8"':
+                                compiler.source += `return ((buffer instanceof vm.agBuffer.Type) ? buffer.dataView.getInt8(index) : 0);`
+                                break;
+                            case '"Uint16"':
+                                compiler.source += `return ((buffer instanceof vm.agBuffer.Type) ? buffer.dataView.getUint16(index, endian) : 0);`
+                                break;
+                            case '"Int16"':
+                                compiler.source += `return ((buffer instanceof vm.agBuffer.Type) ? buffer.dataView.getInt16(index, endian) : 0);`
+                                break;
+                            case '"Uint32"':
+                                compiler.source += `return ((buffer instanceof vm.agBuffer.Type) ? buffer.dataView.getUint32(index, endian) : 0);`
+                                break;
+                            case '"Int32"':
+                                compiler.source += `return ((buffer instanceof vm.agBuffer.Type) ? buffer.dataView.getInt32(index, endian) : 0);`
+                                break;
+                            case '"Uint64"':
+                                compiler.source += `return vm.agBuffer.Type.wrapBigInts(((buffer instanceof vm.agBuffer.Type) ? buffer.dataView.getBigUint64(index, endian) : 0n));`
+                                break;
+                            case '"Int64"':
+                                compiler.source += `return vm.agBuffer.Type.wrapBigInts(((buffer instanceof vm.agBuffer.Type) ? buffer.dataView.getBigInt64(index, endian) : 0n));`
+                                break;
+                            case '"Float16"':
+                                compiler.source += `return ((buffer instanceof vm.agBuffer.Type) ? buffer.dataView.getFloat16(index, endian) : 0.0);`
+                                break;
+                            case '"Float32"':
+                                compiler.source += `return ((buffer instanceof vm.agBuffer.Type) ? buffer.dataView.getFloat32(index, endian) : 0.0);`
+                                break;
+                            case '"Float64"':
+                                compiler.source += `return ((buffer instanceof vm.agBuffer.Type) ? buffer.dataView.getFloat64(index, endian) : 0.0);`
+                                break;
+                            default:
+                                compiler.source += `return ((buffer instanceof vm.agBuffer.Type) ? buffer.get(${datatype},index,endian) : 0);`
+                                isConst = true
+                                break;
+                            
+                        }
+                        compiler.source += `})(${buffer}, ${index}, ${endian}, ${isConst ? datatype : "undefined"})`
+                        // console.log(compiler.source)
+                        const stackSource = compiler.source;
+                        compiler.source = originalSource;
+                        return new imports.TypedInput(stackSource, imports.TYPE_UNKNOWN);
+                    },
+                    setValue: (node, compiler, imports) => {
+                        let bufName = compiler.localVariables.next()
+                        let datatype = compiler.descendInput(node.datatype).asString();
+                        let buffer = compiler.descendInput(node.buffer).asUnknown();
+                        let index = compiler.descendInput(node.index).asNumber();
+                        let endian = compiler.descendInput(node.datatype).asBoolean();
+                        let value = compiler.descendInput(node.value).asUnknown();
+                        // compiler.source += '(function(buffer, index, endian, datatype = null) {'
+                        // compiler.source += `let buffer = ${buffer};`
+                        // console.log(datatype)
+                        let isConst = false
+                        // console.log(datatype)
+                        compiler.source += `let ${bufName} = ${buffer};`
+                        switch (datatype) {
+                            case '"Uint8"':
+                                compiler.source += `if (${bufName} instanceof vm.agBuffer.Type) ${bufName}.dataView.setUint8(${index}, ${value});`
+                                break;
+                            case '"Int8"':
+                                compiler.source += `if (${bufName} instanceof vm.agBuffer.Type) ${bufName}.dataView.setInt8(${index}, ${value});`
+                                break;
+                            case '"Uint16"':
+                                compiler.source += `if (${bufName} instanceof vm.agBuffer.Type) ${bufName}.dataView.setUint16(${index}, ${value}, ${endian});`
+                                break;
+                            case '"Int16"':
+                                compiler.source += `if (${bufName} instanceof vm.agBuffer.Type) ${bufName}.dataView.setInt16(${index}, ${value}, ${endian});`
+                                break;
+                            case '"Uint32"':
+                                compiler.source += `if (${bufName} instanceof vm.agBuffer.Type) ${bufName}.dataView.setUint32(${index}, ${value}, ${endian});`
+                                break;
+                            case '"Int32"':
+                                compiler.source += `if (${bufName} instanceof vm.agBuffer.Type) ${bufName}.dataView.setInt32(${index}, ${value}, ${endian});`
+                                break;
+                            case '"Uint64"':
+                                compiler.source += `if (${bufName} instanceof vm.agBuffer.Type) ${bufName}.dataView.setBigUint64(${index}, vm.agBuffer.Type.handleWrappedBigInts(${value}), ${endian});`
+                                break;
+                            case '"Int64"':
+                                compiler.source += `if (${bufName} instanceof vm.agBuffer.Type) ${bufName}.dataView.setBigInt64(${index}, vm.agBuffer.Type.handleWrappedBigInts(${value}), ${endian});`
+                                break;
+                            case '"Float16"':
+                                compiler.source += `if (${bufName} instanceof vm.agBuffer.Type) ${bufName}.dataView.setFloat16(${index}, ${value}, ${endian});`
+                                break;
+                            case '"Float32"':
+                                compiler.source += `if (${bufName} instanceof vm.agBuffer.Type) ${bufName}.dataView.setFloat32(${index}, ${value}, ${endian});`
+                                break;
+                            case '"Float64"':
+                                compiler.source += `if (${bufName} instanceof vm.agBuffer.Type) ${bufName}.dataView.setFloat64(${index}, ${value}, ${endian});`
+                                break;
+                            default:
+                                compiler.source += `if (${bufName} instanceof vm.agBuffer.Type) ${bufName}.set(${datatype}, ${index}, ${value}, ${endian});`
+                                isConst = true
+                                break;
+                            
+                        }
+                        
+                        // compiler.source += `})(${buffer}, ${index}, ${value}, ${endian}, ${isConst ? datatype : "undefined"})`
+                        // console.log(compiler.source)
+                        // const stackSource = compiler.source;
+                        // compiler.source = originalSource;
+                    },
+                    toArray: (node, compiler, imports) => {
+                        let buffer = compiler.descendInput(node.buffer).asUnknown();
+                        const originalSource = compiler.source;
+                        compiler.source = `vm.jwArray.Type.toArray(Array.from(new Uint8Array(vm.agBuffer.Type.cast(${buffer}).arrayBuffer)))`;
+                        const stackSource = compiler.source;
+                        compiler.source = originalSource;
+                        return new imports.TypedInput(stackSource, imports.TYPE_UNKNOWN);
+                    },
+                    builderCurrent: (node, compiler, imports) => {
+                        // let buffer = compiler.descendInput(node.buffer).asUnknown();
+                        
+                        const originalSource = compiler.source;
+                        compiler.source = `(() => {let bi = (thread._agBufferBuilderIndex ?? []);return bi[bi.length-1] ? new vm.agBuffer.Type(bi[bi.length-1]) : new vm.agBuffer.Type(0)})()`;
+                        const stackSource = compiler.source;
+                        compiler.source = originalSource;
+                        return new imports.TypedInput(stackSource, imports.TYPE_UNKNOWN);
+                    },
+                    builderAppend: (node, compiler, imports) => {
+                        
+                        let datatype = compiler.descendInput(node.datatype).asString();
+                        let value = compiler.descendInput(node.value).asUnknown();
+                        let endian = compiler.descendInput(node.endian).asBoolean();
+                        const bi = compiler.localVariables.next();
+                        compiler.source += `let ${bi} = thread._agBufferBuilderIndex ?? [];`;
+                        compiler.source += `if (${bi}[${bi}.length-1]) {`
+                        
+                        compiler.source += `let buffer = ${bi}[${bi}.length-1];`
+                        compiler.source += `let oldBufferLen = buffer.arrayBuffer.byteLength;`
+                        compiler.source += `let newBuffer;`
+                        compiler.source += `${bi}[${bi}.length-1] = newBuffer = new vm.agBuffer.Type(buffer.arrayBuffer.transfer(oldBufferLen + (vm.agBuffer.sizes[${datatype}] ?? 0)));`
+                        compiler.source += `newBuffer.set(${datatype}, oldBufferLen, ${value}, ${endian});`
+                        compiler.source += `};`
+                        
+                    },
+                    builderSet: (node, compiler, imports) => {
+                        
+                        
+                        let buffer = compiler.descendInput(node.buffer).asUnknown();
+                        
+                        const bi = compiler.localVariables.next();
+                        compiler.source += `let ${bi} = thread._agBufferBuilderIndex ?? [];`;
+                        compiler.source += `if (${bi}[${bi}.length-1]) {`
+                        compiler.source += `let newBuffer;`
+                        compiler.source += `${bi}[${bi}.length-1] = newBuffer = new vm.agBuffer.Type(${buffer});`
+                        compiler.source += `};`
+                        
+                    },
+                    builderAppendBuffer: (node, compiler, imports) => {
+                        
+                        let buffer = compiler.descendInput(node.buffer).asUnknown();
+                        const bi = compiler.localVariables.next();
+                        compiler.source += `let ${bi} = thread._agBufferBuilderIndex ?? [];`;
+                        compiler.source += `if (${bi}[${bi}.length-1]) {`
+                        compiler.source += `let bufferInput = vm.agBuffer.Type.cast(${buffer});`
+                        compiler.source += `let buffer = ${bi}[${bi}.length-1];`
+                        compiler.source += `let oldBufferLen = buffer.arrayBuffer.byteLength;`
+                        compiler.source += `let bufferInputLen = bufferInput.arrayBuffer.byteLength;`
+                        compiler.source += `let newBuffer;`
+                        compiler.source += `${bi}[${bi}.length-1] = newBuffer = new vm.agBuffer.Type(buffer.arrayBuffer.transfer(oldBufferLen + bufferInputLen));`
+                        compiler.source += `newBuffer.writeSubBuffer(bufferInput, oldBufferLen);`
+                        compiler.source += `};`
+                        
+                    },
+                    toTypedArray: (node, compiler, imports) => {
+                        let buffer = compiler.descendInput(node.buffer).asUnknown();
+                        let type = compiler.descendInput(node.datatype).asString();
+                        const originalSource = compiler.source;
+                        
+                        compiler.source = `vm.jwArray.Type.toArray(Array.from((vm.agBuffer.Type.cast(${buffer})).toTypedArray(${type})).map((value, index, array) => ((typeof value === "bigint") ? vm.agBuffer.Type.wrapBigInts(value) : value)))`;
+                        
+                        
+                        const stackSource = compiler.source;
+                        compiler.source = originalSource;
+                        return new imports.TypedInput(stackSource, imports.TYPE_UNKNOWN);
+                    },
+
+                    sizeOfType: (node, compiler, imports) => {
+                        let src = "";
+                        let isConst = false;
+                        let datatype = compiler.descendInput(node.datatype).asString();
+                        // console.log(datatype)
+                        
+                        switch (datatype) {
+                            case '"Uint8"':
+                            case '"Int8"' :
+                                src = "1"
+                                break;
+                            case '"Uint16"':
+                            case '"Int16"':
+                            case '"Float16"':
+                                src = "2"
+                                break;
+                            case '"Uint32"':
+                            case '"Int32"':
+                            case '"Float32"':
+                                src = "4"
+                                break;
+                            case '"Uint64"':
+                            case '"Int64"':
+                            case '"Float64"':
+                                src = "8"
+                                break;
+                            default:
+                                src = `vm.agBuffer.sizes[${datatype}]`
+                                isConst = true
+                                break;
+                            
+                        }
+                        return new imports.TypedInput(src, imports.TYPE_NUMBER);
+
+                    },
+                    fromString: (node, compiler, imports) => {
+                        return new imports.TypedInput(`new vm.agBuffer.Type(new TextEncoder().encode(${compiler.descendInput(node.string).asString()}))`, imports.TYPE_UNKNOWN);
+                    },
+                    bufferToString: (node, compiler, imports) => {
+                        return new imports.TypedInput(`new TextDecoder().decode(new Uint8Array(vm.agBuffer.Type.cast(${compiler.descendInput(node.buffer).asUnknown()}).arrayBuffer))`, imports.TYPE_STRING);
+                    },
+                    fromBase64: (node, compiler, imports) => {
+                        return new imports.TypedInput(`new vm.agBuffer.Type(Uint8Array.fromBase64(${compiler.descendInput(node.base64).asString()}))`, imports.TYPE_UNKNOWN);
+                    },
+                    toBase64: (node, compiler, imports) => {
+                        return new imports.TypedInput(`new Uint8Array(new vm.agBuffer.Type(${compiler.descendInput(node.buffer).asUnknown()}).arrayBuffer).toBase64()`, imports.TYPE_STRING);
+                    },
+                    
+                    writeSubBuffer: (node, compiler, imports) => {
+                        compiler.source += `new vm.agBuffer.Type(new Uint8Array(new vm.agBuffer.Type(${compiler.descendInput(node.subbuffer).asUnknown()}).arrayBuffer).forEach((value, index) => {new vm.agBuffer.Type(${compiler.descendInput(node.buffer).asUnknown()}).dataView.setUint8(index + ${compiler.descendInput(node.index).asNumber()}, value)}));`
+                    },
+                    copy: (node, compiler, imports) => {
+                        return new imports.TypedInput(`new vm.agBuffer.Type(${compiler.descendInput(node.buffer).asUnknown()}).clone()`, imports.TYPE_UNKNOWN);
+                    },
+                    resize: (node, compiler, imports) => {
+                        return new imports.TypedInput(`new vm.agBuffer.Type(${compiler.descendInput(node.buffer).asUnknown()}).resizeAsNew(${compiler.descendInput(node.size).asNumber()})`, imports.TYPE_UNKNOWN);
+                    },
+                    resizeInst: (node, compiler, imports) => {
+                        compiler.source += `new vm.agBuffer.Type(${compiler.descendInput(node.buffer).asUnknown()}).resize(${compiler.descendInput(node.size).asNumber()})`;
+                    },
+
+                    getSize: (node, compiler, imports) => {
+                        return new imports.TypedInput(`new vm.agBuffer.Type(${compiler.descendInput(node.buffer).asUnknown()}).arrayBuffer.byteLength`, imports.TYPE_NUMBER);
+                    },
+                    isBuffer: (node, compiler, imports) => {
+                        return new imports.TypedInput(`${compiler.descendInput(node.buffer).asUnknown()} instanceof vm.agBuffer.Type`, imports.TYPE_BOOLEAN);
+                    },
+                    reverseR: (node, compiler, imports) => {
+                        return new imports.TypedInput(`new vm.agBuffer.Type(${compiler.descendInput(node.buffer).asUnknown()}).reverseAsNew()`, imports.TYPE_UNKNOWN);
+                    },
+                    reverse: (node, compiler, imports) => {
+                        compiler.source += `new vm.agBuffer.Type(${compiler.descendInput(node.buffer).asUnknown()}).reverse()`;
+                    },
+                    toDataUrl: (node, compiler, imports) => {
+                        return new imports.TypedInput(`("data:application/octet-stream;base64," + new Uint8Array(new vm.agBuffer.Type(${compiler.descendInput(node.buffer).asUnknown()}).arrayBuffer).toBase64())`, imports.TYPE_STRING);
+                    },
+                    readNullTerminatedString: (node, compiler, imports) => {
+                        return new imports.TypedInput(`vm.agBuffer.Type.cast(${compiler.descendInput(node.buffer).asUnknown()}).readString(${compiler.descendInput(node.index).asNumber()})`, imports.TYPE_STRING);
+                    },
+                    writeNullTerminatedString: (node, compiler, imports) => {
+                        compiler.source += `vm.agBuffer.Type.cast(${compiler.descendInput(node.buffer).asUnknown()}).writeString(${compiler.descendInput(node.index).asNumber()},${compiler.descendInput(node.string).asString()})`;
+                    },
+                    itemsOf: (node, compiler, imports) => {
+                        return new imports.TypedInput(`new vm.agBuffer.Type(vm.agBuffer.Type.cast(${compiler.descendInput(node.buffer).asUnknown()}).arrayBuffer.slice(${compiler.descendInput(node.min).asNumber()},${compiler.descendInput(node.max).asNumber()}))`,imports.TYPE_STRING)
+                    },
+                    forEach: (node, compiler, imports) => {
+                        const arr = compiler.localVariables.next()
+                        compiler.source += `let ${arr} = new Uint8Array(vm.agBuffer.Type.cast(${compiler.descendInput(node.buffer).asUnknown()}).arrayBuffer);`
+                        compiler.source += `for (agBuffer_index in ${arr}) {agBuffer_index = Number(agBuffer_index);const agBuffer_byte = Number(${arr}[agBuffer_index]);`
+                        compiler.descendStack(node.substack, new imports.Frame(true, undefined, true));
+                        compiler.yieldLoop()
+                        compiler.source += `}`
+
+                    },
+
+                    forEachI: (node, compiler, imports) => {
+                        return new imports.TypedInput(`typeof agBuffer_index === "undefined" ? 0 : agBuffer_index`,imports.TYPE_NUMBER)
+                    },
+                    forEachV: (node, compiler, imports) => {
+                        return new imports.TypedInput(`typeof agBuffer_byte === "undefined" ? 0 : agBuffer_byte`,imports.TYPE_NUMBER)
+                    },
+  
+                    createPointer: (node, compiler, imports) => {
+                        return new imports.TypedInput(`new vm.agBuffer.PointerType(new vm.agBuffer.Type(${compiler.descendInput(node.buffer).asUnknown()}),${compiler.descendInput(node.index).asNumber()},${compiler.descendInput(node.datatype).asString()},${compiler.descendInput(node.endian).asBoolean()})`, imports.TYPE_UNKNOWN);
+                    },
+                    getPointer: (node, compiler, imports) => {
+                        return new imports.TypedInput(`vm.agBuffer.PointerType.tryConvertToPointer(${compiler.descendInput(node.pointer).asUnknown()}).getValue()`, imports.TYPE_UNKNOWN);
+                    },
+                    getPointerIndex: (node, compiler, imports) => {
+                        return new imports.TypedInput(`vm.agBuffer.PointerType.tryConvertToPointer(${compiler.descendInput(node.pointer).asUnknown()}).index`, imports.TYPE_NUMBER);
+                    },
+                    getPointerType: (node, compiler, imports) => {
+                        return new imports.TypedInput(`vm.agBuffer.PointerType.tryConvertToPointer(${compiler.descendInput(node.pointer).asUnknown()}).type`, imports.TYPE_STRING);
+                    },
+                    getPointerEndian: (node, compiler, imports) => {
+                        return new imports.TypedInput(`vm.agBuffer.PointerType.tryConvertToPointer(${compiler.descendInput(node.pointer).asUnknown()}).endian`, imports.TYPE_BOOLEAN);
+                    },
+                    getPointerBuffer: (node, compiler, imports) => {
+                        return new imports.TypedInput(`vm.agBuffer.PointerType.tryConvertToPointer(${compiler.descendInput(node.pointer).asUnknown()}).buffer`, imports.TYPE_UNKNOWN);
+                    },
+                    setPointer: (node, compiler, imports) => {
+                        compiler.source += `vm.agBuffer.PointerType.tryConvertToPointer(${compiler.descendInput(node.pointer).asUnknown()}).setValue(${compiler.descendInput(node.value).asUnknown()});`
+                    },
+                    setPointerIndex: (node, compiler, imports) => {
+                        compiler.source += `vm.agBuffer.PointerType.tryConvertToPointer(${compiler.descendInput(node.pointer).asUnknown()}).index = ${compiler.descendInput(node.value).asUnknown()};`
+                    },
+                    setPointerType: (node, compiler, imports) => {
+                        compiler.source += `vm.agBuffer.PointerType.tryConvertToPointer(${compiler.descendInput(node.pointer).asUnknown()}).type = ${compiler.descendInput(node.value).asString()};`
+                    },
+                    setPointerEndian: (node, compiler, imports) => {
+                        compiler.source += `vm.agBuffer.PointerType.tryConvertToPointer(${compiler.descendInput(node.pointer).asUnknown()}).endian = ${compiler.descendInput(node.value).asBoolean()};`
+                    },
+                    setPointerBuffer: (node, compiler, imports) => {
+                        compiler.source += `vm.agBuffer.PointerType.tryConvertToPointer(${compiler.descendInput(node.pointer).asUnknown()}).buffer = vm.agBuffer.Type.cast(${compiler.descendInput(node.value).asUnknown()});`
+                    },
+                    pointerAsType: (node, compiler, imports) => {
+                        return new imports.TypedInput(`yield* (function*(){let ptr = vm.agBuffer.PointerType.tryConvertToPointer(${compiler.descendInput(node.pointer).asUnknown()});return new vm.agBuffer.PointerType(ptr.buffer,ptr.index,${compiler.descendInput(node.datatype).asString()},${compiler.descendInput(node.endian).asBoolean()})})()`, imports.TYPE_UNKNOWN);
+                    },
+
+                    isPointer: (node, compiler, imports) => {
+                        return new imports.TypedInput(`${compiler.descendInput(node.value).asUnknown()} instanceof vm.agBuffer.PointerType`, imports.TYPE_BOOLEAN);
+                    },
+                    copyPointer: (node, compiler, imports) => {
+                        return new imports.TypedInput(`vm.agBuffer.PointerType.tryConvertToPointer(${compiler.descendInput(node.pointer).asUnknown()}).copy()`, imports.TYPE_UNKNOWN);
+                    },
+
+                    // cast: (node, compiler, imports) => {
+                    //     return new imports.TypedInput(`yield* (function*(){let type = ${compiler.descendInput(node.datatype).asString()};let buf = new vm.agBuffer.Type(vm.agBuffer.sizes[type]);buf.set(type,0,${compiler.descendInput(node.datatype).asNumber()});return buf.get(type,0)})()`,imports.TYPE_UNKNOWN)
+                    // },
+                    stringify: (node, compiler, imports) => {
+                        switch (node.mode) {
+                            case "array":
+                                return new imports.TypedInput(`vm.agBuffer.Type.cast(${compiler.descendInput(node.buffer).asUnknown()}).toString()`, imports.TYPE_STRING);
+                            case "bytes":
+                                return new imports.TypedInput(`Array.from(new Uint8Array(vm.agBuffer.Type.cast(${compiler.descendInput(node.buffer).asUnknown()}).arrayBuffer)).map((value,index,array) => {return value.toString(16).padStart(2,"0")}).join(" ")`, imports.TYPE_STRING);
+                            case "binary":
+                                return new imports.TypedInput(`Array.from(new Uint8Array(vm.agBuffer.Type.cast(${compiler.descendInput(node.buffer).asUnknown()}).arrayBuffer)).map((value,index,array) => {return value.toString(2).padStart(8,"0")}).join(" ")`, imports.TYPE_STRING);
+                            default:
+                                throw new TypeError("how the heck did you trigger this message this should never be possible")
+                        }
+                        
+                    },
+
 
                 }
             };
@@ -984,6 +1836,41 @@
             
             return vm.jwArray.Type.toArray(Array.from(new Uint8Array(BUFFER.arrayBuffer)))
         }
+        toTypedArray({BUFFER,TYPE}) {
+            BUFFER = new ArrayBufferType(BUFFER)
+            let array;
+            let buf = BUFFER.arrayBuffer
+            switch (TYPE) {
+                case "Uint8":
+                    array = new Uint8Array(buf); break;
+                case "Int8":
+                    array = new Int8Array(buf); break;
+                case "Uint16":
+                    array = new Uint16Array(buf); break;
+                case "Int16":
+                    array = new Int16Array(buf); break;
+                case "Uint32":
+                    array = new Uint32Array(buf); break;
+                case "Int32":
+                    array = new Int32Array(buf); break;
+                case "Uint64":
+                    array = new BigUint64Array(buf); break;
+                case "Int64":
+                    array = new BigInt64Array(buf); break;
+                case "Float16":
+                    array = new Float16Array(buf); break;
+                case "Float32":
+                    array = new Float32Array(buf); break;
+                case "Float64":
+                    array = new Float64Array(buf); break;
+                default:
+                    if (agBuffer.disableErrorHandling) {return vm.jwArray.Type.toArray([])} else {throw new TypeError(TYPE + " is not a valid array type!");}
+
+            }
+            return vm.jwArray.Type.toArray([...array]);
+
+        }
+
         getValue(args) {
             if (!args.BUFFER && !agBuffer.disableErrorHandling) return 0;
             
@@ -1017,7 +1904,7 @@
                     return buffer.dataView.getFloat64(index,endian);
                 default:
                     throw new TypeError(`Unknown Type: ${type}`);
-                    new DataView(new ArrayBuffer(32)).getUint32(0)
+                    // new DataView(new ArrayBuffer(32)).getUint32(0)
             }
         }
         setValue(args) {
@@ -1075,7 +1962,7 @@
             return this.bufferCheck(args.VALUE)
         }
         bufferCheck(value) {
-            return value && value instanceof ArrayBufferType
+            return value != undefined && value instanceof ArrayBufferType
         }
         getSize(args) {
             if (!args.BUFFER && !agBuffer.disableErrorHandling) return 0;
@@ -1096,7 +1983,7 @@
             return new agBuffer.Type(Uint8Array.fromBase64(base64));
         }
         toBase64(args) {
-            if (args.BUFFER == undefined && !agBuffer.disableErrorHandling) return "";
+            if (args.BUFFER === undefined && !agBuffer.disableErrorHandling) return "";
 
             const buffer = new ArrayBufferType(args.BUFFER)
             return new Uint8Array(buffer.arrayBuffer).toBase64();
@@ -1108,7 +1995,7 @@
             return new agBuffer.Type(buffer)
         }
         toDataUrl(args) {
-            if (args.BUFFER == undefined && !agBuffer.disableErrorHandling) return "";
+            if (args.BUFFER === undefined && !agBuffer.disableErrorHandling) return "";
             const buffer = new ArrayBufferType(args.BUFFER)
             return ("data:application/octet-stream;base64," + new Uint8Array(buffer.arrayBuffer).toBase64())
         }
@@ -1116,13 +2003,13 @@
             vm.agBuffer.maxReporterRows = Cast.toNumber(args.LINES)
         }
         itemsOf(args) {
-            if (args.BUFFER == undefined && !agBuffer.disableErrorHandling) return new ArrayBufferType(0);
+            if (args.BUFFER === undefined && !agBuffer.disableErrorHandling) return new ArrayBufferType(0);
             args.BUFFER = new ArrayBufferType(args.BUFFER)
             return new agBuffer.Type(args.BUFFER.arrayBuffer.slice(args.MIN, args.MAX))
         }
         writeSubBuffer(args) {
-            if (args.BUFFER == undefined && !agBuffer.disableErrorHandling) return;
-            if (args.SUBBUFFER == undefined && !agBuffer.disableErrorHandling) return;
+            if (args.BUFFER === undefined && !agBuffer.disableErrorHandling) return;
+            if (args.SUBBUFFER === undefined && !agBuffer.disableErrorHandling) return;
             args.BUFFER = new ArrayBufferType(args.BUFFER)
             args.SUBBUFFER = new ArrayBufferType(args.SUBBUFFER)
             let buffer = args.BUFFER
@@ -1134,26 +2021,33 @@
             })
         }
         writeAutoType(args) {
-            if (args.BUFFER == undefined && !agBuffer.disableErrorHandling) return 0;
+            if (args.BUFFER === undefined && !agBuffer.disableErrorHandling) return 0;
             let buffer = new ArrayBufferType(args.BUFFER)
             let value = args.VALUE
             let index = args.INDEX
             let endian = args.ENDIAN
             if (this.isBuffer({value: value})) {this.writeSubBuffer({BUFFER: buffer, SUBBUFFER: value, INDEX: index})}
             else if (!isNaN(value)) {buffer.dataView.setFloat64(index,value,endian)}
-            else if (typeof(value.number) == "bigint") {buffer.dataView.setBigInt64(index,value.number,endian)}
-            // else if (typeof(value.map) == "map") {buffer.dataView.setBigInt64(index,value.number,endian)}
+            else if (typeof(value.number) === "bigint") {buffer.dataView.setBigInt64(index,value.number,endian)}
+            // else if (typeof(value.map) === "map") {buffer.dataView.setBigInt64(index,value.number,endian)}
         }
         resize(args) {
-            if (args.BUFFER == undefined && !agBuffer.disableErrorHandling) return new ArrayBufferType(args.SIZE);
+            if (args.BUFFER === undefined && !agBuffer.disableErrorHandling) return new ArrayBufferType(args.SIZE);
             let buffer = new ArrayBufferType(args.BUFFER)
             let newSize = Cast.toNumber(args.SIZE)
-            return new agBuffer.Type(buffer.arrayBuffer.transfer(newSize))
+            return buffer.resizeAsNew(newSize)
         }
+        resizeInst(args) {
+            if (args.BUFFER === undefined && !agBuffer.disableErrorHandling) return;
+            let buffer = new ArrayBufferType(args.BUFFER)
+            let newSize = Cast.toNumber(args.SIZE)
+            return buffer.resizeAsNew(newSize)
+        }
+
         copy(args) {
-            if (args.BUFFER == undefined && !agBuffer.disableErrorHandling) return new ArrayBufferType(0);
+            if (args.BUFFER === undefined && !agBuffer.disableErrorHandling) return new ArrayBufferType(0);
             args.BUFFER = new ArrayBufferType(args.BUFFER)
-            return new ArrayBufferType(args.BUFFER.arrayBuffer.transfer())
+            return new ArrayBufferType(args.BUFFER.arrayBuffer.slice())
         }
         reverse(args) {
             let buffer = new ArrayBufferType(args.BUFFER)
@@ -1161,12 +2055,12 @@
             buffer.dataView = new DataView(buffer.arrayBuffer)
         }
         reverseR(args) {
-            if (args.BUFFER == undefined && !agBuffer.disableErrorHandling) return new ArrayBufferType(0);
+            if (args.BUFFER === undefined && !agBuffer.disableErrorHandling) return new ArrayBufferType(0);
             let buffer = new ArrayBufferType(args.BUFFER)
-            return new ArrayBufferType(new Uint8Array(buffer.arrayBuffer).reverse())
+            return new ArrayBufferType(new Uint8Array(buffer.arrayBuffer.slice()).reverse())
         }
         stringify(args) {
-            if (args.BUFFER == undefined && !agBuffer.disableErrorHandling) return "";
+            if (args.BUFFER === undefined && !agBuffer.disableErrorHandling) return "";
             let buffer = new ArrayBufferType(args.BUFFER)
             let mode = args.MODE
             switch (mode) {
@@ -1221,7 +2115,7 @@
             return this.getValue({INDEX:0,ENDIAN:false,TYPE:TYPE,BUFFER:buffer})
         }
         writeNullTerminatedString({STRING,BUFFER,INDEX}) {
-            if ((BUFFER == undefined || STRING == undefined) && !agBuffer.disableErrorHandling) return;
+            if ((BUFFER === undefined || STRING === undefined) && !agBuffer.disableErrorHandling) return;
             BUFFER = new ArrayBufferType(BUFFER,true)
             let stringBuffer = new TextEncoder().encode(STRING).buffer
             stringBuffer = stringBuffer.transfer(stringBuffer.byteLength + 1)
@@ -1292,8 +2186,8 @@
             return PTR.copy()
         }
 
-        isPointer({VALUE}) {
-            return (VALUE instanceof ArrayBufferPointerType)
+        isPointer({PTR}) {
+            return (PTR instanceof ArrayBufferPointerType)
         }
 
         pointerAsType({PTR,TYPE,ENDIAN = false}) {

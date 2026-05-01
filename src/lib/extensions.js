@@ -91,7 +91,7 @@ export default [
         creator: "skyhigh173",
         isGitHub: true,
     },
-    {
+    /*{
         name: "Scope Variable",
         description: "Manage your variables in a block-like structure.",
         code: "0znzw/ScopeVars.js",
@@ -100,7 +100,7 @@ export default [
         isGitHub: true,
         unstable: true,
         unstableReason: "This extension uses unstable techniques that may not always work.",
-    },
+    },*/
     {
         name: "Extra Timers",
         description: "Allows for the creation and management of additional timer blocks.",
@@ -309,6 +309,16 @@ export default [
         creatorAlias: "Div",
         isGitHub: true,
         tags: ["new", "customtype", "iterators", "data", "utility", "builder"]
+    },
+    {
+        name: "Algebraic Effects",
+        description: "Intercept custom actions in your scripts to pause, resume, or redirect their flow using modular handlers.",
+        code: "Div/divAlgEffects.js",
+        banner: "Div/divAlgEffects.svg",
+        creator: "Dicuo",
+        creatorAlias: "Div",
+        isGitHub: true,
+        tags: ["new", "effects", "control", "data", "utility"]
     },
     {
         name: "Blobs",

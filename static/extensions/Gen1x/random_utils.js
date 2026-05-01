@@ -1,3 +1,4 @@
+(function(Scratch) {
 // Dado (https://icons8.com/icon/qAN1P79CQdvH/dado) icon by Icons8 (https://icons8.com/)
 
 // reminder to add a space before any block text that starts with a number
@@ -323,3 +324,4 @@ class RandomUtils {
 }
 
 Scratch.extensions.register(new RandomUtils());
+})(Scratch);

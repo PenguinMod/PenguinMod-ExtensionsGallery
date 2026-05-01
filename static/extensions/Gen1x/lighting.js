@@ -413,7 +413,9 @@ self.onmessage = ({ data: msg }) => {
             this._gl = null;
             this._glState = null;
             this._dirty = true;
-            this._excludedSprites = new Set();
+            this._excludedNames = new Set();
+            this._excludedTargetIds = new Set();
+            this._includedTargetIds = new Set();
             this._costumeImageCache = new Map();
             this._lastGLBitmap = null;
             this._lastBitmapPw = 0;
@@ -429,11 +431,18 @@ self.onmessage = ({ data: msg }) => {
             this.canvas.style.cssText =
                 'position:absolute;pointer-events:none;z-index:0;mix-blend-mode:multiply;display:block;clip-path:inset(0 round inherit);';
 
+            this._loadingOverlay = null;
+            this._createLoadingOverlay(3);
+
             this._init();
             this.attachToStage();
 
             this._boundRender = this._render.bind(this);
             this._boundSyncPos = () => {
+                
+                if (!this.canvas.isConnected) {
+                    this._tryAttach();
+                }
                 this._syncCanvasPosition();
                 this._markDirty();
                 this._render();
@@ -447,6 +456,16 @@ self.onmessage = ({ data: msg }) => {
             Scratch.vm.runtime.on('AFTER_EXECUTE', this._boundRender);
             Scratch.vm.runtime.on('PROJECT_START', () => {
                 if (this.resetLightsOnStart) this.clearLights();
+            });
+            Scratch.vm.runtime.on('PROJECT_STOP_ALL', () => {
+                const liveIds = new Set(Scratch.vm.runtime.targets.map(t => t.id));
+                for (const id of this._excludedTargetIds) {
+                    if (!liveIds.has(id)) this._excludedTargetIds.delete(id);
+                }
+                for (const id of this._includedTargetIds) {
+                    if (!liveIds.has(id)) this._includedTargetIds.delete(id);
+                }
+                this._markDirty();
             });
             this._loadRenderSettings();
         }
@@ -765,7 +784,7 @@ self.onmessage = ({ data: msg }) => {
             const spriteListContainer = document.createElement('div');
             spriteListContainer.style.cssText = 'display:flex;flex-direction:column;gap:6px;max-height:150px;overflow-y:auto;padding:4px 8px;';
 
-            const allSprites = Scratch.vm.runtime.targets.filter(t => !t.isStage).map(t => t.sprite.name);
+            const allSprites = [...new Set(Scratch.vm.runtime.targets.filter(t => !t.isStage && t.isOriginal).map(t => t.sprite.name))];
 
             const rebuildSpriteList = () => {
                 spriteListContainer.innerHTML = '';
@@ -966,13 +985,107 @@ self.onmessage = ({ data: msg }) => {
             }
         }
 
+        _createLoadingOverlay(totalSteps) {
+            if (typeof scaffolding !== "undefined") return;
+            const overlay = document.createElement('div');
+            overlay.style.cssText =
+                'position:absolute;pointer-events:none;z-index:1;display:flex;flex-direction:column;' +
+                'align-items:center;justify-content:center;gap:10px;' +
+                'background:rgba(0,0,0,0.55);clip-path:inset(0 round inherit);' +
+                'font-family:sans-serif;box-sizing:border-box;';
+
+            const label = document.createElement('div');
+            label.textContent = 'Loading the Lighting engine\u2026';
+            label.style.cssText =
+                'color:#fff;font-size:13px;font-weight:600;letter-spacing:0.03em;' +
+                'text-shadow:0 1px 4px rgba(0,0,0,0.8);white-space:nowrap;' +
+                'text-align:center;width:100%;';
+
+            const trackEl = document.createElement('div');
+            trackEl.style.cssText =
+                'width:60%;max-width:200px;min-width:80px;height:5px;' +
+                'background:rgba(255,255,255,0.2);border-radius:3px;overflow:hidden;flex-shrink:0;';
+
+            const fillEl = document.createElement('div');
+            fillEl.style.cssText =
+                'height:100%;width:0%;background:#4a9eff;' +
+                'transition:width 0.35s cubic-bezier(0.4,0,0.2,1);';
+
+            const statusEl = document.createElement('div');
+            statusEl.style.cssText =
+                'color:rgba(255,255,255,0.55);font-size:10px;letter-spacing:0.02em;' +
+                'white-space:nowrap;text-align:center;width:100%;transition:opacity 0.2s ease;';
+
+            trackEl.appendChild(fillEl);
+            overlay.appendChild(label);
+            overlay.appendChild(trackEl);
+            overlay.appendChild(statusEl);
+
+            this._loadingOverlay = overlay;
+            this._loadingFill = fillEl;
+            this._loadingStatus = statusEl;
+            this._loadingSteps = 0;
+            this._loadingTotalSteps = totalSteps;
+
+            this._syncLoadingOverlay = () => {
+                if (!this._loadingOverlay) return;
+                const cs = this.canvas.style;
+                const os = this._loadingOverlay.style;
+                if (os.left !== cs.left)     os.left   = cs.left;
+                if (os.top !== cs.top)       os.top    = cs.top;
+                if (os.width !== cs.width)   os.width  = cs.width;
+                if (os.height !== cs.height) os.height = cs.height;
+            };
+        }
+
+        _stepLoadingProgress(status) {
+            if (!this._loadingFill) return;
+            this._loadingSteps = Math.min(this._loadingSteps + 1, this._loadingTotalSteps);
+            this._loadingFill.style.width = ((this._loadingSteps / this._loadingTotalSteps) * 100) + '%';
+            if (status != null && this._loadingStatus) this._loadingStatus.textContent = status;
+        }
+
+        _setLoadingStatus(text) {
+            if (this._loadingStatus) this._loadingStatus.textContent = text;
+        }
+
+        _attachLoadingOverlay() {
+            if (!this._loadingOverlay || this._loadingOverlay.parentElement) return;
+            const parent = this.canvas.parentElement;
+            if (parent) {
+                parent.insertBefore(this._loadingOverlay, this.canvas.nextSibling);
+                this._syncLoadingOverlay();
+            }
+        }
+
+        _dismissLoadingOverlay() {
+            const overlay = this._loadingOverlay;
+            if (!overlay) return;
+            this._loadingOverlay = null;
+            this._loadingFill = null;
+            this._loadingStatus = null;
+            const fill = overlay.querySelector('div > div');
+            if (fill) fill.style.width = '100%';
+            overlay.style.transition = 'opacity 0.4s ease';
+            setTimeout(() => {
+                overlay.style.opacity = '0';
+                setTimeout(() => { if (overlay.parentElement) overlay.parentElement.removeChild(overlay); }, 450);
+            }, 250);
+        }
+
         attachToStage() {
             this._tryAttach();
 
             if (!this._docObserver) {
                 this._docObserver = new MutationObserver(() => {
-                    const stageCanvas = Scratch.vm.renderer.canvas
-                    if (stageCanvas && stageCanvas.parentElement !== this._attachedParent) {
+                    const stageCanvas = Scratch.renderer.canvas;
+                    
+                    
+                    
+                    if (
+                        (stageCanvas && stageCanvas.parentElement !== this._attachedParent) ||
+                        !this.canvas.isConnected
+                    ) {
                         this._tryAttach();
                     }
                 });
@@ -984,7 +1097,7 @@ self.onmessage = ({ data: msg }) => {
         }
 
         _tryAttach() {
-            const stageCanvas = Scratch.vm.renderer.canvas
+            const stageCanvas = Scratch.renderer.canvas
             if (!stageCanvas) {
                 setTimeout(() => this._tryAttach(), 500);
                 return;
@@ -994,7 +1107,12 @@ self.onmessage = ({ data: msg }) => {
             this._attachedParent = canvasParent;
 
             const sortLayer = () => {
-                const currentParent = document.querySelector('[class*="stage_stage_"] canvas, .sc-layers canvas.sc-canvas')?.parentElement;
+                
+                
+                
+                const stageEl = Scratch.renderer.canvas;
+                const currentParent = (stageEl && stageEl.parentElement)
+                    || document.querySelector('[class*="stage_stage_"] canvas, .sc-layers canvas.sc-canvas')?.parentElement;
                 if (!currentParent) return;
 
                 const monitorWrapper = currentParent.querySelector('[class*="monitor-wrapper_"]');
@@ -1014,13 +1132,7 @@ self.onmessage = ({ data: msg }) => {
             };
 
             sortLayer();
-
-            if (this._parentObserver) this._parentObserver.disconnect();
-            this._parentObserver = new MutationObserver(sortLayer);
-            this._parentObserver.observe(canvasParent, {
-                childList: true,
-                subtree: false
-            });
+            this._attachLoadingOverlay();
 
             if (this._setupResizeObserver) this._setupResizeObserver();
             this._markDirty();
@@ -1043,7 +1155,7 @@ self.onmessage = ({ data: msg }) => {
                         data: msg
                     }) => {
                         if (msg.type === 'ready') {
-                            console.log('LightExtension: worker thread active');
+                            this._stepLoadingProgress('Shaders compiled');
                             this._mode = 'worker';
                             this._workerReady = true;
                             if (this._pendingRender) {
@@ -1070,6 +1182,7 @@ self.onmessage = ({ data: msg }) => {
                             this._displayCtx.clearRect(0, 0, _bw, _bh);
                             this._drawBitmapPixelated(this._displayCtx, this._lastGLBitmap, _bw, _bh);
                             this._applyCutouts(this._displayCtx, _w, _h, _bw, _bh);
+                            this._dismissLoadingOverlay();
                             if (this._nextRender) {
                                 const next = this._nextRender;
                                 this._nextRender = null;
@@ -1077,18 +1190,18 @@ self.onmessage = ({ data: msg }) => {
                                 this._worker.postMessage(next);
                             }
                         } else if (msg.type === 'error') {
-                            console.warn('LightExtension: worker GL error:', msg.message, 'falling back to main thread');
                             this._worker.terminate();
                             this._worker = null;
                             this._displayCtx = null;
+                            this._dismissLoadingOverlay();
                             this._initMainThread();
                         }
                     };
 
                     this._worker.onerror = (e) => {
-                        console.warn('LightExtension: worker crashed:', e.message, 'falling back to main thread');
                         this._worker = null;
                         this._displayCtx = null;
+                        this._dismissLoadingOverlay();
                         this._initMainThread();
                     };
 
@@ -1099,18 +1212,16 @@ self.onmessage = ({ data: msg }) => {
                         w,
                         h
                     });
+                    this._stepLoadingProgress('Initialising render worker');
                     return;
 
                 } catch (e) {
-                    console.warn('LightExtension: worker setup failed:', e.message, 'falling back to main thread');
                     if (this._worker) {
                         this._worker.terminate();
                         this._worker = null;
                     }
                     this._displayCtx = null;
                 }
-            } else {
-                console.log('LightExtension: OffscreenCanvas/Worker unavailable, using main-thread WebGL');
             }
 
             this._initMainThread();
@@ -1121,6 +1232,7 @@ self.onmessage = ({ data: msg }) => {
                 const w = Scratch.vm.runtime.stageWidth || 480;
                 const h = Scratch.vm.runtime.stageHeight || 360;
                 const oc = new OffscreenCanvas(w, h);
+                this._stepLoadingProgress('Creating offscreen canvas');
                 const gl = oc.getContext('webgl2', {
                     alpha: true,
                     premultipliedAlpha: true,
@@ -1132,14 +1244,15 @@ self.onmessage = ({ data: msg }) => {
 
                 this._glOffscreen = oc;
                 this._gl = gl;
+                this._stepLoadingProgress('Building GL pipeline');
                 this._glState = buildGLState(gl);
                 this._displayCtx = this.canvas.getContext('2d');
                 this._displayCtx.imageSmoothingEnabled = false;
                 this._mode = 'main';
-                console.log('LightExtension: main-thread WebGL2 active');
+                this._dismissLoadingOverlay();
             } catch (e) {
-                console.error('LightExtension: WebGL2 unavailable:', e.message);
                 this._mode = 'none';
+                this._dismissLoadingOverlay();
             }
         }
 
@@ -1190,21 +1303,21 @@ self.onmessage = ({ data: msg }) => {
             return items;
         }
 
-        _resolveSpriteName(raw) {
-            if (Scratch.Cast.toString(raw) === '_myself_') {
-                const editingTarget = Scratch.vm.editingTarget;
-                if (editingTarget && !editingTarget.isStage) return editingTarget.sprite.name;
-                
-                return null;
+        _resolveTarget(spriteName, util) {
+            if (spriteName === '_myself_') {
+                const t = (util && util.target) ? util.target : null;
+                return (t && !t.isStage) ? t : null;
             }
-            return Scratch.Cast.toString(raw);
+            return Scratch.vm.runtime.targets.find(
+                t => !t.isStage && t.sprite.name === spriteName
+            ) || null;
         }
 
         _setupResizeObserver() {
             if (this._resizeObserver) this._resizeObserver.disconnect();
 
-            const renderer = Scratch.vm.runtime.renderer;
-            const glCanvas = renderer && renderer._gl && renderer._gl.canvas;
+            const renderer = Scratch.renderer;
+            const glCanvas = Scratch.renderer.canvas;
             if (!glCanvas) {
                 setTimeout(() => this._setupResizeObserver(), 200);
                 return;
@@ -1219,18 +1332,46 @@ self.onmessage = ({ data: msg }) => {
         }
 
         _syncCanvasPosition() {
-            const renderer = Scratch.vm.runtime.renderer;
-            const glCanvas = renderer && renderer._gl && renderer._gl.canvas;
-            if (!glCanvas) return;
+            const renderer = Scratch.renderer;
+            const glCanvas = Scratch.renderer.canvas;
+            if (!glCanvas) {
+                
+                if (!this._syncRetryPending) {
+                    this._syncRetryPending = true;
+                    setTimeout(() => {
+                        this._syncRetryPending = false;
+                        this._tryAttach();
+                        this._syncCanvasPosition();
+                        this._markDirty();
+                    }, 200);
+                }
+                return;
+            }
+
             const cs = this.canvas.style;
-            const l = glCanvas.offsetLeft + 'px';
-            const t = glCanvas.offsetTop + 'px';
-            const W = glCanvas.offsetWidth + 'px';
-            const H = glCanvas.offsetHeight + 'px';
-            if (cs.left !== l) cs.left = l;
-            if (cs.top !== t) cs.top = t;
-            if (cs.width !== W) cs.width = W;
+
+            
+            
+            const parent = this.canvas.parentElement;
+            const glRect = glCanvas.getBoundingClientRect();
+            let l, t;
+            if (parent) {
+                const parentRect = parent.getBoundingClientRect();
+                l = (glRect.left - parentRect.left) + 'px';
+                t = (glRect.top  - parentRect.top)  + 'px';
+            } else {
+                l = glCanvas.offsetLeft + 'px';
+                t = glCanvas.offsetTop  + 'px';
+            }
+
+            const W = Math.ceil(glRect.width)  + 'px';
+            const H = Math.ceil(glRect.height) + 'px';
+            if (cs.left   !== l) cs.left   = l;
+            if (cs.top    !== t) cs.top    = t;
+            if (cs.width  !== W) cs.width  = W;
             if (cs.height !== H) cs.height = H;
+
+            if (this._syncLoadingOverlay) this._syncLoadingOverlay();
 
             const ow = glCanvas.offsetWidth;
             const oh = glCanvas.offsetHeight;
@@ -1249,67 +1390,128 @@ self.onmessage = ({ data: msg }) => {
         }
 
         _getEffectiveExclusionSet() {
-            const result = new Set(this._excludedSprites);
-            const allSprites = Scratch.vm.runtime.targets
-                .filter(t => !t.isStage)
-                .map(t => t.sprite.name);
-            if (this.inclusionMode === 'Blacklist') {
-                for (const name of this._inclusionList) result.add(name);
-            } else {
-                for (const name of allSprites) {
-                    if (!this._inclusionList.includes(name)) result.add(name);
+            const allTargets = Scratch.vm.runtime.targets.filter(t => !t.isStage);
+            const result = new Set();
+
+            for (const t of allTargets) {
+                if (this._excludedNames.has(t.sprite.name)) {
+                    result.add(t);
                 }
             }
+
+            for (const id of this._excludedTargetIds) {
+                const t = Scratch.vm.runtime.targets.find(t => t.id === id);
+                if (t) result.add(t);
+            }
+
+            if (this.inclusionMode === 'Blacklist') {
+                for (const name of this._inclusionList) {
+                    for (const t of allTargets) {
+                        if (t.sprite.name === name) result.add(t);
+                    }
+                }
+            } else {
+                for (const t of allTargets) {
+                    if (!this._inclusionList.includes(t.sprite.name)) result.add(t);
+                }
+            }
+
+            for (const id of this._includedTargetIds) {
+                const t = Scratch.vm.runtime.targets.find(t => t.id === id);
+                if (t) result.delete(t);
+            }
+
             return result;
         }
 
         _applyCutouts(ctx, w, h, pw, ph) {
             const effectiveExclusions = this._getEffectiveExclusionSet();
             if (effectiveExclusions.size === 0) return;
-            const renderer = Scratch.vm.runtime.renderer;
+            const renderer = Scratch.renderer;
             if (!renderer || typeof renderer.extractDrawableScreenSpace !== 'function') return;
 
-            const glCanvas = renderer._gl && renderer._gl.canvas;
+            const glCanvas = Scratch.renderer.canvas;
             if (!glCanvas) return;
 
-            ctx.save();
-            ctx.globalCompositeOperation = 'destination-out';
+            const scaleX = pw / glCanvas.offsetWidth;
+            const scaleY = ph / glCanvas.offsetHeight;
 
-            for (const name of effectiveExclusions) {
-                const target = this._getTarget(name);
-                if (!target || !target.visible || target.drawableID == null) continue;
+            const allTargets = Scratch.vm.runtime.targets.filter(t => !t.isStage);
+
+            const drawList = renderer._drawList;
+            const drawOrder = drawList
+                ? new Map(drawList.map((id, idx) => [id, idx]))
+                : null;
+
+            const getLayerIndex = t =>
+                drawOrder && t.drawableID != null
+                    ? (drawOrder.get(t.drawableID) ?? -1)
+                    : -1;
+
+            const sortedExclusions = [...effectiveExclusions].sort(
+                (a, b) => getLayerIndex(a) - getLayerIndex(b)
+            );
+
+            const extractSprite = target => {
+                if (!target || !target.visible || target.drawableID == null) return null;
                 try {
                     const extracted = renderer.extractDrawableScreenSpace(target.drawableID);
-                    if (!extracted) continue;
-
+                    if (!extracted) return null;
                     const imageData = extracted.imageData || extracted.data;
-                    if (!imageData) continue;
-                    if (imageData.width <= 0 || imageData.height <= 0) continue;
+                    if (!imageData || imageData.width <= 0 || imageData.height <= 0) return null;
+                    const { x, y, width, height } = extracted;
+                    if (width <= 0 || height <= 0) return null;
+                    const iw = imageData.width;
+                    const ih = imageData.height;
+                    const raw = imageData.data;
+                    const straight = new Uint8ClampedArray(raw.length);
+                    for (let i = 0; i < raw.length; i += 4) {
+                        const a = raw[i + 3];
+                        if (a === 0) continue;
+                        const inv = 255 / a;
+                        straight[i]     = Math.min(255, raw[i]     * inv);
+                        straight[i + 1] = Math.min(255, raw[i + 1] * inv);
+                        straight[i + 2] = Math.min(255, raw[i + 2] * inv);
+                        straight[i + 3] = a;
+                    }
+                    const src = new OffscreenCanvas(iw, ih);
+                    src.getContext('2d').putImageData(new ImageData(straight, iw, ih), 0, 0);
+                    return { src, x: x * scaleX, y: y * scaleY, w: width * scaleX, h: height * scaleY, layerIdx: getLayerIndex(target) };
+                } catch (e) { return null; }
+            };
 
-                    const {
-                        x,
-                        y,
-                        width,
-                        height
-                    } = extracted;
-                    if (width <= 0 || height <= 0) continue;
+            for (const target of sortedExclusions) {
+                const sprite = extractSprite(target);
+                if (!sprite) continue;
 
-                    const oc = new OffscreenCanvas(imageData.width, imageData.height);
-                    const oct = oc.getContext('2d');
-                    oct.putImageData(imageData, 0, 0);
+                const maskCanvas = new OffscreenCanvas(pw, ph);
+                const maskCtx = maskCanvas.getContext('2d');
 
-                    const scaleX = pw / glCanvas.offsetWidth;
-                    const scaleY = ph / glCanvas.offsetHeight;
-                    const pad = 0.5;
-                    ctx.drawImage(oc,
-                        x * scaleX + pad,
-                        y * scaleY + pad,
-                        width * scaleX - pad * 2,
-                        height * scaleY - pad * 2);
-                } catch (e) {}
+                maskCtx.drawImage(sprite.src, sprite.x, sprite.y, sprite.w, sprite.h);
+
+                const aboveTargets = allTargets.filter(t =>
+                    t.visible &&
+                    t.drawableID != null &&
+                    !effectiveExclusions.has(t) &&
+                    getLayerIndex(t) > sprite.layerIdx
+                );
+
+                if (aboveTargets.length > 0) {
+                    maskCtx.globalCompositeOperation = 'destination-out';
+                    for (const above of aboveTargets) {
+                        const aboveSprite = extractSprite(above);
+                        if (!aboveSprite) continue;
+                        maskCtx.drawImage(aboveSprite.src, aboveSprite.x, aboveSprite.y, aboveSprite.w, aboveSprite.h);
+                    }
+                }
+
+                ctx.save();
+                ctx.globalCompositeOperation = 'destination-out';
+                ctx.imageSmoothingEnabled = true;
+                ctx.imageSmoothingQuality = 'high';
+                ctx.drawImage(maskCanvas, 0, 0);
+                ctx.restore();
             }
-
-            ctx.restore();
         }
 
         _drawBitmapPixelated(ctx, bitmap, pw, ph) {
@@ -1329,40 +1531,39 @@ self.onmessage = ({ data: msg }) => {
             ctx.drawImage(tmp, 0, 0, pw, ph);
         }
 
-        setSpriteExcluded(args) {
-            const name = this._resolveSpriteName(args.SPRITE) || Scratch.Cast.toString(args.SPRITE);
+        setSpriteExcluded(args, util) {
             const state = Scratch.Cast.toString(args.STATE);
-            if (state === 'excluded') {
-                this._excludedSprites.add(name);
+            const myselfTarget = this._resolveTarget(Scratch.Cast.toString(args.SPRITE), util);
+            if (myselfTarget) {
+                if (state === 'excluded') {
+                    this._excludedTargetIds.add(myselfTarget.id);
+                    this._includedTargetIds.delete(myselfTarget.id);
+                } else {
+                    this._excludedTargetIds.delete(myselfTarget.id);
+                    this._includedTargetIds.add(myselfTarget.id);
+                }
             } else {
-                this._excludedSprites.delete(name);
+                const name = Scratch.Cast.toString(args.SPRITE);
+                if (state === 'excluded') {
+                    this._excludedNames.add(name);
+                } else {
+                    this._excludedNames.delete(name);
+                }
             }
             this._markDirty();
         }
 
-        isSpriteExcluded(args) {
-            const name = this._resolveSpriteName(args.SPRITE);
-            return this._excludedSprites.has(name || Scratch.Cast.toString(args.SPRITE));
+        isSpriteExcluded(args, util) {
+            const myselfTarget = this._resolveTarget(Scratch.Cast.toString(args.SPRITE), util);
+            if (myselfTarget) {
+                return this._excludedTargetIds.has(myselfTarget.id);
+            }
+            const name = myselfTarget ? myselfTarget.sprite.name : Scratch.Cast.toString(args.SPRITE);
+            return this._excludedNames.has(name);
         }
 
-        spriteTouchingLight(args, util) {
-            const lightId = Scratch.Cast.toString(args.LIGHT);
-            const li = this.lights[lightId];
-            if (!li) return false;
-
-            
-            let spriteName = Scratch.Cast.toString(args.SPRITE);
-            if (spriteName === '_myself_') {
-                const t = util && util.target ? util.target : Scratch.vm.editingTarget;
-                spriteName = t ? t.sprite.name : null;
-            }
-            if (!spriteName) return false;
-
-            const target = Scratch.vm.runtime.targets.find(
-                t => !t.isStage && t.sprite.name === spriteName
-            );
-            if (!target) return false;
-
+        _checkTouchingLight(target, li, sensitivity) {
+            const s = Math.min(100, Math.max(0, sensitivity)) / 100;
             const sx = target.x;
             const sy = target.y;
             const lx = li.x;
@@ -1370,23 +1571,39 @@ self.onmessage = ({ data: msg }) => {
 
             if (li.type === 'point') {
                 const dist = Math.sqrt((sx - lx) ** 2 + (sy - ly) ** 2);
-                return dist <= li.radius;
+                return dist <= li.radius * s;
             } else if (li.type === 'area') {
-                const hw = (li.width || 0) / 2;
-                const hh = (li.height || 0) / 2;
+                const hw = (li.width || 0) * s / 2;
+                const hh = (li.height || 0) * s / 2;
                 return sx >= lx - hw && sx <= lx + hw && sy >= ly - hh && sy <= ly + hh;
             } else if (li.type === 'spot') {
                 const dx = sx - lx;
                 const dy = sy - ly;
                 const dist = Math.sqrt(dx * dx + dy * dy);
-                if (dist >= li.radius) return false;
+                if (dist >= li.radius * s) return false;
                 const angle = Math.atan2(dy, dx);
-                
                 const dirRad = (90 - li.direction) * (Math.PI / 180);
-                let delta = Math.abs(((angle - dirRad + Math.PI) % (2 * Math.PI)) - Math.PI);
+                const delta = Math.abs(((angle - dirRad + Math.PI) % (2 * Math.PI)) - Math.PI);
                 return delta <= li.arc * (Math.PI / 180);
             }
             return false;
+        }
+
+        spriteTouchingLight(args, util) {
+            const li = this.lights[Scratch.Cast.toString(args.LIGHT)];
+            if (!li) return false;
+            const target = this._resolveTarget(Scratch.Cast.toString(args.SPRITE), util);
+            if (!target) return false;
+            return this._checkTouchingLight(target, li, 100);
+        }
+
+        spriteTouchingLightSensitivity(args, util) {
+            const li = this.lights[Scratch.Cast.toString(args.LIGHT)];
+            if (!li) return false;
+            const target = this._resolveTarget(Scratch.Cast.toString(args.SPRITE), util);
+            if (!target) return false;
+            const sensitivity = Math.min(100, Math.max(0, Scratch.Cast.toNumber(args.SENSITIVITY)));
+            return this._checkTouchingLight(target, li, sensitivity);
         }
 
         hexToRgb(hex) {
@@ -1466,9 +1683,9 @@ self.onmessage = ({ data: msg }) => {
                 const cam = this._getCameraState();
                 if (cam) {
                     globalCamX = cam.pos[0];
-                    globalCamY = -cam.pos[1];
+                    globalCamY = cam.pos[1];
                     globalCamScale = 1 / (cam.scale || 1);
-                    globalCamDirRad = -cam.dir * (Math.PI / 180);
+                    globalCamDirRad = cam.dir * (Math.PI / 180);
                 }
             }
 
@@ -1493,17 +1710,17 @@ self.onmessage = ({ data: msg }) => {
                         const cam = _resolveCamera(li.cameraOverride);
                         if (cam) {
                             camX = cam.pos[0];
-                            camY = -cam.pos[1];
+                            camY = cam.pos[1];
                             camScale = 1 / (cam.scale || 1);
-                            camDirRad = -cam.dir * (Math.PI / 180);
+                            camDirRad = cam.dir * (Math.PI / 180);
                         } else {
                             camX = 0; camY = 0; camScale = 1; camDirRad = 0;
                         }
                     }
                 }
 
-                const cosA = Math.cos(-camDirRad);
-                const sinA = Math.sin(-camDirRad);
+                const cosA = Math.cos(camDirRad);
+                const sinA = Math.sin(camDirRad);
 
                 let lx = li.x - camX;
                 let ly = li.y - camY;
@@ -1545,16 +1762,14 @@ self.onmessage = ({ data: msg }) => {
             const w = Scratch.vm.runtime.stageWidth || 480;
             const h = Scratch.vm.runtime.stageHeight || 360;
 
-            const renderer = Scratch.vm.runtime.renderer;
-            const glCanvas = renderer && renderer._gl && renderer._gl.canvas;
+            const renderer = Scratch.renderer;
+            const glCanvas = Scratch.renderer.canvas;
 
             if (this._cachedPw === 0 && glCanvas && glCanvas.offsetWidth > 0) {
                 this._syncCanvasPosition();
             }
             const pw = this._cachedPw || Math.max(1, Math.round(w * Math.min(window.devicePixelRatio || 1, 3)));
             const ph = this._cachedPh || Math.max(1, Math.round(h * Math.min(window.devicePixelRatio || 1, 3)));
-
-
 
             if (this.canvas.style.imageRendering !== '') {
                 this.canvas.style.imageRendering = '';
@@ -1887,6 +2102,7 @@ self.onmessage = ({ data: msg }) => {
                     {
                         opcode: 'spriteTouchingLight',
                         blockType: Scratch.BlockType.BOOLEAN,
+                        hideFromPalette: true,
                         text: '[SPRITE] touching light [LIGHT]?',
                         arguments: {
                             SPRITE: {
@@ -1896,6 +2112,25 @@ self.onmessage = ({ data: msg }) => {
                             LIGHT: {
                                 type: Scratch.ArgumentType.STRING,
                                 defaultValue: 'light1'
+                            }
+                        }
+                    },
+                    {
+                        opcode: 'spriteTouchingLightSensitivity',
+                        blockType: Scratch.BlockType.BOOLEAN,
+                        text: '[SPRITE] touching light [LIGHT] sensitivity [SENSITIVITY]%?',
+                        arguments: {
+                            SPRITE: {
+                                type: Scratch.ArgumentType.STRING,
+                                menu: 'spriteMenu'
+                            },
+                            LIGHT: {
+                                type: Scratch.ArgumentType.STRING,
+                                defaultValue: 'light1'
+                            },
+                            SENSITIVITY: {
+                                type: Scratch.ArgumentType.NUMBER,
+                                defaultValue: 100
                             }
                         }
                     },
@@ -2124,6 +2359,11 @@ self.onmessage = ({ data: msg }) => {
                         text: 'Modify Lights'
                     },
                     {
+                        opcode: 'allLightsHint',
+                        blockType: Scratch.BlockType.BUTTON,
+                        text: 'Using "ALL" as light ID'
+                    },
+                    {
                         opcode: 'setLightProp',
                         blockType: Scratch.BlockType.COMMAND,
                         text: 'set [PROP] of light [ID] to [VAL]',
@@ -2198,6 +2438,11 @@ self.onmessage = ({ data: msg }) => {
                     {
                         blockType: Scratch.BlockType.LABEL,
                         text: 'Read Lights'
+                    },
+                    {
+                        opcode: 'getLightIds',
+                        blockType: Scratch.BlockType.REPORTER,
+                        text: 'all light IDs'
                     },
                     {
                         opcode: 'getLightProp',
@@ -2496,6 +2741,7 @@ self.onmessage = ({ data: msg }) => {
 
         createPointLight(args) {
             const id = Scratch.Cast.toString(args.ID);
+            if (id === 'ALL') return;
             const li = {
                 type: 'point',
                 ltype: 0,
@@ -2516,6 +2762,7 @@ self.onmessage = ({ data: msg }) => {
 
         createSpotLight(args) {
             const id = Scratch.Cast.toString(args.ID);
+            if (id === 'ALL') return;
             const li = {
                 type: 'spot',
                 ltype: 1,
@@ -2536,6 +2783,7 @@ self.onmessage = ({ data: msg }) => {
 
         createAreaLight(args) {
             const id = Scratch.Cast.toString(args.ID);
+            if (id === 'ALL') return;
             const li = {
                 type: 'area',
                 ltype: 2,
@@ -2557,43 +2805,59 @@ self.onmessage = ({ data: msg }) => {
         setLightProp(args) {
             const id = Scratch.Cast.toString(args.ID);
             const prop = Scratch.Cast.toString(args.PROP);
-            if (this.lights[id]) {
-                this.lights[id][prop] = Scratch.Cast.toNumber(args.VAL);
-                this._markDirty();
+            const ids = id === 'ALL' ? Object.keys(this.lights) : [id];
+            for (const k of ids) {
+                if (this.lights[k]) this.lights[k][prop] = Scratch.Cast.toNumber(args.VAL);
             }
+            if (ids.length) this._markDirty();
         }
 
         changeLightProp(args) {
             const id = Scratch.Cast.toString(args.ID);
             const prop = Scratch.Cast.toString(args.PROP);
-            if (this.lights[id]) {
-                this.lights[id][prop] += Scratch.Cast.toNumber(args.VAL);
-                this._markDirty();
+            const ids = id === 'ALL' ? Object.keys(this.lights) : [id];
+            for (const k of ids) {
+                if (this.lights[k]) this.lights[k][prop] += Scratch.Cast.toNumber(args.VAL);
             }
+            if (ids.length) this._markDirty();
         }
 
         setLightXY(args) {
             const id = Scratch.Cast.toString(args.ID);
-            if (this.lights[id]) {
-                this.lights[id].x = +args.X;
-                this.lights[id].y = +args.Y;
-                this._markDirty();
+            const ids = id === 'ALL' ? Object.keys(this.lights) : [id];
+            for (const k of ids) {
+                if (this.lights[k]) {
+                    this.lights[k].x = +args.X;
+                    this.lights[k].y = +args.Y;
+                }
             }
+            if (ids.length) this._markDirty();
         }
 
         setLightColor(args) {
             const id = Scratch.Cast.toString(args.ID);
-            if (this.lights[id]) {
-                this.lights[id].color = Scratch.Cast.toString(args.COLOR);
-                this._cacheRGB(this.lights[id], this.lights[id].color);
-                this._markDirty();
+            const ids = id === 'ALL' ? Object.keys(this.lights) : [id];
+            for (const k of ids) {
+                if (this.lights[k]) {
+                    this.lights[k].color = Scratch.Cast.toString(args.COLOR);
+                    this._cacheRGB(this.lights[k], this.lights[k].color);
+                }
             }
+            if (ids.length) this._markDirty();
         }
 
         getLightProp(args) {
             const id = Scratch.Cast.toString(args.ID);
             const prop = Scratch.Cast.toString(args.PROP);
             return this.lights[id] ? (this.lights[id][prop] ?? '') : '';
+        }
+
+        getLightIds() {
+            return JSON.stringify(Object.keys(this.lights));
+        }
+
+        allLightsHint() {
+            alert('set the light ID field to "ALL" to apply any change to every light on the scene at once!');
         }
 
         lightExists(args) {

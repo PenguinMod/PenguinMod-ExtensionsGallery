@@ -24,10 +24,10 @@ export default [
         name: "Nodes",
         description: "A node system that can be utilized for many purposes, such as world maps and more!",
         tags: ["new"],
-        code: "EverythingAcc0unt/nodes.js",
-        banner: "EverythingAcc0unt/Nodes.svg",
+        code: "ZiploxWasTaken/nodes.js",
+        banner: "ZiploxWasTaken/Nodes.svg",
         isGitHub: true,
-        creator: "Ziploxwastaken",
+        creator: ["ZiploxWasTaken", "outsideflight"],
     },
     {
         name: "Server Storage",

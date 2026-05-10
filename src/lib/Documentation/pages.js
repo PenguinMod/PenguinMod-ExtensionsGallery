@@ -67,7 +67,7 @@ export default {
     "YeetYourFiles": PageYeetYourFiles,
 
     // NodeSystem (hiiiii XD) -Ziplox 
-    "NodeSystem": PageNodeSystems,
+    "nodesystems": PageNodeSystems,
 
     "more-types": PageMoreTypes,
 

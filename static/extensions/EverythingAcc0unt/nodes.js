@@ -1,4 +1,5 @@
 //Created by ZiploxZQS and OutsideFlight X3
+//There will be unneccesary comments because why not
 
 (async function(Scratch) {
     "use strict";
@@ -25,6 +26,15 @@ const LINK3 = "#1c5729";
                 (l.from === Scratch.Cast.toNumber(b) && l.to === Scratch.Cast.toNumber(a))
         );
     }
+function getNodeNeighbors(id) {
+    id = Scratch.Cast.toNumber(id);
+
+    return links.flatMap(link => {
+        if (link.from === id) return [link.to];
+        if (link.to === id) return [link.from];
+        return [];
+    });
+}
     function areAdjacent(a, b) {
         const dx = Math.abs(a.x - b.x);
         const dy = Math.abs(a.y - b.y);
@@ -81,6 +91,41 @@ const LINK3 = "#1c5729";
                 },
                 disableMonitor: true
             },
+            {
+    opcode: "makeGrid",
+    blockType: Scratch.BlockType.COMMAND,
+    color1: NODE1,
+    color2: NODE2,
+    color3: NODE3,
+    text: "make a grid from x: [X1] y: [Y1] to x: [X2] y: [Y2]",
+    arguments: {
+        X1: {
+            type: Scratch.ArgumentType.NUMBER,
+            defaultValue: -1
+        },
+        Y1: {
+            type: Scratch.ArgumentType.NUMBER,
+            defaultValue: 1
+        },
+        X2: {
+            type: Scratch.ArgumentType.NUMBER,
+            defaultValue: 1
+        },
+        Y2: {
+            type: Scratch.ArgumentType.NUMBER,
+            defaultValue: -1
+        }
+    },
+},
+                    {
+    opcode: "clearNodes",
+    blockType: Scratch.BlockType.COMMAND,
+    color1: NODE1,
+    color2: NODE2,
+    color3: NODE3,
+    text: "remove all nodes",
+    arguments: {},
+},
             {
                 opcode: "nodeExists",
                 blockType: Scratch.BlockType.BOOLEAN,
@@ -149,10 +194,55 @@ const LINK3 = "#1c5729";
                     }
                 },
             },
+                                        {
+    opcode: "closestNode",
+    blockType: Scratch.BlockType.REPORTER,
+    color1: NODE1,
+    color2: NODE2,
+    color3: NODE3,
+    text: "node closest to x: [X] y: [Y]",
+    arguments: {
+        X: {
+            type: Scratch.ArgumentType.NUMBER,
+            defaultValue: 0
+        },
+        Y: {
+            type: Scratch.ArgumentType.NUMBER,
+            defaultValue: 0
+        }
+    }
+},
             {
                 blockType: Scratch.BlockType.XML,
                 xml: `<sep gap='24'/>`
             },
+                    {
+    opcode: "lowestNodeID",
+    blockType: Scratch.BlockType.REPORTER,
+    color1: NODE1,
+    color2: NODE2,
+    color3: NODE3,
+    text: "lowest node ID",
+    arguments: {}
+},
+{
+    opcode: "highestNodeID",
+    blockType: Scratch.BlockType.REPORTER,
+    color1: NODE1,
+    color2: NODE2,
+    color3: NODE3,
+    text: "highest node ID",
+    arguments: {}
+},
+                    {
+    opcode: "nodeCount",
+    blockType: Scratch.BlockType.REPORTER,
+    color1: NODE1,
+    color2: NODE2,
+    color3: NODE3,
+    text: "number of nodes",
+    arguments: {},
+},
             {
                 opcode: "allNodes",
                 blockType: Scratch.BlockType.REPORTER,
@@ -206,6 +296,24 @@ const LINK3 = "#1c5729";
                     }
                 },
             },
+                    {
+    opcode: "connectNodesAnyWay",
+    blockType: Scratch.BlockType.COMMAND,
+    color1: LINK1,
+    color2: LINK2,
+    color3: LINK3,
+    text: "connect nodes from the range [A] to [B] in any way possible",
+    arguments: {
+        A: {
+            type: Scratch.ArgumentType.NUMBER,
+            defaultValue: 1
+        },
+        B: {
+            type: Scratch.ArgumentType.NUMBER,
+            defaultValue: 5
+        }
+    },
+},
             {
                 opcode: "nodesLinked",
                 blockType: Scratch.BlockType.BOOLEAN,
@@ -247,9 +355,68 @@ const LINK3 = "#1c5729";
                 },
             },
             {
+            opcode: "getNeighbors",
+            blockType: Scratch.BlockType.REPORTER,
+            color1: LINK1,
+            color2: LINK2,
+            color3: LINK3,
+            text: "neighbors of node [ID]",
+            arguments: {
+            ID: {
+            type: Scratch.ArgumentType.NUMBER,
+            defaultValue: 1
+            }
+            },
+            },
+            {
                 blockType: Scratch.BlockType.XML,
                 xml: `<sep gap='24'/>`
             },
+                    {
+    opcode: "linkCount",
+    blockType: Scratch.BlockType.REPORTER,
+    color1: LINK1,
+    color2: LINK2,
+    color3: LINK3,
+    text: "link count of node [ID]",
+    arguments: {
+        ID: {
+            type: Scratch.ArgumentType.NUMBER,
+            defaultValue: 1
+        }
+    },
+},
+                    {
+    opcode: "linkedNode",
+    blockType: Scratch.BlockType.REPORTER,
+    color1: LINK1,
+    color2: LINK2,
+    color3: LINK3,
+    text: "linked node [INDEX] of node [ID]",
+    arguments: {
+        INDEX: {
+            type: Scratch.ArgumentType.NUMBER,
+            defaultValue: 1
+        },
+        ID: {
+            type: Scratch.ArgumentType.NUMBER,
+            defaultValue: 1
+        }
+    },
+},
+                              {
+                blockType: Scratch.BlockType.XML,
+                xml: `<sep gap='24'/>`
+            },  
+                    {
+    opcode: "linkCountTotal",
+    blockType: Scratch.BlockType.REPORTER,
+    color1: LINK1,
+    color2: LINK2,
+    color3: LINK3,
+    text: "number of links",
+    arguments: {},
+},
             {
                 opcode: "allLinks",
                 blockType: Scratch.BlockType.REPORTER,
@@ -312,28 +479,54 @@ nodeExists(args) {
             if (!node) return 0;
             return node.y;
         }
-        goDirection(args) {
-            const node = getNode(args.ID);
-            if (!node) return "";
-            let x = node.x;
-            let y = node.y;
-            switch (String(args.DIR)) {
-                case "right":
-                    x += 1;
-                    break;
-                case "left":
-                    x -= 1;
-                    break;
-                case "up":
-                    y += 1;
-                    break;
-                case "down":
-                    y -= 1;
-                    break;
-            }
-return [...nodes.values()]
-    .find(n => n.x === x && n.y === y)?.id ?? "";        
-        }
+getNeighbors(args) {
+    return JSON.stringify(getNodeNeighbors(args.ID));
+}
+        linkCount(args) {
+    return getNeighbors(args.ID).length;
+}
+        linkedNode(args) {
+    const neighbors = getNeighbors(args.ID);
+
+    return (
+        neighbors[
+            Scratch.Cast.toNumber(args.INDEX) - 1
+        ] ?? ""
+    );
+}
+goDirection(args) {
+    const node = getNode(args.ID);
+    if (!node) return "";
+
+    let targetX = node.x;
+    let targetY = node.y;
+
+    switch (String(args.DIR)) {
+        case "right":
+            targetX += 1;
+            break;
+        case "left":
+            targetX -= 1;
+            break;
+        case "up":
+            targetY += 1;
+            break;
+        case "down":
+            targetY -= 1;
+            break;
+    }
+
+    const target = [...nodes.values()].find(
+        n => n.x === targetX && n.y === targetY
+    );
+
+    if (!target) return "";
+
+    // i uhhh forgot to add this back whoops
+    if (!linkExists(node.id, target.id)) return "";
+
+    return target.id;
+}
         linkNodes(args) {
             const a = getNode(args.A);
             const b = getNode(args.B);
@@ -346,6 +539,81 @@ return [...nodes.values()]
                 to: b.id
             });
         }
+        nodeCount() {
+    return nodes.size;
+}
+        linkCountTotal() {
+    return links.length;
+}
+// its so fucking BUGGY aaaaarrrgghhhhh
+connectNodesAnyWay(args) {
+    const A = Scratch.Cast.toNumber(args.A);
+    const B = Scratch.Cast.toNumber(args.B);
+
+    const minID = Math.min(A, B);
+    const maxID = Math.max(A, B);
+
+    const nodesArr = [...nodes.values()];
+
+    for (const node of nodesArr) {
+
+        if (node.id < minID || node.id > maxID) continue;
+
+        const directions = [
+            { dx: 1, dy: 0 },
+            { dx: -1, dy: 0 },
+            { dx: 0, dy: 1 },
+            { dx: 0, dy: -1 }
+        ];
+
+        for (const dir of directions) {
+
+            const nx = node.x + dir.dx;
+            const ny = node.y + dir.dy;
+
+            const neighbor = nodesArr.find(
+                n => n.x === nx && n.y === ny
+            );
+//they find their lovers awwwww!!!
+            if (!neighbor) continue;
+
+            if (neighbor.id < minID || neighbor.id > maxID) continue;
+
+            if (!linkExists(node.id, neighbor.id)) {
+                links.push({
+                    from: node.id,
+                    to: neighbor.id
+                });
+            }
+        }
+    }
+}
+makeGrid(args) {
+    const x1 = Scratch.Cast.toNumber(args.X1);
+    const y1 = Scratch.Cast.toNumber(args.Y1);
+    const x2 = Scratch.Cast.toNumber(args.X2);
+    const y2 = Scratch.Cast.toNumber(args.Y2);
+
+    const minX = Math.min(x1, x2);
+    const maxX = Math.max(x1, x2);
+    const minY = Math.min(y1, y2);
+    const maxY = Math.max(y1, y2);
+
+    let id = 1;
+
+    for (let y = maxY; y >= minY; y--) {
+        for (let x = minX; x <= maxX; x++) {
+
+            nodes.set(id, {
+                id,
+                x,
+                y
+            });
+
+            id++;
+        }
+    }
+}
         unlinkNodes(args) {
             const a = Scratch.Cast.toNumber(args.A);
             const b = Scratch.Cast.toNumber(args.B);
@@ -367,6 +635,39 @@ allNodes() {
         allLinks() {
             return JSON.stringify(links);
         }
+        clearNodes() {
+    nodes.clear();
+    links = [];
+}
+        closestNode(args) {
+    const x = Scratch.Cast.toNumber(args.X);
+    const y = Scratch.Cast.toNumber(args.Y);
+
+    let best = null;
+    let bestDist = Infinity;
+
+    for (const node of nodes.values()) {
+        const dx = node.x - x;
+        const dy = node.y - y;
+        const dist = dx * dx + dy * dy; // this might be useful since i dont want to keep changing the value when the grid is in the middle
+
+        if (dist < bestDist) {
+            bestDist = dist;
+            best = node;
+        }
+    }
+
+    return best ? best.id : "";
+}
+lowestNodeID() {
+    if (nodes.size === 0) return "";
+    return Math.min(...nodes.keys());
+}
+
+highestNodeID() {
+    if (nodes.size === 0) return "";
+    return Math.max(...nodes.keys());
+}
     }
     Scratch.extensions.register(new NodeSystem());
 })(Scratch);

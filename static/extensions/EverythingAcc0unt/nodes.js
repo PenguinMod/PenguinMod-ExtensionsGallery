@@ -4,7 +4,7 @@
         alert("This extension must be unsandboxed.");
         return;
     }
-    const nodes = [];
+    const nodes = new Map();
     const links = [];
     const blocks = [];
 const NODE1 = "#56ad57";
@@ -15,8 +15,8 @@ const LINK1 = "#2f8242";
 const LINK2 = "#256e35";
 const LINK3 = "#1c5729";
     function getNode(id) {
-        return nodes.find(n => n.id === Number(id));
-    }
+    return nodes.get(Number(id));
+}
     function linkExists(a, b) {
         return links.some(
             l =>
@@ -299,32 +299,31 @@ getInfo() {
             };
         }
 createNode(args) {
-    nodes.push({
-        id: Number(args.ID),
+    const id = Number(args.ID);
+
+    nodes.set(id, {
+        id,
         x: Number(args.X),
         y: Number(args.Y)
     });
 }
-        deleteNode(args) {
-            const id = Number(args.ID);
-            const index = nodes.findIndex(
-                n => n.id === id
-            );
-            if (index !== -1) {
-                nodes.splice(index, 1);
-            }
-            for (let i = links.length - 1; i >= 0; i--) {
-                if (
-                    links[i].from === id ||
-                    links[i].to === id
-                ) {
-                    links.splice(i, 1);
-                }
-            }
+deleteNode(args) {
+    const id = Number(args.ID);
+
+    nodes.delete(id);
+
+    for (let i = links.length - 1; i >= 0; i--) {
+        if (
+            links[i].from === id ||
+            links[i].to === id
+        ) {
+            links.splice(i, 1);
         }
-        nodeExists(args) {
-            return !!getNode(args.ID);
-        }
+    }
+}
+nodeExists(args) {
+    return nodes.has(Number(args.ID));
+}
         setNodePosition(args) {
             const node = getNode(args.ID);
             if (!node) return;
@@ -360,10 +359,13 @@ createNode(args) {
                     y -= 1;
                     break;
             }
-            const found = nodes.find(
-                n => n.x === x && n.y === y
-            );
-            return found ? found.id : "";
+            for (const found of nodes.values()) {
+    if (found.x === x && found.y === y) {
+        return found.id;
+    }
+}
+
+return "";
         }
         linkNodes(args) {
             const a = getNode(args.A);
@@ -393,12 +395,14 @@ createNode(args) {
         nodesLinked(args) {
             return linkExists(args.A, args.B);
         }
-        allNodes() {
-            return JSON.stringify(nodes);
-        }
+allNodes() {
+    return JSON.stringify(
+        [...nodes.values()]
+    );
+}
         allLinks() {
             return JSON.stringify(links);
         }
     }
-    Scratch.extensions.register(new Extension());
+    Scratch.extensions.register(new NodeSystem());
 })(Scratch);

@@ -148,24 +148,6 @@ const LINK3 = "#1c5729";
                 },
             },
             {
-                opcode: "goDirection",
-                blockType: Scratch.BlockType.REPORTER,
-                color1: NODE1,
-                color2: NODE2,
-                color3: NODE3,
-                text: "go [DIR] of node id [ID]",
-                arguments: {
-                    DIR: {
-                        type: Scratch.ArgumentType.STRING,
-                        menu: "directions"
-                    },
-                    ID: {
-                        type: Scratch.ArgumentType.NUMBER,
-                        defaultValue: 1
-                    }
-                },
-            },
-            {
                 blockType: Scratch.BlockType.XML,
                 xml: `<sep gap='24'/>`
             },
@@ -237,6 +219,28 @@ const LINK3 = "#1c5729";
                     B: {
                         type: Scratch.ArgumentType.NUMBER,
                         defaultValue: 2
+                    }
+                },
+            },
+            {
+                blockType: Scratch.BlockType.XML,
+                xml: `<sep gap='24'/>`
+            },
+            {
+                opcode: "goDirection",
+                blockType: Scratch.BlockType.REPORTER,
+                color1: LINK1,
+                color2: LINK2,
+                color3: LINK3,
+                text: "go [DIR] of node id [ID]",
+                arguments: {
+                    DIR: {
+                        type: Scratch.ArgumentType.STRING,
+                        menu: "directions"
+                    },
+                    ID: {
+                        type: Scratch.ArgumentType.NUMBER,
+                        defaultValue: 1
                     }
                 },
             },

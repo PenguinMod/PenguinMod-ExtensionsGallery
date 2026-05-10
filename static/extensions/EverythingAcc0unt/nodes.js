@@ -7,7 +7,7 @@
         return;
     }
     const nodes = new Map();
-    const links = [];
+    let links = [];
 const NODE1 = "#56ad57";
 const NODE2 = "#419b42";
 const NODE3 = "#348235";
@@ -16,13 +16,13 @@ const LINK1 = "#2f8242";
 const LINK2 = "#256e35";
 const LINK3 = "#1c5729";
     function getNode(id) {
-    return nodes.get(Number(id));
+    return nodes.get(Scratch.Cast.toNumber(id));
 }
     function linkExists(a, b) {
         return links.some(
             l =>
-                (l.from === Number(a) && l.to === Number(b)) ||
-                (l.from === Number(b) && l.to === Number(a))
+                (l.from === Scratch.Cast.toNumber(a) && l.to === Scratch.Cast.toNumber(b)) ||
+                (l.from === Scratch.Cast.toNumber(b) && l.to === Scratch.Cast.toNumber(a))
         );
     }
     function areAdjacent(a, b) {
@@ -275,16 +275,16 @@ const LINK3 = "#1c5729";
             };
         }
 createNode(args) {
-    const id = Number(args.ID);
+    const id = Scratch.Cast.toNumber(args.ID);
 
     nodes.set(id, {
         id,
-        x: Number(args.X),
-        y: Number(args.Y)
+        x: Scratch.Cast.toNumber(args.X),
+        y: Scratch.Cast.toNumber(args.Y)
     });
 }
 deleteNode(args) {
-    const id = Number(args.ID);
+    const id = Scratch.Cast.toNumber(args.ID);
 
     nodes.delete(id);
 
@@ -292,14 +292,15 @@ links = links.filter(link =>
     link.from !== id &&
     link.to !== id
 );
+}
 nodeExists(args) {
-    return nodes.has(Number(args.ID));
+    return nodes.has(Scratch.Cast.toNumber(args.ID));
 }
         setNodePosition(args) {
             const node = getNode(args.ID);
             if (!node) return;
-            node.x = Number(args.X);
-            node.y = Number(args.Y);
+            node.x = Scratch.Cast.toNumber(args.X);
+            node.y = Scratch.Cast.toNumber(args.Y);
         }
         getNodeX(args) {
             const node = getNode(args.ID);
@@ -330,7 +331,8 @@ nodeExists(args) {
                     y -= 1;
                     break;
             }
-return nodes.values().find(n => n.x === x && n.y === y)?.id ?? "";
+return [...nodes.values()]
+    .find(n => n.x === x && n.y === y)?.id ?? "";        
         }
         linkNodes(args) {
             const a = getNode(args.A);
@@ -345,8 +347,8 @@ return nodes.values().find(n => n.x === x && n.y === y)?.id ?? "";
             });
         }
         unlinkNodes(args) {
-            const a = Number(args.A);
-            const b = Number(args.B);
+            const a = Scratch.Cast.toNumber(args.A);
+            const b = Scratch.Cast.toNumber(args.B);
             links = links.filter(l =>
     !(
         (l.from === a && l.to === b) ||

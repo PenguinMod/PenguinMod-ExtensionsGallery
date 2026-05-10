@@ -1,3 +1,5 @@
+//Created by ZiploxZQS and OutsideFlight X3
+
 (async function(Scratch) {
     "use strict";
     if (!Scratch.extensions.unsandboxed) {
@@ -345,7 +347,6 @@ return nodes.values().find(n => n.x === x && n.y === y)?.id ?? "";
         unlinkNodes(args) {
             const a = Number(args.A);
             const b = Number(args.B);
-            //stevie shut the hell up dude!!!!!!1!//
             links = links.filter(l =>
     !(
         (l.from === a && l.to === b) ||

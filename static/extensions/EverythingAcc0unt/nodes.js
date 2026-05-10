@@ -351,13 +351,7 @@ nodeExists(args) {
                     y -= 1;
                     break;
             }
-            for (const found of nodes.values()) {
-    if (found.x === x && found.y === y) {
-        return found.id;
-    }
-}
-
-return "";
+return nodes.values().find(n => n.x === x && n.y === y)?.id ?? "";
         }
         linkNodes(args) {
             const a = getNode(args.A);

@@ -35,8 +35,9 @@ const LINK3 = "#1c5729";
     }
 getInfo() {
     return {
-        id: "yourExtensionId",
-        name: "Your Extension",
+        id: "ziploxxdnodes",
+        name: "Nodes",
+        
         blocks: [
             {
                 opcode: "createNode",

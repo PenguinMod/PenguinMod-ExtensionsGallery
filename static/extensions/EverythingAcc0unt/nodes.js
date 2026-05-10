@@ -7,8 +7,6 @@
     const nodes = [];
     const links = [];
     const blocks = [];
-    const menus = {};
-    let nextId = 1;
 const NODE1 = "#56ad57";
 const NODE2 = "#419b42";
 const NODE3 = "#348235";

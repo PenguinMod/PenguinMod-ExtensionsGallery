@@ -23,6 +23,7 @@ export default [
     {
         name: "Nodes",
         description: "A node system that can be utilized for many purposes, such as world maps and more!",
+        tags: ["new"],
         code: "EverythingAcc0unt/nodes.js",
         banner: "EverythingAcc0unt/Nodes.svg",
         isGitHub: true,

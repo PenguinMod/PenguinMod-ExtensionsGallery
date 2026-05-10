@@ -4,10 +4,6 @@ Hi! So... Just wanna let you know... this is actually the *second* version of th
 
 Now, you clicked on this markdown so you could learn about our extension about nodes and links, right? Well, without furthur ado, here's the facts!
 
-<h2>Introduction</h2>
-
-The extension itself is pretty self explanatory, but if you need to know how every block works... this is the place to go.
-
 ## Blocks
 
 These are the blocks that are used for the Node category.

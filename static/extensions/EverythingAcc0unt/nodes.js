@@ -45,7 +45,6 @@ const LINK3 = "#1c5729";
             {
                 opcode: "createNode",
                 blockType: Scratch.BlockType.COMMAND,
-                hideFromPalette: false,
                 color1: NODE1,
                 color2: NODE2,
                 color3: NODE3,
@@ -64,12 +63,10 @@ const LINK3 = "#1c5729";
                         defaultValue: 1
                     }
                 },
-                disableMonitor: true
             },
             {
                 opcode: "deleteNode",
                 blockType: Scratch.BlockType.COMMAND,
-                hideFromPalette: false,
                 color1: NODE1,
                 color2: NODE2,
                 color3: NODE3,
@@ -85,7 +82,6 @@ const LINK3 = "#1c5729";
             {
                 opcode: "nodeExists",
                 blockType: Scratch.BlockType.BOOLEAN,
-                hideFromPalette: false,
                 color1: NODE1,
                 color2: NODE2,
                 color3: NODE3,
@@ -96,7 +92,6 @@ const LINK3 = "#1c5729";
                         defaultValue: 1
                     }
                 },
-                disableMonitor: true
             },
             {
                 blockType: Scratch.BlockType.XML,
@@ -105,7 +100,6 @@ const LINK3 = "#1c5729";
             {
                 opcode: "setNodePosition",
                 blockType: Scratch.BlockType.COMMAND,
-                hideFromPalette: false,
                 color1: NODE1,
                 color2: NODE2,
                 color3: NODE3,
@@ -124,12 +118,10 @@ const LINK3 = "#1c5729";
                         defaultValue: 0
                     }
                 },
-                disableMonitor: true
             },
             {
                 opcode: "getNodeX",
                 blockType: Scratch.BlockType.REPORTER,
-                hideFromPalette: false,
                 color1: NODE1,
                 color2: NODE2,
                 color3: NODE3,
@@ -140,12 +132,10 @@ const LINK3 = "#1c5729";
                         defaultValue: 1
                     }
                 },
-                disableMonitor: true
             },
             {
                 opcode: "getNodeY",
                 blockType: Scratch.BlockType.REPORTER,
-                hideFromPalette: false,
                 color1: NODE1,
                 color2: NODE2,
                 color3: NODE3,
@@ -156,12 +146,10 @@ const LINK3 = "#1c5729";
                         defaultValue: 1
                     }
                 },
-                disableMonitor: true
             },
             {
                 opcode: "goDirection",
                 blockType: Scratch.BlockType.REPORTER,
-                hideFromPalette: false,
                 color1: NODE1,
                 color2: NODE2,
                 color3: NODE3,
@@ -176,7 +164,6 @@ const LINK3 = "#1c5729";
                         defaultValue: 1
                     }
                 },
-                disableMonitor: true
             },
             {
                 blockType: Scratch.BlockType.XML,
@@ -185,13 +172,11 @@ const LINK3 = "#1c5729";
             {
                 opcode: "allNodes",
                 blockType: Scratch.BlockType.REPORTER,
-                hideFromPalette: false,
                 color1: NODE1,
                 color2: NODE2,
                 color3: NODE3,
                 text: "all nodes",
                 arguments: {},
-                disableMonitor: true
             },
             {
                 blockType: Scratch.BlockType.XML,
@@ -204,7 +189,6 @@ const LINK3 = "#1c5729";
             {
                 opcode: "linkNodes",
                 blockType: Scratch.BlockType.COMMAND,
-                hideFromPalette: false,
                 color1: LINK1,
                 color2: LINK2,
                 color3: LINK3,
@@ -219,12 +203,10 @@ const LINK3 = "#1c5729";
                         defaultValue: 2
                     }
                 },
-                disableMonitor: true
             },
             {
                 opcode: "unlinkNodes",
                 blockType: Scratch.BlockType.COMMAND,
-                hideFromPalette: false,
                 color1: LINK1,
                 color2: LINK2,
                 color3: LINK3,
@@ -239,12 +221,10 @@ const LINK3 = "#1c5729";
                         defaultValue: 2
                     }
                 },
-                disableMonitor: true
             },
             {
                 opcode: "nodesLinked",
                 blockType: Scratch.BlockType.BOOLEAN,
-                hideFromPalette: false,
                 color1: LINK1,
                 color2: LINK2,
                 color3: LINK3,
@@ -259,7 +239,6 @@ const LINK3 = "#1c5729";
                         defaultValue: 2
                     }
                 },
-                disableMonitor: true
             },
             {
                 blockType: Scratch.BlockType.XML,
@@ -274,7 +253,6 @@ const LINK3 = "#1c5729";
                 color3: LINK3,
                 text: "all links",
                 arguments: {},
-                disableMonitor: true
             }
         ],
                 menus: {

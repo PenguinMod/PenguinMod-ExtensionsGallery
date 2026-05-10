@@ -53,6 +53,10 @@ function getNodeNeighbors(id) {
                 color1: "#f06681",
                 color2: "#d6516c",
                 blocks: [
+            {
+                blockType: Scratch.BlockType.LABEL,
+                text: "By ZiploxZQS and OutsideFlight"
+            },
 
             {
                 opcode: "createNode",
@@ -296,6 +300,20 @@ function getNodeNeighbors(id) {
                     }
                 },
             },
+                    {
+    opcode: "unlinkAllNeighbors",
+    blockType: Scratch.BlockType.COMMAND,
+    color1: LINK1,
+    color2: LINK2,
+    color3: LINK3,
+    text: "unlink all neighbors of node [ID]",
+    arguments: {
+        ID: {
+            type: Scratch.ArgumentType.NUMBER,
+            defaultValue: 1
+        }
+    }
+},
                     {
     opcode: "connectNodesAnyWay",
     blockType: Scratch.BlockType.COMMAND,
@@ -667,6 +685,13 @@ lowestNodeID() {
 highestNodeID() {
     if (nodes.size === 0) return "";
     return Math.max(...nodes.keys());
+}
+        unlinkAllNeighbors(args) {
+    const id = Scratch.Cast.toNumber(args.ID);
+
+    links = links.filter(l =>
+        !(l.from === id || l.to === id)
+    );
 }
     }
     Scratch.extensions.register(new NodeSystem());

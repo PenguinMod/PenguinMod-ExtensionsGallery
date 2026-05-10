@@ -25,7 +25,7 @@ export default [
         description: "A node system that can be utilized for many purposes, such as world maps and more!",
         tags: ["new"],
         code: "ZiploxWasTaken/nodes.js",
-        documentation: "nodesystem",
+        documentation: "nodesystems",
         banner: "ZiploxWasTaken/Nodes.svg",
         isGitHub: true,
         creator: ["ZiploxWasTaken", "outsideflight"],

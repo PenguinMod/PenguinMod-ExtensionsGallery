@@ -374,15 +374,13 @@ return "";
         unlinkNodes(args) {
             const a = Number(args.A);
             const b = Number(args.B);
-            for (let i = links.length - 1; i >= 0; i--) {
-                const l = links[i];
-                if (
-                    (l.from === a && l.to === b) ||
-                    (l.from === b && l.to === a)
-                ) {
-                    links.splice(i, 1);
-                }
-            }
+            //stevie shut the hell up dude!!!!!!1!//
+            links = links.filter(l =>
+    !(
+        (l.from === a && l.to === b) ||
+        (l.from === b && l.to === a)
+    )
+);
         }
         nodesLinked(args) {
             return linkExists(args.A, args.B);

@@ -386,17 +386,13 @@ function getNodeNeighbors(id) {
             }
             },
             },
-            {
-                blockType: Scratch.BlockType.XML,
-                xml: `<sep gap='24'/>`
-            },
                     {
     opcode: "linkCount",
     blockType: Scratch.BlockType.REPORTER,
     color1: LINK1,
     color2: LINK2,
     color3: LINK3,
-    text: "link count of node [ID]",
+    text: "node [ID] neighbor amount",
     arguments: {
         ID: {
             type: Scratch.ArgumentType.NUMBER,
@@ -404,13 +400,17 @@ function getNodeNeighbors(id) {
         }
     },
 },
+            {
+                blockType: Scratch.BlockType.XML,
+                xml: `<sep gap='24'/>`
+            },
                     {
     opcode: "linkedNode",
     blockType: Scratch.BlockType.REPORTER,
     color1: LINK1,
     color2: LINK2,
     color3: LINK3,
-    text: "linked node [INDEX] of node [ID]",
+    text: "linked node #[INDEX] of node ID [ID]",
     arguments: {
         INDEX: {
             type: Scratch.ArgumentType.NUMBER,
@@ -500,11 +500,12 @@ nodeExists(args) {
 getNeighbors(args) {
     return JSON.stringify(getNodeNeighbors(args.ID));
 }
-        linkCount(args) {
-    return getNeighbors(args.ID).length;
+linkCount(args) {
+    return getNodeNeighbors(args.ID).length;
 }
-        linkedNode(args) {
-    const neighbors = getNeighbors(args.ID);
+
+linkedNode(args) {
+    const neighbors = getNodeNeighbors(args.ID);
 
     return (
         neighbors[

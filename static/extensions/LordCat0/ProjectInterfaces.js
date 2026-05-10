@@ -322,6 +322,7 @@
                                 defaultValue: "background-color: red",
                             },
                         },
+                        hideFromPalette: true
                     },
                     {
                         opcode: "HtmlElement",
@@ -906,17 +907,7 @@
             element.style.backgroundColor = args.color;
         }
         CustomCSS (args) {
-            if (!elements[args.id]) {
-                return;
-            }
-            let style = document.getElementById(`LCGuiStyle_${args.id}`);
-            let lines = args.css.split(";");
-            if (!style) {
-                style = document.createElement("style");
-                style.id = `LCGuiStyle_${args.id}`;
-                document.head.append(style);
-            }
-            style.textContent = `[data-id='${args.id}']{\n${lines.join(" !important;\n") + " !important"}\n}`;
+            // Legacy block that is now non-functional
         }
         HtmlElement (args) {
             if (elements[args.id]) return;

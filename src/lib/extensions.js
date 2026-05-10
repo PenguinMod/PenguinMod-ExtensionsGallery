@@ -21,6 +21,14 @@ export default [
         creator: "TheShovel",
     },
     {
+        name: "Nodes",
+        description: "A node system that can be utilized for many purposes, such as world maps and more!",
+        code: "EverythingAcc0unt/nodes.js",
+        banner: "EverythingAcc0unt/Nodes.svg",
+        isGitHub: true,
+        creator: "Ziploxwastaken",
+    },
+    {
         name: "Server Storage",
         description: "Similar to the server storage blocks in the 'Storage' extension, but with a better server uptime and non-global keys.\nDid you know the server is open source?",
         code: "Ikelene/serverStorageExtension.js",

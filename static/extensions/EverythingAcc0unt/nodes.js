@@ -33,240 +33,248 @@ const LINK3 = "#1c5729";
             (dx === 0 && dy === 1)
         );
     }
-    blocks.push({
-        opcode: "createNode",
-        blockType: Scratch.BlockType.COMMAND,
-        hideFromPalette: false,
-        color1: NODE1,
-        color2: NODE2,
-        color3: NODE3,
-        text: "create node at x: [X] y: [Y] with an id of [ID]",
-        arguments: {
-            X: {
-                type: Scratch.ArgumentType.NUMBER,
-                defaultValue: 0
+getInfo() {
+    return {
+        id: "yourExtensionId",
+        name: "Your Extension",
+        blocks: [
+            {
+                opcode: "createNode",
+                blockType: Scratch.BlockType.COMMAND,
+                hideFromPalette: false,
+                color1: NODE1,
+                color2: NODE2,
+                color3: NODE3,
+                text: "create node at x: [X] y: [Y] with an id of [ID]",
+                arguments: {
+                    X: {
+                        type: Scratch.ArgumentType.NUMBER,
+                        defaultValue: 0
+                    },
+                    Y: {
+                        type: Scratch.ArgumentType.NUMBER,
+                        defaultValue: 0
+                    },
+                    ID: {
+                        type: Scratch.ArgumentType.NUMBER,
+                        defaultValue: 1
+                    }
+                },
+                disableMonitor: true
             },
-            Y: {
-                type: Scratch.ArgumentType.NUMBER,
-                defaultValue: 0
+            {
+                opcode: "deleteNode",
+                blockType: Scratch.BlockType.COMMAND,
+                hideFromPalette: false,
+                color1: NODE1,
+                color2: NODE2,
+                color3: NODE3,
+                text: "delete node [ID]",
+                arguments: {
+                    ID: {
+                        type: Scratch.ArgumentType.NUMBER,
+                        defaultValue: 1
+                    }
+                },
+                disableMonitor: true
             },
-            ID: {
-                type: Scratch.ArgumentType.NUMBER,
-                defaultValue: 1
-            }
-        },
-        disableMonitor: true
-    });
-    blocks.push({
-        opcode: "deleteNode",
-        blockType: Scratch.BlockType.COMMAND,
-        hideFromPalette: false,
-        color1: NODE1,
-        color2: NODE2,
-        color3: NODE3,
-        text: "delete node [ID]",
-        arguments: {
-            ID: {
-                type: Scratch.ArgumentType.NUMBER,
-                defaultValue: 1
-            }
-        },
-        disableMonitor: true
-    });
-    blocks.push({
-        opcode: "nodeExists",
-        blockType: Scratch.BlockType.BOOLEAN,
-        hideFromPalette: false,
-        color1: NODE1,
-        color2: NODE2,
-        color3: NODE3,
-        text: "node [ID] exists?",
-        arguments: {
-            ID: {
-                type: Scratch.ArgumentType.NUMBER,
-                defaultValue: 1
-            }
-        },
-        disableMonitor: true
-    });
-    blocks.push({
-        blockType: Scratch.BlockType.XML,
-        xml: `<sep gap='24'/>`
-    });
-    blocks.push({
-        opcode: "setNodePosition",
-        blockType: Scratch.BlockType.COMMAND,
-        hideFromPalette: false,
-        color1: NODE1,
-        color2: NODE2,
-        color3: NODE3,
-        text: "set node [ID] position x: [X] y: [Y]",
-        arguments: {
-            ID: {
-                type: Scratch.ArgumentType.NUMBER,
-                defaultValue: 1
+            {
+                opcode: "nodeExists",
+                blockType: Scratch.BlockType.BOOLEAN,
+                hideFromPalette: false,
+                color1: NODE1,
+                color2: NODE2,
+                color3: NODE3,
+                text: "node [ID] exists?",
+                arguments: {
+                    ID: {
+                        type: Scratch.ArgumentType.NUMBER,
+                        defaultValue: 1
+                    }
+                },
+                disableMonitor: true
             },
-            X: {
-                type: Scratch.ArgumentType.NUMBER,
-                defaultValue: 0
+            {
+                blockType: Scratch.BlockType.XML,
+                xml: `<sep gap='24'/>`
             },
-            Y: {
-                type: Scratch.ArgumentType.NUMBER,
-                defaultValue: 0
-            }
-        },
-        disableMonitor: true
-    });
-    blocks.push({
-        opcode: "getNodeX",
-        blockType: Scratch.BlockType.REPORTER,
-        hideFromPalette: false,
-        color1: NODE1,
-        color2: NODE2,
-        color3: NODE3,
-        text: "x of node [ID]",
-        arguments: {
-            ID: {
-                type: Scratch.ArgumentType.NUMBER,
-                defaultValue: 1
-            }
-        },
-        disableMonitor: true
-    });
-    blocks.push({
-        opcode: "getNodeY",
-        blockType: Scratch.BlockType.REPORTER,
-        hideFromPalette: false,
-        color1: NODE1,
-        color2: NODE2,
-        color3: NODE3,
-        text: "y of node [ID]",
-        arguments: {
-            ID: {
-                type: Scratch.ArgumentType.NUMBER,
-                defaultValue: 1
-            }
-        },
-        disableMonitor: true
-    });
-    blocks.push({
-        opcode: "goDirection",
-        blockType: Scratch.BlockType.REPORTER,
-        hideFromPalette: false,
-        color1: NODE1,
-        color2: NODE2,
-        color3: NODE3,
-        text: "go [DIR] of node id [ID]",
-        arguments: {
-            DIR: {
-                type: Scratch.ArgumentType.STRING,
-                menu: "directions"
+            {
+                opcode: "setNodePosition",
+                blockType: Scratch.BlockType.COMMAND,
+                hideFromPalette: false,
+                color1: NODE1,
+                color2: NODE2,
+                color3: NODE3,
+                text: "set node [ID] position x: [X] y: [Y]",
+                arguments: {
+                    ID: {
+                        type: Scratch.ArgumentType.NUMBER,
+                        defaultValue: 1
+                    },
+                    X: {
+                        type: Scratch.ArgumentType.NUMBER,
+                        defaultValue: 0
+                    },
+                    Y: {
+                        type: Scratch.ArgumentType.NUMBER,
+                        defaultValue: 0
+                    }
+                },
+                disableMonitor: true
             },
-            ID: {
-                type: Scratch.ArgumentType.NUMBER,
-                defaultValue: 1
-            }
-        },
-        disableMonitor: true
-    });
-    blocks.push({
-        blockType: Scratch.BlockType.XML,
-        xml: `<sep gap='24'/>`
-    });
-    blocks.push({
-        opcode: "allNodes",
-        blockType: Scratch.BlockType.REPORTER,
-        hideFromPalette: false,
-        color1: NODE1,
-        color2: NODE2,
-        color3: NODE3,
-        text: "all nodes",
-        arguments: {},
-        disableMonitor: true
-    });
-    blocks.push({
-        blockType: Scratch.BlockType.XML,
-        xml: `<sep gap='48'/>`
-    });
-    blocks.push({
-        blockType: Scratch.BlockType.LABEL,
-        text: "Links"
-    });
-    blocks.push({
-        opcode: "linkNodes",
-        blockType: Scratch.BlockType.COMMAND,
-        hideFromPalette: false,
-        color1: LINK1,
-        color2: LINK2,
-        color3: LINK3,
-        text: "link node [A] to node [B]",
-        arguments: {
-            A: {
-                type: Scratch.ArgumentType.NUMBER,
-                defaultValue: 1
+            {
+                opcode: "getNodeX",
+                blockType: Scratch.BlockType.REPORTER,
+                hideFromPalette: false,
+                color1: NODE1,
+                color2: NODE2,
+                color3: NODE3,
+                text: "x of node [ID]",
+                arguments: {
+                    ID: {
+                        type: Scratch.ArgumentType.NUMBER,
+                        defaultValue: 1
+                    }
+                },
+                disableMonitor: true
             },
-            B: {
-                type: Scratch.ArgumentType.NUMBER,
-                defaultValue: 2
-            }
-        },
-        disableMonitor: true
-    });
-    blocks.push({
-        opcode: "unlinkNodes",
-        blockType: Scratch.BlockType.COMMAND,
-        hideFromPalette: false,
-        color1: LINK1,
-        color2: LINK2,
-        color3: LINK3,
-        text: "unlink node [A] from node [B]",
-        arguments: {
-            A: {
-                type: Scratch.ArgumentType.NUMBER,
-                defaultValue: 1
+            {
+                opcode: "getNodeY",
+                blockType: Scratch.BlockType.REPORTER,
+                hideFromPalette: false,
+                color1: NODE1,
+                color2: NODE2,
+                color3: NODE3,
+                text: "y of node [ID]",
+                arguments: {
+                    ID: {
+                        type: Scratch.ArgumentType.NUMBER,
+                        defaultValue: 1
+                    }
+                },
+                disableMonitor: true
             },
-            B: {
-                type: Scratch.ArgumentType.NUMBER,
-                defaultValue: 2
-            }
-        },
-        disableMonitor: true
-    });
-    blocks.push({
-        opcode: "nodesLinked",
-        blockType: Scratch.BlockType.BOOLEAN,
-        hideFromPalette: false,
-        color1: LINK1,
-        color2: LINK2,
-        color3: LINK3,
-        text: "node [A] linked to node [B]?",
-        arguments: {
-            A: {
-                type: Scratch.ArgumentType.NUMBER,
-                defaultValue: 1
+            {
+                opcode: "goDirection",
+                blockType: Scratch.BlockType.REPORTER,
+                hideFromPalette: false,
+                color1: NODE1,
+                color2: NODE2,
+                color3: NODE3,
+                text: "go [DIR] of node id [ID]",
+                arguments: {
+                    DIR: {
+                        type: Scratch.ArgumentType.STRING,
+                        menu: "directions"
+                    },
+                    ID: {
+                        type: Scratch.ArgumentType.NUMBER,
+                        defaultValue: 1
+                    }
+                },
+                disableMonitor: true
             },
-            B: {
-                type: Scratch.ArgumentType.NUMBER,
-                defaultValue: 2
+            {
+                blockType: Scratch.BlockType.XML,
+                xml: `<sep gap='24'/>`
+            },
+            {
+                opcode: "allNodes",
+                blockType: Scratch.BlockType.REPORTER,
+                hideFromPalette: false,
+                color1: NODE1,
+                color2: NODE2,
+                color3: NODE3,
+                text: "all nodes",
+                arguments: {},
+                disableMonitor: true
+            },
+            {
+                blockType: Scratch.BlockType.XML,
+                xml: `<sep gap='48'/>`
+            },
+            {
+                blockType: Scratch.BlockType.LABEL,
+                text: "Links"
+            },
+            {
+                opcode: "linkNodes",
+                blockType: Scratch.BlockType.COMMAND,
+                hideFromPalette: false,
+                color1: LINK1,
+                color2: LINK2,
+                color3: LINK3,
+                text: "link node [A] to node [B]",
+                arguments: {
+                    A: {
+                        type: Scratch.ArgumentType.NUMBER,
+                        defaultValue: 1
+                    },
+                    B: {
+                        type: Scratch.ArgumentType.NUMBER,
+                        defaultValue: 2
+                    }
+                },
+                disableMonitor: true
+            },
+            {
+                opcode: "unlinkNodes",
+                blockType: Scratch.BlockType.COMMAND,
+                hideFromPalette: false,
+                color1: LINK1,
+                color2: LINK2,
+                color3: LINK3,
+                text: "unlink node [A] from node [B]",
+                arguments: {
+                    A: {
+                        type: Scratch.ArgumentType.NUMBER,
+                        defaultValue: 1
+                    },
+                    B: {
+                        type: Scratch.ArgumentType.NUMBER,
+                        defaultValue: 2
+                    }
+                },
+                disableMonitor: true
+            },
+            {
+                opcode: "nodesLinked",
+                blockType: Scratch.BlockType.BOOLEAN,
+                hideFromPalette: false,
+                color1: LINK1,
+                color2: LINK2,
+                color3: LINK3,
+                text: "node [A] linked to node [B]?",
+                arguments: {
+                    A: {
+                        type: Scratch.ArgumentType.NUMBER,
+                        defaultValue: 1
+                    },
+                    B: {
+                        type: Scratch.ArgumentType.NUMBER,
+                        defaultValue: 2
+                    }
+                },
+                disableMonitor: true
+            },
+            {
+                blockType: Scratch.BlockType.XML,
+                xml: `<sep gap='24'/>`
+            },
+            {
+                opcode: "allLinks",
+                blockType: Scratch.BlockType.REPORTER,
+                hideFromPalette: false,
+                color1: LINK1,
+                color2: LINK2,
+                color3: LINK3,
+                text: "all links",
+                arguments: {},
+                disableMonitor: true
             }
-        },
-        disableMonitor: true
-    });
-    blocks.push({
-        blockType: Scratch.BlockType.XML,
-        xml: `<sep gap='24'/>`
-    });
-    blocks.push({
-        opcode: "allLinks",
-        blockType: Scratch.BlockType.REPORTER,
-        hideFromPalette: false,
-        color1: LINK1,
-        color2: LINK2,
-        color3: LINK3,
-        text: "all links",
-        arguments: {},
-        disableMonitor: true
-    });
+        ]
+    };
+}
     class NodeSystem {
         getInfo() {
             return {

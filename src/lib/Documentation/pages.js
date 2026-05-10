@@ -66,6 +66,9 @@ export default {
     // YeetYourFiles
     "YeetYourFiles": PageYeetYourFiles,
 
+    // NodeSystem (hiiiii XD) -Ziplox 
+    "NodeSystem": PageNodeSystems,
+
     "more-types": PageMoreTypes,
 
     // Boxed Physics

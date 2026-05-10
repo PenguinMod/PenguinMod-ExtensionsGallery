@@ -28,7 +28,7 @@ export default [
         documentation: "nodesystems",
         banner: "ZiploxWasTaken/Nodes.svg",
         isGitHub: true,
-        creator: "ZiploxWasTaken"
+        creator: "ZiploxWasTaken",
     },
     {
         name: "Server Storage",

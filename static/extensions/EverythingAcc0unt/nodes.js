@@ -267,7 +267,7 @@ const LINK3 = "#1c5729";
         arguments: {},
         disableMonitor: true
     });
-    class Extension {
+    class NodeSystem {
         getInfo() {
             return {
                 id: "ziploxnodesystem",

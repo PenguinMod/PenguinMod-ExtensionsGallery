@@ -282,15 +282,10 @@ deleteNode(args) {
 
     nodes.delete(id);
 
-    for (let i = links.length - 1; i >= 0; i--) {
-        if (
-            links[i].from === id ||
-            links[i].to === id
-        ) {
-            links.splice(i, 1);
-        }
-    }
-}
+links = links.filter(link =>
+    link.from !== id &&
+    link.to !== id
+);
 nodeExists(args) {
     return nodes.has(Number(args.ID));
 }

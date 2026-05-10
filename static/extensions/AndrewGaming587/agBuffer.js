@@ -1991,7 +1991,7 @@
         }
         async fromUrl(args) {
             const url = args.URL;
-            let fetchRes = await fetch(url)
+            let fetchRes = await Scratch.fetch(url)
             let buffer = await fetchRes.arrayBuffer()
             return new agBuffer.Type(buffer)
         }

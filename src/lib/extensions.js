@@ -26,7 +26,7 @@ export default [
         tags: ["new"],
         code: "ZiploxWasTaken/nodes.js",
         documentation: "nodesystems",
-        banner: "ZiploxWasTaken/Nodes.svg",
+        banner: "ZiploxWasTaken/Nodes NEW!.svg",
         isGitHub: true,
         creator: "ZiploxWasTaken",
     },

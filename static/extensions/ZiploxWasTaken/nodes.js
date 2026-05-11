@@ -92,7 +92,11 @@
                 blocks: [
                     {
                         blockType: Scratch.BlockType.LABEL,
-                        text: "By ZiploxZQS and OutsideFlight, may be updated later"
+                        text: "Credits: Ziplox and OutF"
+                    },
+                    {
+                        blockType: Scratch.BlockType.LABEL,
+                        text: "May be updated later"
                     },
                     {
                         opcode: "createNode",

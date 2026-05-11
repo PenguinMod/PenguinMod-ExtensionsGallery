@@ -557,7 +557,6 @@
     setSong(args) {
       try {
         let song = Scratch.Cast.toString(args.SONG);
-        if (!await Scratch.canFetch(song)) return;
         song = isValidJSON(song) ? song : song.replace(/.*?#/, "");
         console.log("Loaded BeepBox Song: " + song);
         url = song;

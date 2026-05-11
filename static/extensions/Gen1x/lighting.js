@@ -380,6 +380,16 @@ self.onmessage = ({ data: msg }) => {
         cameraFollowName: 'default',
     };
 
+    const LIGHT_NUMERIC_PROPS = new Set([
+        'x', 'y', 'radius', 'width', 'height', 'direction', 'arc', 'softness',
+        'ltype', 'cr', 'cg', 'cb'
+    ]);
+
+    const LIGHT_ALL_PROPS = new Set([
+        'x', 'y', 'radius', 'width', 'height', 'direction', 'arc', 'softness',
+        'ltype', 'type', 'color', 'cr', 'cg', 'cb', 'cameraOverride'
+    ]);
+
     class LightExtension {
         constructor() {
             this.lights = {};
@@ -1639,7 +1649,7 @@ self.onmessage = ({ data: msg }) => {
         setLightCameraFollow(args) {
             const id = Scratch.Cast.toString(args.ID);
             const state = Scratch.Cast.toString(args.STATE);
-            if (!this.lights[id]) return;
+            if (!Object.prototype.hasOwnProperty.call(this.lights, id)) return;
             if (state === 'none') {
                 this.lights[id].cameraOverride = 'none';
             } else if (state === 'global') {
@@ -1655,14 +1665,14 @@ self.onmessage = ({ data: msg }) => {
         setLightCameraName(args) {
             const id = Scratch.Cast.toString(args.ID);
             const name = Scratch.Cast.toString(args.NAME) || 'default';
-            if (!this.lights[id]) return;
+            if (!Object.prototype.hasOwnProperty.call(this.lights, id)) return;
             this.lights[id].cameraOverride = name;
             this._markDirty();
         }
 
         getLightCameraFollow(args) {
             const id = Scratch.Cast.toString(args.ID);
-            if (!this.lights[id]) return '';
+            if (!Object.prototype.hasOwnProperty.call(this.lights, id)) return '';
             const ov = this.lights[id].cameraOverride;
             if (ov === null || ov === undefined) return 'global';
             if (ov === 'none') return 'none';
@@ -2741,7 +2751,7 @@ self.onmessage = ({ data: msg }) => {
 
         createPointLight(args) {
             const id = Scratch.Cast.toString(args.ID);
-            if (id === 'ALL') return;
+            if (id === 'ALL' || id === '__proto__' || id === 'constructor' || id === 'prototype') return;
             const li = {
                 type: 'point',
                 ltype: 0,
@@ -2762,7 +2772,7 @@ self.onmessage = ({ data: msg }) => {
 
         createSpotLight(args) {
             const id = Scratch.Cast.toString(args.ID);
-            if (id === 'ALL') return;
+            if (id === 'ALL' || id === '__proto__' || id === 'constructor' || id === 'prototype') return;
             const li = {
                 type: 'spot',
                 ltype: 1,
@@ -2783,7 +2793,7 @@ self.onmessage = ({ data: msg }) => {
 
         createAreaLight(args) {
             const id = Scratch.Cast.toString(args.ID);
-            if (id === 'ALL') return;
+            if (id === 'ALL' || id === '__proto__' || id === 'constructor' || id === 'prototype') return;
             const li = {
                 type: 'area',
                 ltype: 2,
@@ -2805,9 +2815,10 @@ self.onmessage = ({ data: msg }) => {
         setLightProp(args) {
             const id = Scratch.Cast.toString(args.ID);
             const prop = Scratch.Cast.toString(args.PROP);
+            if (!LIGHT_NUMERIC_PROPS.has(prop)) return;
             const ids = id === 'ALL' ? Object.keys(this.lights) : [id];
             for (const k of ids) {
-                if (this.lights[k]) this.lights[k][prop] = Scratch.Cast.toNumber(args.VAL);
+                if (Object.prototype.hasOwnProperty.call(this.lights, k)) this.lights[k][prop] = Scratch.Cast.toNumber(args.VAL);
             }
             if (ids.length) this._markDirty();
         }
@@ -2815,9 +2826,10 @@ self.onmessage = ({ data: msg }) => {
         changeLightProp(args) {
             const id = Scratch.Cast.toString(args.ID);
             const prop = Scratch.Cast.toString(args.PROP);
+            if (!LIGHT_NUMERIC_PROPS.has(prop)) return;
             const ids = id === 'ALL' ? Object.keys(this.lights) : [id];
             for (const k of ids) {
-                if (this.lights[k]) this.lights[k][prop] += Scratch.Cast.toNumber(args.VAL);
+                if (Object.prototype.hasOwnProperty.call(this.lights, k)) this.lights[k][prop] += Scratch.Cast.toNumber(args.VAL);
             }
             if (ids.length) this._markDirty();
         }
@@ -2826,7 +2838,7 @@ self.onmessage = ({ data: msg }) => {
             const id = Scratch.Cast.toString(args.ID);
             const ids = id === 'ALL' ? Object.keys(this.lights) : [id];
             for (const k of ids) {
-                if (this.lights[k]) {
+                if (Object.prototype.hasOwnProperty.call(this.lights, k)) {
                     this.lights[k].x = +args.X;
                     this.lights[k].y = +args.Y;
                 }
@@ -2838,7 +2850,7 @@ self.onmessage = ({ data: msg }) => {
             const id = Scratch.Cast.toString(args.ID);
             const ids = id === 'ALL' ? Object.keys(this.lights) : [id];
             for (const k of ids) {
-                if (this.lights[k]) {
+                if (Object.prototype.hasOwnProperty.call(this.lights, k)) {
                     this.lights[k].color = Scratch.Cast.toString(args.COLOR);
                     this._cacheRGB(this.lights[k], this.lights[k].color);
                 }
@@ -2849,7 +2861,10 @@ self.onmessage = ({ data: msg }) => {
         getLightProp(args) {
             const id = Scratch.Cast.toString(args.ID);
             const prop = Scratch.Cast.toString(args.PROP);
-            return this.lights[id] ? (this.lights[id][prop] ?? '') : '';
+            if (!LIGHT_ALL_PROPS.has(prop)) return '';
+            if (!Object.prototype.hasOwnProperty.call(this.lights, id)) return '';
+            const val = this.lights[id][prop];
+            return val !== undefined ? val : '';
         }
 
         getLightIds() {
@@ -2861,11 +2876,13 @@ self.onmessage = ({ data: msg }) => {
         }
 
         lightExists(args) {
-            return !!this.lights[Scratch.Cast.toString(args.ID)];
+            const id = Scratch.Cast.toString(args.ID);
+            return Object.prototype.hasOwnProperty.call(this.lights, id);
         }
 
         deleteLight(args) {
-            delete this.lights[Scratch.Cast.toString(args.ID)];
+            const id = Scratch.Cast.toString(args.ID);
+            if (Object.prototype.hasOwnProperty.call(this.lights, id)) delete this.lights[id];
             this._markDirty();
         }
 

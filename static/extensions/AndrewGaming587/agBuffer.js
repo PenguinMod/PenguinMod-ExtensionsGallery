@@ -85,6 +85,12 @@
             );
         }
         customId = "agBuffer";
+
+        toMonitorContent() {
+            this._monitorUpToDate = true
+            return this.toReporterContent()
+        }
+
         toReporterContent() {
             let root = document.createElement('div')
             root.style.maxWidth = "none" // Idk if this works i'm just trying stuff

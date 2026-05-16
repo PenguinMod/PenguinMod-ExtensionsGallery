@@ -138,7 +138,7 @@ export default [
         name: "Text To Speech: Redone",
         description: "A better alternitive to the base text to speech extension. Powered by the TTStool API",
         code: "PuzzlingGGG/ttsrV2.js",
-        banner: "PuzzlingGGG/tts.png",
+        banner: "PuzzlingGGG/tts.avif",
         creator: "PuzzlingGGG",
         isGitHub: true,
     },

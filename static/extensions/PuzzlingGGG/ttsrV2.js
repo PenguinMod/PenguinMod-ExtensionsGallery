@@ -80,6 +80,7 @@
                 color1: "#1be758",
                 color2: "#22c24a",
                 color3: "#3c813f",
+                blockText: "#000000",
                 blocks: [
                     /* old dev stuff
                     {
@@ -182,6 +183,7 @@
                             }
                         }
                     },
+                    "---",
                     {
                         opcode: "speak",
                         blockType: Scratch.BlockType.COMMAND,
@@ -203,6 +205,10 @@
                         }
                     },
                     {
+                        blockType: Scratch.BlockType.LABEL,
+                        text: "advanced blocks"
+                    },
+                    {
                         opcode: "datauri",
                         blockType: Scratch.BlockType.REPORTER,
                         text: "data uri of [SPEECH]",
@@ -211,6 +217,21 @@
                                 exemptFromNormalization: true
                             }
                         }
+                    },
+                    {
+                        opcode: "cache",
+                        blockType: Scratch.BlockType.COMMAND,
+                        text: "add [SPEECH] to cache",
+                        arguments: {
+                            SPEECH: {
+                                exemptFromNormalization: true
+                            }
+                        }
+                    },
+                    {
+                        opcode: "clearcache",
+                        blockType: Scratch.BlockType.COMMAND,
+                        text: "clear cache"
                     }
                 ],
                 menus: {
@@ -399,6 +420,15 @@
         }
         credit() {
             alert("Text To Speech: Redone by PuzzlingGGG\nUses TTSTools's TTS API (https://ttstool.com) created by LSD Software (https://www.lsdsoftware.com/)");
+        }
+        async cache(args) {
+            if (!(args.SPEECH instanceof Speech)) {
+                throw new Error("input must be a speech part");
+            }
+            await this.datauri(args); // already has caching so use that and ignore the output
+        }
+        clearcache() {
+            cache = {};
         }
     }
 

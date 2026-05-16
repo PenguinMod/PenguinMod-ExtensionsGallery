@@ -1508,7 +1508,7 @@
                         // console.log(datatype)
                         let isConst = false
                         // console.log(datatype)
-                        compiler.source += `let ${bufName} = vm.agBuffer.Type.cast(${buffer};`
+                        compiler.source += `let ${bufName} = vm.agBuffer.Type.cast(${buffer});`
                         switch (datatype) {
                             case '"Uint8"':
                                 compiler.source += `${bufName}.dataView.setUint8(${index}, ${value});`

@@ -85,6 +85,12 @@
             );
         }
         customId = "agBuffer";
+
+        toMonitorContent() {
+            this._monitorUpToDate = true
+            return this.toReporterContent()
+        }
+
         toReporterContent() {
             let root = document.createElement('div')
             root.style.maxWidth = "none" // Idk if this works i'm just trying stuff
@@ -223,12 +229,14 @@
             if (typeof bi === "bigint") return bi;
             return BigInt(bi);
         }
+        _monitorUpToDate = false
         set(type = "Uint8",index,value,endian = false) {
             let buffer = this;
             // console.log(type)
             // console.log(index)
             // console.log(endian)
             // console.log(value)
+            this._monitorUpToDate = false;
             switch (type) {
                 case "Uint8":
                     buffer.dataView.setUint8(index,value);
@@ -1424,52 +1432,64 @@
                         let buffer = compiler.descendInput(node.buffer).asUnknown();
                         let index = compiler.descendInput(node.index).asNumber();
                         let endian = compiler.descendInput(node.endian).asBoolean();
-                        compiler.source = 'yield* (function*(buffer, index, endian, datatype = null) {'
+                        // compiler.source = 'yield* (function*(buffer, index, endian, datatype = null) {'
                         // compiler.source += `let buffer = ${buffer};`
                         // console.log(datatype)
                         let isConst = false
                         // console.log(datatype)
                         switch (datatype) {
                             case '"Uint8"':
-                                compiler.source += `return ((buffer instanceof vm.agBuffer.Type) ? buffer.dataView.getUint8(index) : 0);`
+                                // compiler.source += `return ((buffer instanceof vm.agBuffer.Type) ? buffer.dataView.getUint8(index) : 0);`
+                                compiler.source = `vm.agBuffer.Type.cast(${buffer}).dataView.getUint8(${index}, ${endian})`
                                 break;
                             case '"Int8"':
-                                compiler.source += `return ((buffer instanceof vm.agBuffer.Type) ? buffer.dataView.getInt8(index) : 0);`
+                                // compiler.source += `return ((buffer instanceof vm.agBuffer.Type) ? buffer.dataView.getInt8(index) : 0);`
+                                compiler.source = `vm.agBuffer.Type.cast(${buffer}).dataView.getInt8(${index}, ${endian})`
                                 break;
                             case '"Uint16"':
-                                compiler.source += `return ((buffer instanceof vm.agBuffer.Type) ? buffer.dataView.getUint16(index, endian) : 0);`
+                                // compiler.source += `return ((buffer instanceof vm.agBuffer.Type) ? buffer.dataView.getUint16(index, endian) : 0);`
+                                compiler.source = `vm.agBuffer.Type.cast(${buffer}).dataView.getUint16(${index}, ${endian})`
                                 break;
                             case '"Int16"':
-                                compiler.source += `return ((buffer instanceof vm.agBuffer.Type) ? buffer.dataView.getInt16(index, endian) : 0);`
+                                // compiler.source += `return ((buffer instanceof vm.agBuffer.Type) ? buffer.dataView.getInt16(index, endian) : 0);`
+                                compiler.source = `vm.agBuffer.Type.cast(${buffer}).dataView.getInt16(${index}, ${endian})`
                                 break;
                             case '"Uint32"':
-                                compiler.source += `return ((buffer instanceof vm.agBuffer.Type) ? buffer.dataView.getUint32(index, endian) : 0);`
+                                // compiler.source += `return ((buffer instanceof vm.agBuffer.Type) ? buffer.dataView.getUint32(index, endian) : 0);`
+                                compiler.source = `vm.agBuffer.Type.cast(${buffer}).dataView.getUint32(${index}, ${endian})`
                                 break;
                             case '"Int32"':
-                                compiler.source += `return ((buffer instanceof vm.agBuffer.Type) ? buffer.dataView.getInt32(index, endian) : 0);`
+                                // compiler.source += `return ((buffer instanceof vm.agBuffer.Type) ? buffer.dataView.getInt32(index, endian) : 0);`
+                                compiler.source = `vm.agBuffer.Type.cast(${buffer}).dataView.getInt32(${index}, ${endian})`
                                 break;
                             case '"Uint64"':
-                                compiler.source += `return vm.agBuffer.Type.wrapBigInts(((buffer instanceof vm.agBuffer.Type) ? buffer.dataView.getBigUint64(index, endian) : 0n));`
+                                // compiler.source += `return vm.agBuffer.Type.wrapBigInts(((buffer instanceof vm.agBuffer.Type) ? buffer.dataView.getBigUint64(index, endian) : 0n));`
+                                compiler.source = `vm.agBuffer.Type.wrapBigInts(vm.agBuffer.Type.cast(${buffer}).dataView.getBigUint64(${index}, ${endian}))`
                                 break;
                             case '"Int64"':
-                                compiler.source += `return vm.agBuffer.Type.wrapBigInts(((buffer instanceof vm.agBuffer.Type) ? buffer.dataView.getBigInt64(index, endian) : 0n));`
+                                // compiler.source += `return vm.agBuffer.Type.wrapBigInts(((buffer instanceof vm.agBuffer.Type) ? buffer.dataView.getBigInt64(index, endian) : 0n));`
+                                compiler.source = `vm.agBuffer.Type.wrapBigInts(vm.agBuffer.Type.cast(${buffer}).dataView.getBigInt64(${index}, ${endian}))`
                                 break;
                             case '"Float16"':
-                                compiler.source += `return ((buffer instanceof vm.agBuffer.Type) ? buffer.dataView.getFloat16(index, endian) : 0.0);`
+                                // compiler.source += `return ((buffer instanceof vm.agBuffer.Type) ? buffer.dataView.getFloat16(index, endian) : 0.0);`
+                                compiler.source = `vm.agBuffer.Type.cast(${buffer}).dataView.getFloat16(${index}, ${endian})`
                                 break;
                             case '"Float32"':
-                                compiler.source += `return ((buffer instanceof vm.agBuffer.Type) ? buffer.dataView.getFloat32(index, endian) : 0.0);`
+                                // compiler.source += `return ((buffer instanceof vm.agBuffer.Type) ? buffer.dataView.getFloat32(index, endian) : 0.0);`
+                                compiler.source = `vm.agBuffer.Type.cast(${buffer}).dataView.getFloat32(${index}, ${endian})`
                                 break;
                             case '"Float64"':
-                                compiler.source += `return ((buffer instanceof vm.agBuffer.Type) ? buffer.dataView.getFloat64(index, endian) : 0.0);`
+                                // compiler.source += `return ((buffer instanceof vm.agBuffer.Type) ? buffer.dataView.getFloat64(index, endian) : 0.0);`
+                                compiler.source = `vm.agBuffer.Type.cast(${buffer}).dataView.getFloat64(${index}, ${endian})`
                                 break;
                             default:
-                                compiler.source += `return ((buffer instanceof vm.agBuffer.Type) ? buffer.get(${datatype},index,endian) : 0);`
+                                // compiler.source += `return ((buffer instanceof vm.agBuffer.Type) ? buffer.get(${datatype},index,endian) : 0);`
+                                compiler.source = `vm.agBuffer.Type.cast(${buffer}).get(${datatype}, ${index}, ${endian})`
                                 isConst = true
                                 break;
                             
                         }
-                        compiler.source += `})(${buffer}, ${index}, ${endian}, ${isConst ? datatype : "undefined"})`
+                        // compiler.source += `})(${buffer}, ${index}, ${endian}, ${isConst ? datatype : "undefined"})`
                         // console.log(compiler.source)
                         const stackSource = compiler.source;
                         compiler.source = originalSource;
@@ -1488,48 +1508,48 @@
                         // console.log(datatype)
                         let isConst = false
                         // console.log(datatype)
-                        compiler.source += `let ${bufName} = ${buffer};`
+                        compiler.source += `let ${bufName} = vm.agBuffer.Type.cast(${buffer});`
                         switch (datatype) {
                             case '"Uint8"':
-                                compiler.source += `if (${bufName} instanceof vm.agBuffer.Type) ${bufName}.dataView.setUint8(${index}, ${value});`
+                                compiler.source += `${bufName}.dataView.setUint8(${index}, ${value});`
                                 break;
                             case '"Int8"':
-                                compiler.source += `if (${bufName} instanceof vm.agBuffer.Type) ${bufName}.dataView.setInt8(${index}, ${value});`
+                                compiler.source += `${bufName}.dataView.setInt8(${index}, ${value});`
                                 break;
                             case '"Uint16"':
-                                compiler.source += `if (${bufName} instanceof vm.agBuffer.Type) ${bufName}.dataView.setUint16(${index}, ${value}, ${endian});`
+                                compiler.source += `${bufName}.dataView.setUint16(${index}, ${value}, ${endian});`
                                 break;
                             case '"Int16"':
-                                compiler.source += `if (${bufName} instanceof vm.agBuffer.Type) ${bufName}.dataView.setInt16(${index}, ${value}, ${endian});`
+                                compiler.source += `${bufName}.dataView.setInt16(${index}, ${value}, ${endian});`
                                 break;
                             case '"Uint32"':
-                                compiler.source += `if (${bufName} instanceof vm.agBuffer.Type) ${bufName}.dataView.setUint32(${index}, ${value}, ${endian});`
+                                compiler.source += `${bufName}.dataView.setUint32(${index}, ${value}, ${endian});`
                                 break;
                             case '"Int32"':
-                                compiler.source += `if (${bufName} instanceof vm.agBuffer.Type) ${bufName}.dataView.setInt32(${index}, ${value}, ${endian});`
+                                compiler.source += `${bufName}.dataView.setInt32(${index}, ${value}, ${endian});`
                                 break;
                             case '"Uint64"':
-                                compiler.source += `if (${bufName} instanceof vm.agBuffer.Type) ${bufName}.dataView.setBigUint64(${index}, vm.agBuffer.Type.handleWrappedBigInts(${value}), ${endian});`
+                                compiler.source += `${bufName}.dataView.setBigUint64(${index}, vm.agBuffer.Type.handleWrappedBigInts(${value}), ${endian});`
                                 break;
                             case '"Int64"':
-                                compiler.source += `if (${bufName} instanceof vm.agBuffer.Type) ${bufName}.dataView.setBigInt64(${index}, vm.agBuffer.Type.handleWrappedBigInts(${value}), ${endian});`
+                                compiler.source += `${bufName}.dataView.setBigInt64(${index}, vm.agBuffer.Type.handleWrappedBigInts(${value}), ${endian});`
                                 break;
                             case '"Float16"':
-                                compiler.source += `if (${bufName} instanceof vm.agBuffer.Type) ${bufName}.dataView.setFloat16(${index}, ${value}, ${endian});`
+                                compiler.source += `${bufName}.dataView.setFloat16(${index}, ${value}, ${endian});`
                                 break;
                             case '"Float32"':
-                                compiler.source += `if (${bufName} instanceof vm.agBuffer.Type) ${bufName}.dataView.setFloat32(${index}, ${value}, ${endian});`
+                                compiler.source += `${bufName}.dataView.setFloat32(${index}, ${value}, ${endian});`
                                 break;
                             case '"Float64"':
-                                compiler.source += `if (${bufName} instanceof vm.agBuffer.Type) ${bufName}.dataView.setFloat64(${index}, ${value}, ${endian});`
+                                compiler.source += `${bufName}.dataView.setFloat64(${index}, ${value}, ${endian});`
                                 break;
                             default:
-                                compiler.source += `if (${bufName} instanceof vm.agBuffer.Type) ${bufName}.set(${datatype}, ${index}, ${value}, ${endian});`
+                                compiler.source += `${bufName}.set(${datatype}, ${index}, ${value}, ${endian});`
                                 isConst = true
                                 break;
                             
                         }
-                        
+                        compiler.source += `${bufName}._monitorUpToDate = false;`
                         // compiler.source += `})(${buffer}, ${index}, ${value}, ${endian}, ${isConst ? datatype : "undefined"})`
                         // console.log(compiler.source)
                         // const stackSource = compiler.source;

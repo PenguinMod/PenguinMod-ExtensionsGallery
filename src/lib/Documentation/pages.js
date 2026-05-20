@@ -40,7 +40,7 @@ import Resolution from "./Resolution.md?raw";
 import ProjectInterfaces from "./ProjectInterfaces.md?raw";
 
 // Date Format V2
-import ProjectInterfaces from "./DateFormatV2.md?raw";
+import DateFormatV2 from "./DateFormatV2.md?raw";
 
 export default {
     // the key is the path to the docs page

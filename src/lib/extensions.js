@@ -260,7 +260,8 @@ export default [
         code: "ddededodediamante/dateFormatV2.js",
         banner: "ddededodediamante/dateFormat.svg",
         creator: "ddededodediamante",
-        tags: ["customtype", "utility", "small", "data", "time"],
+        documentation: "DateFormatV2",
+        tags: ["customtype", "utility", "small", "data", "time", "text"],
         isGitHub: true,
     },
     {

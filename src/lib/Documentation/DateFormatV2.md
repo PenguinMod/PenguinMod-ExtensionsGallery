@@ -103,7 +103,7 @@ Compares two dates based on the chosen operation.
 is [date] [weekend v]?::#59c074 boolean
 ```
 
-Checks a specific property of a date. Options are:
+Checks a specific property of a date.
 
 - `weekend` = if the day is Saturday or Sunday
 - `weekday` = if the day is Monday through Friday

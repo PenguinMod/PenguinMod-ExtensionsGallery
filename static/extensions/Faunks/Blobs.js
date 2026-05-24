@@ -20,6 +20,7 @@
         name: "Blobs",
         color1: "#41964cff",
         color3: "#53df5aff",
+        menuIconURI,
         blocks: [
           {
               opcode: "toBlob",

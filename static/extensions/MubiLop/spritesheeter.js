@@ -43,7 +43,7 @@
         this.frameNames = [];
       }
       
-      loadImage(url) {
+      async loadImage(url) {
         if (await Scratch.canFetch(url) === false) return;
           
         return new Promise((resolve, reject) => {

@@ -43,10 +43,10 @@
         this.frameNames = [];
       }
       
-      async loadImage(url) {
-        if (await Scratch.canFetch(url) === false) return;
+      loadImage(url) {
+        return new Promise(async (resolve, reject) => {
+          if (await Scratch.canFetch(url) === false) return;
           
-        return new Promise((resolve, reject) => {
           const img = new Image();
           img.crossOrigin = "anonymous"; // Add CORS support
           img.onload = () => {

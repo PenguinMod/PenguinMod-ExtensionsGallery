@@ -26,8 +26,14 @@
 
 <div style="height: 24px"></div>
 <div class="footer">
-    PenguinMod is not affiliated with TurboWarp, Scratch, the Scratch Team, or
-    the Scratch Foundation.
+    <span>
+        PenguinMod is not affiliated with TurboWarp, Scratch, the Scratch Team, or
+        the Scratch Foundation.
+    </span>
+    <span>
+        Scratch is a project of the Scratch Foundation.
+        It is available for free at <a href="https://scratch.org/">https://scratch.org/</a>.
+    </span>
 </div>
 <div class="links">
     <a
@@ -71,6 +77,7 @@
 
     .links {
         width: 100%;
+        
         display: flex;
         flex-direction: row;
         justify-content: center;
@@ -78,9 +85,10 @@
     }
     .footer {
         width: 100%;
+        margin-bottom: 4px;
+
         display: flex;
         flex-direction: column;
         align-items: center;
-        margin-bottom: 4px;
     }
 </style>

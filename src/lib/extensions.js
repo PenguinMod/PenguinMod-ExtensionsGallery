@@ -21,6 +21,14 @@ export default [
         creator: "TheShovel",
     },
     {
+        name: "Server Storage",
+        description: "Similar to the server storage blocks in the 'Storage' extension, but with a better server uptime and non-global keys.\nDid you know the server is open source?",
+        code: "Ikelene/serverStorageExtension.js",
+        banner: "Ikelene/serverStorageIMG.avif",
+        creator: "Ikelene",
+        isGitHub: true,
+    },
+    {
         name: "Storage Plus",
         description: "A storage extension with many more features. Featuring server storage (with a fast server), local storage and more!",
         code: "Gen1x/storage_plus.js",
@@ -43,6 +51,14 @@ export default [
         creator: "pooiod7",
     },
     {
+        name: "Lighting",
+        description: "A fast, powerful and easy-to-use lighting engine powered by WebGL!",
+        code: "Gen1x/lighting.js",
+        banner: "Gen1x/lighting.avif",
+        creator: "G1nX",
+        tags: ["new"],
+    },
+    {
         name: "3D Math",
         description: "A handful of utilities for making your own sprite-based 3D engine.",
         code: "ObviousAlexC/3DMath.js",
@@ -61,6 +77,13 @@ export default [
         unstableReason: "WebGPU is still experimental and not supported by all browsers and does not work when packaged to electron. Check compatibility at webgpu.io."
     },
     {
+        name: "Beat Sync",
+        description: "An extension designed to let you sync anything in your project to a musical beat, with incredible precision.",
+        code: "Gen1x/beat_sync.js",
+        banner: "Gen1x/beat_sync.avif",
+        creator: "G1nX",
+    },
+    {
         name: "Object",
         description: "Handle large JSON files at an extreme speed.",
         code: "skyhigh173/object.js",
@@ -68,7 +91,7 @@ export default [
         creator: "skyhigh173",
         isGitHub: true,
     },
-    {
+    /*{
         name: "Scope Variable",
         description: "Manage your variables in a block-like structure.",
         code: "0znzw/ScopeVars.js",
@@ -77,7 +100,7 @@ export default [
         isGitHub: true,
         unstable: true,
         unstableReason: "This extension uses unstable techniques that may not always work.",
-    },
+    },*/
     {
         name: "Extra Timers",
         description: "Allows for the creation and management of additional timer blocks.",
@@ -220,6 +243,7 @@ export default [
         creator: "qxsck",
         isGitHub: true,
     },
+    /* Use the TurboWarp version. This one is outdated and broken.
     {
         name: "Format Numbers",
         description: "Format large numbers into AD standard, fixed decimal, comma separated, or scientific notation.",
@@ -229,12 +253,14 @@ export default [
         isGitHub: true, 
         notes: "Gallery banner by Dillon",
     },
+    */
     {
         name: "Date Format",
         description: "Manage, format and compare dates.",
         code: "ddededodediamante/dateFormatV2.js",
         banner: "ddededodediamante/dateFormat.svg",
         creator: "ddededodediamante",
+        tags: ["customtype", "utility", "small", "data", "time"],
         isGitHub: true,
     },
     {
@@ -242,8 +268,9 @@ export default [
         description: "Use translation keys in your projects for multi-language support",
         code: "Embin/embintranslation.js",
         banner: "Embin/embintranslation.avif",
-        creator: "NotEmbin",
+        creator: "embinmc",
         isGitHub: true, 
+        tags: ["data", "utility", "text", "strings"],
         creatorAlias: "Embin",
     },
     {
@@ -253,6 +280,7 @@ export default [
         banner: "DogeisCut/YetAnotherStringExtension.svg",
         creator: "DogeisCut",
         isGitHub: true, 
+        tags: ["strings", "builder", "small", "text", "utility"]
     },
     {
         name: "Regular Expressions",
@@ -261,6 +289,7 @@ export default [
         banner: "DogeisCut/dogeiscutRegularExpressions.svg",
         creator: "DogeisCut",
         isGitHub: true, 
+        tags: ["customtype", "strings", "regex", "text", "utility"]
     },
     {
         name: "Sets",
@@ -269,6 +298,27 @@ export default [
         banner: "DogeisCut/dogeiscutSet.svg",
         creator: "DogeisCut",
         isGitHub: true, 
+        tags: ["customtype", "sets", "data", "utility"]
+    },
+    {
+        name: "Iterators",
+        description: "Transform and iterate over different types of collections and more.",
+        code: "Div/divIterators.js",
+        banner: "Div/divIterators.svg",
+        creator: "Dicuo",
+        creatorAlias: "Div",
+        isGitHub: true,
+        tags: ["new", "customtype", "iterators", "data", "utility", "builder"]
+    },
+    {
+        name: "Algebraic Effects",
+        description: "Intercept custom actions in your scripts to pause, resume, or redirect their flow using modular handlers.",
+        code: "Div/divAlgEffects.js",
+        banner: "Div/divAlgEffects.svg",
+        creator: "Dicuo",
+        creatorAlias: "Div",
+        isGitHub: true,
+        tags: ["new", "effects", "control", "data", "utility"]
     },
     {
         name: "Blobs",
@@ -354,14 +404,6 @@ export default [
         notes: "Some contributions by yuri-kiss :P",
     },
     {
-        name: "Project Page",
-        description: "Modify and affect the studio project page from the code. How annoying can an extension possibly be?",
-        code: "jwklong/projectpage.js",
-        banner: "jwklong/projectpage.avif",
-        creator: "jwklong",
-        isGitHub: true,
-    },
-    {
         name: "All Menus",
         description: "Every dropdown menu for each block, in one extension.",
         code: "Lily/AllMenus.js",
@@ -384,6 +426,7 @@ export default [
         banner: "DogeisCut/BeepBoxPlayer.svg",
         creator: "DogeisCut",
         isGitHub: true, 
+        tags: ["api", "music", "sounds", "ultrabox", "jummbox", "beepbox"]
     },
     {
         name: "Update File (Direct Access)",
@@ -524,6 +567,7 @@ export default [
         code: "Monochromasity/howmanylines.js",
         banner: "Monochromasity/placeholder-howmanylines.avif",
         creator: "Monochromasity",
+        tags: ["small"],
         isGitHub: true,
     },
     {
@@ -543,6 +587,7 @@ export default [
         isGitHub: true, 
         documentation: "Resolution",
         notes: "Gallery banner by Dillon",
+        tags: ["graphics", "utility"]
     },
     {
         name: "Device Motion",
@@ -613,5 +658,15 @@ export default [
         creator: "FloppyDisk-OSC",
         isGitHub: true,
         creatorAlias: "ElectricFuzzball_PM"
+    },
+        {
+        name: "Array Buffers",
+        description: "Read, parse, and write raw data efficiently using Array Buffers",
+        code: "AndrewGaming587/agBuffer.js",
+        banner: "AndrewGaming587/agBuffer.svg",
+        creator: "AndrewScripter587",
+        isGitHub: true,
+        tags: ["customtype","data","utility","new","large"],
+        creatorAlias: "AndrewGaming587"
     },
 ];

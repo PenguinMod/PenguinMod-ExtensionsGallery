@@ -1,3 +1,4 @@
+(function(Scratch) {
 // Dado (https://icons8.com/icon/qAN1P79CQdvH/dado) icon by Icons8 (https://icons8.com/)
 
 // reminder to add a space before any block text that starts with a number
@@ -242,7 +243,9 @@ class RandomUtils {
   }
 
   uuid(args) {
-    return fetch(`https://api.allorigins.win/raw?url=https://www.uuidtools.com/api/generate/${args.VERSION}/count/1`)
+    const allowedVersions = ['v1', 'v4'];
+    const version = allowedVersions.includes(args.VERSION) ? args.VERSION : 'v4';
+    return fetch(`https://api.allorigins.win/raw?url=https://www.uuidtools.com/api/generate/${version}/count/1`)
     .then((response) => {
       if (response.ok) {
         return response.json();
@@ -323,3 +326,4 @@ class RandomUtils {
 }
 
 Scratch.extensions.register(new RandomUtils());
+})(Scratch);

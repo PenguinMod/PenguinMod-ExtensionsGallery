@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="-4 -4 56 56"
+width="48px" height="48px" style="stroke-width:3px;stroke-linecap:round">
+
+<!-- arrow -->
+<line x1="6"  x2="6" y1="4" y2="44" stroke="white" />
+<line x1="0"  x2="6" y1="38" y2="44" stroke="white" />
+<line x1="6"  x2="12" y1="44" y2="38" stroke="white" />
+
+<!-- lines -->
+<line x1="16"  x2="46" y1="10" y2="10" stroke="white" />
+<line x1="16"  x2="40" y1="20" y2="20" stroke="white" />
+<line x1="16"  x2="46" y1="30" y2="30" stroke="white" />
+
+</svg>

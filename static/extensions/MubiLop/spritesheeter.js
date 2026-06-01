@@ -44,7 +44,9 @@
       }
       
       loadImage(url) {
-        return new Promise((resolve, reject) => {
+        return new Promise(async (resolve, reject) => {
+          if (await Scratch.canFetch(url) === false) return;
+          
           const img = new Image();
           img.crossOrigin = "anonymous"; // Add CORS support
           img.onload = () => {

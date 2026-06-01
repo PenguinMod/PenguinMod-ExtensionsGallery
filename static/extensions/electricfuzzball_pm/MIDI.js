@@ -1,4 +1,5 @@
 /* global Scratch, jwArray */
+//added joystick support yay
 
 let jwArray = {
     Type: class {},
@@ -33,6 +34,10 @@ class MIDI {
 
         this.pitchBend = 0;
         this.modWheel = 0;
+        
+        // MPK Mini Plus Joystick State
+        this.joystickX = 64; 
+        this.joystickY = 64; 
 
         this.sequenceQueue = [];
 
@@ -83,6 +88,10 @@ class MIDI {
 
                 { opcode: "getPitchBend", blockType: Scratch.BlockType.REPORTER, text: "pitch bend" },
                 { opcode: "getModWheel", blockType: Scratch.BlockType.REPORTER, text: "mod wheel" },
+                
+                // Joystick reporters
+                { opcode: "getJoystickX", blockType: Scratch.BlockType.REPORTER, text: "joystick tilt x" },
+                { opcode: "getJoystickY", blockType: Scratch.BlockType.REPORTER, text: "joystick tilt y" },
 
                 { opcode: "lastNNotesPressed", blockType: Scratch.BlockType.REPORTER, text: "last [N] notes pressed",
                   arguments: { N: { type: Scratch.ArgumentType.NUMBER, defaultValue: 5 } }, ...jwArray.Block },
@@ -130,6 +139,8 @@ class MIDI {
         this.lastChannel = -1;
         this.lastPad = "";
         this.lastPadVelocity = 0;
+        this.joystickX = 64; 
+        this.joystickY = 64;
         this.updateVisualizer();
     }
 
@@ -145,8 +156,18 @@ class MIDI {
         const command = status & 0xf0;
         const channel = (status & 0x0f) + 1;
 
-        if (command === CONTROL_CHANGE && note === 1) this.modWheel = velocity;
-        if (command === PITCH_BEND) this.pitchBend = ((velocity << 7) | note) - 8192;
+        if (command === CONTROL_CHANGE) {
+            // Your MPK reported CC#002 and CC#012
+            if (note === 2) this.joystickX = velocity;
+            if (note === 12) this.joystickY = velocity;
+            
+            // Standard Mod Wheel remains on CC 1
+            if (note === 1) this.modWheel = velocity;
+        }
+
+        if (command === PITCH_BEND) {
+            this.pitchBend = ((velocity << 7) | note) - 8192;
+        }
 
         const isPad = note >= PAD_NOTE_MIN && note <= PAD_NOTE_MAX;
         const isNoteOn = command === MIDI_NOTE_ON && velocity > 0;
@@ -174,6 +195,12 @@ class MIDI {
         }
     }
 
+    // Boilerplate reporters
+    getPitchBend() { return this.pitchBend; }
+    getModWheel() { return this.modWheel; }
+    getJoystickX() { return this.joystickX; }
+    getJoystickY() { return this.joystickY; }
+
     whenSequencePlayed(args) {
         const target = args.SEQUENCE.trim().split(" ").map(Number);
         const qlen = this.sequenceQueue.length;
@@ -198,9 +225,6 @@ class MIDI {
         }
         return false;
     }
-
-    getPitchBend() { return this.pitchBend; }
-    getModWheel() { return this.modWheel; }
 
     lastNNotesPressed(args) { return new jwArray.Type(this.lastNNotes.slice(-args.N)); }
 
@@ -247,4 +271,4 @@ class MIDI {
 }
 
 Scratch.extensions.register(new MIDI());
-// Howdy! I'm Flowey! Flowey the Flower!
+// but nobody came...

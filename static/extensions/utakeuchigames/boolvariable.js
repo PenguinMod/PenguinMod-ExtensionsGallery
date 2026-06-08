@@ -10,7 +10,7 @@
 
     
 
-    class Boolvariable {
+    class utakeuchigamesBoolvariable {
         constructor() {
             this.boolVariables = {};
             this.boolVariablesinfo = {};
@@ -101,7 +101,7 @@
 
         getInfo() {
             return {
-                id: 'BV', 
+                id: 'utakeuchigamesBV', 
                 name: 'Bool変数拡張',
                 menuIconURI: icon,
                 color1: "#ff8c1a",  
@@ -530,10 +530,10 @@
         }
     }
 
-　　 const Boolvariableextension = new Boolvariable();
+　　 const utakeuchigamesBoolvariableextension = new utakeuchigamesBoolvariable();
     
     vm.runtime.on("BEFORE_EXECUTE", () => {
-        Boolvariableextension.frameCount++;
+        utakeuchigamesBoolvariableextension.frameCount++;
         const now = performance.now();
 
         if (previousTime === 0) {

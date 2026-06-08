@@ -670,9 +670,9 @@ export default [
         creatorAlias: "AndrewGaming587"
     },
     {
-    name: "boolvariales", // The name of the extension.
+    name: "boolvariales",
     description: "Add bool variables and additional tools.",
-    code: "utakeuchigames/boolvariable.js", // 
+    code: "utakeuchigames/boolvariable.js",
     banner: "utakeuchigames/boolvariables.avif",
     creator: "utakeuchigames",
     tags: ["variables"],

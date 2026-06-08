@@ -669,16 +669,16 @@ export default [
         tags: ["customtype","data","utility","new","large"],
         creatorAlias: "AndrewGaming587"
     },
-    {
-    name: "boolvariales",
-    description: "Add bool variables and additional tools.",
-    code: "utakeuchigames/boolvariable.js",
-    banner: "utakeuchigames/boolvariables.avif",
-    creator: "utakeuchigames",
-    tags: ["variables"],
-    creatorAlias: "utakeuchigames",
-    unstable: false,
-    unstableReason: "May break sometimes, Use at your own risk.",
+        {
+        name: "boolvariales",
+        description: "Add bool variables and additional tools.",
+        code: "utakeuchigames/boolvariable.js",
+        banner: "utakeuchigames/boolvariables.avif",
+        creator: "utakeuchigames",
+        tags: ["variables"],
+        creatorAlias: "utakeuchigames",
+        unstable: false,
+        unstableReason: "May break sometimes, Use at your own risk.",
         isGitHub: false,
-　　　　},
+　　 },
 ];

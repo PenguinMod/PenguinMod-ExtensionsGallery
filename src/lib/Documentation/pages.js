@@ -3,6 +3,9 @@
 // ex:
 //      "./test.md?raw"
 //      "./particle-tools.md?raw"
+
+import PageSimpleBrain from "./SimpleBrain.md?raw";
+
 import PageParticleTools from "./particle-tools.md?raw";
 
 // Extra Control (unlisted)
@@ -44,6 +47,7 @@ export default {
     // the key is the path to the docs page
     // so you can do "sharkpool-particle-tools" for example
     // you cant use / like "sharkpool/particle-tools" yet
+    "SimpleBrain": PageSimpleBrain,
     "particle-tools": PageParticleTools,
     "Extra-Control": PageExtraControl,
 
@@ -79,3 +83,5 @@ export default {
     // Project Interfaces
     "ProjectInterfaces": ProjectInterfaces
 };
+
+Add SimpleBrain docs page

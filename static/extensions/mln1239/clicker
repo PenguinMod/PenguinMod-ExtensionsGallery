@@ -1,0 +1,153 @@
+// id: clickerblk
+// name: clicker
+// description: all block:
+// by: mln1239 <https://penguinmod.com/profile?user=mln1239>
+// license: MIT
+
+(async function() {
+    const variables = {};
+    const blocks = [];
+    const menus = {};
+
+
+    class Extension {
+        getInfo() {
+            return {
+                "blockIconURI": "data:image/svg+xml;base64,PHN2ZyB2ZXJzaW9uPSIxLjEiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyIgeG1sbnM6eGxpbms9Imh0dHA6Ly93d3cudzMub3JnLzE5OTkveGxpbmsiIHdpZHRoPSI0MC44MzE4NyIgaGVpZ2h0PSI0MC40MTkwNCIgdmlld0JveD0iMCwwLDQwLjgzMTg3LDQwLjQxOTA0Ij48ZyB0cmFuc2Zvcm09InRyYW5zbGF0ZSgtMjE5LjU4NDIsLTE1OS43OTA0OCkiPjxnIHN0cm9rZS1taXRlcmxpbWl0PSIxMCI+PGc+PHBhdGggZD0iTTIyNS45NDIyOSwxODIuNDcwMDdsMjguNzI3ODIsMC4xNDg4M2MwLDAgLTEuNDg1NjQsMTIuNDc2NTUgLTE0LjgzNTQ1LDEyLjM0Mjk1Yy0xMi44Nzc4OSwtMC4xMjg4OCAtMTMuODkyMzYsLTEyLjQ5MTc4IC0xMy44OTIzNiwtMTIuNDkxNzh6IiBmaWxsPSIjZmZmZmZmIiBzdHJva2U9Im5vbmUiIHN0cm9rZS13aWR0aD0iMC41Ii8+PHBhdGggZD0iTTIyMC41ODQyLDE3OS45MDA3OGMwLjA1NDIxLC0xMC42MDg5OCA4Ljc5MDkxLC0xOS4xNjQ4MyAxOS41MTM5NiwtMTkuMTEwMDRjMTAuNzIzMDYsMC4wNTQ3OSAxOS4zNzE4Niw4LjY5OTQ5IDE5LjMxNzY1LDE5LjMwODQ3Yy0wLjA1NDIxLDEwLjYwODk4IC04Ljc5MDkxLDE5LjE2NDg0IC0xOS41MTM5NiwxOS4xMTAwNWMtMTAuNzIzMDYsLTAuMDU0NzkgLTE5LjM3MTg2LC04LjY5OTQ4IC0xOS4zMTc2NSwtMTkuMzA4NDd6TTIzOS44MzAzMywxOTQuOTEyMDVjMTMuMzQ5ODEsMC4xMzM2IDE0Ljc5MTIsLTEyLjI4MTI3IDE0Ljc5MTIsLTEyLjI4MTI3bC0yOC42MzEzNSwtMC4xNDYzYzAsMCAwLjk2MjI3LDEyLjI5ODcgMTMuODQwMTUsMTIuNDI3NTd6TTI0Ny4wOTkzLDE3Ni42NTA5NWMxLjQ1MDI2LDAuMDA3NDEgMi42MzE4NCwtMS4xNDk3NCAyLjYzOTE4LC0yLjU4NDU1YzAuMDA3MzMsLTEuNDM0ODIgLTEuMTYyMzgsLTIuNjAzOTggLTIuNjEyNjMsLTIuNjExMzhjLTEuNDUwMjYsLTAuMDA3NDEgLTIuNjMxODQsMS4xNDk3NCAtMi42MzkxOCwyLjU4NDU1Yy0wLjAwNzMzLDEuNDM0ODIgMS4xNjIzOCwyLjYwMzk4IDIuNjEyNjMsMi42MTEzOXpNMjMyLjkzNTMsMTc2LjU3ODU4YzEuNDUwMjYsMC4wMDc0MSAyLjYzMTg0LC0xLjE0OTc0IDIuNjM5MTgsLTIuNTg0NTVjMC4wMDczMywtMS40MzQ4MiAtMS4xNjIzOCwtMi42MDM5OCAtMi42MTI2MywtMi42MTEzOWMtMS40NTAyNiwtMC4wMDc0MSAtMi42MzE4NCwxLjE0OTc0IC0yLjYzOTE4LDIuNTg0NTVjLTAuMDA3MzMsMS40MzQ4MiAxLjE2MjM4LDIuNjAzOTggMi42MTI2MywyLjYxMTM5eiIgZmlsbD0iI2ZmYzUwMCIgc3Ryb2tlPSIjMDAwMDAwIiBzdHJva2Utd2lkdGg9IjIiLz48cGF0aCBkPSJNMjMwLjI3MjY4LDE3My45NjY5MmMwLjAwNzM0LC0xLjQzNDgyIDEuMjM5MTksLTIuNjQxNyAyLjY4OTQ0LC0yLjYzNDI5YzEuNDUwMjUsMC4wMDc0MSAyLjY2OTcsMS4yMjY4MyAyLjY2MjM3LDIuNjYxNjRjLTAuMDA3MzQsMS40MzQ4MiAtMS4yMzkxOSwyLjY0MTcxIC0yLjY4OTQ0LDIuNjM0MjljLTEuNDUwMjUsLTAuMDA3NDEgLTIuNjY5NywtMS4yMjY4MyAtMi42NjIzNywtMi42NjE2NXoiIGZpbGw9IiMwMDAwMDAiIHN0cm9rZT0ibm9uZSIgc3Ryb2tlLXdpZHRoPSIwLjUiLz48cGF0aCBkPSJNMjQ0LjQzNjY2LDE3NC4wMzkzYzAuMDA3MzQsLTEuNDM0ODIgMS4yMzkxOCwtMi42NDE3MSAyLjY4OTQ0LC0yLjYzNDI5YzEuNDUwMjUsMC4wMDc0MSAyLjY2OTcsMS4yMjY4MyAyLjY2MjM3LDIuNjYxNjRjLTAuMDA3MzQsMS40MzQ4MiAtMS4yMzkxOCwyLjY0MTcxIC0yLjY4OTQ0LDIuNjM0MjljLTEuNDUwMjUsLTAuMDA3NDEgLTIuNjY5NywtMS4yMjY4MyAtMi42NjIzNywtMi42NjE2NHoiIGZpbGw9IiMwMDAwMDAiIHN0cm9rZT0ibm9uZSIgc3Ryb2tlLXdpZHRoPSIwLjUiLz48L2c+PC9nPjwvZz48L3N2Zz48IS0tcm90YXRpb25DZW50ZXI6MjAuNDE1ODA0MTYyNzg0NjY3OjIwLjIwOTUxODkzNTUzOTg3Ni0tPg==",
+                "id": "clickerblk",
+                "name": "clicker",
+                "docsURI": "https://mln1238.github.io/Documentation_clicker/",
+                "color1": "#ffc800",
+                "color2": "#ffc800",
+                "blocks": blocks,
+                "menus": menus
+            }
+        }
+    }
+    blocks.push({
+        opcode: `add`,
+        blockType: Scratch.BlockType.COMMAND,
+        text: `add clicker name[1]`,
+        filter: [Scratch.TargetType.SPRITE],
+        hideFromPalette: false,
+        arguments: {
+            "1": {
+                type: Scratch.ArgumentType.STRING,
+                defaultValue: 'clicker',
+            },
+        },
+    });
+    Extension.prototype[`add`] = async (args, util) => {
+        variables[args["1"]] = 0
+    };
+
+    blocks.push({
+        opcode: `delete`,
+        blockType: Scratch.BlockType.COMMAND,
+        text: `delete clicker name[2]`,
+        filter: [Scratch.TargetType.SPRITE],
+        hideFromPalette: false,
+        arguments: {
+            "2": {
+                type: Scratch.ArgumentType.STRING,
+                defaultValue: 'clicker',
+            },
+        },
+    });
+    Extension.prototype[`delete`] = async (args, util) => {
+        delete variables[args["2"]]
+    };
+
+    blocks.push({
+        opcode: `st`,
+        blockType: Scratch.BlockType.COMMAND,
+        text: `set clicker name[3] to[3-1]`,
+        filter: [Scratch.TargetType.SPRITE],
+        hideFromPalette: false,
+        arguments: {
+            "3": {
+                type: Scratch.ArgumentType.STRING,
+                defaultValue: 'clicker',
+            },
+            "3-1": {
+                type: Scratch.ArgumentType.NUMBER,
+                defaultValue: '0',
+            },
+        },
+    });
+    Extension.prototype[`st`] = async (args, util) => {
+        if (Boolean(!(variables[args["4"]] == 'undefined'))) {
+            variables[args["3"]] = args["3-1"]
+        };
+    };
+
+    blocks.push({
+        opcode: `cg`,
+        blockType: Scratch.BlockType.COMMAND,
+        text: `change clicker name[4] by[4-1]`,
+        filter: [Scratch.TargetType.SPRITE],
+        hideFromPalette: false,
+        arguments: {
+            "4": {
+                type: Scratch.ArgumentType.STRING,
+                defaultValue: 'clicker',
+            },
+            "4-1": {
+                type: Scratch.ArgumentType.NUMBER,
+                defaultValue: '0',
+            },
+        },
+    });
+    Extension.prototype[`cg`] = async (args, util) => {
+        if (Boolean(!(variables[args["4"]] == 'undefined'))) {
+            variables[args["4"]] = (variables[args["4"]] + args["4-1"])
+        };
+    };
+
+    blocks.push({
+        opcode: `vl`,
+        blockType: Scratch.BlockType.REPORTER,
+        text: `valeu in clicker name[5]`,
+        blockShape: Scratch.BlockShape.ROUND,
+        allowDropAnywhere: false,
+        disableMonitor: false,
+        filter: [Scratch.TargetType.SPRITE],
+        hideFromPalette: false,
+        arguments: {
+            "5": {
+                type: Scratch.ArgumentType.STRING,
+                defaultValue: 'clicker',
+            },
+        },
+    });
+    Extension.prototype[`vl`] = async (args, util) => {
+        return variables[args["5"]]
+    };
+
+    blocks.push({
+        opcode: `te`,
+        blockType: Scratch.BlockType.BOOLEAN,
+        text: `this clicker[6] ha exited`,
+        blockShape: Scratch.BlockShape.HEXAGONAL,
+        disableMonitor: false,
+        filter: [Scratch.TargetType.SPRITE],
+        hideFromPalette: false,
+        arguments: {
+            "6": {
+                type: Scratch.ArgumentType.STRING,
+                defaultValue: 'clicker',
+            },
+        },
+    });
+    Extension.prototype[`te`] = async (args, util) => {
+        if (Boolean(((variables[args["6"]] == '') || (variables[args["6"]] == 'null')))) {
+            return 'true'
+
+        } else {
+            return 'false'
+
+        };
+    };
+
+    Scratch.extensions.register(new Extension());
+})();

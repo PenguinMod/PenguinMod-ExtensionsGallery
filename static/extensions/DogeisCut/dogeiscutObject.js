@@ -417,6 +417,18 @@
             return ObjectType.toObject(new Map(processed))
         }
 
+        static validObject(x) {
+            if (x instanceof ObjectType) return true;
+            if (x instanceof Map) return true;
+            if (isPlainObject(x)) return true;
+            if (typeof x == "object" && typeof x.toJSON == "function") return true;
+            try {
+                let parsed = JSON.parse(Cast.toString(x));
+                if (isPlainObject(parsed)) return true;
+            } catch {}
+            return false;
+        }
+
         get(key) {
             key = ObjectType.forKey(key)
             return this.map.has(key) ? ObjectType.forObject(this.map.get(key)) : ""
@@ -1401,13 +1413,7 @@
         }
 
         is({ VALUE }) {
-            // haha you dont get compield ur a stoopid block
-            try {
-                const parsed = JSON.parse(VALUE)
-                return typeof parsed === 'object' && parsed !== null && !Array.isArray(parsed)
-            } catch {
-                return false
-            } 
+            return dogeiscutObject.Type.validObject(VALUE);
         }
 
         forEachK({ }, util) {

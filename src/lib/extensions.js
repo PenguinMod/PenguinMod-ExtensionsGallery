@@ -668,7 +668,6 @@ export default [
         isGitHub: true,
         tags: ["customtype","data","utility","new","large"],
         creatorAlias: "AndrewGaming587"
-    },
         {
         name: "3Dengine",
         description: "Professional 3D graphics engine for PenguinMod with lighting, materials, fog, raycasting, perspective projection and real-time rendering.",

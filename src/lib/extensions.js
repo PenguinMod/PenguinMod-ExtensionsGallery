@@ -672,7 +672,7 @@ export default [
         {
         name: "3Dengine",
         description: "Professional 3D graphics engine for PenguinMod with lighting, materials, fog, raycasting, perspective projection and real-time rendering.",
-        code: "hacttagame70/3Dcamera.js",
+        code: "hacttagame70/3Dengine.js",
         creator: "hacttagame70",
         isGitHub: true,
         tags: ["3d","engine","graphics","rendering","advanced","featured"]

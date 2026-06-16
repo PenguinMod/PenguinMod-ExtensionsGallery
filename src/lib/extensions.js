@@ -31,15 +31,6 @@ export default [
         creator: "ZiploxWasTaken",
     },
     {
-        name: "Achievements",
-        description: "An extension about achievements.",
-        tags: ["new"],
-        code: "ZiploxWasTaken/achievements.js",
-        banner: "ZiploxWasTaken/Achievements.svg",
-        isGitHub: true,
-        creator: "ZiploxWasTaken",
-    },
-    {
         name: "Server Storage",
         description: "Similar to the server storage blocks in the 'Storage' extension, but with a better server uptime and non-global keys.\nDid you know the server is open source?",
         code: "Ikelene/serverStorageExtension.js",

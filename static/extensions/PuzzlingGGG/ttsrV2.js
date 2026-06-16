@@ -179,7 +179,8 @@
                                 defaultValue: "Amazon US English (Joey)"
                             },
                             COMBINATION: {
-                                exemptFromNormalization: true
+                                exemptFromNormalization: true,
+                                shape: Scratch.BlockShape.PLUS
                             }
                         }
                     },
@@ -190,7 +191,8 @@
                         text: "speak [SPEECH]",
                         arguments: {
                             SPEECH: {
-                                exemptFromNormalization: true
+                                exemptFromNormalization: true,
+                                shape: Scratch.BlockShape.PLUS
                             }
                         }
                     },
@@ -200,7 +202,8 @@
                         text: "speak [SPEECH] and wait",
                         arguments: {
                             SPEECH: {
-                                exemptFromNormalization: true
+                                exemptFromNormalization: true,
+                                shape: Scratch.BlockShape.PLUS
                             }
                         }
                     },
@@ -214,7 +217,8 @@
                         text: "data uri of [SPEECH]",
                         arguments: {
                             SPEECH: {
-                                exemptFromNormalization: true
+                                exemptFromNormalization: true,
+                                shape: Scratch.BlockShape.PLUS
                             }
                         }
                     },
@@ -224,7 +228,8 @@
                         text: "add [SPEECH] to cache",
                         arguments: {
                             SPEECH: {
-                                exemptFromNormalization: true
+                                exemptFromNormalization: true,
+                                shape: Scratch.BlockShape.PLUS
                             }
                         }
                     },

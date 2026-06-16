@@ -414,14 +414,6 @@ export default [
         notes: "Some contributions by yuri-kiss :P",
     },
     {
-        name: "Project Page",
-        description: "Modify and affect the studio project page from the code. How annoying can an extension possibly be?",
-        code: "jwklong/projectpage.js",
-        banner: "jwklong/projectpage.avif",
-        creator: "jwklong",
-        isGitHub: true,
-    },
-    {
         name: "All Menus",
         description: "Every dropdown menu for each block, in one extension.",
         code: "Lily/AllMenus.js",

@@ -243,7 +243,9 @@ class RandomUtils {
   }
 
   uuid(args) {
-    return fetch(`https://api.allorigins.win/raw?url=https://www.uuidtools.com/api/generate/${args.VERSION}/count/1`)
+    const allowedVersions = ['v1', 'v4'];
+    const version = allowedVersions.includes(args.VERSION) ? args.VERSION : 'v4';
+    return fetch(`https://api.allorigins.win/raw?url=https://www.uuidtools.com/api/generate/${version}/count/1`)
     .then((response) => {
       if (response.ok) {
         return response.json();

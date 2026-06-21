@@ -67,9 +67,9 @@ export default [
     },
     {
         name: "GPU.sb3",
-        description: "Use WebGPU compute shaders to accelerate your projects.",
+        description: "Use WebGPU compute shaders to accelerate your projects. Use Pen+ for rendering, not this.",
         code: "derpygamer2142/gpusb3.js",
-        banner: "derpygamer2142/gpusb3.svg",
+        banner: "derpygamer2142/gpusb3.png",
         creator: "insanetaco2000",
         creatorAlias: "derpygamer2142",
         isGitHub: false,

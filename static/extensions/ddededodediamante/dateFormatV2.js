@@ -54,7 +54,7 @@
   }
 
   class ddeDateType {
-    customId = "ddeDateFormat.date"
+    customId = "ddeDateFormat.date";
 
     constructor(dateInput) {
       this._date =
@@ -66,7 +66,7 @@
     }
 
     isValid() {
-      return this._date instanceof Date && !isNaN(this._date.getTime());
+      return !isNaN(this._date.getTime());
     }
     toDate() {
       return new Date(this._date.getTime());
@@ -99,7 +99,7 @@
 
         const detail = element(
           "span",
-          this._date.toLocaleDateString(undefined, {
+          this._date.toLocaleDateString(activeLocale, {
             weekday: "short",
             year: "numeric",
             month: "short",
@@ -124,12 +124,9 @@
         flexDirection: "column",
         alignItems: "center",
       });
-      const top = element(
-        "div",
-        this.isValid() ? this._prettyShort() : "Invalid Date",
-        {},
-      );
-      const sub = element("small", this.isValid() ? this.toString() : "", {
+      const valid = this.isValid();
+      const top = element("div", valid ? this._prettyShort() : "Invalid Date", {});
+      const sub = element("small", valid ? this.toString() : "", {
         opacity: "0.7",
       });
 
@@ -242,9 +239,10 @@
   }
 
   function addToDate(d, amount, unit) {
-    if (isNaN(d?.getTime())) throw new Error("Invalid Date");
+    const time = d?.getTime();
+    if (isNaN(time)) throw new Error("Invalid Date");
 
-    const result = new Date(d.getTime());
+    const result = new Date(time);
     amount = Number(amount) || 0;
     switch ((unit || "").toLowerCase()) {
       case "milliseconds":
@@ -273,9 +271,11 @@
   }
 
   function diffDates(d1, d2, unit) {
-    if (isNaN(d1?.getTime()) || isNaN(d2?.getTime())) throw new Error("Invalid Date");
+    const t1 = d1?.getTime();
+    const t2 = d2?.getTime();
+    if (isNaN(t1) || isNaN(t2)) throw new Error("Invalid Date");
 
-    const ms = d1.getTime() - d2.getTime();
+    const ms = t1 - t2;
     const absMs = Math.abs(ms);
 
     switch ((unit || "").toLowerCase()) {
@@ -311,7 +311,17 @@
       },
     );
 
+  let activeLocale = undefined;
+
   class ddeDateExtension {
+    serialize() {
+      return { activeLocale };
+    }
+
+    deserialize(data) {
+      activeLocale = data.activeLocale;
+    }
+
     getInfo() {
       return {
         id: "ddeDateFormatV2",
@@ -476,6 +486,23 @@
             },
             ...ddeDateFormat.BlockOutput,
           },
+          { blockType: Scratch.BlockType.LABEL, text: "Locale" },
+          {
+            opcode: "setLocale",
+            blockType: Scratch.BlockType.COMMAND,
+            text: "set locale to [locale]",
+            arguments: {
+              locale: {
+                type: Scratch.ArgumentType.STRING,
+                menu: "locales",
+              },
+            },
+          },
+          {
+            opcode: "getLocale",
+            blockType: Scratch.BlockType.REPORTER,
+            text: "current locale",
+          },
         ],
         menus: {
           compareOperations: {
@@ -537,8 +564,50 @@
               { text: "ISO string", value: "iso" },
             ],
           },
+          locales: {
+            acceptReporters: true,
+            items: [
+              { text: "browser default", value: "default" },
+              { text: "English (US)", value: "en-US" },
+              { text: "English (UK)", value: "en-GB" },
+              { text: "Spanish (ES)", value: "es-ES" },
+              { text: "Spanish (MX)", value: "es-MX" },
+              { text: "French (FR)", value: "fr-FR" },
+              { text: "German (DE)", value: "de-DE" },
+              { text: "Italian (IT)", value: "it-IT" },
+              { text: "Portuguese (BR)", value: "pt-BR" },
+              { text: "Portuguese (PT)", value: "pt-PT" },
+              { text: "Dutch (NL)", value: "nl-NL" },
+              { text: "Polish (PL)", value: "pl-PL" },
+              { text: "Russian (RU)", value: "ru-RU" },
+              { text: "Japanese (JP)", value: "ja-JP" },
+              { text: "Chinese (CN)", value: "zh-CN" },
+              { text: "Chinese (TW)", value: "zh-TW" },
+              { text: "Korean (KR)", value: "ko-KR" },
+              { text: "Arabic (SA)", value: "ar-SA" },
+              { text: "Hindi (IN)", value: "hi-IN" },
+              { text: "Turkish (TR)", value: "tr-TR" },
+              { text: "Swedish (SE)", value: "sv-SE" },
+              { text: "Norwegian (NO)", value: "nb-NO" },
+              { text: "Danish (DK)", value: "da-DK" },
+              { text: "Finnish (FI)", value: "fi-FI" },
+              { text: "Greek (GR)", value: "el-GR" },
+              { text: "Hebrew (IL)", value: "he-IL" },
+              { text: "Indonesian (ID)", value: "id-ID" },
+              { text: "Thai (TH)", value: "th-TH" },
+              { text: "Vietnamese (VN)", value: "vi-VN" },
+            ],
+          },
         },
       };
+    }
+
+    setLocale({ locale }) {
+      activeLocale = locale === "default" ? undefined : locale;
+    }
+
+    getLocale() {
+      return activeLocale || "default";
     }
 
     toDateType(input) {
@@ -546,9 +615,7 @@
     }
 
     toNativeDate(input) {
-      if (input instanceof ddeDateType && input.isValid()) return input.toDate();
-      const d = this.toDateType(input);
-      return d.toDate();
+      return this.toDateType(input).toDate();
     }
 
     currentDate() {
@@ -569,7 +636,7 @@
       const d = this.toNativeDate(date);
       if (isNaN(d.getTime())) throw new Error("Invalid Date");
 
-      return d.toLocaleDateString(undefined, {
+      return d.toLocaleDateString(activeLocale, {
         weekday: type,
         year: "numeric",
         month: type,
@@ -600,15 +667,17 @@
     compareDate({ date1, date2, operation }) {
       const d1 = this.toNativeDate(date1);
       const d2 = this.toNativeDate(date2);
-      if (isNaN(d1.getTime()) || isNaN(d2.getTime())) throw new Error("Invalid Date");
+      const t1 = d1.getTime();
+      const t2 = d2.getTime();
+      if (isNaN(t1) || isNaN(t2)) throw new Error("Invalid Date");
 
       switch (operation) {
         case "after":
-          return d1.getTime() > d2.getTime();
+          return t1 > t2;
         case "before":
-          return d1.getTime() < d2.getTime();
+          return t1 < t2;
         case "same":
-          return d1.getTime() === d2.getTime();
+          return t1 === t2;
         default:
           return false;
       }
@@ -740,6 +809,7 @@
 
       const ms = d.getTime();
       let rounded;
+      const unitLower = unit.toLowerCase();
 
       const unitMs = {
         milliseconds: 1,
@@ -747,14 +817,14 @@
         minutes: 60000,
         hours: 3600000,
         days: 86400000,
-      }[unit.toLowerCase()];
+      }[unitLower];
 
       if (unitMs) {
         rounded = Math.round(ms / unitMs) * unitMs;
-      } else if (unit.toLowerCase() === "months") {
+      } else if (unitLower === "months") {
         const temp = new Date(d.getFullYear(), d.getMonth() + 0.5, 1);
         rounded = temp.getTime();
-      } else if (unit.toLowerCase() === "years") {
+      } else if (unitLower === "years") {
         const temp = new Date(d.getFullYear() + 0.5, 0, 1);
         rounded = temp.getTime();
       } else {
@@ -769,6 +839,7 @@
       if (isNaN(d)) throw new Error("Invalid Date");
 
       const now = new Date();
+      const day = d.getDay();
       const sameDay = (a, b) =>
         a.getFullYear() === b.getFullYear() &&
         a.getMonth() === b.getMonth() &&
@@ -776,9 +847,9 @@
 
       switch (property) {
         case "weekend":
-          return [0, 6].includes(d.getDay());
+          return day === 0 || day === 6;
         case "weekday":
-          return ![0, 6].includes(d.getDay());
+          return day !== 0 && day !== 6;
         case "today":
           return sameDay(d, now);
         case "yesterday":

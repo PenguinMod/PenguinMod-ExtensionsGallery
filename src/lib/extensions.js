@@ -669,4 +669,12 @@ export default [
         tags: ["customtype","data","utility","new","large"],
         creatorAlias: "AndrewGaming587"
     },
+    {
+    name: "MMO Engine",
+    description: "An unsandboxed extension that initializes network connections to lay the groundwork for multiplayer MMO games.",
+    code: "src/lib/Lawrence56354/mmo-init.js",
+    banner: "static/images/Lawrence56354/banner.png",
+    creator: "Lawrence56354",
+    isUnsandboxed: true
+}
 ];

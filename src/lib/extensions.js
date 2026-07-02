@@ -670,4 +670,14 @@ export default [
         tags: ["customtype","data","utility","new","large"],
         creatorAlias: "AndrewGaming587"
     },
+        {
+        name: "RPG Collisions",
+        description: "Make sprites avoid walking trough walls and more!",
+        code: "Gatoc_Dev/rpg collisions.js",
+        banner: "Gatoc_Dev/IMG_6103.jpeg",
+        creator: "Gatoc_Dev",
+        isGitHub: true,
+        tags: ["rpg","collisions","utility","new","large","2D"],
+        creatorAlias: "GatocDev"
+    },
 ];

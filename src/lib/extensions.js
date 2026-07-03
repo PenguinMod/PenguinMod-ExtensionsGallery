@@ -676,8 +676,18 @@ export default [
         code: "Gatoc_Dev/rpg collisions.js",
         banner: "Gatoc_Dev/IMG_6103.jpeg",
         creator: "Gatoc_Dev",
-        isGitHub: true,
+        isGitHub: false,
         tags: ["rpg","collisions","utility","new","large","2D"],
+        creatorAlias: "GatocDev"
+    },    
+        {
+        name: "Tags",
+        description: "Can help you with sprite management, or you can just give different behiavors based on tags.",
+        code: "Gatoc_Dev/tags.js",
+        banner: "Gatoc_Dev/IMG_6146.jpeg",
+        creator: "Gatoc_Dev",
+        isGitHub: false,
+        tags: ["sprite","tags","utility","new","small","management"],
         creatorAlias: "GatocDev"
     },
 ];

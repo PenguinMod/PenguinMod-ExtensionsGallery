@@ -271,7 +271,7 @@ export default [
         banner: "Embin/embintranslation.avif",
         creator: "embinmc",
         isGitHub: true, 
-        tags: ["data", "utility", "text", "strings"],
+        tags: ["data", "utility", "text"],
         creatorAlias: "Embin",
     },
     {
@@ -281,7 +281,7 @@ export default [
         banner: "DogeisCut/YetAnotherStringExtension.svg",
         creator: "DogeisCut",
         isGitHub: true, 
-        tags: ["strings", "builder", "small", "text", "utility"]
+        tags: ["builder", "small", "text", "utility"]
     },
     {
         name: "Regular Expressions",
@@ -290,7 +290,7 @@ export default [
         banner: "DogeisCut/dogeiscutRegularExpressions.svg",
         creator: "DogeisCut",
         isGitHub: true, 
-        tags: ["customtype", "strings", "regex", "text", "utility"]
+        tags: ["customtype", "regex", "text", "utility"]
     },
     {
         name: "Sets",
@@ -427,7 +427,7 @@ export default [
         banner: "DogeisCut/BeepBoxPlayer.svg",
         creator: "DogeisCut",
         isGitHub: true, 
-        tags: ["api", "music", "sounds", "ultrabox", "jummbox", "beepbox"]
+        tags: ["api", "music", "sounds"]
     },
     {
         name: "Update File (Direct Access)",

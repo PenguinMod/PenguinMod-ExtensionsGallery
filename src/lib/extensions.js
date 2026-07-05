@@ -91,16 +91,14 @@ export default [
         creator: "skyhigh173",
         isGitHub: true,
     },
-    /*{
-        name: "Scope Variable",
+    {
+        name: "Scope Variables",
         description: "Manage your variables in a block-like structure.",
-        code: "0znzw/ScopeVars.js",
+        code: "0znzw/ScopeVars2.js",
         banner: "0znzw/ScopeVars.avif",
         creator: "yuri-kiss",
         isGitHub: true,
-        unstable: true,
-        unstableReason: "This extension uses unstable techniques that may not always work.",
-    },*/
+    },
     {
         name: "Extra Timers",
         description: "Allows for the creation and management of additional timer blocks.",

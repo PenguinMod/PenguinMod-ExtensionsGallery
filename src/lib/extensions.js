@@ -6,6 +6,13 @@
 */
 export default [
     {
+        name: "Date to Hex",
+        description: "Blocks to change a date to hex and vice versa.",
+        code: "AeroHutch/date-to-hex.js",
+        banner: "AeroHutch/date-to-hex.png",
+        creator: "AeroHutch",
+    },
+    {
         name: "Pen+",
         description: "Extended pen section! Adds blocks for drawing triangles using textures and tints, drawing images and editing their pixels, etc.",
         code: "ObviousAlexC/PenPlus.js",

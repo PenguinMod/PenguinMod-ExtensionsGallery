@@ -670,4 +670,14 @@ export default [
         tags: ["customtype","data","utility","new","large"],
         creatorAlias: "AndrewGaming587"
     },
+
+        {
+        name: "Black Mold",
+        description: "mmmmm black mold",
+        code: "electricfuzzball_pm/blackMold.js",
+        banner: "electricfuzzball_pm/blackMold.svg",
+        creator: "FloppyDisk-OSC",
+        isGitHub: true,
+        creatorAlias: "ElectricFuzzball_PM"
+    },
 ];

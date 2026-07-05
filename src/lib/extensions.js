@@ -64,6 +64,7 @@ export default [
         code: "ObviousAlexC/3DMath.js",
         banner: "ObviousAlexC/3DMath.svg",
         creator: "pinksheep2917",
+        notes: "A bunch of new blocks were added by LSPECTRONIZTAR (with the help of Game Physics Cookbook by Gabor Szauer",
     },
     {
         name: "GPU.sb3",

@@ -1,4 +1,4 @@
-// Made by MubiLop (pls dont remove meeee)
+// Made by MubiLop (pls dont remove meee)
 
 (function(Scratch) {
     'use strict';

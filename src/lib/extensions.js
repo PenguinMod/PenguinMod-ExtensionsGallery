@@ -118,7 +118,16 @@ export default [
         banner: "pooiod/Dictation.svg",
         creator: "pooiod7",
     },
-        {
+    {
+        name: "Test Runner",
+        description: "Test that blocks behave as expected. Provides good error messages and error traceback.",
+        code: "GermanCodeEngineer/TestRunner.js",
+        banner: "GermanCodeEngineer/TestRunnerBanner.svg",
+        creator: "GermanCodeEngineer",
+        isGitHub: true, 
+        tags: ["utility", "tests", "testing", "errors", "debugging", "asserting", "assertions", "development", "control"],
+    },
+    {
         name: "Doodle Recognition",
         description: "A implementation of Google's Quick Draw image vision model",
         code: "TheShovel/doodlerec.js",
@@ -126,7 +135,7 @@ export default [
         creator: "TheShovel",
         isGitHub: true,
     },
-            {
+    {
         name: "Stylus",
         description: "Get the pressure and tilt of a stylus or graphic tablet",
         code: "sourdoggy/stylus extension.js",

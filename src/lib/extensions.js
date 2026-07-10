@@ -680,4 +680,12 @@ export default [
         isGitHub: true,
         creatorAlias: "ElectricFuzzball_PM"
     },
+         {
+        name: "Penguin Windows",
+        description: "A extension that allows creating, removing and more with windows through the power of JAVASCRIPT",
+        code: "That-One-Developer/penguinWindows.js",
+        banner: "That-One-Developer/penguinWindows.svg",
+        creator: "That-One-Developer",
+        isGitHub: true,
+    },
 ];

@@ -150,7 +150,7 @@ will become
 console.log("Hello world!");
 ```
 
-To type blocks in your documentation, specify `scratch` as the programming lanugage.
+To type blocks in your documentation, specify `scratch` as the programming language.
 
 Example:
 ````

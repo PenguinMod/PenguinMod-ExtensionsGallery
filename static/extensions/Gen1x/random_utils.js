@@ -53,7 +53,7 @@ function seededRandom(seed, min, max) {
   const a = 1664525;
   const c = 1013904223;
 
-  seed = (seed * a + c) % m;
+  seed = (((seed * a + c) % m) + m) % m;
 
   const normalized = seed / m;
 

@@ -1,118 +1,133 @@
-class Extension {
-    constructor() {
-        this.canvas = document.createElement("canvas");
-        this.ctx = this.canvas.getContext("2d");
+//oh yeah its moldin' time
+(function (Scratch) {
+    "use strict";
 
-        this.canvas.width = 480;
-        this.canvas.height = 360;
+    let overlay, canvas, ctx;
+    let running = false;
+    let growth = 3;
 
-        this.seeds = [];
-        this.enabled = false;
+    const GRID_SIZE = 4;
+    let cols = 0, rows = 0;
+    let grid = new Uint8Array(0);
+
+    function resize() {
+        if (!canvas) return;
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+        cols = Math.ceil(canvas.width / GRID_SIZE);
+        rows = Math.ceil(canvas.height / GRID_SIZE);
+        grid = new Uint8Array(cols * rows);
     }
 
-    getInfo() {
-        return {
-            id: "blackMold",
-            name: "Black Mold",
-            color1: "#111111",
-            color2: "#000000",
-            blocks: [
-                {
-                    opcode: "start",
-                    blockType: Scratch.BlockType.COMMAND,
-                    text: "start mold"
-                },
-                {
-                    opcode: "stop",
-                    blockType: Scratch.BlockType.COMMAND,
-                    text: "stop mold"
-                },
-                {
-                    opcode: "clear",
-                    blockType: Scratch.BlockType.COMMAND,
-                    text: "clear mold"
-                },
-                {
-                    opcode: "tick",
-                    blockType: Scratch.BlockType.COMMAND,
-                    text: "grow mold"
+    function createOverlay() {
+        if (overlay) return;
+        overlay = document.createElement("div");
+        Object.assign(overlay.style, {
+            position: "fixed", left: "0", top: "0", width: "100vw", height: "100vh",
+            pointerEvents: "none", zIndex: "999999"
+        });
+        canvas = document.createElement("canvas");
+        canvas.style.width = "100%"; canvas.style.height = "100%";
+        overlay.appendChild(canvas);
+        document.body.appendChild(overlay);
+        ctx = canvas.getContext("2d", { alpha: true });
+        resize();
+    }
+
+    function step() {
+        let nextGrid = new Uint8Array(grid);
+        
+        for (let y = 1; y < rows - 1; y++) {
+            for (let x = 1; x < cols - 1; x++) {
+                let i = y * cols + x;
+                
+                // added a mold age thing
+                if (grid[i] > 10) {
+                    nextGrid[i] -= 2;
+                } else if (grid[i] > 0) {
+                    nextGrid[i] = 0;
                 }
-            ]
-        };
-    }
 
-    start() {
-        this.enabled = true;
+                // growing the mold
+                if (grid[i] === 0) {
+                    let neighbors = 0;
+                    if (grid[i - cols - 1] > 0) neighbors++;
+                    if (grid[i - cols] > 0) neighbors++;
+                    if (grid[i - cols + 1] > 0) neighbors++;
+                    if (grid[i - 1] > 0) neighbors++;
+                    if (grid[i + 1] > 0) neighbors++;
+                    if (grid[i + cols - 1] > 0) neighbors++;
+                    if (grid[i + cols] > 0) neighbors++;
+                    if (grid[i + cols + 1] > 0) neighbors++;
 
-        if (this.seeds.length === 0) {
-            this.seeds.push({
-                x: Math.random() * 480,
-                y: Math.random() * 360,
-                r: 5
-            });
+                    if (neighbors > 0 && Math.random() < (neighbors * 0.15)) {
+                        nextGrid[i] = 255;
+                    }
+                }
+            }
         }
-
-        if (!this.overlay) {
-            this.overlay = document.createElement("canvas");
-            this.overlay.width = 480;
-            this.overlay.height = 360;
-            this.overlay.style.position = "absolute";
-            this.overlay.style.pointerEvents = "none";
-            this.overlay.style.left = "0";
-            this.overlay.style.top = "0";
-            this.overlay.style.width = "100%";
-            this.overlay.style.height = "100%";
-            this.overlay.style.zIndex = "9999";
-
-            this.octx = this.overlay.getContext("2d");
-
-            const stage = document.querySelector("canvas");
-            stage.parentElement.appendChild(this.overlay);
-        }
+        grid.set(nextGrid);
     }
 
-    stop() {
-        this.enabled = false;
-    }
-
-    clear() {
-        this.seeds = [];
-        if (this.octx) {
-            this.octx.clearRect(0,0,480,360);
-        }
-    }
-
-    tick() {
-        if (!this.enabled) return;
-
-        const ctx = this.octx;
-
-        // Grow existing blobs
-        for (const blob of this.seeds) {
-
-            blob.r += Math.random() * 0.5;
-
-            ctx.beginPath();
-            ctx.arc(
-                blob.x + (Math.random()-0.5)*blob.r*0.3,
-                blob.y + (Math.random()-0.5)*blob.r*0.3,
-                blob.r,
-                0,
-                Math.PI*2
-            );
-            ctx.fillStyle = "#000";
-            ctx.fill();
-
-            // Chance to branch
-            if (Math.random() < 0.04) {
-                this.seeds.push({
-                    x: blob.x + (Math.random()-0.5)*blob.r*4,
-                    y: blob.y + (Math.random()-0.5)*blob.r*4,
-                    r: 2
-                });
+    function draw() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        
+        for (let y = 0; y < rows; y++) {
+            for (let x = 0; x < cols; x++) {
+                let val = grid[y * cols + x];
+                if (val > 0) {
+                    let size = (GRID_SIZE * 0.8) + (Math.random() * GRID_SIZE * 0.4);
+                    let alpha = val / 255;
+                    ctx.fillStyle = `rgba(20, 25, 20, ${alpha})`;
+                    let ox = (Math.random() - 0.5) * 2;
+                    let oy = (Math.random() - 0.5) * 2;
+                    ctx.fillRect(x * GRID_SIZE + ox, y * GRID_SIZE + oy, size, size);
+                }
             }
         }
     }
-}
 
-Scratch.extensions.register(new Extension());
+    function loop() {
+        if (running) {
+            for (let i = 0; i < growth; i++) step();
+        }
+        draw();
+        requestAnimationFrame(loop);
+    }
+
+    class BlackMold {
+        getInfo() {
+            return {
+                id: "blackmold", name: "Black Mold",
+                color1: "#111111",
+                color2: "#000000",
+                color3: "#222222",
+                blocks: [
+                    { opcode: "start", blockType: Scratch.BlockType.COMMAND, text: "start black mold" },
+                    { opcode: "stop", blockType: Scratch.BlockType.COMMAND, text: "pause black mold" },
+                    { opcode: "clear", blockType: Scratch.BlockType.COMMAND, text: "clear black mold" },
+                    { opcode: "seed", blockType: Scratch.BlockType.COMMAND, text: "add a spore" },
+                    { 
+                        opcode: "setGrowth", blockType: Scratch.BlockType.COMMAND, 
+                        text: "set mold growth to [G]",
+                        arguments: { G: { type: Scratch.ArgumentType.NUMBER, defaultValue: 3 } }
+                    }
+                ]
+            };
+        }
+        start() { if(!overlay) createOverlay(); running = true; requestAnimationFrame(loop); }
+        stop() { running = false; }
+        clear() { grid.fill(0); }
+        seed() { 
+            for (let i = 0; i < 10; i++) {
+                let idx = Math.floor(Math.random() * grid.length);
+                grid[idx] = 255;
+            }
+        }
+        setGrowth(args) { growth = Math.max(1, Math.min(50, Math.floor(args.G))); }
+    }
+
+    Scratch.extensions.register(new BlackMold());
+})(Scratch);
+// all that glitters is gold
+// only shooting stars break the mold

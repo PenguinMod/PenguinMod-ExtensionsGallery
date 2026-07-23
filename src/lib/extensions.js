@@ -680,4 +680,13 @@ export default [
         isGitHub: true,
         creatorAlias: "ElectricFuzzball_PM"
     },
+        {
+        name: "Applele Translations",
+        description: "Helps with project multi-language translation, and if you have too much time you can make your own language",
+        code: "Dimix/Translation.js",
+        banner: "Dimix/Translation.pmg",
+        creator: "Dimixixixiixix",
+        isGitHub: true,
+        creatorAlias: "Dimix"
+    },
 ];

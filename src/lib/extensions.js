@@ -680,4 +680,12 @@ export default [
         isGitHub: true,
         creatorAlias: "ElectricFuzzball_PM"
     },
+    {
+        name: "HTML",
+        description: "Read HTML Data easily",
+        code: "dogstudiostuff/aHTML.js",
+        banner: "dogstudiostuff/aHTML.svg",
+        creator: "dogstudiostuff"
+    },
+    
 ];

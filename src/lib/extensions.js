@@ -325,7 +325,7 @@ export default [
         name: "Complex Numbers",
         description: "Complex Number Type for do complex analysis functions, better implementation than the one made by jwklong in Mathemathics extension lmao.", 
         code: "salagata/reisenComplex.js", 
-        banner: "salagata/reisenComplex_placeholder.svg"
+        banner: "salagata/reisenComplex_placeholder.svg",
         creator: "salagata", 
         tags: ["new","complex", "math", "graphics", "customtype", "utility"], 
         creatorAlias: "Reisen the Inaba", 

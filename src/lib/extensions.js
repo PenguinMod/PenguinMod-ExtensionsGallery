@@ -670,6 +670,17 @@ export default [
         tags: ["customtype","data","utility","new","large"],
         creatorAlias: "AndrewGaming587"
     },
+    {
+        name: "Complex Numbers",
+        description: "Complex Number Type for do complex analysis functions, better implementation than the one made by jwklong in Mathemathics extension lmao.", 
+        code: "salagata/reisenComplex.js", 
+        creator: "salagata", 
+        tags: ["complex", "math", "graphics"], 
+        creatorAlias: "Reisen", 
+        notes: "Additional help by jwklong extensions", 
+        unstable: false,
+        isGitHub: true,
+    },
 
         {
         name: "Black Mold",

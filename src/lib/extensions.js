@@ -322,6 +322,18 @@ export default [
         tags: ["new", "effects", "control", "data", "utility"]
     },
     {
+        name: "Complex Numbers",
+        description: "Complex Number Type for do complex analysis functions, better implementation than the one made by jwklong in Mathemathics extension lmao.", 
+        code: "salagata/reisenComplex.js", 
+        banner: "salagata/reisenComplex_placeholder.svg"
+        creator: "salagata", 
+        tags: ["new","complex", "math", "graphics", "customtype", "utility"], 
+        creatorAlias: "Reisen the Inaba", 
+        notes: "Additional help by jwklong extensions", 
+        unstable: false,
+        isGitHub: true,
+    },
+    {
         name: "Blobs",
         description: "An extension made for handling blobs which can be used to store files. Allows to easily make blobs for the Js extension",
         code: "Faunks/Blobs.js",
@@ -669,17 +681,6 @@ export default [
         isGitHub: true,
         tags: ["customtype","data","utility","new","large"],
         creatorAlias: "AndrewGaming587"
-    },
-    {
-        name: "Complex Numbers",
-        description: "Complex Number Type for do complex analysis functions, better implementation than the one made by jwklong in Mathemathics extension lmao.", 
-        code: "salagata/reisenComplex.js", 
-        creator: "salagata", 
-        tags: ["complex", "math", "graphics"], 
-        creatorAlias: "Reisen", 
-        notes: "Additional help by jwklong extensions", 
-        unstable: false,
-        isGitHub: true,
     },
 
         {

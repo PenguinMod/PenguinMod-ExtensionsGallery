@@ -329,7 +329,7 @@ export default [
         creator: "Dicuo",
         creatorAlias: "Div",
         isGitHub: true,
-        tags: ["customtype", "3D", "data", "utility", "math"]
+        tags: ["new", "customtype", "3D", "data", "utility", "math"]
     },
     {
         name: "Blobs",

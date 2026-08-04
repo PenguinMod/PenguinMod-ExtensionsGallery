@@ -309,7 +309,7 @@ export default [
         creator: "Dicuo",
         creatorAlias: "Div",
         isGitHub: true,
-        tags: ["new", "customtype", "iterators", "data", "utility", "builder"]
+        tags: ["customtype", "iterators", "data", "utility", "builder"]
     },
     {
         name: "Algebraic Effects",
@@ -319,7 +319,17 @@ export default [
         creator: "Dicuo",
         creatorAlias: "Div",
         isGitHub: true,
-        tags: ["new", "effects", "control", "data", "utility"]
+        tags: ["effects", "control", "data", "utility"]
+    },
+    {
+        name: "3D Vectors & Quaternions",
+        description: "Perform 3D Math and Rotations with Vectors and Quaternions",
+        code: "Div/divVecQuat.js",
+        banner: "Div/divVecQuat.svg",
+        creator: "Dicuo",
+        creatorAlias: "Div",
+        isGitHub: true,
+        tags: ["customtype", "3D", "data", "utility", "math"]
     },
     {
         name: "Blobs",

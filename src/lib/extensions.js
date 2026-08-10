@@ -151,6 +151,14 @@ export default [
         isGitHub: true,
     },
     {
+        name: "Velora",
+        description: "Velora is an ecosystem provider that enables cross-platform communication, social features, and cloud storage, all wired together.\nOne Account, Hundreds of Projects.",
+        code: "Ikelene/velora_extension.js",
+        banner: "Ikelene/veloraBanner.png",
+        creator: "Ikelene",
+        isGitHub: true,
+    },
+    {
         name: "E2EE",
         description: "A general-purpose E2EE (End-to-End Encryption) extension for Scratch.",
         code: "MikeDev101/e2ee.js",

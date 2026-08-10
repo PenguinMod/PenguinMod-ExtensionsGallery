@@ -3,7 +3,7 @@
 
     class IkeNotifyPenguin {
         constructor() {
-            this.apiUrl = 'https://ikelene.dev/notifications/v2';
+            this.apiUrl = 'https://ikelene.net/notifications/v2';
             this.projectId = null; 
         }
 

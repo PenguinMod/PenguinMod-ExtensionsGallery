@@ -440,6 +440,17 @@ export default [
         tags: ["api", "music", "sounds"]
     },
     {
+        name: "Internet Radio",
+        description: "Internet Radio allows you to stream live audio from thousands of internet radio stations while providing data to create music visualizers or anything in-between.",
+        code: "Ikelene/internetRadio.js",
+        banner: "Ikelene/internetRadio.svg",
+        creator: "Ikelene",
+        isGitHub: true,
+        unstable: true,
+        unstableReason: "Some radio stations / URLs may not work due to CORS or not supporting a proper audio format. Do not report this, it's normal.",
+        tags: ["api", "music"]
+    },
+    {
         name: "Update File (Direct Access)",
         description: "A simple extension that uses the File System Access API to update files dynamically.",
         code: "Anonymous_cat1/updateFile.js",

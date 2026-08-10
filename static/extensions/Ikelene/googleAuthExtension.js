@@ -69,7 +69,7 @@ class GoogleAuthExtension {
 
     login() {
         const clientId = '382430967410-3svk456rj8ntlu3d3gd9oma09i96cpr9.apps.googleusercontent.com';
-        const redirectUri = 'https://ikelene.dev/google/googleLogin.php';
+        const redirectUri = 'https://ikelene.net/google/googleLogin.php';
         const scope = 'profile email';
 
         const sourceDomain = window.location.hostname;
@@ -81,7 +81,7 @@ class GoogleAuthExtension {
         this.authWindow = window.open(authUrl, 'Google Login', 'width=500,height=600');
 
         window.addEventListener('message', (event) => {
-            if (event.origin === 'https://ikelene.dev') {
+            if (event.origin === 'https://ikelene.net') {
                 const { accountName, fullName, profilePicture, userId, locale, emailVerified } = event.data;
                 this.accountName = accountName;
                 this.fullName = fullName;

@@ -1,9 +1,5 @@
 (function(Scratch) {
   'use strict';
-
-  // Platformer Physics 2D
-  // A clean, professional 2D platformer physics extension
-
   const THEME = {
     primary:   '#3892D1',
     secondary: '#2671A5',

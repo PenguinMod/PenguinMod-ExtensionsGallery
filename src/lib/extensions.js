@@ -690,4 +690,11 @@ export default [
         isGitHub: true,
         creatorAlias: "ElectricFuzzball_PM"
     },
+    {
+    name: "Platformer Physics",
+    description: "A 2D platformer physics engine featuring smooth movement, gravity, collision detection, and advanced jump controls.",
+    code: "4lon3D4rk/platformer-physics.js",
+    banner: "4lon3D4rk/icon.png",
+    creator: "4lon3D4rk"
+    }
 ];

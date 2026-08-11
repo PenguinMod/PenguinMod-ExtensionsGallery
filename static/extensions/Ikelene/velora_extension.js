@@ -5,7 +5,7 @@
 
   const SERVER_HTTP = 'https://velora.ikelene.net';
   const SERVER_WS   = 'wss://velora.ikelene.net';
-  const EXT_ID      = 'velora';
+  const EXT_ID      = 'ikelenepmvelora';
 
   function getFingerprint() {
     return [
@@ -215,7 +215,7 @@
           { opcode: 'setProfileNote',    blockType: 'command',  text: 'set note for [USER] to [NOTE]',  arguments: { USER: { type: 'string', defaultValue: 'username' }, NOTE: { type: 'string', defaultValue: '' } } },
           { opcode: 'deleteProfileNote', blockType: 'command',  text: 'delete note for [USER]',         arguments: { USER: { type: 'string', defaultValue: 'username' } } },
 
-          // money!!! 🤑
+          // currency 🤑
           { blockType: 'label', text: 'Currency' },
           { opcode: 'getBalance',       blockType: 'reporter',text: 'get balance' },
           { opcode: 'transferCredits',  blockType: 'command', text: 'transfer [AMOUNT] credits to [USER]', arguments: { AMOUNT: { type: 'number', defaultValue: 10 }, USER: { type: 'string', defaultValue: 'username' } } },
@@ -1225,10 +1225,6 @@
   }
 
   // FINALLY we can register (this took me a while to make holy crap)
-  if (typeof Scratch !== 'undefined') {
-    Scratch.extensions.register(new VeloraExtension(Scratch.vm.runtime));
-  } else if (typeof window !== 'undefined') {
-    window._VeloraExtension = VeloraExtension;
-  }
+  Scratch.extensions.register(new VeloraExtension(Scratch.vm.runtime));
 
 })();

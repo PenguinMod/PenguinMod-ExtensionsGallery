@@ -36,6 +36,8 @@ import PaintUtils from "./PaintUtils.md?raw";
 // Resolution
 import Resolution from "./Resolution.md?raw";
 
+// Bitwise+
+import PageBitsAndHexaDocs from "./bitsandhexa.md?raw";
 // Project Interfaces
 import ProjectInterfaces from "./ProjectInterfaces.md?raw";
 
@@ -78,6 +80,8 @@ export default {
     // Resolution
     "Resolution": Resolution,
 
+    // Bitwise+
+    "bitsandhexa": PageBitsAndHexaDocs,
     // Project Interfaces
     "ProjectInterfaces": ProjectInterfaces,
 

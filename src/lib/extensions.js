@@ -548,14 +548,14 @@ export default [
         creator: "WAYLIVES",
         isGitHub: false,
     },
-    {
+    /*{
         name: "More Types",
         description: "Adds more value types to PenguinMod, implementing Functions, Objects, Arrays, Sets, Maps, Symbols and Nothing.",
         code: "VeryGoodScratcher42/More-Types.js",
         banner: "VeryGoodScratcher42/More-Types.avif",
         creator: "VeryGoodScratcher42",
         isGitHub: false,
-    },
+    },*/
     {
         name: "oneko",
         description: "Cute cat that follows you on the block area.",

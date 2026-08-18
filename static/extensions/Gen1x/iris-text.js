@@ -273,7 +273,6 @@ Enjoy!! :D
             char.strike = override.strike;
             char.size = override.size;
             char.font = override.font;
-            char.tags = override.tags.slice();
         }
     }
 
@@ -614,12 +613,15 @@ Enjoy!! :D
         glyphMeasureCtx.textRendering = 'optimizeLegibility';
     } catch (e) {}
 
-    function glyphCacheKey(char, fontFamily, size, weight, style, color) {
+    const GLYPH_CACHE_LIMIT = 2000;
+    const TINT_CACHE_LIMIT = 512;
+
+    function glyphCacheKey(char, fontFamily, size, weight, style) {
         return char + '\u0001' + fontFamily + '\u0001' + size + '\u0001' +
-            weight + '\u0001' + style + '\u0001' + color;
+            weight + '\u0001' + style;
     }
 
-    function rasterizeGlyph(char, fontFamily, size, weight, style, color) {
+    function rasterizeGlyph(char, fontFamily, size, weight, style) {
         const px = Math.max(1, Math.round(size * GLYPH_OVERSAMPLE));
         const pad = Math.max(2, Math.round(size * GLYPH_PADDING_EM * GLYPH_OVERSAMPLE));
         const fontStr = `${style} ${weight} ${px}px ${fontFamily}`;
@@ -650,7 +652,7 @@ Enjoy!! :D
         const ctx = canvas.getContext('2d');
         ctx.font = fontStr;
         ctx.textBaseline = 'alphabetic';
-        ctx.fillStyle = color;
+        ctx.fillStyle = '#ffffff';
         try {
             ctx.textRendering = 'optimizeLegibility';
         } catch (e) {}
@@ -660,6 +662,7 @@ Enjoy!! :D
 
         return {
             canvas,
+            tinted: new Map(),
             advance: advance / GLYPH_OVERSAMPLE,
             baselineOriginXEm: baselineX / GLYPH_OVERSAMPLE,
             baselineOriginYEm: baselineY / GLYPH_OVERSAMPLE,
@@ -668,14 +671,50 @@ Enjoy!! :D
         };
     }
 
-    function getGlyphBitmap(char, fontFamily, size, weight, style, color) {
-        const key = glyphCacheKey(char, fontFamily, size, weight, style, color);
+    function getGlyphShape(char, fontFamily, size, weight, style) {
+        const key = glyphCacheKey(char, fontFamily, size, weight, style);
         let entry = glyphCache.get(key);
         if (!entry) {
-            entry = rasterizeGlyph(char, fontFamily, size, weight, style, color);
+            if (glyphCache.size >= GLYPH_CACHE_LIMIT) {
+                glyphCache.delete(glyphCache.keys().next().value);
+            }
+            entry = rasterizeGlyph(char, fontFamily, size, weight, style);
             glyphCache.set(key, entry);
         }
         return entry;
+    }
+
+    function tintGlyph(shape, color) {
+        let tintedCanvas = shape.tinted.get(color);
+        if (tintedCanvas) return tintedCanvas;
+
+        tintedCanvas = document.createElement('canvas');
+        tintedCanvas.width = shape.canvas.width;
+        tintedCanvas.height = shape.canvas.height;
+        const tctx = tintedCanvas.getContext('2d');
+        tctx.fillStyle = color;
+        tctx.fillRect(0, 0, tintedCanvas.width, tintedCanvas.height);
+        tctx.globalCompositeOperation = 'destination-in';
+        tctx.drawImage(shape.canvas, 0, 0);
+
+        if (shape.tinted.size >= TINT_CACHE_LIMIT) {
+            shape.tinted.delete(shape.tinted.keys().next().value);
+        }
+        shape.tinted.set(color, tintedCanvas);
+        return tintedCanvas;
+    }
+
+    function getGlyphBitmap(char, fontFamily, size, weight, style, color) {
+        const shape = getGlyphShape(char, fontFamily, size, weight, style);
+        const canvas = tintGlyph(shape, color);
+        return {
+            canvas,
+            advance: shape.advance,
+            baselineOriginXEm: shape.baselineOriginXEm,
+            baselineOriginYEm: shape.baselineOriginYEm,
+            fontAscentEm: shape.fontAscentEm,
+            fontDescentEm: shape.fontDescentEm
+        };
     }
 
     function strokeUnderline(ctx, glyph, glyphX, glyphY, startX, endX, y, lineWidth) {
@@ -998,7 +1037,6 @@ Enjoy!! :D
     }
 
     const pendingRenderTargets = new Set();
-    const pendingCharacterThreadStarts = new Set();
     let renderFlushScheduled = false;
 
     function requestRenderFlush() {
@@ -1015,17 +1053,12 @@ Enjoy!! :D
     function flushPendingRenders() {
         renderFlushScheduled = false;
         const renderTargets = new Set(pendingRenderTargets);
-        for (const target of pendingCharacterThreadStarts) renderTargets.add(target);
         for (const target of renderTargets) {
-            const needsRender = pendingRenderTargets.delete(target);
-            const startsCharacterThreads = pendingCharacterThreadStarts.delete(target);
+            pendingRenderTargets.delete(target);
             const state = getState(target);
-            if (needsRender && state.visible) renderTarget(target);
-            if (startsCharacterThreads && state.visible) {
-                startCharacterThreads(target);
-            }
+            if (state.visible) renderTarget(target);
         }
-        if (pendingRenderTargets.size || pendingCharacterThreadStarts.size) requestRenderFlush();
+        if (pendingRenderTargets.size) requestRenderFlush();
     }
 
     function flushRenderIfDirty(target) {
@@ -1033,21 +1066,11 @@ Enjoy!! :D
         pendingRenderTargets.delete(target);
         const state = getState(target);
         if (state.visible) renderTarget(target);
-        if (pendingCharacterThreadStarts.delete(target) && state.visible) {
-            startCharacterThreads(target);
-        }
-        if (pendingRenderTargets.size || pendingCharacterThreadStarts.size) requestRenderFlush();
+        if (pendingRenderTargets.size) requestRenderFlush();
     }
 
     function scheduleTextRender(target) {
-        pendingCharacterThreadStarts.add(target);
-        const state = getState(target);
-        if (state.paintDirty || state.layoutKey !== getLayoutKey(state) || !state.layout ||
-            state.skinId === null || pendingRenderTargets.has(target)) {
-            scheduleRender(target);
-        } else {
-            requestRenderFlush();
-        }
+        scheduleRender(target);
     }
 
     function schedulePaint(target, state) {
@@ -1366,15 +1389,15 @@ Enjoy!! :D
             }
 
             if (state.textBorder.enabled && Number(state.textBorder.size) > 0) {
+                const shape = getGlyphShape(op.text, fontFamily, fontSize, fontWeight, fontStyle);
+                const borderGlyph = tintGlyph(shape, state.textBorder.color);
                 ctx.save();
                 ctx.globalAlpha = (hasOpacity ? op.opacity : 1) * Math.max(0, Math.min(100, Number(state.textBorder.opacity) || 0)) / 100;
-                ctx.shadowColor = state.textBorder.color;
-                ctx.shadowBlur = 0;
                 const borderSize = Math.max(0, Number(state.textBorder.size) || 0) * DEST_SCALE;
                 const borderOffsets = [[-borderSize, 0], [borderSize, 0], [0, -borderSize], [0, borderSize], [-borderSize, -borderSize], [borderSize, -borderSize], [-borderSize, borderSize], [borderSize, borderSize]];
                 for (const [offsetX, offsetY] of borderOffsets) {
                     if (!hasRotation) {
-                        drawGlyph(drawXEm * DEST_SCALE + offsetX, drawYEm * DEST_SCALE + offsetY);
+                        ctx.drawImage(borderGlyph, drawXEm * DEST_SCALE + offsetX, drawYEm * DEST_SCALE + offsetY);
                     } else {
                         const cx = op.x * DEST_SCALE;
                         const cy = op.y * DEST_SCALE;
@@ -1382,7 +1405,7 @@ Enjoy!! :D
                         ctx.translate(cx, cy);
                         ctx.rotate(-op.rotation * Math.PI / 180);
                         ctx.translate(-cx, -cy);
-                        drawGlyph(drawXEm * DEST_SCALE + offsetX, drawYEm * DEST_SCALE + offsetY);
+                        ctx.drawImage(borderGlyph, drawXEm * DEST_SCALE + offsetX, drawYEm * DEST_SCALE + offsetY);
                         ctx.restore();
                     }
                 }
@@ -1476,285 +1499,11 @@ Enjoy!! :D
         state.revealToken++;
         state.paintDirty = true;
         state.paintFingerprint = null;
-        pendingCharacterThreadStarts.delete(target);
         const costume = target.getCostumes()[target.currentCostume];
         if (costume && runtime.renderer) {
             runtime.renderer.updateDrawableSkinId(target.drawableID, costume.skinId);
             runtime.requestRedraw();
         }
-        stopCharacterHatThreads(target);
-    }
-
-    const charScripts = {};
-
-    function stopCharacterHatThreads(target) {
-        target._irisCharSequenceActive = false;
-        const threads = target._irisCharSequenceThreads;
-        if (threads && threads.length) {
-            const ownedThreads = new Set(threads);
-            for (let i = runtime.threads.length - 1; i >= 0; i--) {
-                const thread = runtime.threads[i];
-                if (ownedThreads.has(thread)) {
-                    thread.isKilled = true;
-                    runtime.threads.splice(i, 1);
-                }
-            }
-        }
-        target._irisCharSequenceThreads = [];
-        target._irisCharThreadCache = null;
-    }
-
-    function createBlocksSnapshot(sourceBlocks, rootBlockId, rt) {
-        const BlocksClass = sourceBlocks.constructor;
-        const snapshot = new BlocksClass(rt, true);
-        snapshot.forceNoGlow = true;
-
-        const sourceMap = sourceBlocks._blocks;
-        const visited = Object.create(null);
-
-        function copyBlock(id) {
-            if (!id || visited[id] || !sourceMap[id]) return;
-            visited[id] = true;
-            const original = sourceMap[id];
-            const clone = JSON.parse(JSON.stringify(original));
-            snapshot._blocks[id] = clone;
-
-            if (clone.inputs) {
-                for (const inputKey in clone.inputs) {
-                    const input = clone.inputs[inputKey];
-                    if (input && input.block) {
-                        copyBlock(input.block);
-                    }
-                    if (input && input.shadow && input.shadow !== input.block) {
-                        copyBlock(input.shadow);
-                    }
-                }
-            }
-
-            if (clone.next) {
-                copyBlock(clone.next);
-            }
-
-            if (clone.opcode === 'procedures_call' && clone.mutation && clone.mutation.proccode) {
-                const defId = sourceBlocks.getProcedureDefinition(clone.mutation.proccode);
-                if (defId) {
-                    copyBlock(defId);
-                }
-            }
-        }
-
-        copyBlock(rootBlockId);
-
-        if (snapshot._blocks[rootBlockId]) {
-            snapshot._blocks[rootBlockId].parent = null;
-            snapshot._blocks[rootBlockId].topLevel = true;
-        }
-        snapshot._scripts = [rootBlockId];
-
-        return snapshot;
-    }
-
-    const CHAR_REPORTER_OPCODES = ['irisText_currentCharValue', 'irisText_currentCharIndex'];
-
-    function stackUsesCharReporter(blocks, blockId) {
-        const seen = Object.create(null);
-
-        function walk(id) {
-            if (!id || seen[id]) return false;
-            seen[id] = true;
-            const block = blocks.getBlock(id);
-            if (!block) return false;
-            if (CHAR_REPORTER_OPCODES.indexOf(block.opcode) !== -1) return true;
-
-            if (block.inputs) {
-                for (const key in block.inputs) {
-                    const input = block.inputs[key];
-                    if (input && input.block && walk(input.block)) return true;
-                    if (input && input.shadow && input.shadow !== input.block && walk(input.shadow)) return true;
-                }
-            }
-            if (block.opcode === 'procedures_call' && block.mutation && block.mutation.proccode) {
-                const defId = blocks.getProcedureDefinition(block.mutation.proccode);
-                if (defId && walk(defId)) return true;
-            }
-            if (walk(block.next)) return true;
-            return false;
-        }
-
-        return walk(blockId);
-    }
-
-    let ThreadClass = null;
-
-    function createCharacterThread(entry, box) {
-        if (!ThreadClass) {
-            ThreadClass = runtime.threads.length > 0 ? runtime.threads[0].constructor : null;
-        }
-        if (!ThreadClass) return null;
-        const thread = new ThreadClass(entry.stack || 'irisText_char');
-        thread.target = entry.target;
-        thread.stackClick = false;
-        thread.updateMonitor = false;
-        thread.blockContainer = entry.blocks || entry.target.blocks;
-        thread._irisChar = box;
-        thread.pushStack(entry.stack || 'irisText_char');
-        if (entry.func) {
-            thread.procedures = Object.assign({}, entry.proc);
-            thread.generator = entry.func(thread, entry.target, runtime, runtime.getTargetForStage ? runtime.getTargetForStage() : null);
-            thread.isCompiled = true;
-        } else if (entry.compiledResult) {
-            const result = entry.compiledResult;
-            thread.procedures = {};
-            if (result.procedures) {
-                for (const procedureCode of Object.keys(result.procedures)) {
-                    thread.procedures[procedureCode] = result.procedures[procedureCode](thread);
-                }
-            }
-            if (typeof result.startingFunction === 'function') {
-                thread.generator = result.startingFunction(thread)();
-            }
-            thread.executableHat = result.executableHat;
-            thread.isCompiled = true;
-        } else if (typeof thread.tryCompile === 'function' && runtime.compilerOptions && runtime.compilerOptions.enabled) {
-            thread.tryCompile();
-        }
-        runtime.threads.push(thread);
-        if (runtime.threadMap && typeof thread.getId === 'function') {
-            runtime.threadMap.set(thread.getId(), thread);
-        }
-        return thread;
-    }
-
-    function restartCharacterThread(cached, entry, box) {
-        if (!ThreadClass) ThreadClass = cached.constructor;
-        const newThread = new ThreadClass(entry.stack || 'irisText_char');
-        newThread.target = entry.target;
-        newThread.stackClick = false;
-        newThread.updateMonitor = false;
-        newThread.blockContainer = entry.blocks || entry.target.blocks;
-        newThread._irisChar = box;
-        newThread.pushStack(entry.stack || 'irisText_char');
-        if (entry.func) {
-            newThread.procedures = Object.assign({}, entry.proc);
-            newThread.generator = entry.func(newThread, entry.target, runtime, runtime.getTargetForStage ? runtime.getTargetForStage() : null);
-            newThread.isCompiled = true;
-        } else if (entry.compiledResult) {
-            const result = entry.compiledResult;
-            newThread.procedures = {};
-            if (result.procedures) {
-                for (const procedureCode of Object.keys(result.procedures)) {
-                    newThread.procedures[procedureCode] = result.procedures[procedureCode](newThread);
-                }
-            }
-            if (typeof result.startingFunction === 'function') {
-                newThread.generator = result.startingFunction(newThread)();
-            }
-            newThread.executableHat = result.executableHat;
-            newThread.isCompiled = true;
-        } else if (typeof newThread.tryCompile === 'function' && runtime.compilerOptions && runtime.compilerOptions.enabled) {
-            newThread.tryCompile();
-        }
-        if (runtime.threadMap && typeof newThread.getId === 'function') {
-            runtime.threadMap.set(newThread.getId(), newThread);
-        }
-        const idx = runtime.threads.indexOf(cached);
-        if (idx !== -1) {
-            runtime.threads[idx] = newThread;
-        } else {
-            runtime.threads.push(newThread);
-        }
-        return newThread;
-    }
-
-    function startCharacterThread(entry, box, threads, cache, nextCache, liveThreads) {
-        if (!entry.func && (!entry.blocks || entry.blocks.getBlock(entry.stack) === undefined)) return;
-        const cacheKey = entry.tag + '\u0001' + box.index;
-        const cached = cache && cache.get(cacheKey);
-        let thread;
-        if (cached && (entry.func || cached.topBlock === entry.stack) && liveThreads.has(cached)) {
-            thread = restartCharacterThread(cached, entry, box);
-        } else {
-            thread = createCharacterThread(entry, box);
-        }
-        if (!thread) return;
-        if (thread.status !== thread.constructor.STATUS_DONE) {
-            runtime.sequencer.stepThread(thread);
-        }
-        nextCache.set(cacheKey, thread);
-        threads.push(thread);
-    }
-
-    function startCharacterThreadsForEntry(state, entry, threads, cache, nextCache, liveThreads) {
-        const indices = state.charsByTag.get(entry.tag);
-        if (!indices || !indices.length) return;
-
-        if (entry.perChar) {
-            for (const idx of indices) {
-                const box = state.charBoxes[idx];
-                if (box) startCharacterThread(entry, box, threads, cache, nextCache, liveThreads);
-            }
-        } else {
-            const box = state.charBoxes[indices[0]];
-            if (box) startCharacterThread(entry, box, threads, cache, nextCache, liveThreads);
-        }
-    }
-
-    function startCharacterThreads(target) {
-        const state = getState(target);
-        const name = target.id;
-
-        const previousThreads = target._irisCharSequenceThreads;
-        const cache = target._irisCharThreadCache;
-        const nextCache = new Map();
-        const liveThreads = new Set(runtime.threads);
-
-        runtime.startHats('irisText_onRenderComplete', null, target);
-
-        const scriptMap = charScripts[name];
-        const threads = [];
-        target._irisCharSequenceThreads = threads;
-
-        if (scriptMap) {
-            for (const tag in scriptMap) {
-                const entry = scriptMap[tag];
-                if (entry) {
-                    startCharacterThreadsForEntry(state, entry, threads, cache, nextCache, liveThreads);
-                }
-            }
-        }
-
-        if (previousThreads && previousThreads.length) {
-            const reused = new Set(threads);
-            for (let i = runtime.threads.length - 1; i >= 0; i--) {
-                const thread = runtime.threads[i];
-                if (!reused.has(thread) && previousThreads.indexOf(thread) !== -1) {
-                    thread.isKilled = true;
-                    runtime.threads.splice(i, 1);
-                }
-            }
-        }
-
-        target._irisCharThreadCache = nextCache;
-        target._irisCharSequenceActive = threads.length > 0;
-    }
-
-    function charThreadsStillActive(target) {
-        const threads = target._irisCharSequenceThreads;
-        if (!threads || !threads.length) {
-            target._irisCharSequenceActive = false;
-            return false;
-        }
-        const sequenceThreads = new Set(threads);
-        const active = [];
-        for (const thread of runtime.threads) {
-            if (sequenceThreads.has(thread)) active.push(thread);
-        }
-        target._irisCharSequenceThreads = active;
-        if (!active.length) {
-            target._irisCharSequenceActive = false;
-            return false;
-        }
-        return true;
     }
 
     function startTypingCharacterHat(target, char, index) {
@@ -1772,6 +1521,16 @@ Enjoy!! :D
         target._irisTypingChar = null;
     }
 
+    function taggedCharacterIndices(target, tag) {
+        const state = getState(target);
+        const chars = parseRichText(state.rawText, state.baseStyle);
+        const indices = [];
+        for (let index = 0; index < chars.length; index++) {
+            if (chars[index].tags.includes(tag)) indices.push(index);
+        }
+        return indices;
+    }
+
     class IrisText {
         constructor() {
             this._onTargetRemoved = this._onTargetRemoved.bind(this);
@@ -1785,38 +1544,35 @@ Enjoy!! :D
             }
         }
 
-        _scheduleCompiledTag(tagInput, func, thread, target) {
+        *_repeatCompiledTag(tagInput, func, thread, target, stage) {
             const tag = Scratch.Cast.toString(tagInput).toLowerCase();
-            const name = target.id;
-            if (charScripts[name] === undefined) {
-                charScripts[name] = Object.create(null);
+            const indices = taggedCharacterIndices(target, tag);
+            const rootFrame = thread.stackFrames[0];
+            rootFrame.irisTagCharacterNumber = 0;
+
+            for (const index of indices) {
+                rootFrame.irisTagCharacterNumber = index + 1;
+                yield* func(thread, target, runtime, stage);
             }
-            charScripts[name][tag] = {
-                func: func,
-                proc: thread && thread.procedures ? Object.assign({}, thread.procedures) : {},
-                target: target,
-                tag: tag,
-                perChar: true
-            };
         }
 
         getCompileInfo() {
             return {
                 ir: {
-                    scheduleTagBlocks: (generator, block) => ({
+                    repeatForTag: (generator, block) => ({
                         kind: 'stack',
                         tag: generator.descendInputOfBlock(block, 'TAG'),
                         substack: generator.descendSubstack(block, 'SUBSTACK')
                     }),
-                    currentCharValue: (generator, block) => ({
+                    currentCharValue: () => ({
                         kind: 'input'
                     }),
-                    currentCharIndex: (generator, block) => ({
+                    currentCharIndex: () => ({
                         kind: 'input'
                     })
                 },
                 js: {
-                    scheduleTagBlocks: (node, compiler, imports) => {
+                    repeatForTag: (node, compiler, imports) => {
                         const temp = compiler.source;
                         compiler.source = '(function*(thread, target, runtime, stage) {\n';
                         if (node.substack) {
@@ -1825,13 +1581,13 @@ Enjoy!! :D
                         compiler.source += '})';
                         const funcExpr = compiler.source;
                         compiler.source = temp;
-                        compiler.source += `runtime.ext_irisText._scheduleCompiledTag(${compiler.descendInput(node.tag).asString()}, ${funcExpr}, thread, target);\n`;
+                        compiler.source += `yield* runtime.ext_irisText._repeatCompiledTag(${compiler.descendInput(node.tag).asString()}, ${funcExpr}, thread, target, stage);\n`;
                     },
                     currentCharValue: (node, compiler, imports) => {
                         return new imports.TypedInput('(thread && thread._irisChar ? thread._irisChar.char : (target && target._irisTypingChar ? target._irisTypingChar.char : ""))', imports.TYPE_STRING);
                     },
                     currentCharIndex: (node, compiler, imports) => {
-                        return new imports.TypedInput('(thread && thread._irisChar ? thread._irisChar.index + 1 : (target && target._irisTypingChar ? target._irisTypingChar.index + 1 : 0))', imports.TYPE_NUMBER);
+                        return new imports.TypedInput('(thread && thread.stackFrames[0] && thread.stackFrames[0].irisTagCharacterNumber !== undefined ? thread.stackFrames[0].irisTagCharacterNumber : (thread && thread._irisChar ? thread._irisChar.index + 1 : (target && target._irisTypingChar ? target._irisTypingChar.index + 1 : 0)))', imports.TYPE_NUMBER);
                     }
                 }
             };
@@ -1843,8 +1599,6 @@ Enjoy!! :D
                 runtime.renderer.destroySkin(state.skinId);
                 state.skinId = null;
             }
-            stopCharacterHatThreads(target);
-            delete charScripts[target.id];
         }
 
         getInfo() {
@@ -2025,6 +1779,11 @@ Enjoy!! :D
                         isEdgeActivated: false,
                         shouldRestartExistingThreads: false,
                         text: 'on character type'
+                    },
+                    {
+                        opcode: 'currentCharValue',
+                        blockType: Scratch.BlockType.REPORTER,
+                        text: 'character'
                     },
                     {
                         blockType: Scratch.BlockType.LABEL,
@@ -2280,41 +2039,30 @@ Enjoy!! :D
                     },
                     {
                         blockType: Scratch.BlockType.LABEL,
-                        text: 'Per-Character Scripting'
+                        text: 'Tag Loops'
                     },
                     {
-                        opcode: 'onRenderComplete',
-                        blockType: Scratch.BlockType.EVENT,
-                        isEdgeActivated: false,
-                        shouldRestartExistingThreads: true,
-                        text: 'when render finishes'
-                    },
-                    {
-                        opcode: 'scheduleTagBlocks',
-                        blockType: Scratch.BlockType.COMMAND,
-                        text: 'schedule blocks for tag [TAG]',
+                        opcode: 'repeatForTag',
+                        blockType: Scratch.BlockType.LOOP,
+                        text: 'repeat for blocks in tag [TAG] [CHAR]',
                         branchCount: 1,
                         arguments: {
                             TAG: {
                                 type: Scratch.ArgumentType.STRING,
                                 defaultValue: 'shake'
+                            },
+                            CHAR: {
+                                type: Scratch.ArgumentType.STRING,
+                                fillIn: 'currentCharIndex'
                             }
                         }
                     },
                     {
-                        opcode: 'currentCharValue',
-                        blockType: Scratch.BlockType.REPORTER,
-                        text: 'character'
-                    },
-                    {
                         opcode: 'currentCharIndex',
                         blockType: Scratch.BlockType.REPORTER,
-                        text: 'character #'
-                    },
-                    {
-                        opcode: 'waitForCharsToFinish',
-                        blockType: Scratch.BlockType.COMMAND,
-                        text: 'wait until characters finish rendering'
+                        text: 'character #',
+                        canDragDuplicate: true,
+                        hideFromPalette: true
                     },
                     {
                         blockType: Scratch.BlockType.LABEL,
@@ -2641,7 +2389,6 @@ Enjoy!! :D
         }
 
         setText(args, util) {
-            if (util && util.thread && !ThreadClass) ThreadClass = util.thread.constructor;
             const state = getState(util.target);
             const frame = util.stackFrame;
 
@@ -2693,7 +2440,6 @@ Enjoy!! :D
         }
 
         _typeText(args, util, appendLine) {
-            if (util && util.thread && !ThreadClass) ThreadClass = util.thread.constructor;
             const state = getState(util.target);
             const frame = util.stackFrame;
 
@@ -2788,16 +2534,6 @@ Enjoy!! :D
             const state = getState(util.target);
             if (!state.visible) return;
             scheduleTextRender(util.target);
-        }
-
-        waitForCharsToFinish(args, util) {
-            if (pendingCharacterThreadStarts.has(util.target)) {
-                if (pendingRenderTargets.has(util.target)) flushRenderIfDirty(util.target);
-                else flushPendingRenders();
-            }
-            if (!charThreadsStillActive(util.target)) return;
-            if (renderFlushScheduled) flushPendingRenders();
-            util.yieldTick();
         }
 
         setBaseColor(args, util) {
@@ -2951,7 +2687,9 @@ Enjoy!! :D
 
         setTextShadowColor(args, util) {
             const state = getState(util.target);
-            state.textShadow.color = Scratch.Cast.toString(args.COLOR);
+            const color = Scratch.Cast.toString(args.COLOR);
+            if (state.textShadow.color === color) return;
+            state.textShadow.color = color;
             schedulePaint(util.target, state);
         }
 
@@ -2982,7 +2720,9 @@ Enjoy!! :D
 
         setTextBackgroundColor(args, util) {
             const state = getState(util.target);
-            state.textBackground.color = Scratch.Cast.toString(args.COLOR);
+            const color = Scratch.Cast.toString(args.COLOR);
+            if (state.textBackground.color === color) return;
+            state.textBackground.color = color;
             schedulePaint(util.target, state);
         }
 
@@ -3012,7 +2752,9 @@ Enjoy!! :D
 
         setTextBorderColor(args, util) {
             const state = getState(util.target);
-            state.textBorder.color = Scratch.Cast.toString(args.COLOR);
+            const color = Scratch.Cast.toString(args.COLOR);
+            if (state.textBorder.color === color) return;
+            state.textBorder.color = color;
             schedulePaint(util.target, state);
         }
 
@@ -3028,49 +2770,25 @@ Enjoy!! :D
             schedulePaint(util.target, state);
         }
 
-        scheduleTagBlocks(args, util) {
-            const name = util.target.id;
-            const blocks = util.thread.target.blocks;
-            const scheduleBlock = util.thread.peekStack();
-            const branch = blocks.getBranch(scheduleBlock, 1);
-            const tag = Scratch.Cast.toString(args.TAG).toLowerCase();
+        repeatForTag(args, util) {
+            const frame = util.stackFrame;
+            const rootFrame = util.thread.stackFrames[0];
+            let loop = frame.irisTagLoop;
 
-            if (charScripts[name] === undefined) {
-                charScripts[name] = Object.create(null);
+            if (!loop) {
+                const tag = Scratch.Cast.toString(args.TAG).toLowerCase();
+                loop = {
+                    indices: taggedCharacterIndices(util.target, tag),
+                    position: 0
+                };
+                frame.irisTagLoop = loop;
+                rootFrame.irisTagCharacterNumber = 0;
             }
 
-            if (!branch) {
-                delete charScripts[name][tag];
-                return;
-            }
-
-            const snapshot = createBlocksSnapshot(blocks, branch, runtime);
-            const ThreadClass = util.thread ? util.thread.constructor : null;
-            let compiledResult = null;
-
-            if (ThreadClass) {
-                const tempThread = new ThreadClass(branch);
-                tempThread.target = util.target;
-                tempThread.blockContainer = snapshot;
-                tempThread.pushStack(branch);
-                if (typeof tempThread.tryCompile === 'function') {
-                    tempThread.tryCompile();
-                    if (tempThread.isCompiled) {
-                        compiledResult = snapshot.getCachedCompileResult(branch);
-                    }
-                }
-            }
-
-            const newEntry = {
-                stack: branch,
-                blocks: snapshot,
-                target: util.target,
-                tag,
-                compiledResult: compiledResult ? (compiledResult.value || compiledResult) : null,
-                perChar: stackUsesCharReporter(snapshot, branch)
-            };
-
-            charScripts[name][tag] = newEntry;
+            if (loop.position >= loop.indices.length) return;
+            rootFrame.irisTagCharacterNumber = loop.indices[loop.position] + 1;
+            loop.position++;
+            util.startBranch(1, true);
         }
 
         currentCharValue(args, util) {
@@ -3079,6 +2797,10 @@ Enjoy!! :D
         }
 
         currentCharIndex(args, util) {
+            const rootFrame = util.thread && util.thread.stackFrames[0];
+            if (rootFrame && rootFrame.irisTagCharacterNumber !== undefined) {
+                return rootFrame.irisTagCharacterNumber;
+            }
             const cur = (util.thread && util.thread._irisChar) || util.target._irisTypingChar;
             return cur ? cur.index + 1 : 0;
         }

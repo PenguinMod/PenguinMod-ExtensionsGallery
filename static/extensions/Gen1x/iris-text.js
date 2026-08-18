@@ -2119,6 +2119,26 @@ Enjoy!! :D
                         }
                     },
                     {
+                        opcode: 'setCharAxisPos',
+                        blockType: Scratch.BlockType.COMMAND,
+                        text: 'set character [INDEX] [AXIS] to [VALUE]',
+                        arguments: {
+                            INDEX: {
+                                type: Scratch.ArgumentType.NUMBER,
+                                defaultValue: 1
+                            },
+                            AXIS: {
+                                type: Scratch.ArgumentType.STRING,
+                                menu: 'AXIS',
+                                defaultValue: 'x'
+                            },
+                            VALUE: {
+                                type: Scratch.ArgumentType.NUMBER,
+                                defaultValue: 0
+                            }
+                        }
+                    },
+                    {
                         opcode: 'setCharRotation',
                         blockType: Scratch.BlockType.COMMAND,
                         text: 'set character [INDEX] rotation to [DEG] degrees',
@@ -2383,6 +2403,9 @@ Enjoy!! :D
                     },
                     SPRITE: {
                         items: 'getSpriteMenuItems'
+                    },
+                    AXIS: {
+                        items: ['x', 'y']
                     }
                 }
             };
@@ -2833,6 +2856,18 @@ Enjoy!! :D
             if (exists && x === 0 && y === 0) return;
             o.x += x;
             o.y += y;
+            schedulePaint(util.target, state);
+        }
+
+        setCharAxisPos(args, util) {
+            const state = getState(util.target);
+            const idx = Scratch.Cast.toNumber(args.INDEX) - 1;
+            const axis = Scratch.Cast.toString(args.AXIS) === 'y' ? 'y' : 'x';
+            const value = Scratch.Cast.toNumber(args.VALUE);
+            const exists = !!state.charOverrides[idx];
+            const o = getCharOverride(state, idx);
+            if (exists && o[axis] === value) return;
+            o[axis] = value;
             schedulePaint(util.target, state);
         }
 

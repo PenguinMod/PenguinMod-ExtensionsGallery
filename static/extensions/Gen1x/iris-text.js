@@ -1849,7 +1849,7 @@ Enjoy!! :D
 
         getInfo() {
             return {
-                id: 'irisText',
+                id: 'g1nxIrisText',
                 name: 'Iris Text',
                 color1: COLOR_PRIMARY,
                 color2: COLOR_SECONDARY,

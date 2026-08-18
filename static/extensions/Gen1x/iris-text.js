@@ -377,6 +377,7 @@ Enjoy!! :D
             },
             charOverrides: {},
             charOverridesVersion: 0,
+            resetCharTransformsOnText: true,
             charStyleOverrides: {},
             charStyleOverridesVersion: 0,
             typingControl: null,
@@ -430,6 +431,7 @@ Enjoy!! :D
             state.customTypingSpeeds = Object.assign({}, state.customTypingSpeeds || {});
             if (typeof state.smoothing !== 'boolean') state.smoothing = defaults.smoothing;
             state.charStyleOverrides = Object.assign({}, state.charStyleOverrides || {});
+            if (typeof state.resetCharTransformsOnText !== 'boolean') state.resetCharTransformsOnText = defaults.resetCharTransformsOnText;
             if (typeof state.charStyleOverridesVersion !== 'number') state.charStyleOverridesVersion = 0;
             if (state.typingControl !== 'skip' && state.typingControl !== 'stop') state.typingControl = null;
         }
@@ -492,6 +494,7 @@ Enjoy!! :D
             },
             align: state.align,
             smoothing: state.smoothing,
+            resetCharTransformsOnText: state.resetCharTransformsOnText,
             letterSpacing: state.letterSpacing,
             lineSpacing: state.lineSpacing,
             typingSpeeds: Object.assign({}, state.typingSpeeds),
@@ -521,6 +524,7 @@ Enjoy!! :D
             state.align = settings.align;
         }
         if (typeof settings.smoothing === 'boolean') state.smoothing = settings.smoothing;
+        if (typeof settings.resetCharTransformsOnText === 'boolean') state.resetCharTransformsOnText = settings.resetCharTransformsOnText;
         if (Number.isFinite(settings.letterSpacing)) state.letterSpacing = settings.letterSpacing;
         if (Number.isFinite(settings.lineSpacing)) state.lineSpacing = Math.max(0, settings.lineSpacing);
         if (settings.typingSpeeds && typeof settings.typingSpeeds === 'object' && !Array.isArray(settings.typingSpeeds)) {
@@ -576,6 +580,12 @@ Enjoy!! :D
             state.charOverridesVersion++;
         }
         return state.charOverrides[index];
+    }
+
+    function resetCharacterTransformsState(state) {
+        if (!Object.keys(state.charOverrides).length) return;
+        state.charOverrides = {};
+        state.charOverridesVersion++;
     }
 
     const SVG_NS = 'http://www.w3.org/2000/svg';
@@ -1859,6 +1869,17 @@ Enjoy!! :D
                             }
                         }
                     },
+					{
+                        opcode: 'addLine',
+                        blockType: Scratch.BlockType.COMMAND,
+                        text: 'add line [TEXT]',
+                        arguments: {
+                            TEXT: {
+                                type: Scratch.ArgumentType.STRING,
+                                defaultValue: "This is another line!"
+                            }
+                        }
+                    },
                     {
                         opcode: 'clearText',
                         blockType: Scratch.BlockType.COMMAND,
@@ -1938,6 +1959,17 @@ Enjoy!! :D
                         opcode: 'typeText',
                         blockType: Scratch.BlockType.COMMAND,
                         text: 'type [TEXT]',
+                        arguments: {
+                            TEXT: {
+                                type: Scratch.ArgumentType.STRING,
+                                defaultValue: DEFAULT_TEXT
+                            }
+                        }
+                    },
+                    {
+                        opcode: 'typeNewLine',
+                        blockType: Scratch.BlockType.COMMAND,
+                        text: 'type new line [TEXT]',
                         arguments: {
                             TEXT: {
                                 type: Scratch.ArgumentType.STRING,
@@ -2288,6 +2320,18 @@ Enjoy!! :D
                         text: 'Character Transforms'
                     },
                     {
+                        opcode: 'setResetCharTransformsOnText',
+                        blockType: Scratch.BlockType.COMMAND,
+                        text: 'reset character transforms on show/type text [ENABLED]',
+                        arguments: {
+                            ENABLED: {
+                                type: Scratch.ArgumentType.STRING,
+                                menu: 'ONOFF',
+                                defaultValue: 'on'
+                            }
+                        }
+                    },
+                    {
                         opcode: 'setCharPos',
                         blockType: Scratch.BlockType.COMMAND,
                         text: 'set character [INDEX] position to x: [X] y: [Y]',
@@ -2604,6 +2648,7 @@ Enjoy!! :D
                 state.rawText = Scratch.Cast.toString(args.TEXT);
                 state.finalText = stripMarkup(state.rawText);
                 state.visible = true;
+                if (state.resetCharTransformsOnText) resetCharacterTransformsState(state);
                 frame.irisStages = splitWaitStages(state.rawText);
                 frame.irisStageIndex = 0;
                 frame.irisToken = ++state.revealToken;
@@ -2631,23 +2676,40 @@ Enjoy!! :D
             frame.irisWaitUntil = Date.now() + stage.waitAfter * 1000;
             util.yieldTick();
         }
+		
+		addLine(args, util) {
+            const state = getState(util.target);
+            const text = Scratch.Cast.toString(args.TEXT);
+            const existingText = state.visible ? state.rawText : '';
+            const linePrefix = existingText ? '\n' : '';
+            if (state.resetCharTransformsOnText) resetCharacterTransformsState(state);
+            state.revealToken++;
+            state.typingControl = null;
+            state.rawText = existingText + linePrefix + text;
+            state.finalText = stripMarkup(state.rawText);
+            state.visible = true;
+            schedulePaint(util.target, state);
+        }
 
-        typeText(args, util) {
+        _typeText(args, util, appendLine) {
             if (util && util.thread && !ThreadClass) ThreadClass = util.thread.constructor;
             const state = getState(util.target);
             const frame = util.stackFrame;
 
             if (frame.irisTypingSteps === undefined) {
                 const text = Scratch.Cast.toString(args.TEXT);
-                state.rawText = '';
-                state.finalText = stripMarkup(text);
+                const existingText = appendLine && state.visible ? state.rawText : '';
+                const linePrefix = appendLine && existingText ? '\n' : '';
+                state.rawText = existingText + linePrefix;
+                state.finalText = stripMarkup(state.rawText + text);
                 state.visible = true;
+                if (state.resetCharTransformsOnText) resetCharacterTransformsState(state);
                 state.revealToken++;
                 state.typingControl = null;
                 frame.irisTypingSteps = splitTypingSteps(text);
                 frame.irisTypingStepIndex = 0;
-                frame.irisTypingCharIndex = 0;
-                frame.irisTypedText = '';
+                frame.irisTypingCharIndex = stripMarkup(existingText + linePrefix).length;
+                frame.irisTypedText = state.rawText;
                 frame.irisTypingToken = state.revealToken;
                 frame.irisTypingWaitUntil = null;
             }
@@ -2699,6 +2761,14 @@ Enjoy!! :D
 
             state.rawText = frame.irisTypedText;
             schedulePaint(util.target, state);
+        }
+
+        typeText(args, util) {
+            this._typeText(args, util, false);
+        }
+
+        typeNewLine(args, util) {
+            this._typeText(args, util, true);
         }
 
         skipTyping(args, util) {
@@ -3010,6 +3080,11 @@ Enjoy!! :D
         currentCharIndex(args, util) {
             const cur = (util.thread && util.thread._irisChar) || util.target._irisTypingChar;
             return cur ? cur.index + 1 : 0;
+        }
+
+        setResetCharTransformsOnText(args, util) {
+            const state = getState(util.target);
+            state.resetCharTransformsOnText = Scratch.Cast.toString(args.ENABLED).toLowerCase() === 'on';
         }
 
         setCharPos(args, util) {

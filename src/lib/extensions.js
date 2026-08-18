@@ -33,7 +33,8 @@ export default [
         description: "A storage extension with many more features. Featuring server storage (with a fast server), local storage and more!",
         code: "Gen1x/storage_plus.js",
         banner: "Gen1x/storage_plus.avif",
-        creator: "G1nX",
+        isGithub: true,
+        creator: "Gen1x",
     },
     {
         name: "MotionSprite",
@@ -42,6 +43,14 @@ export default [
         banner: "TheShovel/thumbnail-motionsprite.avif",
         isGitHub: true,
         creator: "TheShovel",
+    },
+    {
+        name: "Iris Text",
+        description: "A heavily-expanded text engine loosely based on Animated Text! Adds support for rich text, per-character control, and more!",
+        code: "Gen1x/iris-text.js",
+        banner: "Gen1x/iris-text.avif",
+        isGitHub: true,
+        creator: "Gen1xLol",
     },
     {
         name: "Boxed Physics",
@@ -55,7 +64,8 @@ export default [
         description: "A fast, powerful and easy-to-use lighting engine powered by WebGL!",
         code: "Gen1x/lighting.js",
         banner: "Gen1x/lighting.avif",
-        creator: "G1nX",
+        isGitHub: true,
+        creator: "Gen1xLol",
         tags: ["new"],
     },
     {
@@ -81,7 +91,8 @@ export default [
         description: "An extension designed to let you sync anything in your project to a musical beat, with incredible precision.",
         code: "Gen1x/beat_sync.js",
         banner: "Gen1x/beat_sync.avif",
-        creator: "G1nX",
+        isGitHub: true,
+        creator: "Gen1xLol",
     },
     {
         name: "Object",
@@ -341,10 +352,11 @@ export default [
     },
     {
         name: "Random Utilities",
-        description: "Many blocks related to generating random values, including seed-based number generation, true number generation, UUID's, random strings, etc.",
+        description: "Many blocks related to generating random values. Includes seed-based number generation, true number generation, UUIDs, random strings, etc.",
         code: "Gen1x/random_utils.js",
         banner: "Gen1x/randomutils.avif",
-        creator: "G1nX",
+        isGitHub: true,
+        creator: "Gen1xLol",
     },
     {
         name: "Toast Notifications",
@@ -529,15 +541,16 @@ export default [
         description: "A powerful extension that lets you manage a chessboard, customize it, use Stockfish 17 (via API), a local chess engine (Lozza) and much, MUCH more!",
         code: "Gen1x/chess-ext.js",
         banner: "Gen1x/chess-ext.avif",
-        creator: "G1nX",
-        isGitHub: false,
+        isGitHub: true,
+        creator: "Gen1xLol",
     },
     {
         name: "CATS",
         description: "Blocks related to cats.",
         code: "Gen1x/CATS.js",
         banner: "Gen1x/cats.avif",
-        creator: "G1nX",
+        isGitHub: true,
+        creator: "Gen1xLol",
     },
     {
         name: "Free Servers",

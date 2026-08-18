@@ -1661,6 +1661,8 @@ block(){
 
     
     input(args, util){if(this.check(args, util)){
+      if (document.querySelector('#pythonblock')) {
+
 try{
 
 this.pytext = `${this.pytext}<br>${args.INPUT}`;
@@ -1711,6 +1713,8 @@ return new Promise((resolve) => {
 }catch(error){
 
 }
+
+      } else {throw new Error("The python output must be showing.")}
     } else {throw new Error("Block must be under the When Python Code Starts event")}}
 
 

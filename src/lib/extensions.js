@@ -51,6 +51,7 @@ export default [
         banner: "Gen1x/iris-text.avif",
         isGitHub: true,
         creator: "Gen1xLol",
+        tags: ["new"],
     },
     {
         name: "Boxed Physics",

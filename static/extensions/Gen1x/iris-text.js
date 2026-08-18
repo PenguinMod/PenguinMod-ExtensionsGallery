@@ -1138,6 +1138,7 @@ Enjoy!! :D
         const letterSpacing = state.letterSpacing || 0;
 
         for (let li = 0; li < lines.length; li++) {
+            const line = lines[li];
             const runs = lineRuns[li];
             const lineW = lineWidths[li];
             const justifySpaceCount = state.align === 'justify' && li < lines.length - 1 &&

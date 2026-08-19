@@ -53,8 +53,8 @@ export default [
     {
         name: "Python",
         description: "Python block coding has come! Like EduBlocks, but better.",
-        code: "ScrTwPm/RunPython.js",
-        banner: "ScrTwPm/python.png",
+        code: "ScrTwPm/runpython.js",
+        banner: "ScrTwPm/runpython.png",
         creator: "ScrTwPm",
         documentation: "RunPython",
         isGitHub: true,

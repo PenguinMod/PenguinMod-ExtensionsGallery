@@ -51,6 +51,15 @@ export default [
         creator: "pooiod7",
     },
     {
+        name: "Python",
+        description: "Python block coding has come! Like EduBlocks, but better.",
+        code: "ScrTwPm/RunPython.js",
+        banner: "ScrTwPm/python.png",
+        creator: "ScrTwPm",
+        documentation: "RunPython",
+        isGitHub: true,
+    },
+    {
         name: "Lighting",
         description: "A fast, powerful and easy-to-use lighting engine powered by WebGL!",
         code: "Gen1x/lighting.js",

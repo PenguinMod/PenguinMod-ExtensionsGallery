@@ -42,6 +42,9 @@ import ProjectInterfaces from "./ProjectInterfaces.md?raw";
 // Date Format V2
 import DateFormatV2 from "./DateFormatV2.md?raw";
 
+// Run Python
+import DateFormatV2 from "./RunPython.md?raw";
+
 export default {
     // the key is the path to the docs page
     // so you can do "sharkpool-particle-tools" for example
@@ -80,6 +83,9 @@ export default {
 
     // Project Interfaces
     "ProjectInterfaces": ProjectInterfaces,
+
+    // Run Python
+    "RunPython": RunPython,
 
     "DateFormatV2": DateFormatV2
 };

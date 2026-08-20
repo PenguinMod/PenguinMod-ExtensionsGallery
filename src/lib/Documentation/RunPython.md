@@ -1,5 +1,6 @@
 # Run Python
 Python Block coding has come!
+Mirror python in PenguinMod!
 
 ## Blocks
 
@@ -883,8 +884,8 @@ In python:
 <> [and v] <>:: #4584b6 boolean
 ```
 Based on the dropdown
-* and: returns true if both conditions are true
-* or: returns true if either condition is true (or both)
+* and: returns true if both conditions are ture
+* or: returns true if either condition is ture (or both)
 
 In python:
 ```py

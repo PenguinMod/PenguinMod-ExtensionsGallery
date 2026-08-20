@@ -1,26 +1,53 @@
-// Velora Scratch Extension v1.1
+// Velora Scratch Extension v1.1 (or something i stopped keeping track i think)
 // https://velora.ikelene.net
 (function () {
   'use strict';
 
   const SERVER_HTTP = 'https://velora.ikelene.net';
   const SERVER_WS   = 'wss://velora.ikelene.net';
-  const EXT_ID      = 'ikelenepmvelora';
+  const EXT_ID      = 'velora';
 
-  function getFingerprint() {
-    return [
-      navigator.userAgent.slice(0, 100),
-      navigator.language,
-      screen.width + 'x' + screen.height,
-      screen.colorDepth,
-      Intl.DateTimeFormat().resolvedOptions().timeZone,
-    ].join('|');
-  }
+  // copy pasted from auth.js's SCOPES obj, gotta keep these two in sync by hand
+  // since this file can't just require() the server code
+  const SCOPES = {
+    PROFILE_READ: 1,
+    PROFILE_SENSITIVE: 2,
+    PROJECT_AUTH: 4,
+    ACCOUNT_WRITE: 8,
+    STORAGE_READ: 16,
+    STORAGE_WRITE: 32,
+    VMAIL_READ: 64,
+    VMAIL_SEND: 128,
+    FRIENDS_READ: 256,
+    FRIENDS_MANAGE: 512,
+    CURRENCY_PAY: 1024,
+    CHAT: 2048,
+    MEDIA_UPLOAD: 4096,
+    CURRENCY_READ: 8192,
+  };
+  const SCOPE_NAMES = {
+    1: 'View Basic Profile',
+    2: 'View Sensitive Info',
+    4: 'Project Auth',
+    8: 'Modify Settings',
+    16: 'Read Storage',
+    32: 'Write Storage',
+    64: 'Read vMails',
+    128: 'Send vMails',
+    256: 'View Friends',
+    512: 'Manage Friends',
+    1024: 'Spend Credits',
+    2048: 'Chat Messaging',
+    4096: 'Upload Media',
+    8192: 'View Subscriptions',
+  };
 
   class VeloraExtension {
     constructor(runtime) {
       this.runtime = runtime;
+      // just a few variables
       this._token = null;
+      this._grantedScopes = 0;
       this._user = null;
       this._ws = null;
       this._wsReady = false;
@@ -98,16 +125,16 @@
         color3: '#4c1d95',
         blocks: [
 
-          // connection
+          // connection stuff
           { blockType: 'label', text: 'Connection' },
           { opcode: 'whenConnected',    blockType: 'hat',     text: 'when connected to server' },
           { opcode: 'whenDisconnected', blockType: 'hat',     text: 'when disconnected from server' },
           { opcode: 'serverOnline',     blockType: 'Boolean', text: 'account server online' },
           { opcode: 'isConnected',      blockType: 'Boolean', text: 'is connected to server?' },
 
-          // auth
           { blockType: 'label', text: 'Authentication' },
-          { opcode: 'openLoginPrompt',  blockType: 'command', text: 'open login prompt' },
+          { func: 'openPermissionsCalc', blockType: 'button', text: 'Generate Permissions Integer' },
+          { opcode: 'openLoginPrompt',  blockType: 'command', text: 'sign in to Velora for [PROJECT_NAME] with permissions [PERMISSIONS]', arguments: { PROJECT_NAME: { type: 'string', defaultValue: 'My Project' }, PERMISSIONS: { type: 'string', defaultValue: '5' } } },
           { opcode: 'loginWithToken',   blockType: 'command', text: 'login with token [TOKEN]', arguments: { TOKEN: { type: 'string', defaultValue: '' } } },
           { opcode: 'logout',           blockType: 'command', text: 'logout' },
           { opcode: 'currentToken',     blockType: 'reporter',text: 'current token' },
@@ -116,7 +143,7 @@
             arguments: { RESULT: { type: 'string', menu: 'authResultMenu', defaultValue: 'successful' } } },
           { opcode: 'whenAuthenticated',blockType: 'hat',     text: 'when authenticated' },
 
-          // account info
+          // acc info
           { blockType: 'label', text: 'Account Information' },
           { opcode: 'getAccountKey',    blockType: 'reporter',text: 'get [KEY]',
             arguments: { KEY: { type: 'string', menu: 'accountKeys', defaultValue: 'username' } } },
@@ -128,12 +155,11 @@
           { opcode: 'isUserBanned',     blockType: 'Boolean', text: 'is account banned?' },
           { opcode: 'whenAccountUpdated',blockType:'hat',     text: 'when account updated' },
 
-          // profile
           { blockType: 'label', text: 'Profile' },
           { opcode: 'uploadPfp',    blockType: 'command', text: 'upload image [DATA_URI] as profile picture and [MODE]', arguments: { DATA_URI: { type: 'string', defaultValue: '' }, MODE: { type: 'string', menu: 'uploadModeMenu', defaultValue: 'wait' } } },
           { opcode: 'setChatColor', blockType: 'command', text: 'set chat color to [COLOR]', arguments: { COLOR: { type: 'string', defaultValue: '#c084fc' } } },
 
-          // data storage
+          // per-project save data, scoped to whoever's logged in so ppl cant mess with each others stuff
           { blockType: 'label', text: 'Data Storage' },
           { opcode: 'setStorageId',     blockType: 'command', text: 'set storage ID to [ID]', arguments: { ID: { type: 'string', defaultValue: 'myProject' } } },
           { opcode: 'storageIdSet',     blockType: 'Boolean', text: 'storage ID has been set?' },
@@ -146,14 +172,13 @@
           { opcode: 'getAllStorageValues',blockType: 'reporter',text: 'get all values from storage' },
           { opcode: 'clearStorage',     blockType: 'command', text: 'clear storage' },
 
-          // storange info
           { blockType: 'label', text: 'Storage Information' },
           { opcode: 'storageUsage',     blockType: 'reporter',text: 'storage usage (characters)' },
           { opcode: 'storageLimit',     blockType: 'reporter',text: 'storage limit (characters)' },
           { opcode: 'storageRemaining', blockType: 'reporter',text: 'storage remaining (characters)' },
           { opcode: 'storageBiggest',   blockType: 'reporter',text: 'all storage values ordered biggest to smallest' },
 
-          // messaging
+          // chat stuff, sends over the websocket (more chat app focused compared to cloudlink)
           { blockType: 'label', text: 'Messaging' },
           { opcode: 'sendGlobalMessage',blockType: 'command', text: 'send global message [MSG]', arguments: { MSG: { type: 'string', defaultValue: 'Hello!' } } },
           { opcode: 'getGlobalMessages',blockType: 'reporter',text: 'global messages' },
@@ -163,7 +188,6 @@
           { opcode: 'setTyping',        blockType: 'command', text: 'set typing [STATE]', arguments: { STATE: { type: 'string', menu: 'onOff', defaultValue: 'on' } } },
           { opcode: 'typingUsers',      blockType: 'reporter',text: 'typing users' },
 
-          // chat events
           { blockType: 'label', text: 'Chat Events' },
           { opcode: 'whenGlobalMessageReceived', blockType: 'hat', text: 'when global chat message received' },
           { opcode: 'whenRoomMessageReceived',   blockType: 'hat', text: 'when message in room [ROOM] received',
@@ -172,12 +196,11 @@
           { opcode: 'lastMessageContent', blockType: 'reporter', text: 'last message content' },
           { opcode: 'lastMessageUserJson',blockType: 'reporter', text: 'last message user JSON' },
 
-          // client info
           { blockType: 'label', text: 'Client Information' },
           { opcode: 'clientUsername',   blockType: 'reporter',text: 'client username' },
           { opcode: 'myClientObject',   blockType: 'reporter',text: 'my client object' },
 
-          // users
+          // whos online rn
           { blockType: 'label', text: 'Users' },
           { opcode: 'connectedUsers',   blockType: 'reporter',text: 'connected users' },
           { opcode: 'setStatus',        blockType: 'command', text: 'set status to [STATUS]', arguments: { STATUS: { type: 'string', menu: 'statusMenu', defaultValue: 'online' } } },
@@ -187,7 +210,7 @@
           { opcode: 'lastUserJoined',   blockType: 'reporter',text: 'last user to join' },
           { opcode: 'lastUserLeft',     blockType: 'reporter',text: 'last user to leave' },
 
-          // offline messaging
+          // dms basically
           { blockType: 'label', text: 'vMail' },
           { opcode: 'whenMailReceived', blockType: 'hat',     text: 'when vMail received' },
           { opcode: 'sendMail',         blockType: 'command', text: 'send vMail to [TO] subject [SUBJECT] message [MSG]', arguments: { TO: { type: 'string', defaultValue: 'username' }, SUBJECT: { type: 'string', defaultValue: 'Hello!' }, MSG: { type: 'string', defaultValue: 'Message here' } } },
@@ -196,7 +219,7 @@
           { opcode: 'deleteMail',       blockType: 'command', text: 'delete vMail at index [N]', arguments: { N: { type: 'number', defaultValue: 1 } } },
           { opcode: 'deleteAllMail',    blockType: 'command', text: 'delete all vMail' },
 
-          // friends
+          // friends list stuff
           { blockType: 'label', text: 'Friends' },
           { opcode: 'getFriendsList',   blockType: 'reporter',text: 'get friends list' },
           { opcode: 'sendFriendRequest',blockType: 'command', text: 'send friend request to [USER]', arguments: { USER: { type: 'string', defaultValue: 'username' } } },
@@ -209,13 +232,13 @@
           { opcode: 'getFriendStatus',  blockType: 'reporter',text: 'get friend status of [USER]', arguments: { USER: { type: 'string', defaultValue: 'username' } } },
           { opcode: 'getFriendCount',   blockType: 'reporter',text: 'get friend count' },
 
-          // notes
+          // private lil sticky notes on other ppl's profiles
           { blockType: 'label', text: 'Profile Notes' },
           { opcode: 'getProfileNote',    blockType: 'reporter', text: 'get note for [USER]',            arguments: { USER: { type: 'string', defaultValue: 'username' } } },
           { opcode: 'setProfileNote',    blockType: 'command',  text: 'set note for [USER] to [NOTE]',  arguments: { USER: { type: 'string', defaultValue: 'username' }, NOTE: { type: 'string', defaultValue: '' } } },
           { opcode: 'deleteProfileNote', blockType: 'command',  text: 'delete note for [USER]',         arguments: { USER: { type: 'string', defaultValue: 'username' } } },
 
-          // currency 🤑
+          // money
           { blockType: 'label', text: 'Currency' },
           { opcode: 'getBalance',       blockType: 'reporter',text: 'get balance' },
           { opcode: 'transferCredits',  blockType: 'command', text: 'transfer [AMOUNT] credits to [USER]', arguments: { AMOUNT: { type: 'number', defaultValue: 10 }, USER: { type: 'string', defaultValue: 'username' } } },
@@ -226,7 +249,7 @@
           { opcode: 'getOutgoingSubs',  blockType: 'reporter',text: 'get outgoing subscriptions' },
           { opcode: 'getIncomingSubs',  blockType: 'reporter',text: 'get incoming subscriptions' },
 
-          // media
+          // uploading pics/audio/video
           { blockType: 'label', text: 'Media Upload' },
           { opcode: 'uploadImage', blockType: 'command', text: 'upload image [DATA_URI] and [MODE]', arguments: { DATA_URI: { type: 'string', defaultValue: '' }, MODE: { type: 'string', menu: 'uploadModeMenu', defaultValue: 'wait' } } },
           { opcode: 'uploadAudio', blockType: 'command', text: 'upload audio [DATA_URI] and [MODE]', arguments: { DATA_URI: { type: 'string', defaultValue: '' }, MODE: { type: 'string', menu: 'uploadModeMenu', defaultValue: 'wait' } } },
@@ -235,7 +258,7 @@
           { opcode: 'lastUploadUrl',  blockType: 'reporter', text: 'last upload URL' },
           { opcode: 'uploadProgress', blockType: 'reporter', text: 'upload progress (%)' },
 
-          // file picker (can handle very large files, unlike file extension or whatev it was called idk)
+          // lets ppl pick a file off their computer, handles big files fine unlike some other extensions i wont name
           { blockType: 'label', text: 'File Picker' },
           { opcode: 'openFilePicker', blockType: 'command', text: 'open file selector for [TYPE]', arguments: { TYPE: { type: 'string', menu: 'fileTypeMenu', defaultValue: 'videos' } } },
           { opcode: 'fileWasSelected',     blockType: 'Boolean',   text: 'file was selected' },
@@ -243,7 +266,6 @@
           { opcode: 'selectedFileName',    blockType: 'reporter',  text: 'selected file name' },
           { opcode: 'selectedFileSize',    blockType: 'reporter',  text: 'selected file size (bytes)' },
 
-          // history
           { blockType: 'label', text: 'Login History' },
           { opcode: 'whenNewLoginDetected', blockType: 'hat',     text: 'when new login detected' },
           { opcode: 'fetchLoginHistory',    blockType: 'command',  text: 'fetch login history' },
@@ -252,7 +274,6 @@
           { opcode: 'lastLoginDevice',      blockType: 'reporter', text: 'last login device' },
           { opcode: 'lastLoginIP',          blockType: 'reporter', text: 'last login IP' },
 
-          // user lookups
           { blockType: 'label', text: 'User Lookup' },
           { opcode: 'lookupUser',         blockType: 'command',  text: 'look up user [USER]', arguments: { USER: { type: 'string', defaultValue: 'username' } } },
           { opcode: 'lookedUpUsername',   blockType: 'reporter', text: 'looked up username' },
@@ -262,7 +283,7 @@
           { opcode: 'lookedUpCountry',    blockType: 'reporter', text: 'looked up country' },
           { opcode: 'lookedUpJSON',       blockType: 'reporter', text: 'looked up user (JSON)' },
 
-          // notifications (not system notis)
+          // not system notis, ur app notis
           { blockType: 'label', text: 'Notifications' },
           { opcode: 'whenNotificationReceived', blockType: 'hat',     text: 'when notification received' },
           { opcode: 'notificationCount',        blockType: 'reporter',text: 'notification count' },
@@ -271,7 +292,6 @@
           { opcode: 'lastNotificationTitle',    blockType: 'reporter',text: 'last notification title' },
           { opcode: 'lastNotificationBody',     blockType: 'reporter',text: 'last notification body' },
 
-          // badges
           { blockType: 'label', text: 'Badges' },
           { opcode: 'badgesLoaded',     blockType: 'Boolean', text: 'badges loaded successfully' },
           { opcode: 'allBadges',        blockType: 'reporter',text: 'all user badges' },
@@ -279,7 +299,7 @@
           { opcode: 'hasBadge',         blockType: 'Boolean', text: 'does user have badge [BADGE]', arguments: { BADGE: { type: 'string', defaultValue: 'early_adopter' } } },
           { opcode: 'badgeInfo',        blockType: 'reporter',text: 'badge info [BADGE]', arguments: { BADGE: { type: 'string', defaultValue: 'early_adopter' } } },
 
-          // voice calling (sometiems doesn't work idk)
+          // vc stuff, sometiems doesn't work idk
           { blockType: 'label', text: 'Voice Calling' },
           { opcode: 'callUser',         blockType: 'command', text: 'call user [USER]', arguments: { USER: { type: 'string', defaultValue: 'username' } } },
           { opcode: 'whenCallReceived', blockType: 'hat',     text: 'when call received' },
@@ -288,7 +308,7 @@
           { opcode: 'setMic',           blockType: 'command', text: 'set mic to [STATE]', arguments: { STATE: { type: 'string', menu: 'onOff', defaultValue: 'on' } } },
           { opcode: 'stopCall',         blockType: 'command', text: 'stop call' },
 
-          // logging / developer stuff
+          // for debugging
           { blockType: 'label', text: 'Verbose' },
           { opcode: 'lastActionOutput',  blockType: 'reporter',text: 'last action output (JSON)' },
           { opcode: 'lastActionSuccess', blockType: 'Boolean', text: 'last action successful?' },
@@ -470,17 +490,37 @@
     async _http(path, method = 'GET', body = null) {
       const headers = { 'Content-Type': 'application/json' };
       if (this._token) headers['Authorization'] = `Bearer ${this._token}`;
+      // skipping the fingerprint header here too, same reason as _wsAuth above
       const opts = { method, headers };
       if (body) opts.body = JSON.stringify(body);
       const res = await fetch(SERVER_HTTP + path, opts);
       return res.json().catch(() => ({}));
     }
 
+    // checks scopes on OUR end first so the block goes red instantly instead of
+    // waiting on a network round trip. server double checks everything anyway
+    // so this is just for a snappier error message, not actual security
+    _requireScope(bit) {
+      if (!this._authenticated) throw new Error('Not logged in');
+      if ((this._grantedScopes & bit) !== bit) {
+        const name = SCOPE_NAMES[bit] || `scope ${bit}`;
+        throw new Error(`Missing permission: this block needs the '${name}' scope. Generate a new Permission Integer that includes it at velora.ikelene.net/permissions.`);
+      }
+    }
+
+    _scopeErrorFromData(data) {
+      if (data && data.error === 'insufficient_scope') {
+        const name = SCOPE_NAMES[data.required_scope] || `scope ${data.required_scope}`;
+        return new Error(`Missing permission: this block needs the '${name}' scope. Generate a new Permission Integer that includes it at velora.ikelene.net/permissions.`);
+      }
+      return null;
+    }
+
     async _cmd(path, method = 'GET', body = null) {
       const data = await this._http(path, method, body);
       this._lastActionOutput = JSON.stringify(data);
       this._lastActionSuccess = !!data.success;
-      if (data.error) throw new Error(data.error);
+      if (data.error) throw (this._scopeErrorFromData(data) || new Error(data.error));
       return data;
     }
 
@@ -488,6 +528,7 @@
       const data = await this._http('/auth/validate', 'POST', { token: this._token }).catch(() => ({}));
       if (data.valid) {
         this._user = data.user;
+        this._grantedScopes = Number(data.user?.scopes ?? 0);
         this._username = data.user?.username || '';
         this._authenticated = true;
         this._wsAuth();
@@ -508,6 +549,7 @@
         this._authenticated = false;
         this._lastAuthResult = 'failed';
         this._token = null;
+        this._grantedScopes = 0;
         this._username = '';
       }
     }
@@ -524,16 +566,28 @@
 
     async _fetchFriends() {
       if (!this._token) return;
-      const data = await this._http('/friends').catch(() => ({}));
-      if (data.friends) this._friends = data.friends;
-      const reqData = await this._http('/friends/requests').catch(() => ({}));
-      if (reqData.incoming) this._friendRequests = reqData.incoming;
+      try {
+        const data = await this._http('/friends');
+        if (data.friends) this._friends = data.friends;
+      } catch (e) {
+        if (e.message === 'insufficient_scope') this._friends = 'Permission Denied';
+      }
+      try {
+        const reqData = await this._http('/friends/requests');
+        if (reqData.incoming) this._friendRequests = reqData.incoming;
+      } catch (e) {
+        if (e.message === 'insufficient_scope') this._friendRequests = 'Permission Denied';
+      }
     }
 
     async _fetchMail() {
       if (!this._token) return;
-      const data = await this._http('/mail').catch(() => ({}));
-      if (data.mail) this._mail = data.mail;
+      try {
+        const data = await this._http('/mail');
+        if (data.mail) this._mail = data.mail;
+      } catch(e) {
+        if (e.message === 'insufficient_scope') this._mail = 'Permission Denied';
+      }
     }
 
     async _fetchBadges() {
@@ -542,46 +596,103 @@
       if (data.sys?.badges) this._badges = data.sys.badges;
     }
 
-    _openLoginPopup() {
+    _openLoginPopup(args) {
       if (this._pollInterval) return;
-      fetch(`${SERVER_HTTP}/auth/ext-code`, { method: 'POST' })
+
+      let projName = String(args?.PROJECT_NAME || args?.project_name || 'My Project').trim();
+      let rawPerm = args?.PERMISSIONS !== undefined && args?.PERMISSIONS !== null ? args.PERMISSIONS : (args?.permissions !== undefined ? args.permissions : '');
+      
+      let cleanPerm = String(rawPerm).replace(/[^0-9]/g, '');
+      let permInt = parseInt(cleanPerm, 10);
+
+      // NOT defaulting to full access if this is empty/broken!! used to secretly
+      // fall back to 65535 (literally every scope) which is baaaad. now it just
+      // yells at you to go generate a real permission integer instead
+      if (isNaN(permInt) || permInt <= 0) {
+        if (typeof window !== 'undefined' && window.alert) {
+          window.alert(
+            'Velora Extension Error:\n\n' +
+            'Invalid Permissions Integer!\n\n' +
+            'Please visit https://velora.ikelene.net/permissions to select your project scopes and generate a valid permissions integer.'
+          );
+        }
+        if (typeof window !== 'undefined' && window.open) {
+          window.open('https://velora.ikelene.net/permissions', '_blank');
+        }
+        this._lastAuthResult = 'failed';
+        return;
+      }
+
+      // flip this true right away, even before we've actually gotten a code back
+      // from the server, so isLoginOpen() doesn't lag behind for a sec
+      this._pollInterval = true;
+
+      fetch(`${SERVER_HTTP}/auth/ext-code`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ permissions_integer: permInt, project_name: projName })
+      })
         .then(r => r.json())
         .then(data => {
           const code = data.code;
-          if (!code) return;
+          if (!code) { this._pollInterval = null; return; }
           const popup = window.open(
-            `${SERVER_HTTP}/login?code=${encodeURIComponent(code)}`,
+            `${SERVER_HTTP}/login?code=${encodeURIComponent(code)}&project=${encodeURIComponent(projName)}&permissions=${permInt}`,
             'velora_login',
             'width=900,height=520,toolbar=no,menubar=no,location=no,scrollbars=yes,resizable=yes'
           );
-          const checkClosed = setInterval(() => {
-            if (!popup || popup.closed) {
-              clearInterval(checkClosed);
-              if (this._pollInterval) { clearInterval(this._pollInterval); this._pollInterval = null; }
-            }
-          }, 1000);
-          this._pollInterval = setInterval(async () => {
+
+          const doPoll = async () => {
             try {
               const r = await fetch(`${SERVER_HTTP}/auth/ext-code/status?code=${encodeURIComponent(code)}`);
-              if (r.status === 404) {
-                clearInterval(this._pollInterval); this._pollInterval = null;
-                clearInterval(checkClosed);
-                this._lastAuthResult = 'failed';
-                return;
-              }
+              if (r.status === 404) { this._lastAuthResult = 'failed'; return true; }
               const d = await r.json();
               if (d.ready && d.token) {
-                clearInterval(this._pollInterval); this._pollInterval = null;
-                clearInterval(checkClosed);
                 try { popup?.close(); } catch (_) {}
                 this._token = d.token;
                 await this._validateSavedToken();
                 if (this._authenticated) this._connectWS();
+                return true;
               }
             } catch (_) {}
-          }, 2000);
+            return false;
+          };
+
+          this._pollInterval = setInterval(async () => {
+            if (await doPoll()) {
+              clearInterval(this._pollInterval); this._pollInterval = null;
+              clearInterval(watchClosed);
+            }
+          }, 1500);
+
+          const openedAt = Date.now();
+          let closedStreak = 0;
+          const GRACE_MS = 4000;
+          const REQUIRED_STREAK = 3;
+          const watchClosed = setInterval(async () => {
+            if (Date.now() - openedAt < GRACE_MS) return;
+            if (popup && !popup.closed) { closedStreak = 0; return; }
+            closedStreak++;
+            if (closedStreak < REQUIRED_STREAK) return;
+            clearInterval(watchClosed);
+            if (!this._pollInterval) return;
+            clearInterval(this._pollInterval);
+            this._pollInterval = null;
+            const success = await doPoll();
+            if (!success) this._lastAuthResult = 'failed';
+          }, 1000);
         })
-        .catch(() => {});
+        .catch(() => { this._pollInterval = null; });
+    }
+
+    openPermissionsCalc() {
+      if (typeof window !== 'undefined' && window.open) {
+        window.open('https://velora.ikelene.net/permissions', '_blank');
+      }
+    }
+
+    openLoginPrompt(args) {
+      this._openLoginPopup(args);
     }
 
     whenConnected()           { const v = this._evtConnected;      this._evtConnected = false;      return v; }
@@ -629,6 +740,7 @@
     }
 
     storageKeyExists({ KEY }) {
+      this._requireScope(SCOPES.STORAGE_READ);
       return this._http(`/storage/${this._storageId}/${encodeURIComponent(KEY)}`).then(d => !d.error);
     }
 
@@ -639,12 +751,12 @@
     lastUserLeft()      { return this._lastUserLeft; }
     callData()          { return JSON.stringify(this._callData); }
     typingUsers()       { return JSON.stringify(this._typingUsers); }
-    getFriendCount()    { if (!this._authenticated) return 'Not logged in'; return this._friends.length; }
-    getFriendsList()    { if (!this._authenticated) return 'Not logged in'; return JSON.stringify(this._friends); }
-    getFriendRequests() { if (!this._authenticated) return 'Not logged in'; return JSON.stringify(this._friendRequests); }
+    getFriendCount()    { if (!this._authenticated) return 'Not logged in'; this._requireScope(SCOPES.FRIENDS_READ); return this._friends.length; }
+    getFriendsList()    { if (!this._authenticated) return 'Not logged in'; this._requireScope(SCOPES.FRIENDS_READ); return JSON.stringify(this._friends); }
+    getFriendRequests() { if (!this._authenticated) return 'Not logged in'; this._requireScope(SCOPES.FRIENDS_READ); return JSON.stringify(this._friendRequests); }
     allBadges()         { if (!this._authenticated) return 'Not logged in'; return JSON.stringify(this._badges); }
     badgeCount()        { if (!this._authenticated) return 'Not logged in'; return this._badges.length; }
-    getMailList()       { if (!this._authenticated) return 'Not logged in'; return JSON.stringify(this._mail); }
+    getMailList()       { if (!this._authenticated) return 'Not logged in'; this._requireScope(SCOPES.VMAIL_READ); return JSON.stringify(this._mail); }
     connectedUsers() {
       if (!this._connected) return 'Not connected';
       const obj = {};
@@ -720,8 +832,6 @@
 
     getAccountKey({ KEY }) { if (!this._authenticated) return 'Not logged in'; return this._resolveAccountKey(KEY); }
 
-    openLoginPrompt() { this._openLoginPopup(); }
-
     _waitForWS(ms = 5000) {
       if (this._wsReady) return Promise.resolve();
       return new Promise(resolve => {
@@ -745,6 +855,7 @@
       if (this._notifInterval) { clearInterval(this._notifInterval); this._notifInterval = null; }
       if (this._token) await this._http('/auth/logout', 'POST').catch(() => {});
       this._token = null;
+      this._grantedScopes = 0;
       this._user = null;
       this._authenticated = false;
       this._accountObj = {};
@@ -766,14 +877,17 @@
     }
 
     sendGlobalMessage({ MSG }) {
+      this._requireScope(SCOPES.CHAT);
       this._wsSend({ type: 'globalMessage', message: MSG });
     }
 
     joinRoom({ ROOM }) {
+      this._requireScope(SCOPES.CHAT);
       this._wsSend({ type: 'joinRoom', room: ROOM });
     }
 
     sendRoomMessage({ MSG, ROOM }) {
+      this._requireScope(SCOPES.CHAT);
       this._wsSend({ type: 'roomMessage', room: ROOM, message: MSG });
     }
 
@@ -781,70 +895,83 @@
       this._wsSend({ type: STATE === 'on' ? 'typing' : 'stopTyping' });
     }
 
-    getGlobalMessages() { return JSON.stringify(this._globalMessages.slice(-50)); }
-    getRoomMessages({ ROOM }) { return JSON.stringify((this._roomMessages[ROOM] || []).slice(-50)); }
+    getGlobalMessages() { this._requireScope(SCOPES.CHAT); return JSON.stringify(this._globalMessages.slice(-50)); }
+    getRoomMessages({ ROOM }) { this._requireScope(SCOPES.CHAT); return JSON.stringify((this._roomMessages[ROOM] || []).slice(-50)); }
 
     async getStorage({ KEY }) {
       if (!this._storageId) return '';
+      this._requireScope(SCOPES.STORAGE_READ);
       const data = await this._http(`/storage/${encodeURIComponent(this._storageId)}/${encodeURIComponent(KEY)}`).catch(() => ({}));
       return data.value ?? '';
     }
 
     async setStorage({ KEY, VALUE }) {
       if (!this._storageId) return;
+      this._requireScope(SCOPES.STORAGE_WRITE);
       await this._cmd(`/storage/${encodeURIComponent(this._storageId)}/${encodeURIComponent(KEY)}`, 'PUT', { value: VALUE });
     }
 
     async deleteStorageKey({ KEY }) {
       if (!this._storageId) return;
+      this._requireScope(SCOPES.STORAGE_WRITE);
       await this._cmd(`/storage/${encodeURIComponent(this._storageId)}/${encodeURIComponent(KEY)}`, 'DELETE');
     }
 
     async getAllStorageKeys() {
       if (!this._storageId) return '[]';
+      this._requireScope(SCOPES.STORAGE_READ);
       const data = await this._http(`/storage/${encodeURIComponent(this._storageId)}/keys`).catch(() => ({}));
       return JSON.stringify(data.keys || []);
     }
 
     async getAllStorageValues() {
       if (!this._storageId) return '[]';
+      this._requireScope(SCOPES.STORAGE_READ);
       const data = await this._http(`/storage/${encodeURIComponent(this._storageId)}/values`).catch(() => ({}));
       return JSON.stringify(data.values || []);
     }
 
     async clearStorage() {
       if (!this._storageId) return;
+      this._requireScope(SCOPES.STORAGE_WRITE);
       await this._cmd(`/storage/${encodeURIComponent(this._storageId)}`, 'DELETE');
     }
 
     async storageUsage() {
+      this._requireScope(SCOPES.STORAGE_READ);
       const data = await this._http('/storage-info/info/usage').catch(() => ({}));
       return data.usage ?? 0;
     }
     async storageLimit() {
+      this._requireScope(SCOPES.STORAGE_READ);
       const data = await this._http('/storage-info/info/usage').catch(() => ({}));
       return data.limit ?? 5242880;
     }
     async storageRemaining() {
+      this._requireScope(SCOPES.STORAGE_READ);
       const data = await this._http('/storage-info/info/usage').catch(() => ({}));
       return data.remaining ?? 0;
     }
     async storageBiggest() {
+      this._requireScope(SCOPES.STORAGE_READ);
       const data = await this._http('/storage-info/info/usage').catch(() => ({}));
       return JSON.stringify(data.breakdown || []);
     }
 
     async sendMail({ TO, SUBJECT, MSG }) {
+      this._requireScope(SCOPES.VMAIL_SEND);
       await this._cmd('/mail/send', 'POST', { to: TO, subject: SUBJECT, message: MSG });
     }
 
     getMailBody({ N }) {
       if (!this._authenticated) return 'Not logged in';
+      this._requireScope(SCOPES.VMAIL_READ);
       const idx = parseInt(N) - 1;
       return this._mail[idx]?.body ?? '';
     }
 
     async deleteMail({ N }) {
+      this._requireScope(SCOPES.VMAIL_SEND);
       const idx = parseInt(N) - 1;
       const mail = this._mail[idx];
       if (!mail) return;
@@ -853,15 +980,18 @@
     }
 
     async deleteAllMail() {
+      this._requireScope(SCOPES.VMAIL_SEND);
       await this._cmd('/mail', 'DELETE');
       this._mail = [];
     }
 
     async sendFriendRequest({ USER }) {
+      this._requireScope(SCOPES.FRIENDS_MANAGE);
       await this._cmd('/friends/request', 'POST', { username: USER });
     }
 
     async acceptFriendReq({ USER }) {
+      this._requireScope(SCOPES.FRIENDS_MANAGE);
       const req = this._friendRequests.find(r => r.from_username === USER);
       if (!req) return;
       await this._cmd(`/friends/request/${req.id}/accept`, 'PATCH');
@@ -869,6 +999,7 @@
     }
 
     async declineFriendReq({ USER }) {
+      this._requireScope(SCOPES.FRIENDS_MANAGE);
       const req = this._friendRequests.find(r => r.from_username === USER);
       if (!req) return;
       await this._cmd(`/friends/request/${req.id}/decline`, 'PATCH');
@@ -876,62 +1007,75 @@
     }
 
     async removeFriend({ USER }) {
+      this._requireScope(SCOPES.FRIENDS_MANAGE);
       await this._cmd(`/friends/${encodeURIComponent(USER)}`, 'DELETE');
       await this._fetchFriends();
     }
 
     async getFriendStatus({ USER }) {
+      if (!this._authenticated) return 'Not logged in';
+      this._requireScope(SCOPES.FRIENDS_READ);
       const data = await this._http(`/friends/status/${encodeURIComponent(USER)}`).catch(() => ({}));
       return data.status ?? 'none';
     }
 
     async getProfileNote({ USER }) {
       if (!this._authenticated) return 'Not logged in';
+      this._requireScope(SCOPES.FRIENDS_READ);
       const data = await this._http(`/account/notes/${encodeURIComponent(USER)}`).catch(() => ({}));
       if (data.error === 'plus_required') return 'Plus required';
       return data.note ?? '';
     }
 
     async setProfileNote({ USER, NOTE }) {
+      this._requireScope(SCOPES.FRIENDS_MANAGE);
       await this._cmd(`/account/notes/${encodeURIComponent(USER)}`, 'PUT', { note: NOTE });
     }
 
     async deleteProfileNote({ USER }) {
+      this._requireScope(SCOPES.FRIENDS_MANAGE);
       await this._cmd(`/account/notes/${encodeURIComponent(USER)}`, 'DELETE', {});
     }
 
     async getBalance() {
       if (!this._authenticated) return 'Not logged in';
+      this._requireScope(SCOPES.CURRENCY_READ);
       const data = await this._http('/currency/balance').catch(() => ({}));
       return data.balance ?? 0;
     }
 
     async transferCredits({ AMOUNT, USER }) {
+      this._requireScope(SCOPES.CURRENCY_PAY);
       await this._cmd('/currency/transfer', 'POST', { to: USER, amount: parseInt(AMOUNT) });
     }
 
     async getTransactions() {
       if (!this._authenticated) return 'Not logged in';
+      this._requireScope(SCOPES.CURRENCY_READ);
       const data = await this._http('/currency/transactions').catch(() => ({}));
       return JSON.stringify(data.transactions || []);
     }
 
     async subscribe({ AMOUNT, USER, PERIOD, NOTE }) {
+      this._requireScope(SCOPES.CURRENCY_PAY);
       await this._cmd('/currency/subscribe', 'POST', { to: USER, amount: parseInt(AMOUNT), period: PERIOD, note: NOTE });
     }
 
     async cancelSubscription({ USER }) {
+      this._requireScope(SCOPES.CURRENCY_PAY);
       await this._cmd(`/currency/subscribe/user/${encodeURIComponent(USER)}`, 'DELETE');
     }
 
     async getOutgoingSubs() {
       if (!this._authenticated) return 'Not logged in';
+      this._requireScope(SCOPES.CURRENCY_READ);
       const data = await this._http('/currency/subscriptions/outgoing').catch(() => ({}));
       return JSON.stringify(data.subscriptions || []);
     }
 
     async getIncomingSubs() {
       if (!this._authenticated) return 'Not logged in';
+      this._requireScope(SCOPES.CURRENCY_READ);
       const data = await this._http('/currency/subscriptions/incoming').catch(() => ({}));
       return JSON.stringify(data.subscriptions || []);
     }
@@ -964,6 +1108,7 @@
     }
 
     async uploadImage({ DATA_URI, MODE }) {
+      this._requireScope(SCOPES.MEDIA_UPLOAD);
       this._uploadStatus = 'uploading'; this._uploadProgress = 0;
       const doUpload = async () => {
         let data;
@@ -986,6 +1131,7 @@
     }
 
     async uploadAudio({ DATA_URI, MODE }) {
+      this._requireScope(SCOPES.MEDIA_UPLOAD);
       this._uploadStatus = 'uploading'; this._uploadProgress = 0;
       const doUpload = async () => {
         let data;
@@ -1009,19 +1155,21 @@
     }
 
     async uploadVideo({ DATA_URI, MODE }) {
+      this._requireScope(SCOPES.MEDIA_UPLOAD);
       this._uploadStatus = 'uploading'; this._uploadProgress = 0;
       const doUpload = async () => {
         let data;
         if (typeof DATA_URI === 'string' && DATA_URI.startsWith('blob:')) {
           // splits into 10 MB pieces to stay under cf's 100 mb limit (boo)
-          // avoids loading entire file into memory if possible
+          // grabs the actual File object if we have it instead of re-fetching the
+          // blob url, way faster and doesn't load the whole thing into memory twice
           const fileBlob = (this._selectedFile && this._selectedFileUrl === DATA_URI)
             ? this._selectedFile
             : await this._blobFromUrl(DATA_URI);
 
           const mimeType = fileBlob.type || 'video/mp4';
           const originalName = this._selectedFileName || 'video.mp4';
-          const CHUNK = 10 * 1024 * 1024;
+          const CHUNK = 10 * 1024 * 1024; // 10 MB per chunk
           const total = Math.ceil(fileBlob.size / CHUNK);
           const sessionId = `${Date.now()}_${Math.random().toString(36).slice(2, 10)}`;
 
@@ -1056,6 +1204,7 @@
     }
 
     async uploadPfp({ DATA_URI, MODE }) {
+      this._requireScope(SCOPES.ACCOUNT_WRITE);
       this._uploadStatus = 'uploading'; this._uploadProgress = 0;
       const doUpload = async () => {
         let data;
@@ -1078,6 +1227,7 @@
     }
 
     async setChatColor({ COLOR }) {
+      this._requireScope(SCOPES.ACCOUNT_WRITE);
       await this._cmd('/account/update', 'PATCH', { color: COLOR });
     }
 
@@ -1094,6 +1244,7 @@
         this._selectedFileName = '';
         this._selectedFileSize = 0;
         this._selectedFile = null;
+        // gotta manually clean up the old blob url or it just sits in memory forever
         if (this._selectedFileUrl) { try { URL.revokeObjectURL(this._selectedFileUrl); } catch (_) {} }
         this._selectedFileUrl = '';
 
@@ -1121,6 +1272,8 @@
           const file = input.files && input.files[0];
           if (!file) { finish(); return; }
 
+          // createObjectURL is basically instant no matter how big the file is,
+          // it doesn't actually read the file into memory or anything
           this._selectedFile = file;
           this._selectedFileUrl = URL.createObjectURL(file);
           this._selectedFileName = file.name || '';
@@ -1140,14 +1293,18 @@
 
     async fetchLoginHistory() {
       if (!this._token) return;
+      this._requireScope(SCOPES.PROFILE_SENSITIVE);
       const data = await this._cmd('/auth/login-history');
       this._loginHistory = data.history || [];
     }
 
-    loginHistoryCount() { return this._loginHistory.length; }
-    loginHistoryJSON()  { return JSON.stringify(this._loginHistory); }
-    lastLoginDevice()   { return this._loginHistory[0]?.browser_ua || ''; }
-    lastLoginIP()       { return this._loginHistory[0]?.ip || ''; }
+    loginHistoryCount() { this._requireScope(SCOPES.PROFILE_SENSITIVE); return this._loginHistory.length; }
+    loginHistoryJSON()  { this._requireScope(SCOPES.PROFILE_SENSITIVE); return JSON.stringify(this._loginHistory); }
+    lastLoginDevice()   { this._requireScope(SCOPES.PROFILE_SENSITIVE); return this._loginHistory[0]?.browser_ua || ''; }
+    // this isn't actually ur real ip!! its a hashed version, we don't keep raw ips
+    // around anymore for privacy reasons. still useful for "is this the same
+    // location as last time" type checks tho, just cant reverse it back into an ip
+    lastLoginIP()       { this._requireScope(SCOPES.PROFILE_SENSITIVE); return this._loginHistory[0]?.ip_hash || ''; }
 
     async lookupUser({ USER }) {
       const data = await this._cmd(`/account/lookup/${encodeURIComponent(USER)}`);
@@ -1175,6 +1332,7 @@
 
     async _pollLoginHistory() {
       if (!this._token) return;
+      if ((this._grantedScopes & SCOPES.PROFILE_SENSITIVE) !== SCOPES.PROFILE_SENSITIVE) return;
       const data = await this._http('/auth/login-history').catch(() => ({}));
       const history = data.history || [];
       if (this._knownLoginCount === -1) {
@@ -1224,7 +1382,11 @@
     }
   }
 
-  // FINALLY we can register (this took me a while to make holy crap)
-  Scratch.extensions.register(new VeloraExtension(Scratch.vm.runtime));
+  // and NOW we can register it, this took forever to build
+  if (typeof Scratch !== 'undefined') {
+    Scratch.extensions.register(new VeloraExtension(Scratch.vm.runtime));
+  } else if (typeof window !== 'undefined') {
+    window._VeloraExtension = VeloraExtension;
+  }
 
 })();

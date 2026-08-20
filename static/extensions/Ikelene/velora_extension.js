@@ -5,7 +5,7 @@
 
   const SERVER_HTTP = 'https://velora.ikelene.net';
   const SERVER_WS   = 'wss://velora.ikelene.net';
-  const EXT_ID      = 'velora';
+  const EXT_ID      = 'ikelenepmvelora';
 
   // copy pasted from auth.js's SCOPES obj, gotta keep these two in sync by hand
   // since this file can't just require() the server code

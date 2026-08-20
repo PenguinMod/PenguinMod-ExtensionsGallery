@@ -1,3 +1,6 @@
+// Credits:
+// SharkPool Extra Controls
+// CST1229 https://github.com/CST1229/
 
 (function(Scratch) {
     'use strict';

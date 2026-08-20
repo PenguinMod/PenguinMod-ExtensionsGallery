@@ -58,6 +58,7 @@ export default [
         creator: "ScrTwPm",
         documentation: "RunPython",
         isGitHub: true,
+        notes: "Credit to CST1229 (github) and Sharkool (github)"
     },
     {
         name: "Lighting",

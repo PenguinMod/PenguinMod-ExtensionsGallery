@@ -367,6 +367,14 @@ export default [
         isGitHub: true,
     },
     {
+        name: "Animated Loaders",
+        description: "Create and display modern CSS loading spinners on the stage.",
+        code: "Ikelene/loaders.js",
+        banner: "Ikelene/loaders.png",
+        creator: "Ikelene",
+        isGitHub: true,
+    },
+    {
         name: "Git Penguin",
         description: "Make requests and control the files for your GitHub repository.",
         code: "justablock/gitpenguin.js",

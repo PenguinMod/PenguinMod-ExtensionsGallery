@@ -1,6 +1,3 @@
-// Credits:
-// SharkPool Extra Controls
-// CST1229 https://github.com/CST1229/
 
 (function(Scratch) {
     'use strict';
@@ -355,6 +352,12 @@
 
 
         { blockType: Scratch.BlockType.LABEL, text: "Inputs" },
+        
+                {
+                opcode: 'abtinp',
+                blockType: Scratch.BlockType.BUTTON, 
+                text: 'About inputs',
+                },
 
             {
                 opcode: 'input',
@@ -1162,6 +1165,12 @@ isstrict(args, utii){
 }
 aboutstrict(){
                     window.alert("Strict editing makes the blue python blocks only work when they are under the When Python Code Starts hat block. This is similar to how the editor works in Edublocks. If you have it off, it will allow python blocks to be used outside of python scripts (not recommended). However, it can be turned off for certain debugging purposes, but by default it is on to mirror coding in Python as much as possible. Feel free to turn it off if it annoys you.")
+}
+
+abtinp(){
+  window.alert(`Prints the prompt on the output and awaits an answer. The answer is submitted when the enter key is pressed. 1) IMPORTANT: This will NOT work if the Python output is not showing. 2) This does not work on mobile devices as it will not prompt the touch keyboard. 3) Do NOT click anything else during the prompt until you finish or your python code will stall.
+`)
+
 }
 
 

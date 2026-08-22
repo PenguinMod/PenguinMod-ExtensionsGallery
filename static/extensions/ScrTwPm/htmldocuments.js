@@ -671,9 +671,9 @@
                 el.style.border = "1px solid black"
                 const container = Scratch.renderer.canvas.parentElement;
                 container.appendChild(el);
-                                    if(!this.viewing.includes(args.PAGE)){
-                        this.viewing.push(args.PAGE)
-                    }
+                if (!this.viewing.includes(args.PAGE)) {
+                    this.viewing.push(args.PAGE)
+                }
             } catch (error) { }
         }
 
@@ -928,7 +928,7 @@
                     el.style.border = "1px solid black"
                     const container = Scratch.renderer.canvas.parentElement;
                     container.appendChild(el);
-                    if(!this.viewing.includes(args.PAGE)){
+                    if (!this.viewing.includes(args.PAGE)) {
                         this.viewing.push(args.PAGE)
                     }
                 }
@@ -954,7 +954,7 @@
                     el.style.border = "1px solid black"
                     const container = Scratch.renderer.canvas.parentElement;
                     container.appendChild(el);
-                                        if(!this.viewing.includes(args.PAGE)){
+                    if (!this.viewing.includes(args.PAGE)) {
                         this.viewing.push(args.PAGE)
                     }
                 }
@@ -983,7 +983,7 @@
                     el.style.border = "1px solid black"
                     const container = Scratch.renderer.canvas.parentElement;
                     container.appendChild(el);
-                                        if(!this.viewing.includes(args.PAGE)){
+                    if (!this.viewing.includes(args.PAGE)) {
                         this.viewing.push(args.PAGE)
                     }
                 }

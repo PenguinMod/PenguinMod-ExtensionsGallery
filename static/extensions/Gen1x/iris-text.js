@@ -315,9 +315,16 @@ Enjoy!! :D
         return style;
     }
 
+    let stripMarkupCacheKey = null;
+    let stripMarkupCacheValue = null;
+
     function stripMarkup(text) {
+        if (text === stripMarkupCacheKey) return stripMarkupCacheValue;
         TAG_RE_STRIP.lastIndex = 0;
-        return text.replace(TAG_RE_STRIP, '');
+        const result = text.replace(TAG_RE_STRIP, '');
+        stripMarkupCacheKey = text;
+        stripMarkupCacheValue = result;
+        return result;
     }
 
     function defaultBaseStyle() {
@@ -335,7 +342,11 @@ Enjoy!! :D
 
     const WAIT_RE = /\[wait=([0-9]*\.?[0-9]+)\]/gi;
 
+    let splitWaitStagesCacheKey = null;
+    let splitWaitStagesCacheValue = null;
+
     function splitWaitStages(text) {
+        if (text === splitWaitStagesCacheKey) return splitWaitStagesCacheValue;
         WAIT_RE.lastIndex = 0;
         const stages = [];
         let i = 0;
@@ -354,6 +365,8 @@ Enjoy!! :D
             text: textSoFar,
             waitAfter: 0
         });
+        splitWaitStagesCacheKey = text;
+        splitWaitStagesCacheValue = stages;
         return stages;
     }
 
@@ -381,8 +394,8 @@ Enjoy!! :D
                 color: '#000000',
                 opacity: 50,
                 blur: 8,
-                offsetX: 4,
-                offsetY: 4
+                offsetX: 0,
+                offsetY: 0
             },
             textBackground: {
                 enabled: false,
@@ -423,7 +436,8 @@ Enjoy!! :D
             lastFamiliesKey: null,
             lastFontDefs: '',
             revealToken: 0,
-            fontsPendingAtMeasure: false
+            fontsPendingAtMeasure: false,
+            hasPaintedOnce: false
         };
     }
 
@@ -709,12 +723,45 @@ Enjoy!! :D
         return {
             canvas,
             tinted: new Map(),
+            shadows: new Map(),
             advance: advance / GLYPH_OVERSAMPLE,
             baselineOriginXEm: baselineX / GLYPH_OVERSAMPLE,
             baselineOriginYEm: baselineY / GLYPH_OVERSAMPLE,
             fontAscentEm: ascent / GLYPH_OVERSAMPLE,
             fontDescentEm: descent / GLYPH_OVERSAMPLE
         };
+    }
+
+    const SHADOW_CACHE_LIMIT = 512;
+
+    function getShadowGlyphBitmap(shape, color, blurPx) {
+        const key = color + '\u0001' + blurPx;
+        let entry = shape.shadows.get(key);
+        if (entry) return entry;
+
+        const padPx = Math.ceil(blurPx * 3) + 2;
+        const w = shape.canvas.width + padPx * 2;
+        const h = shape.canvas.height + padPx * 2;
+        const canvas = document.createElement('canvas');
+        canvas.width = w;
+        canvas.height = h;
+        const ctx = canvas.getContext('2d');
+        ctx.shadowColor = color;
+        ctx.shadowBlur = blurPx;
+        ctx.shadowOffsetX = 0;
+        ctx.shadowOffsetY = 0;
+        ctx.drawImage(shape.canvas, padPx, padPx);
+
+        entry = {
+            canvas,
+            offsetX: -padPx,
+            offsetY: -padPx
+        };
+        if (shape.shadows.size >= SHADOW_CACHE_LIMIT) {
+            shape.shadows.delete(shape.shadows.keys().next().value);
+        }
+        shape.shadows.set(key, entry);
+        return entry;
     }
 
     function getGlyphShape(char, fontFamily, size, weight, style) {
@@ -1722,6 +1769,9 @@ Enjoy!! :D
                 if (!loadedDocumentFonts.has(family)) fontsPending = true;
                 ensureDocumentFont(family);
             }
+            if (fontsPending && !state.hasPaintedOnce) {
+                return;
+            }
             const measured = measureRichText(glyphMeasureCtx, richChars, state);
             layout = measured;
             state.shapeKey = shapeKey;
@@ -1884,10 +1934,13 @@ Enjoy!! :D
         const canvas = compositeGlyphsToCanvas(state, paintOps, docW, docH, effectiveMaxWidth, totalHeight, originX, originY);
         pushCanvasToDrawable(target, canvas, docW, docH);
         state.paintDirty = false;
+        state.hasPaintedOnce = true;
     }
 
     const loadedDocumentFonts = new Set();
     const pendingDocumentFonts = new Map();
+    const FONT_LOAD_MAX_RETRIES = 8;
+    const FONT_LOAD_RETRY_DELAY_MS = 150;
 
     function rerenderVisibleTextTargets() {
         for (const candidate of runtime.targets) {
@@ -1901,17 +1954,61 @@ Enjoy!! :D
         }
     }
 
-    function ensureDocumentFont(fontId) {
+    const FONT_PROBE_TEXT = 'AaBbGgQqWwZz01@#';
+    const FONT_PROBE_CONTROL_FAMILIES = ['serif', 'sans-serif', 'monospace'];
+    let fontProbeCtx = null;
+    let fontProbeControlWidths = null;
+
+    function getFontProbeCtx() {
+        if (fontProbeCtx) return fontProbeCtx;
+        const canvas = document.createElement('canvas');
+        fontProbeCtx = canvas.getContext('2d');
+        return fontProbeCtx;
+    }
+
+    function measureFontProbeWidth(fontFamilyCss) {
+        const ctx = getFontProbeCtx();
+        ctx.font = `16px ${fontFamilyCss}`;
+        return ctx.measureText(FONT_PROBE_TEXT).width;
+    }
+
+    function getFontProbeControlWidths() {
+        if (fontProbeControlWidths) return fontProbeControlWidths;
+        fontProbeControlWidths = FONT_PROBE_CONTROL_FAMILIES.map(measureFontProbeWidth);
+        return fontProbeControlWidths;
+    }
+
+    function isFontActuallyRendering(fontId) {
+        const rawFamily = `"${fontId}"`;
+        const controlWidths = getFontProbeControlWidths();
+        const testedWidths = FONT_PROBE_CONTROL_FAMILIES.map(fallback =>
+            measureFontProbeWidth(`${rawFamily}, ${fallback}`)
+        );
+        for (let i = 0; i < testedWidths.length; i++) {
+            if (Math.abs(testedWidths[i] - controlWidths[i]) > 0.5) return true;
+        }
+        return false;
+    }
+
+    function ensureDocumentFont(fontId, attempt) {
+        attempt = attempt || 0;
         if (!document.fonts || loadedDocumentFonts.has(fontId) || pendingDocumentFonts.has(fontId)) return;
-        const promise = document.fonts.load(`16px ${cssFontFamily(fontId)}`, 'M')
+        const fontSpec = `16px ${cssFontFamily(fontId)}`;
+        const promise = document.fonts.load(fontSpec, 'M')
+            .catch(() => [])
             .then(() => {
-                loadedDocumentFonts.add(fontId);
-                invalidateGlyphCacheForFamily(cssFontFamily(fontId));
-                rerenderVisibleTextTargets();
-            })
-            .catch(() => {})
-            .finally(() => {
                 pendingDocumentFonts.delete(fontId);
+                const apiReady = typeof document.fonts.check === 'function' ? document.fonts.check(fontSpec, 'M') : true;
+                const ready = apiReady && isFontActuallyRendering(fontId);
+                if (ready) {
+                    loadedDocumentFonts.add(fontId);
+                    invalidateGlyphCacheForFamily(cssFontFamily(fontId));
+                    rerenderVisibleTextTargets();
+                } else if (attempt < FONT_LOAD_MAX_RETRIES) {
+                    setTimeout(() => ensureDocumentFont(fontId, attempt + 1), FONT_LOAD_RETRY_DELAY_MS);
+                } else {
+                    loadedDocumentFonts.add(fontId);
+                }
             });
         pendingDocumentFonts.set(fontId, promise);
     }
@@ -2073,17 +2170,18 @@ Enjoy!! :D
             const hasTransform = hasRotation || hasScale;
 
             if (state.textShadow.enabled) {
+                const shadowShape = getGlyphShape(op.text, fontFamily, fontSize, fontWeight, fontStyle);
+                const shadowBlurPx = Math.max(0, Number(state.textShadow.blur) || 0) * DEST_SCALE;
+                const shadowBitmap = getShadowGlyphBitmap(shadowShape, state.textShadow.color, shadowBlurPx);
+                const shadowOffsetX = (Number(state.textShadow.offsetX) || 0) * DEST_SCALE + shadowBitmap.offsetX;
+                const shadowOffsetY = (Number(state.textShadow.offsetY) || 0) * DEST_SCALE + shadowBitmap.offsetY;
                 ctx.save();
                 ctx.globalAlpha = (hasOpacity ? op.opacity : 1) * Math.max(0, Math.min(100, Number(state.textShadow.opacity) || 0)) / 100;
-                ctx.shadowColor = state.textShadow.color;
-                ctx.shadowBlur = Math.max(0, Number(state.textShadow.blur) || 0) * DEST_SCALE;
-                ctx.shadowOffsetX = (Number(state.textShadow.offsetX) || 0) * DEST_SCALE;
-                ctx.shadowOffsetY = (Number(state.textShadow.offsetY) || 0) * DEST_SCALE;
                 if (!hasTransform) {
-                    ctx.drawImage(glyph.canvas, drawXEm * DEST_SCALE, drawYEm * DEST_SCALE);
+                    ctx.drawImage(shadowBitmap.canvas, drawXEm * DEST_SCALE + shadowOffsetX, drawYEm * DEST_SCALE + shadowOffsetY);
                 } else {
                     applyCharTransformOp(op, hasRotation, hasScale);
-                    ctx.drawImage(glyph.canvas, drawXEm * DEST_SCALE, drawYEm * DEST_SCALE);
+                    ctx.drawImage(shadowBitmap.canvas, drawXEm * DEST_SCALE + shadowOffsetX, drawYEm * DEST_SCALE + shadowOffsetY);
                 }
                 ctx.restore();
             }

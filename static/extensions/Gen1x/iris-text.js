@@ -2,9 +2,8 @@
 Iris Text by Gen1x - 2026
 
 Code inspiration:
-- Skins (TurboWarp version)
 - Animated Text (PenguinMod version)
-- Lambda by jwklong
+- Tween Extension by JeremyGamer13
 
 Enjoy!! :D
 */
@@ -27,6 +26,11 @@ Enjoy!! :D
     const COLOR_PRIMARY = '#17B9C7';
     const COLOR_SECONDARY = '#149DA9';
     const COLOR_TERTIARY = '#0F808A';
+
+    const WIPE_DIRECTION_BOTTOM_UP = 'bottom-up';
+    const WIPE_DIRECTION_LEFT_RIGHT = 'left-right';
+    const WIPE_DIRECTION_UP_DOWN = 'up-down';
+    const WIPE_DIRECTION_RIGHT_LEFT = 'right-left';
 
     /* stolen from PM's animated text extension code :3 */
     const SANS_SERIF_ID = 'Sans Serif';
@@ -261,6 +265,25 @@ Enjoy!! :D
         };
     }
 
+    function styleSnapshotMatches(snapshot, style) {
+        if (!snapshot) return false;
+        if (snapshot.color !== style.color) return false;
+        if (snapshot.bold !== style.bold) return false;
+        if (snapshot.italic !== style.italic) return false;
+        if (snapshot.underline !== style.underline) return false;
+        if (snapshot.strike !== style.strike) return false;
+        if (snapshot.size !== style.size) return false;
+        if (snapshot.font !== style.font) return false;
+        const tags = Array.isArray(style.tags) ? style.tags : null;
+        const snapTags = snapshot.tags;
+        if (!tags) return snapTags.length === 0;
+        if (tags.length !== snapTags.length) return false;
+        for (let i = 0; i < tags.length; i++) {
+            if (tags[i] !== snapTags[i]) return false;
+        }
+        return true;
+    }
+
     function applyCharacterStyleOverrides(chars, overrides) {
         for (const index in overrides) {
             const char = chars[index];
@@ -379,6 +402,9 @@ Enjoy!! :D
             resetCharTransformsOnText: true,
             charStyleOverrides: {},
             charStyleOverridesVersion: 0,
+            charMasks: {},
+            charMasksVersion: 0,
+            charMaskGeometryVersion: 0,
             typingControl: null,
             skinId: null,
             drawableWidth: 0,
@@ -389,11 +415,15 @@ Enjoy!! :D
             layoutKey: null,
             layout: null,
             charBoxesLayout: null,
+            paintOps: null,
+            paintOpsKey: null,
+            paintOpsLayout: null,
             paintDirty: true,
             paintFingerprint: null,
             lastFamiliesKey: null,
             lastFontDefs: '',
-            revealToken: 0
+            revealToken: 0,
+            fontsPendingAtMeasure: false
         };
     }
 
@@ -421,7 +451,7 @@ Enjoy!! :D
         if (!state) {
             state = defaultState();
             target.setCustomState(STATE_KEY, state);
-        } else {
+        } else if (!state.iiMigrated) {
             const defaults = defaultState();
             state.textShadow = Object.assign(defaults.textShadow, state.textShadow || {});
             state.textBackground = Object.assign(defaults.textBackground, state.textBackground || {});
@@ -433,6 +463,7 @@ Enjoy!! :D
             if (typeof state.resetCharTransformsOnText !== 'boolean') state.resetCharTransformsOnText = defaults.resetCharTransformsOnText;
             if (typeof state.charStyleOverridesVersion !== 'number') state.charStyleOverridesVersion = 0;
             if (state.typingControl !== 'skip' && state.typingControl !== 'stop') state.typingControl = null;
+            state.iiMigrated = true;
         }
         return state;
     }
@@ -574,7 +605,9 @@ Enjoy!! :D
                 x: 0,
                 y: 0,
                 rotation: 0,
-                opacity: 1
+                opacity: 1,
+                scale: 1,
+                color: null
             };
             state.charOverridesVersion++;
         }
@@ -587,19 +620,32 @@ Enjoy!! :D
         state.charOverridesVersion++;
     }
 
-    const SVG_NS = 'http://www.w3.org/2000/svg';
-    let measureSvg = null;
+    function setCharMaskForIndex(state, index, mask) {
+        state.charMasks[index] = mask;
+        state.charMasksVersion++;
+        state.charMaskGeometryVersion++;
+    }
 
-    function getMeasureSvg() {
-        if (measureSvg && document.body.contains(measureSvg)) return measureSvg;
-        measureSvg = document.createElementNS(SVG_NS, 'svg');
-        measureSvg.setAttribute('width', '0');
-        measureSvg.setAttribute('height', '0');
-        measureSvg.style.position = 'absolute';
-        measureSvg.style.visibility = 'hidden';
-        measureSvg.style.pointerEvents = 'none';
-        document.body.appendChild(measureSvg);
-        return measureSvg;
+    function clearCharMaskForIndex(state, index) {
+        if (!state.charMasks[index]) return false;
+        delete state.charMasks[index];
+        state.charMasksVersion++;
+        state.charMaskGeometryVersion++;
+        return true;
+    }
+
+    function indexRange(startArg, endArg) {
+        let start = Math.round(startArg) - 1;
+        let end = Math.round(endArg) - 1;
+        if (end < start) {
+            const tmp = start;
+            start = end;
+            end = tmp;
+        }
+        return {
+            start,
+            end
+        };
     }
 
     const GLYPH_OVERSAMPLE = 3;
@@ -684,6 +730,177 @@ Enjoy!! :D
         return entry;
     }
 
+    const maskPatternSurfaces = new Map();
+    const maskGlyphStencilCache = new Map();
+    const STENCIL_CACHE_LIMIT = 400;
+    const maskScratchCanvasPool = [];
+
+    function getMaskPatternSurface(texture) {
+        let surface = maskPatternSurfaces.get(texture.cacheKey);
+        if (surface) return surface;
+        const canvas = document.createElement('canvas');
+        canvas.width = 1;
+        canvas.height = 1;
+        const ctx = canvas.getContext('2d');
+        surface = { canvas, ctx, pattern: null, patternDirty: true };
+        maskPatternSurfaces.set(texture.cacheKey, surface);
+        return surface;
+    }
+
+    function sampleMaskPattern(texture, matrix, w, h) {
+        const surface = getMaskPatternSurface(texture);
+        if (surface.canvas.width !== w || surface.canvas.height !== h) {
+            surface.canvas.width = w;
+            surface.canvas.height = h;
+            surface.patternDirty = true;
+        }
+        if (surface.patternDirty) {
+            surface.pattern = surface.ctx.createPattern(texture.canvas, 'repeat');
+            surface.patternDirty = false;
+        }
+        if (!surface.pattern) return null;
+
+        surface.pattern.setTransform(matrix);
+        surface.ctx.setTransform(1, 0, 0, 1, 0, 0);
+        surface.ctx.globalAlpha = 1;
+        surface.ctx.globalCompositeOperation = 'source-over';
+        surface.ctx.clearRect(0, 0, w, h);
+        surface.ctx.fillStyle = surface.pattern;
+        surface.ctx.fillRect(0, 0, w, h);
+
+        return surface.canvas;
+    }
+
+    function getMaskGlyphStencil(shape) {
+        let stencil = maskGlyphStencilCache.get(shape);
+        if (stencil) return stencil;
+        stencil = document.createElement('canvas');
+        stencil.width = shape.canvas.width;
+        stencil.height = shape.canvas.height;
+        const sctx = stencil.getContext('2d');
+        sctx.fillStyle = '#ffffff';
+        sctx.fillRect(0, 0, stencil.width, stencil.height);
+        sctx.globalCompositeOperation = 'destination-in';
+        sctx.drawImage(shape.canvas, 0, 0);
+        if (maskGlyphStencilCache.size >= STENCIL_CACHE_LIMIT) {
+            maskGlyphStencilCache.delete(maskGlyphStencilCache.keys().next().value);
+        }
+        maskGlyphStencilCache.set(shape, stencil);
+        return stencil;
+    }
+
+    function acquireMaskScratchCanvas(w, h) {
+        const reused = maskScratchCanvasPool.pop();
+        const canvas = reused || document.createElement('canvas');
+        if (canvas.width !== w) canvas.width = w;
+        if (canvas.height !== h) canvas.height = h;
+        return canvas;
+    }
+
+    function releaseMaskScratchCanvas(canvas) {
+        if (maskScratchCanvasPool.length < 64) maskScratchCanvasPool.push(canvas);
+    }
+
+    function drawMaskedGlyph(destCtx, char, fontFamily, size, weight, style, mask, texture, worldDrawX, worldDrawY, spanW, spanH, spanOriginX, spanOriginY, destX, destY, alpha) {
+        const coverage = Math.max(0, Math.min(100, Number(mask.coverage) || 0)) / 100;
+        if (coverage <= 0) return;
+
+        const shape = getGlyphShape(char, fontFamily, size, weight, style);
+        const w = shape.canvas.width;
+        const h = shape.canvas.height;
+
+        const zoom = Math.max(0.01, (Number(mask.zoom) || 100) / 100);
+        const rotation = Number(mask.rotation) || 0;
+        const anchorX = (mask.x || 0) * DEST_SCALE - destX;
+        const anchorY = -(mask.y || 0) * DEST_SCALE - destY;
+
+        const matrix = new DOMMatrix();
+        matrix.translateSelf(anchorX, anchorY);
+        if (rotation !== 0) matrix.rotateSelf(rotation);
+        matrix.scaleSelf(zoom, zoom);
+
+        const sampled = sampleMaskPattern(texture, matrix, w, h);
+        if (!sampled) return;
+
+        const scratch = acquireMaskScratchCanvas(w, h);
+        const sctx = scratch.getContext('2d');
+        sctx.setTransform(1, 0, 0, 1, 0, 0);
+        sctx.clearRect(0, 0, w, h);
+        sctx.globalAlpha = 1;
+        sctx.globalCompositeOperation = 'source-over';
+        sctx.drawImage(sampled, 0, 0);
+
+        const stencil = getMaskGlyphStencil(shape);
+        sctx.globalCompositeOperation = 'destination-in';
+        sctx.drawImage(stencil, 0, 0);
+        sctx.globalCompositeOperation = 'source-over';
+
+        if (coverage < 1) {
+            const seamless = !!mask.seamless;
+            const localOffsetX = seamless ? (worldDrawX - spanOriginX) : 0;
+            const localOffsetY = seamless ? (worldDrawY - spanOriginY) : 0;
+            const effSpanW = seamless && spanW ? spanW : w;
+            const effSpanH = seamless && spanH ? spanH : h;
+            const blurPx = Math.max(0, Number(mask.blur) || 0) * DEST_SCALE;
+            const direction = mask.direction || WIPE_DIRECTION_BOTTOM_UP;
+            const bandHalf = Math.max(0.5, blurPx / 2);
+
+            let revealEdge, axisIsX, growsPositive;
+            if (direction === WIPE_DIRECTION_LEFT_RIGHT) {
+                revealEdge = effSpanW * coverage - localOffsetX;
+                axisIsX = true;
+                growsPositive = true;
+            } else if (direction === WIPE_DIRECTION_RIGHT_LEFT) {
+                revealEdge = effSpanW - effSpanW * coverage - localOffsetX;
+                axisIsX = true;
+                growsPositive = false;
+            } else if (direction === WIPE_DIRECTION_UP_DOWN) {
+                revealEdge = effSpanH * coverage - localOffsetY;
+                axisIsX = false;
+                growsPositive = true;
+            } else {
+                revealEdge = effSpanH - effSpanH * coverage - localOffsetY;
+                axisIsX = false;
+                growsPositive = false;
+            }
+
+            const axisSize = axisIsX ? w : h;
+            const gradStart = growsPositive ? revealEdge - bandHalf : revealEdge + bandHalf;
+            const gradEnd = growsPositive ? revealEdge + bandHalf : revealEdge - bandHalf;
+            const bandFrom = Math.min(gradStart, gradEnd);
+            const bandTo = Math.max(gradStart, gradEnd);
+
+            if (bandTo <= 0) {
+                if (growsPositive) {
+                    releaseMaskScratchCanvas(scratch);
+                    return;
+                }
+            } else if (bandFrom >= axisSize) {
+                if (!growsPositive) {
+                    releaseMaskScratchCanvas(scratch);
+                    return;
+                }
+            } else {
+                sctx.globalCompositeOperation = 'destination-in';
+                const gradient = axisIsX ?
+                    sctx.createLinearGradient(gradStart, 0, gradEnd, 0) :
+                    sctx.createLinearGradient(0, gradStart, 0, gradEnd);
+                gradient.addColorStop(0, 'rgba(255,255,255,1)');
+                gradient.addColorStop(1, 'rgba(255,255,255,0)');
+                sctx.fillStyle = gradient;
+                sctx.fillRect(0, 0, w, h);
+                sctx.globalCompositeOperation = 'source-over';
+            }
+        }
+
+        destCtx.save();
+        destCtx.globalAlpha = alpha;
+        destCtx.drawImage(scratch, destX, destY);
+        destCtx.restore();
+
+        releaseMaskScratchCanvas(scratch);
+    }
+
     function tintGlyph(shape, color) {
         let tintedCanvas = shape.tinted.get(color);
         if (tintedCanvas) return tintedCanvas;
@@ -706,8 +923,10 @@ Enjoy!! :D
 
     function getGlyphBitmap(char, fontFamily, size, weight, style, color) {
         const shape = getGlyphShape(char, fontFamily, size, weight, style);
+        let bitmap = shape.bitmaps && shape.bitmaps.get(color);
+        if (bitmap) return bitmap;
         const canvas = tintGlyph(shape, color);
-        return {
+        bitmap = {
             canvas,
             advance: shape.advance,
             baselineOriginXEm: shape.baselineOriginXEm,
@@ -715,6 +934,12 @@ Enjoy!! :D
             fontAscentEm: shape.fontAscentEm,
             fontDescentEm: shape.fontDescentEm
         };
+        if (!shape.bitmaps) shape.bitmaps = new Map();
+        if (shape.bitmaps.size >= TINT_CACHE_LIMIT) {
+            shape.bitmaps.delete(shape.bitmaps.keys().next().value);
+        }
+        shape.bitmaps.set(color, bitmap);
+        return bitmap;
     }
 
     function strokeUnderline(ctx, glyph, glyphX, glyphY, startX, endX, y, lineWidth) {
@@ -767,7 +992,199 @@ Enjoy!! :D
         }
     }
 
-    function svgFontStyle(style) {
+    const MASK_TEXTURE_RASTER_SIZE = 512;
+    const maskTextureCache = new Map();
+    const maskTexturePending = new Map();
+
+    function maskCostumeKey(targetName, costume) {
+        return targetName + '\u0001' + costume.name + '\u0001' + (costume.assetId || costume.skinId || '');
+    }
+
+    function findCostumeByRef(targetName, costumeName) {
+        for (const target of runtime.targets) {
+            if (target.isOriginal === false) continue;
+            const name = target.isStage ? 'Stage' : target.getName();
+            if (name !== targetName) continue;
+            const costumes = target.getCostumes();
+            for (const costume of costumes) {
+                if (costume.name === costumeName) return costume;
+            }
+        }
+        return null;
+    }
+
+    function rasterizeCostumeFromSkin(costume, targetName) {
+        if (!runtime.renderer || typeof costume.skinId !== 'number') return null;
+        const renderer = runtime.renderer;
+        const skin = renderer._allSkins && renderer._allSkins[costume.skinId];
+        if (!skin) return null;
+
+        let source = null;
+        if (skin._silhouette && skin._silhouette._lazyData) {
+            source = skin._silhouette._lazyData;
+        } else if (skin._svgImage && skin._svgImageLoaded) {
+            source = skin._svgImage;
+        } else if (skin._image) {
+            source = skin._image;
+        } else if (skin.canvas) {
+            source = skin.canvas;
+        } else if (skin._canvas) {
+            source = skin._canvas;
+        } else if (skin._svgRenderer && skin._svgRenderer._cachedImage) {
+            source = skin._svgRenderer._cachedImage;
+        } else if (skin._svgRenderer && skin._svgRenderer.canvas) {
+            source = skin._svgRenderer.canvas;
+        }
+        if (!source) return null;
+
+        const silhouetteW = skin._silhouette && skin._silhouette._width;
+        const silhouetteH = skin._silhouette && skin._silhouette._height;
+        const nativeW = source.naturalWidth || source.width || silhouetteW || (skin.size && skin.size[0]) || 1;
+        const nativeH = source.naturalHeight || source.height || silhouetteH || (skin.size && skin.size[1]) || 1;
+        if (!nativeW || !nativeH) return null;
+        const aspect = nativeW / nativeH;
+        let canvasW, canvasH;
+        if (aspect >= 1) {
+            canvasW = MASK_TEXTURE_RASTER_SIZE;
+            canvasH = Math.max(1, Math.round(MASK_TEXTURE_RASTER_SIZE / aspect));
+        } else {
+            canvasH = MASK_TEXTURE_RASTER_SIZE;
+            canvasW = Math.max(1, Math.round(MASK_TEXTURE_RASTER_SIZE * aspect));
+        }
+        const canvas = document.createElement('canvas');
+        canvas.width = canvasW;
+        canvas.height = canvasH;
+        const ctx = canvas.getContext('2d');
+        try {
+            ctx.drawImage(source, 0, 0, canvasW, canvasH);
+        } catch (e) {
+            return null;
+        }
+        return { canvas, width: canvasW, height: canvasH };
+    }
+
+    function rasterizeCostumeToCanvas(costume, targetName) {
+        return new Promise((resolve) => {
+            const asset = costume.asset;
+            if (!asset) {
+                const fromSkin = rasterizeCostumeFromSkin(costume, targetName);
+                resolve(fromSkin);
+                return;
+            }
+            let url;
+            let revoke = false;
+            try {
+                if (costume.dataFormat === 'svg') {
+                    const svgText = asset.decodeText();
+                    url = 'data:image/svg+xml;charset=utf8,' + encodeURIComponent(svgText);
+                } else {
+                    url = asset.encodeDataURI();
+                }
+            } catch (e) {
+                const fromSkin = rasterizeCostumeFromSkin(costume, targetName);
+                resolve(fromSkin);
+                return;
+            }
+
+            const img = new Image();
+            img.onload = () => {
+                const nativeW = img.naturalWidth || img.width || 1;
+                const nativeH = img.naturalHeight || img.height || 1;
+                const aspect = nativeW / nativeH;
+                let canvasW, canvasH;
+                if (aspect >= 1) {
+                    canvasW = MASK_TEXTURE_RASTER_SIZE;
+                    canvasH = Math.max(1, Math.round(MASK_TEXTURE_RASTER_SIZE / aspect));
+                } else {
+                    canvasH = MASK_TEXTURE_RASTER_SIZE;
+                    canvasW = Math.max(1, Math.round(MASK_TEXTURE_RASTER_SIZE * aspect));
+                }
+                const canvas = document.createElement('canvas');
+                canvas.width = canvasW;
+                canvas.height = canvasH;
+                const ctx = canvas.getContext('2d');
+                ctx.drawImage(img, 0, 0, canvasW, canvasH);
+                if (revoke) URL.revokeObjectURL(url);
+                resolve({
+                    canvas,
+                    width: canvasW,
+                    height: canvasH
+                });
+            };
+            img.onerror = () => {
+                if (revoke) URL.revokeObjectURL(url);
+                const fromSkin = rasterizeCostumeFromSkin(costume, targetName);
+                resolve(fromSkin);
+            };
+            img.src = url;
+        });
+    }
+
+    const maskRefRetryCounts = new Map();
+    const MASK_REF_MAX_RETRIES = 20;
+    const MASK_REF_RETRY_DELAY_MS = 150;
+
+    function getMaskTexture(targetName, costumeName) {
+        const refKey = targetName + '\u0001' + costumeName;
+        const costume = findCostumeByRef(targetName, costumeName);
+        if (!costume) {
+            const attempts = maskRefRetryCounts.get(refKey) || 0;
+            if (attempts < MASK_REF_MAX_RETRIES) {
+                maskRefRetryCounts.set(refKey, attempts + 1);
+                setTimeout(() => {
+                    getMaskTexture(targetName, costumeName);
+                }, MASK_REF_RETRY_DELAY_MS);
+            }
+            return null;
+        }
+        maskRefRetryCounts.delete(refKey);
+        const key = maskCostumeKey(targetName, costume);
+        const cached = maskTextureCache.get(key);
+        if (cached) return cached;
+
+        if (!maskTexturePending.has(key)) {
+            const promise = rasterizeCostumeToCanvas(costume, targetName).then((result) => {
+                maskTexturePending.delete(key);
+                if (result) {
+                    result.cacheKey = key;
+                    maskTextureCache.set(key, result);
+                    repaintAllTargetsUsingMasks();
+                } else {
+                    const attempts = maskRefRetryCounts.get(refKey) || 0;
+                    if (attempts < MASK_REF_MAX_RETRIES) {
+                        maskRefRetryCounts.set(refKey, attempts + 1);
+                        setTimeout(() => {
+                            getMaskTexture(targetName, costumeName);
+                        }, MASK_REF_RETRY_DELAY_MS);
+                    } else if (typeof console !== 'undefined' && console.warn) {
+                        const skin = runtime.renderer && runtime.renderer._allSkins && runtime.renderer._allSkins[costume.skinId];
+                        console.warn('[iris-text] mask texture failed to load after retries:', targetName, costumeName,
+                            'costume.asset present:', !!costume.asset,
+                            'dataFormat:', costume.dataFormat,
+                            'skinId:', costume.skinId,
+                            'skin found:', !!skin,
+                            'silhouette lazyData present:', !!(skin && skin._silhouette && skin._silhouette._lazyData),
+                            'skin keys:', skin ? Object.keys(skin) : null);
+                    }
+                }
+                return result;
+            });
+            maskTexturePending.set(key, promise);
+        }
+        return null;
+    }
+
+    function repaintAllTargetsUsingMasks() {
+        for (const candidate of runtime.targets) {
+            const state = candidate.getCustomState(STATE_KEY);
+            if (!state || !state.visible) continue;
+            if (!state.charMasks || !Object.keys(state.charMasks).length) continue;
+            state.paintFingerprint = null;
+            schedulePaint(candidate, state);
+        }
+    }
+
+    function shapingFontStyle(style) {
         const fontFamily = cssFontFamily(style.font);
         const fontWeight = style.bold ? 'bold' : 'normal';
         const fontStyle = style.italic ? 'italic' : 'normal';
@@ -781,10 +1198,8 @@ Enjoy!! :D
         };
     }
 
-    function setAttrs(el, attrs) {
-        for (const key in attrs) {
-            el.setAttribute(key, attrs[key]);
-        }
+    function canvasFontString(fontStyle) {
+        return `${fontStyle['font-style']} ${fontStyle['font-weight']} ${fontStyle['font-size']}px ${fontStyle['font-family']}`;
     }
 
     function sameShapingStyle(a, b) {
@@ -820,64 +1235,64 @@ Enjoy!! :D
         return runs;
     }
 
-    function measureShapedRuns(svg, runs, letterSpacing) {
-        const textEl = document.createElementNS(SVG_NS, 'text');
-        const tspans = [];
-        for (const run of runs) {
-            const tspan = document.createElementNS(SVG_NS, 'tspan');
-            run.fontStyle = svgFontStyle(run.style);
-            run.text = run.chars.map(rc => (rc.char === ' ' ? '\u00A0' : rc.char)).join('');
-            setAttrs(tspan, run.fontStyle);
-            if (letterSpacing) tspan.setAttribute('letter-spacing', letterSpacing);
-            tspan.textContent = run.text;
-            textEl.appendChild(tspan);
-            tspans.push(tspan);
-        }
-        svg.appendChild(textEl);
+    const charAdvanceCache = new Map();
+    const CHAR_ADVANCE_CACHE_LIMIT = 4000;
 
-        let globalOffset = 0;
-        for (let r = 0; r < runs.length; r++) {
-            const run = runs[r];
-            const n = run.chars.length;
-            const positions = new Array(n);
-            const runOrigin = n > 0 ?
-                (safeStartX(textEl, globalOffset)) :
-                0;
-            for (let i = 0; i < n; i++) {
-                const idx = globalOffset + i;
-                let shapedX = 0;
-                let advance;
-                try {
-                    shapedX = textEl.getStartPositionOfChar(idx).x - runOrigin;
-                    advance = textEl.getExtentOfChar(idx).width;
-                } catch (e) {
-                    const before = i === 0 ? 0 : tspans[r].getSubStringLength(0, i);
-                    const upTo = tspans[r].getSubStringLength(0, i + 1);
-                    shapedX = before;
-                    advance = upTo - before;
+    function charAdvanceCacheKey(fontStyle, letterSpacing, char) {
+        return fontStyle.styleHash + '\u0001' + fontStyle['font-size'] + '\u0001' +
+            (letterSpacing || 0) + '\u0001' + char;
+    }
+
+    function measureCharsIndividually(measureCtx, run, letterSpacing) {
+        const missing = [];
+        for (let i = 0; i < run.chars.length; i++) {
+            const ch = run.chars[i].char === ' ' ? '\u00A0' : run.chars[i].char;
+            const key = charAdvanceCacheKey(run.fontStyle, letterSpacing, ch);
+            if (!charAdvanceCache.has(key)) missing.push({
+                i,
+                ch,
+                key
+            });
+        }
+
+        if (missing.length) {
+            measureCtx.font = canvasFontString(run.fontStyle);
+            measureCtx.textBaseline = 'alphabetic';
+            const spacing = letterSpacing || 0;
+            for (let m = 0; m < missing.length; m++) {
+                const advance = measureCtx.measureText(missing[m].ch).width + spacing;
+                if (charAdvanceCache.size >= CHAR_ADVANCE_CACHE_LIMIT) {
+                    charAdvanceCache.delete(charAdvanceCache.keys().next().value);
                 }
-                positions[i] = {
-                    shapedX,
-                    advance
-                };
+                charAdvanceCache.set(missing[m].key, advance);
             }
-            run.positions = positions;
-            run.runWidth = tspans[r].getComputedTextLength();
-            globalOffset += n;
         }
 
-        svg.removeChild(textEl);
+        const positions = new Array(run.chars.length);
+        let x = 0;
+        for (let i = 0; i < run.chars.length; i++) {
+            const ch = run.chars[i].char === ' ' ? '\u00A0' : run.chars[i].char;
+            const key = charAdvanceCacheKey(run.fontStyle, letterSpacing, ch);
+            const advance = charAdvanceCache.get(key);
+            positions[i] = {
+                shapedX: x,
+                advance
+            };
+            x += advance;
+        }
+        run.positions = positions;
+        run.runWidth = x;
     }
 
-    function safeStartX(textEl, idx) {
-        try {
-            return textEl.getStartPositionOfChar(idx).x;
-        } catch (e) {
-            return 0;
+    function measureShapedRuns(measureCtx, runs, letterSpacing) {
+        for (const run of runs) {
+            run.fontStyle = shapingFontStyle(run.style);
+            run.text = run.chars.map(rc => (rc.char === ' ' ? '\u00A0' : rc.char)).join('');
+            measureCharsIndividually(measureCtx, run, letterSpacing);
         }
     }
 
-    function measureRichText(svg, richChars, state) {
+    function measureRichText(measureCtx, richChars, state) {
         const hardLines = [
             []
         ];
@@ -892,7 +1307,7 @@ Enjoy!! :D
         let globalIndex = 0;
         for (const line of hardLines) {
             const runs = splitShapingRuns(line, state.charOverrides, globalIndex);
-            if (runs.length) measureShapedRuns(svg, runs, state.letterSpacing);
+            if (runs.length) measureShapedRuns(measureCtx, runs, state.letterSpacing);
             for (const run of runs) {
                 for (let i = 0; i < run.chars.length; i++) {
                     run.chars[i]._width = run.positions[i].advance;
@@ -970,7 +1385,7 @@ Enjoy!! :D
 
             let runStartX = 0;
             for (const run of runs) {
-                run.fontStyle = svgFontStyle(run.style);
+                run.fontStyle = shapingFontStyle(run.style);
                 run.runStartX = runStartX;
                 run.positions = [];
                 let charX = 0;
@@ -1017,12 +1432,27 @@ Enjoy!! :D
             hash = (hash * 33) ^ ((op.y * 100) | 0);
             hash = (hash * 33) ^ ((op.rotation * 100) | 0);
             hash = (hash * 33) ^ ((op.opacity * 1000) | 0);
+            hash = (hash * 33) ^ ((op.scale * 1000) | 0);
             hash = (hash * 33) ^ hashString(op.color);
             hash = (hash * 33) ^ op.font.styleHash;
             hash = (hash * 33) ^ ((op.font['font-size'] * 100) | 0);
             hash = (hash * 33) ^ ((op.letterSpacing * 100) | 0);
             hash = (hash * 33) ^ (op.underline ? 1 : 0);
             hash = (hash * 33) ^ (op.strike ? 1 : 0);
+            if (op.mask) {
+                const m = op.mask;
+                hash = (hash * 33) ^ hashString(m.targetName);
+                hash = (hash * 33) ^ hashString(m.costumeName);
+                hash = (hash * 33) ^ ((m.coverage * 100) | 0);
+                hash = (hash * 33) ^ ((m.opacity != null ? m.opacity : 100) * 100 | 0);
+                hash = (hash * 33) ^ ((m.blur * 100) | 0);
+                hash = (hash * 33) ^ ((m.x * 100) | 0);
+                hash = (hash * 33) ^ ((m.y * 100) | 0);
+                hash = (hash * 33) ^ ((m.zoom != null ? m.zoom : 100) * 100 | 0);
+                hash = (hash * 33) ^ ((m.rotation != null ? m.rotation : 0) * 100 | 0);
+            } else {
+                hash = (hash * 33) ^ 0x5a5a;
+            }
         }
         return hash | 0;
     }
@@ -1037,12 +1467,180 @@ Enjoy!! :D
     }
 
     const pendingRenderTargets = new Set();
-    let renderFlushScheduled = false;
+
+    const charAnimations = new Map();
+    let animationTickerInstalled = false;
+
+    function nowMs() {
+        return (typeof performance !== 'undefined' && performance.now) ? performance.now() : Date.now();
+    }
+
+    const linear = x => x;
+    const sine = (x, dir) => {
+        switch (dir) {
+            case "in": return 1 - Math.cos((x * Math.PI) / 2);
+            case "out": return Math.sin((x * Math.PI) / 2);
+            case "in out": return -(Math.cos(Math.PI * x) - 1) / 2;
+            default: return 0;
+        }
+    };
+    const quad = (x, dir) => {
+        switch (dir) {
+            case "in": return x * x;
+            case "out": return 1 - (1 - x) * (1 - x);
+            case "in out": return x < 0.5 ? 2 * x * x : 1 - Math.pow(-2 * x + 2, 2) / 2;
+            default: return 0;
+        }
+    };
+    const cubic = (x, dir) => {
+        switch (dir) {
+            case "in": return x * x * x;
+            case "out": return 1 - Math.pow(1 - x, 3);
+            case "in out": return x < 0.5 ? 4 * x * x * x : 1 - Math.pow(-2 * x + 2, 3) / 2;
+            default: return 0;
+        }
+    };
+    const quart = (x, dir) => {
+        switch (dir) {
+            case "in": return x * x * x * x;
+            case "out": return 1 - Math.pow(1 - x, 4);
+            case "in out": return x < 0.5 ? 8 * x * x * x * x : 1 - Math.pow(-2 * x + 2, 4) / 2;
+            default: return 0;
+        }
+    };
+    const quint = (x, dir) => {
+        switch (dir) {
+            case "in": return x * x * x * x * x;
+            case "out": return 1 - Math.pow(1 - x, 5);
+            case "in out": return x < 0.5 ? 16 * x * x * x * x * x : 1 - Math.pow(-2 * x + 2, 5) / 2;
+            default:
+            return 0;
+        }
+    };
+    const expo = (x, dir) => {
+        switch (dir) {
+            case "in": return x === 0 ? 0 : Math.pow(2, 10 * x - 10);
+            case "out": return x === 1 ? 1 : 1 - Math.pow(2, -10 * x);
+            case "in out": return x === 0 ? 0 : x === 1 ? 1 : x < 0.5
+                ? Math.pow(2, 20 * x - 10) / 2 : (2 - Math.pow(2, -20 * x + 10)) / 2;
+            default: return 0;
+        }
+    };
+    const circ = (x, dir) => {
+        switch (dir) {
+            case "in": return 1 - Math.sqrt(1 - Math.pow(x, 2));
+            case "out": return Math.sqrt(1 - Math.pow(x - 1, 2));
+            case "in out": return x < 0.5 ? (1 - Math.sqrt(1 - Math.pow(2 * x, 2))) / 2
+                : (Math.sqrt(1 - Math.pow(-2 * x + 2, 2)) + 1) / 2;
+            default: return 0;
+        }
+    };
+    const back = (x, dir) => {
+        const c1 = 1.70158;
+        const c2 = c1 * 1.525;
+        const c3 = c1 + 1;
+        switch (dir) {
+            case "in": return c3 * x * x * x - c1 * x * x;
+            case "out": return 1 + c3 * Math.pow(x - 1, 3) + c1 * Math.pow(x - 1, 2);
+            case "in out": return x < 0.5 ? (Math.pow(2 * x, 2) * ((c2 + 1) * 2 * x - c2)) / 2
+                : (Math.pow(2 * x - 2, 2) * ((c2 + 1) * (x * 2 - 2) + c2) + 2) / 2;
+            default: return 0;
+        }
+    };
+    const elastic = (x, dir) => {
+        const c4 = (2 * Math.PI) / 3;
+        const c5 = (2 * Math.PI) / 4.5;
+        switch (dir) {
+            case "in": return x === 0 ? 0 : x === 1 ? 1 : -Math.pow(2, 10 * x - 10) * Math.sin((x * 10 - 10.75) * c4);
+            case "out": return x === 0 ? 0 : x === 1 ? 1 : Math.pow(2, -10 * x) * Math.sin((x * 10 - 0.75) * c4) + 1;
+            case "in out": return x === 0 ? 0 : x === 1 ? 1 : x < 0.5
+                ? -(Math.pow(2, 20 * x - 10) * Math.sin((20 * x - 11.125) * c5)) / 2
+                : (Math.pow(2, -20 * x + 10) * Math.sin((20 * x - 11.125) * c5)) / 2 + 1;
+            default: return 0;
+        }
+    };
+    const bounce = (x, dir) => {
+        switch (dir) {
+            case "in": return 1 - bounce(1 - x, "out");
+            case "out": {
+                const n1 = 7.5625, d1 = 2.75;
+                if (x < 1 / d1) return n1 * x * x;
+                else if (x < 2 / d1) return n1 * (x -= 1.5 / d1) * x + 0.75;
+                else if (x < 2.5 / d1) return n1 * (x -= 2.25 / d1) * x + 0.9375;
+                return n1 * (x -= 2.625 / d1) * x + 0.984375;
+            }
+            case "in out": return x < 0.5 ? (1 - bounce(1 - 2 * x, "out")) / 2 : (1 + bounce(2 * x - 1, "out")) / 2;
+            default: return 0;
+        }
+    };
+    const EasingMethods = {
+        linear, sine, quad, cubic, quart,
+        quint, expo, circ, back, elastic, bounce
+    };
+
+    function applyEasing(name, dir, x) {
+        const fn = EasingMethods[name] || linear;
+        if (fn === linear) return linear(x);
+        return fn(x, dir);
+    }
+
+    let animationsDirtyThisFrame = false;
+
+    function ensureAnimationTicker() {
+        if (animationTickerInstalled) return;
+        animationTickerInstalled = true;
+        runtime.on('BEFORE_EXECUTE', tickCharAnimations);
+    }
+
+    function tickCharAnimations() {
+        if (!charAnimations.size) return;
+        if (animationsDirtyThisFrame) return;
+        animationsDirtyThisFrame = true;
+        requestAnimationFrame(computeCharAnimationsFrame);
+    }
+
+    function computeCharAnimationsFrame() {
+        animationsDirtyThisFrame = false;
+        if (!charAnimations.size) return;
+        const t = nowMs();
+        const dirtyStates = new Set();
+        for (const [key, anim] of charAnimations) {
+            const state = getState(anim.target);
+            const o = getCharOverride(state, anim.index);
+            const elapsed = t - anim.startTime;
+            const rawProgress = anim.duration > 0 ? Math.min(1, elapsed / anim.duration) : 1;
+            const progress = applyEasing(anim.easing, anim.direction, rawProgress);
+            o[anim.property] = anim.from + (anim.to - anim.from) * progress;
+            dirtyStates.add(anim.target);
+            if (rawProgress >= 1) {
+                o[anim.property] = anim.to;
+                charAnimations.delete(key);
+            }
+        }
+        for (const target of dirtyStates) {
+            schedulePaint(target, getState(target));
+        }
+    }
+
+    let renderFlushLoopRunning = false;
+
+    function renderFlushLoop() {
+        flushPendingRenders();
+        if (pendingRenderTargets.size) {
+            requestAnimationFrame(renderFlushLoop);
+        } else {
+            renderFlushLoopRunning = false;
+        }
+    }
+
+    function ensureRenderFlushTicker() {
+        if (renderFlushLoopRunning) return;
+        renderFlushLoopRunning = true;
+        requestAnimationFrame(renderFlushLoop);
+    }
 
     function requestRenderFlush() {
-        if (renderFlushScheduled) return;
-        renderFlushScheduled = true;
-        Promise.resolve().then(flushPendingRenders);
+        ensureRenderFlushTicker();
     }
 
     function scheduleRender(target) {
@@ -1051,14 +1649,13 @@ Enjoy!! :D
     }
 
     function flushPendingRenders() {
-        renderFlushScheduled = false;
+        if (!pendingRenderTargets.size) return;
         const renderTargets = new Set(pendingRenderTargets);
         for (const target of renderTargets) {
             pendingRenderTargets.delete(target);
             const state = getState(target);
             if (state.visible) renderTarget(target);
         }
-        if (pendingRenderTargets.size) requestRenderFlush();
     }
 
     function flushRenderIfDirty(target) {
@@ -1083,11 +1680,17 @@ Enjoy!! :D
         return getShapeKey(state) + '\u0002' + state.charOverridesVersion;
     }
 
+    function getPaintOpsKey(state, layoutKey) {
+        return layoutKey + '\u0004' + state.align + '\u0004' + state.charMasksVersion;
+    }
+
     const EMPTY_OVERRIDE = {
         x: 0,
         y: 0,
         rotation: 0,
-        opacity: 1
+        opacity: 1,
+        scale: 1,
+        color: null
     };
 
     function addTagIndex(charsByTag, index, tags) {
@@ -1108,20 +1711,24 @@ Enjoy!! :D
         if (!state.visible) return;
 
         const shapeKey = getShapeKey(state);
+        const layoutKey = getLayoutKey(state);
         let layout = state.layout;
-        if (state.shapeKey !== shapeKey || !layout) {
+        if (state.shapeKey !== shapeKey || state.layoutKey !== layoutKey || !layout || state.fontsPendingAtMeasure) {
             const richChars = parseRichText(state.rawText, state.baseStyle);
             applyCharacterStyleOverrides(richChars, state.charStyleOverrides);
-            for (const family of new Set(richChars.map(rc => rc.font))) {
+            const families = new Set(richChars.map(rc => rc.font));
+            let fontsPending = false;
+            for (const family of families) {
+                if (!loadedDocumentFonts.has(family)) fontsPending = true;
                 ensureDocumentFont(family);
             }
-            const svg = getMeasureSvg();
-            const measured = measureRichText(svg, richChars, state);
+            const measured = measureRichText(glyphMeasureCtx, richChars, state);
             layout = measured;
             state.shapeKey = shapeKey;
             state.layout = layout;
+            state.fontsPendingAtMeasure = fontsPending;
         }
-        state.layoutKey = getLayoutKey(state);
+        state.layoutKey = layoutKey;
         const {
             lines,
             lineWidths,
@@ -1150,111 +1757,129 @@ Enjoy!! :D
         const originX = docW / 2;
         const originY = docH / 2;
 
+        const paintOpsKey = getPaintOpsKey(state, layoutKey) + '\u0004' + docW + '\u0004' + docH;
+        let paintOps = state.paintOps;
         let charBoxes = state.charBoxes;
-        if (state.charBoxesLayout !== layout) {
-            charBoxes = [];
-            state.charBoxes = charBoxes;
-            state.charBoxesLayout = layout;
-        }
-        const charsByTag = layout.charsByTag;
-        const paintOps = [];
-        const letterSpacing = state.letterSpacing || 0;
 
-        for (let li = 0; li < lines.length; li++) {
-            const line = lines[li];
-            const runs = lineRuns[li];
-            const lineW = lineWidths[li];
-            const justifySpaceCount = state.align === 'justify' && li < lines.length - 1 &&
-                effectiveMaxWidth > lineW ?
-                line.filter(rc => rc.char === ' ').length : 0;
-            const justifyExtra = justifySpaceCount > 0 ?
-                (effectiveMaxWidth - lineW) / justifySpaceCount : 0;
-            let lineX;
-
-            if (state.align === 'left') {
-                lineX = originX - effectiveMaxWidth / 2;
-            } else if (state.align === 'right') {
-                lineX = originX + effectiveMaxWidth / 2 - lineW;
-            } else if (state.align === 'justify') {
-                lineX = originX - effectiveMaxWidth / 2;
-            } else {
-                lineX = originX - lineW / 2;
+        if (state.paintOpsKey !== paintOpsKey || state.paintOpsLayout !== layout || !paintOps) {
+            if (state.charBoxesLayout !== layout) {
+                charBoxes = [];
+                state.charBoxesLayout = layout;
             }
+            const charsByTag = layout.charsByTag;
+            paintOps = [];
+            const letterSpacing = state.letterSpacing || 0;
 
-            const textStartY = originY - totalHeight / 2;
-            const baseCenterY = textStartY + (li * lineHeight) + lineHeight * 0.5;
+            for (let li = 0; li < lines.length; li++) {
+                const line = lines[li];
+                const runs = lineRuns[li];
+                const lineW = lineWidths[li];
+                const justifySpaceCount = state.align === 'justify' && li < lines.length - 1 &&
+                    effectiveMaxWidth > lineW ?
+                    line.filter(rc => rc.char === ' ').length : 0;
+                const justifyExtra = justifySpaceCount > 0 ?
+                    (effectiveMaxWidth - lineW) / justifySpaceCount : 0;
+                let lineX;
 
-            let spacesBefore = 0;
-            for (const run of runs) {
-                const rc0 = run.chars[0];
+                if (state.align === 'left') {
+                    lineX = originX - effectiveMaxWidth / 2;
+                } else if (state.align === 'right') {
+                    lineX = originX + effectiveMaxWidth / 2 - lineW;
+                } else if (state.align === 'justify') {
+                    lineX = originX - effectiveMaxWidth / 2;
+                } else {
+                    lineX = originX - lineW / 2;
+                }
 
-                const underline = !!rc0.underline;
-                const strike = !!rc0.strike;
-                const style = run.fontStyle;
-                const runOriginX = lineX + run.runStartX;
+                const textStartY = originY - totalHeight / 2;
+                const baseCenterY = textStartY + (li * lineHeight) + lineHeight * 0.5;
 
-                for (let i = 0; i < run.chars.length; i++) {
-                    const rc = run.chars[i];
-                    const pos = run.positions[i];
-                    const index = run.startIndex + i;
-                    const o = run.hasOverride ?
-                        (state.charOverrides[index] || EMPTY_OVERRIDE) :
-                        EMPTY_OVERRIDE;
+                let spacesBefore = 0;
+                for (const run of runs) {
+                    const rc0 = run.chars[0];
 
-                    const charCenterX = runOriginX + pos.shapedX + pos.advance / 2 +
-                        spacesBefore * justifyExtra + o.x;
-                    const charCenterY = baseCenterY - o.y;
-                    const rotation = o.rotation || 0;
-                    const opacity = o.opacity == null ? 1 : o.opacity;
-                    const ch = rc.char === ' ' ? '\u00A0' : rc.char;
+                    const underline = !!rc0.underline;
+                    const strike = !!rc0.strike;
+                    const style = run.fontStyle;
+                    const runOriginX = lineX + run.runStartX;
 
-                    paintOps.push({
-                        text: ch,
-                        x: charCenterX,
-                        y: charCenterY,
-                        rotation,
-                        opacity,
-                        color: rc.color,
-                        font: style,
-                        rawFontFamily: rc0.font,
-                        letterSpacing,
-                        underline,
-                        strike,
-                        width: pos.advance
-                    });
+                    for (let i = 0; i < run.chars.length; i++) {
+                        const rc = run.chars[i];
+                        const pos = run.positions[i];
+                        const index = run.startIndex + i;
+                        const o = run.hasOverride ?
+                            (state.charOverrides[index] || EMPTY_OVERRIDE) :
+                            EMPTY_OVERRIDE;
 
-                    if (rc.char === ' ') spacesBefore++;
+                        const charCenterX = runOriginX + pos.shapedX + pos.advance / 2 +
+                            spacesBefore * justifyExtra + o.x;
+                        const charCenterY = baseCenterY - o.y;
+                        const rotation = o.rotation || 0;
+                        const opacity = o.opacity == null ? 1 : o.opacity;
+                        const scale = o.scale == null ? 1 : o.scale;
+                        const ch = rc.char === ' ' ? '\u00A0' : rc.char;
+                        const mask = state.charMasks[index] || null;
 
-                    let box = charBoxes[index];
-                    if (!box) {
-                        box = {
-                            index,
-                            char: rc.char,
-                            tags: rc.tags,
+                        paintOps.push({
+                            text: ch,
+                            x: charCenterX,
+                            y: charCenterY,
+                            rotation,
+                            opacity,
+                            scale,
+                            color: o.color || rc.color,
+                            font: style,
+                            rawFontFamily: rc0.font,
+                            letterSpacing,
+                            underline,
+                            strike,
                             width: pos.advance,
-                            height: rc.size,
-                            style: characterStyleSnapshot(rc)
-                        };
-                        charBoxes[index] = box;
+                            mask,
+                            charIndex: index
+                        });
+
+                        if (rc.char === ' ') spacesBefore++;
+
+                        let box = charBoxes[index];
+                        if (!box) {
+                            box = {
+                                index,
+                                char: rc.char,
+                                tags: rc.tags,
+                                width: pos.advance,
+                                height: rc.size,
+                                style: characterStyleSnapshot(rc)
+                            };
+                            charBoxes[index] = box;
+                        } else if (!styleSnapshotMatches(box.style, rc)) {
+                            box.style = characterStyleSnapshot(rc);
+                        }
+                        box.x = charCenterX - originX;
+                        box.y = originY - charCenterY;
                     }
-                    box.style = characterStyleSnapshot(rc);
-                    box.x = charCenterX - originX;
-                    box.y = originY - charCenterY;
                 }
             }
-        }
 
-        state.charBoxes = charBoxes;
-        state.charsByTag = charsByTag;
-        state.drawableWidth = docW;
-        state.drawableHeight = docH;
+            state.paintOps = paintOps;
+            state.paintOpsKey = paintOpsKey;
+            state.paintOpsLayout = layout;
+            state.charBoxes = charBoxes;
+            state.charsByTag = charsByTag;
+            state.drawableWidth = docW;
+            state.drawableHeight = docH;
 
-        const fingerprint = fingerprintPaintOps(paintOps, docW, docH);
-        if (fingerprint === state.paintFingerprint && state.skinId !== null) {
-            state.paintDirty = false;
-            return;
+            const fingerprint = fingerprintPaintOps(paintOps, docW, docH);
+            if (fingerprint === state.paintFingerprint && state.skinId !== null) {
+                state.paintDirty = false;
+                return;
+            }
+            state.paintFingerprint = fingerprint;
+        } else {
+            if (state.paintFingerprint !== null && state.skinId !== null) {
+                state.paintDirty = false;
+                return;
+            }
         }
-        state.paintFingerprint = fingerprint;
 
         const canvas = compositeGlyphsToCanvas(state, paintOps, docW, docH, effectiveMaxWidth, totalHeight, originX, originY);
         pushCanvasToDrawable(target, canvas, docW, docH);
@@ -1293,6 +1918,91 @@ Enjoy!! :D
 
     const DEST_SCALE = GLYPH_OVERSAMPLE;
 
+    function maskGroupKey(mask) {
+        return mask.targetName + '\u0001' + mask.costumeName + '\u0001' +
+            (mask.direction || WIPE_DIRECTION_BOTTOM_UP) + '\u0001' +
+            Math.round(mask.x * 4) + '\u0001' + Math.round(mask.y * 4);
+    }
+
+    function computeSeamlessMaskSpansByIndex(paintOps) {
+        const spans = new Map();
+        let groupIndices = null;
+        let groupKey = null;
+        let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
+
+        const flushGroup = () => {
+            if (!groupIndices || !groupIndices.length) return;
+            if (!isFinite(minX) || !isFinite(maxX) || !isFinite(minY) || !isFinite(maxY)) return;
+            const spanW = Math.max(1, maxX - minX);
+            const spanH = Math.max(1, maxY - minY);
+            for (const gi of groupIndices) {
+                spans.set(gi, {
+                    spanW,
+                    spanH,
+                    originX: minX,
+                    originY: minY
+                });
+            }
+        };
+
+        for (let i = 0; i < paintOps.length; i++) {
+            const op = paintOps[i];
+            if (!op.mask || !op.mask.seamless) {
+                flushGroup();
+                groupIndices = null;
+                groupKey = null;
+                continue;
+            }
+
+            const key = maskGroupKey(op.mask);
+            if (groupKey !== key) {
+                flushGroup();
+                groupIndices = [];
+                groupKey = key;
+                minX = Infinity;
+                maxX = -Infinity;
+                minY = Infinity;
+                maxY = -Infinity;
+            }
+            groupIndices.push(op.charIndex);
+
+            if (op.text === '\u00A0' || op.text === '') continue;
+
+            const fontFamily = op.font['font-family'];
+            const fontSize = op.font['font-size'];
+            const fontWeight = op.font['font-weight'];
+            const fontStyle = op.font['font-style'];
+            const shape = getGlyphShape(op.text, fontFamily, fontSize, fontWeight, fontStyle);
+            const advanceCenterXEm = shape.baselineOriginXEm + shape.advance / 2;
+            const baselineYFromLineCenter = (shape.fontAscentEm - shape.fontDescentEm) / 2;
+            const drawXEm = op.x - advanceCenterXEm;
+            const drawYEm = (op.y + baselineYFromLineCenter) - shape.baselineOriginYEm;
+            const px = Math.round(drawXEm * DEST_SCALE);
+            const py = Math.round(drawYEm * DEST_SCALE);
+            const w = shape.canvas.width;
+            const h = shape.canvas.height;
+
+            minX = Math.min(minX, px);
+            maxX = Math.max(maxX, px + w);
+            minY = Math.min(minY, py);
+            maxY = Math.max(maxY, py + h);
+        }
+        flushGroup();
+
+        return spans;
+    }
+
+    function getSeamlessMaskSpans(state, paintOps, layoutDocKey) {
+        const cacheKey = layoutDocKey + '\u0003' + state.charMaskGeometryVersion;
+        if (state.maskSpansCacheKey === cacheKey && state.maskSpansCache) {
+            return state.maskSpansCache;
+        }
+        const spans = computeSeamlessMaskSpansByIndex(paintOps);
+        state.maskSpansCacheKey = cacheKey;
+        state.maskSpansCache = spans;
+        return spans;
+    }
+
     function compositeGlyphsToCanvas(state, paintOps, docW, docH, textWidth, textHeight, originX, originY) {
         let canvas = state.paintCanvas;
         if (!canvas) {
@@ -1330,6 +2040,17 @@ Enjoy!! :D
             ctx.restore();
         }
 
+        const maskSpansByIndex = getSeamlessMaskSpans(state, paintOps, state.layoutKey + '\u0003' + docW + '\u0003' + docH);
+
+        const applyCharTransformOp = (op, hasRotation, hasScale) => {
+            const cx = op.x * DEST_SCALE;
+            const cy = op.y * DEST_SCALE;
+            ctx.translate(cx, cy);
+            if (hasRotation) ctx.rotate(-op.rotation * Math.PI / 180);
+            if (hasScale) ctx.scale(op.scale, op.scale);
+            ctx.translate(-cx, -cy);
+        };
+
         for (let i = 0; i < paintOps.length; i++) {
             const op = paintOps[i];
             if (op.text === '\u00A0' || op.text === '') continue;
@@ -1348,10 +2069,8 @@ Enjoy!! :D
 
             const hasOpacity = op.opacity != null && op.opacity !== 1;
             const hasRotation = !!op.rotation;
-
-            const drawGlyph = (drawX, drawY) => {
-                ctx.drawImage(glyph.canvas, drawX, drawY);
-            };
+            const hasScale = op.scale != null && op.scale !== 1;
+            const hasTransform = hasRotation || hasScale;
 
             if (state.textShadow.enabled) {
                 ctx.save();
@@ -1360,15 +2079,11 @@ Enjoy!! :D
                 ctx.shadowBlur = Math.max(0, Number(state.textShadow.blur) || 0) * DEST_SCALE;
                 ctx.shadowOffsetX = (Number(state.textShadow.offsetX) || 0) * DEST_SCALE;
                 ctx.shadowOffsetY = (Number(state.textShadow.offsetY) || 0) * DEST_SCALE;
-                if (!hasRotation) {
-                    drawGlyph(drawXEm * DEST_SCALE, drawYEm * DEST_SCALE);
+                if (!hasTransform) {
+                    ctx.drawImage(glyph.canvas, drawXEm * DEST_SCALE, drawYEm * DEST_SCALE);
                 } else {
-                    const cx = op.x * DEST_SCALE;
-                    const cy = op.y * DEST_SCALE;
-                    ctx.translate(cx, cy);
-                    ctx.rotate(-op.rotation * Math.PI / 180);
-                    ctx.translate(-cx, -cy);
-                    drawGlyph(drawXEm * DEST_SCALE, drawYEm * DEST_SCALE);
+                    applyCharTransformOp(op, hasRotation, hasScale);
+                    ctx.drawImage(glyph.canvas, drawXEm * DEST_SCALE, drawYEm * DEST_SCALE);
                 }
                 ctx.restore();
             }
@@ -1396,15 +2111,11 @@ Enjoy!! :D
                 const borderSize = Math.max(0, Number(state.textBorder.size) || 0) * DEST_SCALE;
                 const borderOffsets = [[-borderSize, 0], [borderSize, 0], [0, -borderSize], [0, borderSize], [-borderSize, -borderSize], [borderSize, -borderSize], [-borderSize, borderSize], [borderSize, borderSize]];
                 for (const [offsetX, offsetY] of borderOffsets) {
-                    if (!hasRotation) {
+                    if (!hasTransform) {
                         ctx.drawImage(borderGlyph, drawXEm * DEST_SCALE + offsetX, drawYEm * DEST_SCALE + offsetY);
                     } else {
-                        const cx = op.x * DEST_SCALE;
-                        const cy = op.y * DEST_SCALE;
                         ctx.save();
-                        ctx.translate(cx, cy);
-                        ctx.rotate(-op.rotation * Math.PI / 180);
-                        ctx.translate(-cx, -cy);
+                        applyCharTransformOp(op, hasRotation, hasScale);
                         ctx.drawImage(borderGlyph, drawXEm * DEST_SCALE + offsetX, drawYEm * DEST_SCALE + offsetY);
                         ctx.restore();
                     }
@@ -1412,7 +2123,7 @@ Enjoy!! :D
                 ctx.restore();
             }
 
-            if (!hasRotation) {
+            if (!hasTransform) {
                 const px = Math.round(drawXEm * DEST_SCALE);
                 const py = Math.round(drawYEm * DEST_SCALE);
                 if (hasOpacity) {
@@ -1426,13 +2137,42 @@ Enjoy!! :D
             } else {
                 ctx.save();
                 if (hasOpacity) ctx.globalAlpha = op.opacity;
-                const cx = op.x * DEST_SCALE;
-                const cy = op.y * DEST_SCALE;
-                ctx.translate(cx, cy);
-                ctx.rotate(-op.rotation * Math.PI / 180);
-                ctx.translate(-cx, -cy);
+                applyCharTransformOp(op, hasRotation, hasScale);
                 ctx.drawImage(glyph.canvas, drawXEm * DEST_SCALE, drawYEm * DEST_SCALE);
                 ctx.restore();
+            }
+
+            if (op.mask) {
+                const texture = getMaskTexture(op.mask.targetName, op.mask.costumeName);
+                if (texture) {
+                    const px = Math.round(drawXEm * DEST_SCALE);
+                    const py = Math.round(drawYEm * DEST_SCALE);
+                    const span = maskSpansByIndex.get(op.charIndex);
+                    const maskOpacity = Math.max(0, Math.min(100, Number(op.mask.opacity != null ? op.mask.opacity : 100))) / 100;
+                    const combinedAlpha = (hasOpacity ? op.opacity : 1) * maskOpacity;
+                    if (combinedAlpha > 0) {
+                        if (!hasTransform) {
+                            drawMaskedGlyph(
+                                ctx, op.text, fontFamily, fontSize, fontWeight, fontStyle,
+                                op.mask, texture, px, py,
+                                span ? span.spanW : 0, span ? span.spanH : 0,
+                                span ? span.originX : 0, span ? span.originY : 0,
+                                px, py, combinedAlpha
+                            );
+                        } else {
+                            ctx.save();
+                            applyCharTransformOp(op, hasRotation, hasScale);
+                            drawMaskedGlyph(
+                                ctx, op.text, fontFamily, fontSize, fontWeight, fontStyle,
+                                op.mask, texture, px, py,
+                                span ? span.spanW : 0, span ? span.spanH : 0,
+                                span ? span.originX : 0, span ? span.originY : 0,
+                                drawXEm * DEST_SCALE, drawYEm * DEST_SCALE, combinedAlpha
+                            );
+                            ctx.restore();
+                        }
+                    }
+                }
             }
 
             if (op.underline) {
@@ -1512,13 +2252,17 @@ Enjoy!! :D
             index
         };
         target._irisTypingChar = current;
-        const threads = runtime.startHats('irisText_onCharacterType', null, target);
+        const threads = runtime.startHats('g1nxIrisText_onCharacterType', null, target);
         if (Array.isArray(threads)) {
             for (const thread of threads) {
                 thread._irisChar = current;
             }
         }
         target._irisTypingChar = null;
+    }
+
+    function startTypingFinishedHat(target) {
+        runtime.startHats('g1nxIrisText_onTypingFinished', null, target);
     }
 
     function taggedCharacterIndices(target, tag) {
@@ -1537,6 +2281,7 @@ Enjoy!! :D
             runtime.on('targetWasRemoved', this._onTargetRemoved);
             runtime.on('PROJECT_STOP_ALL', () => {
                 runtime.targets.forEach(t => clearTarget(t));
+                charAnimations.clear();
             });
             runtime.ext_irisText = this;
             if (typeof runtime.registerCompiledExtensionBlocks === 'function') {
@@ -1598,6 +2343,9 @@ Enjoy!! :D
             if (state && state.skinId !== null && runtime.renderer) {
                 runtime.renderer.destroySkin(state.skinId);
                 state.skinId = null;
+            }
+            for (const key of charAnimations.keys()) {
+                if (key.startsWith(target.id + '\u0001')) charAnimations.delete(key);
             }
         }
 
@@ -1732,6 +2480,7 @@ Enjoy!! :D
                             }
                         }
                     },
+					'---',
                     {
                         opcode: 'skipTyping',
                         blockType: Scratch.BlockType.COMMAND,
@@ -1742,6 +2491,7 @@ Enjoy!! :D
                         blockType: Scratch.BlockType.COMMAND,
                         text: 'stop typing'
                     },
+					'---',
                     {
                         opcode: 'setTypingSpeed',
                         blockType: Scratch.BlockType.COMMAND,
@@ -1773,6 +2523,7 @@ Enjoy!! :D
                             }
                         }
                     },
+					'---',
                     {
                         opcode: 'onCharacterType',
                         blockType: Scratch.BlockType.EVENT,
@@ -1781,9 +2532,11 @@ Enjoy!! :D
                         text: 'on character type'
                     },
                     {
-                        opcode: 'currentCharValue',
-                        blockType: Scratch.BlockType.REPORTER,
-                        text: 'character'
+                        opcode: 'onTypingFinished',
+                        blockType: Scratch.BlockType.EVENT,
+                        isEdgeActivated: false,
+                        shouldRestartExistingThreads: false,
+                        text: 'when typing finishes'
                     },
                     {
                         blockType: Scratch.BlockType.LABEL,
@@ -1801,6 +2554,7 @@ Enjoy!! :D
                             }
                         }
                     },
+                    '---',
                     {
                         opcode: 'setTextShadowColor',
                         blockType: Scratch.BlockType.COMMAND,
@@ -1864,6 +2618,7 @@ Enjoy!! :D
                             }
                         }
                     },
+                    '---',
                     {
                         opcode: 'setTextBackgroundColor',
                         blockType: Scratch.BlockType.COMMAND,
@@ -2058,6 +2813,18 @@ Enjoy!! :D
                         }
                     },
                     {
+                        opcode: 'repeatForEachChar',
+                        blockType: Scratch.BlockType.LOOP,
+                        text: 'repeat for each character [CHAR]',
+                        branchCount: 1,
+                        arguments: {
+                            CHAR: {
+                                type: Scratch.ArgumentType.STRING,
+                                fillIn: 'currentCharIndex'
+                            }
+                        }
+                    },
+                    {
                         opcode: 'currentCharIndex',
                         blockType: Scratch.BlockType.REPORTER,
                         text: 'character #',
@@ -2080,6 +2847,7 @@ Enjoy!! :D
                             }
                         }
                     },
+                    '---',
                     {
                         opcode: 'setCharPos',
                         blockType: Scratch.BlockType.COMMAND,
@@ -2138,6 +2906,7 @@ Enjoy!! :D
                             }
                         }
                     },
+                    '---',
                     {
                         opcode: 'setCharRotation',
                         blockType: Scratch.BlockType.COMMAND,
@@ -2168,6 +2937,22 @@ Enjoy!! :D
                             }
                         }
                     },
+                    '---',
+                    {
+                        opcode: 'setCharScale',
+                        blockType: Scratch.BlockType.COMMAND,
+                        text: 'set character [INDEX] scale to [PCT] %',
+                        arguments: {
+                            INDEX: {
+                                type: Scratch.ArgumentType.NUMBER,
+                                defaultValue: 1
+                            },
+                            PCT: {
+                                type: Scratch.ArgumentType.NUMBER,
+                                defaultValue: 100
+                            }
+                        }
+                    },
                     {
                         opcode: 'setCharOpacity',
                         blockType: Scratch.BlockType.COMMAND,
@@ -2183,6 +2968,79 @@ Enjoy!! :D
                             }
                         }
                     },
+                    '---',
+                    {
+                        opcode: 'setCharColor',
+                        blockType: Scratch.BlockType.COMMAND,
+                        text: 'set character [INDEX] color to [COLOR]',
+                        arguments: {
+                            INDEX: {
+                                type: Scratch.ArgumentType.NUMBER,
+                                defaultValue: 1
+                            },
+                            COLOR: {
+                                type: Scratch.ArgumentType.COLOR
+                            }
+                        }
+                    },
+                    {
+                        opcode: 'clearCharColor',
+                        blockType: Scratch.BlockType.COMMAND,
+                        text: 'clear character [INDEX] color override',
+                        arguments: {
+                            INDEX: {
+                                type: Scratch.ArgumentType.NUMBER,
+                                defaultValue: 1
+                            }
+                        }
+                    },
+                    '---',
+                    {
+                        opcode: 'animateChar',
+                        blockType: Scratch.BlockType.COMMAND,
+                        text: 'animate character [INDEX] [PROPERTY] to [VALUE] over [SECS] secs easing [EASING] [DIRECTION]',
+                        arguments: {
+                            INDEX: {
+                                type: Scratch.ArgumentType.NUMBER,
+                                defaultValue: 1
+                            },
+                            PROPERTY: {
+                                type: Scratch.ArgumentType.STRING,
+                                menu: 'ANIMATE_PROPERTY',
+                                defaultValue: 'y'
+                            },
+                            VALUE: {
+                                type: Scratch.ArgumentType.NUMBER,
+                                defaultValue: 0
+                            },
+                            SECS: {
+                                type: Scratch.ArgumentType.NUMBER,
+                                defaultValue: 1
+                            },
+                            EASING: {
+                                type: Scratch.ArgumentType.STRING,
+                                menu: 'EASING',
+                                defaultValue: 'linear'
+                            },
+                            DIRECTION: {
+                                type: Scratch.ArgumentType.STRING,
+                                menu: 'EASING_DIRECTION',
+                                defaultValue: 'out'
+                            }
+                        }
+                    },
+                    {
+                        opcode: 'stopCharAnimations',
+                        blockType: Scratch.BlockType.COMMAND,
+                        text: 'stop animations for character [INDEX]',
+                        arguments: {
+                            INDEX: {
+                                type: Scratch.ArgumentType.NUMBER,
+                                defaultValue: 1
+                            }
+                        }
+                    },
+                    '---',
                     {
                         opcode: 'resetCharTransform',
                         blockType: Scratch.BlockType.COMMAND,
@@ -2242,6 +3100,243 @@ Enjoy!! :D
                     },
                     {
                         blockType: Scratch.BlockType.LABEL,
+                        text: 'Character Mask'
+                    },
+                    {
+                        opcode: 'setCharacterMask',
+                        blockType: Scratch.BlockType.COMMAND,
+                        text: 'set character [START] to [END] mask to costume [COSTUME]',
+                        arguments: {
+                            START: {
+                                type: Scratch.ArgumentType.NUMBER,
+                                defaultValue: 1
+                            },
+                            END: {
+                                type: Scratch.ArgumentType.NUMBER,
+                                defaultValue: 1
+                            },
+                            COSTUME: {
+                                type: Scratch.ArgumentType.STRING,
+                                menu: 'MASK_COSTUME'
+                            }
+                        }
+                    },
+                    '---',
+                    {
+                        opcode: 'setCharacterMaskCoverage',
+                        blockType: Scratch.BlockType.COMMAND,
+                        text: 'set character [START] to [END] mask coverage to [COVERAGE] %',
+                        arguments: {
+                            START: {
+                                type: Scratch.ArgumentType.NUMBER,
+                                defaultValue: 1
+                            },
+                            END: {
+                                type: Scratch.ArgumentType.NUMBER,
+                                defaultValue: 1
+                            },
+                            COVERAGE: {
+                                type: Scratch.ArgumentType.NUMBER,
+                                defaultValue: 100
+                            }
+                        }
+                    },
+                    {
+                        opcode: 'setCharacterMaskDirection',
+                        blockType: Scratch.BlockType.COMMAND,
+                        text: 'set character [START] to [END] mask direction to [DIRECTION]',
+                        arguments: {
+                            START: {
+                                type: Scratch.ArgumentType.NUMBER,
+                                defaultValue: 1
+                            },
+                            END: {
+                                type: Scratch.ArgumentType.NUMBER,
+                                defaultValue: 1
+                            },
+                            DIRECTION: {
+                                type: Scratch.ArgumentType.STRING,
+                                menu: 'WIPE_DIRECTION'
+                            }
+                        }
+                    },
+                    {
+                        opcode: 'setCharacterMaskSeamless',
+                        blockType: Scratch.BlockType.COMMAND,
+                        text: 'set character [START] to [END] mask seamless [SEAMLESS]',
+                        arguments: {
+                            START: {
+                                type: Scratch.ArgumentType.NUMBER,
+                                defaultValue: 1
+                            },
+                            END: {
+                                type: Scratch.ArgumentType.NUMBER,
+                                defaultValue: 1
+                            },
+                            SEAMLESS: {
+                                type: Scratch.ArgumentType.STRING,
+                                menu: 'ONOFF'
+                            }
+                        }
+                    },
+                    '---',
+                    {
+                        opcode: 'setCharacterMaskOpacity',
+                        blockType: Scratch.BlockType.COMMAND,
+                        text: 'set character [START] to [END] mask opacity to [OPACITY] %',
+                        arguments: {
+                            START: {
+                                type: Scratch.ArgumentType.NUMBER,
+                                defaultValue: 1
+                            },
+                            END: {
+                                type: Scratch.ArgumentType.NUMBER,
+                                defaultValue: 1
+                            },
+                            OPACITY: {
+                                type: Scratch.ArgumentType.NUMBER,
+                                defaultValue: 100
+                            }
+                        }
+                    },
+                    {
+                        opcode: 'setCharacterMaskBlur',
+                        blockType: Scratch.BlockType.COMMAND,
+                        text: 'set character [START] to [END] mask blur to [BLUR]',
+                        arguments: {
+                            START: {
+                                type: Scratch.ArgumentType.NUMBER,
+                                defaultValue: 1
+                            },
+                            END: {
+                                type: Scratch.ArgumentType.NUMBER,
+                                defaultValue: 1
+                            },
+                            BLUR: {
+                                type: Scratch.ArgumentType.NUMBER,
+                                defaultValue: 2
+                            }
+                        }
+                    },
+                    '---',
+                    {
+                        opcode: 'setCharacterMaskPosition',
+                        blockType: Scratch.BlockType.COMMAND,
+                        text: 'set character [START] to [END] mask position to x [X] y [Y]',
+                        arguments: {
+                            START: {
+                                type: Scratch.ArgumentType.NUMBER,
+                                defaultValue: 1
+                            },
+                            END: {
+                                type: Scratch.ArgumentType.NUMBER,
+                                defaultValue: 1
+                            },
+                            X: {
+                                type: Scratch.ArgumentType.NUMBER,
+                                defaultValue: 0
+                            },
+                            Y: {
+                                type: Scratch.ArgumentType.NUMBER,
+                                defaultValue: 0
+                            }
+                        }
+                    },
+                    {
+                        opcode: 'changeCharacterMaskPosition',
+                        blockType: Scratch.BlockType.COMMAND,
+                        text: 'change character [START] to [END] mask position by x [X] y [Y]',
+                        arguments: {
+                            START: {
+                                type: Scratch.ArgumentType.NUMBER,
+                                defaultValue: 1
+                            },
+                            END: {
+                                type: Scratch.ArgumentType.NUMBER,
+                                defaultValue: 1
+                            },
+                            X: {
+                                type: Scratch.ArgumentType.NUMBER,
+                                defaultValue: 0
+                            },
+                            Y: {
+                                type: Scratch.ArgumentType.NUMBER,
+                                defaultValue: 0
+                            }
+                        }
+                    },
+                    {
+                        opcode: 'setCharacterMaskZoom',
+                        blockType: Scratch.BlockType.COMMAND,
+                        text: 'set character [START] to [END] mask zoom to [ZOOM] %',
+                        arguments: {
+                            START: {
+                                type: Scratch.ArgumentType.NUMBER,
+                                defaultValue: 1
+                            },
+                            END: {
+                                type: Scratch.ArgumentType.NUMBER,
+                                defaultValue: 1
+                            },
+                            ZOOM: {
+                                type: Scratch.ArgumentType.NUMBER,
+                                defaultValue: 100
+                            }
+                        }
+                    },
+                    {
+                        opcode: 'setCharacterMaskRotation',
+                        blockType: Scratch.BlockType.COMMAND,
+                        text: 'set character [START] to [END] mask rotation to [ROTATION]',
+                        arguments: {
+                            START: {
+                                type: Scratch.ArgumentType.NUMBER,
+                                defaultValue: 1
+                            },
+                            END: {
+                                type: Scratch.ArgumentType.NUMBER,
+                                defaultValue: 1
+                            },
+                            ROTATION: {
+                                type: Scratch.ArgumentType.NUMBER,
+                                defaultValue: 0
+                            }
+                        }
+                    },
+                    '---',
+                    {
+                        opcode: 'clearCharacterMask',
+                        blockType: Scratch.BlockType.COMMAND,
+                        text: 'clear character [START] to [END] mask',
+                        arguments: {
+                            START: {
+                                type: Scratch.ArgumentType.NUMBER,
+                                defaultValue: 1
+                            },
+                            END: {
+                                type: Scratch.ArgumentType.NUMBER,
+                                defaultValue: 1
+                            }
+                        }
+                    },
+                    {
+                        opcode: 'clearAllCharacterMasks',
+                        blockType: Scratch.BlockType.COMMAND,
+                        text: 'clear all character masks'
+                    },
+                    {
+                        opcode: 'characterHasMask',
+                        blockType: Scratch.BlockType.BOOLEAN,
+                        text: 'character [INDEX] has a mask?',
+                        arguments: {
+                            INDEX: {
+                                type: Scratch.ArgumentType.NUMBER,
+                                defaultValue: 1
+                            }
+                        }
+                    },
+                    {
+                        blockType: Scratch.BlockType.LABEL,
                         text: 'Text Info'
                     },
                     {
@@ -2277,6 +3372,7 @@ Enjoy!! :D
                             }
                         }
                     },
+					'---',
                     {
                         opcode: 'getCharCount',
                         blockType: Scratch.BlockType.REPORTER,
@@ -2404,8 +3500,23 @@ Enjoy!! :D
                     SPRITE: {
                         items: 'getSpriteMenuItems'
                     },
+                    MASK_COSTUME: {
+                        items: 'getMaskCostumeMenuItems'
+                    },
+                    WIPE_DIRECTION: {
+                        items: [WIPE_DIRECTION_BOTTOM_UP, WIPE_DIRECTION_LEFT_RIGHT, WIPE_DIRECTION_UP_DOWN, WIPE_DIRECTION_RIGHT_LEFT]
+                    },
                     AXIS: {
                         items: ['x', 'y']
+                    },
+                    ANIMATE_PROPERTY: {
+                        items: ['x', 'y', 'rotation', 'opacity', 'scale']
+                    },
+                    EASING: {
+                        items: ['linear', 'sine', 'quad', 'cubic', 'quart', 'quint', 'expo', 'circ', 'back', 'elastic', 'bounce']
+                    },
+                    EASING_DIRECTION: {
+                        items: ['in', 'out', 'in out']
                     }
                 }
             };
@@ -2499,7 +3610,7 @@ Enjoy!! :D
                 state.rawText = frame.irisTypedText;
                 state.typingControl = null;
                 schedulePaint(util.target, state);
-                flushRenderIfDirty(util.target);
+                startTypingFinishedHat(util.target);
                 return;
             }
 
@@ -2518,7 +3629,6 @@ Enjoy!! :D
 
                 state.rawText = frame.irisTypedText;
                 schedulePaint(util.target, state);
-                flushRenderIfDirty(util.target);
                 startTypingCharacterHat(util.target, step.char, frame.irisTypingCharIndex++);
 
                 const delay = Math.max(0, Number(typingDelayForCharacter(state, step.char)) || 0);
@@ -2531,6 +3641,7 @@ Enjoy!! :D
 
             state.rawText = frame.irisTypedText;
             schedulePaint(util.target, state);
+            startTypingFinishedHat(util.target);
         }
 
         typeText(args, util) {
@@ -2556,7 +3667,8 @@ Enjoy!! :D
         renderNow(args, util) {
             const state = getState(util.target);
             if (!state.visible) return;
-            scheduleTextRender(util.target);
+            if (!state.paintDirty && !pendingRenderTargets.has(util.target)) return;
+            flushRenderIfDirty(util.target);
         }
 
         setBaseColor(args, util) {
@@ -2606,6 +3718,32 @@ Enjoy!! :D
                         value: name
                     });
                 }
+            }
+            return items;
+        }
+
+        getMaskCostumeMenuItems() {
+            const items = [];
+            const seen = new Set();
+            for (const target of runtime.targets) {
+                if (target.isOriginal === false) continue;
+                const targetName = target.isStage ? 'Stage' : target.getName();
+                const costumes = target.getCostumes ? target.getCostumes() : [];
+                for (const costume of costumes) {
+                    const value = targetName + ': ' + costume.name;
+                    if (seen.has(value)) continue;
+                    seen.add(value);
+                    items.push({
+                        text: value,
+                        value
+                    });
+                }
+            }
+            if (!items.length) {
+                items.push({
+                    text: '(no costumes found)',
+                    value: ''
+                });
             }
             return items;
         }
@@ -2814,6 +3952,27 @@ Enjoy!! :D
             util.startBranch(1, true);
         }
 
+        repeatForEachChar(args, util) {
+            const frame = util.stackFrame;
+            const rootFrame = util.thread.stackFrames[0];
+            let loop = frame.irisEachCharLoop;
+
+            if (!loop) {
+                const state = getState(util.target);
+                loop = {
+                    count: stripMarkup(state.rawText).length,
+                    position: 0
+                };
+                frame.irisEachCharLoop = loop;
+                rootFrame.irisTagCharacterNumber = 0;
+            }
+
+            if (loop.position >= loop.count) return;
+            rootFrame.irisTagCharacterNumber = loop.position + 1;
+            loop.position++;
+            util.startBranch(1, true);
+        }
+
         currentCharValue(args, util) {
             const cur = (util.thread && util.thread._irisChar) || util.target._irisTypingChar;
             return cur ? cur.char : '';
@@ -2904,9 +4063,89 @@ Enjoy!! :D
             schedulePaint(util.target, state);
         }
 
+        setCharColor(args, util) {
+            const state = getState(util.target);
+            const idx = Scratch.Cast.toNumber(args.INDEX) - 1;
+            const color = Scratch.Cast.toString(args.COLOR);
+            const exists = !!state.charOverrides[idx];
+            const o = getCharOverride(state, idx);
+            if (exists && o.color === color) return;
+            o.color = color;
+            schedulePaint(util.target, state);
+        }
+
+        clearCharColor(args, util) {
+            const state = getState(util.target);
+            const idx = Scratch.Cast.toNumber(args.INDEX) - 1;
+            const o = state.charOverrides[idx];
+            if (!o || o.color === null) return;
+            o.color = null;
+            schedulePaint(util.target, state);
+        }
+
+        setCharScale(args, util) {
+            const state = getState(util.target);
+            const idx = Scratch.Cast.toNumber(args.INDEX) - 1;
+            const scale = Math.max(0, Scratch.Cast.toNumber(args.PCT)) / 100;
+            const exists = !!state.charOverrides[idx];
+            const o = getCharOverride(state, idx);
+            if (exists && o.scale === scale) return;
+            o.scale = scale;
+            schedulePaint(util.target, state);
+        }
+
+        animateChar(args, util) {
+            const target = util.target;
+            const state = getState(target);
+            const idx = Scratch.Cast.toNumber(args.INDEX) - 1;
+            const property = Scratch.Cast.toString(args.PROPERTY);
+            const validProps = ['x', 'y', 'rotation', 'opacity', 'scale'];
+            if (!validProps.includes(property)) return;
+            let targetValue = Scratch.Cast.toNumber(args.VALUE);
+            if (property === 'opacity') targetValue = Math.max(0, Math.min(100, targetValue)) / 100;
+            if (property === 'scale') targetValue = Math.max(0, targetValue) / 100;
+            const duration = Math.max(0, Scratch.Cast.toNumber(args.SECS));
+            const easingName = Scratch.Cast.toString(args.EASING);
+            const easing = Object.prototype.hasOwnProperty.call(EasingMethods, easingName) ? easingName : 'linear';
+            const direction = Scratch.Cast.toString(args.DIRECTION);
+            const o = getCharOverride(state, idx);
+
+            const key = target.id + '\u0001' + idx + '\u0001' + property;
+            if (duration <= 0) {
+                charAnimations.delete(key);
+                o[property] = targetValue;
+                schedulePaint(target, state);
+                return;
+            }
+
+            charAnimations.set(key, {
+                target,
+                state,
+                index: idx,
+                property,
+                easing,
+                direction,
+                from: o[property] == null ? (property === 'scale' || property === 'opacity' ? 1 : 0) : o[property],
+                to: targetValue,
+                startTime: nowMs(),
+                duration: duration * 1000
+            });
+            ensureAnimationTicker();
+        }
+
+        stopCharAnimations(args, util) {
+            const target = util.target;
+            const idx = Scratch.Cast.toNumber(args.INDEX) - 1;
+            const prefix = target.id + '\u0001' + idx + '\u0001';
+            for (const key of charAnimations.keys()) {
+                if (key.startsWith(prefix)) charAnimations.delete(key);
+            }
+        }
+
         resetCharTransform(args, util) {
             const state = getState(util.target);
             const idx = Scratch.Cast.toNumber(args.INDEX) - 1;
+            this.stopCharAnimations(args, util);
             if (state.charOverrides[idx]) {
                 delete state.charOverrides[idx];
                 state.charOverridesVersion++;
@@ -2916,6 +4155,10 @@ Enjoy!! :D
 
         resetAllCharTransforms(args, util) {
             const state = getState(util.target);
+            const target = util.target;
+            for (const key of charAnimations.keys()) {
+                if (key.startsWith(target.id + '\u0001')) charAnimations.delete(key);
+            }
             if (Object.keys(state.charOverrides).length) {
                 state.charOverrides = {};
                 state.charOverridesVersion++;
@@ -2964,6 +4207,272 @@ Enjoy!! :D
             state.layout = null;
             state.paintFingerprint = null;
             schedulePaint(util.target, state);
+        }
+
+        setCharacterMask(args, util) {
+            const state = getState(util.target);
+            const {
+                start,
+                end
+            } = indexRange(Scratch.Cast.toNumber(args.START), Scratch.Cast.toNumber(args.END));
+            const ref = Scratch.Cast.toString(args.COSTUME);
+            const sepIndex = ref.indexOf(': ');
+            if (sepIndex === -1) return;
+            const targetName = ref.slice(0, sepIndex);
+            const costumeName = ref.slice(sepIndex + 2);
+            if (!targetName || !costumeName) return;
+
+            getMaskTexture(targetName, costumeName);
+
+            let paintNeeded = false;
+            for (let idx = start; idx <= end; idx++) {
+                const existing = state.charMasks[idx];
+                if (existing && existing.targetName === targetName && existing.costumeName === costumeName) {
+                    continue;
+                }
+                setCharMaskForIndex(state, idx, {
+                    targetName,
+                    costumeName,
+                    coverage: existing ? existing.coverage : 100,
+                    opacity: existing ? existing.opacity : 100,
+                    blur: existing ? existing.blur : 2,
+                    x: existing ? existing.x : 0,
+                    y: existing ? existing.y : 0,
+                    zoom: existing ? existing.zoom : 100,
+                    rotation: existing ? existing.rotation : 0,
+                    direction: existing ? existing.direction : WIPE_DIRECTION_BOTTOM_UP,
+                    seamless: existing ? existing.seamless : false
+                });
+                paintNeeded = true;
+            }
+            if (paintNeeded) schedulePaint(util.target, state);
+        }
+
+        setCharacterMaskCoverage(args, util) {
+            const state = getState(util.target);
+            const {
+                start,
+                end
+            } = indexRange(Scratch.Cast.toNumber(args.START), Scratch.Cast.toNumber(args.END));
+            const coverage = Scratch.Cast.toNumber(args.COVERAGE);
+            let changed = false;
+            for (let idx = start; idx <= end; idx++) {
+                const existing = state.charMasks[idx];
+                if (!existing) continue;
+                if (existing.coverage === coverage) continue;
+                existing.coverage = coverage;
+                changed = true;
+            }
+            if (changed) {
+                state.charMasksVersion++;
+                schedulePaint(util.target, state);
+            }
+        }
+
+        setCharacterMaskOpacity(args, util) {
+            const state = getState(util.target);
+            const {
+                start,
+                end
+            } = indexRange(Scratch.Cast.toNumber(args.START), Scratch.Cast.toNumber(args.END));
+            const opacity = Scratch.Cast.toNumber(args.OPACITY);
+            let changed = false;
+            for (let idx = start; idx <= end; idx++) {
+                const existing = state.charMasks[idx];
+                if (!existing) continue;
+                if (existing.opacity === opacity) continue;
+                existing.opacity = opacity;
+                changed = true;
+            }
+            if (changed) {
+                state.charMasksVersion++;
+                schedulePaint(util.target, state);
+            }
+        }
+
+        setCharacterMaskBlur(args, util) {
+            const state = getState(util.target);
+            const {
+                start,
+                end
+            } = indexRange(Scratch.Cast.toNumber(args.START), Scratch.Cast.toNumber(args.END));
+            const blur = Scratch.Cast.toNumber(args.BLUR);
+            let changed = false;
+            for (let idx = start; idx <= end; idx++) {
+                const existing = state.charMasks[idx];
+                if (!existing) continue;
+                if (existing.blur === blur) continue;
+                existing.blur = blur;
+                changed = true;
+            }
+            if (changed) {
+                state.charMasksVersion++;
+                schedulePaint(util.target, state);
+            }
+        }
+
+        setCharacterMaskPosition(args, util) {
+            const state = getState(util.target);
+            const {
+                start,
+                end
+            } = indexRange(Scratch.Cast.toNumber(args.START), Scratch.Cast.toNumber(args.END));
+            const x = Scratch.Cast.toNumber(args.X);
+            const y = Scratch.Cast.toNumber(args.Y);
+            let changed = false;
+            let geometryChanged = false;
+            for (let idx = start; idx <= end; idx++) {
+                const existing = state.charMasks[idx];
+                if (!existing) continue;
+                if (existing.x === x && existing.y === y) continue;
+                geometryChanged = true;
+                existing.x = x;
+                existing.y = y;
+                changed = true;
+            }
+            if (changed) {
+                state.charMasksVersion++;
+                if (geometryChanged) state.charMaskGeometryVersion++;
+                schedulePaint(util.target, state);
+            }
+        }
+
+        changeCharacterMaskPosition(args, util) {
+            const state = getState(util.target);
+            const {
+                start,
+                end
+            } = indexRange(Scratch.Cast.toNumber(args.START), Scratch.Cast.toNumber(args.END));
+            const dx = Scratch.Cast.toNumber(args.X);
+            const dy = Scratch.Cast.toNumber(args.Y);
+            let changed = false;
+            if (dx !== 0 || dy !== 0) {
+                for (let idx = start; idx <= end; idx++) {
+                    const existing = state.charMasks[idx];
+                    if (!existing) continue;
+                    existing.x = (existing.x || 0) + dx;
+                    existing.y = (existing.y || 0) + dy;
+                    changed = true;
+                }
+            }
+            if (changed) {
+                state.charMasksVersion++;
+                schedulePaint(util.target, state);
+            }
+        }
+
+        setCharacterMaskZoom(args, util) {
+            const state = getState(util.target);
+            const {
+                start,
+                end
+            } = indexRange(Scratch.Cast.toNumber(args.START), Scratch.Cast.toNumber(args.END));
+            const zoom = Scratch.Cast.toNumber(args.ZOOM);
+            let changed = false;
+            for (let idx = start; idx <= end; idx++) {
+                const existing = state.charMasks[idx];
+                if (!existing) continue;
+                if (existing.zoom === zoom) continue;
+                existing.zoom = zoom;
+                changed = true;
+            }
+            if (changed) {
+                state.charMasksVersion++;
+                schedulePaint(util.target, state);
+            }
+        }
+
+        setCharacterMaskRotation(args, util) {
+            const state = getState(util.target);
+            const {
+                start,
+                end
+            } = indexRange(Scratch.Cast.toNumber(args.START), Scratch.Cast.toNumber(args.END));
+            const rotation = Scratch.Cast.toNumber(args.ROTATION);
+            let changed = false;
+            for (let idx = start; idx <= end; idx++) {
+                const existing = state.charMasks[idx];
+                if (!existing) continue;
+                if (existing.rotation === rotation) continue;
+                existing.rotation = rotation;
+                changed = true;
+            }
+            if (changed) {
+                state.charMasksVersion++;
+                schedulePaint(util.target, state);
+            }
+        }
+
+        setCharacterMaskDirection(args, util) {
+            const state = getState(util.target);
+            const {
+                start,
+                end
+            } = indexRange(Scratch.Cast.toNumber(args.START), Scratch.Cast.toNumber(args.END));
+            const direction = Scratch.Cast.toString(args.DIRECTION) || WIPE_DIRECTION_BOTTOM_UP;
+            let changed = false;
+            for (let idx = start; idx <= end; idx++) {
+                const existing = state.charMasks[idx];
+                if (!existing) continue;
+                if (existing.direction === direction) continue;
+                existing.direction = direction;
+                changed = true;
+            }
+            if (changed) {
+                state.charMasksVersion++;
+                state.charMaskGeometryVersion++;
+                schedulePaint(util.target, state);
+            }
+        }
+
+        setCharacterMaskSeamless(args, util) {
+            const state = getState(util.target);
+            const {
+                start,
+                end
+            } = indexRange(Scratch.Cast.toNumber(args.START), Scratch.Cast.toNumber(args.END));
+            const seamless = Scratch.Cast.toString(args.SEAMLESS) === 'on';
+            let changed = false;
+            for (let idx = start; idx <= end; idx++) {
+                const existing = state.charMasks[idx];
+                if (!existing) continue;
+                if (existing.seamless === seamless) continue;
+                existing.seamless = seamless;
+                changed = true;
+            }
+            if (changed) {
+                state.charMasksVersion++;
+                state.charMaskGeometryVersion++;
+                schedulePaint(util.target, state);
+            }
+        }
+
+        clearCharacterMask(args, util) {
+            const state = getState(util.target);
+            const {
+                start,
+                end
+            } = indexRange(Scratch.Cast.toNumber(args.START), Scratch.Cast.toNumber(args.END));
+            let changed = false;
+            for (let idx = start; idx <= end; idx++) {
+                if (clearCharMaskForIndex(state, idx)) changed = true;
+            }
+            if (changed) schedulePaint(util.target, state);
+        }
+
+        clearAllCharacterMasks(args, util) {
+            const state = getState(util.target);
+            if (!Object.keys(state.charMasks).length) return;
+            state.charMasks = {};
+            state.charMasksVersion++;
+            state.charMaskGeometryVersion++;
+            schedulePaint(util.target, state);
+        }
+
+        characterHasMask(args, util) {
+            const state = getState(util.target);
+            const idx = Scratch.Cast.toNumber(args.INDEX) - 1;
+            return !!state.charMasks[idx];
         }
 
         getCharX(args, util) {

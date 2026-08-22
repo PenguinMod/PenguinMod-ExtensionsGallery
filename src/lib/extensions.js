@@ -406,6 +406,14 @@ export default [
         creator: "NamelessCat",
     },
     {
+        name: "HTML Documents",
+        description: "Create HTML webpages and display them on the stage.",
+        code: "ScrTwPm/htmldocuments.js",
+        banner: "ScrTwPm/htmldocs.png",
+        creator: "ScrTwPm",
+        isGitHub: true,
+    },
+    {
         name: "Extension Exposer",
         description: "Access the raw functions from other extensions.",
         code: "TheShovel/extexp.js",

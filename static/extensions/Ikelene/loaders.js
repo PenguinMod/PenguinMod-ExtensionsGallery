@@ -154,16 +154,6 @@
     indeterminate: () => `<div class="pma-indeterminate"><i></i><i></i></div>`,
   };
 
-  const DEFAULT_CUSTOM_CSS =
-    `.pma-custom-demo {\n` +
-    `  width: 1em; height: 1em; border-radius: 50%;\n` +
-    `  border: 0.15em solid rgba(255,255,255,0.2);\n` +
-    `  border-top-color: var(--pma-color);\n` +
-    `  animation: pma-custom-spin calc(1s / var(--pma-speed)) linear infinite;\n` +
-    `}\n` +
-    `@keyframes pma-custom-spin { to { transform: rotate(360deg); } }`;
-  const DEFAULT_CUSTOM_HTML = `<div class="pma-custom-demo"></div>`;
-
   class AnimatedLoaders {
     constructor(runtime) {
       this.runtime = runtime;
@@ -274,17 +264,6 @@
           },
           "---",
           {
-            opcode: "setCustomLoader",
-            blockType: Scratch.BlockType.COMMAND,
-            text: "set loader [ID] to custom loader — html: [HTML] css: [CSS]",
-            arguments: {
-              ID: { type: Scratch.ArgumentType.STRING, defaultValue: "loader1" },
-              HTML: { type: Scratch.ArgumentType.STRING, defaultValue: DEFAULT_CUSTOM_HTML },
-              CSS: { type: Scratch.ArgumentType.STRING, defaultValue: DEFAULT_CUSTOM_CSS },
-            },
-          },
-          "---",
-          {
             opcode: "loaderExists",
             blockType: Scratch.BlockType.BOOLEAN,
             text: "loader [ID] exists?",
@@ -324,7 +303,6 @@
               { text: "orbit dots", value: "orbit" },
               { text: "progress sweep bar", value: "progress_sweep" },
               { text: "indeterminate bar", value: "indeterminate" },
-              { text: "custom", value: "custom" },
             ],
           },
         },
@@ -411,20 +389,6 @@
     }
 
     _renderPreset(loader) {
-      loader.wrapper.querySelectorAll("style[data-pma-custom]").forEach((el) => el.remove());
-
-      if (loader.style === "custom") {
-        const styleEl = document.createElement("style");
-        styleEl.setAttribute("data-pma-custom", "1");
-        styleEl.textContent = loader.customCss || "";
-        loader.wrapper.innerHTML = "";
-        loader.wrapper.appendChild(styleEl);
-        const holder = document.createElement("div");
-        holder.innerHTML = loader.customHtml || "";
-        while (holder.firstChild) loader.wrapper.appendChild(holder.firstChild);
-        return;
-      }
-
       const build = PRESETS[loader.style] || PRESETS.ring;
       loader.wrapper.innerHTML = build();
     }
@@ -452,8 +416,6 @@
           color: "#8b5cf6",
           style: "ring",
           visible: true,
-          customCss: DEFAULT_CUSTOM_CSS,
-          customHtml: DEFAULT_CUSTOM_HTML,
         };
         this.loaders.set(id, loader);
         this._startLoop();
@@ -540,16 +502,6 @@
       const loader = this._getOrNull(args.ID);
       if (!loader) return;
       loader.style = String(args.STYLE);
-      this._renderPreset(loader);
-      this._applyTransform(String(args.ID));
-    }
-
-    setCustomLoader(args) {
-      const loader = this._getOrNull(args.ID);
-      if (!loader) return;
-      loader.customHtml = String(args.HTML);
-      loader.customCss = String(args.CSS);
-      loader.style = "custom";
       this._renderPreset(loader);
       this._applyTransform(String(args.ID));
     }

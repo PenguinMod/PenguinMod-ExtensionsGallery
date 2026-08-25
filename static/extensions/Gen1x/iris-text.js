@@ -170,6 +170,7 @@ Enjoy!! :D
     const TAG_RE_STRIP = /\[(\/?)([a-z0-9_-]+)(?:=([^\]]+))?\]/gi;
 
     function parseRichText(text, base) {
+        const families = new Set([base.font]);
         const stack = [Object.assign({
             customTags: []
         }, base)];
@@ -192,6 +193,7 @@ Enjoy!! :D
                     font: style.font,
                     tags: style.customTags
                 });
+                families.add(style.font);
                 i++;
             }
             if (!match) break;
@@ -249,6 +251,7 @@ Enjoy!! :D
             }
             i = match.index + match[0].length;
         }
+        out.families = families;
         return out;
     }
 
@@ -285,6 +288,7 @@ Enjoy!! :D
     }
 
     function applyCharacterStyleOverrides(chars, overrides) {
+        const families = chars.families;
         for (const index in overrides) {
             const char = chars[index];
             const override = overrides[index];
@@ -296,6 +300,7 @@ Enjoy!! :D
             char.strike = override.strike;
             char.size = override.size;
             char.font = override.font;
+            if (families) families.add(override.font);
         }
     }
 
@@ -2159,7 +2164,7 @@ Enjoy!! :D
         if (state.shapeKey !== shapeKey || state.layoutKey !== layoutKey || !layout || state.fontsPendingAtMeasure) {
             const richChars = parseRichText(state.rawText, state.baseStyle);
             applyCharacterStyleOverrides(richChars, state.charStyleOverrides);
-            const families = new Set(richChars.map(rc => rc.font));
+            const families = richChars.families;
             let fontsPending = false;
             for (const family of families) {
                 if (!loadedDocumentFonts.has(family)) fontsPending = true;

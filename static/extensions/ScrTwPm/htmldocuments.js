@@ -5,7 +5,7 @@
     class HTMLtoCanvas {
         constructor(runtime) {
             // Initialize an array holding your default dropdown menu options
-            this.pages = {}
+            this.pages = new Map()
             this.changePx = [
                 "block-size",
                 "border-block-end-width",
@@ -112,7 +112,7 @@
         }
         getInfo() {
             return {
-                id: 'htmldocuments',
+                id: 'scrtwpmhtmldocuments',
                 name: 'HTML documents',
                 color1: '#ff9900',
                 blocks: [
@@ -477,7 +477,7 @@
                         }
                     },
                     {
-                        opcode: 'pagePos',
+                        opcode: 'ppos',
                         blockType: Scratch.BlockType.REPORTER,
                         text: '[AXIS] of [PAGE]',
                         disableMonitor: true,
@@ -610,39 +610,32 @@
 
         createPage(args, util) {
             if (!Object.keys(this.pages).includes(args.PAGE)) {
-                if (/[a-z0-9]/i.test(args.PAGE)) {
-                    this.pages[args.PAGE] = {
-                        "data": {
-                            "x": 5,
-                            "y": 5,
-                            height: "350",
-                            width: "470",
-                        },
-                        "ids": [],
-                        "code": ""
-                    }
+                if (args.PAGE !== "") {
+                    this.pages.set(args.PAGE, new Map().set("data", new Map().set("x", 5).set("y", 5).set("width", 470).set("height", 350)).set("ids", []).set("code", ""))
+                    console.log(this.pages)
                 } else {
-                    throw new Error("Name must contain at least one number or letter")
+                    throw new Error("Name cannot be empty")
                 }
             }
         }
         clearPage(args, util) {
 
-            if (Object.keys(this.pages).includes(args.PAGE)) {
-                this.pages[args.PAGE].code = ""
-                this.pages[args.PAGE].ids = []
-            }
+            // //if (Object.keys(this.pages).includes(args.PAGE)) {
+            // let pages = this.pages
+            this.pages.get(args.PAGE)?.set("code", "")
+            this.pages.get(args.PAGE)?.set("ids", [])
+            // }
         }
         deletePage(args, util) {
 
-            if (Object.keys(this.pages).includes(args.PAGE)) {
-                delete this.pages[args.PAGE]
-                if (this.viewing.includes(args.PAGE)) {
-                    const elements = document.querySelectorAll(`.htmlpage.display${args.PAGE}`);
-                    elements.forEach(el => el.remove());
-                }
-
+            //if (Object.keys(this.pages).includes(args.PAGE)) {
+            this.pages.delete(args.PAGE)
+            if (this.viewing.includes(args.PAGE)) {
+                const elements = document.querySelectorAll(`.htmlpage.display${args.PAGE}`);
+                elements.forEach(el => el.remove());
             }
+
+            // }
         }
         allPages() {
             return (JSON.stringify(Object.keys(this.pages)))
@@ -659,15 +652,15 @@
                 const elements = document.querySelectorAll(`.htmlpage.display${args.PAGE}`);
                 elements.forEach(el => el.remove());
                 const el = document.createElement("iframe");
-                el.setAttribute("srcdoc", this.pages[args.PAGE].code)
+                el.setAttribute("srcdoc", this.pages.get(args.PAGE).get("code"))
                 el.setAttribute("class", `htmlpage display${args.PAGE}`)
                 el.style.position = 'absolute';
                 el.style.pointerEvents = 'auto';
                 el.style.zIndex = '10';
-                el.style.left = `${this.pages[args.PAGE].data.x}px`;
-                el.style.top = `${this.pages[args.PAGE].data.y}px`;
-                el.setAttribute("width", `${this.pages[args.PAGE].data.width}px`)
-                el.setAttribute("height", `${this.pages[args.PAGE].data.height}px`)
+                el.style.left = `${this.pages.get(args.PAGE).get("data").get("x")}px`;
+                el.style.top = `${this.pages.get(args.PAGE).get("data").get("y")}px`;
+                el.setAttribute("width", `${this.pages.get(args.PAGE).get("data").get("width")}px`)
+                el.setAttribute("height", `${this.pages.get(args.PAGE).get("data").get("height")}px`)
                 el.style.border = "1px solid black"
                 const container = Scratch.renderer.canvas.parentElement;
                 container.appendChild(el);
@@ -690,143 +683,149 @@
         }
 
         noNestEl(args, util) {
-            if (Object.keys(this.pages).includes(args.PAGE)) {
-                if (args.ID !== "") {
-                    if (!this.pages[args.PAGE].ids.includes(args.ID)) {
-                        this.pages[args.PAGE].ids.push(args.ID)
-                        this.pages[args.PAGE].code += `<!-- begin the ${args.ID} --><${args.EL} id="element${args.PAGE}${args.ID}"><!-- end the top --><!-- end the bottom of ${args.ID} -->`
-                    } else {
-                        throw new Error(`Only one element with the id "${args.ID}" can exist in the document`)
-                    }
+            // //if (Object.keys(this.pages).includes(args.PAGE)) {
+            if (args.ID !== "") {
+                if (!this.pages.get(args.PAGE)?.get("ids").includes(args.ID)) {
+                    console.log(this.pages)
+                    this.pages.get(args.PAGE)?.get("ids").push(args.ID)
+                    this.pages.get(args.PAGE)?.set("code", `${this.pages.get(args.PAGE)?.get("code")}<!-- begin the ${args.ID} --><${args.EL} id="element${args.PAGE}${args.ID}"><!-- end the top --><!-- end the bottom of ${args.ID} -->`)
+                    console.log(this.pages)
                 } else {
-                    this.pages[args.PAGE].code += `<!-- begin the ${args.ID} --><${args.EL} ><!-- end the top --><!-- end the bottom of ${args.ID} -->`
+                    throw new Error(`Only one element with the id "${args.ID}" can exist in the document`)
                 }
+            } else {
+                this.pages.get(args.PAGE)?.set("code", `${this.pages.get(args.PAGE)?.get("code")}<!-- begin the ${args.ID} --><${args.EL} ><!-- end the top --><!-- end the bottom of ${args.ID} -->`)
             }
+            // }
         }
 
         nestEl(args, util) {
-            if (Object.keys(this.pages).includes(args.PAGE)) {
-                if (util.stackFrame.startedBranch) {
-                    this.pages[args.PAGE].code += `</${args.EL}><!-- end the bottom of ${args.ID} -->`
-
-                    util.stackFrame.startedBranch = false;
-                    return;
-                }
-                if (args.ID !== "") {
-                    if (!this.pages[args.PAGE].ids.includes(args.ID)) {
-                        this.pages[args.PAGE].ids.push(args.ID)
-                        this.pages[args.PAGE].code += `<!-- begin the ${args.ID} --><${args.EL} id="element${args.PAGE}${args.ID}"><!-- end the top -->`
-                    } else {
-                        throw new Error(`Ony one element with the id "${args.ID}" can exist in the document`)
-                    }
-                } else {
-                    this.pages[args.PAGE].code += `<!-- begin the ${args.ID} --><${args.EL} ><!-- end the top -->`
-                }
-                util.stackFrame.startedBranch = true;
-                util.startBranch(1, true);
+            //if (Object.keys(this.pages).includes(args.PAGE)) {
+            if (util.stackFrame.startedBranch) {
+                this.pages.get(args.PAGE)?.set("code", `${this.pages.get(args.PAGE)?.get("code")}</${args.EL}><!-- end the bottom of ${args.ID} -->`)
+                console.log(this.pages)
+                util.stackFrame.startedBranch = false;
+                return;
             }
+            if (args.ID !== "") {
+                if (!this.pages.get(args.PAGE)?.get("ids").includes(args.ID)) {
+                    this.pages.get(args.PAGE)?.get("ids").push(args.ID)
+                    this.pages.get(args.PAGE)?.set("code", `${this.pages.get(args.PAGE)?.get("code")}<!-- begin the ${args.ID} --><${args.EL} id="element${args.PAGE}${args.ID}"><!-- end the top -->`)
+                    console.log(this.pages)
+                } else {
+                    throw new Error(`Ony one element with the id "${args.ID}" can exist in the document`)
+                }
+            } else {
+                this.pages.get(args.PAGE)?.set("code", `${this.pages.get(args.PAGE)?.get("code")}<!-- begin the ${args.ID} --><${args.EL} ><!-- end the top -->`)
+            }
+            util.stackFrame.startedBranch = true;
+            util.startBranch(1, true);
+            // }
         }
 
 
         text(args, util) {
-            if (Object.keys(this.pages).includes(args.PAGE)) {
-                this.pages[args.PAGE].code += `${args.TEXT}`
-            }
+            //if (Object.keys(this.pages).includes(args.PAGE)) {
+            this.pages.get(args.PAGE)?.set("code", `${this.pages.get(args.PAGE)?.get("code")}${args.TEXT}`)
+            // }
         }
 
         removeEl(args, util) {
-            if (Object.keys(this.pages).includes(args.PAGE)) {
-                if (this.pages[args.PAGE].ids.includes(args.ID)) {
-                    let text = this.pages[args.PAGE].code
-                    let startWord = `<!-- begin the ${args.ID} -->`;
-                    let endWord = `<!-- end the bottom of ${args.ID} -->`;
-                    let regex = new RegExp(`(${startWord})(.*?)(${endWord})`);
-                    let result = text.replace(regex, '$1 $3');
-                    result = result.replace(`<!-- begin the ${args.ID} -->`, "").replace(`<!-- end the bottom of ${args.ID} -->`, "")
-                    this.pages[args.PAGE].code = (result);
-                    let num = (this.pages[args.PAGE].ids.indexOf(args.ID))
-                    this.pages[args.PAGE].ids.splice(num, 1)
-                }
+            //if (Object.keys(this.pages).includes(args.PAGE)) {
+            if (this.pages.get(args.PAGE)?.get("ids").includes(args.ID)) {
+                console.log(this.pages)
+                let text = this.pages.get(args.PAGE).get("code")
+                let startWord = `<!-- begin the ${args.ID} -->`;
+                let endWord = `<!-- end the bottom of ${args.ID} -->`;
+                let regex = new RegExp(`(${startWord})(.*?)(${endWord})`);
+                let result = text.replace(regex, '$1 $3');
+                result = result.replace(`<!-- begin the ${args.ID} -->`, "").replace(`<!-- end the bottom of ${args.ID} -->`, "")
+                console.log(this.pages)
+                this.pages.get(args.PAGE).set("code", result);
+                let num = (this.pages.get(args.PAGE).get("ids").indexOf(args.ID))
+                this.pages.get(args.PAGE).get("ids").splice(num, 1)
+                console.log(this.pages)
             }
+            // }
 
         }
 
         styleEl(args, util) {
-            if (Object.keys(this.pages).includes(args.PAGE)) {
+            //if (Object.keys(this.pages).includes(args.PAGE)) {
 
 
-                if (util.stackFrame.startedBranch) {
-                    this.pages[args.PAGE].code += `</style><!--end my style-->`
+            if (util.stackFrame.startedBranch) {
+                this.pages.get(args.PAGE)?.set("code", `${this.pages.get(args.PAGE)?.get("code")}</style><!--end my style-->`)
 
-                    util.stackFrame.startedBranch = false;
-                    return;
-                }
-
-                const blockContainer = util.thread.blockContainer;
-                const currentBlockId = util.thread.peekStack(); //
-                const currentBlock = blockContainer.getBlock(currentBlockId);
-                if (currentBlock) {
-                    currentBlock.stylePage = {
-                        page: args.PAGE,
-                        compiledScope: 'global',
-                    };
-                }
-                this.pages[args.PAGE].code += `<!--begin my style--><style>`
-
-                util.stackFrame.startedBranch = true;
-                util.startBranch(1, true);
-
-                //             if (Object.keys(this.pages).includes(args.PAGE)){
-                //     if (util.stackFrame.startedBranch) {
-                //         this.pages[args.PAGE].code += `</${args.EL}><!-- end the bottom of ${args.ID} -->`
-
-                //         util.stackFrame.startedBranch = false; 
-                //         return; 
-                //     }
-                //     if(args.ID !== ""){
-                //         if(!this.pages[args.PAGE].ids.includes(args.ID)){
-                //         this.pages[args.PAGE].ids.push(args.ID)
-                //         this.pages[args.PAGE].code += `<!-- begin the ${args.ID} --><${args.EL} id="element${args.PAGE}${args.ID}"><!-- end the top -->`
-                //         } else {
-                //         throw new Error (`Ony one element with the id "${args.ID}" can exist in the document`)
-                //         }
-                //     } else {
-                //         this.pages[args.PAGE].code += `<!-- begin the ${args.ID} --><${args.EL} ><!-- end the top -->`
-                //     }
-                //     util.stackFrame.startedBranch = true;
-                //     util.startBranch(1, true); 
-                // }
-
-
-                //     if (util.stackFrame.startedBranch) {
-                //         //do after
-                //         this.pages[args.PAGE].code += `</style><!--end my style-->`
-
-                //         util.stackFrame.startedBranch = false; 
-                //         return; 
-                //     }
-                //     //do before
-                //         const blockContainer = util.thread.blockContainer;
-                //         const currentBlockId = util.thread.peekStack(); //
-                //         const currentBlock = blockContainer.getBlock(currentBlockId);
-                //         if (currentBlock) {
-                //         currentBlock.stylePage = {
-                //             page: args.PAGE,
-                //             compiledScope: 'global',
-                //         };
-
-                //         this.pages[args.PAGE].code += `<!--begin my style--><style>`
-
-
-
-
-                //         }
-                //     util.stackFrame.startedBranch = true;
-                //     util.startBranch(1, true); 
-                // }
-
-
+                util.stackFrame.startedBranch = false;
+                return;
             }
+
+            const blockContainer = util.thread.blockContainer;
+            const currentBlockId = util.thread.peekStack(); //
+            const currentBlock = blockContainer.getBlock(currentBlockId);
+            if (currentBlock) {
+                currentBlock.stylePage = {
+                    page: args.PAGE,
+                    compiledScope: 'global',
+                };
+            }
+            this.pages.get(args.PAGE)?.set("code", `${this.pages.get(args.PAGE)?.get("code")}<!--begin my style--><style>`)
+
+            util.stackFrame.startedBranch = true;
+            util.startBranch(1, true);
+
+            //             if (Object.keys(this.pages).includes(args.PAGE)){
+            //     if (util.stackFrame.startedBranch) {
+            //         this.pages[args.PAGE].code += `</${args.EL}><!-- end the bottom of ${args.ID} -->`
+
+            //         util.stackFrame.startedBranch = false; 
+            //         return; 
+            //     }
+            //     if(args.ID !== ""){
+            //         if(!this.pages[args.PAGE].ids.includes(args.ID)){
+            //         this.pages[args.PAGE].ids.push(args.ID)
+            //         this.pages[args.PAGE].code += `<!-- begin the ${args.ID} --><${args.EL} id="element${args.PAGE}${args.ID}"><!-- end the top -->`
+            //         } else {
+            //         throw new Error (`Ony one element with the id "${args.ID}" can exist in the document`)
+            //         }
+            //     } else {
+            //         this.pages[args.PAGE].code += `<!-- begin the ${args.ID} --><${args.EL} ><!-- end the top -->`
+            //     }
+            //     util.stackFrame.startedBranch = true;
+            //     util.startBranch(1, true); 
+            // }
+
+
+            //     if (util.stackFrame.startedBranch) {
+            //         //do after
+            //         this.pages[args.PAGE].code += `</style><!--end my style-->`
+
+            //         util.stackFrame.startedBranch = false; 
+            //         return; 
+            //     }
+            //     //do before
+            //         const blockContainer = util.thread.blockContainer;
+            //         const currentBlockId = util.thread.peekStack(); //
+            //         const currentBlock = blockContainer.getBlock(currentBlockId);
+            //         if (currentBlock) {
+            //         currentBlock.stylePage = {
+            //             page: args.PAGE,
+            //             compiledScope: 'global',
+            //         };
+
+            //         this.pages[args.PAGE].code += `<!--begin my style--><style>`
+
+
+
+
+            //         }
+            //     util.stackFrame.startedBranch = true;
+            //     util.startBranch(1, true); 
+            // }
+
+
+            // }
             // }
 
         }
@@ -859,9 +858,9 @@
 
             // if (parentBlock.stylePage && parentBlock) {
             let page = args.PAGE//parentBlock.stylePage.page
-            this.pages[args.PAGE].code += `<!--begin my style--><style>`
-            this.pages[page].code = `${this.pages[page].code}.htmldocumentelement${args.TYPE}element${page}${args.NAME}{${args.PROPERTY}:${value}};`
-            this.pages[args.PAGE].code += `</style><!--end my style-->`
+            this.pages.get(args.PAGE)?.set("code", `${this.pages.get(args.PAGE)?.get("code")}<!--begin my style--><style>`)
+            this.pages.get(args.PAGE)?.set("code", `${this.pages.get(args.PAGE)?.get("code")}${args.TYPE}element${page}${args.NAME}{${args.PROPERTY}:${value}};`)
+            this.pages.get(args.PAGE)?.set("code", `${this.pages.get(args.PAGE)?.get("code")}</style><!--end my style-->`)
             // }
 
             //     } else {
@@ -874,120 +873,119 @@
 
 
         remallstyle(args, util) {
-            if (Object.keys(this.pages).includes(args.PAGE)) {
+            //if (Object.keys(this.pages).includes(args.PAGE)) {
 
-                let result = this.pages[args.PAGE].code;
+            let result = this.pages.get(args.PAGE).get("code");
 
-                const startWord = "<!--begin my style-->";
-                const endWord = "<!--end my style-->";
+            const startWord = "<!--begin my style-->";
+            const endWord = "<!--end my style-->";
 
-                const regex = new RegExp(`${startWord.replace(/[-/\\^$*+?.()|[\]{}]/g, '\\$&')}.*?${endWord.replace(/[-/\\^$*+?.()|[\]{}]/g, '\\$&')}`, 'gs');
+            const regex = new RegExp(`${startWord.replace(/[-/\\^$*+?.()|[\]{}]/g, '\\$&')}.*?${endWord.replace(/[-/\\^$*+?.()|[\]{}]/g, '\\$&')}`, 'gs');
 
-                this.pages[args.PAGE].code = result.replace(regex, '');
-            }
+            this.pages.get(args.PAGE).set("code", result.replace(regex, ''))
+            // }
         }
 
         setAttr(args, util) {
-            if (Object.keys(this.pages).includes(args.PAGE)) {
-                if (args.ID !== "") {
-                    let text = this.pages[args.PAGE].code;
-                    let newText = ` ${args.ATTR}="${args.VAL}"`;
-                    let newReg = new RegExp(`(<!-- begin the ${args.ID} -->[^>]+)`);
-                    let updatedString = text.replace(newReg, `$1${newText}`);
-                    this.pages[args.PAGE].code = updatedString;
-                }
+            //if (Object.keys(this.pages).includes(args.PAGE)) {
+            if (args.ID !== "") {
+                let text = this.pages.get(args.PAGE).get("code");
+                let newText = ` ${args.ATTR}="${args.VAL}"`;
+                let newReg = new RegExp(`(<!-- begin the ${args.ID} -->[^>]+)`);
+                let updatedString = text.replace(newReg, `$1${newText}`);
+                this.pages.get(args.PAGE).set("code", updatedString)
             }
+            // }
         }
 
-        pagePos(args, util) {
-            if (Object.keys(this.pages).includes(args.PAGE)) {
-                return (this.pages[args.PAGE].data[args.AXIS])
+        ppos(args, util) {
+            if ((this.pages).has(args.PAGE)) {
+                return (this.pages.get(args.PAGE).get("data").get(args.AXIS))
             } else {
                 return ('Page does not exist!')
             }
         }
 
         movePage(args, util) {
-            if (Object.keys(this.pages).includes(args.PAGE)) {
-                this.pages[args.PAGE].data.x = args.X
-                this.pages[args.PAGE].data.y = args.Y
-                console
-                if (this.viewing.includes(args.PAGE) && document.querySelector(".htmlpage")) {
-                    const elements = document.querySelectorAll(`.htmlpage.display${args.PAGE}`);
-                    elements.forEach(el => el.remove());
-                    const el = document.createElement("iframe");
-                    el.setAttribute("srcdoc", this.pages[args.PAGE].code)
-                    el.setAttribute("class", `htmlpage display${args.PAGE}`)
-                    el.style.position = 'absolute';
-                    el.style.pointerEvents = 'auto';
-                    el.style.zIndex = '10';
-                    el.style.left = `${this.pages[args.PAGE].data.x}px`;
-                    el.style.top = `${this.pages[args.PAGE].data.y}px`;
-                    el.setAttribute("width", `${this.pages[args.PAGE].data.width}px`)
-                    el.setAttribute("height", `${this.pages[args.PAGE].data.height}px`)
-                    el.style.border = "1px solid black"
-                    const container = Scratch.renderer.canvas.parentElement;
-                    container.appendChild(el);
-                    if (!this.viewing.includes(args.PAGE)) {
-                        this.viewing.push(args.PAGE)
-                    }
+            //if (Object.keys(this.pages).includes(args.PAGE)) {
+            this.pages.get(args.PAGE).get("data").set("x", args.X)
+            this.pages.get(args.PAGE).get("data").set("y", args.Y)
+            if (this.viewing.includes(args.PAGE) && document.querySelector(".htmlpage")) {
+                const elements = document.querySelectorAll(`.htmlpage.display${args.PAGE}`);
+                elements.forEach(el => el.remove());
+                const el = document.createElement("iframe");
+                el.setAttribute("srcdoc", this.pages.get(args.PAGE).get("code"))
+                el.setAttribute("class", `htmlpage display${args.PAGE}`)
+                el.style.position = 'absolute';
+                el.style.pointerEvents = 'auto';
+                el.style.zIndex = '10';
+                el.style.left = `${this.pages.get(args.PAGE).get("data").get("x")}px`;
+                el.style.top = `${this.pages.get(args.PAGE).get("data").get("y")}px`;
+                el.setAttribute("width", `${this.pages.get(args.PAGE).get("data").get("width")}px`)
+                el.setAttribute("height", `${this.pages.get(args.PAGE).get("data").get("height")}px`)
+                el.style.border = "1px solid black"
+                const container = Scratch.renderer.canvas.parentElement;
+                container.appendChild(el);
+                if (!this.viewing.includes(args.PAGE)) {
+                    this.viewing.push(args.PAGE)
                 }
             }
+            // }
         }
         resizePage(args, util) {
-            if (Object.keys(this.pages).includes(args.PAGE)) {
-                this.pages[args.PAGE].data.width = args.X
-                this.pages[args.PAGE].data.height = args.Y
-                if (this.viewing.includes(args.PAGE) && document.querySelector(".htmlpage")) {
-                    const elements = document.querySelectorAll(`.htmlpage.display${args.PAGE}`);
-                    elements.forEach(el => el.remove());
-                    const el = document.createElement("iframe");
-                    el.setAttribute("srcdoc", this.pages[args.PAGE].code)
-                    el.setAttribute("class", `htmlpage display${args.PAGE}`)
-                    el.style.position = 'absolute';
-                    el.style.pointerEvents = 'auto';
-                    el.style.zIndex = '10';
-                    el.style.left = `${this.pages[args.PAGE].data.x}px`;
-                    el.style.top = `${this.pages[args.PAGE].data.y}px`;
-                    el.setAttribute("width", `${this.pages[args.PAGE].data.width}px`)
-                    el.setAttribute("height", `${this.pages[args.PAGE].data.height}px`)
-                    el.style.border = "1px solid black"
-                    const container = Scratch.renderer.canvas.parentElement;
-                    container.appendChild(el);
-                    if (!this.viewing.includes(args.PAGE)) {
-                        this.viewing.push(args.PAGE)
-                    }
+            //if (Object.keys(this.pages).includes(args.PAGE)) {
+            this.pages.get(args.PAGE).get("data").set("width", args.X)
+            this.pages.get(args.PAGE).get("data").set("height", args.Y)
+            if (this.viewing.includes(args.PAGE) && document.querySelector(".htmlpage")) {
+                const elements = document.querySelectorAll(`.htmlpage.display${args.PAGE}`);
+                elements.forEach(el => el.remove());
+                const el = document.createElement("iframe");
+                el.setAttribute("srcdoc", this.pages.get(args.PAGE).get("code"))
+                el.setAttribute("class", `htmlpage display${args.PAGE}`)
+                el.style.position = 'absolute';
+                el.style.pointerEvents = 'auto';
+                el.style.zIndex = '10';
+                el.style.left = `${this.pages.get(args.PAGE).get("data").get("x")}px`;
+                el.style.top = `${this.pages.get(args.PAGE).get("data").get("y")}px`;
+                el.setAttribute("width", `${this.pages.get(args.PAGE).get("data").get("width")}px`)
+                el.setAttribute("height", `${this.pages.get(args.PAGE).get("data").get("height")}px`)
+                el.style.border = "1px solid black"
+                const container = Scratch.renderer.canvas.parentElement;
+                container.appendChild(el);
+                if (!this.viewing.includes(args.PAGE)) {
+                    this.viewing.push(args.PAGE)
                 }
             }
+            // }
         }
 
         resetDefault(args, util) {
-            if (Object.keys(this.pages).includes(args.PAGE)) {
-                this.pages[args.PAGE].data.width = Number(window.getComputedStyle(Scratch.renderer.canvas.parentElement).width.replace("px", "")) - 10
-                this.pages[args.PAGE].data.height = Number(window.getComputedStyle(Scratch.renderer.canvas.parentElement).height.replace("px", "")) - 10
-                this.pages[args.PAGE].data.x = 5
-                this.pages[args.PAGE].data.y = 5
-                if (this.viewing.includes(args.PAGE) && document.querySelector(".htmlpage")) {
-                    const elements = document.querySelectorAll(`.htmlpage.display${args.PAGE}`);
-                    elements.forEach(el => el.remove());
-                    const el = document.createElement("iframe");
-                    el.setAttribute("srcdoc", this.pages[args.PAGE].code)
-                    el.setAttribute("class", `htmlpage display${args.PAGE}`)
-                    el.style.position = 'absolute';
-                    el.style.pointerEvents = 'auto';
-                    el.style.zIndex = '10';
-                    el.style.left = `${this.pages[args.PAGE].data.x}px`;
-                    el.style.top = `${this.pages[args.PAGE].data.y}px`;
-                    el.setAttribute("width", `${this.pages[args.PAGE].data.width}px`)
-                    el.setAttribute("height", `${this.pages[args.PAGE].data.height}px`)
-                    el.style.border = "1px solid black"
-                    const container = Scratch.renderer.canvas.parentElement;
-                    container.appendChild(el);
-                    if (!this.viewing.includes(args.PAGE)) {
-                        this.viewing.push(args.PAGE)
-                    }
+            //if (Object.keys(this.pages).includes(args.PAGE)) {
+            this.pages.get(args.PAGE).get("data").set("width", Number(window.getComputedStyle(Scratch.renderer.canvas.parentElement).width.replace("px", "")) - 10)
+            this.pages.get(args.PAGE).get("data").set("height", Number(window.getComputedStyle(Scratch.renderer.canvas.parentElement).height.replace("px", "")) - 10)
+            this.pages.get(args.PAGE).get("data").set("x", 5)
+            this.pages.get(args.PAGE).get("data").set("y", 5)
+            if (this.viewing.includes(args.PAGE) && document.querySelector(".htmlpage")) {
+                const elements = document.querySelectorAll(`.htmlpage.display${args.PAGE}`);
+                elements.forEach(el => el.remove());
+                const el = document.createElement("iframe");
+                el.setAttribute("srcdoc", this.pages.get(args.PAGE).get("code"))
+                el.setAttribute("class", `htmlpage display${args.PAGE}`)
+                el.style.position = 'absolute';
+                el.style.pointerEvents = 'auto';
+                el.style.zIndex = '10';
+                el.style.left = `${this.pages.get(args.PAGE).get("data").get("x")}px`;
+                el.style.top = `${this.pages.get(args.PAGE).get("data").get("y")}px`;
+                el.setAttribute("width", `${this.pages.get(args.PAGE).get("data").get("width")}px`)
+                el.setAttribute("height", `${this.pages.get(args.PAGE).get("data").get("height")}px`)
+                el.style.border = "1px solid black"
+                const container = Scratch.renderer.canvas.parentElement;
+                container.appendChild(el);
+                if (!this.viewing.includes(args.PAGE)) {
+                    this.viewing.push(args.PAGE)
                 }
             }
+            // }
         }
 
         spw(args, util) {
@@ -1021,8 +1019,8 @@
 
 
         getHTML(args, util) {
-            if (Object.keys(this.pages).includes(args.PAGE)) {
-                let el = this.pages[args.PAGE].code;
+            if ((this.pages).has(args.PAGE)) {
+                let el = this.pages.get(args.PAGE).get("code");
                 let cleanString = el.replace(/<!--[\s\S]*?-->/g, "");
                 let toChange = `<html><body>${cleanString}</body></html>`
                 return (this.prettierInText(toChange))
@@ -1047,7 +1045,7 @@
 
             el.addEventListener(args.EVE, () => {
 
-                const targetOpcode = 'htmldocuments_eve';
+                const targetOpcode = 'scrtwpmhtmldocuments_eve';
                 const vm = Scratch.vm;
 
                 vm.runtime.targets.forEach(target => {
@@ -1107,7 +1105,7 @@
             if (document.querySelector(".htmlpage")) {
                 return (JSON.stringify(this.viewing))
             } else {
-                return ('')
+                return ('[]')
             }
         }
     }

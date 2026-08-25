@@ -451,7 +451,11 @@ Enjoy!! :D
             hasPaintedOnce: false,
             taggedIndicesCache: null,
             taggedIndicesCacheKey: null,
-            paintOpPool: []
+            paintOpPool: [],
+            typingFullRaw: null,
+            typingBoxKey: null,
+            typingBoxWidth: 0,
+            typingBoxHeight: 0
         };
     }
 
@@ -1787,8 +1791,37 @@ Enjoy!! :D
         };
     }
 
-    function fingerprintPaintOps(paintOps, docW, docH) {
+    function clearTypingBox(state) {
+        state.typingFullRaw = null;
+        state.typingBoxKey = null;
+        state.typingBoxWidth = 0;
+        state.typingBoxHeight = 0;
+    }
+
+    function shapeKeyForText(state, rawText) {
+        const prev = state.rawText;
+        state.rawText = rawText;
+        const key = getShapeKey(state);
+        state.rawText = prev;
+        return key;
+    }
+
+    function ensureTypingBox(state) {
+        if (!state.typingFullRaw) return;
+        const key = shapeKeyForText(state, state.typingFullRaw);
+        if (state.typingBoxKey === key) return;
+        const richChars = parseRichText(state.typingFullRaw, state.baseStyle);
+        applyCharacterStyleOverrides(richChars, state.charStyleOverrides);
+        const measured = measureRichText(glyphMeasureCtx, richChars, state);
+        const lineHeight = state.baseStyle.size * state.lineSpacing;
+        state.typingBoxKey = key;
+        state.typingBoxWidth = measured.maxWidth;
+        state.typingBoxHeight = measured.lines.length * lineHeight;
+    }
+
+    function fingerprintPaintOps(paintOps, docW, docH, align) {
         let hash = (docW * 2654435761) ^ (docH * 40503);
+        hash = (hash * 33) ^ hashString(align);
         hash = (hash * 33) ^ paintOps.length;
         for (let i = 0; i < paintOps.length; i++) {
             const op = paintOps[i];
@@ -2194,8 +2227,11 @@ Enjoy!! :D
         );
         const pad = Math.max(64, state.baseStyle.size * 2, decorationPad + state.baseStyle.size);
 
-        const effectiveMaxWidth = state.maxWidth && state.maxWidth > 0 ? state.maxWidth : maxWidth;
-        const effectiveMaxHeight = state.maxHeight && state.maxHeight > 0 ? state.maxHeight : totalHeight;
+        ensureTypingBox(state);
+        let effectiveMaxWidth = state.maxWidth && state.maxWidth > 0 ? state.maxWidth : maxWidth;
+        let effectiveMaxHeight = state.maxHeight && state.maxHeight > 0 ? state.maxHeight : totalHeight;
+        if (state.typingBoxWidth > effectiveMaxWidth) effectiveMaxWidth = state.typingBoxWidth;
+        if (state.typingBoxHeight > effectiveMaxHeight) effectiveMaxHeight = state.typingBoxHeight;
 
         const docW = Math.ceil(effectiveMaxWidth + pad * 2);
         const docH = Math.ceil(effectiveMaxHeight + pad * 2);
@@ -2337,7 +2373,7 @@ Enjoy!! :D
             state.drawableWidth = docW;
             state.drawableHeight = docH;
 
-            const fingerprint = fingerprintPaintOps(paintOps, docW, docH);
+            const fingerprint = fingerprintPaintOps(paintOps, docW, docH, state.align);
             if (fingerprint === state.paintFingerprint && state.skinId !== null) {
                 state.paintDirty = false;
                 return;
@@ -3928,6 +3964,7 @@ self.onmessage = async (event) => {
         const state = getState(target);
         state.visible = false;
         state.revealToken++;
+        clearTypingBox(state);
         state.paintDirty = true;
         state.paintFingerprint = null;
         const costume = target.getCostumes()[target.currentCostume];
@@ -4083,7 +4120,7 @@ self.onmessage = async (event) => {
                             }
                         }
                     },
-					{
+                    {
                         opcode: 'addLine',
                         blockType: Scratch.BlockType.COMMAND,
                         text: 'add line [TEXT]',
@@ -5238,11 +5275,12 @@ self.onmessage = async (event) => {
             const frame = util.stackFrame;
 
             if (frame.irisStages === undefined) {
-                state.rawText = Scratch.Cast.toString(args.TEXT);
-                state.finalText = stripMarkup(state.rawText);
+                const text = Scratch.Cast.toString(args.TEXT);
+                state.finalText = stripMarkup(text);
                 state.visible = true;
                 if (state.resetCharTransformsOnText) resetCharacterTransformsState(state);
-                frame.irisStages = splitWaitStages(state.rawText);
+                clearTypingBox(state);
+                frame.irisStages = splitWaitStages(text);
                 frame.irisStageIndex = 0;
                 frame.irisToken = ++state.revealToken;
                 frame.irisWaitUntil = null;
@@ -5273,8 +5311,8 @@ self.onmessage = async (event) => {
             frame.irisWaitUntil = Date.now() + stage.waitAfter * 1000;
             util.yieldTick();
         }
-		
-		addLine(args, util) {
+
+        addLine(args, util) {
             const state = getState(util.target);
             const text = Scratch.Cast.toString(args.TEXT);
             const existingText = state.visible ? state.rawText : '';
@@ -5282,6 +5320,7 @@ self.onmessage = async (event) => {
             if (state.resetCharTransformsOnText) resetCharacterTransformsState(state);
             state.revealToken++;
             state.typingControl = null;
+            clearTypingBox(state);
             state.rawText = existingText + linePrefix + text;
             state.finalText = stripMarkup(state.rawText);
             state.visible = true;
@@ -5297,11 +5336,13 @@ self.onmessage = async (event) => {
                 const existingText = appendLine && state.visible ? state.rawText : '';
                 const linePrefix = appendLine && existingText ? '\n' : '';
                 state.rawText = existingText + linePrefix;
-                state.finalText = stripMarkup(state.rawText + text);
+                state.typingFullRaw = state.rawText + text;
+                state.finalText = stripMarkup(state.typingFullRaw);
                 state.visible = true;
                 if (state.resetCharTransformsOnText) resetCharacterTransformsState(state);
                 state.revealToken++;
                 state.typingControl = null;
+                state.typingBoxKey = null;
                 frame.irisTypingSteps = splitTypingSteps(text);
                 frame.irisTypingStepIndex = 0;
                 frame.irisTypingCharIndex = stripMarkup(existingText + linePrefix).length;
@@ -5315,6 +5356,8 @@ self.onmessage = async (event) => {
             if (state.typingControl === 'stop') {
                 state.typingControl = null;
                 state.finalText = stripMarkup(state.rawText);
+                clearTypingBox(state);
+                schedulePaint(util.target, state);
                 return;
             }
 
@@ -5324,6 +5367,7 @@ self.onmessage = async (event) => {
                 }
                 state.rawText = frame.irisTypedText;
                 state.typingControl = null;
+                clearTypingBox(state);
                 schedulePaint(util.target, state);
                 startTypingFinishedHat(util.target);
                 return;
@@ -5355,6 +5399,7 @@ self.onmessage = async (event) => {
             }
 
             state.rawText = frame.irisTypedText;
+            clearTypingBox(state);
             schedulePaint(util.target, state);
             startTypingFinishedHat(util.target);
         }
@@ -5487,7 +5532,8 @@ self.onmessage = async (event) => {
 
         setAlign(args, util) {
             const state = getState(util.target);
-            const align = Scratch.Cast.toString(args.ALIGN);
+            const align = Scratch.Cast.toString(args.ALIGN).toLowerCase();
+            if (align !== 'left' && align !== 'center' && align !== 'right' && align !== 'justify') return;
             if (state.align === align) return;
             state.align = align;
             schedulePaint(util.target, state);

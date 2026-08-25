@@ -764,16 +764,21 @@ Enjoy!! :D
 
     const SHADOW_CACHE_LIMIT = 512;
     const GLOBAL_SHADOW_CANVAS_LIMIT = 256;
-    const shadowCanvasPool = [];
     const globalShadowLRU = new Map();
     let shadowGlobalKeySeq = 1;
 
-    function acquireShadowCanvas(w, h) {
-        const reused = shadowCanvasPool.pop();
-        const canvas = reused || document.createElement('canvas');
-        if (canvas.width !== w) canvas.width = w;
-        if (canvas.height !== h) canvas.height = h;
-        return canvas;
+    const sharedShadowSurface = (() => {
+        const canvas = typeof OffscreenCanvas === 'function' ? new OffscreenCanvas(1, 1) : document.createElement('canvas');
+        canvas.width = 1;
+        canvas.height = 1;
+        return {
+            canvas,
+            ctx: canvas.getContext('2d')
+        };
+    })();
+
+    function releaseShadowCapture(capture) {
+        if (capture && capture !== sharedShadowSurface.canvas && typeof capture.close === 'function') capture.close();
     }
 
     function evictOldestGlobalShadow() {
@@ -782,7 +787,7 @@ Enjoy!! :D
         const oldest = globalShadowLRU.get(oldestKey);
         globalShadowLRU.delete(oldestKey);
         oldest.shape.shadows.delete(oldest.key);
-        if (shadowCanvasPool.length < 64) shadowCanvasPool.push(oldest.entry.canvas);
+        releaseShadowCapture(oldest.entry.canvas);
     }
 
     function getShadowGlyphBitmap(shape, color, blurPx) {
@@ -802,8 +807,11 @@ Enjoy!! :D
         const padPx = Math.ceil(blurPx * 3) + 2;
         const w = shape.canvas.width + padPx * 2;
         const h = shape.canvas.height + padPx * 2;
-        const canvas = acquireShadowCanvas(w, h);
-        const ctx = canvas.getContext('2d');
+        const surface = sharedShadowSurface;
+        if (surface.canvas.width !== w) surface.canvas.width = w;
+        if (surface.canvas.height !== h) surface.canvas.height = h;
+        const ctx = surface.canvas.getContext('2d');
+        surface.ctx = ctx;
         ctx.setTransform(1, 0, 0, 1, 0, 0);
         ctx.clearRect(0, 0, w, h);
         ctx.shadowColor = color;
@@ -812,19 +820,23 @@ Enjoy!! :D
         ctx.shadowOffsetY = 0;
         ctx.drawImage(shape.canvas, padPx, padPx);
 
-        const globalKey = shadowGlobalKeySeq++;
+        const canSnapshot = typeof surface.canvas.transferToImageBitmap === 'function';
+        const canvas = canSnapshot ? surface.canvas.transferToImageBitmap() : surface.canvas;
         entry = {
             canvas,
             offsetX: -padPx,
-            offsetY: -padPx,
-            globalKey
+            offsetY: -padPx
         };
+        if (!canSnapshot) return entry;
+
+        const globalKey = shadowGlobalKeySeq++;
+        entry.globalKey = globalKey;
         if (shape.shadows.size >= SHADOW_CACHE_LIMIT) {
             const evictedKey = shape.shadows.keys().next().value;
             const evicted = shape.shadows.get(evictedKey);
             shape.shadows.delete(evictedKey);
             globalShadowLRU.delete(evicted.globalKey);
-            releasePooledCanvas(shadowCanvasPool, evicted.canvas);
+            releaseShadowCapture(evicted.canvas);
         }
         shape.shadows.set(key, entry);
 
@@ -847,7 +859,7 @@ Enjoy!! :D
         if (shape.shadows) {
             for (const shadowEntry of shape.shadows.values()) {
                 globalShadowLRU.delete(shadowEntry.globalKey);
-                releasePooledCanvas(shadowCanvasPool, shadowEntry.canvas);
+                releaseShadowCapture(shadowEntry.canvas);
             }
         }
         const stencil = maskGlyphStencilCache.get(shape);
@@ -2508,6 +2520,22 @@ function bucketSize(n) {
     return Math.max(CANVAS_SIZE_BUCKET, Math.ceil(n / CANVAS_SIZE_BUCKET) * CANVAS_SIZE_BUCKET);
 }
 
+const GLOBAL_SHADOW_CANVAS_LIMIT = 256;
+const globalShadowLRU = new Map();
+let shadowGlobalKeySeq = 1;
+
+const sharedShadowSurface = (() => {
+    const canvas = new OffscreenCanvas(1, 1);
+    return {
+        canvas,
+        ctx: canvas.getContext('2d')
+    };
+})();
+
+function releaseShadowCapture(capture) {
+    if (capture && capture !== sharedShadowSurface.canvas && typeof capture.close === 'function') capture.close();
+}
+
 function releaseGlyphOwnedCanvases(shape) {
     releasePooledCanvas(glyphShapeCanvasPool, shape.canvas);
     if (shape.tinted) {
@@ -2518,7 +2546,7 @@ function releaseGlyphOwnedCanvases(shape) {
     if (shape.shadows) {
         for (const shadowEntry of shape.shadows.values()) {
             globalShadowLRU.delete(shadowEntry.globalKey);
-            releasePooledCanvas(shadowCanvasPool, shadowEntry.canvas);
+            releaseShadowCapture(shadowEntry.canvas);
         }
     }
     const stencil = maskGlyphStencilCache.get(shape);
@@ -2578,26 +2606,13 @@ function getGlyphBitmap(glyphKey, color) {
     return bitmap;
 }
 
-const GLOBAL_SHADOW_CANVAS_LIMIT = 256;
-const shadowCanvasPool = [];
-const globalShadowLRU = new Map();
-let shadowGlobalKeySeq = 1;
-
-function acquireShadowCanvas(w, h) {
-    const reused = shadowCanvasPool.pop();
-    const canvas = reused || new OffscreenCanvas(w, h);
-    if (canvas.width !== w) canvas.width = w;
-    if (canvas.height !== h) canvas.height = h;
-    return canvas;
-}
-
 function evictOldestGlobalShadow() {
     const oldestKey = globalShadowLRU.keys().next().value;
     if (oldestKey === undefined) return;
     const oldest = globalShadowLRU.get(oldestKey);
     globalShadowLRU.delete(oldestKey);
     oldest.shape.shadows.delete(oldest.key);
-    if (shadowCanvasPool.length < 64) shadowCanvasPool.push(oldest.entry.canvas);
+    releaseShadowCapture(oldest.entry.canvas);
 }
 
 function getShadowGlyphBitmap(shape, color, blurPx) {
@@ -2617,8 +2632,11 @@ function getShadowGlyphBitmap(shape, color, blurPx) {
     const padPx = Math.ceil(blurPx * 3) + 2;
     const w = shape.canvas.width + padPx * 2;
     const h = shape.canvas.height + padPx * 2;
-    const canvas = acquireShadowCanvas(w, h);
-    const ctx = canvas.getContext('2d');
+    const surface = sharedShadowSurface;
+    if (surface.canvas.width !== w) surface.canvas.width = w;
+    if (surface.canvas.height !== h) surface.canvas.height = h;
+    const ctx = surface.canvas.getContext('2d');
+    surface.ctx = ctx;
     ctx.setTransform(1, 0, 0, 1, 0, 0);
     ctx.clearRect(0, 0, w, h);
     ctx.shadowColor = color;
@@ -2627,19 +2645,23 @@ function getShadowGlyphBitmap(shape, color, blurPx) {
     ctx.shadowOffsetY = 0;
     ctx.drawImage(shape.canvas, padPx, padPx);
 
-    const globalKey = shadowGlobalKeySeq++;
+    const canSnapshot = typeof surface.canvas.transferToImageBitmap === 'function';
+    const canvas = canSnapshot ? surface.canvas.transferToImageBitmap() : surface.canvas;
     entry = {
         canvas,
         offsetX: -padPx,
-        offsetY: -padPx,
-        globalKey
+        offsetY: -padPx
     };
+    if (!canSnapshot) return entry;
+
+    const globalKey = shadowGlobalKeySeq++;
+    entry.globalKey = globalKey;
     if (shape.shadows.size >= SHADOW_CACHE_LIMIT) {
         const evictedKey = shape.shadows.keys().next().value;
         const evicted = shape.shadows.get(evictedKey);
         shape.shadows.delete(evictedKey);
         globalShadowLRU.delete(evicted.globalKey);
-        releasePooledCanvas(shadowCanvasPool, evicted.canvas);
+        releaseShadowCapture(evicted.canvas);
     }
     shape.shadows.set(key, entry);
 

@@ -1,6 +1,8 @@
 (function (Scratch) {
     'use strict';
 
+    const dom = new DOMParser()
+    const toAString = new XMLSerializer()
 
     class HTMLtoCanvas {
         constructor(runtime) {
@@ -726,7 +728,11 @@
 
         text(args, util) {
             //if (Object.keys(this.pages).includes(args.PAGE)) {
-            this.pages.get(args.PAGE)?.set("code", `${this.pages.get(args.PAGE)?.get("code")}${args.TEXT}`)
+            let text = document.createRange().createContextualFragment(args.TEXT)
+            const elements = text.querySelectorAll(`script`);
+            elements.forEach(el => el.remove());
+            text = toAString.serializeToString(text)
+            this.pages.get(args.PAGE)?.set("code", `${this.pages.get(args.PAGE)?.get("code")}${text}`)
             // }
         }
 

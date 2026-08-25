@@ -5,6 +5,8 @@ Code inspiration:
 - Animated Text (PenguinMod version)
 - Tween Extension by JeremyGamer13
 
+Special thanks to SharkPool for helping me find bugs!
+
 Enjoy!! :D
 */
 
@@ -982,8 +984,8 @@ Enjoy!! :D
         const w = shape.canvas.width;
         const h = shape.canvas.height;
 
-        const zoom = Math.max(0.01, (Number(mask.zoom) || 100) / 100);
-        const rotation = Number(mask.rotation) || 0;
+        const zoom = Math.max(0.01, (Scratch.Cast.toNumber(mask.zoom) || 100) / 100);
+        const rotation = Scratch.Cast.toNumber(mask.rotation) || 0;
         const anchorX = (mask.x || 0) * DEST_SCALE - destX;
         const anchorY = -(mask.y || 0) * DEST_SCALE - destY;
 
@@ -1014,7 +1016,7 @@ Enjoy!! :D
             const localOffsetY = seamless ? (worldDrawY - spanOriginY) : 0;
             const effSpanW = seamless && spanW ? spanW : w;
             const effSpanH = seamless && spanH ? spanH : h;
-            const blurPx = Math.max(0, Number(mask.blur) || 0) * DEST_SCALE;
+            const blurPx = Math.max(0, Scratch.Cast.toNumber(mask.blur) || 0) * DEST_SCALE;
             const direction = mask.direction || WIPE_DIRECTION_BOTTOM_UP;
             const bandHalf = Math.max(0.5, blurPx / 2);
 
@@ -1078,11 +1080,11 @@ Enjoy!! :D
         return mask.targetName + '\u0001' + mask.costumeName + '\u0001' +
             (mask.direction || WIPE_DIRECTION_BOTTOM_UP) + '\u0001' +
             (Scratch.Cast.toNumber(mask.coverage) || 0) + '\u0001' +
-            (Number(mask.blur) || 0) + '\u0001' +
-            (Number(mask.x) || 0) + '\u0001' +
-            (Number(mask.y) || 0) + '\u0001' +
-            (Number(mask.zoom) || 100) + '\u0001' +
-            (Number(mask.rotation) || 0) + '\u0001' + alpha;
+            (Scratch.Cast.toNumber(mask.blur) || 0) + '\u0001' +
+            (Scratch.Cast.toNumber(mask.x) || 0) + '\u0001' +
+            (Scratch.Cast.toNumber(mask.y) || 0) + '\u0001' +
+            (Scratch.Cast.toNumber(mask.zoom) || 100) + '\u0001' +
+            (Scratch.Cast.toNumber(mask.rotation) || 0) + '\u0001' + alpha;
     }
 
     function collectBatchedMaskGroups(paintOps) {
@@ -1101,7 +1103,7 @@ Enjoy!! :D
         for (let i = 0; i < paintOps.length; i++) {
             const op = paintOps[i];
             const mask = op.mask;
-            const maskOpacity = mask ? Math.max(0, Math.min(100, Number(mask.opacity != null ? mask.opacity : 100))) / 100 : 0;
+            const maskOpacity = mask ? Math.max(0, Math.min(100, Scratch.Cast.toNumber(mask.opacity != null ? mask.opacity : 100))) / 100 : 0;
             const alpha = (op.opacity == null ? 1 : op.opacity) * maskOpacity;
             const canBatch = mask && mask.seamless && !op.rotation && (op.scale == null || op.scale === 1) &&
                 Math.max(0, Math.min(100, Scratch.Cast.toNumber(mask.coverage) || 0)) > 0 && alpha > 0;
@@ -1173,10 +1175,10 @@ Enjoy!! :D
             const pattern = batchCtx.createPattern(group.texture.canvas, 'repeat');
             if (!pattern) continue;
             const matrix = new DOMMatrix();
-            matrix.translateSelf((Number(mask.x) || 0) * DEST_SCALE, -(Number(mask.y) || 0) * DEST_SCALE);
-            const rotation = Number(mask.rotation) || 0;
+            matrix.translateSelf((Scratch.Cast.toNumber(mask.x) || 0) * DEST_SCALE, -(Scratch.Cast.toNumber(mask.y) || 0) * DEST_SCALE);
+            const rotation = Scratch.Cast.toNumber(mask.rotation) || 0;
             if (rotation !== 0) matrix.rotateSelf(rotation);
-            const zoom = Math.max(0.01, (Number(mask.zoom) || 100) / 100);
+            const zoom = Math.max(0.01, (Scratch.Cast.toNumber(mask.zoom) || 100) / 100);
             matrix.scaleSelf(zoom, zoom);
             pattern.setTransform(matrix);
             batchCtx.fillStyle = pattern;
@@ -1192,7 +1194,7 @@ Enjoy!! :D
 
             const coverage = Math.max(0, Math.min(100, Scratch.Cast.toNumber(mask.coverage) || 0)) / 100;
             if (coverage < 1) {
-                const blurPx = Math.max(0, Number(mask.blur) || 0) * DEST_SCALE;
+                const blurPx = Math.max(0, Scratch.Cast.toNumber(mask.blur) || 0) * DEST_SCALE;
                 const bandHalf = Math.max(0.5, blurPx / 2);
                 const direction = mask.direction || WIPE_DIRECTION_BOTTOM_UP;
                 const axisIsX = direction === WIPE_DIRECTION_LEFT_RIGHT || direction === WIPE_DIRECTION_RIGHT_LEFT;
@@ -1474,24 +1476,9 @@ Enjoy!! :D
         });
     }
 
-    const maskRefRetryCounts = new Map();
-    const MASK_REF_MAX_RETRIES = 20;
-    const MASK_REF_RETRY_DELAY_MS = 150;
-
     function getMaskTexture(targetName, costumeName) {
-        const refKey = targetName + '\u0001' + costumeName;
         const costume = findCostumeByRef(targetName, costumeName);
-        if (!costume) {
-            const attempts = maskRefRetryCounts.get(refKey) || 0;
-            if (attempts < MASK_REF_MAX_RETRIES) {
-                maskRefRetryCounts.set(refKey, attempts + 1);
-                setTimeout(() => {
-                    getMaskTexture(targetName, costumeName);
-                }, MASK_REF_RETRY_DELAY_MS);
-            }
-            return null;
-        }
-        maskRefRetryCounts.delete(refKey);
+        if (!costume) return null;
         const key = maskCostumeKey(targetName, costume);
         const cached = maskTextureCache.get(key);
         if (cached) return cached;
@@ -1503,23 +1490,6 @@ Enjoy!! :D
                     result.cacheKey = key;
                     maskTextureCache.set(key, result);
                     repaintAllTargetsUsingMasks();
-                } else {
-                    const attempts = maskRefRetryCounts.get(refKey) || 0;
-                    if (attempts < MASK_REF_MAX_RETRIES) {
-                        maskRefRetryCounts.set(refKey, attempts + 1);
-                        setTimeout(() => {
-                            getMaskTexture(targetName, costumeName);
-                        }, MASK_REF_RETRY_DELAY_MS);
-                    } else if (typeof console !== 'undefined' && console.warn) {
-                        const skin = runtime.renderer && runtime.renderer._allSkins && runtime.renderer._allSkins[costume.skinId];
-                        console.warn('[iris-text] mask texture failed to load after retries:', targetName, costumeName,
-                            'costume.asset present:', !!costume.asset,
-                            'dataFormat:', costume.dataFormat,
-                            'skinId:', costume.skinId,
-                            'skin found:', !!skin,
-                            'silhouette lazyData present:', !!(skin && skin._silhouette && skin._silhouette._lazyData),
-                            'skin keys:', skin ? Object.keys(skin) : null);
-                    }
                 }
                 return result;
             });
@@ -1887,6 +1857,7 @@ Enjoy!! :D
             set.delete(key);
             if (!set.size) charAnimationsByTarget.delete(targetId);
         }
+        if (!charAnimations.size) releaseAnimationTicker();
         return true;
     }
 
@@ -1895,6 +1866,7 @@ Enjoy!! :D
         if (!set || !set.size) return;
         for (const key of set) charAnimations.delete(key);
         charAnimationsByTarget.delete(targetId);
+        if (!charAnimations.size) releaseAnimationTicker();
     }
 
     function clearCharAnimationsForTargetIndex(targetId, idx) {
@@ -1908,6 +1880,7 @@ Enjoy!! :D
             }
         }
         if (!set.size) charAnimationsByTarget.delete(targetId);
+        if (!charAnimations.size) releaseAnimationTicker();
     }
 
     function nowMs() {
@@ -2031,8 +2004,17 @@ Enjoy!! :D
         runtime.on('BEFORE_EXECUTE', tickCharAnimations);
     }
 
+    function releaseAnimationTicker() {
+        if (!animationTickerInstalled) return;
+        animationTickerInstalled = false;
+        runtime.removeListener('BEFORE_EXECUTE', tickCharAnimations);
+    }
+
     function tickCharAnimations() {
-        if (!charAnimations.size) return;
+        if (!charAnimations.size) {
+            releaseAnimationTicker();
+            return;
+        }
         if (animationsDirtyThisFrame) return;
         animationsDirtyThisFrame = true;
         requestAnimationFrame(computeCharAnimationsFrame);
@@ -2059,6 +2041,7 @@ Enjoy!! :D
         for (const target of dirtyStates) {
             schedulePaint(target, getState(target));
         }
+        if (!charAnimations.size) releaseAnimationTicker();
     }
 
     let renderFlushLoopRunning = false;
@@ -2192,10 +2175,10 @@ Enjoy!! :D
 
         const decorationPad = Math.max(
             0,
-            Number(state.textBackground.padding) || 0,
-            Number(state.textBorder.size) || 0,
-            (Number(state.textShadow.blur) || 0) + Math.abs(Number(state.textShadow.offsetX) || 0),
-            (Number(state.textShadow.blur) || 0) + Math.abs(Number(state.textShadow.offsetY) || 0)
+            Scratch.Cast.toNumber(state.textBackground.padding) || 0,
+            Scratch.Cast.toNumber(state.textBorder.size) || 0,
+            (Scratch.Cast.toNumber(state.textShadow.blur) || 0) + Math.abs(Scratch.Cast.toNumber(state.textShadow.offsetX) || 0),
+            (Scratch.Cast.toNumber(state.textShadow.blur) || 0) + Math.abs(Scratch.Cast.toNumber(state.textShadow.offsetY) || 0)
         );
         const pad = Math.max(64, state.baseStyle.size * 2, decorationPad + state.baseStyle.size);
 
@@ -2493,6 +2476,16 @@ const STENCIL_CACHE_LIMIT = 400;
 const CANVAS_SIZE_BUCKET = 32;
 const GLYPH_CACHE_LIMIT = 2000;
 
+// defined here cuz this is a worker and im not sure if workers can access Scratch
+const Scratch = {
+    Cast: {
+        toNumber(value) {
+            const n = Number(value);
+            return n === n ? n : 0;
+        }
+    }
+};
+
 const glyphShapesByKey = new Map();
 
 const glyphShapeCanvasPool = [];
@@ -2761,8 +2754,8 @@ function drawMaskedGlyph(destCtx, glyphKey, mask, texture, worldDrawX, worldDraw
     const w = shape.canvas.width;
     const h = shape.canvas.height;
 
-    const zoom = Math.max(0.01, (Number(mask.zoom) || 100) / 100);
-    const rotation = Number(mask.rotation) || 0;
+    const zoom = Math.max(0.01, (Scratch.Cast.toNumber(mask.zoom) || 100) / 100);
+    const rotation = Scratch.Cast.toNumber(mask.rotation) || 0;
     const anchorX = (mask.x || 0) * DEST_SCALE - destX;
     const anchorY = -(mask.y || 0) * DEST_SCALE - destY;
 
@@ -2793,7 +2786,7 @@ function drawMaskedGlyph(destCtx, glyphKey, mask, texture, worldDrawX, worldDraw
         const localOffsetY = seamless ? (worldDrawY - spanOriginY) : 0;
         const effSpanW = seamless && spanW ? spanW : w;
         const effSpanH = seamless && spanH ? spanH : h;
-        const blurPx = Math.max(0, Number(mask.blur) || 0) * DEST_SCALE;
+        const blurPx = Math.max(0, Scratch.Cast.toNumber(mask.blur) || 0) * DEST_SCALE;
         const direction = mask.direction || WIPE_DIRECTION_BOTTOM_UP;
         const bandHalf = Math.max(0.5, blurPx / 2);
 
@@ -2857,11 +2850,11 @@ function maskBatchKey(mask, alpha) {
     return mask.targetName + '\u0001' + mask.costumeName + '\u0001' +
         (mask.direction || WIPE_DIRECTION_BOTTOM_UP) + '\u0001' +
         (Scratch.Cast.toNumber(mask.coverage) || 0) + '\u0001' +
-        (Number(mask.blur) || 0) + '\u0001' +
-        (Number(mask.x) || 0) + '\u0001' +
-        (Number(mask.y) || 0) + '\u0001' +
-        (Number(mask.zoom) || 100) + '\u0001' +
-        (Number(mask.rotation) || 0) + '\u0001' + alpha;
+        (Scratch.Cast.toNumber(mask.blur) || 0) + '\u0001' +
+        (Scratch.Cast.toNumber(mask.x) || 0) + '\u0001' +
+        (Scratch.Cast.toNumber(mask.y) || 0) + '\u0001' +
+        (Scratch.Cast.toNumber(mask.zoom) || 100) + '\u0001' +
+        (Scratch.Cast.toNumber(mask.rotation) || 0) + '\u0001' + alpha;
 }
 
 function collectBatchedMaskGroups(paintOps, maskTextures) {
@@ -2880,7 +2873,7 @@ function collectBatchedMaskGroups(paintOps, maskTextures) {
     for (let i = 0; i < paintOps.length; i++) {
         const op = paintOps[i];
         const mask = op.mask;
-        const maskOpacity = mask ? Math.max(0, Math.min(100, Number(mask.opacity != null ? mask.opacity : 100))) / 100 : 0;
+        const maskOpacity = mask ? Math.max(0, Math.min(100, Scratch.Cast.toNumber(mask.opacity != null ? mask.opacity : 100))) / 100 : 0;
         const alpha = (op.opacity == null ? 1 : op.opacity) * maskOpacity;
         const canBatch = mask && mask.seamless && !op.rotation && (op.scale == null || op.scale === 1) &&
             Math.max(0, Math.min(100, Scratch.Cast.toNumber(mask.coverage) || 0)) > 0 && alpha > 0;
@@ -2954,10 +2947,10 @@ function drawBatchedMaskGroups(ctx, stateId, groups, pixelW, pixelH) {
         const pattern = batchCtx.createPattern(group.texture.canvas, 'repeat');
         if (!pattern) continue;
         const matrix = new DOMMatrix();
-        matrix.translateSelf((Number(mask.x) || 0) * DEST_SCALE, -(Number(mask.y) || 0) * DEST_SCALE);
-        const rotation = Number(mask.rotation) || 0;
+        matrix.translateSelf((Scratch.Cast.toNumber(mask.x) || 0) * DEST_SCALE, -(Scratch.Cast.toNumber(mask.y) || 0) * DEST_SCALE);
+        const rotation = Scratch.Cast.toNumber(mask.rotation) || 0;
         if (rotation !== 0) matrix.rotateSelf(rotation);
-        const zoom = Math.max(0.01, (Number(mask.zoom) || 100) / 100);
+        const zoom = Math.max(0.01, (Scratch.Cast.toNumber(mask.zoom) || 100) / 100);
         matrix.scaleSelf(zoom, zoom);
         pattern.setTransform(matrix);
         batchCtx.fillStyle = pattern;
@@ -2973,7 +2966,7 @@ function drawBatchedMaskGroups(ctx, stateId, groups, pixelW, pixelH) {
 
         const coverage = Math.max(0, Math.min(100, Scratch.Cast.toNumber(mask.coverage) || 0)) / 100;
         if (coverage < 1) {
-            const blurPx = Math.max(0, Number(mask.blur) || 0) * DEST_SCALE;
+            const blurPx = Math.max(0, Scratch.Cast.toNumber(mask.blur) || 0) * DEST_SCALE;
             const bandHalf = Math.max(0.5, blurPx / 2);
             const direction = mask.direction || WIPE_DIRECTION_BOTTOM_UP;
             const axisIsX = direction === WIPE_DIRECTION_LEFT_RIGHT || direction === WIPE_DIRECTION_RIGHT_LEFT;
@@ -3168,15 +3161,15 @@ function compositeGlyphsToCanvas(stateId, settings, paintOps, docW, docH, textWi
 
     const background = settings.textBackground;
     if (background.enabled) {
-        const padding = Math.max(0, Number(background.padding) || 0) * DEST_SCALE;
+        const padding = Math.max(0, Scratch.Cast.toNumber(background.padding) || 0) * DEST_SCALE;
         const width = textWidth * DEST_SCALE + padding * 2;
         const height = textHeight * DEST_SCALE + padding * 2;
         const x = originX * DEST_SCALE - width / 2;
         const y = originY * DEST_SCALE - height / 2;
         ctx.save();
-        ctx.globalAlpha = Math.max(0, Math.min(100, Number(background.opacity) || 0)) / 100;
+        ctx.globalAlpha = Math.max(0, Math.min(100, Scratch.Cast.toNumber(background.opacity) || 0)) / 100;
         ctx.fillStyle = background.color;
-        const radius = Math.min(Math.max(0, Number(background.radius) || 0) * DEST_SCALE, width / 2, height / 2);
+        const radius = Math.min(Math.max(0, Scratch.Cast.toNumber(background.radius) || 0) * DEST_SCALE, width / 2, height / 2);
         ctx.beginPath();
         ctx.roundRect(x, y, width, height, radius);
         ctx.fill();
@@ -3218,11 +3211,11 @@ function compositeGlyphsToCanvas(stateId, settings, paintOps, docW, docH, textWi
 
         if (settings.textShadow.enabled) {
             const shadowShape = glyph.shape;
-            const shadowBlurPx = Math.max(0, Number(settings.textShadow.blur) || 0) * DEST_SCALE;
+            const shadowBlurPx = Math.max(0, Scratch.Cast.toNumber(settings.textShadow.blur) || 0) * DEST_SCALE;
             const shadowBitmap = getShadowGlyphBitmap(shadowShape, settings.textShadow.color, shadowBlurPx);
-            const shadowOffsetX = (Number(settings.textShadow.offsetX) || 0) * DEST_SCALE + shadowBitmap.offsetX;
-            const shadowOffsetY = (Number(settings.textShadow.offsetY) || 0) * DEST_SCALE + shadowBitmap.offsetY;
-            ctx.globalAlpha = (hasOpacity ? op.opacity : 1) * Math.max(0, Math.min(100, Number(settings.textShadow.opacity) || 0)) / 100;
+            const shadowOffsetX = (Scratch.Cast.toNumber(settings.textShadow.offsetX) || 0) * DEST_SCALE + shadowBitmap.offsetX;
+            const shadowOffsetY = (Scratch.Cast.toNumber(settings.textShadow.offsetY) || 0) * DEST_SCALE + shadowBitmap.offsetY;
+            ctx.globalAlpha = (hasOpacity ? op.opacity : 1) * Math.max(0, Math.min(100, Scratch.Cast.toNumber(settings.textShadow.opacity) || 0)) / 100;
             ctx.drawImage(shadowBitmap.canvas, drawXEm * DEST_SCALE + shadowOffsetX, drawYEm * DEST_SCALE + shadowOffsetY);
             ctx.globalAlpha = 1;
         }
@@ -3239,11 +3232,11 @@ function compositeGlyphsToCanvas(stateId, settings, paintOps, docW, docH, textWi
             if (hasOpacity) ctx.globalAlpha = 1;
         }
 
-        if (settings.textBorder.enabled && Number(settings.textBorder.size) > 0) {
+        if (settings.textBorder.enabled && Scratch.Cast.toNumber(settings.textBorder.size) > 0) {
             const shape = glyph.shape;
             const borderGlyph = tintGlyph(shape, settings.textBorder.color);
-            ctx.globalAlpha = (hasOpacity ? op.opacity : 1) * Math.max(0, Math.min(100, Number(settings.textBorder.opacity) || 0)) / 100;
-            const borderSize = Math.max(0, Number(settings.textBorder.size) || 0) * DEST_SCALE;
+            ctx.globalAlpha = (hasOpacity ? op.opacity : 1) * Math.max(0, Math.min(100, Scratch.Cast.toNumber(settings.textBorder.opacity) || 0)) / 100;
+            const borderSize = Math.max(0, Scratch.Cast.toNumber(settings.textBorder.size) || 0) * DEST_SCALE;
             const borderOffsets = [[-borderSize, 0], [borderSize, 0], [0, -borderSize], [0, borderSize], [-borderSize, -borderSize], [borderSize, -borderSize], [-borderSize, borderSize], [borderSize, borderSize]];
             for (const [offsetX, offsetY] of borderOffsets) {
                 ctx.drawImage(borderGlyph, drawXEm * DEST_SCALE + offsetX, drawYEm * DEST_SCALE + offsetY);
@@ -3273,7 +3266,7 @@ function compositeGlyphsToCanvas(stateId, settings, paintOps, docW, docH, textWi
                 const px = Math.round(drawXEm * DEST_SCALE);
                 const py = Math.round(drawYEm * DEST_SCALE);
                 const span = maskSpansByIndex.get(op.charIndex);
-                const maskOpacity = Math.max(0, Math.min(100, Number(op.mask.opacity != null ? op.mask.opacity : 100))) / 100;
+                const maskOpacity = Math.max(0, Math.min(100, Scratch.Cast.toNumber(op.mask.opacity != null ? op.mask.opacity : 100))) / 100;
                 const combinedAlpha = (hasOpacity ? op.opacity : 1) * maskOpacity;
                 if (combinedAlpha > 0) {
                     if (!hasTransform) {
@@ -3693,15 +3686,15 @@ self.onmessage = async (event) => {
 
         const background = state.textBackground;
         if (background.enabled) {
-            const padding = Math.max(0, Number(background.padding) || 0) * DEST_SCALE;
+            const padding = Math.max(0, Scratch.Cast.toNumber(background.padding) || 0) * DEST_SCALE;
             const width = textWidth * DEST_SCALE + padding * 2;
             const height = textHeight * DEST_SCALE + padding * 2;
             const x = originX * DEST_SCALE - width / 2;
             const y = originY * DEST_SCALE - height / 2;
             ctx.save();
-            ctx.globalAlpha = Math.max(0, Math.min(100, Number(background.opacity) || 0)) / 100;
+            ctx.globalAlpha = Math.max(0, Math.min(100, Scratch.Cast.toNumber(background.opacity) || 0)) / 100;
             ctx.fillStyle = background.color;
-            const radius = Math.min(Math.max(0, Number(background.radius) || 0) * DEST_SCALE, width / 2, height / 2);
+            const radius = Math.min(Math.max(0, Scratch.Cast.toNumber(background.radius) || 0) * DEST_SCALE, width / 2, height / 2);
             ctx.beginPath();
             ctx.roundRect(x, y, width, height, radius);
             ctx.fill();
@@ -3746,11 +3739,11 @@ self.onmessage = async (event) => {
 
             if (state.textShadow.enabled) {
                 const shadowShape = glyph.shape || getGlyphShape(op.text, fontFamily, fontSize, fontWeight, fontStyle);
-                const shadowBlurPx = Math.max(0, Number(state.textShadow.blur) || 0) * DEST_SCALE;
+                const shadowBlurPx = Math.max(0, Scratch.Cast.toNumber(state.textShadow.blur) || 0) * DEST_SCALE;
                 const shadowBitmap = getShadowGlyphBitmap(shadowShape, state.textShadow.color, shadowBlurPx);
-                const shadowOffsetX = (Number(state.textShadow.offsetX) || 0) * DEST_SCALE + shadowBitmap.offsetX;
-                const shadowOffsetY = (Number(state.textShadow.offsetY) || 0) * DEST_SCALE + shadowBitmap.offsetY;
-                ctx.globalAlpha = (hasOpacity ? op.opacity : 1) * Math.max(0, Math.min(100, Number(state.textShadow.opacity) || 0)) / 100;
+                const shadowOffsetX = (Scratch.Cast.toNumber(state.textShadow.offsetX) || 0) * DEST_SCALE + shadowBitmap.offsetX;
+                const shadowOffsetY = (Scratch.Cast.toNumber(state.textShadow.offsetY) || 0) * DEST_SCALE + shadowBitmap.offsetY;
+                ctx.globalAlpha = (hasOpacity ? op.opacity : 1) * Math.max(0, Math.min(100, Scratch.Cast.toNumber(state.textShadow.opacity) || 0)) / 100;
                 ctx.drawImage(shadowBitmap.canvas, drawXEm * DEST_SCALE + shadowOffsetX, drawYEm * DEST_SCALE + shadowOffsetY);
                 ctx.globalAlpha = 1;
             }
@@ -3767,11 +3760,11 @@ self.onmessage = async (event) => {
                 if (hasOpacity) ctx.globalAlpha = 1;
             }
 
-            if (state.textBorder.enabled && Number(state.textBorder.size) > 0) {
+            if (state.textBorder.enabled && Scratch.Cast.toNumber(state.textBorder.size) > 0) {
                 const shape = glyph.shape || getGlyphShape(op.text, fontFamily, fontSize, fontWeight, fontStyle);
                 const borderGlyph = tintGlyph(shape, state.textBorder.color);
-                ctx.globalAlpha = (hasOpacity ? op.opacity : 1) * Math.max(0, Math.min(100, Number(state.textBorder.opacity) || 0)) / 100;
-                const borderSize = Math.max(0, Number(state.textBorder.size) || 0) * DEST_SCALE;
+                ctx.globalAlpha = (hasOpacity ? op.opacity : 1) * Math.max(0, Math.min(100, Scratch.Cast.toNumber(state.textBorder.opacity) || 0)) / 100;
+                const borderSize = Math.max(0, Scratch.Cast.toNumber(state.textBorder.size) || 0) * DEST_SCALE;
                 const borderOffsets = [[-borderSize, 0], [borderSize, 0], [0, -borderSize], [0, borderSize], [-borderSize, -borderSize], [borderSize, -borderSize], [-borderSize, borderSize], [borderSize, borderSize]];
                 for (const [offsetX, offsetY] of borderOffsets) {
                     ctx.drawImage(borderGlyph, drawXEm * DEST_SCALE + offsetX, drawYEm * DEST_SCALE + offsetY);
@@ -3801,7 +3794,7 @@ self.onmessage = async (event) => {
                     const px = Math.round(drawXEm * DEST_SCALE);
                     const py = Math.round(drawYEm * DEST_SCALE);
                     const span = maskSpansByIndex.get(op.charIndex);
-                    const maskOpacity = Math.max(0, Math.min(100, Number(op.mask.opacity != null ? op.mask.opacity : 100))) / 100;
+                    const maskOpacity = Math.max(0, Math.min(100, Scratch.Cast.toNumber(op.mask.opacity != null ? op.mask.opacity : 100))) / 100;
                     const combinedAlpha = (hasOpacity ? op.opacity : 1) * maskOpacity;
                     if (combinedAlpha > 0) {
                         if (!hasTransform) {
@@ -3965,12 +3958,13 @@ self.onmessage = async (event) => {
     class IrisText {
         constructor() {
             this._onTargetRemoved = this._onTargetRemoved.bind(this);
+            this._onProjectStopAll = this._onProjectStopAll.bind(this);
+            if (runtime.ext_irisText && runtime.ext_irisText !== this) {
+                runtime.removeListener('targetWasRemoved', runtime.ext_irisText._onTargetRemoved);
+                runtime.removeListener('PROJECT_STOP_ALL', runtime.ext_irisText._onProjectStopAll);
+            }
             runtime.on('targetWasRemoved', this._onTargetRemoved);
-            runtime.on('PROJECT_STOP_ALL', () => {
-                runtime.targets.forEach(t => clearTarget(t));
-                charAnimations.clear();
-                charAnimationsByTarget.clear();
-            });
+            runtime.on('PROJECT_STOP_ALL', this._onProjectStopAll);
             runtime.ext_irisText = this;
             if (typeof runtime.registerCompiledExtensionBlocks === 'function') {
                 runtime.registerCompiledExtensionBlocks('irisText', this.getCompileInfo());
@@ -4034,6 +4028,14 @@ self.onmessage = async (event) => {
             }
             if (state) disposeStateFromWorker(state);
             clearCharAnimationsForTarget(target.id);
+            if (!charAnimations.size) releaseAnimationTicker();
+        }
+
+        _onProjectStopAll() {
+            runtime.targets.forEach(t => clearTarget(t));
+            charAnimations.clear();
+            charAnimationsByTarget.clear();
+            releaseAnimationTicker();
         }
 
         getInfo() {
@@ -5322,7 +5324,7 @@ self.onmessage = async (event) => {
                 schedulePaint(util.target, state);
                 startTypingCharacterHat(util.target, step.char, frame.irisTypingCharIndex++);
 
-                const delay = Math.max(0, Number(typingDelayForCharacter(state, step.char)) || 0);
+                const delay = Math.max(0, Scratch.Cast.toNumber(typingDelayForCharacter(state, step.char)) || 0);
                 if (delay > 0) {
                     frame.irisTypingWaitUntil = Date.now() + delay * 1000;
                     util.yieldTick();

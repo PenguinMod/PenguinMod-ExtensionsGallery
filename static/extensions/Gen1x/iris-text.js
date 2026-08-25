@@ -2084,9 +2084,9 @@ Enjoy!! :D
 
     function flushPendingRenders() {
         if (!pendingRenderTargets.size) return;
-        const renderTargets = new Set(pendingRenderTargets);
+        const renderTargets = Array.from(pendingRenderTargets);
+        pendingRenderTargets.clear();
         for (const target of renderTargets) {
-            pendingRenderTargets.delete(target);
             const state = getState(target);
             if (state.visible) renderTarget(target);
         }
@@ -3876,7 +3876,11 @@ self.onmessage = async (event) => {
                 installLinearFiltering(current, state);
             }
         }
-        renderer.updateDrawableSkinId(target.drawableID, state.skinId);
+        const drawable = renderer._allDrawables[target.drawableID];
+        const skin = renderer._allSkins[state.skinId];
+        if (!drawable || drawable.skin !== skin) {
+            renderer.updateDrawableSkinId(target.drawableID, state.skinId);
+        }
         runtime.requestRedraw();
     }
 
@@ -5226,9 +5230,13 @@ self.onmessage = async (event) => {
             }
 
             const stage = frame.irisStages[frame.irisStageIndex];
-            state.rawText = stage.text;
-            state.paintDirty = true;
-            scheduleTextRender(util.target);
+            if (state.rawText !== stage.text) {
+                state.rawText = stage.text;
+                state.paintDirty = true;
+            }
+            if (state.paintDirty || !state.hasPaintedOnce) {
+                scheduleTextRender(util.target);
+            }
 
             frame.irisStageIndex++;
             if (frame.irisStageIndex >= frame.irisStages.length) return;
@@ -5431,12 +5439,15 @@ self.onmessage = async (event) => {
         }
 
         applyExportSettings(args, util) {
-            let settings;
-            try {
-                settings = JSON.parse(Scratch.Cast.toString(args.SETTINGS));
-            } catch (e) {
-                return;
+            let settings = args.SETTINGS;
+            if (typeof settings === 'string') {
+                try {
+                    settings = JSON.parse(settings);
+                } catch (e) {
+                    return;
+                }
             }
+            if (!settings || typeof settings !== 'object' || Array.isArray(settings)) return;
             const sprite = Scratch.Cast.toString(args.SPRITE);
             const target = sprite === '_myself_' ?
                 util.target :

@@ -419,6 +419,7 @@ Enjoy!! :D
             },
             charOverrides: {},
             charOverridesVersion: 0,
+            charTransformsVersion: 0,
             resetCharTransformsOnText: true,
             charStyleOverrides: {},
             charStyleOverridesVersion: 0,
@@ -438,6 +439,8 @@ Enjoy!! :D
             paintOps: null,
             paintOpsKey: null,
             paintOpsGeometryKey: null,
+            paintOpsTransformsVersion: 0,
+            paintOpsMasksVersion: 0,
             paintOpsLayout: null,
             paintDirty: true,
             paintFingerprint: null,
@@ -494,6 +497,9 @@ Enjoy!! :D
             state.charStyleOverrides = Object.assign({}, state.charStyleOverrides || {});
             if (typeof state.resetCharTransformsOnText !== 'boolean') state.resetCharTransformsOnText = defaults.resetCharTransformsOnText;
             if (typeof state.charStyleOverridesVersion !== 'number') state.charStyleOverridesVersion = 0;
+            if (typeof state.charTransformsVersion !== 'number') state.charTransformsVersion = 0;
+            if (typeof state.paintOpsTransformsVersion !== 'number') state.paintOpsTransformsVersion = 0;
+            if (typeof state.paintOpsMasksVersion !== 'number') state.paintOpsMasksVersion = 0;
             if (state.typingControl !== 'skip' && state.typingControl !== 'stop') state.typingControl = null;
             state.iiMigrated = true;
         }
@@ -642,6 +648,7 @@ Enjoy!! :D
                 color: null
             };
             state.charOverridesVersion++;
+            state.charTransformsVersion++;
         }
         return state.charOverrides[index];
     }
@@ -650,6 +657,7 @@ Enjoy!! :D
         if (!Object.keys(state.charOverrides).length) return;
         state.charOverrides = {};
         state.charOverridesVersion++;
+        state.charTransformsVersion++;
     }
 
     function setCharMaskForIndex(state, index, mask) {
@@ -2038,45 +2046,47 @@ Enjoy!! :D
     function applyEasing(name, dir, x) {
         const fn = EasingMethods[name] || linear;
         if (fn === linear) return linear(x);
-        return fn(x, dir);
+        const d = (dir || 'out').toString().toLowerCase().trim();
+        const normalizedDir = (d === 'in' || d === 'out' || d === 'in out') ? d : 'out';
+        const res = fn(x, normalizedDir);
+        return Number.isFinite(res) ? res : x;
     }
 
-    let animationsDirtyThisFrame = false;
+    let animationFrameId = null;
 
     function ensureAnimationTicker() {
-        if (animationTickerInstalled) return;
-        animationTickerInstalled = true;
-        runtime.on('BEFORE_EXECUTE', tickCharAnimations);
+        if (animationFrameId !== null || !charAnimations.size) return;
+        animationFrameId = requestAnimationFrame(stepCharAnimations);
     }
 
     function releaseAnimationTicker() {
-        if (!animationTickerInstalled) return;
-        animationTickerInstalled = false;
-        runtime.removeListener('BEFORE_EXECUTE', tickCharAnimations);
+        if (animationFrameId !== null) {
+            cancelAnimationFrame(animationFrameId);
+            animationFrameId = null;
+        }
     }
 
-    function tickCharAnimations() {
-        if (!charAnimations.size) {
-            releaseAnimationTicker();
-            return;
+    function stepCharAnimations() {
+        animationFrameId = null;
+        if (!charAnimations.size) return;
+        computeCharAnimationsFrame();
+        if (charAnimations.size && animationFrameId === null) {
+            animationFrameId = requestAnimationFrame(stepCharAnimations);
         }
-        if (animationsDirtyThisFrame) return;
-        animationsDirtyThisFrame = true;
-        requestAnimationFrame(computeCharAnimationsFrame);
     }
 
     function computeCharAnimationsFrame() {
-        animationsDirtyThisFrame = false;
         if (!charAnimations.size) return;
         const t = nowMs();
         const dirtyStates = new Set();
-        for (const [key, anim] of charAnimations) {
+        for (const [key, anim] of Array.from(charAnimations.entries())) {
             const state = getState(anim.target);
             const o = getCharOverride(state, anim.index);
             const elapsed = t - anim.startTime;
             const rawProgress = anim.duration > 0 ? Math.min(1, elapsed / anim.duration) : 1;
             const progress = applyEasing(anim.easing, anim.direction, rawProgress);
             o[anim.property] = anim.from + (anim.to - anim.from) * progress;
+            state.charTransformsVersion++;
             dirtyStates.add(anim.target);
             if (rawProgress >= 1) {
                 o[anim.property] = anim.to;
@@ -2086,6 +2096,7 @@ Enjoy!! :D
         for (const target of dirtyStates) {
             schedulePaint(target, getState(target));
         }
+        flushPendingRenders();
         if (!charAnimations.size) releaseAnimationTicker();
     }
 
@@ -2153,7 +2164,7 @@ Enjoy!! :D
     }
 
     function getPaintOpsKey(state, layoutKey) {
-        return getPaintOpsGeometryKey(state, layoutKey) + '\u0004' + state.charMasksVersion;
+        return getPaintOpsGeometryKey(state, layoutKey) + '\u0004' + state.charMasksVersion + '\u0004' + state.charTransformsVersion;
     }
 
     const EMPTY_OVERRIDE = {
@@ -2240,19 +2251,21 @@ Enjoy!! :D
         const originY = docH / 2;
 
         const geometryKey = getPaintOpsGeometryKey(state, layoutKey) + '\u0004' + docW + '\u0004' + docH;
-        const paintOpsKey = geometryKey + '\u0004' + state.charMasksVersion;
+        const paintOpsKey = geometryKey + '\u0004' + state.charMasksVersion + '\u0004' + state.charTransformsVersion;
         let paintOps = state.paintOps;
         let charBoxes = state.charBoxes;
 
         const geometryUnchanged = state.paintOpsGeometryKey === geometryKey &&
             state.paintOpsLayout === layout && !!paintOps;
+        const transformsUnchanged = state.paintOpsTransformsVersion === state.charTransformsVersion;
 
-        if (geometryUnchanged && state.paintOpsKey !== paintOpsKey) {
+        if (geometryUnchanged && transformsUnchanged && state.paintOpsKey !== paintOpsKey) {
             for (let i = 0; i < paintOps.length; i++) {
                 const op = paintOps[i];
                 op.mask = state.charMasks[op.charIndex] || null;
             }
             state.paintOpsKey = paintOpsKey;
+            state.paintOpsMasksVersion = state.charMasksVersion;
 
             const fingerprint = fingerprintMaskOps(paintOps, docW, docH);
             if (fingerprint === state.paintFingerprint && state.skinId !== null) {
@@ -2368,6 +2381,8 @@ Enjoy!! :D
             state.paintOpsKey = paintOpsKey;
             state.paintOpsGeometryKey = geometryKey;
             state.paintOpsLayout = layout;
+            state.paintOpsTransformsVersion = state.charTransformsVersion;
+            state.paintOpsMasksVersion = state.charMasksVersion;
             state.charBoxes = charBoxes;
             state.charsByTag = charsByTag;
             state.drawableWidth = docW;
@@ -5766,6 +5781,7 @@ self.onmessage = async (event) => {
             if (exists && o.x === x && o.y === y) return;
             o.x = x;
             o.y = y;
+            state.charTransformsVersion++;
             schedulePaint(util.target, state);
         }
 
@@ -5779,6 +5795,7 @@ self.onmessage = async (event) => {
             if (exists && x === 0 && y === 0) return;
             o.x += x;
             o.y += y;
+            state.charTransformsVersion++;
             schedulePaint(util.target, state);
         }
 
@@ -5791,6 +5808,7 @@ self.onmessage = async (event) => {
             const o = getCharOverride(state, idx);
             if (exists && o[axis] === value) return;
             o[axis] = value;
+            state.charTransformsVersion++;
             schedulePaint(util.target, state);
         }
 
@@ -5802,6 +5820,7 @@ self.onmessage = async (event) => {
             const o = getCharOverride(state, idx);
             if (exists && o.rotation === rotation) return;
             o.rotation = rotation;
+            state.charTransformsVersion++;
             schedulePaint(util.target, state);
         }
 
@@ -5813,6 +5832,7 @@ self.onmessage = async (event) => {
             const o = getCharOverride(state, idx);
             if (exists && rotation === 0) return;
             o.rotation += rotation;
+            state.charTransformsVersion++;
             schedulePaint(util.target, state);
         }
 
@@ -5824,6 +5844,7 @@ self.onmessage = async (event) => {
             const o = getCharOverride(state, idx);
             if (exists && o.opacity === opacity) return;
             o.opacity = opacity;
+            state.charTransformsVersion++;
             schedulePaint(util.target, state);
         }
 
@@ -5835,6 +5856,7 @@ self.onmessage = async (event) => {
             const o = getCharOverride(state, idx);
             if (exists && o.color === color) return;
             o.color = color;
+            state.charTransformsVersion++;
             schedulePaint(util.target, state);
         }
 
@@ -5844,6 +5866,7 @@ self.onmessage = async (event) => {
             const o = state.charOverrides[idx];
             if (!o || o.color === null) return;
             o.color = null;
+            state.charTransformsVersion++;
             schedulePaint(util.target, state);
         }
 
@@ -5855,6 +5878,7 @@ self.onmessage = async (event) => {
             const o = getCharOverride(state, idx);
             if (exists && o.scale === scale) return;
             o.scale = scale;
+            state.charTransformsVersion++;
             schedulePaint(util.target, state);
         }
 
@@ -5862,22 +5886,23 @@ self.onmessage = async (event) => {
             const target = util.target;
             const state = getState(target);
             const idx = Scratch.Cast.toNumber(args.INDEX) - 1;
-            const property = Scratch.Cast.toString(args.PROPERTY);
+            const property = Scratch.Cast.toString(args.PROPERTY).toLowerCase();
             const validProps = ['x', 'y', 'rotation', 'opacity', 'scale'];
             if (!validProps.includes(property)) return;
             let targetValue = Scratch.Cast.toNumber(args.VALUE);
             if (property === 'opacity') targetValue = Math.max(0, Math.min(100, targetValue)) / 100;
             if (property === 'scale') targetValue = Math.max(0, targetValue) / 100;
             const duration = Math.max(0, Scratch.Cast.toNumber(args.SECS));
-            const easingName = Scratch.Cast.toString(args.EASING);
+            const easingName = Scratch.Cast.toString(args.EASING).toLowerCase();
             const easing = Object.prototype.hasOwnProperty.call(EasingMethods, easingName) ? easingName : 'linear';
-            const direction = Scratch.Cast.toString(args.DIRECTION);
+            const direction = Scratch.Cast.toString(args.DIRECTION).toLowerCase();
             const o = getCharOverride(state, idx);
 
             const key = target.id + '\u0001' + idx + '\u0001' + property;
             if (duration <= 0) {
                 deleteCharAnimation(target.id, key);
                 o[property] = targetValue;
+                state.charTransformsVersion++;
                 schedulePaint(target, state);
                 return;
             }
@@ -5910,6 +5935,7 @@ self.onmessage = async (event) => {
             if (state.charOverrides[idx]) {
                 delete state.charOverrides[idx];
                 state.charOverridesVersion++;
+                state.charTransformsVersion++;
                 schedulePaint(util.target, state);
             }
         }
@@ -5921,6 +5947,7 @@ self.onmessage = async (event) => {
             if (Object.keys(state.charOverrides).length) {
                 state.charOverrides = {};
                 state.charOverridesVersion++;
+                state.charTransformsVersion++;
                 schedulePaint(util.target, state);
             }
         }

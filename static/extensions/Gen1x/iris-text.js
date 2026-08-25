@@ -3982,6 +3982,9 @@ self.onmessage = async (event) => {
         clearTypingBox(state);
         state.paintDirty = true;
         state.paintFingerprint = null;
+        state.charMasks = {};
+        state.charMasksVersion++;
+        state.charMaskGeometryVersion++;
         const costume = target.getCostumes()[target.currentCostume];
         if (costume && runtime.renderer) {
             runtime.renderer.updateDrawableSkinId(target.drawableID, costume.skinId);
@@ -6014,6 +6017,7 @@ self.onmessage = async (event) => {
             for (let idx = start; idx <= end; idx++) {
                 const existing = state.charMasks[idx];
                 if (existing && existing.targetName === targetName && existing.costumeName === costumeName) {
+                    paintNeeded = true;
                     continue;
                 }
                 setCharMaskForIndex(state, idx, {

@@ -145,7 +145,7 @@ Enjoy!! :D
         ];
 
         const customFonts = [];
-        document.fonts.forEach(face => {
+        Array.from(document.fonts).forEach(face => {
             if (!FONT_IDS.includes(face.family) && !customFonts.some(f => f.value === face.family)) {
                 customFonts.push({
                     text: face.family,
@@ -234,7 +234,7 @@ Enjoy!! :D
                             top.strike = true;
                             break;
                         case 'size':
-                            top.size = Number(value) || top.size;
+                            top.size = Scratch.Cast.toNumber(value) || top.size;
                             break;
                         case 'font':
                             top.font = value === RANDOM_ID ?
@@ -356,7 +356,7 @@ Enjoy!! :D
             textSoFar += text.slice(i, match.index);
             stages.push({
                 text: textSoFar,
-                waitAfter: Math.max(0, Number(match[1]) || 0)
+                waitAfter: Math.max(0, Scratch.Cast.toNumber(match[1]) || 0)
             });
             i = match.index + match[0].length;
         }
@@ -430,14 +430,21 @@ Enjoy!! :D
             charBoxesLayout: null,
             paintOps: null,
             paintOpsKey: null,
+            paintOpsGeometryKey: null,
             paintOpsLayout: null,
             paintDirty: true,
             paintFingerprint: null,
+            renderInFlight: false,
+            renderQueued: false,
+            maskBatchCanvas: null,
             lastFamiliesKey: null,
             lastFontDefs: '',
             revealToken: 0,
             fontsPendingAtMeasure: false,
-            hasPaintedOnce: false
+            hasPaintedOnce: false,
+            taggedIndicesCache: null,
+            taggedIndicesCacheKey: null,
+            paintOpPool: []
         };
     }
 
@@ -676,6 +683,22 @@ Enjoy!! :D
     const GLYPH_CACHE_LIMIT = 2000;
     const TINT_CACHE_LIMIT = 512;
 
+    const glyphShapeCanvasPool = [];
+    const tintedCanvasPool = [];
+    const stencilCanvasPool = [];
+    const GENERIC_POOL_LIMIT = 256;
+
+    function acquirePooledCanvas(pool, w, h) {
+        const canvas = pool.pop() || document.createElement('canvas');
+        if (canvas.width !== w) canvas.width = w;
+        if (canvas.height !== h) canvas.height = h;
+        return canvas;
+    }
+
+    function releasePooledCanvas(pool, canvas) {
+        if (canvas && pool.length < GENERIC_POOL_LIMIT) pool.push(canvas);
+    }
+
     function glyphCacheKey(char, fontFamily, size, weight, style) {
         return char + '\u0001' + fontFamily + '\u0001' + size + '\u0001' +
             weight + '\u0001' + style;
@@ -706,10 +729,10 @@ Enjoy!! :D
 
         const canvasW = leftBearing + rightBearing + pad * 2;
         const canvasH = ascent + descent + pad * 2;
-        const canvas = document.createElement('canvas');
-        canvas.width = Math.max(1, canvasW);
-        canvas.height = Math.max(1, canvasH);
+        const canvas = acquirePooledCanvas(glyphShapeCanvasPool, Math.max(1, canvasW), Math.max(1, canvasH));
         const ctx = canvas.getContext('2d');
+        ctx.setTransform(1, 0, 0, 1, 0, 0);
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
         ctx.font = fontStr;
         ctx.textBaseline = 'alphabetic';
         ctx.fillStyle = '#ffffff';
@@ -733,35 +756,98 @@ Enjoy!! :D
     }
 
     const SHADOW_CACHE_LIMIT = 512;
+    const GLOBAL_SHADOW_CANVAS_LIMIT = 256;
+    const shadowCanvasPool = [];
+    const globalShadowLRU = new Map();
+    let shadowGlobalKeySeq = 1;
+
+    function acquireShadowCanvas(w, h) {
+        const reused = shadowCanvasPool.pop();
+        const canvas = reused || document.createElement('canvas');
+        if (canvas.width !== w) canvas.width = w;
+        if (canvas.height !== h) canvas.height = h;
+        return canvas;
+    }
+
+    function evictOldestGlobalShadow() {
+        const oldestKey = globalShadowLRU.keys().next().value;
+        if (oldestKey === undefined) return;
+        const oldest = globalShadowLRU.get(oldestKey);
+        globalShadowLRU.delete(oldestKey);
+        oldest.shape.shadows.delete(oldest.key);
+        if (shadowCanvasPool.length < 64) shadowCanvasPool.push(oldest.entry.canvas);
+    }
 
     function getShadowGlyphBitmap(shape, color, blurPx) {
         const key = color + '\u0001' + blurPx;
         let entry = shape.shadows.get(key);
-        if (entry) return entry;
+        if (entry) {
+            const globalKey = entry.globalKey;
+            globalShadowLRU.delete(globalKey);
+            globalShadowLRU.set(globalKey, {
+                shape,
+                key,
+                entry
+            });
+            return entry;
+        }
 
         const padPx = Math.ceil(blurPx * 3) + 2;
         const w = shape.canvas.width + padPx * 2;
         const h = shape.canvas.height + padPx * 2;
-        const canvas = document.createElement('canvas');
-        canvas.width = w;
-        canvas.height = h;
+        const canvas = acquireShadowCanvas(w, h);
         const ctx = canvas.getContext('2d');
+        ctx.setTransform(1, 0, 0, 1, 0, 0);
+        ctx.clearRect(0, 0, w, h);
         ctx.shadowColor = color;
         ctx.shadowBlur = blurPx;
         ctx.shadowOffsetX = 0;
         ctx.shadowOffsetY = 0;
         ctx.drawImage(shape.canvas, padPx, padPx);
 
+        const globalKey = shadowGlobalKeySeq++;
         entry = {
             canvas,
             offsetX: -padPx,
-            offsetY: -padPx
+            offsetY: -padPx,
+            globalKey
         };
         if (shape.shadows.size >= SHADOW_CACHE_LIMIT) {
-            shape.shadows.delete(shape.shadows.keys().next().value);
+            const evictedKey = shape.shadows.keys().next().value;
+            const evicted = shape.shadows.get(evictedKey);
+            shape.shadows.delete(evictedKey);
+            globalShadowLRU.delete(evicted.globalKey);
+            releasePooledCanvas(shadowCanvasPool, evicted.canvas);
         }
         shape.shadows.set(key, entry);
+
+        if (globalShadowLRU.size >= GLOBAL_SHADOW_CANVAS_LIMIT) evictOldestGlobalShadow();
+        globalShadowLRU.set(globalKey, {
+            shape,
+            key,
+            entry
+        });
         return entry;
+    }
+
+    function releaseGlyphOwnedCanvases(shape) {
+        releasePooledCanvas(glyphShapeCanvasPool, shape.canvas);
+        if (shape.tinted) {
+            for (const tintedCanvas of shape.tinted.values()) {
+                releasePooledCanvas(tintedCanvasPool, tintedCanvas);
+            }
+        }
+        if (shape.shadows) {
+            for (const shadowEntry of shape.shadows.values()) {
+                globalShadowLRU.delete(shadowEntry.globalKey);
+                releasePooledCanvas(shadowCanvasPool, shadowEntry.canvas);
+            }
+        }
+        const stencil = maskGlyphStencilCache.get(shape);
+        if (stencil) {
+            maskGlyphStencilCache.delete(shape);
+            releasePooledCanvas(stencilCanvasPool, stencil);
+        }
     }
 
     function getGlyphShape(char, fontFamily, size, weight, style) {
@@ -769,7 +855,10 @@ Enjoy!! :D
         let entry = glyphCache.get(key);
         if (!entry) {
             if (glyphCache.size >= GLYPH_CACHE_LIMIT) {
-                glyphCache.delete(glyphCache.keys().next().value);
+                const evictedKey = glyphCache.keys().next().value;
+                const evictedShape = glyphCache.get(evictedKey);
+                glyphCache.delete(evictedKey);
+                if (evictedShape) releaseGlyphOwnedCanvases(evictedShape);
             }
             entry = rasterizeGlyph(char, fontFamily, size, weight, style);
             glyphCache.set(key, entry);
@@ -777,33 +866,42 @@ Enjoy!! :D
         return entry;
     }
 
-    const maskPatternSurfaces = new Map();
     const maskGlyphStencilCache = new Map();
     const STENCIL_CACHE_LIMIT = 400;
     const maskScratchCanvasPool = [];
+    const CANVAS_SIZE_BUCKET = 32;
 
-    function getMaskPatternSurface(texture) {
-        let surface = maskPatternSurfaces.get(texture.cacheKey);
-        if (surface) return surface;
+    function bucketSize(n) {
+        return Math.max(CANVAS_SIZE_BUCKET, Math.ceil(n / CANVAS_SIZE_BUCKET) * CANVAS_SIZE_BUCKET);
+    }
+
+    const sharedPatternSurface = (() => {
         const canvas = document.createElement('canvas');
         canvas.width = 1;
         canvas.height = 1;
-        const ctx = canvas.getContext('2d');
-        surface = { canvas, ctx, pattern: null, patternDirty: true };
-        maskPatternSurfaces.set(texture.cacheKey, surface);
-        return surface;
-    }
+        return {
+            canvas,
+            ctx: canvas.getContext('2d'),
+            cacheKey: null,
+            pattern: null,
+            capW: canvas.width,
+            capH: canvas.height
+        };
+    })();
 
     function sampleMaskPattern(texture, matrix, w, h) {
-        const surface = getMaskPatternSurface(texture);
-        if (surface.canvas.width !== w || surface.canvas.height !== h) {
-            surface.canvas.width = w;
-            surface.canvas.height = h;
-            surface.patternDirty = true;
+        const surface = sharedPatternSurface;
+        let patternDirty = surface.cacheKey !== texture.cacheKey;
+        if (surface.capW < w || surface.capH < h) {
+            surface.capW = Math.max(surface.capW, bucketSize(w));
+            surface.capH = Math.max(surface.capH, bucketSize(h));
+            surface.canvas.width = surface.capW;
+            surface.canvas.height = surface.capH;
+            patternDirty = true;
         }
-        if (surface.patternDirty) {
+        if (patternDirty) {
             surface.pattern = surface.ctx.createPattern(texture.canvas, 'repeat');
-            surface.patternDirty = false;
+            surface.cacheKey = texture.cacheKey;
         }
         if (!surface.pattern) return null;
 
@@ -821,26 +919,49 @@ Enjoy!! :D
     function getMaskGlyphStencil(shape) {
         let stencil = maskGlyphStencilCache.get(shape);
         if (stencil) return stencil;
-        stencil = document.createElement('canvas');
-        stencil.width = shape.canvas.width;
-        stencil.height = shape.canvas.height;
+        stencil = acquirePooledCanvas(stencilCanvasPool, shape.canvas.width, shape.canvas.height);
         const sctx = stencil.getContext('2d');
+        sctx.setTransform(1, 0, 0, 1, 0, 0);
+        sctx.globalCompositeOperation = 'source-over';
+        sctx.clearRect(0, 0, stencil.width, stencil.height);
         sctx.fillStyle = '#ffffff';
         sctx.fillRect(0, 0, stencil.width, stencil.height);
         sctx.globalCompositeOperation = 'destination-in';
         sctx.drawImage(shape.canvas, 0, 0);
         if (maskGlyphStencilCache.size >= STENCIL_CACHE_LIMIT) {
-            maskGlyphStencilCache.delete(maskGlyphStencilCache.keys().next().value);
+            const evictedShape = maskGlyphStencilCache.keys().next().value;
+            releasePooledCanvas(stencilCanvasPool, maskGlyphStencilCache.get(evictedShape));
+            maskGlyphStencilCache.delete(evictedShape);
         }
         maskGlyphStencilCache.set(shape, stencil);
         return stencil;
     }
 
     function acquireMaskScratchCanvas(w, h) {
-        const reused = maskScratchCanvasPool.pop();
-        const canvas = reused || document.createElement('canvas');
-        if (canvas.width !== w) canvas.width = w;
-        if (canvas.height !== h) canvas.height = h;
+        let best = -1;
+        let bestArea = Infinity;
+        for (let i = 0; i < maskScratchCanvasPool.length; i++) {
+            const c = maskScratchCanvasPool[i];
+            if (c.width >= w && c.height >= h) {
+                const area = c.width * c.height;
+                if (area < bestArea) {
+                    bestArea = area;
+                    best = i;
+                }
+            }
+        }
+        let canvas;
+        if (best !== -1) {
+            canvas = maskScratchCanvasPool.splice(best, 1)[0];
+        } else {
+            canvas = maskScratchCanvasPool.length ? maskScratchCanvasPool.pop() : document.createElement('canvas');
+            const cw = Math.max(canvas.width, bucketSize(w));
+            const ch = Math.max(canvas.height, bucketSize(h));
+            if (canvas.width !== cw) canvas.width = cw;
+            if (canvas.height !== ch) canvas.height = ch;
+        }
+        canvas.usedW = w;
+        canvas.usedH = h;
         return canvas;
     }
 
@@ -875,7 +996,7 @@ Enjoy!! :D
         sctx.clearRect(0, 0, w, h);
         sctx.globalAlpha = 1;
         sctx.globalCompositeOperation = 'source-over';
-        sctx.drawImage(sampled, 0, 0);
+        sctx.drawImage(sampled, 0, 0, w, h, 0, 0, w, h);
 
         const stencil = getMaskGlyphStencil(shape);
         sctx.globalCompositeOperation = 'destination-in';
@@ -942,27 +1063,172 @@ Enjoy!! :D
 
         destCtx.save();
         destCtx.globalAlpha = alpha;
-        destCtx.drawImage(scratch, destX, destY);
+        destCtx.drawImage(scratch, 0, 0, w, h, destX, destY, w, h);
         destCtx.restore();
 
         releaseMaskScratchCanvas(scratch);
+    }
+
+    function maskBatchKey(mask, alpha) {
+        return mask.targetName + '\u0001' + mask.costumeName + '\u0001' +
+            (mask.direction || WIPE_DIRECTION_BOTTOM_UP) + '\u0001' +
+            (Number(mask.coverage) || 0) + '\u0001' +
+            (Number(mask.blur) || 0) + '\u0001' +
+            (Number(mask.x) || 0) + '\u0001' +
+            (Number(mask.y) || 0) + '\u0001' +
+            (Number(mask.zoom) || 100) + '\u0001' +
+            (Number(mask.rotation) || 0) + '\u0001' + alpha;
+    }
+
+    function collectBatchedMaskGroups(paintOps) {
+        const groups = [];
+        const batchedOps = new Set();
+        let group = null;
+
+        const flushGroup = () => {
+            if (group && group.items.length > 1) {
+                groups.push(group);
+                for (let i = 0; i < group.items.length; i++) batchedOps.add(group.items[i].op);
+            }
+            group = null;
+        };
+
+        for (let i = 0; i < paintOps.length; i++) {
+            const op = paintOps[i];
+            const mask = op.mask;
+            const maskOpacity = mask ? Math.max(0, Math.min(100, Number(mask.opacity != null ? mask.opacity : 100))) / 100 : 0;
+            const alpha = (op.opacity == null ? 1 : op.opacity) * maskOpacity;
+            const canBatch = mask && mask.seamless && !op.rotation && (op.scale == null || op.scale === 1) &&
+                Math.max(0, Math.min(100, Number(mask.coverage) || 0)) > 0 && alpha > 0;
+            if (!canBatch) {
+                flushGroup();
+                continue;
+            }
+
+            const key = maskBatchKey(mask, alpha);
+            if (!group || group.key !== key) {
+                flushGroup();
+                const texture = getMaskTexture(mask.targetName, mask.costumeName);
+                if (!texture) continue;
+                group = {
+                    key,
+                    mask,
+                    alpha,
+                    texture,
+                    items: [],
+                    minX: Infinity,
+                    minY: Infinity,
+                    maxX: -Infinity,
+                    maxY: -Infinity
+                };
+            }
+
+            if (op.text === '\u00A0' || op.text === '') continue;
+
+            const fontFamily = op.font['font-family'];
+            const fontSize = op.font['font-size'];
+            const fontWeight = op.font['font-weight'];
+            const fontStyle = op.font['font-style'];
+            const glyph = getGlyphBitmap(op.text, fontFamily, fontSize, fontWeight, fontStyle, op.color);
+            const drawXEm = op.x - (glyph.baselineOriginXEm + glyph.advance / 2);
+            const drawYEm = (op.y + (glyph.fontAscentEm - glyph.fontDescentEm) / 2) - glyph.baselineOriginYEm;
+            const px = Math.round(drawXEm * DEST_SCALE);
+            const py = Math.round(drawYEm * DEST_SCALE);
+            group.items.push({op, glyph, px, py});
+            group.minX = Math.min(group.minX, px);
+            group.minY = Math.min(group.minY, py);
+            group.maxX = Math.max(group.maxX, px + glyph.canvas.width);
+            group.maxY = Math.max(group.maxY, py + glyph.canvas.height);
+        }
+        flushGroup();
+
+        return {groups, batchedOps};
+    }
+
+    function drawBatchedMaskGroups(ctx, state, groups, pixelW, pixelH) {
+        if (!groups.length) return;
+        let canvas = state.maskBatchCanvas;
+        if (!canvas) {
+            canvas = document.createElement('canvas');
+            state.maskBatchCanvas = canvas;
+        }
+        if (canvas.width !== pixelW || canvas.height !== pixelH) {
+            canvas.width = pixelW;
+            canvas.height = pixelH;
+        }
+        const batchCtx = canvas.getContext('2d');
+
+        for (let i = 0; i < groups.length; i++) {
+            const group = groups[i];
+            const mask = group.mask;
+            batchCtx.setTransform(1, 0, 0, 1, 0, 0);
+            batchCtx.globalAlpha = 1;
+            batchCtx.globalCompositeOperation = 'source-over';
+            batchCtx.clearRect(0, 0, pixelW, pixelH);
+            const pattern = batchCtx.createPattern(group.texture.canvas, 'repeat');
+            if (!pattern) continue;
+            const matrix = new DOMMatrix();
+            matrix.translateSelf((Number(mask.x) || 0) * DEST_SCALE, -(Number(mask.y) || 0) * DEST_SCALE);
+            const rotation = Number(mask.rotation) || 0;
+            if (rotation !== 0) matrix.rotateSelf(rotation);
+            const zoom = Math.max(0.01, (Number(mask.zoom) || 100) / 100);
+            matrix.scaleSelf(zoom, zoom);
+            pattern.setTransform(matrix);
+            batchCtx.fillStyle = pattern;
+            batchCtx.fillRect(0, 0, pixelW, pixelH);
+
+            batchCtx.globalCompositeOperation = 'destination-in';
+            for (let j = 0; j < group.items.length; j++) {
+                const item = group.items[j];
+                batchCtx.globalAlpha = group.alpha;
+                batchCtx.drawImage(item.glyph.shape.canvas, item.px, item.py);
+            }
+            batchCtx.globalAlpha = 1;
+
+            const coverage = Math.max(0, Math.min(100, Number(mask.coverage) || 0)) / 100;
+            if (coverage < 1) {
+                const blurPx = Math.max(0, Number(mask.blur) || 0) * DEST_SCALE;
+                const bandHalf = Math.max(0.5, blurPx / 2);
+                const direction = mask.direction || WIPE_DIRECTION_BOTTOM_UP;
+                const axisIsX = direction === WIPE_DIRECTION_LEFT_RIGHT || direction === WIPE_DIRECTION_RIGHT_LEFT;
+                const growsPositive = direction === WIPE_DIRECTION_LEFT_RIGHT || direction === WIPE_DIRECTION_UP_DOWN;
+                const axisStart = axisIsX ? group.minX : group.minY;
+                const axisSize = axisIsX ? group.maxX - group.minX : group.maxY - group.minY;
+                const revealEdge = growsPositive ? axisStart + axisSize * coverage : axisStart + axisSize - axisSize * coverage;
+                const gradStart = growsPositive ? revealEdge - bandHalf : revealEdge + bandHalf;
+                const gradEnd = growsPositive ? revealEdge + bandHalf : revealEdge - bandHalf;
+                const gradient = axisIsX ?
+                    batchCtx.createLinearGradient(gradStart, 0, gradEnd, 0) :
+                    batchCtx.createLinearGradient(0, gradStart, 0, gradEnd);
+                gradient.addColorStop(0, 'rgba(255,255,255,1)');
+                gradient.addColorStop(1, 'rgba(255,255,255,0)');
+                batchCtx.fillStyle = gradient;
+                batchCtx.fillRect(0, 0, pixelW, pixelH);
+            }
+
+            ctx.drawImage(canvas, 0, 0);
+        }
     }
 
     function tintGlyph(shape, color) {
         let tintedCanvas = shape.tinted.get(color);
         if (tintedCanvas) return tintedCanvas;
 
-        tintedCanvas = document.createElement('canvas');
-        tintedCanvas.width = shape.canvas.width;
-        tintedCanvas.height = shape.canvas.height;
+        tintedCanvas = acquirePooledCanvas(tintedCanvasPool, shape.canvas.width, shape.canvas.height);
         const tctx = tintedCanvas.getContext('2d');
+        tctx.setTransform(1, 0, 0, 1, 0, 0);
+        tctx.globalCompositeOperation = 'source-over';
+        tctx.clearRect(0, 0, tintedCanvas.width, tintedCanvas.height);
         tctx.fillStyle = color;
         tctx.fillRect(0, 0, tintedCanvas.width, tintedCanvas.height);
         tctx.globalCompositeOperation = 'destination-in';
         tctx.drawImage(shape.canvas, 0, 0);
 
         if (shape.tinted.size >= TINT_CACHE_LIMIT) {
-            shape.tinted.delete(shape.tinted.keys().next().value);
+            const evictedColor = shape.tinted.keys().next().value;
+            releasePooledCanvas(tintedCanvasPool, shape.tinted.get(evictedColor));
+            shape.tinted.delete(evictedColor);
+            if (shape.bitmaps) shape.bitmaps.delete(evictedColor);
         }
         shape.tinted.set(color, tintedCanvas);
         return tintedCanvas;
@@ -979,7 +1245,8 @@ Enjoy!! :D
             baselineOriginXEm: shape.baselineOriginXEm,
             baselineOriginYEm: shape.baselineOriginYEm,
             fontAscentEm: shape.fontAscentEm,
-            fontDescentEm: shape.fontDescentEm
+            fontDescentEm: shape.fontDescentEm,
+            shape
         };
         if (!shape.bitmaps) shape.bitmaps = new Map();
         if (shape.bitmaps.size >= TINT_CACHE_LIMIT) {
@@ -987,6 +1254,29 @@ Enjoy!! :D
         }
         shape.bitmaps.set(color, bitmap);
         return bitmap;
+    }
+
+    const READBACK_CANVAS = document.createElement('canvas');
+    const READBACK_CTX = READBACK_CANVAS.getContext('2d', {
+        willReadFrequently: true
+    });
+
+    function getGlyphInkColumns(glyph) {
+        if (glyph.inkColumns) return glyph.inkColumns;
+        const w = glyph.canvas.width;
+        const h = glyph.canvas.height;
+        if (READBACK_CANVAS.width !== w) READBACK_CANVAS.width = w;
+        if (READBACK_CANVAS.height !== h) READBACK_CANVAS.height = h;
+        READBACK_CTX.setTransform(1, 0, 0, 1, 0, 0);
+        READBACK_CTX.clearRect(0, 0, w, h);
+        READBACK_CTX.drawImage(glyph.canvas, 0, 0);
+        const image = READBACK_CTX.getImageData(0, 0, w, h);
+        const inkColumns = new Uint8Array(w * h);
+        for (let i = 0; i < inkColumns.length; i++) {
+            inkColumns[i] = image.data[i * 4 + 3] > 16 ? 1 : 0;
+        }
+        glyph.inkColumns = inkColumns;
+        return inkColumns;
     }
 
     function strokeUnderline(ctx, glyph, glyphX, glyphY, startX, endX, y, lineWidth) {
@@ -999,16 +1289,17 @@ Enjoy!! :D
         };
 
         try {
-            const image = glyph.canvas.getContext('2d').getImageData(0, 0, glyph.canvas.width, glyph.canvas.height);
+            const w = glyph.canvas.width;
+            const inkData = getGlyphInkColumns(glyph);
             const rowStart = Math.max(0, Math.floor(y - glyphY - lineWidth / 2));
             const rowEnd = Math.min(glyph.canvas.height - 1, Math.ceil(y - glyphY + lineWidth / 2));
             const columnStart = Math.max(0, Math.floor(startX - glyphX));
-            const columnEnd = Math.min(glyph.canvas.width - 1, Math.ceil(endX - glyphX));
-            const ink = new Uint8Array(glyph.canvas.width);
+            const columnEnd = Math.min(w - 1, Math.ceil(endX - glyphX));
+            const ink = new Uint8Array(w);
 
             for (let py = rowStart; py <= rowEnd; py++) {
                 for (let px = columnStart; px <= columnEnd; px++) {
-                    if (image.data[(py * glyph.canvas.width + px) * 4 + 3] > 16) ink[px] = 1;
+                    if (inkData[py * w + px]) ink[px] = 1;
                 }
             }
 
@@ -1034,8 +1325,19 @@ Enjoy!! :D
     }
 
     function invalidateGlyphCacheForFamily(fontFamily) {
+        const evictedKeys = [];
         for (const key of glyphCache.keys()) {
-            if (key.indexOf('\u0001' + fontFamily + '\u0001') !== -1) glyphCache.delete(key);
+            if (key.indexOf('\u0001' + fontFamily + '\u0001') !== -1) {
+                glyphCache.delete(key);
+                evictedKeys.push(key);
+            }
+        }
+        if (evictedKeys.length && renderWorker) {
+            for (const key of evictedKeys) workerKnownGlyphKeys.delete(key);
+            renderWorker.postMessage({
+                type: 'evict-glyphs',
+                glyphKeys: evictedKeys
+            });
         }
     }
 
@@ -1231,18 +1533,33 @@ Enjoy!! :D
         }
     }
 
+    function shapingFontStyleKey(style) {
+        return style.font + '\u0001' + style.size + '\u0001' + (style.bold ? 1 : 0) + '\u0001' + (style.italic ? 1 : 0);
+    }
+
+    const shapingFontStyleCache = new Map();
+    const SHAPING_FONT_STYLE_CACHE_LIMIT = 500;
+
     function shapingFontStyle(style) {
+        const key = shapingFontStyleKey(style);
+        let cached = shapingFontStyleCache.get(key);
+        if (cached) return cached;
         const fontFamily = cssFontFamily(style.font);
         const fontWeight = style.bold ? 'bold' : 'normal';
         const fontStyle = style.italic ? 'italic' : 'normal';
         const styleHash = ((hashString(fontFamily) * 33) ^ hashString(fontWeight) * 33 ^ hashString(fontStyle)) | 0;
-        return {
+        cached = {
             'font-family': fontFamily,
             'font-size': style.size,
             'font-weight': fontWeight,
             'font-style': fontStyle,
             'styleHash': styleHash
         };
+        if (shapingFontStyleCache.size >= SHAPING_FONT_STYLE_CACHE_LIMIT) {
+            shapingFontStyleCache.delete(shapingFontStyleCache.keys().next().value);
+        }
+        shapingFontStyleCache.set(key, cached);
+        return cached;
     }
 
     function canvasFontString(fontStyle) {
@@ -1351,6 +1668,7 @@ Enjoy!! :D
             }
         }
 
+        const hardLineRunsCache = [];
         let globalIndex = 0;
         for (const line of hardLines) {
             const runs = splitShapingRuns(line, state.charOverrides, globalIndex);
@@ -1360,6 +1678,7 @@ Enjoy!! :D
                     run.chars[i]._width = run.positions[i].advance;
                 }
             }
+            hardLineRunsCache.push(runs);
             globalIndex += line.length + 1;
         }
 
@@ -1370,8 +1689,11 @@ Enjoy!! :D
 
         let maxWidth = 0;
         const wrapLimit = state.maxWidth && state.maxWidth > 0 ? state.maxWidth : Infinity;
+        const wrappedLineSourceHardLine = [];
 
-        for (const hardLine of hardLines) {
+        for (let hardLineIndex = 0; hardLineIndex < hardLines.length; hardLineIndex++) {
+            const hardLine = hardLines[hardLineIndex];
+            const linesBeforeThisHardLine = lines.length;
             let currentLine = [];
             let currentLineWidth = 0;
 
@@ -1390,16 +1712,18 @@ Enjoy!! :D
 
                     if (spaceIdx !== -1 && spaceIdx < currentLine.length - 1) {
                         const nextLineInitial = currentLine.splice(spaceIdx + 1);
-                        currentLineWidth = currentLine.reduce((sum, c) => sum + c._width, 0);
+                        let nextLineWidth = 0;
+                        for (let k = 0; k < nextLineInitial.length; k++) nextLineWidth += nextLineInitial[k]._width;
+                        currentLineWidth -= nextLineWidth;
 
-                        lines.push([...currentLine]);
+                        lines.push(currentLine);
                         lineWidths.push(currentLineWidth);
                         if (currentLineWidth > maxWidth) maxWidth = currentLineWidth;
 
                         currentLine = nextLineInitial;
-                        currentLineWidth = currentLine.reduce((sum, c) => sum + c._width, 0);
+                        currentLineWidth = nextLineWidth;
                     } else {
-                        lines.push([...currentLine]);
+                        lines.push(currentLine);
                         lineWidths.push(currentLineWidth);
                         if (currentLineWidth > maxWidth) maxWidth = currentLineWidth;
 
@@ -1420,6 +1744,10 @@ Enjoy!! :D
                 lines.push([]);
                 lineWidths.push(0);
             }
+
+            if (lines.length - linesBeforeThisHardLine === 1) {
+                wrappedLineSourceHardLine[linesBeforeThisHardLine] = hardLineIndex;
+            }
         }
 
         globalIndex = 0;
@@ -1428,7 +1756,10 @@ Enjoy!! :D
 
         for (let li = 0; li < lines.length; li++) {
             const line = lines[li];
-            const runs = splitShapingRuns(line, state.charOverrides, globalIndex);
+            const sourceHardLine = wrappedLineSourceHardLine[li];
+            const runs = sourceHardLine !== undefined ?
+                hardLineRunsCache[sourceHardLine] :
+                splitShapingRuns(line, state.charOverrides, globalIndex);
 
             let runStartX = 0;
             for (const run of runs) {
@@ -1486,23 +1817,38 @@ Enjoy!! :D
             hash = (hash * 33) ^ ((op.letterSpacing * 100) | 0);
             hash = (hash * 33) ^ (op.underline ? 1 : 0);
             hash = (hash * 33) ^ (op.strike ? 1 : 0);
-            if (op.mask) {
-                const m = op.mask;
-                hash = (hash * 33) ^ hashString(m.targetName);
-                hash = (hash * 33) ^ hashString(m.costumeName);
-                hash = (hash * 33) ^ ((m.coverage * 100) | 0);
-                hash = (hash * 33) ^ ((m.opacity != null ? m.opacity : 100) * 100 | 0);
-                hash = (hash * 33) ^ ((m.blur * 100) | 0);
-                hash = (hash * 33) ^ ((m.x * 100) | 0);
-                hash = (hash * 33) ^ ((m.y * 100) | 0);
-                hash = (hash * 33) ^ ((m.zoom != null ? m.zoom : 100) * 100 | 0);
-                hash = (hash * 33) ^ ((m.rotation != null ? m.rotation : 0) * 100 | 0);
-            } else {
-                hash = (hash * 33) ^ 0x5a5a;
-            }
+            hash = fingerprintMaskInto(hash, op.mask);
         }
         return hash | 0;
     }
+
+    function fingerprintMaskOps(paintOps, docW, docH) {
+        let hash = (docW * 2654435761) ^ (docH * 40503);
+        hash = (hash * 33) ^ paintOps.length;
+        for (let i = 0; i < paintOps.length; i++) {
+            hash = (hash * 33) ^ i;
+            hash = fingerprintMaskInto(hash, paintOps[i].mask);
+        }
+        return hash | 0;
+    }
+
+    function fingerprintMaskInto(hash, mask) {
+        if (mask) {
+            hash = (hash * 33) ^ hashString(mask.targetName);
+            hash = (hash * 33) ^ hashString(mask.costumeName);
+            hash = (hash * 33) ^ ((mask.coverage * 100) | 0);
+            hash = (hash * 33) ^ ((mask.opacity != null ? mask.opacity : 100) * 100 | 0);
+            hash = (hash * 33) ^ ((mask.blur * 100) | 0);
+            hash = (hash * 33) ^ ((mask.x * 100) | 0);
+            hash = (hash * 33) ^ ((mask.y * 100) | 0);
+            hash = (hash * 33) ^ ((mask.zoom != null ? mask.zoom : 100) * 100 | 0);
+            hash = (hash * 33) ^ ((mask.rotation != null ? mask.rotation : 0) * 100 | 0);
+        } else {
+            hash = (hash * 33) ^ 0x5a5a;
+        }
+        return hash;
+    }
+
 
     function hashString(str) {
         if (!str) return 0;
@@ -1516,7 +1862,48 @@ Enjoy!! :D
     const pendingRenderTargets = new Set();
 
     const charAnimations = new Map();
+    const charAnimationsByTarget = new Map();
     let animationTickerInstalled = false;
+
+    function addCharAnimation(targetId, key, anim) {
+        charAnimations.set(key, anim);
+        let set = charAnimationsByTarget.get(targetId);
+        if (!set) {
+            set = new Set();
+            charAnimationsByTarget.set(targetId, set);
+        }
+        set.add(key);
+    }
+
+    function deleteCharAnimation(targetId, key) {
+        if (!charAnimations.delete(key)) return false;
+        const set = charAnimationsByTarget.get(targetId);
+        if (set) {
+            set.delete(key);
+            if (!set.size) charAnimationsByTarget.delete(targetId);
+        }
+        return true;
+    }
+
+    function clearCharAnimationsForTarget(targetId) {
+        const set = charAnimationsByTarget.get(targetId);
+        if (!set || !set.size) return;
+        for (const key of set) charAnimations.delete(key);
+        charAnimationsByTarget.delete(targetId);
+    }
+
+    function clearCharAnimationsForTargetIndex(targetId, idx) {
+        const set = charAnimationsByTarget.get(targetId);
+        if (!set || !set.size) return;
+        const prefix = targetId + '\u0001' + idx + '\u0001';
+        for (const key of Array.from(set)) {
+            if (key.startsWith(prefix)) {
+                charAnimations.delete(key);
+                set.delete(key);
+            }
+        }
+        if (!set.size) charAnimationsByTarget.delete(targetId);
+    }
 
     function nowMs() {
         return (typeof performance !== 'undefined' && performance.now) ? performance.now() : Date.now();
@@ -1661,7 +2048,7 @@ Enjoy!! :D
             dirtyStates.add(anim.target);
             if (rawProgress >= 1) {
                 o[anim.property] = anim.to;
-                charAnimations.delete(key);
+                deleteCharAnimation(anim.target.id, key);
             }
         }
         for (const target of dirtyStates) {
@@ -1706,11 +2093,12 @@ Enjoy!! :D
     }
 
     function flushRenderIfDirty(target) {
-        if (!pendingRenderTargets.has(target)) return;
+        if (!pendingRenderTargets.has(target)) return Promise.resolve();
         pendingRenderTargets.delete(target);
         const state = getState(target);
-        if (state.visible) renderTarget(target);
+        const promise = state.visible ? renderTarget(target) : Promise.resolve();
         if (pendingRenderTargets.size) requestRenderFlush();
+        return promise || Promise.resolve();
     }
 
     function scheduleTextRender(target) {
@@ -1727,8 +2115,12 @@ Enjoy!! :D
         return getShapeKey(state) + '\u0002' + state.charOverridesVersion;
     }
 
+    function getPaintOpsGeometryKey(state, layoutKey) {
+        return layoutKey + '\u0004' + state.align;
+    }
+
     function getPaintOpsKey(state, layoutKey) {
-        return layoutKey + '\u0004' + state.align + '\u0004' + state.charMasksVersion;
+        return getPaintOpsGeometryKey(state, layoutKey) + '\u0004' + state.charMasksVersion;
     }
 
     const EMPTY_OVERRIDE = {
@@ -1756,6 +2148,10 @@ Enjoy!! :D
     function renderTarget(target) {
         const state = getState(target);
         if (!state.visible) return;
+        if (state.renderInFlight) {
+            state.renderQueued = true;
+            return state.renderPromise || Promise.resolve();
+        }
 
         const shapeKey = getShapeKey(state);
         const layoutKey = getLayoutKey(state);
@@ -1807,16 +2203,38 @@ Enjoy!! :D
         const originX = docW / 2;
         const originY = docH / 2;
 
-        const paintOpsKey = getPaintOpsKey(state, layoutKey) + '\u0004' + docW + '\u0004' + docH;
+        const geometryKey = getPaintOpsGeometryKey(state, layoutKey) + '\u0004' + docW + '\u0004' + docH;
+        const paintOpsKey = geometryKey + '\u0004' + state.charMasksVersion;
         let paintOps = state.paintOps;
         let charBoxes = state.charBoxes;
 
-        if (state.paintOpsKey !== paintOpsKey || state.paintOpsLayout !== layout || !paintOps) {
+        const geometryUnchanged = state.paintOpsGeometryKey === geometryKey &&
+            state.paintOpsLayout === layout && !!paintOps;
+
+        if (geometryUnchanged && state.paintOpsKey !== paintOpsKey) {
+            for (let i = 0; i < paintOps.length; i++) {
+                const op = paintOps[i];
+                op.mask = state.charMasks[op.charIndex] || null;
+            }
+            state.paintOpsKey = paintOpsKey;
+
+            const fingerprint = fingerprintMaskOps(paintOps, docW, docH);
+            if (fingerprint === state.paintFingerprint && state.skinId !== null) {
+                state.paintDirty = false;
+                return;
+            }
+            state.paintFingerprint = fingerprint;
+        } else if (state.paintOpsKey !== paintOpsKey || state.paintOpsLayout !== layout || !paintOps) {
             if (state.charBoxesLayout !== layout) {
                 charBoxes = [];
                 state.charBoxesLayout = layout;
             }
             const charsByTag = layout.charsByTag;
+            const prevPaintOps = paintOps;
+            const opPool = state.paintOpPool || (state.paintOpPool = []);
+            if (prevPaintOps) {
+                for (let i = prevPaintOps.length - 1; i >= 0; i--) opPool.push(prevPaintOps[i]);
+            }
             paintOps = [];
             const letterSpacing = state.letterSpacing || 0;
 
@@ -1870,23 +2288,23 @@ Enjoy!! :D
                         const ch = rc.char === ' ' ? '\u00A0' : rc.char;
                         const mask = state.charMasks[index] || null;
 
-                        paintOps.push({
-                            text: ch,
-                            x: charCenterX,
-                            y: charCenterY,
-                            rotation,
-                            opacity,
-                            scale,
-                            color: o.color || rc.color,
-                            font: style,
-                            rawFontFamily: rc0.font,
-                            letterSpacing,
-                            underline,
-                            strike,
-                            width: pos.advance,
-                            mask,
-                            charIndex: index
-                        });
+                        const op = opPool.length ? opPool.pop() : {};
+                        op.text = ch;
+                        op.x = charCenterX;
+                        op.y = charCenterY;
+                        op.rotation = rotation;
+                        op.opacity = opacity;
+                        op.scale = scale;
+                        op.color = o.color || rc.color;
+                        op.font = style;
+                        op.rawFontFamily = rc0.font;
+                        op.letterSpacing = letterSpacing;
+                        op.underline = underline;
+                        op.strike = strike;
+                        op.width = pos.advance;
+                        op.mask = mask;
+                        op.charIndex = index;
+                        paintOps.push(op);
 
                         if (rc.char === ' ') spacesBefore++;
 
@@ -1912,6 +2330,7 @@ Enjoy!! :D
 
             state.paintOps = paintOps;
             state.paintOpsKey = paintOpsKey;
+            state.paintOpsGeometryKey = geometryKey;
             state.paintOpsLayout = layout;
             state.charBoxes = charBoxes;
             state.charsByTag = charsByTag;
@@ -1931,10 +2350,40 @@ Enjoy!! :D
             }
         }
 
+        state.renderInFlight = true;
+        state.renderQueued = false;
+        const paintedPromise = compositeGlyphsAndPush(target, state, paintOps, docW, docH, effectiveMaxWidth, totalHeight, originX, originY);
+        state.paintDirty = false;
+        state.renderPromise = Promise.resolve(paintedPromise).then(() => {
+            state.hasPaintedOnce = true;
+        }).finally(() => {
+            state.renderInFlight = false;
+            state.renderPromise = null;
+            if (state.renderQueued) {
+                state.renderQueued = false;
+                scheduleRender(target);
+            }
+        });
+        return state.renderPromise;
+    }
+
+    function compositeGlyphsAndPush(target, state, paintOps, docW, docH, effectiveMaxWidth, totalHeight, originX, originY) {
+        if (!renderWorkerFailed && supportsRenderWorker()) {
+            const workerPromise = compositeGlyphsViaWorker(state, paintOps, docW, docH, effectiveMaxWidth, totalHeight, originX, originY);
+            if (workerPromise) {
+                return workerPromise.then((result) => {
+                    pushImageBitmapToDrawable(target, result.bitmap, result.pixelW, result.pixelH, docW, docH);
+                }).catch((err) => {
+                    renderWorkerFailed = true;
+                    console.log('[Iris Text] Render worker request failed (' + (err && err.message ? err.message : err) + ') — falling back to main-thread rendering.');
+                    const canvas = compositeGlyphsToCanvas(state, paintOps, docW, docH, effectiveMaxWidth, totalHeight, originX, originY);
+                    pushCanvasToDrawable(target, canvas, docW, docH);
+                });
+            }
+        }
         const canvas = compositeGlyphsToCanvas(state, paintOps, docW, docH, effectiveMaxWidth, totalHeight, originX, originY);
         pushCanvasToDrawable(target, canvas, docW, docH);
-        state.paintDirty = false;
-        state.hasPaintedOnce = true;
+        return Promise.resolve();
     }
 
     const loadedDocumentFonts = new Set();
@@ -1952,6 +2401,17 @@ Enjoy!! :D
             state.paintFingerprint = null;
             scheduleRender(candidate);
         }
+    }
+
+    let rerenderVisibleTextTargetsQueued = false;
+
+    function requestRerenderVisibleTextTargets() {
+        if (rerenderVisibleTextTargetsQueued) return;
+        rerenderVisibleTextTargetsQueued = true;
+        Promise.resolve().then(() => {
+            rerenderVisibleTextTargetsQueued = false;
+            rerenderVisibleTextTargets();
+        });
     }
 
     const FONT_PROBE_TEXT = 'AaBbGgQqWwZz01@#';
@@ -2003,7 +2463,7 @@ Enjoy!! :D
                 if (ready) {
                     loadedDocumentFonts.add(fontId);
                     invalidateGlyphCacheForFamily(cssFontFamily(fontId));
-                    rerenderVisibleTextTargets();
+                    requestRerenderVisibleTextTargets();
                 } else if (attempt < FONT_LOAD_MAX_RETRIES) {
                     setTimeout(() => ensureDocumentFont(fontId, attempt + 1), FONT_LOAD_RETRY_DELAY_MS);
                 } else {
@@ -2014,6 +2474,1112 @@ Enjoy!! :D
     }
 
     const DEST_SCALE = GLYPH_OVERSAMPLE;
+
+    const WORKER_SOURCE = `
+const WIPE_DIRECTION_BOTTOM_UP = 'bottom-up';
+const WIPE_DIRECTION_LEFT_RIGHT = 'left-right';
+const WIPE_DIRECTION_UP_DOWN = 'up-down';
+const WIPE_DIRECTION_RIGHT_LEFT = 'right-left';
+
+const DEST_SCALE = 3;
+const TINT_CACHE_LIMIT = 512;
+const SHADOW_CACHE_LIMIT = 512;
+const STENCIL_CACHE_LIMIT = 400;
+const CANVAS_SIZE_BUCKET = 32;
+const GLYPH_CACHE_LIMIT = 2000;
+
+const glyphShapesByKey = new Map();
+
+const glyphShapeCanvasPool = [];
+const tintedCanvasPool = [];
+const stencilCanvasPool = [];
+const GENERIC_POOL_LIMIT = 256;
+
+function acquirePooledCanvas(pool, w, h) {
+    const canvas = pool.pop() || new OffscreenCanvas(w, h);
+    if (canvas.width !== w) canvas.width = w;
+    if (canvas.height !== h) canvas.height = h;
+    return canvas;
+}
+
+function releasePooledCanvas(pool, canvas) {
+    if (canvas && pool.length < GENERIC_POOL_LIMIT) pool.push(canvas);
+}
+
+function bucketSize(n) {
+    return Math.max(CANVAS_SIZE_BUCKET, Math.ceil(n / CANVAS_SIZE_BUCKET) * CANVAS_SIZE_BUCKET);
+}
+
+function releaseGlyphOwnedCanvases(shape) {
+    releasePooledCanvas(glyphShapeCanvasPool, shape.canvas);
+    if (shape.tinted) {
+        for (const tintedCanvas of shape.tinted.values()) {
+            releasePooledCanvas(tintedCanvasPool, tintedCanvas);
+        }
+    }
+    if (shape.shadows) {
+        for (const shadowEntry of shape.shadows.values()) {
+            globalShadowLRU.delete(shadowEntry.globalKey);
+            releasePooledCanvas(shadowCanvasPool, shadowEntry.canvas);
+        }
+    }
+    const stencil = maskGlyphStencilCache.get(shape);
+    if (stencil) {
+        maskGlyphStencilCache.delete(shape);
+        releasePooledCanvas(stencilCanvasPool, stencil);
+    }
+}
+
+function getGlyphShape(glyphKey) {
+    return glyphShapesByKey.get(glyphKey) || null;
+}
+
+function tintGlyph(shape, color) {
+    let tintedCanvas = shape.tinted.get(color);
+    if (tintedCanvas) return tintedCanvas;
+
+    tintedCanvas = acquirePooledCanvas(tintedCanvasPool, shape.canvas.width, shape.canvas.height);
+    const tctx = tintedCanvas.getContext('2d');
+    tctx.setTransform(1, 0, 0, 1, 0, 0);
+    tctx.globalCompositeOperation = 'source-over';
+    tctx.clearRect(0, 0, tintedCanvas.width, tintedCanvas.height);
+    tctx.fillStyle = color;
+    tctx.fillRect(0, 0, tintedCanvas.width, tintedCanvas.height);
+    tctx.globalCompositeOperation = 'destination-in';
+    tctx.drawImage(shape.canvas, 0, 0);
+
+    if (shape.tinted.size >= TINT_CACHE_LIMIT) {
+        const evictedColor = shape.tinted.keys().next().value;
+        releasePooledCanvas(tintedCanvasPool, shape.tinted.get(evictedColor));
+        shape.tinted.delete(evictedColor);
+        if (shape.bitmaps) shape.bitmaps.delete(evictedColor);
+    }
+    shape.tinted.set(color, tintedCanvas);
+    return tintedCanvas;
+}
+
+function getGlyphBitmap(glyphKey, color) {
+    const shape = getGlyphShape(glyphKey);
+    if (!shape) return null;
+    let bitmap = shape.bitmaps.get(color);
+    if (bitmap) return bitmap;
+    const canvas = tintGlyph(shape, color);
+    bitmap = {
+        canvas,
+        advance: shape.advance,
+        baselineOriginXEm: shape.baselineOriginXEm,
+        baselineOriginYEm: shape.baselineOriginYEm,
+        fontAscentEm: shape.fontAscentEm,
+        fontDescentEm: shape.fontDescentEm,
+        shape
+    };
+    if (shape.bitmaps.size >= TINT_CACHE_LIMIT) {
+        shape.bitmaps.delete(shape.bitmaps.keys().next().value);
+    }
+    shape.bitmaps.set(color, bitmap);
+    return bitmap;
+}
+
+const GLOBAL_SHADOW_CANVAS_LIMIT = 256;
+const shadowCanvasPool = [];
+const globalShadowLRU = new Map();
+let shadowGlobalKeySeq = 1;
+
+function acquireShadowCanvas(w, h) {
+    const reused = shadowCanvasPool.pop();
+    const canvas = reused || new OffscreenCanvas(w, h);
+    if (canvas.width !== w) canvas.width = w;
+    if (canvas.height !== h) canvas.height = h;
+    return canvas;
+}
+
+function evictOldestGlobalShadow() {
+    const oldestKey = globalShadowLRU.keys().next().value;
+    if (oldestKey === undefined) return;
+    const oldest = globalShadowLRU.get(oldestKey);
+    globalShadowLRU.delete(oldestKey);
+    oldest.shape.shadows.delete(oldest.key);
+    if (shadowCanvasPool.length < 64) shadowCanvasPool.push(oldest.entry.canvas);
+}
+
+function getShadowGlyphBitmap(shape, color, blurPx) {
+    const key = color + '\u0001' + blurPx;
+    let entry = shape.shadows.get(key);
+    if (entry) {
+        const globalKey = entry.globalKey;
+        globalShadowLRU.delete(globalKey);
+        globalShadowLRU.set(globalKey, {
+            shape,
+            key,
+            entry
+        });
+        return entry;
+    }
+
+    const padPx = Math.ceil(blurPx * 3) + 2;
+    const w = shape.canvas.width + padPx * 2;
+    const h = shape.canvas.height + padPx * 2;
+    const canvas = acquireShadowCanvas(w, h);
+    const ctx = canvas.getContext('2d');
+    ctx.setTransform(1, 0, 0, 1, 0, 0);
+    ctx.clearRect(0, 0, w, h);
+    ctx.shadowColor = color;
+    ctx.shadowBlur = blurPx;
+    ctx.shadowOffsetX = 0;
+    ctx.shadowOffsetY = 0;
+    ctx.drawImage(shape.canvas, padPx, padPx);
+
+    const globalKey = shadowGlobalKeySeq++;
+    entry = {
+        canvas,
+        offsetX: -padPx,
+        offsetY: -padPx,
+        globalKey
+    };
+    if (shape.shadows.size >= SHADOW_CACHE_LIMIT) {
+        const evictedKey = shape.shadows.keys().next().value;
+        const evicted = shape.shadows.get(evictedKey);
+        shape.shadows.delete(evictedKey);
+        globalShadowLRU.delete(evicted.globalKey);
+        releasePooledCanvas(shadowCanvasPool, evicted.canvas);
+    }
+    shape.shadows.set(key, entry);
+
+    if (globalShadowLRU.size >= GLOBAL_SHADOW_CANVAS_LIMIT) evictOldestGlobalShadow();
+    globalShadowLRU.set(globalKey, {
+        shape,
+        key,
+        entry
+    });
+    return entry;
+}
+
+const maskGlyphStencilCache = new Map();
+const maskScratchCanvasPool = [];
+
+const sharedPatternSurface = (() => {
+    const canvas = new OffscreenCanvas(1, 1);
+    return {
+        canvas,
+        ctx: canvas.getContext('2d'),
+        cacheKey: null,
+        pattern: null,
+        capW: canvas.width,
+        capH: canvas.height
+    };
+})();
+
+function sampleMaskPattern(texture, matrix, w, h) {
+    const surface = sharedPatternSurface;
+    let patternDirty = surface.cacheKey !== texture.cacheKey;
+    if (surface.capW < w || surface.capH < h) {
+        surface.capW = Math.max(surface.capW, bucketSize(w));
+        surface.capH = Math.max(surface.capH, bucketSize(h));
+        surface.canvas.width = surface.capW;
+        surface.canvas.height = surface.capH;
+        patternDirty = true;
+    }
+    if (patternDirty) {
+        surface.pattern = surface.ctx.createPattern(texture.canvas, 'repeat');
+        surface.cacheKey = texture.cacheKey;
+    }
+    if (!surface.pattern) return null;
+
+    surface.pattern.setTransform(matrix);
+    surface.ctx.setTransform(1, 0, 0, 1, 0, 0);
+    surface.ctx.globalAlpha = 1;
+    surface.ctx.globalCompositeOperation = 'source-over';
+    surface.ctx.clearRect(0, 0, w, h);
+    surface.ctx.fillStyle = surface.pattern;
+    surface.ctx.fillRect(0, 0, w, h);
+
+    return surface.canvas;
+}
+
+function getMaskGlyphStencil(shape) {
+    let stencil = maskGlyphStencilCache.get(shape);
+    if (stencil) return stencil;
+    stencil = acquirePooledCanvas(stencilCanvasPool, shape.canvas.width, shape.canvas.height);
+    const sctx = stencil.getContext('2d');
+    sctx.setTransform(1, 0, 0, 1, 0, 0);
+    sctx.globalCompositeOperation = 'source-over';
+    sctx.clearRect(0, 0, stencil.width, stencil.height);
+    sctx.fillStyle = '#ffffff';
+    sctx.fillRect(0, 0, stencil.width, stencil.height);
+    sctx.globalCompositeOperation = 'destination-in';
+    sctx.drawImage(shape.canvas, 0, 0);
+    if (maskGlyphStencilCache.size >= STENCIL_CACHE_LIMIT) {
+        const evictedShape = maskGlyphStencilCache.keys().next().value;
+        releasePooledCanvas(stencilCanvasPool, maskGlyphStencilCache.get(evictedShape));
+        maskGlyphStencilCache.delete(evictedShape);
+    }
+    maskGlyphStencilCache.set(shape, stencil);
+    return stencil;
+}
+
+function acquireMaskScratchCanvas(w, h) {
+    let best = -1;
+    let bestArea = Infinity;
+    for (let i = 0; i < maskScratchCanvasPool.length; i++) {
+        const c = maskScratchCanvasPool[i];
+        if (c.width >= w && c.height >= h) {
+            const area = c.width * c.height;
+            if (area < bestArea) {
+                bestArea = area;
+                best = i;
+            }
+        }
+    }
+    let canvas;
+    if (best !== -1) {
+        canvas = maskScratchCanvasPool.splice(best, 1)[0];
+    } else {
+        canvas = maskScratchCanvasPool.length ? maskScratchCanvasPool.pop() : new OffscreenCanvas(1, 1);
+        const cw = Math.max(canvas.width, bucketSize(w));
+        const ch = Math.max(canvas.height, bucketSize(h));
+        if (canvas.width !== cw) canvas.width = cw;
+        if (canvas.height !== ch) canvas.height = ch;
+    }
+    return canvas;
+}
+
+function releaseMaskScratchCanvas(canvas) {
+    if (maskScratchCanvasPool.length < 64) maskScratchCanvasPool.push(canvas);
+}
+
+function drawMaskedGlyph(destCtx, glyphKey, mask, texture, worldDrawX, worldDrawY, spanW, spanH, spanOriginX, spanOriginY, destX, destY, alpha) {
+    const coverage = Math.max(0, Math.min(100, Number(mask.coverage) || 0)) / 100;
+    if (coverage <= 0) return;
+
+    const shape = getGlyphShape(glyphKey);
+    if (!shape) return;
+    const w = shape.canvas.width;
+    const h = shape.canvas.height;
+
+    const zoom = Math.max(0.01, (Number(mask.zoom) || 100) / 100);
+    const rotation = Number(mask.rotation) || 0;
+    const anchorX = (mask.x || 0) * DEST_SCALE - destX;
+    const anchorY = -(mask.y || 0) * DEST_SCALE - destY;
+
+    const matrix = new DOMMatrix();
+    matrix.translateSelf(anchorX, anchorY);
+    if (rotation !== 0) matrix.rotateSelf(rotation);
+    matrix.scaleSelf(zoom, zoom);
+
+    const sampled = sampleMaskPattern(texture, matrix, w, h);
+    if (!sampled) return;
+
+    const scratch = acquireMaskScratchCanvas(w, h);
+    const sctx = scratch.getContext('2d');
+    sctx.setTransform(1, 0, 0, 1, 0, 0);
+    sctx.clearRect(0, 0, w, h);
+    sctx.globalAlpha = 1;
+    sctx.globalCompositeOperation = 'source-over';
+    sctx.drawImage(sampled, 0, 0, w, h, 0, 0, w, h);
+
+    const stencil = getMaskGlyphStencil(shape);
+    sctx.globalCompositeOperation = 'destination-in';
+    sctx.drawImage(stencil, 0, 0);
+    sctx.globalCompositeOperation = 'source-over';
+
+    if (coverage < 1) {
+        const seamless = !!mask.seamless;
+        const localOffsetX = seamless ? (worldDrawX - spanOriginX) : 0;
+        const localOffsetY = seamless ? (worldDrawY - spanOriginY) : 0;
+        const effSpanW = seamless && spanW ? spanW : w;
+        const effSpanH = seamless && spanH ? spanH : h;
+        const blurPx = Math.max(0, Number(mask.blur) || 0) * DEST_SCALE;
+        const direction = mask.direction || WIPE_DIRECTION_BOTTOM_UP;
+        const bandHalf = Math.max(0.5, blurPx / 2);
+
+        let revealEdge, axisIsX, growsPositive;
+        if (direction === WIPE_DIRECTION_LEFT_RIGHT) {
+            revealEdge = effSpanW * coverage - localOffsetX;
+            axisIsX = true;
+            growsPositive = true;
+        } else if (direction === WIPE_DIRECTION_RIGHT_LEFT) {
+            revealEdge = effSpanW - effSpanW * coverage - localOffsetX;
+            axisIsX = true;
+            growsPositive = false;
+        } else if (direction === WIPE_DIRECTION_UP_DOWN) {
+            revealEdge = effSpanH * coverage - localOffsetY;
+            axisIsX = false;
+            growsPositive = true;
+        } else {
+            revealEdge = effSpanH - effSpanH * coverage - localOffsetY;
+            axisIsX = false;
+            growsPositive = false;
+        }
+
+        const axisSize = axisIsX ? w : h;
+        const gradStart = growsPositive ? revealEdge - bandHalf : revealEdge + bandHalf;
+        const gradEnd = growsPositive ? revealEdge + bandHalf : revealEdge - bandHalf;
+        const bandFrom = Math.min(gradStart, gradEnd);
+        const bandTo = Math.max(gradStart, gradEnd);
+
+        if (bandTo <= 0) {
+            if (growsPositive) {
+                releaseMaskScratchCanvas(scratch);
+                return;
+            }
+        } else if (bandFrom >= axisSize) {
+            if (!growsPositive) {
+                releaseMaskScratchCanvas(scratch);
+                return;
+            }
+        } else {
+            sctx.globalCompositeOperation = 'destination-in';
+            const gradient = axisIsX ?
+                sctx.createLinearGradient(gradStart, 0, gradEnd, 0) :
+                sctx.createLinearGradient(0, gradStart, 0, gradEnd);
+            gradient.addColorStop(0, 'rgba(255,255,255,1)');
+            gradient.addColorStop(1, 'rgba(255,255,255,0)');
+            sctx.fillStyle = gradient;
+            sctx.fillRect(0, 0, w, h);
+            sctx.globalCompositeOperation = 'source-over';
+        }
+    }
+
+    destCtx.save();
+    destCtx.globalAlpha = alpha;
+    destCtx.drawImage(scratch, 0, 0, w, h, destX, destY, w, h);
+    destCtx.restore();
+
+    releaseMaskScratchCanvas(scratch);
+}
+
+function maskBatchKey(mask, alpha) {
+    return mask.targetName + '\u0001' + mask.costumeName + '\u0001' +
+        (mask.direction || WIPE_DIRECTION_BOTTOM_UP) + '\u0001' +
+        (Number(mask.coverage) || 0) + '\u0001' +
+        (Number(mask.blur) || 0) + '\u0001' +
+        (Number(mask.x) || 0) + '\u0001' +
+        (Number(mask.y) || 0) + '\u0001' +
+        (Number(mask.zoom) || 100) + '\u0001' +
+        (Number(mask.rotation) || 0) + '\u0001' + alpha;
+}
+
+function collectBatchedMaskGroups(paintOps, maskTextures) {
+    const groups = [];
+    const batchedOps = new Set();
+    let group = null;
+
+    const flushGroup = () => {
+        if (group && group.items.length > 1) {
+            groups.push(group);
+            for (let i = 0; i < group.items.length; i++) batchedOps.add(group.items[i].op);
+        }
+        group = null;
+    };
+
+    for (let i = 0; i < paintOps.length; i++) {
+        const op = paintOps[i];
+        const mask = op.mask;
+        const maskOpacity = mask ? Math.max(0, Math.min(100, Number(mask.opacity != null ? mask.opacity : 100))) / 100 : 0;
+        const alpha = (op.opacity == null ? 1 : op.opacity) * maskOpacity;
+        const canBatch = mask && mask.seamless && !op.rotation && (op.scale == null || op.scale === 1) &&
+            Math.max(0, Math.min(100, Number(mask.coverage) || 0)) > 0 && alpha > 0;
+        if (!canBatch) {
+            flushGroup();
+            continue;
+        }
+
+        const key = maskBatchKey(mask, alpha);
+        if (!group || group.key !== key) {
+            flushGroup();
+            const texture = maskTextures.get(mask.targetName + '\u0001' + mask.costumeName);
+            if (!texture) continue;
+            group = {
+                key,
+                mask,
+                alpha,
+                texture,
+                items: [],
+                minX: Infinity,
+                minY: Infinity,
+                maxX: -Infinity,
+                maxY: -Infinity
+            };
+        }
+
+        if (op.text === '\u00A0' || op.text === '') continue;
+
+        const glyph = getGlyphBitmap(op.glyphKey, op.color);
+        if (!glyph) {
+            flushGroup();
+            continue;
+        }
+        const drawXEm = op.x - (glyph.baselineOriginXEm + glyph.advance / 2);
+        const drawYEm = (op.y + (glyph.fontAscentEm - glyph.fontDescentEm) / 2) - glyph.baselineOriginYEm;
+        const px = Math.round(drawXEm * DEST_SCALE);
+        const py = Math.round(drawYEm * DEST_SCALE);
+        group.items.push({op, glyph, px, py});
+        group.minX = Math.min(group.minX, px);
+        group.minY = Math.min(group.minY, py);
+        group.maxX = Math.max(group.maxX, px + glyph.canvas.width);
+        group.maxY = Math.max(group.maxY, py + glyph.canvas.height);
+    }
+    flushGroup();
+
+    return {groups, batchedOps};
+}
+
+const maskBatchCanvasesByState = new Map();
+
+function drawBatchedMaskGroups(ctx, stateId, groups, pixelW, pixelH) {
+    if (!groups.length) return;
+    let canvas = maskBatchCanvasesByState.get(stateId);
+    if (!canvas) {
+        canvas = new OffscreenCanvas(pixelW, pixelH);
+        maskBatchCanvasesByState.set(stateId, canvas);
+    }
+    if (canvas.width !== pixelW || canvas.height !== pixelH) {
+        canvas.width = pixelW;
+        canvas.height = pixelH;
+    }
+    const batchCtx = canvas.getContext('2d');
+
+    for (let i = 0; i < groups.length; i++) {
+        const group = groups[i];
+        const mask = group.mask;
+        batchCtx.setTransform(1, 0, 0, 1, 0, 0);
+        batchCtx.globalAlpha = 1;
+        batchCtx.globalCompositeOperation = 'source-over';
+        batchCtx.clearRect(0, 0, pixelW, pixelH);
+        const pattern = batchCtx.createPattern(group.texture.canvas, 'repeat');
+        if (!pattern) continue;
+        const matrix = new DOMMatrix();
+        matrix.translateSelf((Number(mask.x) || 0) * DEST_SCALE, -(Number(mask.y) || 0) * DEST_SCALE);
+        const rotation = Number(mask.rotation) || 0;
+        if (rotation !== 0) matrix.rotateSelf(rotation);
+        const zoom = Math.max(0.01, (Number(mask.zoom) || 100) / 100);
+        matrix.scaleSelf(zoom, zoom);
+        pattern.setTransform(matrix);
+        batchCtx.fillStyle = pattern;
+        batchCtx.fillRect(0, 0, pixelW, pixelH);
+
+        batchCtx.globalCompositeOperation = 'destination-in';
+        for (let j = 0; j < group.items.length; j++) {
+            const item = group.items[j];
+            batchCtx.globalAlpha = group.alpha;
+            batchCtx.drawImage(item.glyph.shape.canvas, item.px, item.py);
+        }
+        batchCtx.globalAlpha = 1;
+
+        const coverage = Math.max(0, Math.min(100, Number(mask.coverage) || 0)) / 100;
+        if (coverage < 1) {
+            const blurPx = Math.max(0, Number(mask.blur) || 0) * DEST_SCALE;
+            const bandHalf = Math.max(0.5, blurPx / 2);
+            const direction = mask.direction || WIPE_DIRECTION_BOTTOM_UP;
+            const axisIsX = direction === WIPE_DIRECTION_LEFT_RIGHT || direction === WIPE_DIRECTION_RIGHT_LEFT;
+            const growsPositive = direction === WIPE_DIRECTION_LEFT_RIGHT || direction === WIPE_DIRECTION_UP_DOWN;
+            const axisStart = axisIsX ? group.minX : group.minY;
+            const axisSize = axisIsX ? group.maxX - group.minX : group.maxY - group.minY;
+            const revealEdge = growsPositive ? axisStart + axisSize * coverage : axisStart + axisSize - axisSize * coverage;
+            const gradStart = growsPositive ? revealEdge - bandHalf : revealEdge + bandHalf;
+            const gradEnd = growsPositive ? revealEdge + bandHalf : revealEdge - bandHalf;
+            const gradient = axisIsX ?
+                batchCtx.createLinearGradient(gradStart, 0, gradEnd, 0) :
+                batchCtx.createLinearGradient(0, gradStart, 0, gradEnd);
+            gradient.addColorStop(0, 'rgba(255,255,255,1)');
+            gradient.addColorStop(1, 'rgba(255,255,255,0)');
+            batchCtx.fillStyle = gradient;
+            batchCtx.fillRect(0, 0, pixelW, pixelH);
+        }
+
+        ctx.drawImage(canvas, 0, 0);
+    }
+}
+
+const READBACK_CANVAS = new OffscreenCanvas(1, 1);
+const READBACK_CTX = READBACK_CANVAS.getContext('2d', {
+    willReadFrequently: true
+});
+
+function getGlyphInkColumns(glyph) {
+    if (glyph.inkColumns) return glyph.inkColumns;
+    const w = glyph.canvas.width;
+    const h = glyph.canvas.height;
+    if (READBACK_CANVAS.width !== w) READBACK_CANVAS.width = w;
+    if (READBACK_CANVAS.height !== h) READBACK_CANVAS.height = h;
+    READBACK_CTX.setTransform(1, 0, 0, 1, 0, 0);
+    READBACK_CTX.clearRect(0, 0, w, h);
+    READBACK_CTX.drawImage(glyph.canvas, 0, 0);
+    const image = READBACK_CTX.getImageData(0, 0, w, h);
+    const inkColumns = new Uint8Array(w * h);
+    for (let i = 0; i < inkColumns.length; i++) {
+        inkColumns[i] = image.data[i * 4 + 3] > 16 ? 1 : 0;
+    }
+    glyph.inkColumns = inkColumns;
+    return inkColumns;
+}
+
+function strokeUnderline(ctx, glyph, glyphX, glyphY, startX, endX, y, lineWidth) {
+    const stroke = (x1, x2) => {
+        if (x2 <= x1) return;
+        ctx.beginPath();
+        ctx.moveTo(x1, y);
+        ctx.lineTo(x2, y);
+        ctx.stroke();
+    };
+
+    try {
+        const w = glyph.canvas.width;
+        const inkData = getGlyphInkColumns(glyph);
+        const rowStart = Math.max(0, Math.floor(y - glyphY - lineWidth / 2));
+        const rowEnd = Math.min(glyph.canvas.height - 1, Math.ceil(y - glyphY + lineWidth / 2));
+        const columnStart = Math.max(0, Math.floor(startX - glyphX));
+        const columnEnd = Math.min(w - 1, Math.ceil(endX - glyphX));
+        const ink = new Uint8Array(w);
+
+        for (let py = rowStart; py <= rowEnd; py++) {
+            for (let px = columnStart; px <= columnEnd; px++) {
+                if (inkData[py * w + px]) ink[px] = 1;
+            }
+        }
+
+        const padding = Math.max(1, Math.ceil(lineWidth / 2) + 1);
+        let segmentStart = startX;
+        let px = columnStart;
+        while (px <= columnEnd) {
+            if (!ink[px]) {
+                px++;
+                continue;
+            }
+            const inkStart = px;
+            while (px <= columnEnd && ink[px]) px++;
+            const skipStart = Math.max(startX, glyphX + inkStart - padding);
+            const skipEnd = Math.min(endX, glyphX + px + padding);
+            stroke(segmentStart, skipStart);
+            segmentStart = Math.max(segmentStart, skipEnd);
+        }
+        stroke(segmentStart, endX);
+    } catch (e) {
+        stroke(startX, endX);
+    }
+}
+
+function maskGroupKey(mask) {
+    return mask.targetName + '\u0001' + mask.costumeName + '\u0001' +
+        (mask.direction || WIPE_DIRECTION_BOTTOM_UP) + '\u0001' +
+        Math.round(mask.x * 4) + '\u0001' + Math.round(mask.y * 4);
+}
+
+function computeSeamlessMaskSpansByIndex(paintOps) {
+    const spans = new Map();
+    let groupIndices = null;
+    let groupKey = null;
+    let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
+
+    const flushGroup = () => {
+        if (!groupIndices || !groupIndices.length) return;
+        if (!isFinite(minX) || !isFinite(maxX) || !isFinite(minY) || !isFinite(maxY)) return;
+        const spanW = Math.max(1, maxX - minX);
+        const spanH = Math.max(1, maxY - minY);
+        for (const gi of groupIndices) {
+            spans.set(gi, {
+                spanW,
+                spanH,
+                originX: minX,
+                originY: minY
+            });
+        }
+    };
+
+    for (let i = 0; i < paintOps.length; i++) {
+        const op = paintOps[i];
+        if (!op.mask || !op.mask.seamless) {
+            flushGroup();
+            groupIndices = null;
+            groupKey = null;
+            continue;
+        }
+
+        const key = maskGroupKey(op.mask);
+        if (groupKey !== key) {
+            flushGroup();
+            groupIndices = [];
+            groupKey = key;
+            minX = Infinity;
+            maxX = -Infinity;
+            minY = Infinity;
+            maxY = -Infinity;
+        }
+        groupIndices.push(op.charIndex);
+
+        if (op.text === '\u00A0' || op.text === '') continue;
+
+        const shape = getGlyphShape(op.glyphKey);
+        if (!shape) continue;
+        const advanceCenterXEm = shape.baselineOriginXEm + shape.advance / 2;
+        const baselineYFromLineCenter = (shape.fontAscentEm - shape.fontDescentEm) / 2;
+        const drawXEm = op.x - advanceCenterXEm;
+        const drawYEm = (op.y + baselineYFromLineCenter) - shape.baselineOriginYEm;
+        const px = Math.round(drawXEm * DEST_SCALE);
+        const py = Math.round(drawYEm * DEST_SCALE);
+        const w = shape.canvas.width;
+        const h = shape.canvas.height;
+
+        minX = Math.min(minX, px);
+        maxX = Math.max(maxX, px + w);
+        minY = Math.min(minY, py);
+        maxY = Math.max(maxY, py + h);
+    }
+    flushGroup();
+
+    return spans;
+}
+
+const maskSpansCacheByState = new Map();
+
+function getSeamlessMaskSpans(stateId, paintOps, layoutDocKey, geometryVersion) {
+    const cacheKey = layoutDocKey + '\u0003' + geometryVersion;
+    let entry = maskSpansCacheByState.get(stateId);
+    if (entry && entry.cacheKey === cacheKey) return entry.spans;
+    const spans = computeSeamlessMaskSpansByIndex(paintOps);
+    maskSpansCacheByState.set(stateId, { cacheKey, spans });
+    return spans;
+}
+
+const paintCanvasByState = new Map();
+
+function compositeGlyphsToCanvas(stateId, settings, paintOps, docW, docH, textWidth, textHeight, originX, originY, maskTextures) {
+    let canvas = paintCanvasByState.get(stateId);
+    const pixelW = Math.max(1, Math.round(docW * DEST_SCALE));
+    const pixelH = Math.max(1, Math.round(docH * DEST_SCALE));
+    if (!canvas) {
+        canvas = new OffscreenCanvas(pixelW, pixelH);
+        paintCanvasByState.set(stateId, canvas);
+    }
+    if (canvas.width !== pixelW || canvas.height !== pixelH) {
+        canvas.width = pixelW;
+        canvas.height = pixelH;
+    }
+    const ctx = canvas.getContext('2d');
+    ctx.imageSmoothingEnabled = !!settings.smoothing;
+    ctx.setTransform(1, 0, 0, 1, 0, 0);
+    ctx.clearRect(0, 0, pixelW, pixelH);
+    ctx.textBaseline = 'alphabetic';
+
+    const background = settings.textBackground;
+    if (background.enabled) {
+        const padding = Math.max(0, Number(background.padding) || 0) * DEST_SCALE;
+        const width = textWidth * DEST_SCALE + padding * 2;
+        const height = textHeight * DEST_SCALE + padding * 2;
+        const x = originX * DEST_SCALE - width / 2;
+        const y = originY * DEST_SCALE - height / 2;
+        ctx.save();
+        ctx.globalAlpha = Math.max(0, Math.min(100, Number(background.opacity) || 0)) / 100;
+        ctx.fillStyle = background.color;
+        const radius = Math.min(Math.max(0, Number(background.radius) || 0) * DEST_SCALE, width / 2, height / 2);
+        ctx.beginPath();
+        ctx.roundRect(x, y, width, height, radius);
+        ctx.fill();
+        ctx.restore();
+    }
+
+    const maskSpansByIndex = getSeamlessMaskSpans(stateId, paintOps, settings.layoutKey + '\u0003' + docW + '\u0003' + docH, settings.charMaskGeometryVersion);
+    const batchedMasks = collectBatchedMaskGroups(paintOps, maskTextures);
+
+    const applyCharTransformOp = (op, hasRotation, hasScale) => {
+        const cx = op.x * DEST_SCALE;
+        const cy = op.y * DEST_SCALE;
+        ctx.translate(cx, cy);
+        if (hasRotation) ctx.rotate(-op.rotation * Math.PI / 180);
+        if (hasScale) ctx.scale(op.scale, op.scale);
+        ctx.translate(-cx, -cy);
+    };
+    const resetTransform = () => ctx.setTransform(1, 0, 0, 1, 0, 0);
+
+    for (let i = 0; i < paintOps.length; i++) {
+        const op = paintOps[i];
+        if (op.text === '\u00A0' || op.text === '') continue;
+
+        const glyph = getGlyphBitmap(op.glyphKey, op.color);
+        if (!glyph) continue;
+        const fontSize = op.fontSize;
+
+        const advanceCenterXEm = glyph.baselineOriginXEm + glyph.advance / 2;
+        const baselineYFromLineCenter = (glyph.fontAscentEm - glyph.fontDescentEm) / 2;
+        const drawXEm = op.x - advanceCenterXEm;
+        const drawYEm = (op.y + baselineYFromLineCenter) - glyph.baselineOriginYEm;
+
+        const hasOpacity = op.opacity != null && op.opacity !== 1;
+        const hasRotation = !!op.rotation;
+        const hasScale = op.scale != null && op.scale !== 1;
+        const hasTransform = hasRotation || hasScale;
+
+        if (hasTransform) applyCharTransformOp(op, hasRotation, hasScale);
+
+        if (settings.textShadow.enabled) {
+            const shadowShape = glyph.shape;
+            const shadowBlurPx = Math.max(0, Number(settings.textShadow.blur) || 0) * DEST_SCALE;
+            const shadowBitmap = getShadowGlyphBitmap(shadowShape, settings.textShadow.color, shadowBlurPx);
+            const shadowOffsetX = (Number(settings.textShadow.offsetX) || 0) * DEST_SCALE + shadowBitmap.offsetX;
+            const shadowOffsetY = (Number(settings.textShadow.offsetY) || 0) * DEST_SCALE + shadowBitmap.offsetY;
+            ctx.globalAlpha = (hasOpacity ? op.opacity : 1) * Math.max(0, Math.min(100, Number(settings.textShadow.opacity) || 0)) / 100;
+            ctx.drawImage(shadowBitmap.canvas, drawXEm * DEST_SCALE + shadowOffsetX, drawYEm * DEST_SCALE + shadowOffsetY);
+            ctx.globalAlpha = 1;
+        }
+
+        if (op.strike) {
+            if (hasOpacity) ctx.globalAlpha = op.opacity;
+            ctx.strokeStyle = op.color;
+            ctx.lineWidth = Math.max(1, fontSize * 0.06) * DEST_SCALE;
+            const sy = op.y * DEST_SCALE;
+            ctx.beginPath();
+            ctx.moveTo((op.x - op.width / 2) * DEST_SCALE, sy);
+            ctx.lineTo((op.x + op.width / 2) * DEST_SCALE, sy);
+            ctx.stroke();
+            if (hasOpacity) ctx.globalAlpha = 1;
+        }
+
+        if (settings.textBorder.enabled && Number(settings.textBorder.size) > 0) {
+            const shape = glyph.shape;
+            const borderGlyph = tintGlyph(shape, settings.textBorder.color);
+            ctx.globalAlpha = (hasOpacity ? op.opacity : 1) * Math.max(0, Math.min(100, Number(settings.textBorder.opacity) || 0)) / 100;
+            const borderSize = Math.max(0, Number(settings.textBorder.size) || 0) * DEST_SCALE;
+            const borderOffsets = [[-borderSize, 0], [borderSize, 0], [0, -borderSize], [0, borderSize], [-borderSize, -borderSize], [borderSize, -borderSize], [-borderSize, borderSize], [borderSize, borderSize]];
+            for (const [offsetX, offsetY] of borderOffsets) {
+                ctx.drawImage(borderGlyph, drawXEm * DEST_SCALE + offsetX, drawYEm * DEST_SCALE + offsetY);
+            }
+            ctx.globalAlpha = 1;
+        }
+
+        if (!hasTransform) {
+            const px = Math.round(drawXEm * DEST_SCALE);
+            const py = Math.round(drawYEm * DEST_SCALE);
+            if (hasOpacity) {
+                ctx.globalAlpha = op.opacity;
+                ctx.drawImage(glyph.canvas, px, py);
+                ctx.globalAlpha = 1;
+            } else {
+                ctx.drawImage(glyph.canvas, px, py);
+            }
+        } else {
+            if (hasOpacity) ctx.globalAlpha = op.opacity;
+            ctx.drawImage(glyph.canvas, drawXEm * DEST_SCALE, drawYEm * DEST_SCALE);
+            if (hasOpacity) ctx.globalAlpha = 1;
+        }
+
+        if (op.mask && !batchedMasks.batchedOps.has(op)) {
+            const texture = maskTextures.get(op.mask.targetName + '\u0001' + op.mask.costumeName);
+            if (texture) {
+                const px = Math.round(drawXEm * DEST_SCALE);
+                const py = Math.round(drawYEm * DEST_SCALE);
+                const span = maskSpansByIndex.get(op.charIndex);
+                const maskOpacity = Math.max(0, Math.min(100, Number(op.mask.opacity != null ? op.mask.opacity : 100))) / 100;
+                const combinedAlpha = (hasOpacity ? op.opacity : 1) * maskOpacity;
+                if (combinedAlpha > 0) {
+                    if (!hasTransform) {
+                        drawMaskedGlyph(
+                            ctx, op.glyphKey,
+                            op.mask, texture, px, py,
+                            span ? span.spanW : 0, span ? span.spanH : 0,
+                            span ? span.originX : 0, span ? span.originY : 0,
+                            px, py, combinedAlpha
+                        );
+                    } else {
+                        drawMaskedGlyph(
+                            ctx, op.glyphKey,
+                            op.mask, texture, px, py,
+                            span ? span.spanW : 0, span ? span.spanH : 0,
+                            span ? span.originX : 0, span ? span.originY : 0,
+                            drawXEm * DEST_SCALE, drawYEm * DEST_SCALE, combinedAlpha
+                        );
+                    }
+                }
+            }
+        }
+
+        if (op.underline) {
+            if (hasOpacity) ctx.globalAlpha = op.opacity;
+            ctx.strokeStyle = op.color;
+            const lineWidth = Math.max(1, fontSize * 0.06) * DEST_SCALE;
+            ctx.lineWidth = lineWidth;
+            const uy = (op.y + baselineYFromLineCenter + fontSize * 0.06) * DEST_SCALE;
+            const startX = (op.x - op.width / 2) * DEST_SCALE;
+            const endX = (op.x + op.width / 2) * DEST_SCALE;
+            if (hasRotation) {
+                ctx.beginPath();
+                ctx.moveTo(startX, uy);
+                ctx.lineTo(endX, uy);
+                ctx.stroke();
+            } else {
+                strokeUnderline(ctx, glyph, Math.round(drawXEm * DEST_SCALE), Math.round(drawYEm * DEST_SCALE), startX, endX, uy, lineWidth);
+            }
+            if (hasOpacity) ctx.globalAlpha = 1;
+        }
+
+        if (hasTransform) resetTransform();
+    }
+
+    drawBatchedMaskGroups(ctx, stateId, batchedMasks.groups, pixelW, pixelH);
+
+    return canvas;
+}
+
+const maskTexturesByKey = new Map();
+
+self.onmessage = async (event) => {
+    const msg = event.data;
+    if (!msg) return;
+
+    if (msg.type === 'composite') {
+        try {
+            for (const [key, bitmap] of msg.glyphUpdates) {
+                const canvas = acquirePooledCanvas(glyphShapeCanvasPool, bitmap.width, bitmap.height);
+                const gctx = canvas.getContext('2d');
+                gctx.setTransform(1, 0, 0, 1, 0, 0);
+                gctx.clearRect(0, 0, canvas.width, canvas.height);
+                gctx.drawImage(bitmap, 0, 0);
+                bitmap.close();
+                const meta = msg.glyphMeta.get(key);
+                if (glyphShapesByKey.size >= GLYPH_CACHE_LIMIT && !glyphShapesByKey.has(key)) {
+                    const evictedKey = glyphShapesByKey.keys().next().value;
+                    const evictedShape = glyphShapesByKey.get(evictedKey);
+                    glyphShapesByKey.delete(evictedKey);
+                    if (evictedShape) releaseGlyphOwnedCanvases(evictedShape);
+                }
+                glyphShapesByKey.set(key, {
+                    canvas,
+                    tinted: new Map(),
+                    shadows: new Map(),
+                    bitmaps: new Map(),
+                    advance: meta.advance,
+                    baselineOriginXEm: meta.baselineOriginXEm,
+                    baselineOriginYEm: meta.baselineOriginYEm,
+                    fontAscentEm: meta.fontAscentEm,
+                    fontDescentEm: meta.fontDescentEm
+                });
+            }
+
+            for (const [key, bitmap] of msg.maskTextureUpdates) {
+                if (bitmap === null) {
+                    maskTexturesByKey.delete(key);
+                    continue;
+                }
+                const canvas = new OffscreenCanvas(bitmap.width, bitmap.height);
+                canvas.getContext('2d').drawImage(bitmap, 0, 0);
+                bitmap.close();
+                maskTexturesByKey.set(key, { canvas, cacheKey: key });
+            }
+
+            const canvas = compositeGlyphsToCanvas(
+                msg.stateId, msg.settings, msg.paintOps,
+                msg.docW, msg.docH, msg.textWidth, msg.textHeight,
+                msg.originX, msg.originY, maskTexturesByKey
+            );
+
+            const resultBitmap = canvas.transferToImageBitmap ?
+                canvas.transferToImageBitmap() :
+                await createImageBitmap(canvas);
+
+            self.postMessage({
+                type: 'composite-result',
+                requestId: msg.requestId,
+                stateId: msg.stateId,
+                bitmap: resultBitmap,
+                pixelW: canvas.width,
+                pixelH: canvas.height
+            }, [resultBitmap]);
+        } catch (err) {
+            self.postMessage({
+                type: 'composite-error',
+                requestId: msg.requestId,
+                stateId: msg.stateId,
+                message: err && err.message ? err.message : String(err)
+            });
+        }
+    } else if (msg.type === 'evict-glyphs') {
+        for (const key of msg.glyphKeys) {
+            const shape = glyphShapesByKey.get(key);
+            glyphShapesByKey.delete(key);
+            if (shape) releaseGlyphOwnedCanvases(shape);
+        }
+    } else if (msg.type === 'dispose-state') {
+        paintCanvasByState.delete(msg.stateId);
+        maskBatchCanvasesByState.delete(msg.stateId);
+        maskSpansCacheByState.delete(msg.stateId);
+    }
+};
+`;
+
+    let renderWorker = null;
+    let renderWorkerFailed = false;
+    let renderWorkerRequestId = 0;
+    const renderWorkerPending = new Map();
+    const workerKnownGlyphKeys = new Set();
+    const workerKnownMaskKeys = new Set();
+    const stateWorkerIds = new WeakMap();
+    let nextStateWorkerId = 1;
+
+    function supportsRenderWorker() {
+        return typeof Worker !== 'undefined' &&
+            typeof OffscreenCanvas !== 'undefined' &&
+            typeof createImageBitmap !== 'undefined';
+    }
+
+    function getStateWorkerId(state) {
+        let id = stateWorkerIds.get(state);
+        if (!id) {
+            id = nextStateWorkerId++;
+            stateWorkerIds.set(state, id);
+        }
+        return id;
+    }
+
+    function handleRenderWorkerMessage(event) {
+        const msg = event.data;
+        if (!msg) return;
+        const pending = renderWorkerPending.get(msg.requestId);
+        if (!pending) return;
+        renderWorkerPending.delete(msg.requestId);
+        if (msg.type === 'composite-result') {
+            pending.resolve({
+                bitmap: msg.bitmap,
+                pixelW: msg.pixelW,
+                pixelH: msg.pixelH
+            });
+        } else {
+            pending.reject(new Error(msg.message || 'render worker error'));
+        }
+    }
+
+    function ensureRenderWorker() {
+        if (renderWorker || renderWorkerFailed) return renderWorker;
+        if (!supportsRenderWorker()) {
+            renderWorkerFailed = true;
+            console.log('[Iris Text] SOMEHOW, the render worker is not supported in this environment (wow!). falling back to the main thread.');
+            return null;
+        }
+        try {
+            const blob = new Blob([WORKER_SOURCE], {
+                type: 'text/javascript'
+            });
+            const url = URL.createObjectURL(blob);
+            renderWorker = new Worker(url);
+            renderWorker.onmessage = handleRenderWorkerMessage;
+            renderWorker.onerror = () => {
+                renderWorkerFailed = true;
+                console.log('[Iris Text] uh-oh, the render crashed... falling back to the main thread.');
+                for (const pending of renderWorkerPending.values()) {
+                    pending.reject(new Error('render worker crashed'));
+                }
+                renderWorkerPending.clear();
+                if (renderWorker) {
+                    renderWorker.terminate();
+                    renderWorker = null;
+                }
+            };
+            console.log('[Iris Text] the render worker has started. using worker rendering.');
+        } catch (e) {
+            renderWorkerFailed = true;
+            renderWorker = null;
+            console.log('[Iris Text] render worker failed to start (' + (e && e.message ? e.message : e) + '). using main-thread rendering.');
+        }
+        return renderWorker;
+    }
+
+    function disposeStateFromWorker(state) {
+        const id = stateWorkerIds.get(state);
+        if (id === undefined || !renderWorker) return;
+        renderWorker.postMessage({
+            type: 'dispose-state',
+            stateId: id
+        });
+    }
+
+    async function compositeGlyphsViaWorker(state, paintOps, docW, docH, textWidth, textHeight, originX, originY) {
+        const worker = ensureRenderWorker();
+        if (!worker) return null;
+
+        const glyphJobs = [];
+        const neededMaskKeys = new Set();
+
+        for (let i = 0; i < paintOps.length; i++) {
+            const op = paintOps[i];
+            if (op.text === '\u00A0' || op.text === '') continue;
+            const fontFamily = op.font['font-family'];
+            const fontSize = op.font['font-size'];
+            const fontWeight = op.font['font-weight'];
+            const fontStyle = op.font['font-style'];
+            const key = glyphCacheKey(op.text, fontFamily, fontSize, fontWeight, fontStyle);
+            op.glyphKey = key;
+            op.fontSize = fontSize;
+            if (!workerKnownGlyphKeys.has(key) && !glyphJobs.some(j => j.key === key)) {
+                const shape = getGlyphShape(op.text, fontFamily, fontSize, fontWeight, fontStyle);
+                glyphJobs.push({ key, shape });
+                workerKnownGlyphKeys.add(key);
+            }
+            if (op.mask) {
+                neededMaskKeys.add(op.mask.targetName + '\u0001' + op.mask.costumeName);
+            }
+        }
+
+        const maskJobs = [];
+        for (const maskKey of neededMaskKeys) {
+            if (workerKnownMaskKeys.has(maskKey)) continue;
+            const [targetName, costumeName] = maskKey.split('\u0001');
+            const texture = getMaskTexture(targetName, costumeName);
+            if (!texture) continue;
+            maskJobs.push({ maskKey, texture });
+            workerKnownMaskKeys.add(maskKey);
+        }
+
+        const [glyphBitmaps, maskBitmaps] = await Promise.all([
+            Promise.all(glyphJobs.map(j => createImageBitmap(j.shape.canvas))),
+            Promise.all(maskJobs.map(j => createImageBitmap(j.texture.canvas)))
+        ]);
+
+        const glyphUpdates = glyphJobs.map((j, idx) => [j.key, glyphBitmaps[idx]]);
+        const glyphMeta = glyphJobs.map(j => [j.key, {
+            advance: j.shape.advance,
+            baselineOriginXEm: j.shape.baselineOriginXEm,
+            baselineOriginYEm: j.shape.baselineOriginYEm,
+            fontAscentEm: j.shape.fontAscentEm,
+            fontDescentEm: j.shape.fontDescentEm
+        }]);
+        const maskTextureUpdates = maskJobs.map((j, idx) => [j.maskKey, maskBitmaps[idx]]);
+
+        const stateId = getStateWorkerId(state);
+        const requestId = ++renderWorkerRequestId;
+
+        const settings = {
+            smoothing: state.smoothing,
+            textBackground: state.textBackground,
+            textShadow: state.textShadow,
+            textBorder: state.textBorder,
+            layoutKey: state.layoutKey,
+            charMaskGeometryVersion: state.charMaskGeometryVersion
+        };
+
+        const transferList = glyphUpdates.map(([, bitmap]) => bitmap)
+            .concat(maskTextureUpdates.map(([, bitmap]) => bitmap));
+
+        const resultPromise = new Promise((resolve, reject) => {
+            renderWorkerPending.set(requestId, { resolve, reject });
+        });
+
+        worker.postMessage({
+            type: 'composite',
+            requestId,
+            stateId,
+            settings,
+            paintOps,
+            docW,
+            docH,
+            textWidth,
+            textHeight,
+            originX,
+            originY,
+            glyphUpdates,
+            glyphMeta: new Map(glyphMeta),
+            maskTextureUpdates
+        }, transferList);
+
+        return resultPromise;
+    }
 
     function maskGroupKey(mask) {
         return mask.targetName + '\u0001' + mask.costumeName + '\u0001' +
@@ -2138,6 +3704,7 @@ Enjoy!! :D
         }
 
         const maskSpansByIndex = getSeamlessMaskSpans(state, paintOps, state.layoutKey + '\u0003' + docW + '\u0003' + docH);
+        const batchedMasks = collectBatchedMaskGroups(paintOps);
 
         const applyCharTransformOp = (op, hasRotation, hasScale) => {
             const cx = op.x * DEST_SCALE;
@@ -2147,6 +3714,7 @@ Enjoy!! :D
             if (hasScale) ctx.scale(op.scale, op.scale);
             ctx.translate(-cx, -cy);
         };
+        const resetTransform = () => ctx.setTransform(1, 0, 0, 1, 0, 0);
 
         for (let i = 0; i < paintOps.length; i++) {
             const op = paintOps[i];
@@ -2169,78 +3737,60 @@ Enjoy!! :D
             const hasScale = op.scale != null && op.scale !== 1;
             const hasTransform = hasRotation || hasScale;
 
+            if (hasTransform) applyCharTransformOp(op, hasRotation, hasScale);
+
             if (state.textShadow.enabled) {
-                const shadowShape = getGlyphShape(op.text, fontFamily, fontSize, fontWeight, fontStyle);
+                const shadowShape = glyph.shape || getGlyphShape(op.text, fontFamily, fontSize, fontWeight, fontStyle);
                 const shadowBlurPx = Math.max(0, Number(state.textShadow.blur) || 0) * DEST_SCALE;
                 const shadowBitmap = getShadowGlyphBitmap(shadowShape, state.textShadow.color, shadowBlurPx);
                 const shadowOffsetX = (Number(state.textShadow.offsetX) || 0) * DEST_SCALE + shadowBitmap.offsetX;
                 const shadowOffsetY = (Number(state.textShadow.offsetY) || 0) * DEST_SCALE + shadowBitmap.offsetY;
-                ctx.save();
                 ctx.globalAlpha = (hasOpacity ? op.opacity : 1) * Math.max(0, Math.min(100, Number(state.textShadow.opacity) || 0)) / 100;
-                if (!hasTransform) {
-                    ctx.drawImage(shadowBitmap.canvas, drawXEm * DEST_SCALE + shadowOffsetX, drawYEm * DEST_SCALE + shadowOffsetY);
-                } else {
-                    applyCharTransformOp(op, hasRotation, hasScale);
-                    ctx.drawImage(shadowBitmap.canvas, drawXEm * DEST_SCALE + shadowOffsetX, drawYEm * DEST_SCALE + shadowOffsetY);
-                }
-                ctx.restore();
+                ctx.drawImage(shadowBitmap.canvas, drawXEm * DEST_SCALE + shadowOffsetX, drawYEm * DEST_SCALE + shadowOffsetY);
+                ctx.globalAlpha = 1;
             }
 
-            if (op.underline || op.strike) {
-                ctx.save();
+            if (op.strike) {
                 if (hasOpacity) ctx.globalAlpha = op.opacity;
                 ctx.strokeStyle = op.color;
                 ctx.lineWidth = Math.max(1, fontSize * 0.06) * DEST_SCALE;
-                if (op.strike) {
-                    const sy = op.y * DEST_SCALE;
-                    ctx.beginPath();
-                    ctx.moveTo((op.x - op.width / 2) * DEST_SCALE, sy);
-                    ctx.lineTo((op.x + op.width / 2) * DEST_SCALE, sy);
-                    ctx.stroke();
-                }
-                ctx.restore();
+                const sy = op.y * DEST_SCALE;
+                ctx.beginPath();
+                ctx.moveTo((op.x - op.width / 2) * DEST_SCALE, sy);
+                ctx.lineTo((op.x + op.width / 2) * DEST_SCALE, sy);
+                ctx.stroke();
+                if (hasOpacity) ctx.globalAlpha = 1;
             }
 
             if (state.textBorder.enabled && Number(state.textBorder.size) > 0) {
-                const shape = getGlyphShape(op.text, fontFamily, fontSize, fontWeight, fontStyle);
+                const shape = glyph.shape || getGlyphShape(op.text, fontFamily, fontSize, fontWeight, fontStyle);
                 const borderGlyph = tintGlyph(shape, state.textBorder.color);
-                ctx.save();
                 ctx.globalAlpha = (hasOpacity ? op.opacity : 1) * Math.max(0, Math.min(100, Number(state.textBorder.opacity) || 0)) / 100;
                 const borderSize = Math.max(0, Number(state.textBorder.size) || 0) * DEST_SCALE;
                 const borderOffsets = [[-borderSize, 0], [borderSize, 0], [0, -borderSize], [0, borderSize], [-borderSize, -borderSize], [borderSize, -borderSize], [-borderSize, borderSize], [borderSize, borderSize]];
                 for (const [offsetX, offsetY] of borderOffsets) {
-                    if (!hasTransform) {
-                        ctx.drawImage(borderGlyph, drawXEm * DEST_SCALE + offsetX, drawYEm * DEST_SCALE + offsetY);
-                    } else {
-                        ctx.save();
-                        applyCharTransformOp(op, hasRotation, hasScale);
-                        ctx.drawImage(borderGlyph, drawXEm * DEST_SCALE + offsetX, drawYEm * DEST_SCALE + offsetY);
-                        ctx.restore();
-                    }
+                    ctx.drawImage(borderGlyph, drawXEm * DEST_SCALE + offsetX, drawYEm * DEST_SCALE + offsetY);
                 }
-                ctx.restore();
+                ctx.globalAlpha = 1;
             }
 
             if (!hasTransform) {
                 const px = Math.round(drawXEm * DEST_SCALE);
                 const py = Math.round(drawYEm * DEST_SCALE);
                 if (hasOpacity) {
-                    ctx.save();
                     ctx.globalAlpha = op.opacity;
                     ctx.drawImage(glyph.canvas, px, py);
-                    ctx.restore();
+                    ctx.globalAlpha = 1;
                 } else {
                     ctx.drawImage(glyph.canvas, px, py);
                 }
             } else {
-                ctx.save();
                 if (hasOpacity) ctx.globalAlpha = op.opacity;
-                applyCharTransformOp(op, hasRotation, hasScale);
                 ctx.drawImage(glyph.canvas, drawXEm * DEST_SCALE, drawYEm * DEST_SCALE);
-                ctx.restore();
+                if (hasOpacity) ctx.globalAlpha = 1;
             }
 
-            if (op.mask) {
+            if (op.mask && !batchedMasks.batchedOps.has(op)) {
                 const texture = getMaskTexture(op.mask.targetName, op.mask.costumeName);
                 if (texture) {
                     const px = Math.round(drawXEm * DEST_SCALE);
@@ -2258,8 +3808,6 @@ Enjoy!! :D
                                 px, py, combinedAlpha
                             );
                         } else {
-                            ctx.save();
-                            applyCharTransformOp(op, hasRotation, hasScale);
                             drawMaskedGlyph(
                                 ctx, op.text, fontFamily, fontSize, fontWeight, fontStyle,
                                 op.mask, texture, px, py,
@@ -2267,14 +3815,12 @@ Enjoy!! :D
                                 span ? span.originX : 0, span ? span.originY : 0,
                                 drawXEm * DEST_SCALE, drawYEm * DEST_SCALE, combinedAlpha
                             );
-                            ctx.restore();
                         }
                     }
                 }
             }
 
             if (op.underline) {
-                ctx.save();
                 if (hasOpacity) ctx.globalAlpha = op.opacity;
                 ctx.strokeStyle = op.color;
                 const lineWidth = Math.max(1, fontSize * 0.06) * DEST_SCALE;
@@ -2290,10 +3836,13 @@ Enjoy!! :D
                 } else {
                     strokeUnderline(ctx, glyph, Math.round(drawXEm * DEST_SCALE), Math.round(drawYEm * DEST_SCALE), startX, endX, uy, lineWidth);
                 }
-                ctx.restore();
+                if (hasOpacity) ctx.globalAlpha = 1;
             }
 
+            if (hasTransform) resetTransform();
         }
+
+        drawBatchedMaskGroups(ctx, state, batchedMasks.groups, pixelW, pixelH);
 
         return canvas;
     }
@@ -2331,6 +3880,26 @@ Enjoy!! :D
         runtime.requestRedraw();
     }
 
+    function pushImageBitmapToDrawable(target, bitmap, pixelW, pixelH, docW, docH) {
+        const state = getState(target);
+        let scratch = state.workerResultCanvas;
+        if (!scratch) {
+            scratch = document.createElement('canvas');
+            scratch.reusable = false;
+            state.workerResultCanvas = scratch;
+        }
+        if (scratch.width !== pixelW || scratch.height !== pixelH) {
+            scratch.width = pixelW;
+            scratch.height = pixelH;
+        }
+        const sctx = scratch.getContext('2d');
+        sctx.setTransform(1, 0, 0, 1, 0, 0);
+        sctx.clearRect(0, 0, pixelW, pixelH);
+        sctx.drawImage(bitmap, 0, 0);
+        bitmap.close();
+        pushCanvasToDrawable(target, scratch, docW, docH);
+    }
+
     function clearTarget(target) {
         const state = getState(target);
         state.visible = false;
@@ -2365,11 +3934,22 @@ Enjoy!! :D
 
     function taggedCharacterIndices(target, tag) {
         const state = getState(target);
+        const shapeKey = getShapeKey(state);
+        let cache = state.taggedIndicesCache;
+        if (!cache || state.taggedIndicesCacheKey !== shapeKey) {
+            cache = new Map();
+            state.taggedIndicesCache = cache;
+            state.taggedIndicesCacheKey = shapeKey;
+        }
+        let indices = cache.get(tag);
+        if (indices) return indices;
+
         const chars = parseRichText(state.rawText, state.baseStyle);
-        const indices = [];
+        indices = [];
         for (let index = 0; index < chars.length; index++) {
             if (chars[index].tags.includes(tag)) indices.push(index);
         }
+        cache.set(tag, indices);
         return indices;
     }
 
@@ -2380,6 +3960,7 @@ Enjoy!! :D
             runtime.on('PROJECT_STOP_ALL', () => {
                 runtime.targets.forEach(t => clearTarget(t));
                 charAnimations.clear();
+                charAnimationsByTarget.clear();
             });
             runtime.ext_irisText = this;
             if (typeof runtime.registerCompiledExtensionBlocks === 'function') {
@@ -2442,9 +4023,8 @@ Enjoy!! :D
                 runtime.renderer.destroySkin(state.skinId);
                 state.skinId = null;
             }
-            for (const key of charAnimations.keys()) {
-                if (key.startsWith(target.id + '\u0001')) charAnimations.delete(key);
-            }
+            if (state) disposeStateFromWorker(state);
+            clearCharAnimationsForTarget(target.id);
         }
 
         getInfo() {
@@ -3766,7 +5346,7 @@ Enjoy!! :D
             const state = getState(util.target);
             if (!state.visible) return;
             if (!state.paintDirty && !pendingRenderTargets.has(util.target)) return;
-            flushRenderIfDirty(util.target);
+            return flushRenderIfDirty(util.target);
         }
 
         setBaseColor(args, util) {
@@ -4210,13 +5790,13 @@ Enjoy!! :D
 
             const key = target.id + '\u0001' + idx + '\u0001' + property;
             if (duration <= 0) {
-                charAnimations.delete(key);
+                deleteCharAnimation(target.id, key);
                 o[property] = targetValue;
                 schedulePaint(target, state);
                 return;
             }
 
-            charAnimations.set(key, {
+            addCharAnimation(target.id, key, {
                 target,
                 state,
                 index: idx,
@@ -4234,10 +5814,7 @@ Enjoy!! :D
         stopCharAnimations(args, util) {
             const target = util.target;
             const idx = Scratch.Cast.toNumber(args.INDEX) - 1;
-            const prefix = target.id + '\u0001' + idx + '\u0001';
-            for (const key of charAnimations.keys()) {
-                if (key.startsWith(prefix)) charAnimations.delete(key);
-            }
+            clearCharAnimationsForTargetIndex(target.id, idx);
         }
 
         resetCharTransform(args, util) {
@@ -4254,9 +5831,7 @@ Enjoy!! :D
         resetAllCharTransforms(args, util) {
             const state = getState(util.target);
             const target = util.target;
-            for (const key of charAnimations.keys()) {
-                if (key.startsWith(target.id + '\u0001')) charAnimations.delete(key);
-            }
+            clearCharAnimationsForTarget(target.id);
             if (Object.keys(state.charOverrides).length) {
                 state.charOverrides = {};
                 state.charOverridesVersion++;

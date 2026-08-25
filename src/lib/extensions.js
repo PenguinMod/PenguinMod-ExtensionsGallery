@@ -309,7 +309,7 @@ export default [
         creator: "Dicuo",
         creatorAlias: "Div",
         isGitHub: true,
-        tags: ["new", "customtype", "iterators", "data", "utility", "builder"]
+        tags: ["customtype", "iterators", "data", "utility", "builder"]
     },
     {
         name: "Algebraic Effects",
@@ -319,7 +319,17 @@ export default [
         creator: "Dicuo",
         creatorAlias: "Div",
         isGitHub: true,
-        tags: ["new", "effects", "control", "data", "utility"]
+        tags: ["effects", "control", "data", "utility"]
+    },
+    {
+        name: "3D Vectors & Quaternions",
+        description: "Perform 3D Math and Rotations with Vectors and Quaternions",
+        code: "Div/divVecQuat.js",
+        banner: "Div/divVecQuat.svg",
+        creator: "Dicuo",
+        creatorAlias: "Div",
+        isGitHub: true,
+        tags: ["new", "customtype", "3D", "data", "utility", "math"]
     },
     {
         name: "Complex Numbers",
@@ -550,14 +560,14 @@ export default [
         creator: "WAYLIVES",
         isGitHub: false,
     },
-    {
+    /*{
         name: "More Types",
         description: "Adds more value types to PenguinMod, implementing Functions, Objects, Arrays, Sets, Maps, Symbols and Nothing.",
         code: "VeryGoodScratcher42/More-Types.js",
         banner: "VeryGoodScratcher42/More-Types.avif",
         creator: "VeryGoodScratcher42",
         isGitHub: false,
-    },
+    },*/
     {
         name: "oneko",
         description: "Cute cat that follows you on the block area.",

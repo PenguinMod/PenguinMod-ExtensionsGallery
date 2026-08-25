@@ -975,7 +975,7 @@ Enjoy!! :D
     }
 
     function drawMaskedGlyph(destCtx, char, fontFamily, size, weight, style, mask, texture, worldDrawX, worldDrawY, spanW, spanH, spanOriginX, spanOriginY, destX, destY, alpha) {
-        const coverage = Math.max(0, Math.min(100, Number(mask.coverage) || 0)) / 100;
+        const coverage = Math.max(0, Math.min(100, Scratch.Cast.toNumber(mask.coverage) || 0)) / 100;
         if (coverage <= 0) return;
 
         const shape = getGlyphShape(char, fontFamily, size, weight, style);
@@ -1077,7 +1077,7 @@ Enjoy!! :D
     function maskBatchKey(mask, alpha) {
         return mask.targetName + '\u0001' + mask.costumeName + '\u0001' +
             (mask.direction || WIPE_DIRECTION_BOTTOM_UP) + '\u0001' +
-            (Number(mask.coverage) || 0) + '\u0001' +
+            (Scratch.Cast.toNumber(mask.coverage) || 0) + '\u0001' +
             (Number(mask.blur) || 0) + '\u0001' +
             (Number(mask.x) || 0) + '\u0001' +
             (Number(mask.y) || 0) + '\u0001' +
@@ -1104,7 +1104,7 @@ Enjoy!! :D
             const maskOpacity = mask ? Math.max(0, Math.min(100, Number(mask.opacity != null ? mask.opacity : 100))) / 100 : 0;
             const alpha = (op.opacity == null ? 1 : op.opacity) * maskOpacity;
             const canBatch = mask && mask.seamless && !op.rotation && (op.scale == null || op.scale === 1) &&
-                Math.max(0, Math.min(100, Number(mask.coverage) || 0)) > 0 && alpha > 0;
+                Math.max(0, Math.min(100, Scratch.Cast.toNumber(mask.coverage) || 0)) > 0 && alpha > 0;
             if (!canBatch) {
                 flushGroup();
                 continue;
@@ -1190,7 +1190,7 @@ Enjoy!! :D
             }
             batchCtx.globalAlpha = 1;
 
-            const coverage = Math.max(0, Math.min(100, Number(mask.coverage) || 0)) / 100;
+            const coverage = Math.max(0, Math.min(100, Scratch.Cast.toNumber(mask.coverage) || 0)) / 100;
             if (coverage < 1) {
                 const blurPx = Math.max(0, Number(mask.blur) || 0) * DEST_SCALE;
                 const bandHalf = Math.max(0.5, blurPx / 2);
@@ -2753,7 +2753,7 @@ function releaseMaskScratchCanvas(canvas) {
 }
 
 function drawMaskedGlyph(destCtx, glyphKey, mask, texture, worldDrawX, worldDrawY, spanW, spanH, spanOriginX, spanOriginY, destX, destY, alpha) {
-    const coverage = Math.max(0, Math.min(100, Number(mask.coverage) || 0)) / 100;
+    const coverage = Math.max(0, Math.min(100, Scratch.Cast.toNumber(mask.coverage) || 0)) / 100;
     if (coverage <= 0) return;
 
     const shape = getGlyphShape(glyphKey);
@@ -2856,7 +2856,7 @@ function drawMaskedGlyph(destCtx, glyphKey, mask, texture, worldDrawX, worldDraw
 function maskBatchKey(mask, alpha) {
     return mask.targetName + '\u0001' + mask.costumeName + '\u0001' +
         (mask.direction || WIPE_DIRECTION_BOTTOM_UP) + '\u0001' +
-        (Number(mask.coverage) || 0) + '\u0001' +
+        (Scratch.Cast.toNumber(mask.coverage) || 0) + '\u0001' +
         (Number(mask.blur) || 0) + '\u0001' +
         (Number(mask.x) || 0) + '\u0001' +
         (Number(mask.y) || 0) + '\u0001' +
@@ -2883,7 +2883,7 @@ function collectBatchedMaskGroups(paintOps, maskTextures) {
         const maskOpacity = mask ? Math.max(0, Math.min(100, Number(mask.opacity != null ? mask.opacity : 100))) / 100 : 0;
         const alpha = (op.opacity == null ? 1 : op.opacity) * maskOpacity;
         const canBatch = mask && mask.seamless && !op.rotation && (op.scale == null || op.scale === 1) &&
-            Math.max(0, Math.min(100, Number(mask.coverage) || 0)) > 0 && alpha > 0;
+            Math.max(0, Math.min(100, Scratch.Cast.toNumber(mask.coverage) || 0)) > 0 && alpha > 0;
         if (!canBatch) {
             flushGroup();
             continue;
@@ -2971,7 +2971,7 @@ function drawBatchedMaskGroups(ctx, stateId, groups, pixelW, pixelH) {
         }
         batchCtx.globalAlpha = 1;
 
-        const coverage = Math.max(0, Math.min(100, Number(mask.coverage) || 0)) / 100;
+        const coverage = Math.max(0, Math.min(100, Scratch.Cast.toNumber(mask.coverage) || 0)) / 100;
         if (coverage < 1) {
             const blurPx = Math.max(0, Number(mask.blur) || 0) * DEST_SCALE;
             const bandHalf = Math.max(0.5, blurPx / 2);

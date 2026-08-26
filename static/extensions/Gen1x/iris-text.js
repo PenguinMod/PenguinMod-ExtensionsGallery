@@ -2146,7 +2146,9 @@ Enjoy!! :D
     }
 
     function scheduleTextRender(target) {
-        scheduleRender(target);
+        pendingRenderTargets.delete(target);
+        const state = getState(target);
+        if (state.visible) renderTarget(target);
     }
 
     function schedulePaint(target, state) {
@@ -2401,37 +2403,20 @@ Enjoy!! :D
             }
         }
 
-        state.renderInFlight = true;
         state.renderQueued = false;
-        const paintedPromise = compositeGlyphsAndPush(target, state, paintOps, docW, docH, effectiveMaxWidth, totalHeight, originX, originY);
+        compositeGlyphsAndPush(target, state, paintOps, docW, docH, effectiveMaxWidth, totalHeight, originX, originY);
         state.paintDirty = false;
-        state.renderPromise = Promise.resolve(paintedPromise).then(() => {
-            state.hasPaintedOnce = true;
-        }).finally(() => {
-            state.renderInFlight = false;
-            state.renderPromise = null;
-            if (state.renderQueued) {
-                state.renderQueued = false;
-                scheduleRender(target);
-            }
-        });
-        return state.renderPromise;
+        state.hasPaintedOnce = true;
+        state.renderInFlight = false;
+        state.renderPromise = null;
+        if (state.renderQueued) {
+            state.renderQueued = false;
+            scheduleRender(target);
+        }
+        return Promise.resolve();
     }
 
     function compositeGlyphsAndPush(target, state, paintOps, docW, docH, effectiveMaxWidth, totalHeight, originX, originY) {
-        if (!renderWorkerFailed && supportsRenderWorker()) {
-            const workerPromise = compositeGlyphsViaWorker(state, paintOps, docW, docH, effectiveMaxWidth, totalHeight, originX, originY);
-            if (workerPromise) {
-                return workerPromise.then((result) => {
-                    pushImageBitmapToDrawable(target, result.bitmap, result.pixelW, result.pixelH, docW, docH);
-                }).catch((err) => {
-                    renderWorkerFailed = true;
-                    console.log('[Iris Text] Render worker request failed (' + (err && err.message ? err.message : err) + ') — falling back to main-thread rendering.');
-                    const canvas = compositeGlyphsToCanvas(state, paintOps, docW, docH, effectiveMaxWidth, totalHeight, originX, originY);
-                    pushCanvasToDrawable(target, canvas, docW, docH);
-                });
-            }
-        }
         const canvas = compositeGlyphsToCanvas(state, paintOps, docW, docH, effectiveMaxWidth, totalHeight, originX, originY);
         pushCanvasToDrawable(target, canvas, docW, docH);
         return Promise.resolve();
@@ -2527,10 +2512,10 @@ Enjoy!! :D
     const DEST_SCALE = GLYPH_OVERSAMPLE;
 
     const WORKER_SOURCE = `
-const WIPE_DIRECTION_BOTTOM_UP = 'bottom-up';
-const WIPE_DIRECTION_LEFT_RIGHT = 'left-right';
-const WIPE_DIRECTION_UP_DOWN = 'up-down';
-const WIPE_DIRECTION_RIGHT_LEFT = 'right-left';
+const WIPE_DIRECTION_BOTTOM_UP = '${WIPE_DIRECTION_BOTTOM_UP}';
+const WIPE_DIRECTION_LEFT_RIGHT = '${WIPE_DIRECTION_LEFT_RIGHT}';
+const WIPE_DIRECTION_UP_DOWN = '${WIPE_DIRECTION_UP_DOWN}';
+const WIPE_DIRECTION_RIGHT_LEFT = '${WIPE_DIRECTION_RIGHT_LEFT}';
 
 const DEST_SCALE = 3;
 const TINT_CACHE_LIMIT = 512;

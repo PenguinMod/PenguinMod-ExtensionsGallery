@@ -3,7 +3,7 @@
 
     class ServerStorage {
         constructor() {
-            this.serverUrl = 'https://ikelene.dev/storage/';
+            this.serverUrl = 'https://ikelene.net/storage/';
             this.apiKey = '';
             this.maxDataSize = 262144;
 
@@ -180,7 +180,7 @@
         setServerUrl(args) {
             const server = args.SERVER;
             if (server === 'global') {
-                this.serverUrl = 'https://ikelene.dev/storage/';
+                this.serverUrl = 'https://ikelene.net/storage/';
             } else {
                 const trimmed = server.trim();
                 if (!trimmed.length) return;

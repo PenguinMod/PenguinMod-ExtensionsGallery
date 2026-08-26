@@ -46,14 +46,6 @@ export default [
         isGitHub: true,
     },
     {
-        name: "Shovel Debugger",
-        description: "Shovel's improved and feature rich debugger!",
-        code: "TheShovel/shoveldebugger.js",
-        banner: "TheShovel/thumbnail-shoveldebugger.avif",
-        creator: "TheShovel",
-        isGitHub: true,
-    },
-    {
         name: "Iris Text",
         description: "A heavily-expanded text engine loosely based on Animated Text! Adds support for rich text, per-character control, and more!",
         code: "Gen1x/iris-text.js",
@@ -314,21 +306,6 @@ export default [
         banner: "justablock/gitpenguin.avif",
         creator: "justablock",
         isGitHub: false,
-    },
-    {
-        name: "Storage Plus",
-        description: "A storage extension with many more features. Featuring server storage (with a fast server), local storage and more!",
-        code: "Gen1x/storage_plus.js",
-        banner: "Gen1x/storage_plus.avif",
-        creator: "G1nX",
-    },
-    {
-        name: "Server Storage",
-        description: "Similar to the server storage blocks in the 'Storage' extension, but with a better server uptime and non-global keys.\nDid you know the server is open source?",
-        code: "Ikelene/serverStorageExtension.js",
-        banner: "Ikelene/serverStorageIMG.avif",
-        creator: "Ikelene",
-        isGitHub: true,
     },
     {
         name: "Pang API",

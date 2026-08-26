@@ -1335,55 +1335,56 @@
 
         }
         property(args, util) {
+            if (this.pages.has(args.PAGE)) {
+                function containsCssUnit(str) {
+                    const cssUnitsPattern = /\d+(?:px|em|rem|ex|ch|vw|vh|vmin|vmax|cm|mm|in|pt|pc|Q|deg|grad|rad|turn|s|ms|Hz|kHz|dpi|dpcm|dppx|%)\b/i;
+                    return cssUnitsPattern.test(str);
+                }
 
-            function containsCssUnit(str) {
-                const cssUnitsPattern = /\d+(?:px|em|rem|ex|ch|vw|vh|vmin|vmax|cm|mm|in|pt|pc|Q|deg|grad|rad|turn|s|ms|Hz|kHz|dpi|dpcm|dppx|%)\b/i;
-                return cssUnitsPattern.test(str);
-            }
+                // const blockContainer = util.thread.blockContainer;
+                // const currentBlockId = util.thread.peekStack();
+                // const currentBlock = blockContainer.getBlock(currentBlockId);
 
-            // const blockContainer = util.thread.blockContainer;
-            // const currentBlockId = util.thread.peekStack();
-            // const currentBlock = blockContainer.getBlock(currentBlockId);
-
-            // if (currentBlock) {
-            //     if(currentBlock.parent){
-            //     const parentBlockId = currentBlock.parent;
-            //     const parentBlock = blockContainer.getBlock(parentBlockId);
-            let px = this.changePx
-            let value = ""
-            console.log(px)
-            if (px.includes(args.VALUE)) {
-                if (!containsCssUnit(args.VALUE)) {
-                    value = `${args.VALUE}px`
+                // if (currentBlock) {
+                //     if(currentBlock.parent){
+                //     const parentBlockId = currentBlock.parent;
+                //     const parentBlock = blockContainer.getBlock(parentBlockId);
+                let px = this.changePx
+                let value = ""
+                console.log(px)
+                if (px.includes(args.VALUE)) {
+                    if (!containsCssUnit(args.VALUE)) {
+                        value = `${args.VALUE}px`
+                    } else {
+                        value = args.VALUE
+                    }
                 } else {
                     value = args.VALUE
                 }
-            } else {
-                value = args.VALUE
+
+                // if (parentBlock.stylePage && parentBlock) {
+
+                console.log(value)
+                if (!this.pages.get(args.PAGE)?.get("code").querySelector("style")) {
+                    let body = this.pages.get(args.PAGE)?.get("code").querySelector("head")
+                    // console.log(`body is`, body)
+                    let el = document.createElement("style")
+                    el.innerHTML = `${args.TYPE}element${args.PAGE}${args.NAME}{${args.PROPERTY}:${value};}`
+                    el = body.appendChild(el)
+                } else {
+                    let el = this.pages.get(args.PAGE)?.get("code").querySelector("style")
+                    el.innerHTML += `${args.TYPE}element${args.PAGE}${args.NAME}{${args.PROPERTY}:${value};}`
+                }
+
+                // }
+
+                //     } else {
+                //         // throw new Error(`Just clicking this block won't do anything. You have to put it inside of an "add style to" loop first. The shape matches the shape of this block!`)
+                //     }
+                // }
+
+
             }
-
-            // if (parentBlock.stylePage && parentBlock) {
-
-            console.log(value)
-            if (!this.pages.get(args.PAGE)?.get("code").querySelector("style")) {
-                let body = this.pages.get(args.PAGE)?.get("code").querySelector("head")
-                // console.log(`body is`, body)
-                let el = document.createElement("style")
-                el.innerHTML = `${args.TYPE}element${args.PAGE}${args.NAME}{${args.PROPERTY}:${value};}`
-                el = body.appendChild(el)
-            } else {
-                let el = this.pages.get(args.PAGE)?.get("code").querySelector("style")
-                el.innerHTML += `${args.TYPE}element${args.PAGE}${args.NAME}{${args.PROPERTY}:${value};}`
-            }
-
-            // }
-
-            //     } else {
-            //         // throw new Error(`Just clicking this block won't do anything. You have to put it inside of an "add style to" loop first. The shape matches the shape of this block!`)
-            //     }
-            // }
-
-
         }
 
 

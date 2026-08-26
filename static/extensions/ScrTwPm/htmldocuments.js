@@ -6,7 +6,6 @@
 
     class HTMLDocuments {
         constructor(runtime) {
-            // Initialize an array holding your default dropdown menu options
             this.pages = new Map()
             this.changePx = [
                 "block-size",
@@ -313,6 +312,27 @@
                     },
 
 
+                    {
+                        opcode: 'changeHTML',
+                        blockType: Scratch.BlockType.CONDITIONAL,
+                        text: 'change [ID] in [PAGE] to',
+                        arguments: {
+                            PAGE: {
+                                type: Scratch.ArgumentType.STRING,
+                                defaultValue: "my-page"
+                            },
+                            ID: {
+                                type: Scratch.ArgumentType.STRING,
+                                defaultValue: "new-el"
+                            },
+                            EL: {
+                                type: Scratch.ArgumentType.STRING,
+                                menu: "nonest",
+                                defaultValue: "input"
+                            },
+                        }
+                    },
+
                     { blockType: Scratch.BlockType.LABEL, text: "CSS Styles" },
 
                     // {
@@ -419,6 +439,40 @@
                             },
                         }
                     },
+
+                    { blockType: Scratch.BlockType.LABEL, text: "Webpage Data" },
+
+                    {
+                        opcode: 'allEls',
+                        blockType: Scratch.BlockType.REPORTER,
+                        text: 'all elements in [PAGE]',
+                        arguments: {
+                            EVE: { type: Scratch.ArgumentType.STRING, menu: 'eves', defaultValue: 'click' },
+                            ID: { type: Scratch.ArgumentType.STRING, defaultValue: 'new-el' },
+                            PAGE: {
+                                type: Scratch.ArgumentType.STRING,
+                                defaultValue: "my-page"
+                            },
+                        }
+                    },
+                    {
+                        opcode: 'dataEl',
+                        blockType: Scratch.BlockType.REPORTER,
+                        text: '[OPTS] [ID] in [PAGE]',
+                        arguments: {
+                            EVE: { type: Scratch.ArgumentType.STRING, menu: 'eves', defaultValue: 'click' },
+                            ID: { type: Scratch.ArgumentType.STRING, defaultValue: 'new-el' },
+                            PAGE: {
+                                type: Scratch.ArgumentType.STRING,
+                                defaultValue: "my-page"
+                            },
+                            OPTS: {
+                                type: Scratch.ArgumentType.STRING,
+                                menu: "opts"
+                            },
+                        }
+                    },
+
 
                     { blockType: Scratch.BlockType.LABEL, text: "Webpage Positioning" },
 
@@ -532,6 +586,26 @@
                             // {text: "animation", value: "@keyframes "},
                         ]
                     },
+                    opts: {
+                        acceptReporters: false,
+                        items: [
+                            { text: "inner HTML", value: "innerHTML" },
+                            { text: "text content", value: "textContent" },
+                            { text: "children", value: "children" },
+                            { text: "parent element", value: "parentElement" },
+                            { text: "tag name", value: "tagName" },
+                            // { text: "style", value: "style" },
+                            { text: "value", value: "value" },
+                            { text: "checked", value: "checked" },
+                            { text: "class list", value: "classList" },
+                            { text: "offset width", value: "offsetWidth" },
+                            { text: "offset height", value: "offsetHeight" },
+                            { text: "scroll width", value: "scrollWidth" },
+                            { text: "scroll height", value: "scrollHeight" },
+                            { text: "disabled", value: "disabled" },
+                            // { text: "all data of", value: "all" },
+                        ]
+                    },
                     properties: {
                         acceptReporters: true,
                         items: [
@@ -614,8 +688,7 @@
         createPage(args, util) {
             if (!Object.keys(this.pages).includes(args.PAGE)) {
                 if (args.PAGE !== "") {
-                    // this.pages.set(args.PAGE, new Map().set("data", new Map().set("x", 5).set("y", 5).set("width", 470).set("height", 350)).set("ids", []).set("code", ""))
-                    this.pages.set(args.PAGE, new Map().set("data", new Map().set("x", 5).set("y", 5).set("width", 470).set("height", 350)).set("ids", []).set("code", dom.parseFromString("", 'text/html')).set("eves", new Map()))
+                    this.pages.set(args.PAGE, new Map().set("data", new Map().set("x", 5).set("y", 5).set("width", 470).set("height", 350)).set("code", dom.parseFromString("", 'text/html')).set("eves", new Map()))
                     console.log(this.pages)
                 } else {
                     throw new Error("Name cannot be empty")
@@ -628,7 +701,6 @@
             // let pages = this.pages
 
             this.pages.get(args.PAGE)?.set("code", dom.parseFromString("", 'text/html'))
-            this.pages.get(args.PAGE)?.set("ids", [])
             this.pages.get(args.PAGE)?.set("eves", new Map())
             // }
         }
@@ -750,7 +822,7 @@
         noNestEl(args, util) {
             if ((this.pages).has(args.PAGE)) {
                 if (args.ID !== "") {
-                    if (!this.pages.get(args.PAGE)?.get("ids").includes(args.ID)) {
+                    if (!this.pages.get(args.PAGE)?.get("code").querySelector(`#element${args.PAGE}${args.ID}`)) {
                         // console.log(this.pages)
                         const blockContainer = util.thread.blockContainer;
                         const currentBlockId = util.thread.peekStack();
@@ -769,6 +841,7 @@
                         let nest = ""
                         const loopOpcodes = [
                             'scrtwpmhtmldocuments_nestEl',
+                            'scrtwpmhtmldocuments_changeHTML',
                         ];
                         // let blockId = currentBlockId;
 
@@ -800,7 +873,6 @@
                                     console.log("nest", nest)
 
 
-                                    this.pages.get(args.PAGE)?.get("ids").push(args.ID)
                                     let body = this.pages.get(args.PAGE)?.get("code").querySelector(nest === "" ? "body" : `#element${args.PAGE}${nest}`)
                                     // console.log(`body is`, body)
                                     let el = document.createElement(args.EL)
@@ -867,7 +939,7 @@
                     return;
                 }
                 if (args.ID !== "") {
-                    if (!this.pages.get(args.PAGE)?.get("ids").includes(args.ID)) {
+                    if (!this.pages.get(args.PAGE)?.get("code").querySelector(`#element${args.PAGE}${args.ID}`)) {
                         const blockContainer = util.thread.blockContainer;
                         const currentBlockId = util.thread.peekStack(); //
                         const currentBlock = blockContainer.getBlock(currentBlockId);
@@ -887,6 +959,7 @@
                         let nest = ""
                         const loopOpcodes = [
                             'scrtwpmhtmldocuments_nestEl',
+                            'scrtwpmhtmldocuments_changeHTML',
                         ];
                         let blockId = currentBlockId;
                         while (blockId) {
@@ -903,7 +976,6 @@
                                 console.log("nest is", nest)
 
 
-                                this.pages.get(args.PAGE)?.get("ids").push(args.ID)
                                 let body = this.pages.get(args.PAGE)?.get("code").querySelector(nest === "" ? "body" : `#element${args.PAGE}${nest}`)
                                 // console.log(`body is`, body)
                                 let el = document.createElement(args.EL)
@@ -928,7 +1000,6 @@
                         // } 
                         // console.log(this.pages)
                         // this.pages.get(args.PAGE)?.set("code", toAString.serializeToString(this.pages.get(args.PAGE).get("code")))
-                        this.pages.get(args.PAGE)?.get("ids").push(args.ID)
                         let body = this.pages.get(args.PAGE)?.get("code").querySelector(nest === "" ? "body" : `#element${args.PAGE}${nest}`)
                         // console.log(`body is`, body)
                         let el = document.createElement(args.EL)
@@ -949,6 +1020,97 @@
         }
 
 
+        changeHTML(args, util) {
+            if ((this.pages).has(args.PAGE)) {
+                if (util.stackFrame.startedBranch) {
+                    // this.pages.get(args.PAGE)?.set("code", `${this.pages.get(args.PAGE)?.get("code")}</${args.EL}><!-- end the bottom of ${args.ID} -->`)
+                    // this.pages.get(args.PAGE)?.set("code", document.createRange().createContextualFragment(this.pages.get(args.PAGE).get("code")))
+                    // console.log(this.pages)
+                    util.stackFrame.startedBranch = false;
+                    return;
+                }
+                if (args.ID !== "") {
+                    if (this.pages.get(args.PAGE)?.get("code").querySelector(`#element${args.PAGE}${args.ID}`)) {
+                        const blockContainer = util.thread.blockContainer;
+                        const currentBlockId = util.thread.peekStack(); //
+                        const currentBlock = blockContainer.getBlock(currentBlockId);
+                        if (currentBlock) {
+                            currentBlock.el = {
+                                el: args.ID,
+                                compiledScope: 'global',
+                            };
+                        }
+                        let body = this.pages.get(args.PAGE)?.get("code").querySelector(`#element${args.PAGE}${args.ID}`)
+                        body.innerHTML = ""
+                        // console.log(this.pages)
+
+                        //   const target = util.thread.target;
+
+
+                        //     let parentBlockId = ""
+                        //     let parentBlock = ""
+                        //     let nest = ""
+                        //     const loopOpcodes = [
+                        //         'scrtwpmhtmldocuments_nestEl',
+                        //                 ];
+                        //                 let blockId = currentBlockId;
+                        //                 while (blockId) {
+                        //                     const block = target.blocks.getBlock(blockId);
+                        //                     if (!block) break;
+
+                        //                     if (loopOpcodes.includes(block.opcode) && block !== currentBlock) {
+                        //                         // blockId = block.parent;
+                        //                         console.log(`found by ${args.ID}`)
+                        //                         parentBlockId = block;
+                        //                         console.log(parentBlockId)
+                        //                         parentBlock = blockContainer.getBlock(parentBlockId)
+                        //                         nest = parentBlockId.el.el
+                        //                         console.log("nest is", nest)
+
+
+                        //             // let body = this.pages.get(args.PAGE)?.get("code").querySelector(nest === "" ? "body" : `#element${args.PAGE}${nest}`)
+                        //             // // console.log(`body is`, body)
+                        //             // let el = document.createElement(args.EL)
+                        //             // el.setAttribute("id", `element${args.PAGE}${args.ID}`)
+                        //             // el = body.appendChild(el)
+
+
+                        //                         util.stackFrame.startedBranch = true;
+                        //     util.startBranch(1);
+                        //     return
+
+
+
+                        // }
+
+                        //  blockId = block.parent; // Move to the parent block [3]
+
+                        // }
+                        // console.log("cb", currentBlock)
+                        // if (currentBlock && currentBlock.parent && currentBlock.parent.el){
+                        //     nest = currentBlock.parent.el
+                        // } 
+                        // console.log(this.pages)
+                        // this.pages.get(args.PAGE)?.set("code", toAString.serializeToString(this.pages.get(args.PAGE).get("code")))
+                        // let body = this.pages.get(args.PAGE)?.get("code").querySelector(nest === "" ? "body" : `#element${args.PAGE}${nest}`)
+                        // // console.log(`body is`, body)
+                        // let el = document.createElement(args.EL)
+                        // el.setAttribute("id", `element${args.PAGE}${args.ID}`)
+                        // el = body.appendChild(el)
+                        // this.pages.get(args.PAGE)?.set("code", `${this.pages.get(args.PAGE)?.get("code")}<!-- begin the ${args.ID} --><${args.EL} id="element${args.PAGE}${args.ID}"><!-- end the top -->`)
+                    } else {
+                        throw new Error(`Ony one element with the id "${args.ID}" can exist in the document`)
+                    }
+                } else {
+                    throw new Error(`Element must have an id`)
+                    // this.pages.get(args.PAGE)?.set("code", toAString.serializeToString(this.pages.get(args.PAGE).get("code")))
+                    // this.pages.get(args.PAGE)?.set("code", `${this.pages.get(args.PAGE)?.get("code")}<!-- begin the ${args.ID} --><${args.EL} ><!-- end the top -->`)
+                }
+                util.stackFrame.startedBranch = true;
+                util.startBranch(1, true);
+            }
+        }
+
         text(args, util) {
             //if (Object.keys(this.pages).includes(args.PAGE)) {
 
@@ -958,7 +1120,7 @@
 
             if ((this.pages).has(args.PAGE)) {
                 // if (args.ID !== "") {
-                // if (!this.pages.get(args.PAGE)?.get("ids").includes(args.ID)) {
+                // if (!this.pages.get(args.PAGE)?.get("code").querySelector(`#element${args.PAGE}${args.ID}`)) {
                 // console.log(this.pages)
                 const blockContainer = util.thread.blockContainer;
                 const currentBlockId = util.thread.peekStack();
@@ -977,6 +1139,8 @@
                 let nest = ""
                 const loopOpcodes = [
                     'scrtwpmhtmldocuments_nestEl',
+                    'scrtwpmhtmldocuments_changeHTML',
+
                 ];
                 // let blockId = currentBlockId;
 
@@ -1008,7 +1172,6 @@
                             console.log("nest", nest)
 
 
-                            this.pages.get(args.PAGE)?.get("ids").push(args.ID)
                             let body = this.pages.get(args.PAGE)?.get("code").querySelector(nest === "" ? "body" : `#element${args.PAGE}${nest}`)
                             // console.log(`body is`, body)
 
@@ -1077,7 +1240,7 @@
 
         removeEl(args, util) {
             //if (Object.keys(this.pages).includes(args.PAGE)) {
-            if (this.pages.get(args.PAGE)?.get("ids").includes(args.ID)) {
+            if (this.pages.get(args.PAGE)?.get("code").querySelector(`#element${args.PAGE}${args.ID}`)) {
 
 
                 if (this.pages.get(args.PAGE)?.get("code").querySelector(`#element${args.PAGE}${args.ID}`)) {
@@ -1086,8 +1249,6 @@
                     el.remove()
                 }
 
-                let num = (this.pages.get(args.PAGE).get("ids").indexOf(args.ID))
-                this.pages.get(args.PAGE).get("ids").splice(num, 1)
                 console.log(this.pages)
             }
             // }
@@ -1676,6 +1837,44 @@
                 });
             }
         }
+
+        allEls(args, util) {
+            if (this.pages.has(args.PAGE)) {
+                const allIds = Array.from(this.pages.get(args.PAGE).get("code").querySelectorAll('[id]:not([id=""])'))
+                    .map(element => element.id.replace(`element${args.PAGE}`, ""));
+                return (JSON.stringify(allIds));
+            } else {
+                return ('[]')
+            }
+        }
+
+        dataEl(args, util) {
+            try {
+                if (this.pages.get(args.PAGE)?.get("code").querySelector(`#element${args.PAGE}${args.ID}`)) {
+                    switch (args.OPTS) {
+                        case "children":
+                            return ([...this.pages.get(args.PAGE)?.get("code").querySelector(`#element${args.PAGE}${args.ID}`)[args.OPTS]].map(child => child.id).filter(id => id !== ""))
+                        case "parentElement":
+                            return (this.pages.get(args.PAGE)?.get("code").querySelector(`#element${args.PAGE}${args.ID}`)[args.OPTS].getAttribute("id") ?? this.pages.get(args.PAGE)?.get("code").querySelector(`#element${args.PAGE}${args.ID}`)[args.OPTS].tagName)
+                        default:
+                            if (args.OPTS !== "innerHTML") {
+                                if (this.viewing.includes(args.PAGE)) {
+                                    return (document.querySelector(`.htmlpage.display${args.PAGE}`).contentDocument.querySelector(`#element${args.PAGE}${args.ID}`)[args.OPTS] ?? "")
+                                } else {
+                                    return ("Display the page to use these.")
+                                }
+                            } else {
+                                return (this.pages.get(args.PAGE)?.get("code").querySelector(`#element${args.PAGE}${args.ID}`)[args.OPTS] ?? "")
+                            }
+
+                    }
+                } else {
+                    return (`An element with the id "${args.ID}" doesn't exist in the page`)
+                }
+            } catch (error) { return ("") }
+        }
+
+
 
 
         eve() {

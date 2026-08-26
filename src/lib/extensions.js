@@ -4,6 +4,7 @@
         to help copy & pasting work better
         pleas dont remove them :)
 */
+// a sakura
 export default [
     {
         name: "Pen+",
@@ -41,8 +42,16 @@ export default [
         description: "An advanced math-based animation system",
         code: "TheShovel/qoan-renderer.js",
         banner: "TheShovel/thumbnail-motionsprite.avif",
-        isGitHub: true,
         creator: "TheShovel",
+        isGitHub: true,
+    },
+    {
+        name: "Shovel Debugger",
+        description: "Shovel's improved and feature rich debugger!",
+        code: "TheShovel/shoveldebugger.js",
+        banner: "TheShovel/thumbnail-shoveldebugger.avif",
+        creator: "TheShovel",
+        isGitHub: true,
     },
     {
         name: "Iris Text",
@@ -77,17 +86,6 @@ export default [
         creator: "pinksheep2917",
     },
     {
-        name: "GPU.sb3",
-        description: "Use WebGPU compute shaders to accelerate your projects. Use Pen+ for rendering, not this.",
-        code: "derpygamer2142/gpusb3.js",
-        banner: "derpygamer2142/gpusb3.png",
-        creator: "insanetaco2000",
-        creatorAlias: "derpygamer2142",
-        isGitHub: false,
-        unstable: true,
-        unstableReason: "WebGPU is still experimental and not supported by all browsers and does not work when packaged to electron. Check compatibility at webgpu.io."
-    },
-    {
         name: "Beat Sync",
         description: "An extension designed to let you sync anything in your project to a musical beat, with incredible precision.",
         code: "Gen1x/beat_sync.js",
@@ -103,16 +101,16 @@ export default [
         creator: "skyhigh173",
         isGitHub: true,
     },
-    /*{
-        name: "Scope Variable",
-        description: "Manage your variables in a block-like structure.",
-        code: "0znzw/ScopeVars.js",
-        banner: "0znzw/ScopeVars.avif",
-        creator: "yuri-kiss",
+    {
+        name: "Array Buffers",
+        description: "Read, parse, and write raw data efficiently using Array Buffers",
+        code: "AndrewGaming587/agBuffer.js",
+        banner: "AndrewGaming587/agBuffer.svg",
+        creator: "AndrewScripter587",
+        creatorAlias: "AndrewGaming587",
         isGitHub: true,
-        unstable: true,
-        unstableReason: "This extension uses unstable techniques that may not always work.",
-    },*/
+        tags: ["customtype", "data", "utility", "new", "large"],
+    },
     {
         name: "Extra Timers",
         description: "Allows for the creation and management of additional timer blocks.",
@@ -120,9 +118,8 @@ export default [
         code: "steve0greatness/timers.js",
         banner: "steve0greatness/timers.svg",
         creator: "Steve0Greatness",
-        isGitHub: true, 
+        isGitHub: true,
     },
-    
     {
         name: "Dictation",
         description: "Convert your voice into text. (not supported in all browsers)",
@@ -130,20 +127,12 @@ export default [
         banner: "pooiod/Dictation.svg",
         creator: "pooiod7",
     },
-        {
+    {
         name: "Doodle Recognition",
         description: "A implementation of Google's Quick Draw image vision model",
         code: "TheShovel/doodlerec.js",
         banner: "TheShovel/thumbnail-doodlerec.avif",
         creator: "TheShovel",
-        isGitHub: true,
-    },
-            {
-        name: "Stylus",
-        description: "Get the pressure and tilt of a stylus or graphic tablet",
-        code: "sourdoggy/stylus extension.js",
-        banner: "sourdoggy/stylus_ext.avif",
-        creator: "sourdoggy",
         isGitHub: true,
     },
     {
@@ -179,47 +168,6 @@ export default [
         isGitHub: true,
     },
     {
-        name: "Spritesheeter",
-        description: "Load and manipulate spritesheets with customizable frames and XML support",
-        code: "MubiLop/spritesheeter.js",
-        banner: "MubiLop/spritesheeter.avif",
-        creator: "cicerorph",
-        creatorAlias: "MubiLop",
-        isGitHub: true
-    },
-    {
-        name: "Background Remover",
-        description: "Removes background from images.",
-        code: "dumzdev/removebg.js",
-        banner: "dumzdev/removebgbanner.svg",
-        creator: "dumzdev",
-    },
-    /*{
-        name: "PenguinAI",
-        description: "Talk to AI! Use Models like DALL-E-3, GPT, LLama, Claude, and more!",
-        code: "MubiLop/penguingpt.js",
-        banner: "MubiLop/penguingpt.avif",
-        creator: "cicerorph",
-        creatorAlias: "MubiLop",
-        isGitHub: true,
-        unstable: true,
-        documentation: "PenguinAI",
-        unstableReason: "AI models can generate unintended or inappropriate output.\nSome AI models may also become temporarily inaccessible.\n\nUse at your own risk.",
-    },*/
-/*
-    {
-        name: "Block AI",
-        description: "An AI powered chat bot to help you code in your projects.",
-        code: "TheShovel/blockAI.js",
-        banner: "TheShovel/thumbnail-blockAI.avif",
-        creator: "TheShovel",
-        creatorAlias: "TheShovel",
-        isGitHub: true,
-        unstable: true,
-        unstableReason: "The AI model can generate inaccurate output and broken syntax!",
-    },
-*/
-    {
         name: "PenguinHook",
         description: "Send Webhook requests, that can be Discord or any type of webhook.",
         code: "MubiLop/penguinhook.js",
@@ -231,12 +179,12 @@ export default [
     {
         name: "Number Utilities",
         description: "Adds blocks for number formatting and manipulation.",
+        notes: "Art made by hazel",
         code: "MubiLop/numutils.js",
         banner: "MubiLop/numutils.avif",
+        documentation: "NumberUtilities",
         creator: "cicerorph",
         creatorAlias: "MubiLop",
-        notes: "Art made by hazel",
-        documentation: "NumberUtilities",
         isGitHub: true,
     },
     {
@@ -255,36 +203,15 @@ export default [
         creator: "qxsck",
         isGitHub: true,
     },
-    /* Use the TurboWarp version. This one is outdated and broken.
-    {
-        name: "Format Numbers",
-        description: "Format large numbers into AD standard, fixed decimal, comma separated, or scientific notation.",
-        code: "DogeisCut/FormatNumbers.js",
-        banner: "DogeisCut/FormatNumbers.avif",
-        creator: "DogeisCut",
-        isGitHub: true, 
-        notes: "Gallery banner by Dillon",
-    },
-    */
     {
         name: "Date Format",
         description: "Manage, format and compare dates.",
         code: "ddededodediamante/dateFormatV2.js",
         banner: "ddededodediamante/dateFormat.svg",
-        creator: "ddededodediamante",
         documentation: "DateFormatV2",
-        tags: ["customtype", "utility", "small", "data", "time", "text"],
+        creator: "ddededodediamante",
         isGitHub: true,
-    },
-    {
-        name: "Translation Keys",
-        description: "Use translation keys in your projects for multi-language support",
-        code: "Embin/embintranslation.js",
-        banner: "Embin/embintranslation.avif",
-        creator: "embinmc",
-        isGitHub: true, 
-        tags: ["data", "utility", "text"],
-        creatorAlias: "Embin",
+        tags: ["customtype", "utility", "small", "data", "time", "text"],
     },
     {
         name: "Yet Another String Extension",
@@ -292,8 +219,8 @@ export default [
         code: "DogeisCut/YetAnotherStringExtension.js",
         banner: "DogeisCut/YetAnotherStringExtension.svg",
         creator: "DogeisCut",
-        isGitHub: true, 
-        tags: ["builder", "small", "text", "utility"]
+        isGitHub: true,
+        tags: ["builder", "small", "text", "utility"],
     },
     {
         name: "Regular Expressions",
@@ -301,8 +228,8 @@ export default [
         code: "DogeisCut/dogeiscutRegularExpressions.js",
         banner: "DogeisCut/dogeiscutRegularExpressions.svg",
         creator: "DogeisCut",
-        isGitHub: true, 
-        tags: ["customtype", "regex", "text", "utility"]
+        isGitHub: true,
+        tags: ["customtype", "regex", "text", "utility"],
     },
     {
         name: "Sets",
@@ -310,8 +237,8 @@ export default [
         code: "DogeisCut/dogeiscutSet.js",
         banner: "DogeisCut/dogeiscutSet.svg",
         creator: "DogeisCut",
-        isGitHub: true, 
-        tags: ["customtype", "sets", "data", "utility"]
+        isGitHub: true,
+        tags: ["customtype", "sets", "data", "utility"],
     },
     {
         name: "Iterators",
@@ -362,21 +289,21 @@ export default [
     {
         name: "Toast Notifications",
         description: "Did you want alerts? Notifications that are easily customizable? This is the only and best notification extension!",
+        notes: "Additional code by themeatly2 and ddededodediamante",
         code: "MubiLop/toastnotifs.js",
         banner: "MubiLop/toastnotifs.avif",
         creator: "cicerorph",
         creatorAlias: "MubiLop",
-        notes: "Additional code by themeatly2 and ddededodediamante",
         isGitHub: true,
     },
     {
         name: "Project Interfaces",
         description: "Effortlessly create intuitive graphical user interfaces in your projects.",
+        notes: "Gallery banner by Dillon",
         code: "LordCat0/ProjectInterfaces.js",
         banner: "LordCat0/ProjectInterfaces.avif",
         creator: "LordCat0",
         creatorAlias: "Lord cat",
-        notes: "Gallery banner by Dillon",
         isGitHub: true,
     },
     {
@@ -385,7 +312,22 @@ export default [
         code: "justablock/gitpenguin.js",
         banner: "justablock/gitpenguin.avif",
         creator: "justablock",
-        isGitHub: false, 
+        isGitHub: false,
+    },
+    {
+        name: "Storage Plus",
+        description: "A storage extension with many more features. Featuring server storage (with a fast server), local storage and more!",
+        code: "Gen1x/storage_plus.js",
+        banner: "Gen1x/storage_plus.avif",
+        creator: "G1nX",
+    },
+    {
+        name: "Server Storage",
+        description: "Similar to the server storage blocks in the 'Storage' extension, but with a better server uptime and non-global keys.\nDid you know the server is open source?",
+        code: "Ikelene/serverStorageExtension.js",
+        banner: "Ikelene/serverStorageIMG.avif",
+        creator: "Ikelene",
+        isGitHub: true,
     },
     {
         name: "Pang API",
@@ -419,13 +361,14 @@ export default [
         creator: "NamelessCat",
     },
     {
-        name: "Extension Exposer",
-        description: "Access the raw functions from other extensions.",
-        code: "TheShovel/extexp.js",
-        banner: "TheShovel/placeholder-extexp.avif",
-        creator: "TheShovel",
+        name: "Translation Keys",
+        description: "Use translation keys in your projects for multi-language support",
+        code: "Embin/embintranslation.js",
+        banner: "Embin/embintranslation.avif",
+        creator: "embinmc",
+        creatorAlias: "Embin",
         isGitHub: true,
-        notes: "Some contributions by yuri-kiss :P",
+        tags: ["data", "utility", "text"],
     },
     {
         name: "All Menus",
@@ -434,6 +377,15 @@ export default [
         banner: "Lily/AllMenus.svg",
         creator: "LilyMakesThings",
         isGitHub: false,
+    },
+    {
+        name: "Extension Exposer",
+        description: "Access the raw functions from other extensions.",
+        notes: "Some contributions by yuri-kiss :P",
+        code: "TheShovel/extexp.js",
+        banner: "TheShovel/placeholder-extexp.avif",
+        creator: "TheShovel",
+        isGitHub: true,
     },
     {
         name: "More Fields",
@@ -449,8 +401,8 @@ export default [
         code: "DogeisCut/BeepBoxPlayer.js",
         banner: "DogeisCut/BeepBoxPlayer.svg",
         creator: "DogeisCut",
-        isGitHub: true, 
-        tags: ["api", "music", "sounds"]
+        isGitHub: true,
+        tags: ["api", "music", "sounds"],
     },
     {
         name: "Update File (Direct Access)",
@@ -467,9 +419,9 @@ export default [
         description: "Upload files to the cloud by throwing it to outer space!",
         code: "MubiLop/yeetyourfiles.js",
         banner: "MubiLop/yeetyourfiles.png",
+        documentation: "YeetYourFiles",
         creator: "cicerorph",
         creatorAlias: "MubiLop",
-        documentation: "YeetYourFiles",
         isGitHub: true,
     },
     {
@@ -479,6 +431,16 @@ export default [
         banner: "Codefoxy/cfupload.svg",
         creator: "Codefoxy",
         isGitHub: false,
+    },
+    {
+        name: "Device Motion",
+        description: "Use Device Motion API to get rotation or movement of the device. Works best on mobile devices.",
+        notes: "Extension thumbnail made by Dillon.",
+        code: "gaimerI17/DeviceMotion.js",
+        banner: "gaimerI17/DeviceMotion.avif",
+        creator: "gaimerI",
+        creatorAlias: "gaimerI17",
+        isGitHub: true,
     },
     {
         name: "Video Sharing",
@@ -507,9 +469,9 @@ export default [
         description: "Authenticate with anything and everything!",
         code: "MubiLop/authpenguin.js",
         banner: "MubiLop/authpenguin.avif",
+        documentation: "AuthPenguin",
         creator: "cicerorph",
         creatorAlias: "MubiLop",
-        documentation: "AuthPenguin",
         isGitHub: true,
     },
     {
@@ -527,6 +489,34 @@ export default [
         code: "NotHouse/DiscordAuth.js",
         banner: "NotHouse/DiscordAuth-banner.avif",
         creator: "enderhacker",
+        isGitHub: true,
+    },
+    {
+        name: "More Types",
+        description: "Adds more value types to PenguinMod, implementing Functions, Objects, Arrays, Sets, Maps, Symbols and Nothing.",
+        code: "VeryGoodScratcher42/More-Types.js",
+        banner: "VeryGoodScratcher42/More-Types.avif",
+        creator: "VeryGoodScratcher42",
+        isGitHub: false,
+    },
+    {
+        name: "Resolution",
+        description: "Provides utility blocks that simplify the creation of projects with dynamic resolution support.",
+        notes: "Gallery banner by Dillon",
+        code: "DogeisCut/Resolution.js",
+        banner: "DogeisCut/Resolution.svg",
+        documentation: "Resolution",
+        creator: "DogeisCut",
+        isGitHub: true,
+        tags: ["graphics", "utility"],
+    },
+    {
+        name: "Cryptography",
+        description: "Hash, encrypt and verify values using various algorithms. Actual security not guaranteed",
+        code: "gaimerI17/crypto.js",
+        banner: "gaimerI17/crypto.avif",
+        creator: "gaimerI",
+        creatorAlias: "gaimerI17",
         isGitHub: true,
     },
     {
@@ -592,8 +582,8 @@ export default [
         code: "Monochromasity/howmanylines.js",
         banner: "Monochromasity/placeholder-howmanylines.avif",
         creator: "Monochromasity",
-        tags: ["small"],
         isGitHub: true,
+        tags: ["small"],
     },
     {
         name: "Paint Utils",
@@ -604,35 +594,87 @@ export default [
         isGitHub: true,
     },
     {
-        name: "Resolution",
-        description: "Provides utility blocks that simplify the creation of projects with dynamic resolution support.",
-        code: "DogeisCut/Resolution.js",
-        banner: "DogeisCut/Resolution.svg",
+        name: "Smoke Detector",
+        description: "Plays a beep every 30 seconds.",
+        code: "electricfuzzball_pm/firealarm.js",
+        banner: "electricfuzzball_pm/firealarm.svg",
+        creator: "FloppyDisk-OSC",
+        creatorAlias: "ElectricFuzzball_PM",
+        isGitHub: true,
+    },
+    {
+        name: "Stage Brah",
+        description: "Spawn Brah cats in your codespace!",
+        code: "electricfuzzball_pm/StageBrah.js",
+        banner: "electricfuzzball_pm/StageBrah.svg",
+        creator: "FloppyDisk-OSC",
+        creatorAlias: "ElectricFuzzball_PM",
+        isGitHub: true,
+    },
+    {
+        name: "MIDI Controller",
+        description: "Use a MIDI keyboard to interact with projects!",
+        code: "electricfuzzball_pm/MIDI.js",
+        banner: "electricfuzzball_pm/MIDI.svg",
+        creator: "FloppyDisk-OSC",
+        creatorAlias: "ElectricFuzzball_PM",
+        isGitHub: true,
+    },
+    {
+        name: "Black Mold",
+        description: "mmmmm black mold",
+        code: "electricfuzzball_pm/blackMold.js",
+        banner: "electricfuzzball_pm/blackMold.svg",
+        creator: "FloppyDisk-OSC",
+        creatorAlias: "ElectricFuzzball_PM",
+        isGitHub: true,
+    },
+    /*{
+        name: "Scope Variable",
+        description: "Manage your variables in a block-like structure.",
+        code: "0znzw/ScopeVars.js",
+        banner: "0znzw/ScopeVars.avif",
+        creator: "yuri-kiss",
+        isGitHub: true,
+        unstable: true,
+        unstableReason: "This extension uses unstable techniques that may not always work.",
+    },*/
+    /*{
+        name: "PenguinAI",
+        description: "Talk to AI! Use Models like DALL-E-3, GPT, LLama, Claude, and more!",
+        code: "MubiLop/penguingpt.js",
+        banner: "MubiLop/penguingpt.avif",
+        creator: "cicerorph",
+        creatorAlias: "MubiLop",
+        isGitHub: true,
+        unstable: true,
+        documentation: "PenguinAI",
+        unstableReason: "AI models can generate unintended or inappropriate output.\nSome AI models may also become temporarily inaccessible.\n\nUse at your own risk.",
+    },*/
+    /*
+        {
+        name: "Block AI",
+        description: "An AI powered chat bot to help you code in your projects.",
+        code: "TheShovel/blockAI.js",
+        banner: "TheShovel/thumbnail-blockAI.avif",
+        creator: "TheShovel",
+        creatorAlias: "TheShovel",
+        isGitHub: true,
+        unstable: true,
+        unstableReason: "The AI model can generate inaccurate output and broken syntax!",
+    },
+    */
+    /* Use the TurboWarp version. This one is outdated and broken.
+    {
+        name: "Format Numbers",
+        description: "Format large numbers into AD standard, fixed decimal, comma separated, or scientific notation.",
+        code: "DogeisCut/FormatNumbers.js",
+        banner: "DogeisCut/FormatNumbers.avif",
         creator: "DogeisCut",
         isGitHub: true, 
-        documentation: "Resolution",
         notes: "Gallery banner by Dillon",
-        tags: ["graphics", "utility"]
     },
-    {
-        name: "Device Motion",
-        description: "Use Device Motion API to get rotation or movement of the device. Works best on mobile devices. \n Thumbnail by Dillon. ",
-        code: "gaimerI17/DeviceMotion.js",
-        banner: "gaimerI17/DeviceMotion.avif",
-        creator: "gaimerI",
-        isGitHub: true,
-        creatorAlias: "gaimerI17",
-        notes: "Extension thumbnail made by Dillon."
-    },
-    {
-        name: "Cryptography",
-        description: "Hash, encrypt and verify values using various algorithms. Actual security not guaranteed",
-        code: "gaimerI17/crypto.js",
-        banner: "gaimerI17/crypto.avif",
-        creator: "gaimerI",
-        isGitHub: true,
-        creatorAlias: "gaimerI17",
-    },
+    */
     /* these extensions are completely dead as of now
     {
         name: "Online Captcha",
@@ -657,51 +699,4 @@ export default [
         creator: "G1nX",
     },
     */
-        {
-        name: "Smoke Detector",
-        description: "Plays a beep every 30 seconds.",
-        code: "electricfuzzball_pm/firealarm.js",
-        banner: "electricfuzzball_pm/firealarm.svg",
-        creator: "FloppyDisk-OSC",
-        isGitHub: true,
-        creatorAlias: "ElectricFuzzball_PM"
-    },
-        {
-        name: "Stage Brah",
-        description: "Spawn Brah cats in your codespace!",
-        code: "electricfuzzball_pm/StageBrah.js",
-        banner: "electricfuzzball_pm/StageBrah.svg",
-        creator: "FloppyDisk-OSC",
-        isGitHub: true,
-        creatorAlias: "ElectricFuzzball_PM"
-    },
-        {
-        name: "MIDI Controller",
-        description: "Use a MIDI keyboard to interact with projects!",
-        code: "electricfuzzball_pm/MIDI.js",
-        banner: "electricfuzzball_pm/MIDI.svg",
-        creator: "FloppyDisk-OSC",
-        isGitHub: true,
-        creatorAlias: "ElectricFuzzball_PM"
-    },
-        {
-        name: "Array Buffers",
-        description: "Read, parse, and write raw data efficiently using Array Buffers",
-        code: "AndrewGaming587/agBuffer.js",
-        banner: "AndrewGaming587/agBuffer.svg",
-        creator: "AndrewScripter587",
-        isGitHub: true,
-        tags: ["customtype","data","utility","new","large"],
-        creatorAlias: "AndrewGaming587"
-    },
-
-        {
-        name: "Black Mold",
-        description: "mmmmm black mold",
-        code: "electricfuzzball_pm/blackMold.js",
-        banner: "electricfuzzball_pm/blackMold.svg",
-        creator: "FloppyDisk-OSC",
-        isGitHub: true,
-        creatorAlias: "ElectricFuzzball_PM"
-    },
 ];

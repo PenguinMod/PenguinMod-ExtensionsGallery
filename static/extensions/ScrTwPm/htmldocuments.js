@@ -458,7 +458,7 @@
                     {
                         opcode: 'dataEl',
                         blockType: Scratch.BlockType.REPORTER,
-                        text: '[OPTS] [ID] in [PAGE]',
+                        text: '[OPTS] of [ID] in [PAGE]',
                         arguments: {
                             EVE: { type: Scratch.ArgumentType.STRING, menu: 'eves', defaultValue: 'click' },
                             ID: { type: Scratch.ArgumentType.STRING, defaultValue: 'new-el' },
@@ -716,7 +716,7 @@
             // }
         }
         allPages() {
-            return (JSON.stringify(Object.keys(this.pages)))
+            return (JSON.stringify(Array.from(this.pages.keys())))
         }
         get() {
             if (Object.keys(this.pages).includes("my-page")) {
@@ -1373,7 +1373,7 @@
                 el = body.appendChild(el)
             } else {
                 let el = this.pages.get(args.PAGE)?.get("code").querySelector("style")
-                el.innerHTML += `${args.TYPE}element${args.PAGE}${args.NAME}{${args.PROPERTY}:${value}};`
+                el.innerHTML += `${args.TYPE}element${args.PAGE}${args.NAME}{${args.PROPERTY}:${value};}`
             }
 
             // }

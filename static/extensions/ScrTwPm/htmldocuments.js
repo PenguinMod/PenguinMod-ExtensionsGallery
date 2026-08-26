@@ -4,7 +4,7 @@
     const dom = new DOMParser()
     const toAString = new XMLSerializer()
 
-    class HTMLtoCanvas {
+    class HTMLDocuments {
         constructor(runtime) {
             // Initialize an array holding your default dropdown menu options
             this.pages = new Map()
@@ -312,6 +312,7 @@
 
                     },
 
+
                     { blockType: Scratch.BlockType.LABEL, text: "CSS Styles" },
 
                     // {
@@ -613,7 +614,8 @@
         createPage(args, util) {
             if (!Object.keys(this.pages).includes(args.PAGE)) {
                 if (args.PAGE !== "") {
-                    this.pages.set(args.PAGE, new Map().set("data", new Map().set("x", 5).set("y", 5).set("width", 470).set("height", 350)).set("ids", []).set("code", ""))
+                    // this.pages.set(args.PAGE, new Map().set("data", new Map().set("x", 5).set("y", 5).set("width", 470).set("height", 350)).set("ids", []).set("code", ""))
+                    this.pages.set(args.PAGE, new Map().set("data", new Map().set("x", 5).set("y", 5).set("width", 470).set("height", 350)).set("ids", []).set("code", dom.parseFromString("", 'text/html')).set("eves", new Map()))
                     console.log(this.pages)
                 } else {
                     throw new Error("Name cannot be empty")
@@ -624,8 +626,10 @@
 
             // //if (Object.keys(this.pages).includes(args.PAGE)) {
             // let pages = this.pages
-            this.pages.get(args.PAGE)?.set("code", "")
+
+            this.pages.get(args.PAGE)?.set("code", dom.parseFromString("", 'text/html'))
             this.pages.get(args.PAGE)?.set("ids", [])
+            this.pages.get(args.PAGE)?.set("eves", new Map())
             // }
         }
         deletePage(args, util) {
@@ -650,26 +654,85 @@
 
 
         displayPage(args, util) {
-            try {
-                const elements = document.querySelectorAll(`.htmlpage.display${args.PAGE}`);
-                elements.forEach(el => el.remove());
-                const el = document.createElement("iframe");
-                el.setAttribute("srcdoc", this.pages.get(args.PAGE).get("code"))
-                el.setAttribute("class", `htmlpage display${args.PAGE}`)
-                el.style.position = 'absolute';
-                el.style.pointerEvents = 'auto';
-                el.style.zIndex = '10';
-                el.style.left = `${this.pages.get(args.PAGE).get("data").get("x")}px`;
-                el.style.top = `${this.pages.get(args.PAGE).get("data").get("y")}px`;
-                el.setAttribute("width", `${this.pages.get(args.PAGE).get("data").get("width")}px`)
-                el.setAttribute("height", `${this.pages.get(args.PAGE).get("data").get("height")}px`)
-                el.style.border = "1px solid black"
-                const container = Scratch.renderer.canvas.parentElement;
-                container.appendChild(el);
-                if (!this.viewing.includes(args.PAGE)) {
-                    this.viewing.push(args.PAGE)
-                }
-            } catch (error) { }
+            return new Promise((resolve, reject) => {
+                try {
+                    const elements = document.querySelectorAll(`.htmlpage.display${args.PAGE}`);
+                    elements.forEach(el => el.remove());
+                    const el = document.createElement("iframe");
+                    el.setAttribute("srcdoc", toAString.serializeToString(this.pages.get(args.PAGE).get("code")))
+                    el.setAttribute("class", `htmlpage display${args.PAGE}`)
+                    el.style.position = 'absolute';
+                    el.style.pointerEvents = 'auto';
+                    el.style.zIndex = '10';
+                    el.style.left = `${this.pages.get(args.PAGE).get("data").get("x")}px`;
+                    el.style.top = `${this.pages.get(args.PAGE).get("data").get("y")}px`;
+                    el.setAttribute("width", `${this.pages.get(args.PAGE).get("data").get("width")}px`)
+                    el.setAttribute("height", `${this.pages.get(args.PAGE).get("data").get("height")}px`)
+                    el.style.border = "1px solid black"
+                    const container = Scratch.renderer.canvas.parentElement;
+                    container.appendChild(el);
+                    if (!this.viewing.includes(args.PAGE)) {
+                        this.viewing.push(args.PAGE)
+                    }
+                    el.onload = () => {
+                        for (const [key, value] of this.pages.get(args.PAGE)?.get("eves")) {
+                            // console.log(key, value)
+                            console.log(el.contentDocument.querySelector(`#element${args.PAGE}${key}`))
+                            el.contentDocument.querySelector(`#element${args.PAGE}${key}`).addEventListener(value, () => {
+                                const triggerText = String(key);
+                                const triggerTexta = String(args.PAGE);
+
+                                const targetOpcode = 'scrtwpmhtmldocuments_eve';
+                                const vm = Scratch.vm;
+
+                                vm.runtime.targets.forEach(target => {
+                                    const blocks = target.blocks;
+                                    const scripts = blocks.getScripts();
+
+                                    scripts.forEach(rootBlockId => {
+                                        const block = blocks.getBlock(rootBlockId);
+
+                                        if (block && block.opcode === targetOpcode) {
+                                            let hatValue = '';
+                                            let hatValuea = '';
+
+                                            if (block.fields && block.fields.ID && block.fields.PAGE) {
+                                                hatValue = block.fields.ID.value;
+                                                hatValuea = block.fields.PAGE.value;
+                                            }
+                                            else if (block.inputs && block.inputs.ID && block.inputs.PAGE) {
+                                                const inputID = block.inputs.ID;
+                                                const inputPAGE = block.inputs.PAGE;
+
+                                                const shadowBlockID = blocks.getBlock(inputID.shadow);
+                                                const shadowBlockPAGE = blocks.getBlock(inputPAGE.shadow);
+
+                                                if (shadowBlockID && shadowBlockID.fields) {
+                                                    const fieldKey = Object.keys(shadowBlockID.fields)[0];
+                                                    hatValue = shadowBlockID.fields[fieldKey]?.value || '';
+                                                }
+                                                if (shadowBlockPAGE && shadowBlockPAGE.fields) {
+                                                    const fieldKeya = Object.keys(shadowBlockPAGE.fields)[0];
+                                                    hatValuea = shadowBlockPAGE.fields[fieldKeya]?.value || '';
+                                                }
+                                            }
+
+                                            if (hatValue === triggerText && hatValuea === triggerTexta) {
+                                                vm.runtime._pushThread(rootBlockId, target);
+                                            }
+                                        }
+                                    });
+                                });
+                            }
+
+                            )
+
+
+                        }
+                    }
+                } catch (error) { }
+                resolve();
+            });
         }
 
         hidePageAll(args, util) {
@@ -685,69 +748,344 @@
         }
 
         noNestEl(args, util) {
-            // //if (Object.keys(this.pages).includes(args.PAGE)) {
-            if (args.ID !== "") {
-                if (!this.pages.get(args.PAGE)?.get("ids").includes(args.ID)) {
-                    console.log(this.pages)
-                    this.pages.get(args.PAGE)?.get("ids").push(args.ID)
-                    this.pages.get(args.PAGE)?.set("code", `${this.pages.get(args.PAGE)?.get("code")}<!-- begin the ${args.ID} --><${args.EL} id="element${args.PAGE}${args.ID}"><!-- end the top --><!-- end the bottom of ${args.ID} -->`)
-                    console.log(this.pages)
+            if ((this.pages).has(args.PAGE)) {
+                if (args.ID !== "") {
+                    if (!this.pages.get(args.PAGE)?.get("ids").includes(args.ID)) {
+                        // console.log(this.pages)
+                        const blockContainer = util.thread.blockContainer;
+                        const currentBlockId = util.thread.peekStack();
+                        const currentBlock = blockContainer.getBlock(currentBlockId);
+                        const target = util.thread.target;
+
+
+
+                        let parentBlockId = ""
+                        let parentBlock = ""
+
+
+                        let childId = currentBlockId;
+                        let blockId = target.blocks.getBlock(currentBlockId)?.parent;
+
+                        let nest = ""
+                        const loopOpcodes = [
+                            'scrtwpmhtmldocuments_nestEl',
+                        ];
+                        // let blockId = currentBlockId;
+
+
+
+
+
+
+                        while (blockId) {
+                            const parentBlock = target.blocks.getBlock(blockId);
+                            // if (!parentBlock) break;
+                            console.log(parentBlock)
+
+                            if (loopOpcodes.includes(parentBlock.opcode)) {
+
+
+                                const substackId = parentBlock.inputs?.SUBSTACK?.block;
+                                //   const substack2Id = parentBlock.inputs?.SUBSTACK2?.block;
+
+                                // console.log(parentBlock)
+
+                                if (substackId === childId) {
+
+                                    console.log(`found by ${args.ID}`)
+                                    parentBlockId = blockId;
+                                    console.log("pbid", parentBlockId)
+                                    const pB = blockContainer.getBlock(parentBlockId)
+                                    nest = pB.el.el
+                                    console.log("nest", nest)
+
+
+                                    this.pages.get(args.PAGE)?.get("ids").push(args.ID)
+                                    let body = this.pages.get(args.PAGE)?.get("code").querySelector(nest === "" ? "body" : `#element${args.PAGE}${nest}`)
+                                    // console.log(`body is`, body)
+                                    let el = document.createElement(args.EL)
+                                    el.setAttribute("id", `element${args.PAGE}${args.ID}`)
+                                    el = body.appendChild(el)
+                                    return
+                                }
+
+                                if (substackId) {
+                                    let checkId = substackId;
+                                    while (checkId) {
+                                        if (checkId === childId) return blockId;
+                                        checkId = target.blocks.getBlock(checkId)?.next;
+                                    }
+                                }
+
+                                //   if (substack2Id) {
+                                //     let checkId = substack2Id;
+                                //     while (checkId) {
+                                //       if (checkId === childId) return blockId;
+                                //       checkId = target.blocks.getBlock(checkId)?.next;
+                                //     }
+                                //   }
+                            }
+                            childId = blockId;
+                            blockId = parentBlock.parent;
+                        }
+                        // console.log("cb", currentBlock)
+                        // console.log("Parent is", currentBlock.parent)
+                        // if (currentBlock && currentBlock.parent){
+                        //     const parentBlockId = currentBlock.parent;
+                        //     const parentBlock = blockContainer.getBlock(parentBlockId)
+                        //     if(parentBlock && parentBlock.el){
+                        //         console.log("el", parentBlock.el)
+                        //         nest = parentBlock.el.el
+                        //     }
+                        // } 
+                        // this.pages.get(args.PAGE)?.set("code", toAString.serializeToString(this.pages.get(args.PAGE).get("code")))
+                        // console.log(`nest is`, nest)
+
+
+                        // this.pages.get(args.PAGE)?.set("code", `${this.pages.get(args.PAGE)?.get("code")}<!-- begin the ${args.ID} --><${args.EL} id="element${args.PAGE}${args.ID}"><!-- end the top --><!-- end the bottom of ${args.ID} -->`)
+                        // this.pages.get(args.PAGE)?.set("code", document.createRange().createContextualFragment(this.pages.get(args.PAGE).get("code")))
+                        // console.log(this.pages)
+                    } else {
+                        throw new Error(`Only one element with the id "${args.ID}" can exist in the document`)
+                    }
                 } else {
-                    throw new Error(`Only one element with the id "${args.ID}" can exist in the document`)
+                    throw new Error(`Element must have an id`)
+
+                    // this.pages.get(args.PAGE)?.set("code", toAString.serializeToString(this.pages.get(args.PAGE).get("code")))
+                    // this.pages.get(args.PAGE)?.set("code", `${this.pages.get(args.PAGE)?.get("code")}<!-- begin the ${args.ID} --><${args.EL} ><!-- end the top --><!-- end the bottom of ${args.ID} -->`)
                 }
-            } else {
-                this.pages.get(args.PAGE)?.set("code", `${this.pages.get(args.PAGE)?.get("code")}<!-- begin the ${args.ID} --><${args.EL} ><!-- end the top --><!-- end the bottom of ${args.ID} -->`)
             }
-            // }
         }
 
         nestEl(args, util) {
-            //if (Object.keys(this.pages).includes(args.PAGE)) {
-            if (util.stackFrame.startedBranch) {
-                this.pages.get(args.PAGE)?.set("code", `${this.pages.get(args.PAGE)?.get("code")}</${args.EL}><!-- end the bottom of ${args.ID} -->`)
-                console.log(this.pages)
-                util.stackFrame.startedBranch = false;
-                return;
-            }
-            if (args.ID !== "") {
-                if (!this.pages.get(args.PAGE)?.get("ids").includes(args.ID)) {
-                    this.pages.get(args.PAGE)?.get("ids").push(args.ID)
-                    this.pages.get(args.PAGE)?.set("code", `${this.pages.get(args.PAGE)?.get("code")}<!-- begin the ${args.ID} --><${args.EL} id="element${args.PAGE}${args.ID}"><!-- end the top -->`)
-                    console.log(this.pages)
-                } else {
-                    throw new Error(`Ony one element with the id "${args.ID}" can exist in the document`)
+            if ((this.pages).has(args.PAGE)) {
+                if (util.stackFrame.startedBranch) {
+                    // this.pages.get(args.PAGE)?.set("code", `${this.pages.get(args.PAGE)?.get("code")}</${args.EL}><!-- end the bottom of ${args.ID} -->`)
+                    // this.pages.get(args.PAGE)?.set("code", document.createRange().createContextualFragment(this.pages.get(args.PAGE).get("code")))
+                    // console.log(this.pages)
+                    util.stackFrame.startedBranch = false;
+                    return;
                 }
-            } else {
-                this.pages.get(args.PAGE)?.set("code", `${this.pages.get(args.PAGE)?.get("code")}<!-- begin the ${args.ID} --><${args.EL} ><!-- end the top -->`)
+                if (args.ID !== "") {
+                    if (!this.pages.get(args.PAGE)?.get("ids").includes(args.ID)) {
+                        const blockContainer = util.thread.blockContainer;
+                        const currentBlockId = util.thread.peekStack(); //
+                        const currentBlock = blockContainer.getBlock(currentBlockId);
+                        if (currentBlock) {
+                            currentBlock.el = {
+                                el: args.ID,
+                                compiledScope: 'global',
+                            };
+                        }
+                        // console.log(this.pages)
+
+                        const target = util.thread.target;
+
+
+                        let parentBlockId = ""
+                        let parentBlock = ""
+                        let nest = ""
+                        const loopOpcodes = [
+                            'scrtwpmhtmldocuments_nestEl',
+                        ];
+                        let blockId = currentBlockId;
+                        while (blockId) {
+                            const block = target.blocks.getBlock(blockId);
+                            if (!block) break;
+
+                            if (loopOpcodes.includes(block.opcode) && block !== currentBlock) {
+                                // blockId = block.parent;
+                                console.log(`found by ${args.ID}`)
+                                parentBlockId = block;
+                                console.log(parentBlockId)
+                                parentBlock = blockContainer.getBlock(parentBlockId)
+                                nest = parentBlockId.el.el
+                                console.log("nest is", nest)
+
+
+                                this.pages.get(args.PAGE)?.get("ids").push(args.ID)
+                                let body = this.pages.get(args.PAGE)?.get("code").querySelector(nest === "" ? "body" : `#element${args.PAGE}${nest}`)
+                                // console.log(`body is`, body)
+                                let el = document.createElement(args.EL)
+                                el.setAttribute("id", `element${args.PAGE}${args.ID}`)
+                                el = body.appendChild(el)
+
+
+                                util.stackFrame.startedBranch = true;
+                                util.startBranch(1);
+                                return
+
+
+
+                            }
+
+                            blockId = block.parent; // Move to the parent block [3]
+
+                        }
+                        // console.log("cb", currentBlock)
+                        // if (currentBlock && currentBlock.parent && currentBlock.parent.el){
+                        //     nest = currentBlock.parent.el
+                        // } 
+                        // console.log(this.pages)
+                        // this.pages.get(args.PAGE)?.set("code", toAString.serializeToString(this.pages.get(args.PAGE).get("code")))
+                        this.pages.get(args.PAGE)?.get("ids").push(args.ID)
+                        let body = this.pages.get(args.PAGE)?.get("code").querySelector(nest === "" ? "body" : `#element${args.PAGE}${nest}`)
+                        // console.log(`body is`, body)
+                        let el = document.createElement(args.EL)
+                        el.setAttribute("id", `element${args.PAGE}${args.ID}`)
+                        el = body.appendChild(el)
+                        // this.pages.get(args.PAGE)?.set("code", `${this.pages.get(args.PAGE)?.get("code")}<!-- begin the ${args.ID} --><${args.EL} id="element${args.PAGE}${args.ID}"><!-- end the top -->`)
+                    } else {
+                        throw new Error(`Ony one element with the id "${args.ID}" can exist in the document`)
+                    }
+                } else {
+                    throw new Error(`Element must have an id`)
+                    // this.pages.get(args.PAGE)?.set("code", toAString.serializeToString(this.pages.get(args.PAGE).get("code")))
+                    // this.pages.get(args.PAGE)?.set("code", `${this.pages.get(args.PAGE)?.get("code")}<!-- begin the ${args.ID} --><${args.EL} ><!-- end the top -->`)
+                }
+                util.stackFrame.startedBranch = true;
+                util.startBranch(1, true);
             }
-            util.stackFrame.startedBranch = true;
-            util.startBranch(1, true);
-            // }
         }
 
 
         text(args, util) {
             //if (Object.keys(this.pages).includes(args.PAGE)) {
-            let text = document.createRange().createContextualFragment(args.TEXT)
-            const elements = text.querySelectorAll(`script`);
-            elements.forEach(el => el.remove());
-            text = toAString.serializeToString(text)
-            this.pages.get(args.PAGE)?.set("code", `${this.pages.get(args.PAGE)?.get("code")}${text}`)
+
+            // this.pages.get(args.PAGE)?.set("code", `${this.pages.get(args.PAGE)?.get("code")}${text}`)
+
+
+
+            if ((this.pages).has(args.PAGE)) {
+                // if (args.ID !== "") {
+                // if (!this.pages.get(args.PAGE)?.get("ids").includes(args.ID)) {
+                // console.log(this.pages)
+                const blockContainer = util.thread.blockContainer;
+                const currentBlockId = util.thread.peekStack();
+                const currentBlock = blockContainer.getBlock(currentBlockId);
+                const target = util.thread.target;
+
+
+
+                let parentBlockId = ""
+                let parentBlock = ""
+
+
+                let childId = currentBlockId;
+                let blockId = target.blocks.getBlock(currentBlockId)?.parent;
+
+                let nest = ""
+                const loopOpcodes = [
+                    'scrtwpmhtmldocuments_nestEl',
+                ];
+                // let blockId = currentBlockId;
+
+
+
+
+
+
+                while (blockId) {
+                    const parentBlock = target.blocks.getBlock(blockId);
+                    // if (!parentBlock) break;
+                    console.log(parentBlock)
+
+                    if (loopOpcodes.includes(parentBlock.opcode)) {
+
+
+                        const substackId = parentBlock.inputs?.SUBSTACK?.block;
+                        //   const substack2Id = parentBlock.inputs?.SUBSTACK2?.block;
+
+                        // console.log(parentBlock)
+
+                        if (substackId === childId) {
+
+                            console.log(`found by ${args.ID}`)
+                            parentBlockId = blockId;
+                            console.log("pbid", parentBlockId)
+                            const pB = blockContainer.getBlock(parentBlockId)
+                            nest = pB.el.el
+                            console.log("nest", nest)
+
+
+                            this.pages.get(args.PAGE)?.get("ids").push(args.ID)
+                            let body = this.pages.get(args.PAGE)?.get("code").querySelector(nest === "" ? "body" : `#element${args.PAGE}${nest}`)
+                            // console.log(`body is`, body)
+
+
+                            let text = document.createRange().createContextualFragment(args.TEXT)
+                            let elements = text.querySelectorAll(`script`);
+                            elements.forEach(el => el.remove());
+                            text = toAString.serializeToString(text)
+
+
+                            body.innerHTML += text
+                            return
+                        }
+
+                        if (substackId) {
+                            let checkId = substackId;
+                            while (checkId) {
+                                if (checkId === childId) return blockId;
+                                checkId = target.blocks.getBlock(checkId)?.next;
+                            }
+                        }
+
+                        //   if (substack2Id) {
+                        //     let checkId = substack2Id;
+                        //     while (checkId) {
+                        //       if (checkId === childId) return blockId;
+                        //       checkId = target.blocks.getBlock(checkId)?.next;
+                        //     }
+                        //   }
+                    }
+                    childId = blockId;
+                    blockId = parentBlock.parent;
+                }
+                // console.log("cb", currentBlock)
+                // console.log("Parent is", currentBlock.parent)
+                // if (currentBlock && currentBlock.parent){
+                //     const parentBlockId = currentBlock.parent;
+                //     const parentBlock = blockContainer.getBlock(parentBlockId)
+                //     if(parentBlock && parentBlock.el){
+                //         console.log("el", parentBlock.el)
+                //         nest = parentBlock.el.el
+                //     }
+                // } 
+                // this.pages.get(args.PAGE)?.set("code", toAString.serializeToString(this.pages.get(args.PAGE).get("code")))
+                // console.log(`nest is`, nest)
+
+
+                // this.pages.get(args.PAGE)?.set("code", `${this.pages.get(args.PAGE)?.get("code")}<!-- begin the ${args.ID} --><${args.EL} id="element${args.PAGE}${args.ID}"><!-- end the top --><!-- end the bottom of ${args.ID} -->`)
+                // this.pages.get(args.PAGE)?.set("code", document.createRange().createContextualFragment(this.pages.get(args.PAGE).get("code")))
+                // console.log(this.pages)
+                //     } else {
+                //         throw new Error(`Only one element with the id "${args.ID}" can exist in the document`)
+                //     }
+                // } else {
+                //         throw new Error(`Element must have an id`)
+
+                //     // this.pages.get(args.PAGE)?.set("code", toAString.serializeToString(this.pages.get(args.PAGE).get("code")))
+                //     // this.pages.get(args.PAGE)?.set("code", `${this.pages.get(args.PAGE)?.get("code")}<!-- begin the ${args.ID} --><${args.EL} ><!-- end the top --><!-- end the bottom of ${args.ID} -->`)
+                // }
+            }
+
+
+
             // }
         }
 
         removeEl(args, util) {
             //if (Object.keys(this.pages).includes(args.PAGE)) {
             if (this.pages.get(args.PAGE)?.get("ids").includes(args.ID)) {
-                console.log(this.pages)
-                let text = this.pages.get(args.PAGE).get("code")
-                let startWord = `<!-- begin the ${args.ID} -->`;
-                let endWord = `<!-- end the bottom of ${args.ID} -->`;
-                let regex = new RegExp(`(${startWord})(.*?)(${endWord})`);
-                let result = text.replace(regex, '$1 $3');
-                result = result.replace(`<!-- begin the ${args.ID} -->`, "").replace(`<!-- end the bottom of ${args.ID} -->`, "")
-                console.log(this.pages)
-                this.pages.get(args.PAGE).set("code", result);
+
+
+                if (this.pages.get(args.PAGE)?.get("code").querySelector(`#element${args.PAGE}${args.ID}`)) {
+                    let el = this.pages.get(args.PAGE)?.get("code").querySelector(`#element${args.PAGE}${args.ID}`)
+                    // console.log(`body is`, body)
+                    el.remove()
+                }
+
                 let num = (this.pages.get(args.PAGE).get("ids").indexOf(args.ID))
                 this.pages.get(args.PAGE).get("ids").splice(num, 1)
                 console.log(this.pages)
@@ -852,6 +1190,7 @@
             //     const parentBlock = blockContainer.getBlock(parentBlockId);
             let px = this.changePx
             let value = ""
+            console.log(px)
             if (px.includes(args.VALUE)) {
                 if (!containsCssUnit(args.VALUE)) {
                     value = `${args.VALUE}px`
@@ -863,10 +1202,19 @@
             }
 
             // if (parentBlock.stylePage && parentBlock) {
-            let page = args.PAGE//parentBlock.stylePage.page
-            this.pages.get(args.PAGE)?.set("code", `${this.pages.get(args.PAGE)?.get("code")}<!--begin my style--><style>`)
-            this.pages.get(args.PAGE)?.set("code", `${this.pages.get(args.PAGE)?.get("code")}${args.TYPE}element${page}${args.NAME}{${args.PROPERTY}:${value}};`)
-            this.pages.get(args.PAGE)?.set("code", `${this.pages.get(args.PAGE)?.get("code")}</style><!--end my style-->`)
+
+            console.log(value)
+            if (!this.pages.get(args.PAGE)?.get("code").querySelector("style")) {
+                let body = this.pages.get(args.PAGE)?.get("code").querySelector("head")
+                // console.log(`body is`, body)
+                let el = document.createElement("style")
+                el.innerHTML = `${args.TYPE}element${args.PAGE}${args.NAME}{${args.PROPERTY}:${value};}`
+                el = body.appendChild(el)
+            } else {
+                let el = this.pages.get(args.PAGE)?.get("code").querySelector("style")
+                el.innerHTML += `${args.TYPE}element${args.PAGE}${args.NAME}{${args.PROPERTY}:${value}};`
+            }
+
             // }
 
             //     } else {
@@ -881,25 +1229,27 @@
         remallstyle(args, util) {
             //if (Object.keys(this.pages).includes(args.PAGE)) {
 
-            let result = this.pages.get(args.PAGE).get("code");
 
-            const startWord = "<!--begin my style-->";
-            const endWord = "<!--end my style-->";
+            if (this.pages.get(args.PAGE)?.get("code").querySelector(`style`)) {
+                let el = this.pages.get(args.PAGE)?.get("code").querySelector(`style`)
+                // console.log(`body is`, body)
+                el.remove()
+            }
 
-            const regex = new RegExp(`${startWord.replace(/[-/\\^$*+?.()|[\]{}]/g, '\\$&')}.*?${endWord.replace(/[-/\\^$*+?.()|[\]{}]/g, '\\$&')}`, 'gs');
-
-            this.pages.get(args.PAGE).set("code", result.replace(regex, ''))
             // }
         }
 
         setAttr(args, util) {
             //if (Object.keys(this.pages).includes(args.PAGE)) {
             if (args.ID !== "") {
-                let text = this.pages.get(args.PAGE).get("code");
-                let newText = ` ${args.ATTR}="${args.VAL}"`;
-                let newReg = new RegExp(`(<!-- begin the ${args.ID} -->[^>]+)`);
-                let updatedString = text.replace(newReg, `$1${newText}`);
-                this.pages.get(args.PAGE).set("code", updatedString)
+
+
+                if (this.pages.get(args.PAGE)?.get("code").querySelector(`#element${args.PAGE}${args.ID}`)) {
+                    let el = this.pages.get(args.PAGE)?.get("code").querySelector(`#element${args.PAGE}${args.ID}`)
+                    // console.log(`body is`, body)
+                    el.setAttribute(args.ATTR, args.VAL)
+
+                }
             }
             // }
         }
@@ -914,84 +1264,274 @@
 
         movePage(args, util) {
             //if (Object.keys(this.pages).includes(args.PAGE)) {
-            this.pages.get(args.PAGE).get("data").set("x", args.X)
-            this.pages.get(args.PAGE).get("data").set("y", args.Y)
-            if (this.viewing.includes(args.PAGE) && document.querySelector(".htmlpage")) {
-                const elements = document.querySelectorAll(`.htmlpage.display${args.PAGE}`);
-                elements.forEach(el => el.remove());
-                const el = document.createElement("iframe");
-                el.setAttribute("srcdoc", this.pages.get(args.PAGE).get("code"))
-                el.setAttribute("class", `htmlpage display${args.PAGE}`)
-                el.style.position = 'absolute';
-                el.style.pointerEvents = 'auto';
-                el.style.zIndex = '10';
-                el.style.left = `${this.pages.get(args.PAGE).get("data").get("x")}px`;
-                el.style.top = `${this.pages.get(args.PAGE).get("data").get("y")}px`;
-                el.setAttribute("width", `${this.pages.get(args.PAGE).get("data").get("width")}px`)
-                el.setAttribute("height", `${this.pages.get(args.PAGE).get("data").get("height")}px`)
-                el.style.border = "1px solid black"
-                const container = Scratch.renderer.canvas.parentElement;
-                container.appendChild(el);
-                if (!this.viewing.includes(args.PAGE)) {
-                    this.viewing.push(args.PAGE)
-                }
-            }
-            // }
+            return new Promise((resolve, reject) => {
+                try {
+                    this.pages.get(args.PAGE).get("data").set("x", args.X)
+                    this.pages.get(args.PAGE).get("data").set("y", args.Y)
+                    if (this.viewing.includes(args.PAGE) && document.querySelector(".htmlpage")) {
+                        const elements = document.querySelectorAll(`.htmlpage.display${args.PAGE}`);
+                        elements.forEach(el => el.remove());
+                        const el = document.createElement("iframe");
+                        el.setAttribute("srcdoc", toAString.serializeToString(this.pages.get(args.PAGE).get("code")))
+                        el.setAttribute("class", `htmlpage display${args.PAGE}`)
+                        el.style.position = 'absolute';
+                        el.style.pointerEvents = 'auto';
+                        el.style.zIndex = '10';
+                        el.style.left = `${this.pages.get(args.PAGE).get("data").get("x")}px`;
+                        el.style.top = `${this.pages.get(args.PAGE).get("data").get("y")}px`;
+                        el.setAttribute("width", `${this.pages.get(args.PAGE).get("data").get("width")}px`)
+                        el.setAttribute("height", `${this.pages.get(args.PAGE).get("data").get("height")}px`)
+                        el.style.border = "1px solid black"
+                        const container = Scratch.renderer.canvas.parentElement;
+                        container.appendChild(el);
+                        if (!this.viewing.includes(args.PAGE)) {
+                            this.viewing.push(args.PAGE)
+                        }
+                    }
+                    // }
+
+                    el.onload = () => {
+                        for (const [key, value] of this.pages.get(args.PAGE)?.get("eves")) {
+                            // console.log(key, value)
+                            console.log(el.contentDocument.querySelector(`#element${args.PAGE}${key}`))
+                            el.contentDocument.querySelector(`#element${args.PAGE}${key}`).addEventListener(value, () => {
+                                const triggerText = String(key);
+                                const triggerTexta = String(args.PAGE);
+
+                                const targetOpcode = 'scrtwpmhtmldocuments_eve';
+                                const vm = Scratch.vm;
+
+                                vm.runtime.targets.forEach(target => {
+                                    const blocks = target.blocks;
+                                    const scripts = blocks.getScripts();
+
+                                    scripts.forEach(rootBlockId => {
+                                        const block = blocks.getBlock(rootBlockId);
+
+                                        if (block && block.opcode === targetOpcode) {
+                                            let hatValue = '';
+                                            let hatValuea = '';
+
+                                            if (block.fields && block.fields.ID && block.fields.PAGE) {
+                                                hatValue = block.fields.ID.value;
+                                                hatValuea = block.fields.PAGE.value;
+                                            }
+                                            else if (block.inputs && block.inputs.ID && block.inputs.PAGE) {
+                                                const inputID = block.inputs.ID;
+                                                const inputPAGE = block.inputs.PAGE;
+
+                                                const shadowBlockID = blocks.getBlock(inputID.shadow);
+                                                const shadowBlockPAGE = blocks.getBlock(inputPAGE.shadow);
+
+                                                if (shadowBlockID && shadowBlockID.fields) {
+                                                    const fieldKey = Object.keys(shadowBlockID.fields)[0];
+                                                    hatValue = shadowBlockID.fields[fieldKey]?.value || '';
+                                                }
+                                                if (shadowBlockPAGE && shadowBlockPAGE.fields) {
+                                                    const fieldKeya = Object.keys(shadowBlockPAGE.fields)[0];
+                                                    hatValuea = shadowBlockPAGE.fields[fieldKeya]?.value || '';
+                                                }
+                                            }
+
+                                            if (hatValue === triggerText && hatValuea === triggerTexta) {
+                                                vm.runtime._pushThread(rootBlockId, target);
+                                            }
+                                        }
+                                    });
+                                });
+                            }
+
+                            )
+
+
+                        }
+                    }
+                } catch (error) { }
+                resolve();
+            });
+
+
         }
         resizePage(args, util) {
-            //if (Object.keys(this.pages).includes(args.PAGE)) {
-            this.pages.get(args.PAGE).get("data").set("width", args.X)
-            this.pages.get(args.PAGE).get("data").set("height", args.Y)
-            if (this.viewing.includes(args.PAGE) && document.querySelector(".htmlpage")) {
-                const elements = document.querySelectorAll(`.htmlpage.display${args.PAGE}`);
-                elements.forEach(el => el.remove());
-                const el = document.createElement("iframe");
-                el.setAttribute("srcdoc", this.pages.get(args.PAGE).get("code"))
-                el.setAttribute("class", `htmlpage display${args.PAGE}`)
-                el.style.position = 'absolute';
-                el.style.pointerEvents = 'auto';
-                el.style.zIndex = '10';
-                el.style.left = `${this.pages.get(args.PAGE).get("data").get("x")}px`;
-                el.style.top = `${this.pages.get(args.PAGE).get("data").get("y")}px`;
-                el.setAttribute("width", `${this.pages.get(args.PAGE).get("data").get("width")}px`)
-                el.setAttribute("height", `${this.pages.get(args.PAGE).get("data").get("height")}px`)
-                el.style.border = "1px solid black"
-                const container = Scratch.renderer.canvas.parentElement;
-                container.appendChild(el);
-                if (!this.viewing.includes(args.PAGE)) {
-                    this.viewing.push(args.PAGE)
-                }
-            }
-            // }
+
+            return new Promise((resolve, reject) => {
+                try {
+                    //if (Object.keys(this.pages).includes(args.PAGE)) {
+                    this.pages.get(args.PAGE).get("data").set("width", args.X)
+                    this.pages.get(args.PAGE).get("data").set("height", args.Y)
+                    if (this.viewing.includes(args.PAGE) && document.querySelector(".htmlpage")) {
+                        const elements = document.querySelectorAll(`.htmlpage.display${args.PAGE}`);
+                        elements.forEach(el => el.remove());
+                        const el = document.createElement("iframe");
+                        el.setAttribute("srcdoc", toAString.serializeToString(this.pages.get(args.PAGE).get("code")))
+                        el.setAttribute("class", `htmlpage display${args.PAGE}`)
+                        el.style.position = 'absolute';
+                        el.style.pointerEvents = 'auto';
+                        el.style.zIndex = '10';
+                        el.style.left = `${this.pages.get(args.PAGE).get("data").get("x")}px`;
+                        el.style.top = `${this.pages.get(args.PAGE).get("data").get("y")}px`;
+                        el.setAttribute("width", `${this.pages.get(args.PAGE).get("data").get("width")}px`)
+                        el.setAttribute("height", `${this.pages.get(args.PAGE).get("data").get("height")}px`)
+                        el.style.border = "1px solid black"
+                        const container = Scratch.renderer.canvas.parentElement;
+                        container.appendChild(el);
+                        if (!this.viewing.includes(args.PAGE)) {
+                            this.viewing.push(args.PAGE)
+                        }
+                    }
+                    // }
+
+                    el.onload = () => {
+                        for (const [key, value] of this.pages.get(args.PAGE)?.get("eves")) {
+                            // console.log(key, value)
+                            console.log(el.contentDocument.querySelector(`#element${args.PAGE}${key}`))
+                            el.contentDocument.querySelector(`#element${args.PAGE}${key}`).addEventListener(value, () => {
+                                const triggerText = String(key);
+                                const triggerTexta = String(args.PAGE);
+
+                                const targetOpcode = 'scrtwpmhtmldocuments_eve';
+                                const vm = Scratch.vm;
+
+                                vm.runtime.targets.forEach(target => {
+                                    const blocks = target.blocks;
+                                    const scripts = blocks.getScripts();
+
+                                    scripts.forEach(rootBlockId => {
+                                        const block = blocks.getBlock(rootBlockId);
+
+                                        if (block && block.opcode === targetOpcode) {
+                                            let hatValue = '';
+                                            let hatValuea = '';
+
+                                            if (block.fields && block.fields.ID && block.fields.PAGE) {
+                                                hatValue = block.fields.ID.value;
+                                                hatValuea = block.fields.PAGE.value;
+                                            }
+                                            else if (block.inputs && block.inputs.ID && block.inputs.PAGE) {
+                                                const inputID = block.inputs.ID;
+                                                const inputPAGE = block.inputs.PAGE;
+
+                                                const shadowBlockID = blocks.getBlock(inputID.shadow);
+                                                const shadowBlockPAGE = blocks.getBlock(inputPAGE.shadow);
+
+                                                if (shadowBlockID && shadowBlockID.fields) {
+                                                    const fieldKey = Object.keys(shadowBlockID.fields)[0];
+                                                    hatValue = shadowBlockID.fields[fieldKey]?.value || '';
+                                                }
+                                                if (shadowBlockPAGE && shadowBlockPAGE.fields) {
+                                                    const fieldKeya = Object.keys(shadowBlockPAGE.fields)[0];
+                                                    hatValuea = shadowBlockPAGE.fields[fieldKeya]?.value || '';
+                                                }
+                                            }
+
+                                            if (hatValue === triggerText && hatValuea === triggerTexta) {
+                                                vm.runtime._pushThread(rootBlockId, target);
+                                            }
+                                        }
+                                    });
+                                });
+                            }
+
+                            )
+
+
+                        }
+                    }
+                } catch (error) { }
+                resolve();
+            });
         }
 
         resetDefault(args, util) {
-            //if (Object.keys(this.pages).includes(args.PAGE)) {
-            this.pages.get(args.PAGE).get("data").set("width", Number(window.getComputedStyle(Scratch.renderer.canvas.parentElement).width.replace("px", "")) - 10)
-            this.pages.get(args.PAGE).get("data").set("height", Number(window.getComputedStyle(Scratch.renderer.canvas.parentElement).height.replace("px", "")) - 10)
-            this.pages.get(args.PAGE).get("data").set("x", 5)
-            this.pages.get(args.PAGE).get("data").set("y", 5)
-            if (this.viewing.includes(args.PAGE) && document.querySelector(".htmlpage")) {
-                const elements = document.querySelectorAll(`.htmlpage.display${args.PAGE}`);
-                elements.forEach(el => el.remove());
-                const el = document.createElement("iframe");
-                el.setAttribute("srcdoc", this.pages.get(args.PAGE).get("code"))
-                el.setAttribute("class", `htmlpage display${args.PAGE}`)
-                el.style.position = 'absolute';
-                el.style.pointerEvents = 'auto';
-                el.style.zIndex = '10';
-                el.style.left = `${this.pages.get(args.PAGE).get("data").get("x")}px`;
-                el.style.top = `${this.pages.get(args.PAGE).get("data").get("y")}px`;
-                el.setAttribute("width", `${this.pages.get(args.PAGE).get("data").get("width")}px`)
-                el.setAttribute("height", `${this.pages.get(args.PAGE).get("data").get("height")}px`)
-                el.style.border = "1px solid black"
-                const container = Scratch.renderer.canvas.parentElement;
-                container.appendChild(el);
-                if (!this.viewing.includes(args.PAGE)) {
-                    this.viewing.push(args.PAGE)
-                }
-            }
-            // }
+
+            return new Promise((resolve, reject) => {
+                try {
+                    //if (Object.keys(this.pages).includes(args.PAGE)) {
+                    this.pages.get(args.PAGE).get("data").set("width", Number(window.getComputedStyle(Scratch.renderer.canvas.parentElement).width.replace("px", "")) - 10)
+                    this.pages.get(args.PAGE).get("data").set("height", Number(window.getComputedStyle(Scratch.renderer.canvas.parentElement).height.replace("px", "")) - 10)
+                    this.pages.get(args.PAGE).get("data").set("x", 5)
+                    this.pages.get(args.PAGE).get("data").set("y", 5)
+                    if (this.viewing.includes(args.PAGE) && document.querySelector(".htmlpage")) {
+                        const elements = document.querySelectorAll(`.htmlpage.display${args.PAGE}`);
+                        elements.forEach(el => el.remove());
+                        const el = document.createElement("iframe");
+                        el.setAttribute("srcdoc", toAString.serializeToString(this.pages.get(args.PAGE).get("code")))
+                        el.setAttribute("class", `htmlpage display${args.PAGE}`)
+                        el.style.position = 'absolute';
+                        el.style.pointerEvents = 'auto';
+                        el.style.zIndex = '10';
+                        el.style.left = `${this.pages.get(args.PAGE).get("data").get("x")}px`;
+                        el.style.top = `${this.pages.get(args.PAGE).get("data").get("y")}px`;
+                        el.setAttribute("width", `${this.pages.get(args.PAGE).get("data").get("width")}px`)
+                        el.setAttribute("height", `${this.pages.get(args.PAGE).get("data").get("height")}px`)
+                        el.style.border = "1px solid black"
+                        const container = Scratch.renderer.canvas.parentElement;
+                        container.appendChild(el);
+                        if (!this.viewing.includes(args.PAGE)) {
+                            this.viewing.push(args.PAGE)
+                        }
+                    }
+                    // }
+
+                    el.onload = () => {
+                        for (const [key, value] of this.pages.get(args.PAGE)?.get("eves")) {
+                            // console.log(key, value)
+                            console.log(el.contentDocument.querySelector(`#element${args.PAGE}${key}`))
+                            el.contentDocument.querySelector(`#element${args.PAGE}${key}`).addEventListener(value, () => {
+                                const triggerText = String(key);
+                                const triggerTexta = String(args.PAGE);
+
+                                const targetOpcode = 'scrtwpmhtmldocuments_eve';
+                                const vm = Scratch.vm;
+
+                                vm.runtime.targets.forEach(target => {
+                                    const blocks = target.blocks;
+                                    const scripts = blocks.getScripts();
+
+                                    scripts.forEach(rootBlockId => {
+                                        const block = blocks.getBlock(rootBlockId);
+
+                                        if (block && block.opcode === targetOpcode) {
+                                            let hatValue = '';
+                                            let hatValuea = '';
+
+                                            if (block.fields && block.fields.ID && block.fields.PAGE) {
+                                                hatValue = block.fields.ID.value;
+                                                hatValuea = block.fields.PAGE.value;
+                                            }
+                                            else if (block.inputs && block.inputs.ID && block.inputs.PAGE) {
+                                                const inputID = block.inputs.ID;
+                                                const inputPAGE = block.inputs.PAGE;
+
+                                                const shadowBlockID = blocks.getBlock(inputID.shadow);
+                                                const shadowBlockPAGE = blocks.getBlock(inputPAGE.shadow);
+
+                                                if (shadowBlockID && shadowBlockID.fields) {
+                                                    const fieldKey = Object.keys(shadowBlockID.fields)[0];
+                                                    hatValue = shadowBlockID.fields[fieldKey]?.value || '';
+                                                }
+                                                if (shadowBlockPAGE && shadowBlockPAGE.fields) {
+                                                    const fieldKeya = Object.keys(shadowBlockPAGE.fields)[0];
+                                                    hatValuea = shadowBlockPAGE.fields[fieldKeya]?.value || '';
+                                                }
+                                            }
+
+                                            if (hatValue === triggerText && hatValuea === triggerTexta) {
+                                                vm.runtime._pushThread(rootBlockId, target);
+                                            }
+                                        }
+                                    });
+                                });
+                            }
+
+                            )
+
+
+                        }
+                    }
+                } catch (error) { }
+                resolve();
+            });
         }
 
         spw(args, util) {
@@ -1003,9 +1543,6 @@
         }
 
         prettierInText(html) {
-            /*
-            This function is AI generated. It formats the code for better readability when getting the html of a page. Tell me if this needs to go or if there's a better way to do this. Is this what the dom parser is for???
-            */
             let clean = html.replace(/\s*([<>])\s*/g, '$1').replace(/\s+/g, ' ');
             let reg = /(<[^>]+>)/g;
             let matches = clean.split(reg).filter(Boolean);
@@ -1026,10 +1563,13 @@
 
         getHTML(args, util) {
             if ((this.pages).has(args.PAGE)) {
-                let el = this.pages.get(args.PAGE).get("code");
-                let cleanString = el.replace(/<!--[\s\S]*?-->/g, "");
+                let doc = this.pages.get(args.PAGE).get("code")
+                let el = toAString.serializeToString(doc)
+                // let el = this.pages.get(args.PAGE).get("code");
+                let cleanString = el.replace(/<!--[\s\S]*?-->/g, "").replace(/xmlns="[\s\S]*?"/g, "");
                 let toChange = `<html><body>${cleanString}</body></html>`
-                return (this.prettierInText(toChange))
+
+                return (this.prettierInText(cleanString))
             } else {
                 return ('Page does not exist!')
             }
@@ -1037,69 +1577,104 @@
 
 
         addeve(args, util) {
-            let el = document.getElementById(`element${args.PAGE}${args.ID}`);
-            if (!el) return;
-
-            // This clones the element and replaces the old one. 
-            // Clones do NOT keep event listeners attached via addEventListener.
-            const newEl = el.cloneNode(true);
-            el.parentNode.replaceChild(newEl, el);
-
-            el = newEl
-            const triggerText = args.ID;
-            const triggerTexta = args.PAGE;
-
-            el.addEventListener(args.EVE, () => {
-
-                const targetOpcode = 'scrtwpmhtmldocuments_eve';
-                const vm = Scratch.vm;
-
-                vm.runtime.targets.forEach(target => {
-                    const blocks = target.blocks;
-                    const scripts = blocks.getScripts();
-
-                    scripts.forEach(rootBlockId => {
-                        const block = blocks.getBlock(rootBlockId);
-
-                        if (block && block.opcode === targetOpcode) {
-                            let hatValue = '';
-                            let hatValuea = '';
-
-                            // 1. Check if it's a Field (dropdown/fixed text)
-                            if (block.fields && block.fields.ID && block.fields.PAGE) {
-                                hatValue = block.fields.ID.value;
-                                hatValuea = block.fields.PAGE.value;
-                            }
-                            // 2. Check if it's an Input (text bubble)
-                            else if (block.inputs && block.inputs.ID) {
-                                const input = block.inputs.ID;
-                                const inputa = block.inputs.PAGE;
-                                // Dig into the 'shadow' block which holds the text value
-                                const shadowBlock = blocks.getBlock(input.shadow);
-                                const shadowBlocka = blocks.getBlock(inputa.shadow);
-                                if (shadowBlock && shadowBlock.fields && shadowBlock.fields.TEXT && shadowBlocka && shadowBlocka.fields && shadowBlocka.fields.TEXT) {
-                                    hatValue = shadowBlock.fields.TEXT.value;
-                                    hatValuea = shadowBlocka.fields.TEXT.value;
-                                }
-                            }
-
-                            // Compare and trigger
-                            if (hatValue === triggerText && hatValuea === triggerTexta) {
-                                vm.runtime._pushThread(rootBlockId, target);
-                            }
-                        }
-                    });
-                });
-            });
+            let el = this.pages.get(args.PAGE)?.get("code").getElementById(`element${args.PAGE}${args.ID}`);
+            if (!el) throw new Error(`An element with the id "${args.ID}" doesn't exist in the page`);
+            this.pages.get(args.PAGE)?.get("eves").set(args.ID, args.EVE)
+            // console.log(this.pages.get(args.PAGE)?.get("eves"))
         }
 
         remeve(args) {
-            const el = document.getElementById(`element${args.PAGE}${args.ID}`);
+            let el = this.pages.get(args.PAGE)?.get("code").getElementById(`element${args.PAGE}${args.ID}`);
             if (!el) return;
-            // This clones the element and replaces the old one. 
-            // Clones do NOT keep event listeners attached via addEventListener.
-            const newEl = el.cloneNode(true);
-            el.parentNode.replaceChild(newEl, el);
+            this.pages.get(args.PAGE)?.get("eves").delete(args.ID)
+
+
+            if (this.viewing.includes(args.PAGE) && document.querySelector(".htmlpage")) {
+                return new Promise((resolve, reject) => {
+                    try {
+                        //if (Object.keys(this.pages).includes(args.PAGE)) {
+                        if (this.viewing.includes(args.PAGE) && document.querySelector(".htmlpage")) {
+                            const elements = document.querySelectorAll(`.htmlpage.display${args.PAGE}`);
+                            elements.forEach(el => el.remove());
+                            const el = document.createElement("iframe");
+                            el.setAttribute("srcdoc", toAString.serializeToString(this.pages.get(args.PAGE).get("code")))
+                            el.setAttribute("class", `htmlpage display${args.PAGE}`)
+                            el.style.position = 'absolute';
+                            el.style.pointerEvents = 'auto';
+                            el.style.zIndex = '10';
+                            el.style.left = `${this.pages.get(args.PAGE).get("data").get("x")}px`;
+                            el.style.top = `${this.pages.get(args.PAGE).get("data").get("y")}px`;
+                            el.setAttribute("width", `${this.pages.get(args.PAGE).get("data").get("width")}px`)
+                            el.setAttribute("height", `${this.pages.get(args.PAGE).get("data").get("height")}px`)
+                            el.style.border = "1px solid black"
+                            const container = Scratch.renderer.canvas.parentElement;
+                            container.appendChild(el);
+                            if (!this.viewing.includes(args.PAGE)) {
+                                this.viewing.push(args.PAGE)
+                            }
+                        }
+                        // }
+
+                        el.onload = () => {
+                            for (const [key, value] of this.pages.get(args.PAGE)?.get("eves")) {
+                                // console.log(key, value)
+                                console.log(el.contentDocument.querySelector(`#element${args.PAGE}${key}`))
+                                el.contentDocument.querySelector(`#element${args.PAGE}${key}`).addEventListener(value, () => {
+                                    const triggerText = String(key);
+                                    const triggerTexta = String(args.PAGE);
+
+                                    const targetOpcode = 'scrtwpmhtmldocuments_eve';
+                                    const vm = Scratch.vm;
+
+                                    vm.runtime.targets.forEach(target => {
+                                        const blocks = target.blocks;
+                                        const scripts = blocks.getScripts();
+
+                                        scripts.forEach(rootBlockId => {
+                                            const block = blocks.getBlock(rootBlockId);
+
+                                            if (block && block.opcode === targetOpcode) {
+                                                let hatValue = '';
+                                                let hatValuea = '';
+
+                                                if (block.fields && block.fields.ID && block.fields.PAGE) {
+                                                    hatValue = block.fields.ID.value;
+                                                    hatValuea = block.fields.PAGE.value;
+                                                }
+                                                else if (block.inputs && block.inputs.ID && block.inputs.PAGE) {
+                                                    const inputID = block.inputs.ID;
+                                                    const inputPAGE = block.inputs.PAGE;
+
+                                                    const shadowBlockID = blocks.getBlock(inputID.shadow);
+                                                    const shadowBlockPAGE = blocks.getBlock(inputPAGE.shadow);
+
+                                                    if (shadowBlockID && shadowBlockID.fields) {
+                                                        const fieldKey = Object.keys(shadowBlockID.fields)[0];
+                                                        hatValue = shadowBlockID.fields[fieldKey]?.value || '';
+                                                    }
+                                                    if (shadowBlockPAGE && shadowBlockPAGE.fields) {
+                                                        const fieldKeya = Object.keys(shadowBlockPAGE.fields)[0];
+                                                        hatValuea = shadowBlockPAGE.fields[fieldKeya]?.value || '';
+                                                    }
+                                                }
+
+                                                if (hatValue === triggerText && hatValuea === triggerTexta) {
+                                                    vm.runtime._pushThread(rootBlockId, target);
+                                                }
+                                            }
+                                        });
+                                    });
+                                }
+
+                                )
+
+
+                            }
+                        }
+                    } catch (error) { }
+                    resolve();
+                });
+            }
         }
 
 
@@ -1116,5 +1691,5 @@
         }
     }
 
-    Scratch.extensions.register(new HTMLtoCanvas(Scratch.runtime));
+    Scratch.extensions.register(new HTMLDocuments(Scratch.runtime));
 })(Scratch);

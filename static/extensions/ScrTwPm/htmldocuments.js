@@ -1409,7 +1409,11 @@
                 if (this.pages.get(args.PAGE)?.get("code").querySelector(`#element${args.PAGE}${args.ID}`)) {
                     let el = this.pages.get(args.PAGE)?.get("code").querySelector(`#element${args.PAGE}${args.ID}`)
                     // console.log(`body is`, body)
-                    el.setAttribute(args.ATTR, args.VAL)
+                    if(args.ATTR === "class"){
+                        el.setAttribute(args.ATTR, `element${args.PAGE}${args.VAL}`)
+                    } else {
+                        el.setAttribute(args.ATTR, args.VAL)
+                    }
 
                 }
             }

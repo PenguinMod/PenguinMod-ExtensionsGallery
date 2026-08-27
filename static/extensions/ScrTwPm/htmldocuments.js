@@ -953,12 +953,10 @@
                         const currentBlockId = util.thread.peekStack(); //
                         const currentBlock = blockContainer.getBlock(currentBlockId);
                         let blocksInLoop = []
-                        function fn () {
-            const bc = util.thread.target.blocks;
-            const currentBlock = bc.getBlock(currentBlockId);
-            if (!currentBlock) return;
+            function fn () {
 
-            // 3. Find the ID of the first block inside the loop's C-shaped slot (SUBSTACK)
+            const bc = util.thread.target.blocks;
+
             const substackInput = currentBlock.inputs.SUBSTACK;
             if (!substackInput || !substackInput.block) {
                 console.log("The loop branch is empty.");
@@ -966,20 +964,37 @@
             }
 
             const branchBlockIds = [];
-            let nextBlockId = substackInput.block;
 
-            // 4. Follow the chain of linked blocks sequentially down the branch
-            while (nextBlockId) {
-                branchBlockIds.push(nextBlockId);
-                
-                const blockInfo = bc.getBlock(nextBlockId);
-                // Move down to the next block inline, stopping if there are no more
-                nextBlockId = blockInfo ? blockInfo.next : null;
-            }
+            // Helper function to recursively collect block IDs down the chain
+            const scanChain = (startBlockId) => {
+                let nextBlockId = startBlockId;
 
-            // 5. Output the list of specific IDs
-            blocksInLoop = (branchBlockIds);
-            console.log(blocksInLoop)
+                while (nextBlockId) {
+                    branchBlockIds.push(nextBlockId);
+                    
+                    const blockInfo = blockContainer.getBlock(nextBlockId);
+                    if (!blockInfo) break;
+
+                    // If this block is ANOTHER loop, dive inside its mouth first!
+                    if (blockInfo.inputs && blockInfo.inputs.SUBSTACK && blockInfo.inputs.SUBSTACK.block) {
+                        scanChain(blockInfo.inputs.SUBSTACK.block);
+                    }
+                    
+                    // If it's an If-Else block, it might also have a SUBSTACK2 mouth
+                    if (blockInfo.inputs && blockInfo.inputs.SUBSTACK2 && blockInfo.inputs.SUBSTACK2.block) {
+                        scanChain(blockInfo.inputs.SUBSTACK2.block);
+                    }
+
+                    // Move to the next block directly underneath
+                    nextBlockId = blockInfo.next;
+                }
+            };
+
+            // Start scanning from the very first block inside your custom loop
+            scanChain(substackInput.block);
+
+            blocksInLoop = branchBlockIds
+
                         }
 
 fn()

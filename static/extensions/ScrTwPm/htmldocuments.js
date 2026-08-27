@@ -869,6 +869,7 @@
                                     parentBlockId = blockId;
                                     console.log("pbid", parentBlockId)
                                     const pB = blockContainer.getBlock(parentBlockId)
+                                    if(pB && pB.el.bin.includes(currentBlockId)){
                                     nest = pB.el.el
                                     console.log("nest", nest)
 
@@ -879,6 +880,7 @@
                                     el.setAttribute("id", `element${args.PAGE}${args.ID}`)
                                     el = body.appendChild(el)
                                     return
+                                    }
                                 }
 
                                 if (substackId) {
@@ -917,6 +919,13 @@
                         // this.pages.get(args.PAGE)?.set("code", `${this.pages.get(args.PAGE)?.get("code")}<!-- begin the ${args.ID} --><${args.EL} id="element${args.PAGE}${args.ID}"><!-- end the top --><!-- end the bottom of ${args.ID} -->`)
                         // this.pages.get(args.PAGE)?.set("code", document.createRange().createContextualFragment(this.pages.get(args.PAGE).get("code")))
                         // console.log(this.pages)
+
+                        
+                                    let body = this.pages.get(args.PAGE)?.get("code").querySelector(nest === "" ? "body" : `#element${args.PAGE}${nest}`)
+                                    // console.log(`body is`, body)
+                                    let el = document.createElement(args.EL)
+                                    el.setAttribute("id", `element${args.PAGE}${args.ID}`)
+                                    el = body.appendChild(el)
                     } else {
                         throw new Error(`Only one element with the id "${args.ID}" can exist in the document`)
                     }
@@ -943,10 +952,43 @@
                         const blockContainer = util.thread.blockContainer;
                         const currentBlockId = util.thread.peekStack(); //
                         const currentBlock = blockContainer.getBlock(currentBlockId);
+                        let blocksInLoop = []
+                        function fn () {
+            const bc = util.thread.target.blocks;
+            const currentBlock = bc.getBlock(currentBlockId);
+            if (!currentBlock) return;
+
+            // 3. Find the ID of the first block inside the loop's C-shaped slot (SUBSTACK)
+            const substackInput = currentBlock.inputs.SUBSTACK;
+            if (!substackInput || !substackInput.block) {
+                console.log("The loop branch is empty.");
+                return;
+            }
+
+            const branchBlockIds = [];
+            let nextBlockId = substackInput.block;
+
+            // 4. Follow the chain of linked blocks sequentially down the branch
+            while (nextBlockId) {
+                branchBlockIds.push(nextBlockId);
+                
+                const blockInfo = bc.getBlock(nextBlockId);
+                // Move down to the next block inline, stopping if there are no more
+                nextBlockId = blockInfo ? blockInfo.next : null;
+            }
+
+            // 5. Output the list of specific IDs
+            blocksInLoop = (branchBlockIds);
+            console.log(blocksInLoop)
+                        }
+
+fn()
+
                         if (currentBlock) {
                             currentBlock.el = {
                                 el: args.ID,
                                 compiledScope: 'global',
+                                bin: blocksInLoop
                             };
                         }
                         // console.log(this.pages)
@@ -972,6 +1014,8 @@
                                 parentBlockId = block;
                                 console.log(parentBlockId)
                                 parentBlock = blockContainer.getBlock(parentBlockId)
+                            // const pB = blockContainer.getBlock(parentBlockId)
+                                if(parentBlockId && parentBlockId.el.bin.includes(currentBlockId)){
                                 nest = parentBlockId.el.el
                                 console.log("nest is", nest)
 
@@ -986,7 +1030,7 @@
                                 util.stackFrame.startedBranch = true;
                                 util.startBranch(1);
                                 return
-
+                                    }
 
 
                             }
@@ -1034,10 +1078,41 @@
                         const blockContainer = util.thread.blockContainer;
                         const currentBlockId = util.thread.peekStack(); //
                         const currentBlock = blockContainer.getBlock(currentBlockId);
+                        function fn () {
+            const bc = util.thread.target.blocks;
+            const currentBlock = bc.getBlock(currentBlockId);
+            if (!currentBlock) return;
+
+            // 3. Find the ID of the first block inside the loop's C-shaped slot (SUBSTACK)
+            const substackInput = currentBlock.inputs.SUBSTACK;
+            if (!substackInput || !substackInput.block) {
+                console.log("The loop branch is empty.");
+                return;
+            }
+
+            const branchBlockIds = [];
+            let nextBlockId = substackInput.block;
+
+            // 4. Follow the chain of linked blocks sequentially down the branch
+            while (nextBlockId) {
+                branchBlockIds.push(nextBlockId);
+                
+                const blockInfo = bc.getBlock(nextBlockId);
+                // Move down to the next block inline, stopping if there are no more
+                nextBlockId = blockInfo ? blockInfo.next : null;
+            }
+
+            // 5. Output the list of specific IDs
+            blocksInLoop = (branchBlockIds);
+                        }
+
+fn()
+
                         if (currentBlock) {
                             currentBlock.el = {
                                 el: args.ID,
                                 compiledScope: 'global',
+                                bin: blocksInLoop
                             };
                         }
                         let body = this.pages.get(args.PAGE)?.get("code").querySelector(`#element${args.PAGE}${args.ID}`)
@@ -1168,22 +1243,22 @@
                             parentBlockId = blockId;
                             console.log("pbid", parentBlockId)
                             const pB = blockContainer.getBlock(parentBlockId)
+                            if(pB && pB.el.bin.includes(currentBlockId)){
                             nest = pB.el.el
                             console.log("nest", nest)
 
-
                             let body = this.pages.get(args.PAGE)?.get("code").querySelector(nest === "" ? "body" : `#element${args.PAGE}${nest}`)
                             // console.log(`body is`, body)
-
 
                             let text = document.createRange().createContextualFragment(args.TEXT)
                             let elements = text.querySelectorAll(`script`);
                             elements.forEach(el => el.remove());
                             text = toAString.serializeToString(text)
-
-
                             body.innerHTML += text
+
+                            console.log("BODY",body)
                             return
+                                    }
                         }
 
                         if (substackId) {
@@ -1231,6 +1306,16 @@
                 //     // this.pages.get(args.PAGE)?.set("code", toAString.serializeToString(this.pages.get(args.PAGE).get("code")))
                 //     // this.pages.get(args.PAGE)?.set("code", `${this.pages.get(args.PAGE)?.get("code")}<!-- begin the ${args.ID} --><${args.EL} ><!-- end the top --><!-- end the bottom of ${args.ID} -->`)
                 // }
+
+                                            let body = this.pages.get(args.PAGE)?.get("code").querySelector(nest === "" ? "body" : `#element${args.PAGE}${nest}`)
+                            // console.log(`body is`, body)
+
+                            let text = document.createRange().createContextualFragment(args.TEXT)
+                            let elements = text.querySelectorAll(`script`);
+                            elements.forEach(el => el.remove());
+                            text = toAString.serializeToString(text)
+                            body.innerHTML += text
+
             }
 
 

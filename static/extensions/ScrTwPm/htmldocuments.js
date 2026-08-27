@@ -1588,51 +1588,13 @@
                         for (const [key, value] of this.pages.get(args.PAGE)?.get("eves")) {
                             // 
 
-                            el.contentDocument.querySelector(`#element${args.PAGE}${key}`).addEventListener(value, () => {
-                                const triggerText = String(key);
-                                const triggerTexta = String(args.PAGE);
+                            el.contentDocument.querySelector(`#element${args.PAGE}${key}`).addEventListener(value, () => {  
+                                const matchFields = {
+                                    ID: args.ID,
+                                    PAGE: args.PAGE
+                                };
 
-                                const targetOpcode = 'scrtwpmhtmldocuments_eve';
-                                const vm = Scratch.vm;
-
-                                vm.runtime.targets.forEach(target => {
-                                    const blocks = target.blocks;
-                                    const scripts = blocks.getScripts();
-
-                                    scripts.forEach(rootBlockId => {
-                                        const block = blocks.getBlock(rootBlockId);
-
-                                        if (block && block.opcode === targetOpcode) {
-                                            let hatValue = '';
-                                            let hatValuea = '';
-
-                                            if (block.fields && block.fields.ID && block.fields.PAGE) {
-                                                hatValue = block.fields.ID.value;
-                                                hatValuea = block.fields.PAGE.value;
-                                            }
-                                            else if (block.inputs && block.inputs.ID && block.inputs.PAGE) {
-                                                const inputID = block.inputs.ID;
-                                                const inputPAGE = block.inputs.PAGE;
-
-                                                const shadowBlockID = blocks.getBlock(inputID.shadow);
-                                                const shadowBlockPAGE = blocks.getBlock(inputPAGE.shadow);
-
-                                                if (shadowBlockID && shadowBlockID.fields) {
-                                                    const fieldKey = Object.keys(shadowBlockID.fields)[0];
-                                                    hatValue = shadowBlockID.fields[fieldKey]?.value || '';
-                                                }
-                                                if (shadowBlockPAGE && shadowBlockPAGE.fields) {
-                                                    const fieldKeya = Object.keys(shadowBlockPAGE.fields)[0];
-                                                    hatValuea = shadowBlockPAGE.fields[fieldKeya]?.value || '';
-                                                }
-                                            }
-
-                                            if (hatValue === triggerText && hatValuea === triggerTexta) {
-                                                vm.runtime._pushThread(rootBlockId, target);
-                                            }
-                                        }
-                                    });
-                                });
+                                this.runtime.startHats('scrtwpmhtmldocuments_eve', matchFields);
                             }
 
                             )

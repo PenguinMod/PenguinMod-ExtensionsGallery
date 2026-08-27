@@ -1089,6 +1089,7 @@
                     util.stackFrame.startedBranch = false;
                     return;
                 }
+                let blocksInLoop = []
                 if (args.ID !== "") {
                     if (this.pages.get(args.PAGE)?.get("code").querySelector(`#element${args.PAGE}${args.ID}`)) {
                         const blockContainer = util.thread.blockContainer;

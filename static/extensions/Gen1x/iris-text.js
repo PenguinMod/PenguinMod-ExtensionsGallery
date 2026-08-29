@@ -385,6 +385,7 @@ Enjoy!! :D
             baseStyle: defaultBaseStyle(),
             align: 'center',
             smoothing: true,
+            growDownwardOnly: false,
             letterSpacing: 0,
             lineSpacing: 1.2,
             typingSpeeds: {
@@ -494,6 +495,7 @@ Enjoy!! :D
             state.typingSpeeds = Object.assign(defaults.typingSpeeds, state.typingSpeeds || {});
             state.customTypingSpeeds = Object.assign({}, state.customTypingSpeeds || {});
             if (typeof state.smoothing !== 'boolean') state.smoothing = defaults.smoothing;
+            if (typeof state.growDownwardOnly !== 'boolean') state.growDownwardOnly = defaults.growDownwardOnly;
             state.charStyleOverrides = Object.assign({}, state.charStyleOverrides || {});
             if (typeof state.resetCharTransformsOnText !== 'boolean') state.resetCharTransformsOnText = defaults.resetCharTransformsOnText;
             if (typeof state.charStyleOverridesVersion !== 'number') state.charStyleOverridesVersion = 0;
@@ -538,10 +540,27 @@ Enjoy!! :D
 
         while ((match = TAG_RE.exec(text)) !== null) {
             addCharacters(text.slice(lastIndex, match.index));
-            steps.push({
-                content: match[0],
-                char: null
-            });
+            const tag = match[2].toLowerCase();
+            const value = match[3];
+            if (SELF_CLOSING_TAGS.indexOf(tag) !== -1) {
+                if (tag === 'wait') {
+                    steps.push({
+                        content: '',
+                        char: null,
+                        wait: Math.max(0, Scratch.Cast.toNumber(value) || 0)
+                    });
+                } else {
+                    steps.push({
+                        content: match[0],
+                        char: null
+                    });
+                }
+            } else {
+                steps.push({
+                    content: match[0],
+                    char: null
+                });
+            }
             lastIndex = match.index + match[0].length;
         }
         addCharacters(text.slice(lastIndex));
@@ -562,6 +581,7 @@ Enjoy!! :D
             },
             align: state.align,
             smoothing: state.smoothing,
+            growDownwardOnly: state.growDownwardOnly,
             resetCharTransformsOnText: state.resetCharTransformsOnText,
             letterSpacing: state.letterSpacing,
             lineSpacing: state.lineSpacing,
@@ -592,6 +612,7 @@ Enjoy!! :D
             state.align = settings.align;
         }
         if (typeof settings.smoothing === 'boolean') state.smoothing = settings.smoothing;
+        if (typeof settings.growDownwardOnly === 'boolean') state.growDownwardOnly = settings.growDownwardOnly;
         if (typeof settings.resetCharTransformsOnText === 'boolean') state.resetCharTransformsOnText = settings.resetCharTransformsOnText;
         if (Number.isFinite(settings.letterSpacing)) state.letterSpacing = settings.letterSpacing;
         if (Number.isFinite(settings.lineSpacing)) state.lineSpacing = Math.max(0, settings.lineSpacing);
@@ -802,8 +823,8 @@ Enjoy!! :D
         releaseShadowCapture(oldest.entry.canvas);
     }
 
-    function getShadowGlyphBitmap(shape, color, blurPx) {
-        const key = color + '\u0001' + blurPx;
+    function getShadowGlyphBitmap(shape, color, blurPx, offsetXPx, offsetYPx) {
+        const key = color + '\u0001' + blurPx + '\u0001' + offsetXPx + '\u0001' + offsetYPx;
         let entry = shape.shadows.get(key);
         if (entry) {
             const globalKey = entry.globalKey;
@@ -816,7 +837,7 @@ Enjoy!! :D
             return entry;
         }
 
-        const padPx = Math.ceil(blurPx * 3) + 2;
+        const padPx = Math.ceil(blurPx * 3) + Math.ceil(Math.max(Math.abs(offsetXPx), Math.abs(offsetYPx))) + 2;
         const w = shape.canvas.width + padPx * 2;
         const h = shape.canvas.height + padPx * 2;
         const surface = sharedShadowSurface;
@@ -828,9 +849,15 @@ Enjoy!! :D
         ctx.clearRect(0, 0, w, h);
         ctx.shadowColor = color;
         ctx.shadowBlur = blurPx;
+        ctx.shadowOffsetX = offsetXPx;
+        ctx.shadowOffsetY = offsetYPx;
+        ctx.drawImage(shape.canvas, padPx, padPx);
+        ctx.globalCompositeOperation = 'destination-out';
+        ctx.shadowColor = 'transparent';
         ctx.shadowOffsetX = 0;
         ctx.shadowOffsetY = 0;
         ctx.drawImage(shape.canvas, padPx, padPx);
+        ctx.globalCompositeOperation = 'source-over';
 
         const canSnapshot = typeof surface.canvas.transferToImageBitmap === 'function';
         const canvas = canSnapshot ? surface.canvas.transferToImageBitmap() : surface.canvas;
@@ -1263,6 +1290,28 @@ Enjoy!! :D
         }
         shape.tinted.set(color, tintedCanvas);
         return tintedCanvas;
+    }
+
+    const borderOffsetsCache = new Map();
+
+    function getBorderOffsets(borderSize) {
+        const key = Math.round(borderSize * 4);
+        let offsets = borderOffsetsCache.get(key);
+        if (offsets) return offsets;
+
+        const steps = Math.max(8, Math.ceil((Math.PI * 2 * borderSize) / 1.5));
+        offsets = [];
+        for (let i = 0; i < steps; i++) {
+            const angle = (i / steps) * Math.PI * 2;
+            offsets.push([Math.cos(angle) * borderSize, Math.sin(angle) * borderSize]);
+        }
+
+        if (borderOffsetsCache.size >= 64) {
+            const evictedKey = borderOffsetsCache.keys().next().value;
+            borderOffsetsCache.delete(evictedKey);
+        }
+        borderOffsetsCache.set(key, offsets);
+        return offsets;
     }
 
     function getGlyphBitmap(char, fontFamily, size, weight, style, color) {
@@ -1827,6 +1876,32 @@ Enjoy!! :D
         state.typingBoxHeight = measured.lines.length * lineHeight;
     }
 
+    function getExactTextDimensions(state) {
+        const richChars = parseRichText(state.rawText, state.baseStyle);
+        applyCharacterStyleOverrides(richChars, state.charStyleOverrides);
+        const measured = measureRichText(glyphMeasureCtx, richChars, state);
+        const lineHeight = state.baseStyle.size * state.lineSpacing;
+        let width = measured.maxWidth;
+        let height = measured.lines.length * lineHeight;
+
+        ensureTypingBox(state);
+        if (state.typingBoxWidth > width) width = state.typingBoxWidth;
+        if (state.typingBoxHeight > height) height = state.typingBoxHeight;
+
+        if (state.maxWidth && state.maxWidth > 0) width = Math.min(width, state.maxWidth);
+        if (state.maxHeight && state.maxHeight > 0) height = Math.min(height, state.maxHeight);
+
+        return {
+            width,
+            height
+        };
+    }
+
+    function getExactTextDimensionsForTarget(target) {
+        const state = getState(target);
+        return getExactTextDimensions(state);
+    }
+
     function fingerprintPaintOps(paintOps, docW, docH, align) {
         let hash = (docW * 2654435761) ^ (docH * 40503);
         hash = (hash * 33) ^ hashString(align);
@@ -2250,9 +2325,10 @@ Enjoy!! :D
         const docH = Math.ceil(effectiveMaxHeight + pad * 2);
 
         const originX = docW / 2;
-        const originY = docH / 2;
+        const originY = state.growDownwardOnly ? (pad + totalHeight / 2) : docH / 2;
+        const anchorY = state.growDownwardOnly ? (pad + lineHeight / 2) : originY;
 
-        const geometryKey = getPaintOpsGeometryKey(state, layoutKey) + '\u0004' + docW + '\u0004' + docH;
+        const geometryKey = getPaintOpsGeometryKey(state, layoutKey) + '\u0004' + docW + '\u0004' + docH + '\u0004' + (state.growDownwardOnly ? 1 : 0);
         const paintOpsKey = geometryKey + '\u0004' + state.charMasksVersion + '\u0004' + state.charTransformsVersion;
         let paintOps = state.paintOps;
         let charBoxes = state.charBoxes;
@@ -2404,7 +2480,7 @@ Enjoy!! :D
         }
 
         state.renderQueued = false;
-        compositeGlyphsAndPush(target, state, paintOps, docW, docH, effectiveMaxWidth, totalHeight, originX, originY);
+        compositeGlyphsAndPush(target, state, paintOps, docW, docH, effectiveMaxWidth, totalHeight, originX, originY, anchorY);
         state.paintDirty = false;
         state.hasPaintedOnce = true;
         state.renderInFlight = false;
@@ -2416,9 +2492,9 @@ Enjoy!! :D
         return Promise.resolve();
     }
 
-    function compositeGlyphsAndPush(target, state, paintOps, docW, docH, effectiveMaxWidth, totalHeight, originX, originY) {
+    function compositeGlyphsAndPush(target, state, paintOps, docW, docH, effectiveMaxWidth, totalHeight, originX, originY, anchorY) {
         const canvas = compositeGlyphsToCanvas(state, paintOps, docW, docH, effectiveMaxWidth, totalHeight, originX, originY);
-        pushCanvasToDrawable(target, canvas, docW, docH);
+        pushCanvasToDrawable(target, canvas, docW, docH, originX, anchorY != null ? anchorY : originY);
         return Promise.resolve();
     }
 
@@ -2620,6 +2696,28 @@ function tintGlyph(shape, color) {
     return tintedCanvas;
 }
 
+const borderOffsetsCache = new Map();
+
+function getBorderOffsets(borderSize) {
+    const key = Math.round(borderSize * 4);
+    let offsets = borderOffsetsCache.get(key);
+    if (offsets) return offsets;
+
+    const steps = Math.max(8, Math.ceil((Math.PI * 2 * borderSize) / 1.5));
+    offsets = [];
+    for (let i = 0; i < steps; i++) {
+        const angle = (i / steps) * Math.PI * 2;
+        offsets.push([Math.cos(angle) * borderSize, Math.sin(angle) * borderSize]);
+    }
+
+    if (borderOffsetsCache.size >= 64) {
+        const evictedKey = borderOffsetsCache.keys().next().value;
+        borderOffsetsCache.delete(evictedKey);
+    }
+    borderOffsetsCache.set(key, offsets);
+    return offsets;
+}
+
 function getGlyphBitmap(glyphKey, color) {
     const shape = getGlyphShape(glyphKey);
     if (!shape) return null;
@@ -2651,8 +2749,8 @@ function evictOldestGlobalShadow() {
     releaseShadowCapture(oldest.entry.canvas);
 }
 
-function getShadowGlyphBitmap(shape, color, blurPx) {
-    const key = color + '\u0001' + blurPx;
+function getShadowGlyphBitmap(shape, color, blurPx, offsetXPx, offsetYPx) {
+    const key = color + '\u0001' + blurPx + '\u0001' + offsetXPx + '\u0001' + offsetYPx;
     let entry = shape.shadows.get(key);
     if (entry) {
         const globalKey = entry.globalKey;
@@ -2665,7 +2763,7 @@ function getShadowGlyphBitmap(shape, color, blurPx) {
         return entry;
     }
 
-    const padPx = Math.ceil(blurPx * 3) + 2;
+    const padPx = Math.ceil(blurPx * 3) + Math.ceil(Math.max(Math.abs(offsetXPx), Math.abs(offsetYPx))) + 2;
     const w = shape.canvas.width + padPx * 2;
     const h = shape.canvas.height + padPx * 2;
     const surface = sharedShadowSurface;
@@ -2677,9 +2775,15 @@ function getShadowGlyphBitmap(shape, color, blurPx) {
     ctx.clearRect(0, 0, w, h);
     ctx.shadowColor = color;
     ctx.shadowBlur = blurPx;
+    ctx.shadowOffsetX = offsetXPx;
+    ctx.shadowOffsetY = offsetYPx;
+    ctx.drawImage(shape.canvas, padPx, padPx);
+    ctx.globalCompositeOperation = 'destination-out';
+    ctx.shadowColor = 'transparent';
     ctx.shadowOffsetX = 0;
     ctx.shadowOffsetY = 0;
     ctx.drawImage(shape.canvas, padPx, padPx);
+    ctx.globalCompositeOperation = 'source-over';
 
     const canSnapshot = typeof surface.canvas.transferToImageBitmap === 'function';
     const canvas = canSnapshot ? surface.canvas.transferToImageBitmap() : surface.canvas;
@@ -3270,24 +3374,12 @@ function compositeGlyphsToCanvas(stateId, settings, paintOps, docW, docH, textWi
         if (settings.textShadow.enabled) {
             const shadowShape = glyph.shape;
             const shadowBlurPx = Math.max(0, Scratch.Cast.toNumber(settings.textShadow.blur) || 0) * DEST_SCALE;
-            const shadowBitmap = getShadowGlyphBitmap(shadowShape, settings.textShadow.color, shadowBlurPx);
-            const shadowOffsetX = (Scratch.Cast.toNumber(settings.textShadow.offsetX) || 0) * DEST_SCALE + shadowBitmap.offsetX;
-            const shadowOffsetY = (Scratch.Cast.toNumber(settings.textShadow.offsetY) || 0) * DEST_SCALE + shadowBitmap.offsetY;
+            const shadowOffsetXPx = (Scratch.Cast.toNumber(settings.textShadow.offsetX) || 0) * DEST_SCALE;
+            const shadowOffsetYPx = (Scratch.Cast.toNumber(settings.textShadow.offsetY) || 0) * DEST_SCALE;
+            const shadowBitmap = getShadowGlyphBitmap(shadowShape, settings.textShadow.color, shadowBlurPx, shadowOffsetXPx, shadowOffsetYPx);
             ctx.globalAlpha = (hasOpacity ? op.opacity : 1) * Math.max(0, Math.min(100, Scratch.Cast.toNumber(settings.textShadow.opacity) || 0)) / 100;
-            ctx.drawImage(shadowBitmap.canvas, drawXEm * DEST_SCALE + shadowOffsetX, drawYEm * DEST_SCALE + shadowOffsetY);
+            ctx.drawImage(shadowBitmap.canvas, drawXEm * DEST_SCALE + shadowBitmap.offsetX, drawYEm * DEST_SCALE + shadowBitmap.offsetY);
             ctx.globalAlpha = 1;
-        }
-
-        if (op.strike) {
-            if (hasOpacity) ctx.globalAlpha = op.opacity;
-            ctx.strokeStyle = op.color;
-            ctx.lineWidth = Math.max(1, fontSize * 0.06) * DEST_SCALE;
-            const sy = op.y * DEST_SCALE;
-            ctx.beginPath();
-            ctx.moveTo((op.x - op.width / 2) * DEST_SCALE, sy);
-            ctx.lineTo((op.x + op.width / 2) * DEST_SCALE, sy);
-            ctx.stroke();
-            if (hasOpacity) ctx.globalAlpha = 1;
         }
 
         if (settings.textBorder.enabled && Scratch.Cast.toNumber(settings.textBorder.size) > 0) {
@@ -3295,7 +3387,7 @@ function compositeGlyphsToCanvas(stateId, settings, paintOps, docW, docH, textWi
             const borderGlyph = tintGlyph(shape, settings.textBorder.color);
             ctx.globalAlpha = (hasOpacity ? op.opacity : 1) * Math.max(0, Math.min(100, Scratch.Cast.toNumber(settings.textBorder.opacity) || 0)) / 100;
             const borderSize = Math.max(0, Scratch.Cast.toNumber(settings.textBorder.size) || 0) * DEST_SCALE;
-            const borderOffsets = [[-borderSize, 0], [borderSize, 0], [0, -borderSize], [0, borderSize], [-borderSize, -borderSize], [borderSize, -borderSize], [-borderSize, borderSize], [borderSize, borderSize]];
+            const borderOffsets = getBorderOffsets(borderSize);
             for (const [offsetX, offsetY] of borderOffsets) {
                 ctx.drawImage(borderGlyph, drawXEm * DEST_SCALE + offsetX, drawYEm * DEST_SCALE + offsetY);
             }
@@ -3346,6 +3438,18 @@ function compositeGlyphsToCanvas(stateId, settings, paintOps, docW, docH, textWi
                     }
                 }
             }
+        }
+
+        if (op.strike) {
+            if (hasOpacity) ctx.globalAlpha = op.opacity;
+            ctx.strokeStyle = op.color;
+            ctx.lineWidth = Math.max(1, fontSize * 0.06) * DEST_SCALE;
+            const sy = op.y * DEST_SCALE;
+            ctx.beginPath();
+            ctx.moveTo((op.x - op.width / 2) * DEST_SCALE, sy);
+            ctx.lineTo((op.x + op.width / 2) * DEST_SCALE, sy);
+            ctx.stroke();
+            if (hasOpacity) ctx.globalAlpha = 1;
         }
 
         if (op.underline) {
@@ -3798,24 +3902,12 @@ self.onmessage = async (event) => {
             if (state.textShadow.enabled) {
                 const shadowShape = glyph.shape || getGlyphShape(op.text, fontFamily, fontSize, fontWeight, fontStyle);
                 const shadowBlurPx = Math.max(0, Scratch.Cast.toNumber(state.textShadow.blur) || 0) * DEST_SCALE;
-                const shadowBitmap = getShadowGlyphBitmap(shadowShape, state.textShadow.color, shadowBlurPx);
-                const shadowOffsetX = (Scratch.Cast.toNumber(state.textShadow.offsetX) || 0) * DEST_SCALE + shadowBitmap.offsetX;
-                const shadowOffsetY = (Scratch.Cast.toNumber(state.textShadow.offsetY) || 0) * DEST_SCALE + shadowBitmap.offsetY;
+                const shadowOffsetXPx = (Scratch.Cast.toNumber(state.textShadow.offsetX) || 0) * DEST_SCALE;
+                const shadowOffsetYPx = (Scratch.Cast.toNumber(state.textShadow.offsetY) || 0) * DEST_SCALE;
+                const shadowBitmap = getShadowGlyphBitmap(shadowShape, state.textShadow.color, shadowBlurPx, shadowOffsetXPx, shadowOffsetYPx);
                 ctx.globalAlpha = (hasOpacity ? op.opacity : 1) * Math.max(0, Math.min(100, Scratch.Cast.toNumber(state.textShadow.opacity) || 0)) / 100;
-                ctx.drawImage(shadowBitmap.canvas, drawXEm * DEST_SCALE + shadowOffsetX, drawYEm * DEST_SCALE + shadowOffsetY);
+                ctx.drawImage(shadowBitmap.canvas, drawXEm * DEST_SCALE + shadowBitmap.offsetX, drawYEm * DEST_SCALE + shadowBitmap.offsetY);
                 ctx.globalAlpha = 1;
-            }
-
-            if (op.strike) {
-                if (hasOpacity) ctx.globalAlpha = op.opacity;
-                ctx.strokeStyle = op.color;
-                ctx.lineWidth = Math.max(1, fontSize * 0.06) * DEST_SCALE;
-                const sy = op.y * DEST_SCALE;
-                ctx.beginPath();
-                ctx.moveTo((op.x - op.width / 2) * DEST_SCALE, sy);
-                ctx.lineTo((op.x + op.width / 2) * DEST_SCALE, sy);
-                ctx.stroke();
-                if (hasOpacity) ctx.globalAlpha = 1;
             }
 
             if (state.textBorder.enabled && Scratch.Cast.toNumber(state.textBorder.size) > 0) {
@@ -3823,7 +3915,7 @@ self.onmessage = async (event) => {
                 const borderGlyph = tintGlyph(shape, state.textBorder.color);
                 ctx.globalAlpha = (hasOpacity ? op.opacity : 1) * Math.max(0, Math.min(100, Scratch.Cast.toNumber(state.textBorder.opacity) || 0)) / 100;
                 const borderSize = Math.max(0, Scratch.Cast.toNumber(state.textBorder.size) || 0) * DEST_SCALE;
-                const borderOffsets = [[-borderSize, 0], [borderSize, 0], [0, -borderSize], [0, borderSize], [-borderSize, -borderSize], [borderSize, -borderSize], [-borderSize, borderSize], [borderSize, borderSize]];
+                const borderOffsets = getBorderOffsets(borderSize);
                 for (const [offsetX, offsetY] of borderOffsets) {
                     ctx.drawImage(borderGlyph, drawXEm * DEST_SCALE + offsetX, drawYEm * DEST_SCALE + offsetY);
                 }
@@ -3876,6 +3968,18 @@ self.onmessage = async (event) => {
                 }
             }
 
+            if (op.strike) {
+                if (hasOpacity) ctx.globalAlpha = op.opacity;
+                ctx.strokeStyle = op.color;
+                ctx.lineWidth = Math.max(1, fontSize * 0.06) * DEST_SCALE;
+                const sy = op.y * DEST_SCALE;
+                ctx.beginPath();
+                ctx.moveTo((op.x - op.width / 2) * DEST_SCALE, sy);
+                ctx.lineTo((op.x + op.width / 2) * DEST_SCALE, sy);
+                ctx.stroke();
+                if (hasOpacity) ctx.globalAlpha = 1;
+            }
+
             if (op.underline) {
                 if (hasOpacity) ctx.globalAlpha = op.opacity;
                 ctx.strokeStyle = op.color;
@@ -3911,11 +4015,14 @@ self.onmessage = async (event) => {
         };
     }
 
-    function pushCanvasToDrawable(target, canvas, width, height) {
+    function pushCanvasToDrawable(target, canvas, width, height, anchorX, anchorY) {
         const state = getState(target);
         const renderer = runtime.renderer;
         if (!renderer) return;
-        const rotationCenter = [width / 2, height / 2];
+        const rotationCenter = [
+            anchorX != null ? anchorX : width / 2,
+            anchorY != null ? anchorY : height / 2
+        ];
 
         if (state.skinId === null) {
             const BitmapSkin = renderer.exports.BitmapSkin;
@@ -4104,6 +4211,7 @@ self.onmessage = async (event) => {
             return {
                 id: 'g1nxIrisText',
                 name: 'Iris Text',
+                docsURI: 'https://hackmd.io/@Gen1x01/iris-text',
                 color1: COLOR_PRIMARY,
                 color2: COLOR_SECONDARY,
                 color3: COLOR_TERTIARY,
@@ -4202,6 +4310,18 @@ self.onmessage = async (event) => {
                                 type: Scratch.ArgumentType.STRING,
                                 menu: 'ONOFF',
                                 defaultValue: 'on'
+                            }
+                        }
+                    },
+                    {
+                        opcode: 'setGrowDownwardOnly',
+                        blockType: Scratch.BlockType.COMMAND,
+                        text: 'grow downward only [ENABLED]',
+                        arguments: {
+                            ENABLED: {
+                                type: Scratch.ArgumentType.STRING,
+                                menu: 'ONOFF',
+                                defaultValue: 'off'
                             }
                         }
                     },
@@ -5140,6 +5260,18 @@ self.onmessage = async (event) => {
                         text: 'total final text (no markup)'
                     },
                     {
+                        opcode: 'getExactTextWidth',
+                        blockType: Scratch.BlockType.REPORTER,
+                        text: 'text width',
+                        disableMonitor: true
+                    },
+                    {
+                        opcode: 'getExactTextHeight',
+                        blockType: Scratch.BlockType.REPORTER,
+                        text: 'text height',
+                        disableMonitor: true
+                    },
+                    {
                         blockType: Scratch.BlockType.LABEL,
                         text: 'Markup Helpers'
                     },
@@ -5386,6 +5518,14 @@ self.onmessage = async (event) => {
 
             while (frame.irisTypingStepIndex < frame.irisTypingSteps.length) {
                 const step = frame.irisTypingSteps[frame.irisTypingStepIndex++];
+                if (step.wait !== undefined) {
+                    if (step.wait > 0) {
+                        frame.irisTypingWaitUntil = Date.now() + step.wait * 1000;
+                        util.yieldTick();
+                        return;
+                    }
+                    continue;
+                }
                 frame.irisTypedText += step.content;
                 if (step.char === null) continue;
 
@@ -5547,6 +5687,14 @@ self.onmessage = async (event) => {
             const smoothing = Scratch.Cast.toString(args.ENABLED).toLowerCase() === 'on';
             if (state.smoothing === smoothing) return;
             state.smoothing = smoothing;
+            schedulePaint(util.target, state);
+        }
+
+        setGrowDownwardOnly(args, util) {
+            const state = getState(util.target);
+            const growDownwardOnly = Scratch.Cast.toString(args.ENABLED).toLowerCase() === 'on';
+            if (state.growDownwardOnly === growDownwardOnly) return;
+            state.growDownwardOnly = growDownwardOnly;
             schedulePaint(util.target, state);
         }
 
@@ -6286,6 +6434,20 @@ self.onmessage = async (event) => {
         getFinalText(args, util) {
             const state = getState(util.target);
             return state.finalText;
+        }
+
+        getExactTextWidth(args, util) {
+            const target = util && util.target ? util.target : runtime.getEditingTarget && runtime.getEditingTarget();
+            if (!target) return 0;
+            flushRenderIfDirty(target);
+            return getExactTextDimensionsForTarget(target).width;
+        }
+
+        getExactTextHeight(args, util) {
+            const target = util && util.target ? util.target : runtime.getEditingTarget && runtime.getEditingTarget();
+            if (!target) return 0;
+            flushRenderIfDirty(target);
+            return getExactTextDimensionsForTarget(target).height;
         }
 
         colorMarkup(args) {

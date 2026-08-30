@@ -166,10 +166,28 @@ Enjoy!! :D
         ];
     }
 
-    const KNOWN_TAGS = ['color', 'b', 'i', 'u', 's', 'size', 'font'];
+    const KNOWN_TAGS = ['color', 'b', 'i', 'u', 's', 'size', 'font', 'gradient'];
     const SELF_CLOSING_TAGS = ['wait'];
     const TAG_RE = /\[(\/?)([a-z0-9_-]+)(?:=([^\]]+))?\]/gi;
     const TAG_RE_STRIP = /\[(\/?)([a-z0-9_-]+)(?:=([^\]]+))?\]/gi;
+
+    function parseGradientValue(value) {
+        if (!value) return null;
+        const pipeIndex = value.indexOf('|');
+        const colorsPart = pipeIndex === -1 ? value : value.slice(0, pipeIndex);
+        const anglePart = pipeIndex === -1 ? '' : value.slice(pipeIndex + 1);
+        const colors = colorsPart.split(',')
+            .map(c => c.trim())
+            .filter(c => c.length > 0);
+        if (colors.length < 2) return null;
+        const angle = Scratch.Cast.toNumber(anglePart.trim()) || 0;
+        return {
+            colors,
+            angle
+        };
+    }
+
+    let gradientSpanIdSeq = 1;
 
     function parseRichText(text, base) {
         const families = new Set([base.font]);
@@ -193,7 +211,9 @@ Enjoy!! :D
                     strike: style.strike,
                     size: style.size,
                     font: style.font,
-                    tags: style.customTags
+                    tags: style.customTags,
+                    gradient: style.gradient,
+                    gradientSpanId: style.gradientSpanId
                 });
                 families.add(style.font);
                 i++;
@@ -218,7 +238,9 @@ Enjoy!! :D
                     strike: prev.strike,
                     size: prev.size,
                     font: prev.font,
-                    customTags: prev.customTags
+                    customTags: prev.customTags,
+                    gradient: prev.gradient,
+                    gradientSpanId: prev.gradientSpanId
                 };
                 if (KNOWN_TAGS.indexOf(tag) !== -1) {
                     switch (tag) {
@@ -245,6 +267,12 @@ Enjoy!! :D
                                 randomFontOtherThan(prev.font) :
                                 (value || top.font);
                             break;
+                        case 'gradient': {
+                            const parsed = parseGradientValue(value);
+                            top.gradient = parsed || top.gradient;
+                            top.gradientSpanId = parsed ? gradientSpanIdSeq++ : top.gradientSpanId;
+                            break;
+                        }
                     }
                 } else {
                     top.customTags = top.customTags.concat([tag]);
@@ -343,7 +371,9 @@ Enjoy!! :D
             strike: false,
             size: 32,
             font: HANDWRITING_ID,
-            customTags: []
+            customTags: [],
+            gradient: null,
+            gradientSpanId: null
         };
     }
 
@@ -459,7 +489,8 @@ Enjoy!! :D
             typingFullRaw: null,
             typingBoxKey: null,
             typingBoxWidth: 0,
-            typingBoxHeight: 0
+            typingBoxHeight: 0,
+            isTyping: false
         };
     }
 
@@ -508,7 +539,7 @@ Enjoy!! :D
         return state;
     }
 
-    const TYPING_PUNCTUATION = '.,!?;:\'"…';
+    const TYPING_PUNCTUATION = '.,!?;:…';
     const TYPING_SYMBOLS = '@#$%^&*+=<>/\\|~`_-()[]{}';
 
     function typingGroupForCharacter(char) {
@@ -1292,6 +1323,41 @@ Enjoy!! :D
         return tintedCanvas;
     }
 
+    function buildGradientCanvasStyle(ctx, gradient, spanW, spanH, localOffsetXPx, localOffsetYPx) {
+        const angleRad = (gradient.angle || 0) * Math.PI / 180;
+        const dx = Math.cos(angleRad);
+        const dy = Math.sin(angleRad);
+        const halfW = spanW / 2;
+        const halfH = spanH / 2;
+        const half = Math.abs(dx) * halfW + Math.abs(dy) * halfH;
+        const cx = spanW / 2 - localOffsetXPx;
+        const cy = spanH / 2 - localOffsetYPx;
+        const x0 = cx - dx * half;
+        const y0 = cy - dy * half;
+        const x1 = cx + dx * half;
+        const y1 = cy + dy * half;
+        const canvasGradient = ctx.createLinearGradient(x0, y0, x1, y1);
+        const colors = gradient.colors;
+        const last = colors.length - 1;
+        for (let c = 0; c <= last; c++) {
+            canvasGradient.addColorStop(last === 0 ? 0 : c / last, colors[c]);
+        }
+        return canvasGradient;
+    }
+
+    function tintGlyphGradient(shape, gradient, spanW, spanH, localOffsetXPx, localOffsetYPx) {
+        const scratchCanvas = acquirePooledCanvas(tintedCanvasPool, shape.canvas.width, shape.canvas.height);
+        const tctx = scratchCanvas.getContext('2d');
+        tctx.setTransform(1, 0, 0, 1, 0, 0);
+        tctx.globalCompositeOperation = 'source-over';
+        tctx.clearRect(0, 0, scratchCanvas.width, scratchCanvas.height);
+        tctx.fillStyle = buildGradientCanvasStyle(tctx, gradient, spanW, spanH, localOffsetXPx, localOffsetYPx);
+        tctx.fillRect(0, 0, scratchCanvas.width, scratchCanvas.height);
+        tctx.globalCompositeOperation = 'destination-in';
+        tctx.drawImage(shape.canvas, 0, 0);
+        return scratchCanvas;
+    }
+
     const borderOffsetsCache = new Map();
 
     function getBorderOffsets(borderSize) {
@@ -1921,8 +1987,21 @@ Enjoy!! :D
             hash = (hash * 33) ^ (op.underline ? 1 : 0);
             hash = (hash * 33) ^ (op.strike ? 1 : 0);
             hash = fingerprintMaskInto(hash, op.mask);
+            hash = fingerprintGradientInto(hash, op.gradient);
         }
         return hash | 0;
+    }
+
+    function fingerprintGradientInto(hash, gradient) {
+        if (gradient) {
+            hash = (hash * 33) ^ ((gradient.angle * 100) | 0);
+            for (let c = 0; c < gradient.colors.length; c++) {
+                hash = (hash * 33) ^ hashString(gradient.colors[c]);
+            }
+        } else {
+            hash = (hash * 33) ^ 0xa5a5;
+        }
+        return hash;
     }
 
     function fingerprintMaskOps(paintOps, docW, docH) {
@@ -1967,6 +2046,7 @@ Enjoy!! :D
     const charAnimations = new Map();
     const charAnimationsByTarget = new Map();
     let animationTickerInstalled = false;
+    let charAnimTokenSeq = 1;
 
     function addCharAnimation(targetId, key, anim) {
         charAnimations.set(key, anim);
@@ -2154,6 +2234,7 @@ Enjoy!! :D
         if (!charAnimations.size) return;
         const t = nowMs();
         const dirtyStates = new Set();
+        const finishedTargets = [];
         for (const [key, anim] of Array.from(charAnimations.entries())) {
             const state = getState(anim.target);
             const o = getCharOverride(state, anim.index);
@@ -2166,12 +2247,16 @@ Enjoy!! :D
             if (rawProgress >= 1) {
                 o[anim.property] = anim.to;
                 deleteCharAnimation(anim.target.id, key);
+                finishedTargets.push(anim.target);
             }
         }
         for (const target of dirtyStates) {
             schedulePaint(target, getState(target));
         }
         flushPendingRenders();
+        for (const target of finishedTargets) {
+            startCharAnimationFinishedHat(target);
+        }
         if (!charAnimations.size) releaseAnimationTicker();
     }
 
@@ -2431,6 +2516,8 @@ Enjoy!! :D
                         op.width = pos.advance;
                         op.mask = mask;
                         op.charIndex = index;
+                        op.gradient = o.color ? null : (rc.gradient || null);
+                        op.gradientSpanId = o.color ? null : (rc.gradientSpanId || null);
                         paintOps.push(op);
 
                         if (rc.char === ' ') spacesBefore++;
@@ -2694,6 +2781,41 @@ function tintGlyph(shape, color) {
     }
     shape.tinted.set(color, tintedCanvas);
     return tintedCanvas;
+}
+
+function buildGradientCanvasStyle(ctx, gradient, spanW, spanH, localOffsetXPx, localOffsetYPx) {
+    const angleRad = (gradient.angle || 0) * Math.PI / 180;
+    const dx = Math.cos(angleRad);
+    const dy = Math.sin(angleRad);
+    const halfW = spanW / 2;
+    const halfH = spanH / 2;
+    const half = Math.abs(dx) * halfW + Math.abs(dy) * halfH;
+    const cx = spanW / 2 - localOffsetXPx;
+    const cy = spanH / 2 - localOffsetYPx;
+    const x0 = cx - dx * half;
+    const y0 = cy - dy * half;
+    const x1 = cx + dx * half;
+    const y1 = cy + dy * half;
+    const canvasGradient = ctx.createLinearGradient(x0, y0, x1, y1);
+    const colors = gradient.colors;
+    const last = colors.length - 1;
+    for (let c = 0; c <= last; c++) {
+        canvasGradient.addColorStop(last === 0 ? 0 : c / last, colors[c]);
+    }
+    return canvasGradient;
+}
+
+function tintGlyphGradient(shape, gradient, spanW, spanH, localOffsetXPx, localOffsetYPx) {
+    const scratchCanvas = acquirePooledCanvas(tintedCanvasPool, shape.canvas.width, shape.canvas.height);
+    const tctx = scratchCanvas.getContext('2d');
+    tctx.setTransform(1, 0, 0, 1, 0, 0);
+    tctx.globalCompositeOperation = 'source-over';
+    tctx.clearRect(0, 0, scratchCanvas.width, scratchCanvas.height);
+    tctx.fillStyle = buildGradientCanvasStyle(tctx, gradient, spanW, spanH, localOffsetXPx, localOffsetYPx);
+    tctx.fillRect(0, 0, scratchCanvas.width, scratchCanvas.height);
+    tctx.globalCompositeOperation = 'destination-in';
+    tctx.drawImage(shape.canvas, 0, 0);
+    return scratchCanvas;
 }
 
 const borderOffsetsCache = new Map();
@@ -3301,6 +3423,81 @@ function getSeamlessMaskSpans(stateId, paintOps, layoutDocKey, geometryVersion) 
     return spans;
 }
 
+function computeGradientSpansByIndex(paintOps) {
+    const spans = new Map();
+    let groupIndices = null;
+    let groupId = null;
+    let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
+
+    const flushGroup = () => {
+        if (!groupIndices || !groupIndices.length) return;
+        if (!isFinite(minX) || !isFinite(maxX) || !isFinite(minY) || !isFinite(maxY)) return;
+        const spanW = Math.max(1, maxX - minX);
+        const spanH = Math.max(1, maxY - minY);
+        for (const gi of groupIndices) {
+            spans.set(gi, {
+                spanW,
+                spanH,
+                originX: minX,
+                originY: minY
+            });
+        }
+    };
+
+    for (let i = 0; i < paintOps.length; i++) {
+        const op = paintOps[i];
+        if (!op.gradient || !op.gradientSpanId) {
+            flushGroup();
+            groupIndices = null;
+            groupId = null;
+            continue;
+        }
+
+        if (groupId !== op.gradientSpanId) {
+            flushGroup();
+            groupIndices = [];
+            groupId = op.gradientSpanId;
+            minX = Infinity;
+            maxX = -Infinity;
+            minY = Infinity;
+            maxY = -Infinity;
+        }
+        groupIndices.push(op.charIndex);
+
+        if (op.text === '\u00A0' || op.text === '') continue;
+
+        const shape = getGlyphShape(op.glyphKey);
+        if (!shape) continue;
+        const advanceCenterXEm = shape.baselineOriginXEm + shape.advance / 2;
+        const baselineYFromLineCenter = (shape.fontAscentEm - shape.fontDescentEm) / 2;
+        const drawXEm = op.x - advanceCenterXEm;
+        const drawYEm = (op.y + baselineYFromLineCenter) - shape.baselineOriginYEm;
+        const px = Math.round(drawXEm * DEST_SCALE);
+        const py = Math.round(drawYEm * DEST_SCALE);
+        const w = shape.canvas.width;
+        const h = shape.canvas.height;
+
+        minX = Math.min(minX, px);
+        maxX = Math.max(maxX, px + w);
+        minY = Math.min(minY, py);
+        maxY = Math.max(maxY, py + h);
+    }
+    flushGroup();
+
+    return spans;
+}
+
+const gradientSpansCacheByState = new Map();
+
+function getGradientSpans(stateId, paintOps, layoutDocKey, geometryVersion) {
+    const cacheKey = layoutDocKey + '\u0003' + geometryVersion;
+    let entry = gradientSpansCacheByState.get(stateId);
+    if (entry && entry.cacheKey === cacheKey) return entry.spans;
+    const spans = computeGradientSpansByIndex(paintOps);
+    gradientSpansCacheByState.set(stateId, { cacheKey, spans });
+    return spans;
+}
+
 const paintCanvasByState = new Map();
 
 function compositeGlyphsToCanvas(stateId, settings, paintOps, docW, docH, textWidth, textHeight, originX, originY, maskTextures) {
@@ -3339,7 +3536,9 @@ function compositeGlyphsToCanvas(stateId, settings, paintOps, docW, docH, textWi
     }
 
     const maskSpansByIndex = getSeamlessMaskSpans(stateId, paintOps, settings.layoutKey + '\u0003' + docW + '\u0003' + docH, settings.charMaskGeometryVersion);
+    const gradientSpansByIndex = getGradientSpans(stateId, paintOps, settings.layoutKey + '\u0003' + docW + '\u0003' + docH, settings.charMaskGeometryVersion);
     const batchedMasks = collectBatchedMaskGroups(paintOps, maskTextures);
+    const gradientScratchCanvases = [];
 
     const applyCharTransformOp = (op, hasRotation, hasScale) => {
         const cx = op.x * DEST_SCALE;
@@ -3355,7 +3554,31 @@ function compositeGlyphsToCanvas(stateId, settings, paintOps, docW, docH, textWi
         const op = paintOps[i];
         if (op.text === '\u00A0' || op.text === '') continue;
 
-        const glyph = getGlyphBitmap(op.glyphKey, op.color);
+        let glyph;
+        if (op.gradient) {
+            const shape = getGlyphShape(op.glyphKey);
+            const span = shape && gradientSpansByIndex.get(op.charIndex);
+            if (shape && span) {
+                const advanceCenterXEm = shape.baselineOriginXEm + shape.advance / 2;
+                const baselineYFromLineCenter = (shape.fontAscentEm - shape.fontDescentEm) / 2;
+                const drawXEmForSpan = op.x - advanceCenterXEm;
+                const drawYEmForSpan = (op.y + baselineYFromLineCenter) - shape.baselineOriginYEm;
+                const localOffsetXPx = Math.round(drawXEmForSpan * DEST_SCALE) - span.originX;
+                const localOffsetYPx = Math.round(drawYEmForSpan * DEST_SCALE) - span.originY;
+                const gradientCanvas = tintGlyphGradient(shape, op.gradient, span.spanW, span.spanH, localOffsetXPx, localOffsetYPx);
+                gradientScratchCanvases.push(gradientCanvas);
+                glyph = {
+                    canvas: gradientCanvas,
+                    advance: shape.advance,
+                    baselineOriginXEm: shape.baselineOriginXEm,
+                    baselineOriginYEm: shape.baselineOriginYEm,
+                    fontAscentEm: shape.fontAscentEm,
+                    fontDescentEm: shape.fontDescentEm,
+                    shape
+                };
+            }
+        }
+        if (!glyph) glyph = getGlyphBitmap(op.glyphKey, op.color);
         if (!glyph) continue;
         const fontSize = op.fontSize;
 
@@ -3475,6 +3698,10 @@ function compositeGlyphsToCanvas(stateId, settings, paintOps, docW, docH, textWi
     }
 
     drawBatchedMaskGroups(ctx, stateId, batchedMasks.groups, pixelW, pixelH);
+
+    for (let gi = 0; gi < gradientScratchCanvases.length; gi++) {
+        releasePooledCanvas(tintedCanvasPool, gradientScratchCanvases[gi]);
+    }
 
     return canvas;
 }
@@ -3826,6 +4053,84 @@ self.onmessage = async (event) => {
         return spans;
     }
 
+    function computeGradientSpansByIndex(paintOps) {
+        const spans = new Map();
+        let groupIndices = null;
+        let groupId = null;
+        let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
+
+        const flushGroup = () => {
+            if (!groupIndices || !groupIndices.length) return;
+            if (!isFinite(minX) || !isFinite(maxX) || !isFinite(minY) || !isFinite(maxY)) return;
+            const spanW = Math.max(1, maxX - minX);
+            const spanH = Math.max(1, maxY - minY);
+            for (const gi of groupIndices) {
+                spans.set(gi, {
+                    spanW,
+                    spanH,
+                    originX: minX,
+                    originY: minY
+                });
+            }
+        };
+
+        for (let i = 0; i < paintOps.length; i++) {
+            const op = paintOps[i];
+            if (!op.gradient || !op.gradientSpanId) {
+                flushGroup();
+                groupIndices = null;
+                groupId = null;
+                continue;
+            }
+
+            if (groupId !== op.gradientSpanId) {
+                flushGroup();
+                groupIndices = [];
+                groupId = op.gradientSpanId;
+                minX = Infinity;
+                maxX = -Infinity;
+                minY = Infinity;
+                maxY = -Infinity;
+            }
+            groupIndices.push(op.charIndex);
+
+            if (op.text === '\u00A0' || op.text === '') continue;
+
+            const fontFamily = op.font['font-family'];
+            const fontSize = op.font['font-size'];
+            const fontWeight = op.font['font-weight'];
+            const fontStyle = op.font['font-style'];
+            const shape = getGlyphShape(op.text, fontFamily, fontSize, fontWeight, fontStyle);
+            const advanceCenterXEm = shape.baselineOriginXEm + shape.advance / 2;
+            const baselineYFromLineCenter = (shape.fontAscentEm - shape.fontDescentEm) / 2;
+            const drawXEm = op.x - advanceCenterXEm;
+            const drawYEm = (op.y + baselineYFromLineCenter) - shape.baselineOriginYEm;
+            const px = Math.round(drawXEm * DEST_SCALE);
+            const py = Math.round(drawYEm * DEST_SCALE);
+            const w = shape.canvas.width;
+            const h = shape.canvas.height;
+
+            minX = Math.min(minX, px);
+            maxX = Math.max(maxX, px + w);
+            minY = Math.min(minY, py);
+            maxY = Math.max(maxY, py + h);
+        }
+        flushGroup();
+
+        return spans;
+    }
+
+    function getGradientSpans(state, paintOps, layoutDocKey) {
+        const cacheKey = layoutDocKey + '\u0003' + state.charMaskGeometryVersion;
+        if (state.gradientSpansCacheKey === cacheKey && state.gradientSpansCache) {
+            return state.gradientSpansCache;
+        }
+        const spans = computeGradientSpansByIndex(paintOps);
+        state.gradientSpansCacheKey = cacheKey;
+        state.gradientSpansCache = spans;
+        return spans;
+    }
+
     function compositeGlyphsToCanvas(state, paintOps, docW, docH, textWidth, textHeight, originX, originY) {
         let canvas = state.paintCanvas;
         if (!canvas) {
@@ -3864,7 +4169,9 @@ self.onmessage = async (event) => {
         }
 
         const maskSpansByIndex = getSeamlessMaskSpans(state, paintOps, state.layoutKey + '\u0003' + docW + '\u0003' + docH);
+        const gradientSpansByIndex = getGradientSpans(state, paintOps, state.layoutKey + '\u0003' + docW + '\u0003' + docH);
         const batchedMasks = collectBatchedMaskGroups(paintOps);
+        const gradientScratchCanvases = [];
 
         const applyCharTransformOp = (op, hasRotation, hasScale) => {
             const cx = op.x * DEST_SCALE;
@@ -3885,7 +4192,31 @@ self.onmessage = async (event) => {
             const fontWeight = op.font['font-weight'];
             const fontStyle = op.font['font-style'];
 
-            const glyph = getGlyphBitmap(op.text, fontFamily, fontSize, fontWeight, fontStyle, op.color);
+            let glyph;
+            if (op.gradient) {
+                const shape = getGlyphShape(op.text, fontFamily, fontSize, fontWeight, fontStyle);
+                const span = shape && gradientSpansByIndex.get(op.charIndex);
+                if (shape && span) {
+                    const advanceCenterXEmForSpan = shape.baselineOriginXEm + shape.advance / 2;
+                    const baselineYFromLineCenterForSpan = (shape.fontAscentEm - shape.fontDescentEm) / 2;
+                    const drawXEmForSpan = op.x - advanceCenterXEmForSpan;
+                    const drawYEmForSpan = (op.y + baselineYFromLineCenterForSpan) - shape.baselineOriginYEm;
+                    const localOffsetXPx = Math.round(drawXEmForSpan * DEST_SCALE) - span.originX;
+                    const localOffsetYPx = Math.round(drawYEmForSpan * DEST_SCALE) - span.originY;
+                    const gradientCanvas = tintGlyphGradient(shape, op.gradient, span.spanW, span.spanH, localOffsetXPx, localOffsetYPx);
+                    gradientScratchCanvases.push(gradientCanvas);
+                    glyph = {
+                        canvas: gradientCanvas,
+                        advance: shape.advance,
+                        baselineOriginXEm: shape.baselineOriginXEm,
+                        baselineOriginYEm: shape.baselineOriginYEm,
+                        fontAscentEm: shape.fontAscentEm,
+                        fontDescentEm: shape.fontDescentEm,
+                        shape
+                    };
+                }
+            }
+            if (!glyph) glyph = getGlyphBitmap(op.text, fontFamily, fontSize, fontWeight, fontStyle, op.color);
 
             const advanceCenterXEm = glyph.baselineOriginXEm + glyph.advance / 2;
             const baselineYFromLineCenter = (glyph.fontAscentEm - glyph.fontDescentEm) / 2;
@@ -4004,6 +4335,10 @@ self.onmessage = async (event) => {
 
         drawBatchedMaskGroups(ctx, state, batchedMasks.groups, pixelW, pixelH);
 
+        for (let gi = 0; gi < gradientScratchCanvases.length; gi++) {
+            releasePooledCanvas(tintedCanvasPool, gradientScratchCanvases[gi]);
+        }
+
         return canvas;
     }
 
@@ -4071,6 +4406,7 @@ self.onmessage = async (event) => {
         const state = getState(target);
         state.visible = false;
         state.revealToken++;
+        state.isTyping = false;
         clearTypingBox(state);
         state.paintDirty = true;
         state.paintFingerprint = null;
@@ -4101,6 +4437,10 @@ self.onmessage = async (event) => {
 
     function startTypingFinishedHat(target) {
         runtime.startHats('g1nxIrisText_onTypingFinished', null, target);
+    }
+
+    function startCharAnimationFinishedHat(target) {
+        runtime.startHats('g1nxIrisText_onCharAnimationFinished', null, target);
     }
 
     function taggedCharacterIndices(target, tag) {
@@ -4361,6 +4701,11 @@ self.onmessage = async (event) => {
                         opcode: 'stopTyping',
                         blockType: Scratch.BlockType.COMMAND,
                         text: 'stop typing'
+                    },
+                    {
+                        opcode: 'isTyping',
+                        blockType: Scratch.BlockType.BOOLEAN,
+                        text: 'is typing?'
                     },
 					'---',
                     {
@@ -4869,7 +5214,7 @@ self.onmessage = async (event) => {
                     {
                         opcode: 'animateChar',
                         blockType: Scratch.BlockType.COMMAND,
-                        text: 'animate character [INDEX] [PROPERTY] to [VALUE] over [SECS] secs easing [EASING] [DIRECTION]',
+                        text: 'animate character [INDEX] [PROPERTY] to [VALUE] over [SECS] secs easing [EASING] [DIRECTION] and [WAIT]',
                         arguments: {
                             INDEX: {
                                 type: Scratch.ArgumentType.NUMBER,
@@ -4897,6 +5242,11 @@ self.onmessage = async (event) => {
                                 type: Scratch.ArgumentType.STRING,
                                 menu: 'EASING_DIRECTION',
                                 defaultValue: 'out'
+                            },
+                            WAIT: {
+                                type: Scratch.ArgumentType.STRING,
+                                menu: 'WAIT_MODE',
+                                defaultValue: "don't wait"
                             }
                         }
                     },
@@ -4910,6 +5260,13 @@ self.onmessage = async (event) => {
                                 defaultValue: 1
                             }
                         }
+                    },
+                    {
+                        opcode: 'onCharAnimationFinished',
+                        blockType: Scratch.BlockType.EVENT,
+                        isEdgeActivated: false,
+                        shouldRestartExistingThreads: false,
+                        text: 'when a character animation finishes'
                     },
                     '---',
                     {
@@ -5290,6 +5647,25 @@ self.onmessage = async (event) => {
                         }
                     },
                     {
+                        opcode: 'gradientMarkup',
+                        blockType: Scratch.BlockType.REPORTER,
+                        text: 'gradient [TEXT] with colors [COLORS] at angle [ANGLE]',
+                        arguments: {
+                            TEXT: {
+                                type: Scratch.ArgumentType.STRING,
+                                defaultValue: 'sunset'
+                            },
+                            COLORS: {
+                                type: Scratch.ArgumentType.STRING,
+                                defaultValue: '#ff7e5f,#feb47b'
+                            },
+                            ANGLE: {
+                                type: Scratch.ArgumentType.NUMBER,
+                                defaultValue: 0
+                            }
+                        }
+                    },
+                    {
                         opcode: 'styleMarkup',
                         blockType: Scratch.BlockType.REPORTER,
                         text: 'style [TEXT] as [STYLE]',
@@ -5400,6 +5776,9 @@ self.onmessage = async (event) => {
                     },
                     EASING_DIRECTION: {
                         items: ['in', 'out', 'in out']
+                    },
+                    WAIT_MODE: {
+                        items: ['wait', "don't wait"]
                     }
                 }
             };
@@ -5455,6 +5834,7 @@ self.onmessage = async (event) => {
             if (state.resetCharTransformsOnText) resetCharacterTransformsState(state);
             state.revealToken++;
             state.typingControl = null;
+            state.isTyping = false;
             clearTypingBox(state);
             state.rawText = existingText + linePrefix + text;
             state.finalText = stripMarkup(state.rawText);
@@ -5484,6 +5864,7 @@ self.onmessage = async (event) => {
                 frame.irisTypedText = state.rawText;
                 frame.irisTypingToken = state.revealToken;
                 frame.irisTypingWaitUntil = null;
+                state.isTyping = true;
             }
 
             if (state.revealToken !== frame.irisTypingToken) return;
@@ -5493,6 +5874,7 @@ self.onmessage = async (event) => {
                 state.finalText = stripMarkup(state.rawText);
                 clearTypingBox(state);
                 schedulePaint(util.target, state);
+                state.isTyping = false;
                 return;
             }
 
@@ -5504,6 +5886,7 @@ self.onmessage = async (event) => {
                 state.typingControl = null;
                 clearTypingBox(state);
                 schedulePaint(util.target, state);
+                state.isTyping = false;
                 startTypingFinishedHat(util.target);
                 return;
             }
@@ -5544,6 +5927,7 @@ self.onmessage = async (event) => {
             state.rawText = frame.irisTypedText;
             clearTypingBox(state);
             schedulePaint(util.target, state);
+            state.isTyping = false;
             startTypingFinishedHat(util.target);
         }
 
@@ -5561,6 +5945,10 @@ self.onmessage = async (event) => {
 
         stopTyping(args, util) {
             getState(util.target).typingControl = 'stop';
+        }
+
+        isTyping(args, util) {
+            return !!getState(util.target).isTyping;
         }
 
         clearText(args, util) {
@@ -6021,41 +6409,69 @@ self.onmessage = async (event) => {
         animateChar(args, util) {
             const target = util.target;
             const state = getState(target);
-            const idx = Scratch.Cast.toNumber(args.INDEX) - 1;
-            const property = Scratch.Cast.toString(args.PROPERTY).toLowerCase();
-            const validProps = ['x', 'y', 'rotation', 'opacity', 'scale'];
-            if (!validProps.includes(property)) return;
-            let targetValue = Scratch.Cast.toNumber(args.VALUE);
-            if (property === 'opacity') targetValue = Math.max(0, Math.min(100, targetValue)) / 100;
-            if (property === 'scale') targetValue = Math.max(0, targetValue) / 100;
-            const duration = Math.max(0, Scratch.Cast.toNumber(args.SECS));
-            const easingName = Scratch.Cast.toString(args.EASING).toLowerCase();
-            const easing = Object.prototype.hasOwnProperty.call(EasingMethods, easingName) ? easingName : 'linear';
-            const direction = Scratch.Cast.toString(args.DIRECTION).toLowerCase();
-            const o = getCharOverride(state, idx);
+            const frame = util.stackFrame;
 
-            const key = target.id + '\u0001' + idx + '\u0001' + property;
-            if (duration <= 0) {
-                deleteCharAnimation(target.id, key);
-                o[property] = targetValue;
-                state.charTransformsVersion++;
-                schedulePaint(target, state);
-                return;
+            if (frame.irisAnimKey === undefined) {
+                const idx = Scratch.Cast.toNumber(args.INDEX) - 1;
+                const property = Scratch.Cast.toString(args.PROPERTY).toLowerCase();
+                const validProps = ['x', 'y', 'rotation', 'opacity', 'scale'];
+                if (!validProps.includes(property)) {
+                    frame.irisAnimKey = null;
+                    return;
+                }
+                let targetValue = Scratch.Cast.toNumber(args.VALUE);
+                if (property === 'opacity') targetValue = Math.max(0, Math.min(100, targetValue)) / 100;
+                if (property === 'scale') targetValue = Math.max(0, targetValue) / 100;
+                const duration = Math.max(0, Scratch.Cast.toNumber(args.SECS));
+                const easingName = Scratch.Cast.toString(args.EASING).toLowerCase();
+                const easing = Object.prototype.hasOwnProperty.call(EasingMethods, easingName) ? easingName : 'linear';
+                const direction = Scratch.Cast.toString(args.DIRECTION).toLowerCase();
+                const shouldWait = Scratch.Cast.toString(args.WAIT).toLowerCase() !== "don't wait";
+                const o = getCharOverride(state, idx);
+
+                const key = target.id + '\u0001' + idx + '\u0001' + property;
+                if (duration <= 0) {
+                    deleteCharAnimation(target.id, key);
+                    o[property] = targetValue;
+                    state.charTransformsVersion++;
+                    schedulePaint(target, state);
+                    startCharAnimationFinishedHat(target);
+                    frame.irisAnimKey = null;
+                    return;
+                }
+
+                const token = charAnimTokenSeq++;
+                addCharAnimation(target.id, key, {
+                    target,
+                    state,
+                    index: idx,
+                    property,
+                    easing,
+                    direction,
+                    from: o[property] == null ? (property === 'scale' || property === 'opacity' ? 1 : 0) : o[property],
+                    to: targetValue,
+                    startTime: nowMs(),
+                    duration: duration * 1000,
+                    token
+                });
+                ensureAnimationTicker();
+
+                if (!shouldWait) {
+                    frame.irisAnimKey = null;
+                    return;
+                }
+
+                frame.irisAnimKey = key;
+                frame.irisAnimToken = token;
             }
 
-            addCharAnimation(target.id, key, {
-                target,
-                state,
-                index: idx,
-                property,
-                easing,
-                direction,
-                from: o[property] == null ? (property === 'scale' || property === 'opacity' ? 1 : 0) : o[property],
-                to: targetValue,
-                startTime: nowMs(),
-                duration: duration * 1000
-            });
-            ensureAnimationTicker();
+            if (frame.irisAnimKey === null) return;
+
+            const current = charAnimations.get(frame.irisAnimKey);
+            if (current && current.token === frame.irisAnimToken) {
+                util.yieldTick();
+                return;
+            }
         }
 
         stopCharAnimations(args, util) {
@@ -6454,6 +6870,17 @@ self.onmessage = async (event) => {
             const text = Scratch.Cast.toString(args.TEXT);
             const color = Scratch.Cast.toString(args.COLOR);
             return `[color=${color}]${text}[/color]`;
+        }
+
+        gradientMarkup(args) {
+            const text = Scratch.Cast.toString(args.TEXT);
+            const colors = Scratch.Cast.toString(args.COLORS)
+                .split(',')
+                .map(c => c.trim())
+                .filter(c => c.length > 0);
+            if (colors.length < 2) return text;
+            const angle = Scratch.Cast.toNumber(args.ANGLE) || 0;
+            return `[gradient=${colors.join(',')}|${angle}]${text}[/gradient]`;
         }
 
         styleMarkup(args) {

@@ -4,6 +4,43 @@
     const dom = new DOMParser()
     const toAString = new XMLSerializer()
 
+    class CustomType {
+            constructor(html){
+        this.html = html
+    }
+    toString() {
+        return this.html
+    }
+    toReporterContent() {
+        let wrap =  document.createElement('div')
+        wrap.innerHTML = this.html
+        return wrap;
+    }
+}
+
+    class CustomTypeTwo {
+            constructor(html){
+        this.html = html
+    }
+    toString() {
+        return this.html
+    }
+    toReporterContent() {
+        let wrap =  document.createElement('div')
+        wrap.innerText = this.html
+        // wrap.style.backgroundColor = "black"
+        // wrap.style.color = "white"
+        // wrap.style.border = "solid 10px black"
+        wrap.style.border = "solid 10px #ffffff00"
+        wrap.style.backgroundColor = "#ffffff00"
+        wrap.style.boxSizing = "border-box"
+        wrap.style.fontFamily = "Consolas"
+        wrap.style.height = "fit-content"
+        wrap.style.width = "fit-content"
+        return wrap;
+    }
+}
+
 
     class HTMLDocuments {
         constructor(runtime) {
@@ -164,6 +201,17 @@
                         opcode: 'getHTML',
                         blockType: Scratch.BlockType.REPORTER,
                         text: 'get html code of [PAGE]',
+                        arguments: {
+                            PAGE: {
+                                type: Scratch.ArgumentType.STRING,
+                                defaultValue: "my-page"
+                            }
+                        }
+                    },
+                    {
+                        opcode: 'previewHTML',
+                        blockType: Scratch.BlockType.REPORTER,
+                        text: 'preview [PAGE]',
                         arguments: {
                             PAGE: {
                                 type: Scratch.ArgumentType.STRING,
@@ -1123,6 +1171,14 @@
                         const blockContainer = util.thread.blockContainer;
                         const currentBlockId = util.thread.peekStack(); //
                         const currentBlock = blockContainer.getBlock(currentBlockId);
+                        if(!currentBlock){
+                        let body = this.pages.get(args.PAGE)?.get("code").querySelector("body")
+                        // 
+                        let el = document.createElement(args.EL)
+                        el.setAttribute("id", `${args.ID}`)
+                        el = body.appendChild(el)
+                        return
+                        }
                         let blocksInLoop = []
                         function fn() {
 
@@ -1135,7 +1191,6 @@
                             }
 
                             const branchBlockIds = [];
-
                             // Helper function to recursively collect block IDs down the chain
                             const scanChain = (startBlockId) => {
                                 let nextBlockId = startBlockId;
@@ -1238,7 +1293,7 @@
                         el = body.appendChild(el)
                         // this.pages.get(args.PAGE)?.set("code", `${this.pages.get(args.PAGE)?.get("code")}<!-- begin the ${args.ID} --><${args.EL} id="${args.ID}"><!-- end the top -->`)
                     } else {
-                        throw new Error(`Ony one element with the id "${args.ID}" can exist in the document`)
+                        throw new Error(`Only one element with the id "${args.ID}" can exist in the document`)
                     }
                 } else {
                     throw new Error(`Element must have an id`)
@@ -1257,15 +1312,106 @@
                     // this.pages.get(args.PAGE)?.set("code", `${this.pages.get(args.PAGE)?.get("code")}</${args.EL}><!-- end the bottom of ${args.ID} -->`)
                     // this.pages.get(args.PAGE)?.set("code", document.createRange().createContextualFragment(this.pages.get(args.PAGE).get("code")))
                     // 
-                    util.stackFrame.startedBranch = false;
-                    return;
+
+
+                return new Promise((resolve, reject) => {
+                try {
+                    if (this.viewing.includes(args.PAGE) && document.querySelector(".htmlpage")) {
+                        const elements = document.querySelectorAll(`.htmlpage.display${args.PAGE}`);
+                        elements.forEach(el => el.remove());
+                        const el = document.createElement("iframe");
+                        el.setAttribute("srcdoc", toAString.serializeToString(this.pages.get(args.PAGE).get("code")))
+                        el.setAttribute("class", `htmlpage display${args.PAGE}`)
+                        el.style.position = 'absolute';
+                        el.style.pointerEvents = 'auto';
+                        el.style.zIndex = '10';
+                        el.style.left = `${this.pages.get(args.PAGE).get("data").get("x")}px`;
+                        el.style.top = `${this.pages.get(args.PAGE).get("data").get("y")}px`;
+                        el.setAttribute("width", `${this.pages.get(args.PAGE).get("data").get("width")}px`)
+                        el.setAttribute("height", `${this.pages.get(args.PAGE).get("data").get("height")}px`)
+                        el.style.border = "1px solid black"
+                        const container = Scratch.renderer.canvas.parentElement;
+                        container.appendChild(el);
+                        if (!this.viewing.includes(args.PAGE)) {
+                            this.viewing.push(args.PAGE)
+                        }
+                    }
+                    el.onload = () => {
+                        for (const [key, value] of this.pages.get(args.PAGE)?.get("eves")) {
+                            // 
+
+                            el.contentDocument.querySelector(`#${key}`).addEventListener(value, () => {
+                                const triggerText = String(key);
+                                const triggerTexta = String(args.PAGE);
+
+                                const targetOpcode = 'scrtwpmhtmldocuments_eve';
+                                const vm = Scratch.vm;
+
+                                vm.runtime.targets.forEach(target => {
+                                    const blocks = target.blocks;
+                                    const scripts = blocks.getScripts();
+
+                                    scripts.forEach(rootBlockId => {
+                                        const block = blocks.getBlock(rootBlockId);
+
+                                        if (block && block.opcode === targetOpcode) {
+                                            let hatValue = '';
+                                            let hatValuea = '';
+
+                                            if (block.fields && block.fields.ID && block.fields.PAGE) {
+                                                hatValue = block.fields.ID.value;
+                                                hatValuea = block.fields.PAGE.value;
+                                            }
+                                            else if (block.inputs && block.inputs.ID && block.inputs.PAGE) {
+                                                const inputID = block.inputs.ID;
+                                                const inputPAGE = block.inputs.PAGE;
+
+                                                const shadowBlockID = blocks.getBlock(inputID.shadow);
+                                                const shadowBlockPAGE = blocks.getBlock(inputPAGE.shadow);
+
+                                                if (shadowBlockID && shadowBlockID.fields) {
+                                                    const fieldKey = Object.keys(shadowBlockID.fields)[0];
+                                                    hatValue = shadowBlockID.fields[fieldKey]?.value || '';
+                                                }
+                                                if (shadowBlockPAGE && shadowBlockPAGE.fields) {
+                                                    const fieldKeya = Object.keys(shadowBlockPAGE.fields)[0];
+                                                    hatValuea = shadowBlockPAGE.fields[fieldKeya]?.value || '';
+                                                }
+                                            }
+
+                                            if (hatValue === triggerText && hatValuea === triggerTexta) {
+                                                vm.runtime._pushThread(rootBlockId, target);
+                                            }
+                                        }
+                                    });
+                                });
+                            }
+
+                            )
+
+
+                        }
+                    }
+                } catch (error) { }
+                resolve();
+                util.stackFrame.startedBranch = false;
+                return;
+            });
+
+
                 }
                 let blocksInLoop = []
                 if (args.ID !== "") {
                     if (this.pages.get(args.PAGE)?.get("code").querySelector(`#${args.ID}`)) {
+                        console.log(this.getInfo().menus.nest.items)
+                        console.log(this.pages.get(args.PAGE)?.get("code").querySelector(`#${args.ID}`).tagName.toLowerCase())
+                        if(this.getInfo().menus.nest.items.includes(this.pages.get(args.PAGE)?.get("code").querySelector(`#${args.ID}`).tagName.toLowerCase())){
                         const blockContainer = util.thread.blockContainer;
                         const currentBlockId = util.thread.peekStack(); //
                         const currentBlock = blockContainer.getBlock(currentBlockId);
+                        if(!currentBlock){
+                        return
+                        }
                         function fn() {
                             const bc = util.thread.target.blocks;
                             const currentBlock = bc.getBlock(currentBlockId);
@@ -1363,10 +1509,23 @@
                         // el = body.appendChild(el)
                         // this.pages.get(args.PAGE)?.set("code", `${this.pages.get(args.PAGE)?.get("code")}<!-- begin the ${args.ID} --><${args.EL} id="${args.ID}"><!-- end the top -->`)
                     } else {
-                        throw new Error(`Ony one element with the id "${args.ID}" can exist in the document`)
+                        const blockContainer = util.thread.blockContainer;
+                        const currentBlockId = util.thread.peekStack(); //
+                        const currentBlock = blockContainer.getBlock(currentBlockId);
+                        if (currentBlock) {
+                            currentBlock.el = {
+                                el: args.ID,
+                                compiledScope: 'global',
+                                bin: blocksInLoop,
+                                page: args.PAGE
+                            };
+                        }
+                    }
+                    } else {
+                        throw new Error(`An element with the id "${args.ID}" doesn't exist in the page`)
                     }
                 } else {
-                    throw new Error(`Element must have an id`)
+                    // throw new Error(`Element must have an id`)
                     // this.pages.get(args.PAGE)?.set("code", toAString.serializeToString(this.pages.get(args.PAGE).get("code")))
                     // this.pages.get(args.PAGE)?.set("code", `${this.pages.get(args.PAGE)?.get("code")}<!-- begin the ${args.ID} --><${args.EL} ><!-- end the top -->`)
                 }
@@ -1432,6 +1591,7 @@
                             parentBlockId = blockId;
 
                             const pB = blockContainer.getBlock(parentBlockId)
+                            console.log(pB)
                             if (pB && pB.el.bin.includes(currentBlockId) && pB.el.page === args.PAGE) {
                                 nest = pB.el.el
 
@@ -1449,6 +1609,7 @@
                                 return
                             }
                         }
+                    
 
                         if (substackId) {
                             let checkId = substackId;
@@ -1567,7 +1728,7 @@
             //         this.pages[args.PAGE].ids.push(args.ID)
             //         this.pages[args.PAGE].code += `<!-- begin the ${args.ID} --><${args.EL} id="${args.ID}"><!-- end the top -->`
             //         } else {
-            //         throw new Error (`Ony one element with the id "${args.ID}" can exist in the document`)
+            //         throw new Error (`Only one element with the id "${args.ID}" can exist in the document`)
             //         }
             //     } else {
             //         this.pages[args.PAGE].code += `<!-- begin the ${args.ID} --><${args.EL} ><!-- end the top -->`
@@ -1952,40 +2113,149 @@
         importHTML(args, util) {
 
         }
-
         prettierInText(html) {
-            let clean = html.replace(/\s*([<>])\s*/g, '$1').replace(/\s+/g, ' ');
+            let styleBlocks = [];
+            let clean = html.replace(/<style[^>]*>([\s\S]*?)<\/style>/gi, (match) => {
+                styleBlocks.push(match);
+                return `___STYLE_BLOCK_${styleBlocks.length - 1}___`;
+            });
+
+            clean = clean.replace(/\s*([<>])\s*/g, '$1').replace(/\s+/g, ' ');
+
             let reg = /(<[^>]+>)/g;
             let matches = clean.split(reg).filter(Boolean);
             let formatted = '';
             let pad = 0;
+
             matches.forEach((token) => {
-                if (token.match(/<\/\w+/)) {
-                    pad--;
-                }
-                formatted += '  '.repeat(Math.max(0, pad)) + token + '\n';
-                if (token.match(/<[^\/][^>]*[^>\/]>/) && !token.match(/<(input|img|br|hr|meta|link)/)) {
-                    pad++;
+
+                let styleMatch = token.match(/___STYLE_BLOCK_(\d+)___/);
+
+                if (styleMatch) {
+                    let originalStyle = styleBlocks[parseInt(styleMatch[1])];
+
+                    let lines = originalStyle.split('\n');
+                    lines.forEach((line) => {
+                        if (line.trim()) {
+                            formatted += '  '.repeat(Math.max(0, pad)) + line + '\n';
+                        }
+                    });
+                } else {
+
+                    if (token.match(/^<\/\w+/)) {
+                        pad--;
+                    }
+
+                    formatted += '  '.repeat(Math.max(0, pad)) + token + '\n';
+
+                    if (token.match(/^<[^\/]/) && !token.match(/\/>$/) && !token.match(/^<(input|img|br|hr|meta|link|embed|source|track|wbr)/i)) {
+                        pad++;
+                    }
                 }
             });
+
             return formatted.trim();
         }
 
 
+
+
+        prettierinCSS(cssText) {
+            const indent = " ".repeat(2);
+            let formatted = "";
+            let depth = 0;
+
+            const tokens = cssText
+                .replace(/\s+/g, " ")
+                .replace(/\{/g, " { ")
+                .replace(/\}/g, " } ")
+                .replace(/;/g, " ; ")
+                .split(/\s(?=(?:[^"']*["'][^"']*["'])*[^"']*$)/)
+                .filter(token => token.trim() !== "");
+
+
+            for (let i = 0; i < tokens.length; i++) {
+                const token = tokens[i];
+                const nextToken = tokens[i + 1];
+
+                if (token === "{") {
+                    depth++;
+                    formatted += " {\n" + indent.repeat(depth);
+                }
+                else if (token === "}") {
+                    depth--;
+
+                    formatted = formatted.trimEnd() + "\n" + indent.repeat(depth) + "}\n" + (depth === 0 ? "\n" : "");
+                }
+                else if (token === ";") {
+                    formatted += ";\n" + indent.repeat(depth);
+                }
+                else if (token === ":") {
+                    formatted += ": ";
+                }
+                else {
+
+                    formatted += token;
+
+
+                    if (nextToken && nextToken !== "{" && nextToken !== "}" && nextToken !== ";" && nextToken !== ":") {
+                        formatted += " ";
+                    }
+                }
+            }
+            return "\n" + formatted.trim() + "\n";
+        }
+
+
+
         getHTML(args, util) {
             if ((this.pages).has(args.PAGE)) {
-                let doc = this.pages.get(args.PAGE).get("code")
+                let originalDoc = this.pages.get(args.PAGE).get("code");
+                let doc = originalDoc.cloneNode(true);
+                let style = doc.querySelector("style")
+                
+                let sText = ""
+                if (style) {
+                    sText = this.prettierinCSS(style.innerHTML)
+                    style.innerHTML = sText
+                }
+                
                 let el = toAString.serializeToString(doc)
+                
                 // let el = this.pages.get(args.PAGE).get("code");
                 let cleanString = el.replace(/<!--[\s\S]*?-->/g, "").replace(/xmlns="[\s\S]*?"/g, "").replaceAll(``, "");
                 let toChange = `<html><body>${cleanString}</body></html>`
-
-                return (this.prettierInText(cleanString))
+                
+                return (new CustomTypeTwo(this.prettierInText(cleanString)))
             } else {
                 return ('Page does not exist!')
             }
         }
 
+
+        previewHTML(args, util) {
+            if ((this.pages).has(args.PAGE)) {
+                let originalDoc = this.pages.get(args.PAGE).get("code");
+                let doc = originalDoc.cloneNode(true);
+                let style = doc.querySelector("style")
+                
+                let sText = ""
+                if (style) {
+                    sText = this.prettierinCSS(style.innerHTML)
+                    style.innerHTML = sText
+                }
+                
+                let el = toAString.serializeToString(doc)
+                
+                // let el = this.pages.get(args.PAGE).get("code");
+                let cleanString = el.replace(/<!--[\s\S]*?-->/g, "").replace(/xmlns="[\s\S]*?"/g, "").replaceAll(``, "");
+                let toChange = `<html><body>${cleanString}</body></html>`
+                
+                return (new CustomType(this.prettierInText(cleanString)))
+            } else {
+                return ('Page does not exist!')
+            }
+        }
 
         addeve(args, util) {
             let el = this.pages.get(args.PAGE)?.get("code").getElementById(`${args.ID}`);

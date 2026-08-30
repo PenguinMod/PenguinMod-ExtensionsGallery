@@ -192,12 +192,14 @@ Enjoy!! :D
     function parseRichText(text, base) {
         const families = new Set([base.font]);
         const stack = [Object.assign({
-            customTags: []
+            customTags: [],
+            gradientOccurrenceIndex: -1
         }, base)];
         const out = [];
         TAG_RE.lastIndex = 0;
         let i = 0;
         let match;
+        let gradientOccurrenceSeq = 0;
         while ((match = TAG_RE.exec(text)) !== null || i < text.length) {
             const tagStart = match ? match.index : text.length;
             while (i < tagStart) {
@@ -213,7 +215,8 @@ Enjoy!! :D
                     font: style.font,
                     tags: style.customTags,
                     gradient: style.gradient,
-                    gradientSpanId: style.gradientSpanId
+                    gradientSpanId: style.gradientSpanId,
+                    gradientOccurrenceIndex: style.gradientOccurrenceIndex
                 });
                 families.add(style.font);
                 i++;
@@ -240,7 +243,8 @@ Enjoy!! :D
                     font: prev.font,
                     customTags: prev.customTags,
                     gradient: prev.gradient,
-                    gradientSpanId: prev.gradientSpanId
+                    gradientSpanId: prev.gradientSpanId,
+                    gradientOccurrenceIndex: prev.gradientOccurrenceIndex
                 };
                 if (KNOWN_TAGS.indexOf(tag) !== -1) {
                     switch (tag) {
@@ -271,6 +275,7 @@ Enjoy!! :D
                             const parsed = parseGradientValue(value);
                             top.gradient = parsed || top.gradient;
                             top.gradientSpanId = parsed ? gradientSpanIdSeq++ : top.gradientSpanId;
+                            top.gradientOccurrenceIndex = parsed ? gradientOccurrenceSeq++ : top.gradientOccurrenceIndex;
                             break;
                         }
                     }
@@ -490,6 +495,8 @@ Enjoy!! :D
             typingBoxKey: null,
             typingBoxWidth: 0,
             typingBoxHeight: 0,
+            typingBoxLineWidths: null,
+            typingBoxGradientSpans: null,
             isTyping: false
         };
     }
@@ -1187,7 +1194,7 @@ Enjoy!! :D
             const mask = op.mask;
             const maskOpacity = mask ? Math.max(0, Math.min(100, Scratch.Cast.toNumber(mask.opacity != null ? mask.opacity : 100))) / 100 : 0;
             const alpha = (op.opacity == null ? 1 : op.opacity) * maskOpacity;
-            const canBatch = mask && mask.seamless && !op.rotation && (op.scale == null || op.scale === 1) &&
+            const canBatch = mask && !op.gradient && mask.seamless && !op.rotation && (op.scale == null || op.scale === 1) &&
                 Math.max(0, Math.min(100, Scratch.Cast.toNumber(mask.coverage) || 0)) > 0 && alpha > 0;
             if (!canBatch) {
                 flushGroup();
@@ -1919,6 +1926,8 @@ Enjoy!! :D
         state.typingBoxKey = null;
         state.typingBoxWidth = 0;
         state.typingBoxHeight = 0;
+        state.typingBoxLineWidths = null;
+        state.typingBoxGradientSpans = null;
     }
 
     function shapeKeyForText(state, rawText) {
@@ -1927,6 +1936,111 @@ Enjoy!! :D
         const key = getShapeKey(state);
         state.rawText = prev;
         return key;
+    }
+
+    function computeFinalGradientSpans(state, measured) {
+        const spans = new Map();
+        if (!measured.lines.length) return spans;
+
+        const lineHeight = state.baseStyle.size * state.lineSpacing;
+        const totalHeight = measured.lines.length * lineHeight;
+        const textStartY = -totalHeight / 2;
+
+        let groupOccurrenceIndex = null;
+        let groupChars = null;
+        let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
+
+        const flushGroup = () => {
+            if (!groupChars || !groupChars.length) return;
+            if (isFinite(minX) && isFinite(maxX) && isFinite(minY) && isFinite(maxY)) {
+                const spanW = Math.max(1, maxX - minX);
+                const spanH = Math.max(1, maxY - minY);
+                for (const gc of groupChars) {
+                    spans.set(gc.charIndex, {
+                        spanW,
+                        spanH,
+                        localOffsetXPx: gc.px - minX,
+                        localOffsetYPx: gc.py - minY
+                    });
+                }
+            }
+            groupOccurrenceIndex = null;
+            groupChars = null;
+            minX = Infinity;
+            maxX = -Infinity;
+            minY = Infinity;
+            maxY = -Infinity;
+        };
+
+        for (let li = 0; li < measured.lines.length; li++) {
+            const runs = measured.lineRuns[li];
+            const lineW = measured.lineWidths[li];
+            let lineX;
+            if (state.align === 'left' || state.align === 'justify') {
+                lineX = 0;
+            } else if (state.align === 'right') {
+                lineX = -lineW;
+            } else {
+                lineX = -lineW / 2;
+            }
+
+            const baseCenterY = textStartY + (li * lineHeight) + lineHeight * 0.5;
+
+            for (const run of runs) {
+                const runOriginX = lineX + run.runStartX;
+                const fontFamily = run.fontStyle['font-family'];
+                const fontSize = run.fontStyle['font-size'];
+                const fontWeight = run.fontStyle['font-weight'];
+                const fontStyle = run.fontStyle['font-style'];
+
+                for (let i = 0; i < run.chars.length; i++) {
+                    const rc = run.chars[i];
+                    const pos = run.positions[i];
+                    const occurrenceIndex = rc.gradient ? rc.gradientOccurrenceIndex : -1;
+
+                    if (occurrenceIndex == null || occurrenceIndex < 0) {
+                        flushGroup();
+                        continue;
+                    }
+
+                    if (groupOccurrenceIndex !== occurrenceIndex) {
+                        flushGroup();
+                        groupOccurrenceIndex = occurrenceIndex;
+                        groupChars = [];
+                    }
+
+                    const ch = rc.char === ' ' ? '\u00A0' : rc.char;
+                    const charIndex = run.startIndex + i;
+                    if (ch === '\u00A0' || ch === '') {
+                        groupChars.push({ charIndex, px: 0, py: 0 });
+                        continue;
+                    }
+
+                    const shape = getGlyphShape(ch, fontFamily, fontSize, fontWeight, fontStyle);
+                    if (!shape) continue;
+
+                    const charCenterX = runOriginX + pos.shapedX + pos.advance / 2;
+                    const charCenterY = baseCenterY;
+                    const advanceCenterXEm = shape.baselineOriginXEm + shape.advance / 2;
+                    const baselineYFromLineCenter = (shape.fontAscentEm - shape.fontDescentEm) / 2;
+                    const drawXEm = charCenterX - advanceCenterXEm;
+                    const drawYEm = (charCenterY + baselineYFromLineCenter) - shape.baselineOriginYEm;
+                    const px = Math.round(drawXEm * DEST_SCALE);
+                    const py = Math.round(drawYEm * DEST_SCALE);
+                    const w = shape.canvas.width;
+                    const h = shape.canvas.height;
+
+                    groupChars.push({ charIndex, px, py });
+                    minX = Math.min(minX, px);
+                    maxX = Math.max(maxX, px + w);
+                    minY = Math.min(minY, py);
+                    maxY = Math.max(maxY, py + h);
+                }
+            }
+        }
+        flushGroup();
+
+        return spans;
     }
 
     function ensureTypingBox(state) {
@@ -1940,6 +2054,8 @@ Enjoy!! :D
         state.typingBoxKey = key;
         state.typingBoxWidth = measured.maxWidth;
         state.typingBoxHeight = measured.lines.length * lineHeight;
+        state.typingBoxLineWidths = measured.lineWidths;
+        state.typingBoxGradientSpans = computeFinalGradientSpans(state, measured);
     }
 
     function getExactTextDimensions(state) {
@@ -2449,11 +2565,14 @@ Enjoy!! :D
             }
             paintOps = [];
             const letterSpacing = state.letterSpacing || 0;
+            const typingBoxLineWidths = state.typingBoxLineWidths;
+            const isFinalTypingLine = !!typingBoxLineWidths && typingBoxLineWidths.length === lines.length;
 
             for (let li = 0; li < lines.length; li++) {
                 const line = lines[li];
                 const runs = lineRuns[li];
                 const lineW = lineWidths[li];
+                const centerLineW = isFinalTypingLine ? typingBoxLineWidths[li] : lineW;
                 const justifySpaceCount = state.align === 'justify' && li < lines.length - 1 &&
                     effectiveMaxWidth > lineW ?
                     line.filter(rc => rc.char === ' ').length : 0;
@@ -2464,11 +2583,11 @@ Enjoy!! :D
                 if (state.align === 'left') {
                     lineX = originX - effectiveMaxWidth / 2;
                 } else if (state.align === 'right') {
-                    lineX = originX + effectiveMaxWidth / 2 - lineW;
+                    lineX = originX + effectiveMaxWidth / 2 - centerLineW;
                 } else if (state.align === 'justify') {
                     lineX = originX - effectiveMaxWidth / 2;
                 } else {
-                    lineX = originX - lineW / 2;
+                    lineX = originX - centerLineW / 2;
                 }
 
                 const textStartY = originY - totalHeight / 2;
@@ -2518,6 +2637,7 @@ Enjoy!! :D
                         op.charIndex = index;
                         op.gradient = o.color ? null : (rc.gradient || null);
                         op.gradientSpanId = o.color ? null : (rc.gradientSpanId || null);
+                        op.gradientOccurrenceIndex = o.color ? -1 : (rc.gradientOccurrenceIndex != null ? rc.gradientOccurrenceIndex : -1);
                         paintOps.push(op);
 
                         if (rc.char === ' ') spacesBefore++;
@@ -3159,7 +3279,7 @@ function collectBatchedMaskGroups(paintOps, maskTextures) {
         const mask = op.mask;
         const maskOpacity = mask ? Math.max(0, Math.min(100, Scratch.Cast.toNumber(mask.opacity != null ? mask.opacity : 100))) / 100 : 0;
         const alpha = (op.opacity == null ? 1 : op.opacity) * maskOpacity;
-        const canBatch = mask && mask.seamless && !op.rotation && (op.scale == null || op.scale === 1) &&
+        const canBatch = mask && !op.gradient && mask.seamless && !op.rotation && (op.scale == null || op.scale === 1) &&
             Math.max(0, Math.min(100, Scratch.Cast.toNumber(mask.coverage) || 0)) > 0 && alpha > 0;
         if (!canBatch) {
             flushGroup();
@@ -3633,7 +3753,7 @@ function compositeGlyphsToCanvas(stateId, settings, paintOps, docW, docH, textWi
             if (hasOpacity) ctx.globalAlpha = 1;
         }
 
-        if (op.mask && !batchedMasks.batchedOps.has(op)) {
+        if (op.mask && !op.gradient && !batchedMasks.batchedOps.has(op)) {
             const texture = maskTextures.get(op.mask.targetName + '\u0001' + op.mask.costumeName);
             if (texture) {
                 const px = Math.round(drawXEm * DEST_SCALE);
@@ -4126,6 +4246,12 @@ self.onmessage = async (event) => {
             return state.gradientSpansCache;
         }
         const spans = computeGradientSpansByIndex(paintOps);
+        const finalSpans = state.typingBoxGradientSpans;
+        if (finalSpans && finalSpans.size) {
+            for (const [charIndex, finalSpan] of finalSpans) {
+                spans.set(charIndex, finalSpan);
+            }
+        }
         state.gradientSpansCacheKey = cacheKey;
         state.gradientSpansCache = spans;
         return spans;
@@ -4197,12 +4323,18 @@ self.onmessage = async (event) => {
                 const shape = getGlyphShape(op.text, fontFamily, fontSize, fontWeight, fontStyle);
                 const span = shape && gradientSpansByIndex.get(op.charIndex);
                 if (shape && span) {
-                    const advanceCenterXEmForSpan = shape.baselineOriginXEm + shape.advance / 2;
-                    const baselineYFromLineCenterForSpan = (shape.fontAscentEm - shape.fontDescentEm) / 2;
-                    const drawXEmForSpan = op.x - advanceCenterXEmForSpan;
-                    const drawYEmForSpan = (op.y + baselineYFromLineCenterForSpan) - shape.baselineOriginYEm;
-                    const localOffsetXPx = Math.round(drawXEmForSpan * DEST_SCALE) - span.originX;
-                    const localOffsetYPx = Math.round(drawYEmForSpan * DEST_SCALE) - span.originY;
+                    let localOffsetXPx, localOffsetYPx;
+                    if (span.localOffsetXPx !== undefined) {
+                        localOffsetXPx = span.localOffsetXPx;
+                        localOffsetYPx = span.localOffsetYPx;
+                    } else {
+                        const advanceCenterXEmForSpan = shape.baselineOriginXEm + shape.advance / 2;
+                        const baselineYFromLineCenterForSpan = (shape.fontAscentEm - shape.fontDescentEm) / 2;
+                        const drawXEmForSpan = op.x - advanceCenterXEmForSpan;
+                        const drawYEmForSpan = (op.y + baselineYFromLineCenterForSpan) - shape.baselineOriginYEm;
+                        localOffsetXPx = Math.round(drawXEmForSpan * DEST_SCALE) - span.originX;
+                        localOffsetYPx = Math.round(drawYEmForSpan * DEST_SCALE) - span.originY;
+                    }
                     const gradientCanvas = tintGlyphGradient(shape, op.gradient, span.spanW, span.spanH, localOffsetXPx, localOffsetYPx);
                     gradientScratchCanvases.push(gradientCanvas);
                     glyph = {
@@ -4269,7 +4401,7 @@ self.onmessage = async (event) => {
                 if (hasOpacity) ctx.globalAlpha = 1;
             }
 
-            if (op.mask && !batchedMasks.batchedOps.has(op)) {
+            if (op.mask && !op.gradient && !batchedMasks.batchedOps.has(op)) {
                 const texture = getMaskTexture(op.mask.targetName, op.mask.costumeName);
                 if (texture) {
                     const px = Math.round(drawXEm * DEST_SCALE);

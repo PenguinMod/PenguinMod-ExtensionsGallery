@@ -4,42 +4,44 @@
     const dom = new DOMParser()
     const toAString = new XMLSerializer()
 
-    class CustomType {
-            constructor(html){
-        this.html = html
+    class PrevHTML {
+        constructor(html) {
+            this.html = html
+        }
+        toString() {
+            return this.html
+        }
+        toReporterContent() {
+            let wrap = document.createElement('iframe')
+            wrap.setAttribute("srcdoc", this.html)
+            wrap.style.height = "95%"
+            wrap.style.width = "95%"
+            return wrap;
+        }
     }
-    toString() {
-        return this.html
-    }
-    toReporterContent() {
-        let wrap =  document.createElement('div')
-        wrap.innerHTML = this.html
-        return wrap;
-    }
-}
 
-    class CustomTypeTwo {
-            constructor(html){
-        this.html = html
+    class HtmlCode {
+        constructor(html) {
+            this.html = html
+        }
+        toString() {
+            return this.html
+        }
+        toReporterContent() {
+            let wrap = document.createElement('div')
+            wrap.innerText = this.html
+            // wrap.style.backgroundColor = "black"
+            // wrap.style.color = "white"
+            // wrap.style.border = "solid 10px black"
+            wrap.style.border = "solid 10px #ffffff00"
+            wrap.style.backgroundColor = "#ffffff00"
+            wrap.style.boxSizing = "border-box"
+            wrap.style.fontFamily = "Consolas"
+            wrap.style.height = "fit-content"
+            wrap.style.width = "fit-content"
+            return wrap;
+        }
     }
-    toString() {
-        return this.html
-    }
-    toReporterContent() {
-        let wrap =  document.createElement('div')
-        wrap.innerText = this.html
-        // wrap.style.backgroundColor = "black"
-        // wrap.style.color = "white"
-        // wrap.style.border = "solid 10px black"
-        wrap.style.border = "solid 10px #ffffff00"
-        wrap.style.backgroundColor = "#ffffff00"
-        wrap.style.boxSizing = "border-box"
-        wrap.style.fontFamily = "Consolas"
-        wrap.style.height = "fit-content"
-        wrap.style.width = "fit-content"
-        return wrap;
-    }
-}
 
 
     class HTMLDocuments {
@@ -1171,13 +1173,13 @@
                         const blockContainer = util.thread.blockContainer;
                         const currentBlockId = util.thread.peekStack(); //
                         const currentBlock = blockContainer.getBlock(currentBlockId);
-                        if(!currentBlock){
-                        let body = this.pages.get(args.PAGE)?.get("code").querySelector("body")
-                        // 
-                        let el = document.createElement(args.EL)
-                        el.setAttribute("id", `${args.ID}`)
-                        el = body.appendChild(el)
-                        return
+                        if (!currentBlock) {
+                            let body = this.pages.get(args.PAGE)?.get("code").querySelector("body")
+                            // 
+                            let el = document.createElement(args.EL)
+                            el.setAttribute("id", `${args.ID}`)
+                            el = body.appendChild(el)
+                            return
                         }
                         let blocksInLoop = []
                         function fn() {
@@ -1314,213 +1316,213 @@
                     // 
 
 
-                return new Promise((resolve, reject) => {
-                try {
-                    if (this.viewing.includes(args.PAGE) && document.querySelector(".htmlpage")) {
-                        const elements = document.querySelectorAll(`.htmlpage.display${args.PAGE}`);
-                        elements.forEach(el => el.remove());
-                        const el = document.createElement("iframe");
-                        el.setAttribute("srcdoc", toAString.serializeToString(this.pages.get(args.PAGE).get("code")))
-                        el.setAttribute("class", `htmlpage display${args.PAGE}`)
-                        el.style.position = 'absolute';
-                        el.style.pointerEvents = 'auto';
-                        el.style.zIndex = '10';
-                        el.style.left = `${this.pages.get(args.PAGE).get("data").get("x")}px`;
-                        el.style.top = `${this.pages.get(args.PAGE).get("data").get("y")}px`;
-                        el.setAttribute("width", `${this.pages.get(args.PAGE).get("data").get("width")}px`)
-                        el.setAttribute("height", `${this.pages.get(args.PAGE).get("data").get("height")}px`)
-                        el.style.border = "1px solid black"
-                        const container = Scratch.renderer.canvas.parentElement;
-                        container.appendChild(el);
-                        if (!this.viewing.includes(args.PAGE)) {
-                            this.viewing.push(args.PAGE)
-                        }
-                    }
-                    el.onload = () => {
-                        for (const [key, value] of this.pages.get(args.PAGE)?.get("eves")) {
-                            // 
-
-                            el.contentDocument.querySelector(`#${key}`).addEventListener(value, () => {
-                                const triggerText = String(key);
-                                const triggerTexta = String(args.PAGE);
-
-                                const targetOpcode = 'scrtwpmhtmldocuments_eve';
-                                const vm = Scratch.vm;
-
-                                vm.runtime.targets.forEach(target => {
-                                    const blocks = target.blocks;
-                                    const scripts = blocks.getScripts();
-
-                                    scripts.forEach(rootBlockId => {
-                                        const block = blocks.getBlock(rootBlockId);
-
-                                        if (block && block.opcode === targetOpcode) {
-                                            let hatValue = '';
-                                            let hatValuea = '';
-
-                                            if (block.fields && block.fields.ID && block.fields.PAGE) {
-                                                hatValue = block.fields.ID.value;
-                                                hatValuea = block.fields.PAGE.value;
-                                            }
-                                            else if (block.inputs && block.inputs.ID && block.inputs.PAGE) {
-                                                const inputID = block.inputs.ID;
-                                                const inputPAGE = block.inputs.PAGE;
-
-                                                const shadowBlockID = blocks.getBlock(inputID.shadow);
-                                                const shadowBlockPAGE = blocks.getBlock(inputPAGE.shadow);
-
-                                                if (shadowBlockID && shadowBlockID.fields) {
-                                                    const fieldKey = Object.keys(shadowBlockID.fields)[0];
-                                                    hatValue = shadowBlockID.fields[fieldKey]?.value || '';
-                                                }
-                                                if (shadowBlockPAGE && shadowBlockPAGE.fields) {
-                                                    const fieldKeya = Object.keys(shadowBlockPAGE.fields)[0];
-                                                    hatValuea = shadowBlockPAGE.fields[fieldKeya]?.value || '';
-                                                }
-                                            }
-
-                                            if (hatValue === triggerText && hatValuea === triggerTexta) {
-                                                vm.runtime._pushThread(rootBlockId, target);
-                                            }
-                                        }
-                                    });
-                                });
+                    return new Promise((resolve, reject) => {
+                        try {
+                            if (this.viewing.includes(args.PAGE) && document.querySelector(".htmlpage")) {
+                                const elements = document.querySelectorAll(`.htmlpage.display${args.PAGE}`);
+                                elements.forEach(el => el.remove());
+                                const el = document.createElement("iframe");
+                                el.setAttribute("srcdoc", toAString.serializeToString(this.pages.get(args.PAGE).get("code")))
+                                el.setAttribute("class", `htmlpage display${args.PAGE}`)
+                                el.style.position = 'absolute';
+                                el.style.pointerEvents = 'auto';
+                                el.style.zIndex = '10';
+                                el.style.left = `${this.pages.get(args.PAGE).get("data").get("x")}px`;
+                                el.style.top = `${this.pages.get(args.PAGE).get("data").get("y")}px`;
+                                el.setAttribute("width", `${this.pages.get(args.PAGE).get("data").get("width")}px`)
+                                el.setAttribute("height", `${this.pages.get(args.PAGE).get("data").get("height")}px`)
+                                el.style.border = "1px solid black"
+                                const container = Scratch.renderer.canvas.parentElement;
+                                container.appendChild(el);
+                                if (!this.viewing.includes(args.PAGE)) {
+                                    this.viewing.push(args.PAGE)
+                                }
                             }
+                            el.onload = () => {
+                                for (const [key, value] of this.pages.get(args.PAGE)?.get("eves")) {
+                                    // 
 
-                            )
+                                    el.contentDocument.querySelector(`#${key}`).addEventListener(value, () => {
+                                        const triggerText = String(key);
+                                        const triggerTexta = String(args.PAGE);
+
+                                        const targetOpcode = 'scrtwpmhtmldocuments_eve';
+                                        const vm = Scratch.vm;
+
+                                        vm.runtime.targets.forEach(target => {
+                                            const blocks = target.blocks;
+                                            const scripts = blocks.getScripts();
+
+                                            scripts.forEach(rootBlockId => {
+                                                const block = blocks.getBlock(rootBlockId);
+
+                                                if (block && block.opcode === targetOpcode) {
+                                                    let hatValue = '';
+                                                    let hatValuea = '';
+
+                                                    if (block.fields && block.fields.ID && block.fields.PAGE) {
+                                                        hatValue = block.fields.ID.value;
+                                                        hatValuea = block.fields.PAGE.value;
+                                                    }
+                                                    else if (block.inputs && block.inputs.ID && block.inputs.PAGE) {
+                                                        const inputID = block.inputs.ID;
+                                                        const inputPAGE = block.inputs.PAGE;
+
+                                                        const shadowBlockID = blocks.getBlock(inputID.shadow);
+                                                        const shadowBlockPAGE = blocks.getBlock(inputPAGE.shadow);
+
+                                                        if (shadowBlockID && shadowBlockID.fields) {
+                                                            const fieldKey = Object.keys(shadowBlockID.fields)[0];
+                                                            hatValue = shadowBlockID.fields[fieldKey]?.value || '';
+                                                        }
+                                                        if (shadowBlockPAGE && shadowBlockPAGE.fields) {
+                                                            const fieldKeya = Object.keys(shadowBlockPAGE.fields)[0];
+                                                            hatValuea = shadowBlockPAGE.fields[fieldKeya]?.value || '';
+                                                        }
+                                                    }
+
+                                                    if (hatValue === triggerText && hatValuea === triggerTexta) {
+                                                        vm.runtime._pushThread(rootBlockId, target);
+                                                    }
+                                                }
+                                            });
+                                        });
+                                    }
+
+                                    )
 
 
-                        }
-                    }
-                } catch (error) { }
-                resolve();
-                util.stackFrame.startedBranch = false;
-                return;
-            });
+                                }
+                            }
+                        } catch (error) { }
+                        resolve();
+                        util.stackFrame.startedBranch = false;
+                        return;
+                    });
 
 
                 }
                 let blocksInLoop = []
                 if (args.ID !== "") {
                     if (this.pages.get(args.PAGE)?.get("code").querySelector(`#${args.ID}`)) {
-                        console.log(this.getInfo().menus.nest.items)
-                        console.log(this.pages.get(args.PAGE)?.get("code").querySelector(`#${args.ID}`).tagName.toLowerCase())
-                        if(this.getInfo().menus.nest.items.includes(this.pages.get(args.PAGE)?.get("code").querySelector(`#${args.ID}`).tagName.toLowerCase())){
-                        const blockContainer = util.thread.blockContainer;
-                        const currentBlockId = util.thread.peekStack(); //
-                        const currentBlock = blockContainer.getBlock(currentBlockId);
-                        if(!currentBlock){
-                        return
-                        }
-                        function fn() {
-                            const bc = util.thread.target.blocks;
-                            const currentBlock = bc.getBlock(currentBlockId);
-                            if (!currentBlock) return;
 
-                            // 3. Find the ID of the first block inside the loop's C-shaped slot (SUBSTACK)
-                            const substackInput = currentBlock.inputs.SUBSTACK;
-                            if (!substackInput || !substackInput.block) {
 
-                                return;
+                        if (this.getInfo().menus.nest.items.includes(this.pages.get(args.PAGE)?.get("code").querySelector(`#${args.ID}`).tagName.toLowerCase())) {
+                            const blockContainer = util.thread.blockContainer;
+                            const currentBlockId = util.thread.peekStack(); //
+                            const currentBlock = blockContainer.getBlock(currentBlockId);
+                            if (!currentBlock) {
+                                return
+                            }
+                            function fn() {
+                                const bc = util.thread.target.blocks;
+                                const currentBlock = bc.getBlock(currentBlockId);
+                                if (!currentBlock) return;
+
+                                // 3. Find the ID of the first block inside the loop's C-shaped slot (SUBSTACK)
+                                const substackInput = currentBlock.inputs.SUBSTACK;
+                                if (!substackInput || !substackInput.block) {
+
+                                    return;
+                                }
+
+                                const branchBlockIds = [];
+                                let nextBlockId = substackInput.block;
+
+                                // 4. Follow the chain of linked blocks sequentially down the branch
+                                while (nextBlockId) {
+                                    branchBlockIds.push(nextBlockId);
+
+                                    const blockInfo = bc.getBlock(nextBlockId);
+                                    // Move down to the next block inline, stopping if there are no more
+                                    nextBlockId = blockInfo ? blockInfo.next : null;
+                                }
+
+                                // 5. Output the list of specific IDs
+                                blocksInLoop = (branchBlockIds);
                             }
 
-                            const branchBlockIds = [];
-                            let nextBlockId = substackInput.block;
+                            fn()
 
-                            // 4. Follow the chain of linked blocks sequentially down the branch
-                            while (nextBlockId) {
-                                branchBlockIds.push(nextBlockId);
-
-                                const blockInfo = bc.getBlock(nextBlockId);
-                                // Move down to the next block inline, stopping if there are no more
-                                nextBlockId = blockInfo ? blockInfo.next : null;
+                            if (currentBlock) {
+                                currentBlock.el = {
+                                    el: args.ID,
+                                    compiledScope: 'global',
+                                    bin: blocksInLoop,
+                                    page: args.PAGE
+                                };
                             }
+                            let body = this.pages.get(args.PAGE)?.get("code").querySelector(`#${args.ID}`)
+                            body.innerHTML = ""
+                            // 
 
-                            // 5. Output the list of specific IDs
-                            blocksInLoop = (branchBlockIds);
+                            //   const target = util.thread.target;
+
+
+                            //     let parentBlockId = ""
+                            //     let parentBlock = ""
+                            //     let nest = ""
+                            //     const loopOpcodes = [
+                            //         'scrtwpmhtmldocuments_nestEl',
+                            //                 ];
+                            //                 let blockId = currentBlockId;
+                            //                 while (blockId) {
+                            //                     const block = target.blocks.getBlock(blockId);
+                            //                     if (!block) break;
+
+                            //                     if (loopOpcodes.includes(block.opcode) && block !== currentBlock) {
+                            //                         // blockId = block.parent;
+                            //                         
+                            //                         parentBlockId = block;
+                            //                         
+                            //                         parentBlock = blockContainer.getBlock(parentBlockId)
+                            //                         nest = parentBlockId.el.el
+                            //                         
+
+
+                            //             // let body = this.pages.get(args.PAGE)?.get("code").querySelector(nest === "" ? "body" : `#${nest}`)
+                            //             // // 
+                            //             // let el = document.createElement(args.EL)
+                            //             // el.setAttribute("id", `${args.ID}`)
+                            //             // el = body.appendChild(el)
+
+
+                            //                         util.stackFrame.startedBranch = true;
+                            //     util.startBranch(1);
+                            //     return
+
+
+
+                            // }
+
+                            //  blockId = block.parent; // Move to the parent block [3]
+
+                            // }
+                            // 
+                            // if (currentBlock && currentBlock.parent && currentBlock.parent.el){
+                            //     nest = currentBlock.parent.el
+                            // } 
+                            // 
+                            // this.pages.get(args.PAGE)?.set("code", toAString.serializeToString(this.pages.get(args.PAGE).get("code")))
+                            // let body = this.pages.get(args.PAGE)?.get("code").querySelector(nest === "" ? "body" : `#${nest}`)
+                            // // 
+                            // let el = document.createElement(args.EL)
+                            // el.setAttribute("id", `${args.ID}`)
+                            // el = body.appendChild(el)
+                            // this.pages.get(args.PAGE)?.set("code", `${this.pages.get(args.PAGE)?.get("code")}<!-- begin the ${args.ID} --><${args.EL} id="${args.ID}"><!-- end the top -->`)
+                        } else {
+                            const blockContainer = util.thread.blockContainer;
+                            const currentBlockId = util.thread.peekStack(); //
+                            const currentBlock = blockContainer.getBlock(currentBlockId);
+                            if (currentBlock) {
+                                currentBlock.el = {
+                                    el: args.ID,
+                                    compiledScope: 'global',
+                                    bin: blocksInLoop,
+                                    page: args.PAGE
+                                };
+                            }
                         }
-
-                        fn()
-
-                        if (currentBlock) {
-                            currentBlock.el = {
-                                el: args.ID,
-                                compiledScope: 'global',
-                                bin: blocksInLoop,
-                                page: args.PAGE
-                            };
-                        }
-                        let body = this.pages.get(args.PAGE)?.get("code").querySelector(`#${args.ID}`)
-                        body.innerHTML = ""
-                        // 
-
-                        //   const target = util.thread.target;
-
-
-                        //     let parentBlockId = ""
-                        //     let parentBlock = ""
-                        //     let nest = ""
-                        //     const loopOpcodes = [
-                        //         'scrtwpmhtmldocuments_nestEl',
-                        //                 ];
-                        //                 let blockId = currentBlockId;
-                        //                 while (blockId) {
-                        //                     const block = target.blocks.getBlock(blockId);
-                        //                     if (!block) break;
-
-                        //                     if (loopOpcodes.includes(block.opcode) && block !== currentBlock) {
-                        //                         // blockId = block.parent;
-                        //                         
-                        //                         parentBlockId = block;
-                        //                         
-                        //                         parentBlock = blockContainer.getBlock(parentBlockId)
-                        //                         nest = parentBlockId.el.el
-                        //                         
-
-
-                        //             // let body = this.pages.get(args.PAGE)?.get("code").querySelector(nest === "" ? "body" : `#${nest}`)
-                        //             // // 
-                        //             // let el = document.createElement(args.EL)
-                        //             // el.setAttribute("id", `${args.ID}`)
-                        //             // el = body.appendChild(el)
-
-
-                        //                         util.stackFrame.startedBranch = true;
-                        //     util.startBranch(1);
-                        //     return
-
-
-
-                        // }
-
-                        //  blockId = block.parent; // Move to the parent block [3]
-
-                        // }
-                        // 
-                        // if (currentBlock && currentBlock.parent && currentBlock.parent.el){
-                        //     nest = currentBlock.parent.el
-                        // } 
-                        // 
-                        // this.pages.get(args.PAGE)?.set("code", toAString.serializeToString(this.pages.get(args.PAGE).get("code")))
-                        // let body = this.pages.get(args.PAGE)?.get("code").querySelector(nest === "" ? "body" : `#${nest}`)
-                        // // 
-                        // let el = document.createElement(args.EL)
-                        // el.setAttribute("id", `${args.ID}`)
-                        // el = body.appendChild(el)
-                        // this.pages.get(args.PAGE)?.set("code", `${this.pages.get(args.PAGE)?.get("code")}<!-- begin the ${args.ID} --><${args.EL} id="${args.ID}"><!-- end the top -->`)
-                    } else {
-                        const blockContainer = util.thread.blockContainer;
-                        const currentBlockId = util.thread.peekStack(); //
-                        const currentBlock = blockContainer.getBlock(currentBlockId);
-                        if (currentBlock) {
-                            currentBlock.el = {
-                                el: args.ID,
-                                compiledScope: 'global',
-                                bin: blocksInLoop,
-                                page: args.PAGE
-                            };
-                        }
-                    }
                     } else {
                         throw new Error(`An element with the id "${args.ID}" doesn't exist in the page`)
                     }
@@ -1591,7 +1593,7 @@
                             parentBlockId = blockId;
 
                             const pB = blockContainer.getBlock(parentBlockId)
-                            console.log(pB)
+
                             if (pB && pB.el.bin.includes(currentBlockId) && pB.el.page === args.PAGE) {
                                 nest = pB.el.el
 
@@ -1609,7 +1611,7 @@
                                 return
                             }
                         }
-                    
+
 
                         if (substackId) {
                             let checkId = substackId;
@@ -2213,20 +2215,20 @@
                 let originalDoc = this.pages.get(args.PAGE).get("code");
                 let doc = originalDoc.cloneNode(true);
                 let style = doc.querySelector("style")
-                
+
                 let sText = ""
                 if (style) {
                     sText = this.prettierinCSS(style.innerHTML)
                     style.innerHTML = sText
                 }
-                
+
                 let el = toAString.serializeToString(doc)
-                
+
                 // let el = this.pages.get(args.PAGE).get("code");
                 let cleanString = el.replace(/<!--[\s\S]*?-->/g, "").replace(/xmlns="[\s\S]*?"/g, "").replaceAll(``, "");
                 let toChange = `<html><body>${cleanString}</body></html>`
-                
-                return (new CustomTypeTwo(this.prettierInText(cleanString)))
+
+                return (new HtmlCode(this.prettierInText(cleanString)))
             } else {
                 return ('Page does not exist!')
             }
@@ -2238,20 +2240,20 @@
                 let originalDoc = this.pages.get(args.PAGE).get("code");
                 let doc = originalDoc.cloneNode(true);
                 let style = doc.querySelector("style")
-                
+
                 let sText = ""
                 if (style) {
                     sText = this.prettierinCSS(style.innerHTML)
                     style.innerHTML = sText
                 }
-                
+
                 let el = toAString.serializeToString(doc)
-                
+
                 // let el = this.pages.get(args.PAGE).get("code");
                 let cleanString = el.replace(/<!--[\s\S]*?-->/g, "").replace(/xmlns="[\s\S]*?"/g, "").replaceAll(``, "");
                 let toChange = `<html><body>${cleanString}</body></html>`
-                
-                return (new CustomType(this.prettierInText(cleanString)))
+
+                return (new PrevHTML(this.prettierInText(cleanString)))
             } else {
                 return ('Page does not exist!')
             }

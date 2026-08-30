@@ -4541,7 +4541,10 @@ self.onmessage = async (event) => {
         }
 
         _onProjectStopAll() {
-            runtime.targets.forEach(t => clearTarget(t));
+            runtime.targets.forEach(t => {
+                const state = t.getCustomState(STATE_KEY);
+                if (state) state.isTyping = false;
+            });
             charAnimations.clear();
             charAnimationsByTarget.clear();
             releaseAnimationTicker();

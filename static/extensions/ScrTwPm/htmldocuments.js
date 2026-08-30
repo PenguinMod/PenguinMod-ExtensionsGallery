@@ -202,22 +202,15 @@
                     {
                         opcode: 'getHTML',
                         blockType: Scratch.BlockType.REPORTER,
-                        text: 'get html code of [PAGE]',
+                        text: '[PAGE] html [GET]',
                         arguments: {
                             PAGE: {
                                 type: Scratch.ArgumentType.STRING,
                                 defaultValue: "my-page"
-                            }
-                        }
-                    },
-                    {
-                        opcode: 'previewHTML',
-                        blockType: Scratch.BlockType.REPORTER,
-                        text: 'preview [PAGE]',
-                        arguments: {
-                            PAGE: {
+                            },
+                            GET: {
                                 type: Scratch.ArgumentType.STRING,
-                                defaultValue: "my-page"
+                                menu: "get"
                             }
                         }
                     },
@@ -660,6 +653,13 @@
                             { text: "class", value: "." },
                             { text: "tag", value: "" },
                             // {text: "animation", value: "@keyframes "},
+                        ]
+                    },
+                    get: {
+                        acceptReporters: false,
+                        items: [
+                            { text: "code", value: "code" },
+                            { text: "preview", value: "preview" },
                         ]
                     },
                     opts: {
@@ -2227,33 +2227,11 @@
                 // let el = this.pages.get(args.PAGE).get("code");
                 let cleanString = el.replace(/<!--[\s\S]*?-->/g, "").replace(/xmlns="[\s\S]*?"/g, "").replaceAll(``, "");
                 let toChange = `<html><body>${cleanString}</body></html>`
-
-                return (new HtmlCode(this.prettierInText(cleanString)))
-            } else {
-                return ('Page does not exist!')
-            }
-        }
-
-
-        previewHTML(args, util) {
-            if ((this.pages).has(args.PAGE)) {
-                let originalDoc = this.pages.get(args.PAGE).get("code");
-                let doc = originalDoc.cloneNode(true);
-                let style = doc.querySelector("style")
-
-                let sText = ""
-                if (style) {
-                    sText = this.prettierinCSS(style.innerHTML)
-                    style.innerHTML = sText
+                if(args.GET === "code"){
+                    return (new HtmlCode(this.prettierInText(cleanString)))
+                } else {
+                    return (new PrevHTML(this.prettierInText(cleanString)))
                 }
-
-                let el = toAString.serializeToString(doc)
-
-                // let el = this.pages.get(args.PAGE).get("code");
-                let cleanString = el.replace(/<!--[\s\S]*?-->/g, "").replace(/xmlns="[\s\S]*?"/g, "").replaceAll(``, "");
-                let toChange = `<html><body>${cleanString}</body></html>`
-
-                return (new PrevHTML(this.prettierInText(cleanString)))
             } else {
                 return ('Page does not exist!')
             }

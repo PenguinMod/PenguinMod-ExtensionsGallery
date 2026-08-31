@@ -5889,7 +5889,8 @@ self.onmessage = async (event) => {
                     },
                     FONT: {
                         items: 'getFontMenuItems',
-                        isTypeable: true
+                        isTypeable: true,
+						acceptText: true // for my 3 nitrobolt users :P
                     },
                     SPRITE: {
                         items: 'getSpriteMenuItems'

@@ -2511,11 +2511,13 @@
             }
         }
 
-        listener(args, util){
-            if(this.pages.get(args.PAGE).get("eves").has(args.ID)){
-                return(this.pages.get(args.PAGE).get("eves").get(args.ID))
-            } else 
-                return("")
+        listener(args, util) {
+            try {
+                if (this.pages.get(args.PAGE).get("eves").has(args.ID)) {
+                    return (this.pages.get(args.PAGE).get("eves").get(args.ID))
+                } else
+                    return ("")
+            } catch (error) { return ("") }
         }
 
         allEls(args, util) {

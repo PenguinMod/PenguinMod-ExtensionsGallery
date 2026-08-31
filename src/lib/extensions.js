@@ -344,6 +344,7 @@ export default [
         code: "ScrTwPm/htmldocuments.js",
         banner: "ScrTwPm/htmldocs.png",
         creator: "ScrTwPm",
+        documentation: "HTMLDocuments",
         isGitHub: true,
     },
     {

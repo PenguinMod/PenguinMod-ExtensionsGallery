@@ -157,6 +157,7 @@
                 name: 'HTML Documents',
                 color1: '#e34f26',
                 menuIconURI: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAADAklEQVRYR8WWX0hTURzHf+e6tRmaUdOGmwaRPQwpwwrESHroIbI/DxXZS6nR36fqoQejVRASQYQE/UMTKk2yhzYpqIdCKgRfIrBSNDLT/mgMN3W72909cc68h7uzP/dOXfu83O/vbNzz4dzzu/cgyDBIPf+PnWswK9KM3T1A586IAA4Hoej5t4URyDKyqEk4FLkKgoQLn30VSJ63QK41i2UtfL/C9GqqPjSSf6yhmOSMCFhvvdpnsK/szJiAzdVvRgiJsQLVJRhQ1BCYWt6xHA+LxcJyIrxHHfSqPAKlAwjRAtuLx8FgjrrjvAWkEHhPrqNRU+B37dYLoYnRS2xg/gI44L6Ngu4mWmgK/D272+Ef+NzHBjgB+doJCPV9YDUht1B/H2oKEPhWVAvgsWEInj/IaoLeNsQyhqk/Ms1zFiCIdZUsE/QKSH4Z/JORW6cm0PwW1J0xV4HpiTDIEl0KsHcN6hcwXn0KQr6V1TwamzCmBQEJYHd90S+QtasODHvqWc2TqoB57cZBy5VHJbTQI4ADPjC3fWQ1T6oCy50tl7M3bHbSQo+AFvweWHKnL2rP8AI2V/9qhNAQLdIicPcTywReQN0BhFiBHatmQDBkswGuFcXDFeSDzupkAjgUBN+pMpp1C4ztX/9E9k/vZQO8wJEtAPLsjtYQCL53Q6D1HM26BXwPmxyTHTcTvo7FhgMAP0dYnUzA17AN8PhoJOsVIPD7gH8bKpAlzn7shJzT99iYGm99CTuzpUWAkKwNlQ0oiRj8ntjvAEGXAGAMphtdAHnL2JBCIgHv8VIAOTIpew3PWYBHDoOptYdGRUB8+QDEzkaaeZTlx5IIRS+GF0BABb8J46EILCoth4LG9v8roExOWHrxfmtOeWUtG0jHCvg9YZDoeTcWW0dvBVqcF3l2s8QVUBirKZPlqZmk/8kpENhJJy5YBmtzd7thRWH0UWqWpDdXg32eqtGaTW/4Y3s8UG4e2Np6tf+YigCP5/qZ79Ovu4pIxqEA2N1DVcho7FZ+18s/56x1ML2/L6YAAAAQZGVCR0UxN0MwMUY2QkVFNEM0NUbEID3rAAAAAElFTkSuQmCC',
+                // blockIconURI: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAADAklEQVRYR8WWX0hTURzHf+e6tRmaUdOGmwaRPQwpwwrESHroIbI/DxXZS6nR36fqoQejVRASQYQE/UMTKk2yhzYpqIdCKgRfIrBSNDLT/mgMN3W72909cc68h7uzP/dOXfu83O/vbNzz4dzzu/cgyDBIPf+PnWswK9KM3T1A586IAA4Hoej5t4URyDKyqEk4FLkKgoQLn30VSJ63QK41i2UtfL/C9GqqPjSSf6yhmOSMCFhvvdpnsK/szJiAzdVvRgiJsQLVJRhQ1BCYWt6xHA+LxcJyIrxHHfSqPAKlAwjRAtuLx8FgjrrjvAWkEHhPrqNRU+B37dYLoYnRS2xg/gI44L6Ngu4mWmgK/D272+Ef+NzHBjgB+doJCPV9YDUht1B/H2oKEPhWVAvgsWEInj/IaoLeNsQyhqk/Ms1zFiCIdZUsE/QKSH4Z/JORW6cm0PwW1J0xV4HpiTDIEl0KsHcN6hcwXn0KQr6V1TwamzCmBQEJYHd90S+QtasODHvqWc2TqoB57cZBy5VHJbTQI4ADPjC3fWQ1T6oCy50tl7M3bHbSQo+AFvweWHKnL2rP8AI2V/9qhNAQLdIicPcTywReQN0BhFiBHatmQDBkswGuFcXDFeSDzupkAjgUBN+pMpp1C4ztX/9E9k/vZQO8wJEtAPLsjtYQCL53Q6D1HM26BXwPmxyTHTcTvo7FhgMAP0dYnUzA17AN8PhoJOsVIPD7gH8bKpAlzn7shJzT99iYGm99CTuzpUWAkKwNlQ0oiRj8ntjvAEGXAGAMphtdAHnL2JBCIgHv8VIAOTIpew3PWYBHDoOptYdGRUB8+QDEzkaaeZTlx5IIRS+GF0BABb8J46EILCoth4LG9v8roExOWHrxfmtOeWUtG0jHCvg9YZDoeTcWW0dvBVqcF3l2s8QVUBirKZPlqZmk/8kpENhJJy5YBmtzd7thRWH0UWqWpDdXg32eqtGaTW/4Y3s8UG4e2Np6tf+YigCP5/qZ79Ovu4pIxqEA2N1DVcho7FZ+18s/56x1ML2/L6YAAAAQZGVCR0UxN0MwMUY2QkVFNEM0NUbEID3rAAAAAElFTkSuQmCC',
                 blocks: [
 
                     {
@@ -442,7 +443,8 @@
                         },
                         color1: "#2965f1",
                         color2: "#255bd9",
-                        color3: "#255bd9"
+                        color3: "#255bd9",
+                        // blockIconURI: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAABOElEQVRYR2NkGGDAiGy/mu+T/3AODcGtzTJwe4e+A5gleGGeIQj+vvgMpqkaAqMOIDYEYMEPAiRFwdF57HA2NiAiIgJnYwNaaZ/A9KBxwP9/f/7c3qrACnUf/UMAOfhBgGAUEALoaSDG7i9DVYwgnI8eBTR3wLVZfGCLYIAkB4AAqaGAHgJUdwC1cwFdHVA55yPDxlMQPw6IA2C+H9oOIATwJUL0+AcBktMACCAnROukn3A2CIw6gJQQQA9+EMAQIBQFMACLCpgD0AsgEKCpA2AAX0FElgNAAN0RA+4AZIDuGOQQSOv9yHDkJqafKA4BfAA9EWIDI88ByCUfMiA6CkCA2GgARcH/f/8Z/r36AhfDBrBZDgJYBdGBqveDf4xMLESphQFcFqIDohShA1yhQ6ylyIBkDdQGAJCZFDDWLCQVAAAAEGRlQkc3OTYwRjM3Mzk1MUE0MTk1IBDo1wAAAABJRU5ErkJggg=='
                     },
 
                     {
@@ -470,7 +472,8 @@
                         },
                         color1: "#2965f1",
                         color2: "#255bd9",
-                        color3: "#255bd9"
+                        color3: "#255bd9",
+                        // blockIconURI: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAABOElEQVRYR2NkGGDAiGy/mu+T/3AODcGtzTJwe4e+A5gleGGeIQj+vvgMpqkaAqMOIDYEYMEPAiRFwdF57HA2NiAiIgJnYwNaaZ/A9KBxwP9/f/7c3qrACnUf/UMAOfhBgGAUEALoaSDG7i9DVYwgnI8eBTR3wLVZfGCLYIAkB4AAqaGAHgJUdwC1cwFdHVA55yPDxlMQPw6IA2C+H9oOIATwJUL0+AcBktMACCAnROukn3A2CIw6gJQQQA9+EMAQIBQFMACLCpgD0AsgEKCpA2AAX0FElgNAAN0RA+4AZIDuGOQQSOv9yHDkJqafKA4BfAA9EWIDI88ByCUfMiA6CkCA2GgARcH/f/8Z/r36AhfDBrBZDgJYBdGBqveDf4xMLESphQFcFqIDohShA1yhQ6ylyIBkDdQGAJCZFDDWLCQVAAAAEGRlQkc3OTYwRjM3Mzk1MUE0MTk1IBDo1wAAAABJRU5ErkJggg=='
                     },
 
                     {
@@ -493,7 +496,8 @@
                         },
                         color1: "#2965f1",
                         color2: "#255bd9",
-                        color3: "#255bd9"
+                        color3: "#255bd9",
+                        // blockIconURI: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAABOElEQVRYR2NkGGDAiGy/mu+T/3AODcGtzTJwe4e+A5gleGGeIQj+vvgMpqkaAqMOIDYEYMEPAiRFwdF57HA2NiAiIgJnYwNaaZ/A9KBxwP9/f/7c3qrACnUf/UMAOfhBgGAUEALoaSDG7i9DVYwgnI8eBTR3wLVZfGCLYIAkB4AAqaGAHgJUdwC1cwFdHVA55yPDxlMQPw6IA2C+H9oOIATwJUL0+AcBktMACCAnROukn3A2CIw6gJQQQA9+EMAQIBQFMACLCpgD0AsgEKCpA2AAX0FElgNAAN0RA+4AZIDuGOQQSOv9yHDkJqafKA4BfAA9EWIDI88ByCUfMiA6CkCA2GgARcH/f/8Z/r36AhfDBrBZDgJYBdGBqveDf4xMLESphQFcFqIDohShA1yhQ6ylyIBkDdQGAJCZFDDWLCQVAAAAEGRlQkc3OTYwRjM3Mzk1MUE0MTk1IBDo1wAAAABJRU5ErkJggg=='
                     },
 
                     {
@@ -508,7 +512,8 @@
                         },
                         color1: "#2965f1",
                         color2: "#255bd9",
-                        color3: "#255bd9"
+                        color3: "#255bd9",
+                        // blockIconURI: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAABOElEQVRYR2NkGGDAiGy/mu+T/3AODcGtzTJwe4e+A5gleGGeIQj+vvgMpqkaAqMOIDYEYMEPAiRFwdF57HA2NiAiIgJnYwNaaZ/A9KBxwP9/f/7c3qrACnUf/UMAOfhBgGAUEALoaSDG7i9DVYwgnI8eBTR3wLVZfGCLYIAkB4AAqaGAHgJUdwC1cwFdHVA55yPDxlMQPw6IA2C+H9oOIATwJUL0+AcBktMACCAnROukn3A2CIw6gJQQQA9+EMAQIBQFMACLCpgD0AsgEKCpA2AAX0FElgNAAN0RA+4AZIDuGOQQSOv9yHDkJqafKA4BfAA9EWIDI88ByCUfMiA6CkCA2GgARcH/f/8Z/r36AhfDBrBZDgJYBdGBqveDf4xMLESphQFcFqIDohShA1yhQ6ylyIBkDdQGAJCZFDDWLCQVAAAAEGRlQkc3OTYwRjM3Mzk1MUE0MTk1IBDo1wAAAABJRU5ErkJggg=='
                     },
 
                     { blockType: Scratch.BlockType.LABEL, text: "Event Listeners" },
@@ -547,7 +552,7 @@
                     {
                         opcode: 'remeve',
                         blockType: Scratch.BlockType.COMMAND,
-                        text: 'remove event listeners from [ID] in [PAGE]',
+                        text: 'remove event listener from [ID] in [PAGE]',
                         arguments: {
                             EVE: { type: Scratch.ArgumentType.STRING, menu: 'eves', defaultValue: 'click' },
                             ID: { type: Scratch.ArgumentType.STRING, defaultValue: 'new-el' },

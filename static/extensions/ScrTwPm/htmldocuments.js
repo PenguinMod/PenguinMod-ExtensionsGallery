@@ -1941,7 +1941,7 @@
                 const rules = sheet.cssRules || sheet.rules;
                 for (let i = 0; i < rules.length; i++) {
                     if (rules[i].selectorText === `${args.TYPE}${args.NAME}`) {
-
+                        return (rules[i].style[args.PROPERTY] ?? "");
                     }
                 }
             } catch (error) { return "" }

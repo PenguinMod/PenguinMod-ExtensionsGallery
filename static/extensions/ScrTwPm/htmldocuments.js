@@ -154,7 +154,7 @@
         getInfo() {
             return {
                 id: 'scrtwpmhtmldocuments',
-                name: 'HTML documents',
+                name: 'HTML Documents',
                 color1: '#ff9900',
                 menuIconURI: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAADAklEQVRYR8WWX0hTURzHf+e6tRmaUdOGmwaRPQwpwwrESHroIbI/DxXZS6nR36fqoQejVRASQYQE/UMTKk2yhzYpqIdCKgRfIrBSNDLT/mgMN3W72909cc68h7uzP/dOXfu83O/vbNzz4dzzu/cgyDBIPf+PnWswK9KM3T1A586IAA4Hoej5t4URyDKyqEk4FLkKgoQLn30VSJ63QK41i2UtfL/C9GqqPjSSf6yhmOSMCFhvvdpnsK/szJiAzdVvRgiJsQLVJRhQ1BCYWt6xHA+LxcJyIrxHHfSqPAKlAwjRAtuLx8FgjrrjvAWkEHhPrqNRU+B37dYLoYnRS2xg/gI44L6Ngu4mWmgK/D272+Ef+NzHBjgB+doJCPV9YDUht1B/H2oKEPhWVAvgsWEInj/IaoLeNsQyhqk/Ms1zFiCIdZUsE/QKSH4Z/JORW6cm0PwW1J0xV4HpiTDIEl0KsHcN6hcwXn0KQr6V1TwamzCmBQEJYHd90S+QtasODHvqWc2TqoB57cZBy5VHJbTQI4ADPjC3fWQ1T6oCy50tl7M3bHbSQo+AFvweWHKnL2rP8AI2V/9qhNAQLdIicPcTywReQN0BhFiBHatmQDBkswGuFcXDFeSDzupkAjgUBN+pMpp1C4ztX/9E9k/vZQO8wJEtAPLsjtYQCL53Q6D1HM26BXwPmxyTHTcTvo7FhgMAP0dYnUzA17AN8PhoJOsVIPD7gH8bKpAlzn7shJzT99iYGm99CTuzpUWAkKwNlQ0oiRj8ntjvAEGXAGAMphtdAHnL2JBCIgHv8VIAOTIpew3PWYBHDoOptYdGRUB8+QDEzkaaeZTlx5IIRS+GF0BABb8J46EILCoth4LG9v8roExOWHrxfmtOeWUtG0jHCvg9YZDoeTcWW0dvBVqcF3l2s8QVUBirKZPlqZmk/8kpENhJJy5YBmtzd7thRWH0UWqWpDdXg32eqtGaTW/4Y3s8UG4e2Np6tf+YigCP5/qZ79Ovu4pIxqEA2N1DVcho7FZ+18s/56x1ML2/L6YAAAAQZGVCR0UxN0MwMUY2QkVFNEM0NUbEID3rAAAAAElFTkSuQmCC',
                 blocks: [
@@ -2353,7 +2353,7 @@
                 if (this.pages.get(args.PAGE)?.get("code").querySelector(`#${args.ID}`)) {
                     switch (args.OPTS) {
                         case "children":
-                            return ([...this.pages.get(args.PAGE)?.get("code").querySelector(`#${args.ID}`)[args.OPTS]].map(child => child.id).filter(id => id !== ""))
+                            return JSON.stringify([...this.pages.get(args.PAGE)?.get("code").querySelector(`#${args.ID}`)[args.OPTS]].map(child => child.id).filter(id => id !== ""))
                         case "parentElement":
                             return (this.pages.get(args.PAGE)?.get("code").querySelector(`#${args.ID}`)[args.OPTS].getAttribute("id") ?? this.pages.get(args.PAGE)?.get("code").querySelector(`#${args.ID}`)[args.OPTS].tagName)
                         default:
@@ -2361,7 +2361,7 @@
                                 if (this.viewing.includes(args.PAGE)) {
                                     return (document.querySelector(`.htmlpage.display${args.PAGE}`).contentDocument.querySelector(`#${args.ID}`)[args.OPTS] ?? "")
                                 } else {
-                                    return ("Display the page to use these.")
+                                    return (`Display ${args.PAGE} to use this`)
                                 }
                             } else {
                                 return (this.pages.get(args.PAGE)?.get("code").querySelector(`#${args.ID}`)[args.OPTS] ?? "")

@@ -34,6 +34,10 @@ Enjoy!! :D
     const WIPE_DIRECTION_UP_DOWN = 'up-down';
     const WIPE_DIRECTION_RIGHT_LEFT = 'right-left';
 
+    const GRADIENT_TYPE_LINEAR = 'linear';
+    const GRADIENT_TYPE_RADIAL = 'radial';
+    const GRADIENT_TYPE_CONIC = 'conic';
+
     /* stolen from PM's animated text extension code :3 */
     const SANS_SERIF_ID = 'Sans Serif';
     const SERIF_ID = 'Serif';
@@ -172,19 +176,29 @@ Enjoy!! :D
     const TAG_RE = /\[(\/?)([a-z0-9_-]+)(?:=([^\]]+))?\]/gi;
     const TAG_RE_STRIP = /\[(\/?)([a-z0-9_-]+)(?:=([^\]]+))?\]/gi;
 
+    function normalizeGradientType(value) {
+        const t = (value || '').toString().toLowerCase().trim();
+        if (t === GRADIENT_TYPE_RADIAL) return GRADIENT_TYPE_RADIAL;
+        if (t === GRADIENT_TYPE_CONIC) return GRADIENT_TYPE_CONIC;
+        return GRADIENT_TYPE_LINEAR;
+    }
+
     function parseGradientValue(value) {
         if (!value) return null;
-        const pipeIndex = value.indexOf('|');
-        const colorsPart = pipeIndex === -1 ? value : value.slice(0, pipeIndex);
-        const anglePart = pipeIndex === -1 ? '' : value.slice(pipeIndex + 1);
+        const parts = value.split('|');
+        const colorsPart = parts[0] || '';
+        const anglePart = parts.length > 1 ? parts[1] : '';
+        const typePart = parts.length > 2 ? parts[2] : '';
         const colors = colorsPart.split(',')
             .map(c => c.trim())
             .filter(c => c.length > 0);
         if (colors.length < 2) return null;
         const angle = Scratch.Cast.toNumber(anglePart.trim()) || 0;
+        const type = normalizeGradientType(typePart.trim());
         return {
             colors,
-            angle
+            angle,
+            type
         };
     }
 
@@ -1332,21 +1346,41 @@ Enjoy!! :D
     }
 
     function buildGradientCanvasStyle(ctx, gradient, spanW, spanH, localOffsetXPx, localOffsetYPx) {
+        const colors = gradient.colors;
+        const last = colors.length - 1;
+        const cx = spanW / 2 - localOffsetXPx;
+        const cy = spanH / 2 - localOffsetYPx;
+        const type = gradient.type || GRADIENT_TYPE_LINEAR;
+
+        if (type === GRADIENT_TYPE_RADIAL) {
+            const radius = Math.max(1, Math.sqrt(spanW * spanW + spanH * spanH) / 2);
+            const canvasGradient = ctx.createRadialGradient(cx, cy, 0, cx, cy, radius);
+            for (let c = 0; c <= last; c++) {
+                canvasGradient.addColorStop(last === 0 ? 0 : c / last, colors[c]);
+            }
+            return canvasGradient;
+        }
+
+        if (type === GRADIENT_TYPE_CONIC && typeof ctx.createConicGradient === 'function') {
+            const startAngleRad = (gradient.angle || 0) * Math.PI / 180;
+            const canvasGradient = ctx.createConicGradient(startAngleRad, cx, cy);
+            for (let c = 0; c <= last; c++) {
+                canvasGradient.addColorStop(last === 0 ? 0 : c / last, colors[c]);
+            }
+            return canvasGradient;
+        }
+
         const angleRad = (gradient.angle || 0) * Math.PI / 180;
         const dx = Math.cos(angleRad);
         const dy = Math.sin(angleRad);
         const halfW = spanW / 2;
         const halfH = spanH / 2;
         const half = Math.abs(dx) * halfW + Math.abs(dy) * halfH;
-        const cx = spanW / 2 - localOffsetXPx;
-        const cy = spanH / 2 - localOffsetYPx;
         const x0 = cx - dx * half;
         const y0 = cy - dy * half;
         const x1 = cx + dx * half;
         const y1 = cy + dy * half;
         const canvasGradient = ctx.createLinearGradient(x0, y0, x1, y1);
-        const colors = gradient.colors;
-        const last = colors.length - 1;
         for (let c = 0; c <= last; c++) {
             canvasGradient.addColorStop(last === 0 ? 0 : c / last, colors[c]);
         }
@@ -2112,6 +2146,7 @@ Enjoy!! :D
     function fingerprintGradientInto(hash, gradient) {
         if (gradient) {
             hash = (hash * 33) ^ ((gradient.angle * 100) | 0);
+            hash = (hash * 33) ^ hashString(gradient.type || GRADIENT_TYPE_LINEAR);
             for (let c = 0; c < gradient.colors.length; c++) {
                 hash = (hash * 33) ^ hashString(gradient.colors[c]);
             }
@@ -2796,6 +2831,9 @@ Enjoy!! :D
     const DEST_SCALE = GLYPH_OVERSAMPLE;
 
     const WORKER_SOURCE = `
+const GRADIENT_TYPE_LINEAR = '${GRADIENT_TYPE_LINEAR}';
+const GRADIENT_TYPE_RADIAL = '${GRADIENT_TYPE_RADIAL}';
+const GRADIENT_TYPE_CONIC = '${GRADIENT_TYPE_CONIC}';
 const WIPE_DIRECTION_BOTTOM_UP = '${WIPE_DIRECTION_BOTTOM_UP}';
 const WIPE_DIRECTION_LEFT_RIGHT = '${WIPE_DIRECTION_LEFT_RIGHT}';
 const WIPE_DIRECTION_UP_DOWN = '${WIPE_DIRECTION_UP_DOWN}';
@@ -2905,21 +2943,41 @@ function tintGlyph(shape, color) {
 }
 
 function buildGradientCanvasStyle(ctx, gradient, spanW, spanH, localOffsetXPx, localOffsetYPx) {
+    const colors = gradient.colors;
+    const last = colors.length - 1;
+    const cx = spanW / 2 - localOffsetXPx;
+    const cy = spanH / 2 - localOffsetYPx;
+    const type = gradient.type || GRADIENT_TYPE_LINEAR;
+
+    if (type === GRADIENT_TYPE_RADIAL) {
+        const radius = Math.max(1, Math.sqrt(spanW * spanW + spanH * spanH) / 2);
+        const canvasGradient = ctx.createRadialGradient(cx, cy, 0, cx, cy, radius);
+        for (let c = 0; c <= last; c++) {
+            canvasGradient.addColorStop(last === 0 ? 0 : c / last, colors[c]);
+        }
+        return canvasGradient;
+    }
+
+    if (type === GRADIENT_TYPE_CONIC && typeof ctx.createConicGradient === 'function') {
+        const startAngleRad = (gradient.angle || 0) * Math.PI / 180;
+        const canvasGradient = ctx.createConicGradient(startAngleRad, cx, cy);
+        for (let c = 0; c <= last; c++) {
+            canvasGradient.addColorStop(last === 0 ? 0 : c / last, colors[c]);
+        }
+        return canvasGradient;
+    }
+
     const angleRad = (gradient.angle || 0) * Math.PI / 180;
     const dx = Math.cos(angleRad);
     const dy = Math.sin(angleRad);
     const halfW = spanW / 2;
     const halfH = spanH / 2;
     const half = Math.abs(dx) * halfW + Math.abs(dy) * halfH;
-    const cx = spanW / 2 - localOffsetXPx;
-    const cy = spanH / 2 - localOffsetYPx;
     const x0 = cx - dx * half;
     const y0 = cy - dy * half;
     const x1 = cx + dx * half;
     const y1 = cy + dy * half;
     const canvasGradient = ctx.createLinearGradient(x0, y0, x1, y1);
-    const colors = gradient.colors;
-    const last = colors.length - 1;
     for (let c = 0; c <= last; c++) {
         canvasGradient.addColorStop(last === 0 ? 0 : c / last, colors[c]);
     }
@@ -5852,7 +5910,7 @@ self.onmessage = async (event) => {
                     {
                         opcode: 'gradientMarkup',
                         blockType: Scratch.BlockType.REPORTER,
-                        text: 'gradient [TEXT] with colors [COLORS] at angle [ANGLE]',
+                        text: 'gradient [TEXT] with colors [COLORS] as [TYPE] at angle [ANGLE]',
                         arguments: {
                             TEXT: {
                                 type: Scratch.ArgumentType.STRING,
@@ -5861,6 +5919,11 @@ self.onmessage = async (event) => {
                             COLORS: {
                                 type: Scratch.ArgumentType.STRING,
                                 defaultValue: '#ff7e5f,#feb47b'
+                            },
+                            TYPE: {
+                                type: Scratch.ArgumentType.STRING,
+                                menu: 'GRADIENT_TYPE',
+                                defaultValue: GRADIENT_TYPE_LINEAR
                             },
                             ANGLE: {
                                 type: Scratch.ArgumentType.NUMBER,
@@ -5951,6 +6014,9 @@ self.onmessage = async (event) => {
                     },
                     STYLE: {
                         items: ['bold', 'italic', 'underline', 'strikethrough']
+                    },
+                    GRADIENT_TYPE: {
+                        items: [GRADIENT_TYPE_LINEAR, GRADIENT_TYPE_RADIAL, GRADIENT_TYPE_CONIC]
                     },
                     TYPING_GROUP: {
                         items: ['default', 'symbols', 'punctuation', 'numbers']
@@ -7128,7 +7194,8 @@ self.onmessage = async (event) => {
                 .filter(c => c.length > 0);
             if (colors.length < 2) return text;
             const angle = Scratch.Cast.toNumber(args.ANGLE) || 0;
-            return `[gradient=${colors.join(',')}|${angle}]${text}[/gradient]`;
+            const type = normalizeGradientType(args.TYPE);
+            return `[gradient=${colors.join(',')}|${angle}|${type}]${text}[/gradient]`;
         }
 
         styleMarkup(args) {

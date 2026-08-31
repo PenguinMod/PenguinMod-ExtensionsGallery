@@ -439,7 +439,10 @@
                                 type: Scratch.ArgumentType.STRING,
                                 defaultValue: "my-page",
                             },
-                        }
+                        },
+                        color1: "#2965f1",
+                        color2: "#255bd9",
+                        color3: "#255bd9"
                     },
 
                     {
@@ -451,7 +454,10 @@
                                 type: Scratch.ArgumentType.STRING,
                                 defaultValue: "my-page"
                             },
-                        }
+                        },
+                        color1: "#2965f1",
+                        color2: "#255bd9",
+                        color3: "#255bd9"
                     },
 
                     { blockType: Scratch.BlockType.LABEL, text: "Event Listeners" },

@@ -4601,6 +4601,7 @@ self.onmessage = async (event) => {
         constructor() {
             this._onTargetRemoved = this._onTargetRemoved.bind(this);
             this._onProjectStopAll = this._onProjectStopAll.bind(this);
+            if (!supportsRenderWorker()) this.disclaimer();
             if (runtime.ext_irisText && runtime.ext_irisText !== this) {
                 runtime.removeListener('targetWasRemoved', runtime.ext_irisText._onTargetRemoved);
                 runtime.removeListener('PROJECT_STOP_ALL', runtime.ext_irisText._onProjectStopAll);
@@ -4622,6 +4623,37 @@ self.onmessage = async (event) => {
             for (const index of indices) {
                 rootFrame.irisTagCharacterNumber = index + 1;
                 yield* func(thread, target, runtime, stage);
+            }
+        }
+
+        async disclaimer() {
+            const disclaimerText = `Hey there! You are currently seeing this prompt because <b>your current environment lacks support for proper multi-threading</b>.
+            
+            Please be aware that this will make Iris Text VERY slow with certain operations. <b>Moving to another browser, preferably Chromium-based,</b> will mitigate this issue.
+            
+            Sorry for the inconvenience, and enjoy using Iris Text! :D`;
+
+            if (typeof scaffolding !== "undefined") return;
+            if (ScratchBlocks.customPrompt) {
+                const modal = await ScratchBlocks.customPrompt({
+                        title: "Disclaimer!"
+                    }, {
+                        content: {
+                            width: "500px"
+                        }
+                    },
+                    [{
+                        name: "OK",
+                        role: "ok",
+                        callback: () => console.log("Confirmed")
+                    }]
+                );
+
+                const p = document.createElement("p");
+                p.innerHTML = disclaimerText.replace(/\n/g, "<br>");
+                modal.appendChild(p);
+            } else {
+                alert(disclaimerText);
             }
         }
 

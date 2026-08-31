@@ -557,6 +557,18 @@
                             },
                         }
                     },
+                    {
+                        opcode: 'listener',
+                        blockType: Scratch.BlockType.REPORTER,
+                        text: 'listener of [ID] in [PAGE]',
+                        arguments: {
+                            ID: { type: Scratch.ArgumentType.STRING, defaultValue: 'new-el' },
+                            PAGE: {
+                                type: Scratch.ArgumentType.STRING,
+                                defaultValue: "my-page"
+                            },
+                        }
+                    },
 
                     { blockType: Scratch.BlockType.LABEL, text: "Webpage Data" },
 
@@ -2497,6 +2509,13 @@
                     resolve();
                 });
             }
+        }
+
+        listener(args, util){
+            if(this.pages.get(args.PAGE).get("eves").has(args.ID)){
+                return(this.pages.get(args.PAGE).get("eves").get(args.ID))
+            } else 
+                return("")
         }
 
         allEls(args, util) {

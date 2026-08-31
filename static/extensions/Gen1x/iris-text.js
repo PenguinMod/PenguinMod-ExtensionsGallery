@@ -148,10 +148,11 @@ Enjoy!! :D
 
         const customFonts = [];
         Array.from(document.fonts).forEach(face => {
-            if (!FONT_IDS.includes(face.family) && !customFonts.some(f => f.value === face.family)) {
+            const family = face.family.replace(/^["']|["']$/g, '');
+            if (!FONT_IDS.includes(family) && !customFonts.some(f => f.value === family)) {
                 customFonts.push({
-                    text: face.family,
-                    value: face.family
+                    text: family,
+                    value: family
                 });
             }
         });

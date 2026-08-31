@@ -747,7 +747,7 @@
                         ]
                     },
                     properties: {
-                        acceptReporters: false,
+                        acceptReporters: true,
                         items: [
 
                             'align-content', 'align-items', 'align-self', 'all', 'animation', 'animation-delay', 'animation-direction', 'animation-duration', 'animation-fill-mode', 'animation-iter-count', 'animation-name', 'animation-play-state', 'animation-timing-fn', 'backface-visibility', 'background', 'background-attachment', 'background-blend-mode', 'background-clip', 'background-color', 'background-image', 'background-origin', 'background-position', 'background-repeat', 'background-size', 'border', 'border-bottom', 'border-bottom-color', 'border-bottom-left-rad', 'border-bottom-right-ra', 'border-bottom-style', 'border-bottom-width', 'border-collapse', 'border-color', 'border-image', 'border-image-outset', 'border-image-repeat', 'border-image-slice', 'border-image-source', 'border-image-width', 'border-left', 'border-left-color', 'border-left-style', 'border-left-width', 'border-radius', 'border-right', 'border-right-color', 'border-right-style', 'border-right-width', 'border-spacing', 'border-style', 'border-top', 'border-top-color', 'border-top-left-radius', 'border-top-right-radius', 'border-top-style', 'border-top-width', 'border-width', 'bottom', 'box-decoration-break', 'box-shadow', 'box-sizing', 'caption-side', 'caret-color',
@@ -1837,63 +1837,77 @@
 
         }
         property(args, util) {
-            if (this.pages.has(args.PAGE)) {
-                function containsCssUnit(str) {
-                    const cssUnitsPattern = /\d+(?:px|em|rem|ex|ch|vw|vh|vmin|vmax|cm|mm|in|pt|pc|Q|deg|grad|rad|turn|s|ms|Hz|kHz|dpi|dpcm|dppx|%)\b/i;
-                    return cssUnitsPattern.test(str);
-                }
+            if (this.getInfo().menus.properties.items.includes(args.PROPERTY)) {
+                if (this.pages.has(args.PAGE)) {
+                    function containsCssUnit(str) {
+                        const cssUnitsPattern = /\d+(?:px|em|rem|ex|ch|vw|vh|vmin|vmax|cm|mm|in|pt|pc|Q|deg|grad|rad|turn|s|ms|Hz|kHz|dpi|dpcm|dppx|%)\b/i;
+                        return cssUnitsPattern.test(str);
+                    }
 
-                // const blockContainer = util.thread.blockContainer;
-                // const currentBlockId = util.thread.peekStack();
-                // const currentBlock = blockContainer.getBlock(currentBlockId);
+                    // const blockContainer = util.thread.blockContainer;
+                    // const currentBlockId = util.thread.peekStack();
+                    // const currentBlock = blockContainer.getBlock(currentBlockId);
 
-                // if (currentBlock) {
-                //     if(currentBlock.parent){
-                //     const parentBlockId = currentBlock.parent;
-                //     const parentBlock = blockContainer.getBlock(parentBlockId);
-                let px = this.changePx
-                let value = ""
+                    // if (currentBlock) {
+                    //     if(currentBlock.parent){
+                    //     const parentBlockId = currentBlock.parent;
+                    //     const parentBlock = blockContainer.getBlock(parentBlockId);
+                    let px = this.changePx
+                    let value = ""
 
-                if (px.includes(args.VALUE)) {
-                    if (!containsCssUnit(args.VALUE)) {
-                        value = `${args.VALUE}px`
+                    if (px.includes(args.VALUE)) {
+                        if (!containsCssUnit(args.VALUE)) {
+                            value = `${args.VALUE}px`
+                        } else {
+                            value = args.VALUE
+                        }
                     } else {
                         value = args.VALUE
                     }
-                } else {
-                    value = args.VALUE
-                }
 
-                // if (parentBlock.stylePage && parentBlock) {
+                    // if (parentBlock.stylePage && parentBlock) {
 
-
-                if (!this.pages.get(args.PAGE)?.get("code").querySelector("style")) {
-                    let body = this.pages.get(args.PAGE)?.get("code").querySelector("head")
-                    // 
-                    let el = document.createElement("style")
-                    if (args.TYPE === "") {
-                        el.innerHTML = `${args.NAME}{${args.PROPERTY}:${value};}`
+                    let sheeter = ""
+                    let ello = ""
+                    if (!this.pages.get(args.PAGE)?.get("code").querySelector("style")) {
+                        let body = this.pages.get(args.PAGE)?.get("code").querySelector("head")
+                        let el = document.createElement("style")
+                        el = body.appendChild(el)
+                        const sheet = el.sheet
+                        sheet.insertRule(`${args.TYPE}${args.NAME}{${args.PROPERTY}:${value};}`, sheet.cssRules.length);
                     } else {
-                        el.innerHTML = `${args.TYPE}${args.NAME}{${args.PROPERTY}:${value};}`
+                        let el = this.pages.get(args.PAGE)?.get("code").querySelector("style")
+                        ello = el
+
+                        const sheet = el.sheet
+
+                        sheeter = sheet
+                        // if (args.TYPE === "") {
+
+                        const rule = Array.from(sheet.cssRules).find(r => r.selectorText === `${args.TYPE}${args.NAME}`);
+                        if (rule) {
+                            rule.style.setProperty(args.PROPERTY, value);
+                        } else {
+                            sheet.insertRule(`${args.TYPE}${args.NAME}{${args.PROPERTY}:${value};}`, sheet["cssRules"].length);
+                        }
+                        // }
+                        let updatedText = "";
+
+                        for (let i = 0; i < sheeter.cssRules.length; i++) {
+                            updatedText += sheeter.cssRules[i].cssText
+                        }
+                        ello.innerHTML = updatedText;
                     }
-                    el = body.appendChild(el)
-                } else {
-                    let el = this.pages.get(args.PAGE)?.get("code").querySelector("style")
-                    if (args.TYPE === "") {
-                        el.innerHTML += `${args.NAME}{${args.PROPERTY}:${value};}`
-                    } else {
-                        el.innerHTML += `${args.TYPE}${args.NAME}{${args.PROPERTY}:${value};}`
-                    }
+
+                    // }
+
+                    //     } else {
+                    //         // throw new Error(`Just clicking this block won't do anything. You have to put it inside of an "add style to" loop first. The shape matches the shape of this block!`)
+                    //     }
+                    // }
+
+
                 }
-
-                // }
-
-                //     } else {
-                //         // throw new Error(`Just clicking this block won't do anything. You have to put it inside of an "add style to" loop first. The shape matches the shape of this block!`)
-                //     }
-                // }
-
-
             }
         }
 
@@ -1926,7 +1940,7 @@
 
                 let updatedText = "";
                 for (let i = 0; i < sheet.cssRules.length; i++) {
-                    updatedText += sheet.cssRules[i].cssText + "\n";
+                    updatedText += sheet.cssRules[i].cssText;
                 }
 
                 style.innerHTML = updatedText;
@@ -1935,16 +1949,19 @@
         }
 
         getProperty(args, util) {
-            try {
-                const style = this.pages.get(args.PAGE)?.get("code").querySelector("style")
-                const sheet = style.sheet;
-                const rules = sheet.cssRules || sheet.rules;
-                for (let i = 0; i < rules.length; i++) {
-                    if (rules[i].selectorText === `${args.TYPE}${args.NAME}`) {
-                        return (rules[i].style[args.PROPERTY] ?? "");
+            if (this.getInfo().menus.properties.items.includes(args.PROPERTY)) {
+                try {
+                    const style = this.pages.get(args.PAGE)?.get("code").querySelector("style")
+                    const sheet = style.sheet;
+                    const rules = sheet.cssRules || sheet.rules;
+                    for (let i = 0; i < rules.length; i++) {
+                        if (rules[i].selectorText === `${args.TYPE}${args.NAME}`) {
+                            return (rules[i].style[args.PROPERTY] ?? "");
+                        }
                     }
-                }
-            } catch (error) { return "" }
+                    return ("")
+                } catch (error) { return ("") }
+            } else { return ("") }
         }
 
         setAttr(args, util) {

@@ -433,7 +433,7 @@
                             },
                             VALUE: {
                                 type: Scratch.ArgumentType.STRING,
-                                defaultValue: "green",
+                                defaultValue: "red",
                             },
                             PAGE: {
                                 type: Scratch.ArgumentType.STRING,
@@ -446,7 +446,58 @@
                     },
 
                     {
-                        opcode: 'remallstyle',
+                        opcode: 'getProperty',
+                        blockType: Scratch.BlockType.REPORTER,
+                        text: 'get [PROPERTY] of [TYPE] [NAME] in [PAGE]',
+                        arguments: {
+                            PROPERTY: {
+                                type: Scratch.ArgumentType.STRING,
+                                menu: "properties",
+                                defaultValue: "color"
+                            },
+                            TYPE: {
+                                type: Scratch.ArgumentType.STRING,
+                                menu: "types"
+                            },
+                            NAME: {
+                                type: Scratch.ArgumentType.STRING,
+                                defaultValue: "new-el"
+                            },
+                            PAGE: {
+                                type: Scratch.ArgumentType.STRING,
+                                defaultValue: "my-page",
+                            },
+                        },
+                        color1: "#2965f1",
+                        color2: "#255bd9",
+                        color3: "#255bd9"
+                    },
+
+                    {
+                        opcode: 'removeStyle',
+                        blockType: Scratch.BlockType.COMMAND,
+                        text: 'clear styling for [TYPE] [NAME] in [PAGE]',
+                        arguments: {
+                            TYPE: {
+                                type: Scratch.ArgumentType.STRING,
+                                menu: "types"
+                            },
+                            NAME: {
+                                type: Scratch.ArgumentType.STRING,
+                                defaultValue: "new-el"
+                            },
+                            PAGE: {
+                                type: Scratch.ArgumentType.STRING,
+                                defaultValue: "my-page"
+                            },
+                        },
+                        color1: "#2965f1",
+                        color2: "#255bd9",
+                        color3: "#255bd9"
+                    },
+
+                    {
+                        opcode: 'removeAllStyle',
                         blockType: Scratch.BlockType.COMMAND,
                         text: 'clear styling of [PAGE]',
                         arguments: {
@@ -668,6 +719,13 @@
                             { text: "preview", value: "preview" },
                         ]
                     },
+                    sel: {
+                        acceptReporters: false,
+                        items: [
+                            { text: "declaration", value: "dec" },
+                            { text: "computed style", value: "comp" },
+                        ]
+                    },
                     opts: {
                         acceptReporters: false,
                         items: [
@@ -689,7 +747,7 @@
                         ]
                     },
                     properties: {
-                        acceptReporters: true,
+                        acceptReporters: false,
                         items: [
 
                             'align-content', 'align-items', 'align-self', 'all', 'animation', 'animation-delay', 'animation-direction', 'animation-duration', 'animation-fill-mode', 'animation-iter-count', 'animation-name', 'animation-play-state', 'animation-timing-fn', 'backface-visibility', 'background', 'background-attachment', 'background-blend-mode', 'background-clip', 'background-color', 'background-image', 'background-origin', 'background-position', 'background-repeat', 'background-size', 'border', 'border-bottom', 'border-bottom-color', 'border-bottom-left-rad', 'border-bottom-right-ra', 'border-bottom-style', 'border-bottom-width', 'border-collapse', 'border-color', 'border-image', 'border-image-outset', 'border-image-repeat', 'border-image-slice', 'border-image-source', 'border-image-width', 'border-left', 'border-left-color', 'border-left-style', 'border-left-width', 'border-radius', 'border-right', 'border-right-color', 'border-right-style', 'border-right-width', 'border-spacing', 'border-style', 'border-top', 'border-top-color', 'border-top-left-radius', 'border-top-right-radius', 'border-top-style', 'border-top-width', 'border-width', 'bottom', 'box-decoration-break', 'box-shadow', 'box-sizing', 'caption-side', 'caret-color',
@@ -699,6 +757,12 @@
                             'left', 'letter-spacing', 'line-height', 'list-style', 'list-style-image', 'list-style-position', 'list-style-type', 'margin', 'margin-bottom', 'margin-left', 'margin-right', 'margin-top', 'max-height', 'max-width',
                             'min-height', 'min-width', 'object-fit', 'object-position', 'opacity', 'order', 'outline', 'outline-color', 'outline-offset', 'outline-style', 'outline-width', 'overflow', 'overflow-x', 'overflow-y', 'padding', 'padding-bottom', 'padding-left', 'padding-right', 'padding-top', 'page-break-after', 'page-break-before', 'page-break-inside', 'perspective', 'perspective-origin', 'pointer-events', 'position', 'quotes', 'right', 'row-gap', 'scroll-behavior', 'table-layout', 'text-align', 'text-align-last', 'text-decoration', 'text-decoration-color', 'text-decoration-line', 'text-decoration-style', 'text-indent', 'text-justify', 'text-overflow', 'text-shadow', 'text-transform', 'top', 'transform', 'transform-origin', 'transform-style', 'transition', 'transition-delay', 'transition-duration', 'transition-property', 'transition-timing-fn', 'user-select', 'vertical-align', 'visibility', 'white-space', 'width', 'word-break', 'word-spacing', 'word-wrap', 'writing-mode', 'z-index'
 
+                        ]
+                    },
+                    jsproperties: {
+                        acceptReporters: false,
+                        items: [
+                            { "text": "align-content", "value": "alignContent" }, { "text": "align-items", "value": "alignItems" }, { "text": "align-self", "value": "alignSelf" }, { "text": "all", "value": "all" }, { "text": "animation", "value": "animation" }, { "text": "animation-delay", "value": "animationDelay" }, { "text": "animation-direction", "value": "animationDirection" }, { "text": "animation-duration", "value": "animationDuration" }, { "text": "animation-fill-mode", "value": "animationFillMode" }, { "text": "animation-iter-count", "value": "animationIterCount" }, { "text": "animation-name", "value": "animationName" }, { "text": "animation-play-state", "value": "animationPlayState" }, { "text": "animation-timing-fn", "value": "animationTimingFn" }, { "text": "backface-visibility", "value": "backfaceVisibility" }, { "text": "background", "value": "background" }, { "text": "background-attachment", "value": "backgroundAttachment" }, { "text": "background-blend-mode", "value": "backgroundBlendMode" }, { "text": "background-clip", "value": "backgroundClip" }, { "text": "background-color", "value": "backgroundColor" }, { "text": "background-image", "value": "backgroundImage" }, { "text": "background-origin", "value": "backgroundOrigin" }, { "text": "background-position", "value": "backgroundPosition" }, { "text": "background-repeat", "value": "backgroundRepeat" }, { "text": "background-size", "value": "backgroundSize" }, { "text": "border", "value": "border" }, { "text": "border-bottom", "value": "borderBottom" }, { "text": "border-bottom-color", "value": "borderBottomColor" }, { "text": "border-bottom-left-rad", "value": "borderBottomLeftRad" }, { "text": "border-bottom-right-ra", "value": "borderBottomRightRa" }, { "text": "border-bottom-style", "value": "borderBottomStyle" }, { "text": "border-bottom-width", "value": "borderBottomWidth" }, { "text": "border-collapse", "value": "borderCollapse" }, { "text": "border-color", "value": "borderColor" }, { "text": "border-image", "value": "borderImage" }, { "text": "border-image-outset", "value": "borderImageOutset" }, { "text": "border-image-repeat", "value": "borderImageRepeat" }, { "text": "border-image-slice", "value": "borderImageSlice" }, { "text": "border-image-source", "value": "borderImageSource" }, { "text": "border-image-width", "value": "borderImageWidth" }, { "text": "border-left", "value": "borderLeft" }, { "text": "border-left-color", "value": "borderLeftColor" }, { "text": "border-left-style", "value": "borderLeftStyle" }, { "text": "border-left-width", "value": "borderLeftWidth" }, { "text": "border-radius", "value": "borderRadius" }, { "text": "border-right", "value": "borderRight" }, { "text": "border-right-color", "value": "borderRightColor" }, { "text": "border-right-style", "value": "borderRightStyle" }, { "text": "border-right-width", "value": "borderRightWidth" }, { "text": "border-spacing", "value": "borderSpacing" }, { "text": "border-style", "value": "borderStyle" }, { "text": "border-top", "value": "borderTop" }, { "text": "border-top-color", "value": "borderTopColor" }, { "text": "border-top-left-radius", "value": "borderTopLeftRadius" }, { "text": "border-top-right-radius", "value": "borderTopRightRadius" }, { "text": "border-top-style", "value": "borderTopStyle" }, { "text": "border-top-width", "value": "borderTopWidth" }, { "text": "border-width", "value": "borderWidth" }, { "text": "bottom", "value": "bottom" }, { "text": "box-decoration-break", "value": "boxDecorationBreak" }, { "text": "box-shadow", "value": "boxShadow" }, { "text": "box-sizing", "value": "boxSizing" }, { "text": "caption-side", "value": "captionSide" }, { "text": "caret-color", "value": "caretColor" }, { "text": "clear", "value": "clear" }, { "text": "clip", "value": "clip" }, { "text": "clip-path", "value": "clipPath" }, { "text": "color", "value": "color" }, { "text": "column-count", "value": "columnCount" }, { "text": "column-fill", "value": "columnFill" }, { "text": "column-gap", "value": "columnGap" }, { "text": "column-rule", "value": "columnRule" }, { "text": "column-rule-color", "value": "columnRuleColor" }, { "text": "column-rule-style", "value": "columnRuleStyle" }, { "text": "column-rule-width", "value": "columnRuleWidth" }, { "text": "column-span", "value": "columnSpan" }, { "text": "column-width", "value": "columnWidth" }, { "text": "columns", "value": "columns" }, { "text": "content", "value": "content" }, { "text": "counter-increment", "value": "counterIncrement" }, { "text": "counter-reset", "value": "counterReset" }, { "text": "cursor", "value": "cursor" }, { "text": "direction", "value": "direction" }, { "text": "display", "value": "display" }, { "text": "empty-cells", "value": "emptyCells" }, { "text": "filter", "value": "filter" }, { "text": "flex", "value": "flex" }, { "text": "flex-basis", "value": "flexBasis" }, { "text": "flex-direction", "value": "flexDirection" }, { "text": "flex-flow", "value": "flexFlow" }, { "text": "flex-grow", "value": "flexGrow" }, { "text": "flex-shrink", "value": "flexShrink" }, { "text": "flex-wrap", "value": "flexWrap" }, { "text": "float", "value": "float" }, { "text": "font", "value": "font" }, { "text": "font-family", "value": "fontFamily" }, { "text": "font-kerning", "value": "fontKerning" }, { "text": "font-size", "value": "fontSize" }, { "text": "font-stretch", "value": "fontStretch" }, { "text": "font-style", "value": "fontStyle" }, { "text": "font-variant", "value": "fontVariant" }, { "text": "font-weight", "value": "fontWeight" }, { "text": "gap", "value": "gap" }, { "text": "grid", "value": "grid" }, { "text": "grid-area", "value": "gridArea" }, { "text": "grid-auto-columns", "value": "gridAutoColumns" }, { "text": "grid-auto-flow", "value": "gridAutoFlow" }, { "text": "grid-auto-rows", "value": "gridAutoRows" }, { "text": "grid-column", "value": "gridColumn" }, { "text": "grid-column-end", "value": "gridColumnEnd" }, { "text": "grid-column-gap", "value": "gridColumnGap" }, { "text": "grid-column-start", "value": "gridColumnStart" }, { "text": "grid-gap", "value": "gridGap" }, { "text": "grid-row", "value": "gridRow" }, { "text": "grid-row-end", "value": "gridRowEnd" }, { "text": "grid-row-gap", "value": "gridRowGap" }, { "text": "grid-row-start", "value": "gridRowStart" }, { "text": "grid-template", "value": "gridTemplate" }, { "text": "grid-template-areas", "value": "gridTemplateAreas" }, { "text": "grid-template-columns", "value": "gridTemplateColumns" }, { "text": "grid-template-rows", "value": "gridTemplateRows" }, { "text": "height", "value": "height" }, { "text": "hyphens", "value": "hyphens" }, { "text": "justify-content", "value": "justifyContent" }, { "text": "left", "value": "left" }, { "text": "letter-spacing", "value": "letterSpacing" }, { "text": "line-height", "value": "lineHeight" }, { "text": "list-style", "value": "listStyle" }, { "text": "list-style-image", "value": "listStyleImage" }, { "text": "list-style-position", "value": "listStylePosition" }, { "text": "list-style-type", "value": "listStyleType" }, { "text": "margin", "value": "margin" }, { "text": "margin-bottom", "value": "marginBottom" }, { "text": "margin-left", "value": "marginLeft" }, { "text": "margin-right", "value": "marginRight" }, { "text": "margin-top", "value": "marginTop" }, { "text": "max-height", "value": "maxHeight" }, { "text": "max-width", "value": "maxWidth" }, { "text": "min-height", "value": "minHeight" }, { "text": "min-width", "value": "minWidth" }, { "text": "object-fit", "value": "objectFit" }, { "text": "object-position", "value": "objectPosition" }, { "text": "opacity", "value": "opacity" }, { "text": "order", "value": "order" }, { "text": "outline", "value": "outline" }, { "text": "outline-color", "value": "outlineColor" }, { "text": "outline-offset", "value": "outlineOffset" }, { "text": "outline-style", "value": "outlineStyle" }, { "text": "outline-width", "value": "outlineWidth" }, { "text": "overflow", "value": "overflow" }, { "text": "overflow-x", "value": "overflowX" }, { "text": "overflow-y", "value": "overflowY" }, { "text": "padding", "value": "padding" }, { "text": "padding-bottom", "value": "paddingBottom" }, { "text": "padding-left", "value": "paddingLeft" }, { "text": "padding-right", "value": "paddingRight" }, { "text": "padding-top", "value": "paddingTop" }, { "text": "page-break-after", "value": "pageBreakAfter" }, { "text": "page-break-before", "value": "pageBreakBefore" }, { "text": "page-break-inside", "value": "pageBreakInside" }, { "text": "perspective", "value": "perspective" }, { "text": "perspective-origin", "value": "perspectiveOrigin" }, { "text": "pointer-events", "value": "pointerEvents" }, { "text": "position", "value": "position" }, { "text": "quotes", "value": "quotes" }, { "text": "right", "value": "right" }, { "text": "row-gap", "value": "rowGap" }, { "text": "scroll-behavior", "value": "scrollBehavior" }, { "text": "table-layout", "value": "tableLayout" }, { "text": "text-align", "value": "textAlign" }, { "text": "text-align-last", "value": "textAlignLast" }, { "text": "text-decoration", "value": "textDecoration" }, { "text": "text-decoration-color", "value": "textDecorationColor" }, { "text": "text-decoration-line", "value": "textDecorationLine" }, { "text": "text-decoration-style", "value": "textDecorationStyle" }, { "text": "text-indent", "value": "textIndent" }, { "text": "text-justify", "value": "textJustify" }, { "text": "text-overflow", "value": "textOverflow" }, { "text": "text-shadow", "value": "textShadow" }, { "text": "text-transform", "value": "textTransform" }, { "text": "top", "value": "top" }, { "text": "transform", "value": "transform" }, { "text": "transform-origin", "value": "transformOrigin" }, { "text": "transform-style", "value": "transformStyle" }, { "text": "transition", "value": "transition" }, { "text": "transition-delay", "value": "transitionDelay" }, { "text": "transition-duration", "value": "transitionDuration" }, { "text": "transition-property", "value": "transitionProperty" }, { "text": "transition-timing-fn", "value": "transitionTimingFn" }, { "text": "user-select", "value": "userSelect" }, { "text": "vertical-align", "value": "verticalAlign" }, { "text": "visibility", "value": "visibility" }, { "text": "white-space", "value": "whiteSpace" }, { "text": "width", "value": "width" }, { "text": "word-break", "value": "wordBreak" }, { "text": "word-spacing", "value": "wordSpacing" }, { "text": "word-wrap", "value": "wordWrap" }, { "text": "writing-mode", "value": "writingMode" }, { "text": "z-index", "value": "zIndex" }
                         ]
                     },
                     axis: {
@@ -714,7 +778,7 @@
                         ]
                     },
                     eves: {
-                        acceptReporters: true,
+                        acceptReporters: false,
                         items: [
                             // Mouse & Pointer
                             "click", "dblclick", "mousedown", "mouseup", "mouseenter",
@@ -1834,7 +1898,7 @@
         }
 
 
-        remallstyle(args, util) {
+        removeAllStyle(args, util) {
             //if (Object.keys(this.pages).includes(args.PAGE)) {
 
 
@@ -1845,6 +1909,42 @@
             }
 
             // }
+        }
+
+        removeStyle(args, util) {
+            try {
+                let style = this.pages.get(args.PAGE)?.get("code").querySelector("style");
+
+
+                const sheet = style.sheet;
+
+                for (let i = sheet.cssRules.length - 1; i >= 0; i--) {
+                    if (sheet.cssRules[i].selectorText === `${args.TYPE}${args.NAME}`) {
+                        sheet.deleteRule(i);
+                    }
+                }
+
+                let updatedText = "";
+                for (let i = 0; i < sheet.cssRules.length; i++) {
+                    updatedText += sheet.cssRules[i].cssText + "\n";
+                }
+
+                style.innerHTML = updatedText;
+            } catch (error) { }
+
+        }
+
+        getProperty(args, util) {
+            try {
+                const style = this.pages.get(args.PAGE)?.get("code").querySelector("style")
+                const sheet = style.sheet;
+                const rules = sheet.cssRules || sheet.rules;
+                for (let i = 0; i < rules.length; i++) {
+                    if (rules[i].selectorText === `${args.TYPE}${args.NAME}`) {
+
+                    }
+                }
+            } catch (error) { return "" }
         }
 
         setAttr(args, util) {

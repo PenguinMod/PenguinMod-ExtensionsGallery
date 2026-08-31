@@ -5349,6 +5349,41 @@ self.onmessage = async (event) => {
                     {
                         opcode: 'animateChar',
                         blockType: Scratch.BlockType.COMMAND,
+                        text: 'animate character [INDEX] [PROPERTY] to [VALUE] over [SECS] secs easing [EASING] [DIRECTION]',
+                        hideFromPalette: true,
+                        arguments: {
+                            INDEX: {
+                                type: Scratch.ArgumentType.NUMBER,
+                                defaultValue: 1
+                            },
+                            PROPERTY: {
+                                type: Scratch.ArgumentType.STRING,
+                                menu: 'ANIMATE_PROPERTY',
+                                defaultValue: 'y'
+                            },
+                            VALUE: {
+                                type: Scratch.ArgumentType.NUMBER,
+                                defaultValue: 0
+                            },
+                            SECS: {
+                                type: Scratch.ArgumentType.NUMBER,
+                                defaultValue: 1
+                            },
+                            EASING: {
+                                type: Scratch.ArgumentType.STRING,
+                                menu: 'EASING',
+                                defaultValue: 'linear'
+                            },
+                            DIRECTION: {
+                                type: Scratch.ArgumentType.STRING,
+                                menu: 'EASING_DIRECTION',
+                                defaultValue: 'out'
+                            }
+                        }
+                    },
+                    {
+                        opcode: 'animateCharNew',
+                        blockType: Scratch.BlockType.COMMAND,
                         text: 'animate character [INDEX] [PROPERTY] to [VALUE] over [SECS] secs easing [EASING] [DIRECTION] and [WAIT]',
                         arguments: {
                             INDEX: {
@@ -5890,7 +5925,7 @@ self.onmessage = async (event) => {
                     FONT: {
                         items: 'getFontMenuItems',
                         isTypeable: true,
-						acceptText: true // for my 3 nitrobolt users :P
+			acceptText: true // for my 3 nitrobolt users :P
                     },
                     SPRITE: {
                         items: 'getSpriteMenuItems'
@@ -6543,6 +6578,50 @@ self.onmessage = async (event) => {
         }
 
         animateChar(args, util) {
+            const target = util.target;
+            const state = getState(target);
+
+            const idx = Scratch.Cast.toNumber(args.INDEX) - 1;
+            const property = Scratch.Cast.toString(args.PROPERTY).toLowerCase();
+            const validProps = ['x', 'y', 'rotation', 'opacity', 'scale'];
+            if (!validProps.includes(property)) return;
+            let targetValue = Scratch.Cast.toNumber(args.VALUE);
+            if (property === 'opacity') targetValue = Math.max(0, Math.min(100, targetValue)) / 100;
+            if (property === 'scale') targetValue = Math.max(0, targetValue) / 100;
+            const duration = Math.max(0, Scratch.Cast.toNumber(args.SECS));
+            const easingName = Scratch.Cast.toString(args.EASING).toLowerCase();
+            const easing = Object.prototype.hasOwnProperty.call(EasingMethods, easingName) ? easingName : 'linear';
+            const direction = Scratch.Cast.toString(args.DIRECTION).toLowerCase();
+            const o = getCharOverride(state, idx);
+
+            const key = target.id + '\u0001' + idx + '\u0001' + property;
+            if (duration <= 0) {
+                deleteCharAnimation(target.id, key);
+                o[property] = targetValue;
+                state.charTransformsVersion++;
+                schedulePaint(target, state);
+                startCharAnimationFinishedHat(target);
+                return;
+            }
+
+            const token = charAnimTokenSeq++;
+            addCharAnimation(target.id, key, {
+                target,
+                state,
+                index: idx,
+                property,
+                easing,
+                direction,
+                from: o[property] == null ? (property === 'scale' || property === 'opacity' ? 1 : 0) : o[property],
+                to: targetValue,
+                startTime: nowMs(),
+                duration: duration * 1000,
+                token
+            });
+            ensureAnimationTicker();
+        }
+
+        animateCharNew(args, util) {
             const target = util.target;
             const state = getState(target);
             const frame = util.stackFrame;

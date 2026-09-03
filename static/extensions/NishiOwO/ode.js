@@ -160,16 +160,22 @@
   let bodies = {};
   let joints = {};
   let divVecQuat;
+  let jwArray;
+  let blk_array_obj = {};
+  let arg_array_obj = {};
   const blk_array =
     Scratch.BlockType[Scratch.extensions.isNitroBolt ? "ARRAY" : "REPORTER"];
   const arg_array =
     Scratch.ArgumentType[Scratch.extensions.isNitroBolt ? "ARRAY" : "STRING"];
-  const from_array = Scratch.extensions.isNitroBolt
+  const from_array = (Scratch.extensions.isNitroBolt || Scratch.extensions.isPenguinMod)
     ? (x) => x
     : (x) => JSON.stringify(x);
   const to_f32array = Scratch.extensions.isNitroBolt
     ? Scratch.Cast.toFloat32Array
-    : (x) => {
+    : (Scratch.extensions.isPenguinMod && jwArray)
+    ? (x) => {
+	return new jwArray.Type(x);
+    } : (x) => {
         try {
           const json = JSON.parse(x);
 
@@ -182,6 +188,13 @@
       };
 
   if (Scratch.vm.divVecQuat) divVecQuat = Scratch.vm.divVecQuat;
+
+  if (Scratch.extensions.isPenguinMod && !Scratch.vm.jwArray) Scratch.vm.extensionManager.loadExtensionIdSync("jwArray");
+  if (Scratch.vm.jwArray){
+    jwArray = Scratch.vm.jwArray;
+    blk_array_obj = jwArray.Block;
+    arg_array_obj = jwArray.Argument;
+  }
 
   /* DO NOT REMOVE THE COMMENT BELOW!!! */
 // This code implements the `-sMODULARIZE` settings by taking the generated
@@ -3429,6 +3442,7 @@ embedded = true;
               GRAVITY: {
                 type: arg_array,
                 defaultValue: from_array([0, -9.81, 0]),
+		...arg_array_obj
               },
             },
           },
@@ -3446,10 +3460,12 @@ embedded = true;
               START: {
                 type: arg_array,
                 defaultValue: from_array([0, 0, 0]),
+		...arg_array_obj
               },
               END: {
                 type: arg_array,
                 defaultValue: from_array([0, 0, 0]),
+		...arg_array_obj
               },
             },
           },
@@ -3467,10 +3483,12 @@ embedded = true;
               START: {
                 type: arg_array,
                 defaultValue: from_array([0, 0, 0]),
+		...arg_array_obj
               },
               END: {
                 type: arg_array,
                 defaultValue: from_array([0, 0, 0]),
+		...arg_array_obj
               },
               GEOM: {
                 type: Scratch.ArgumentType.STRING,
@@ -3510,6 +3528,7 @@ embedded = true;
           {
             opcode: "bodyGetArray",
             blockType: blk_array,
+	    ...blk_array_obj,
             disableMonitor: true,
             text: Scratch.translate("get [TYPE] of body [BODY]"),
             arguments: {
@@ -3541,6 +3560,7 @@ embedded = true;
               ARRAY: {
                 type: arg_array,
                 defaultValue: from_array([0, 0, 0]),
+		...arg_array_obj
               },
             },
           },
@@ -3556,6 +3576,7 @@ embedded = true;
               FORCE: {
                 type: arg_array,
                 defaultValue: from_array([0, 0, 0]),
+		...arg_array_obj
               },
             },
           },
@@ -3645,6 +3666,7 @@ embedded = true;
               SIZE: {
                 type: arg_array,
                 defaultValue: from_array([1, 1, 1]),
+		...arg_array_obj
               },
               WORLD: {
                 type: Scratch.ArgumentType.STRING,
@@ -3754,11 +3776,13 @@ embedded = true;
             arguments: {
               VERTEX: {
                 type: arg_array,
-                defaultValue: [],
+                defaultValue: from_array([]),
+		...arg_array_obj
               },
               INDEX: {
                 type: arg_array,
-                defaultValue: [],
+                defaultValue: from_array([]),
+		...arg_array_obj
               },
               WORLD: {
                 type: Scratch.ArgumentType.STRING,
@@ -3786,7 +3810,8 @@ embedded = true;
               },
               DATA: {
                 type: arg_array,
-                defaultValue: [],
+                defaultValue: from_array([]),
+		...arg_array_obj
               },
               WIDTH: {
                 type: Scratch.ArgumentType.NUMBER,
@@ -3857,6 +3882,7 @@ embedded = true;
           {
             opcode: "geomGetArray",
             blockType: blk_array,
+	    ...blk_array_obj,
             disableMonitor: true,
             text: Scratch.translate("get [TYPE] of geometry [GEOM]"),
             arguments: {
@@ -3888,6 +3914,7 @@ embedded = true;
               ARRAY: {
                 type: arg_array,
                 defaultValue: from_array([0, 0, 0]),
+		...arg_array_obj
               },
             },
           },
@@ -3932,6 +3959,7 @@ embedded = true;
           {
             opcode: "jointGetArray",
             blockType: blk_array,
+	    ...blk_array_obj,
             disableMonitor: true,
             text: Scratch.translate("get [TYPE] of joint [JOINT]"),
             arguments: {
@@ -4045,6 +4073,7 @@ embedded = true;
               TORQUES: {
                 type: arg_array,
                 defaultValue: from_array([0]),
+		...arg_array_obj
               },
             },
           },

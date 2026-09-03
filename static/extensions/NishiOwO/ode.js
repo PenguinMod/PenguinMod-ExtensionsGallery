@@ -159,6 +159,7 @@
   let geoms = {};
   let bodies = {};
   let joints = {};
+  let divVecQuat;
   const blk_array =
     Scratch.BlockType[Scratch.extensions.isNitroBolt ? "ARRAY" : "REPORTER"];
   const arg_array =
@@ -179,6 +180,8 @@
           return new Float32Array([]);
         }
       };
+
+  if (Scratch.vm.divVecQuat) divVecQuat = Scratch.vm.divVecQuat;
 
   /* DO NOT REMOVE THE COMMENT BELOW!!! */
 // This code implements the `-sMODULARIZE` settings by taking the generated
@@ -3302,7 +3305,7 @@ embedded = true;
 
   class ODE {
     getInfo() {
-      return {
+      let base = {
         id: "nishiowoOde",
         name: Scratch.translate("ODE"),
         blockIconURI: blockIconURI,
@@ -4035,12 +4038,63 @@ embedded = true;
               },
               TORQUES: {
                 type: arg_array,
-                defaultValue: [0],
+                defaultValue: from_array([0]),
               },
             },
           },
         ],
       };
+
+      if(Scratch.extensions.isPenguinMod && divVecQuat){
+	base.blocks.push({
+          blockType: "label",
+          text: Scratch.translate("3D Vectors & Quats compatibility"),
+        },
+        {
+          opcode: "divVecToVector",
+          text: Scratch.translate("div vector [INPUT] to vector"),
+          ...divVecQuat.Vector.Block,
+          arguments: {
+            INPUT: {
+              ...divVecQuat.Vector.Argument
+            }
+          }
+        },
+        {
+          opcode: "vectorToDivVec",
+          text: Scratch.translate("vector [INPUT] to div vector"),
+          ...divVecQuat.Vector.Block,
+          arguments: {
+            INPUT: {
+              type: arg_array,
+              defaultValue: from_array([0, 0, 0])
+            }
+          }
+        },
+        {
+          opcode: "divQuatToQuaternion",
+          text: Scratch.translate("div quaternion [INPUT] to quaternion"),
+          ...divVecQuat.Quat.Block,
+          arguments: {
+            INPUT: {
+              ...divVecQuat.Quat.Argument
+            }
+          }
+        },
+        {
+          opcode: "quaternionToDivQuat",
+          text: Scratch.translate("quaternion [INPUT] to div quaternion"),
+          ...divVecQuat.Quat.Block,
+          arguments: {
+            INPUT: {
+              type: arg_array,
+              defaultValue: from_array([0, 0, 0, 0])
+            }
+          }
+        });
+      }
+
+      return base;
     }
 
     resetAll() {
@@ -5341,6 +5395,26 @@ embedded = true;
             dJointAddPUTorques(joints[joint].joint, torques[0], torques[1]);
           break;
       }
+    }
+
+    divVecToVector(args){
+      const input = divVecQuat.Vector.Type.toVector3D(args.INPUT);
+      return from_array([input.x, input.y, input.z]);
+    }
+    
+    vectorToDivVec(args){
+      const input = to_f32array(args.INPUT);
+      return new divVecQuat.Vector.Type(input[0], input[1], input[2]);
+    }
+    
+    divQuatToQuaternion(args){
+      const input = divVecQuat.Quat.Type.toQuat(args.INPUT);
+      return from_array([input.r, input.yz, input.xz, input.xy]);
+    }
+    
+    quaternionToDivQuat(args){
+      const input = to_f32array(args.INPUT);
+      return new divVecQuat.Quat.Type(input[3], input[0], input[1], input[2]);
     }
   }
 

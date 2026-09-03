@@ -175,7 +175,7 @@
     ? Scratch.Cast.toFloat32Array
     : Scratch.extensions.isPenguinMod && jwArray
       ? (x) => {
-          return new jwArray.Type(x);
+          return new Float32Array(jwArray.Type.toArray(x).array);
         }
       : (x) => {
           try {

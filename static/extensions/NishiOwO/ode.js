@@ -167,9 +167,10 @@
     Scratch.BlockType[Scratch.extensions.isNitroBolt ? "ARRAY" : "REPORTER"];
   const arg_array =
     Scratch.ArgumentType[Scratch.extensions.isNitroBolt ? "ARRAY" : "STRING"];
-  const from_array =
-    Scratch.extensions.isNitroBolt || Scratch.extensions.isPenguinMod
-      ? (x) => x
+  const from_array = Scratch.extensions.isNitroBolt
+    ? (x) => x
+    : Scratch.extensions.isPenguinMod
+      ? (x) => new jwArray.Type(x)
       : (x) => JSON.stringify(x);
   const to_f32array = Scratch.extensions.isNitroBolt
     ? Scratch.Cast.toFloat32Array

@@ -4059,8 +4059,8 @@ embedded = true;
           },
           {
             opcode: "divVecToVector",
+            blockType: Scratch.BlockType.REPORTER,
             text: Scratch.translate("div vector [INPUT] to vector"),
-            ...divVecQuat.Vector.Block,
             arguments: {
               INPUT: {
                 ...divVecQuat.Vector.Argument,
@@ -4081,7 +4081,7 @@ embedded = true;
           {
             opcode: "divQuatToQuaternion",
             text: Scratch.translate("div quaternion [INPUT] to quaternion"),
-            ...divVecQuat.Quat.Block,
+            blockType: Scratch.BlockType.REPORTER,
             arguments: {
               INPUT: {
                 ...divVecQuat.Quat.Argument,

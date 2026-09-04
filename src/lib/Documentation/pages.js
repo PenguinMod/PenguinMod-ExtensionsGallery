@@ -42,6 +42,8 @@ import ProjectInterfaces from "./ProjectInterfaces.md?raw";
 // Date Format V2
 import DateFormatV2 from "./DateFormatV2.md?raw";
 
+import PageComplexNumbers from "./SalagataComplex.md?raw";
+
 export default {
     // the key is the path to the docs page
     // so you can do "sharkpool-particle-tools" for example
@@ -81,5 +83,8 @@ export default {
     // Project Interfaces
     "ProjectInterfaces": ProjectInterfaces,
 
-    "DateFormatV2": DateFormatV2
+    "DateFormatV2": DateFormatV2,
+
+    // Complex Numebrs
+    "SalagataComplex": PageComplexNumbers
 };

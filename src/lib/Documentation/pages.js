@@ -45,6 +45,9 @@ import DateFormatV2 from "./DateFormatV2.md?raw";
 // ODE
 import ODE from "./ODE.md?raw";
 
+// TurboSynth
+import TurboSynth from "./TurboSynth.md?raw";
+
 export default {
     // the key is the path to the docs page
     // so you can do "sharkpool-particle-tools" for example
@@ -87,5 +90,8 @@ export default {
     "DateFormatV2": DateFormatV2,
 
     // ODE
-    "ODE": ODE
+    "ODE": ODE,
+
+    // TurboSynth
+    "TurboSynth": TurboSynth
 };

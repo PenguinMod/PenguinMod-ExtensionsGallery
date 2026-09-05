@@ -625,6 +625,14 @@ export default [
         creator: "NishiOwO",
         isGitHub: true,
     },
+    {
+        name: "Libxmp",
+        description: "Play tracker modules using Libxmp.",
+        code: "NishiOwO/libxmp.js",
+        banner: "NishiOwO/libxmp.svg",
+        creator: "NishiOwO",
+        isGitHub: true,
+    },
     /*{
         name: "Scope Variable",
         description: "Manage your variables in a block-like structure.",

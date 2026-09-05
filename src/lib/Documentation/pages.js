@@ -43,6 +43,8 @@ import ProjectInterfaces from "./ProjectInterfaces.md?raw";
 import DateFormatV2 from "./DateFormatV2.md?raw";
 
 import PageComplexNumbers from "./SalagataComplex.md?raw";
+// ODE
+import ODE from "./ODE.md?raw";
 
 export default {
     // the key is the path to the docs page
@@ -87,4 +89,6 @@ export default {
 
     // Complex Numebrs
     "SalagataComplex": PageComplexNumbers
+    // ODE
+    "ODE": ODE
 };

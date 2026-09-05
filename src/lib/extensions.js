@@ -620,6 +620,7 @@ export default [
         name: "TurboSynth",
         description: "Synthesizer that uses TurboSynth.",
         code: "NishiOwO/turbosynth.js",
+        banner: "NishiOwO/turbosynth.svg",
         documentation: "TurboSynth",
         creator: "NishiOwO",
         isGitHub: true,

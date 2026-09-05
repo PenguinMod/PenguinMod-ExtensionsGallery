@@ -502,7 +502,6 @@ Enjoy!! :D
             paintFingerprint: null,
             renderInFlight: false,
             renderQueued: false,
-            maskBatchCanvas: null,
             lastFamiliesKey: null,
             lastFontDefs: '',
             revealToken: 0,
@@ -774,7 +773,7 @@ Enjoy!! :D
     const GLYPH_OVERSAMPLE = 3;
     const GLYPH_PADDING_EM = 0.35;
     const glyphCache = new Map();
-    const glyphMeasureCanvas = document.createElement('canvas');
+    let framePinnedGlyphKeys = null;    const glyphMeasureCanvas = document.createElement('canvas');
     const glyphMeasureCtx = glyphMeasureCanvas.getContext('2d', {
         willReadFrequently: false
     });
@@ -983,10 +982,18 @@ Enjoy!! :D
         let entry = glyphCache.get(key);
         if (!entry) {
             if (glyphCache.size >= GLYPH_CACHE_LIMIT) {
-                const evictedKey = glyphCache.keys().next().value;
-                const evictedShape = glyphCache.get(evictedKey);
-                glyphCache.delete(evictedKey);
-                if (evictedShape) releaseGlyphOwnedCanvases(evictedShape);
+                let evictedKey;
+                for (const candidateKey of glyphCache.keys()) {
+                    if (!framePinnedGlyphKeys || !framePinnedGlyphKeys.has(candidateKey)) {
+                        evictedKey = candidateKey;
+                        break;
+                    }
+                }
+                if (evictedKey !== undefined) {
+                    const evictedShape = glyphCache.get(evictedKey);
+                    glyphCache.delete(evictedKey);
+                    if (evictedShape) releaseGlyphOwnedCanvases(evictedShape);
+                }
             }
             entry = rasterizeGlyph(char, fontFamily, size, weight, style);
             glyphCache.set(key, entry);
@@ -1195,147 +1202,6 @@ Enjoy!! :D
         destCtx.restore();
 
         releaseMaskScratchCanvas(scratch);
-    }
-
-    function maskBatchKey(mask, alpha) {
-        return mask.targetName + '\u0001' + mask.costumeName + '\u0001' +
-            (mask.direction || WIPE_DIRECTION_BOTTOM_UP) + '\u0001' +
-            (Scratch.Cast.toNumber(mask.coverage) || 0) + '\u0001' +
-            (Scratch.Cast.toNumber(mask.blur) || 0) + '\u0001' +
-            (Scratch.Cast.toNumber(mask.x) || 0) + '\u0001' +
-            (Scratch.Cast.toNumber(mask.y) || 0) + '\u0001' +
-            (Scratch.Cast.toNumber(mask.zoom) || 100) + '\u0001' +
-            (Scratch.Cast.toNumber(mask.rotation) || 0) + '\u0001' + alpha;
-    }
-
-    function collectBatchedMaskGroups(paintOps) {
-        const groups = [];
-        const batchedOps = new Set();
-        let group = null;
-
-        const flushGroup = () => {
-            if (group && group.items.length > 1) {
-                groups.push(group);
-                for (let i = 0; i < group.items.length; i++) batchedOps.add(group.items[i].op);
-            }
-            group = null;
-        };
-
-        for (let i = 0; i < paintOps.length; i++) {
-            const op = paintOps[i];
-            const mask = op.mask;
-            const maskOpacity = mask ? Math.max(0, Math.min(100, Scratch.Cast.toNumber(mask.opacity != null ? mask.opacity : 100))) / 100 : 0;
-            const alpha = (op.opacity == null ? 1 : op.opacity) * maskOpacity;
-            const canBatch = mask && !op.gradient && mask.seamless && !op.rotation && (op.scale == null || op.scale === 1) &&
-                Math.max(0, Math.min(100, Scratch.Cast.toNumber(mask.coverage) || 0)) > 0 && alpha > 0;
-            if (!canBatch) {
-                flushGroup();
-                continue;
-            }
-
-            const key = maskBatchKey(mask, alpha);
-            if (!group || group.key !== key) {
-                flushGroup();
-                const texture = getMaskTexture(mask.targetName, mask.costumeName);
-                if (!texture) continue;
-                group = {
-                    key,
-                    mask,
-                    alpha,
-                    texture,
-                    items: [],
-                    minX: Infinity,
-                    minY: Infinity,
-                    maxX: -Infinity,
-                    maxY: -Infinity
-                };
-            }
-
-            if (op.text === '\u00A0' || op.text === '') continue;
-
-            const fontFamily = op.font['font-family'];
-            const fontSize = op.font['font-size'];
-            const fontWeight = op.font['font-weight'];
-            const fontStyle = op.font['font-style'];
-            const glyph = getGlyphBitmap(op.text, fontFamily, fontSize, fontWeight, fontStyle, op.color);
-            const drawXEm = op.x - (glyph.baselineOriginXEm + glyph.advance / 2);
-            const drawYEm = (op.y + (glyph.fontAscentEm - glyph.fontDescentEm) / 2) - glyph.baselineOriginYEm;
-            const px = Math.round(drawXEm * DEST_SCALE);
-            const py = Math.round(drawYEm * DEST_SCALE);
-            group.items.push({op, glyph, px, py});
-            group.minX = Math.min(group.minX, px);
-            group.minY = Math.min(group.minY, py);
-            group.maxX = Math.max(group.maxX, px + glyph.canvas.width);
-            group.maxY = Math.max(group.maxY, py + glyph.canvas.height);
-        }
-        flushGroup();
-
-        return {groups, batchedOps};
-    }
-
-    function drawBatchedMaskGroups(ctx, state, groups, pixelW, pixelH) {
-        if (!groups.length) return;
-        let canvas = state.maskBatchCanvas;
-        if (!canvas) {
-            canvas = document.createElement('canvas');
-            state.maskBatchCanvas = canvas;
-        }
-        if (canvas.width !== pixelW || canvas.height !== pixelH) {
-            canvas.width = pixelW;
-            canvas.height = pixelH;
-        }
-        const batchCtx = canvas.getContext('2d');
-
-        for (let i = 0; i < groups.length; i++) {
-            const group = groups[i];
-            const mask = group.mask;
-            batchCtx.setTransform(1, 0, 0, 1, 0, 0);
-            batchCtx.globalAlpha = 1;
-            batchCtx.globalCompositeOperation = 'source-over';
-            batchCtx.clearRect(0, 0, pixelW, pixelH);
-            const pattern = batchCtx.createPattern(group.texture.canvas, 'repeat');
-            if (!pattern) continue;
-            const matrix = new DOMMatrix();
-            matrix.translateSelf((Scratch.Cast.toNumber(mask.x) || 0) * DEST_SCALE, -(Scratch.Cast.toNumber(mask.y) || 0) * DEST_SCALE);
-            const rotation = Scratch.Cast.toNumber(mask.rotation) || 0;
-            if (rotation !== 0) matrix.rotateSelf(rotation);
-            const zoom = Math.max(0.01, (Scratch.Cast.toNumber(mask.zoom) || 100) / 100);
-            matrix.scaleSelf(zoom, zoom);
-            pattern.setTransform(matrix);
-            batchCtx.fillStyle = pattern;
-            batchCtx.fillRect(0, 0, pixelW, pixelH);
-
-            batchCtx.globalCompositeOperation = 'destination-in';
-            for (let j = 0; j < group.items.length; j++) {
-                const item = group.items[j];
-                batchCtx.globalAlpha = group.alpha;
-                batchCtx.drawImage(item.glyph.shape.canvas, item.px, item.py);
-            }
-            batchCtx.globalAlpha = 1;
-
-            const coverage = Math.max(0, Math.min(100, Scratch.Cast.toNumber(mask.coverage) || 0)) / 100;
-            if (coverage < 1) {
-                const blurPx = Math.max(0, Scratch.Cast.toNumber(mask.blur) || 0) * DEST_SCALE;
-                const bandHalf = Math.max(0.5, blurPx / 2);
-                const direction = mask.direction || WIPE_DIRECTION_BOTTOM_UP;
-                const axisIsX = direction === WIPE_DIRECTION_LEFT_RIGHT || direction === WIPE_DIRECTION_RIGHT_LEFT;
-                const growsPositive = direction === WIPE_DIRECTION_LEFT_RIGHT || direction === WIPE_DIRECTION_UP_DOWN;
-                const axisStart = axisIsX ? group.minX : group.minY;
-                const axisSize = axisIsX ? group.maxX - group.minX : group.maxY - group.minY;
-                const revealEdge = growsPositive ? axisStart + axisSize * coverage : axisStart + axisSize - axisSize * coverage;
-                const gradStart = growsPositive ? revealEdge - bandHalf : revealEdge + bandHalf;
-                const gradEnd = growsPositive ? revealEdge + bandHalf : revealEdge - bandHalf;
-                const gradient = axisIsX ?
-                    batchCtx.createLinearGradient(gradStart, 0, gradEnd, 0) :
-                    batchCtx.createLinearGradient(0, gradStart, 0, gradEnd);
-                gradient.addColorStop(0, 'rgba(255,255,255,1)');
-                gradient.addColorStop(1, 'rgba(255,255,255,0)');
-                batchCtx.fillStyle = gradient;
-                batchCtx.fillRect(0, 0, pixelW, pixelH);
-            }
-
-            ctx.drawImage(canvas, 0, 0);
-        }
     }
 
     function tintGlyph(shape, color) {
@@ -2100,12 +1966,15 @@ Enjoy!! :D
                     const py = Math.round(drawYEm * DEST_SCALE);
                     const w = shape.canvas.width;
                     const h = shape.canvas.height;
+                    const padYPx = Math.round((shape.baselineOriginYEm - shape.fontAscentEm) * DEST_SCALE);
+                    const inkTop = py + padYPx;
+                    const inkBottom = py + h - padYPx;
 
                     groupChars.push({ charIndex, px, py });
                     minX = Math.min(minX, px);
                     maxX = Math.max(maxX, px + w);
-                    minY = Math.min(minY, py);
-                    maxY = Math.max(maxY, py + h);
+                    minY = Math.min(minY, inkTop);
+                    maxY = Math.max(maxY, inkBottom);
                 }
             }
         }
@@ -2773,17 +2642,28 @@ Enjoy!! :D
 
     function compositeGlyphsAndPush(target, state, paintOps, docW, docH, effectiveMaxWidth, totalHeight, originX, originY, anchorY) {
         ensureRenderWorker();
-        let canvas = null;
-        if (!glCompositorFailed) {
-            try {
-                canvas = compositeGlyphsToCanvasWebGL2(state, paintOps, docW, docH, effectiveMaxWidth, totalHeight, originX, originY);
-            } catch (e) {
-                canvas = null;
-                glCompositorFailed = true;
-            }
+        const pinnedKeys = new Set();
+        for (let i = 0; i < paintOps.length; i++) {
+            const op = paintOps[i];
+            if (op.text === '\u00A0' || op.text === '') continue;
+            pinnedKeys.add(glyphCacheKey(op.text, op.font['font-family'], op.font['font-size'], op.font['font-weight'], op.font['font-style']));
         }
-        if (!canvas) {
-            canvas = compositeGlyphsToCanvasCanvas2D(state, paintOps, docW, docH, effectiveMaxWidth, totalHeight, originX, originY);
+        framePinnedGlyphKeys = pinnedKeys;
+        let canvas = null;
+        try {
+            if (!glCompositorFailed) {
+                try {
+                    canvas = compositeGlyphsToCanvasWebGL2(state, paintOps, docW, docH, effectiveMaxWidth, totalHeight, originX, originY);
+                } catch (e) {
+                    canvas = null;
+                    glCompositorFailed = true;
+                }
+            }
+            if (!canvas) {
+                canvas = compositeGlyphsToCanvasCanvas2D(state, paintOps, docW, docH, effectiveMaxWidth, totalHeight, originX, originY);
+            }
+        } finally {
+            framePinnedGlyphKeys = null;
         }
         pushCanvasToDrawable(target, canvas, docW, docH, originX, anchorY != null ? anchorY : originY);
         return Promise.resolve();
@@ -3357,149 +3237,6 @@ function drawMaskedGlyph(destCtx, glyphKey, mask, texture, worldDrawX, worldDraw
     releaseMaskScratchCanvas(scratch);
 }
 
-function maskBatchKey(mask, alpha) {
-    return mask.targetName + '\u0001' + mask.costumeName + '\u0001' +
-        (mask.direction || WIPE_DIRECTION_BOTTOM_UP) + '\u0001' +
-        (Scratch.Cast.toNumber(mask.coverage) || 0) + '\u0001' +
-        (Scratch.Cast.toNumber(mask.blur) || 0) + '\u0001' +
-        (Scratch.Cast.toNumber(mask.x) || 0) + '\u0001' +
-        (Scratch.Cast.toNumber(mask.y) || 0) + '\u0001' +
-        (Scratch.Cast.toNumber(mask.zoom) || 100) + '\u0001' +
-        (Scratch.Cast.toNumber(mask.rotation) || 0) + '\u0001' + alpha;
-}
-
-function collectBatchedMaskGroups(paintOps, maskTextures) {
-    const groups = [];
-    const batchedOps = new Set();
-    let group = null;
-
-    const flushGroup = () => {
-        if (group && group.items.length > 1) {
-            groups.push(group);
-            for (let i = 0; i < group.items.length; i++) batchedOps.add(group.items[i].op);
-        }
-        group = null;
-    };
-
-    for (let i = 0; i < paintOps.length; i++) {
-        const op = paintOps[i];
-        const mask = op.mask;
-        const maskOpacity = mask ? Math.max(0, Math.min(100, Scratch.Cast.toNumber(mask.opacity != null ? mask.opacity : 100))) / 100 : 0;
-        const alpha = (op.opacity == null ? 1 : op.opacity) * maskOpacity;
-        const canBatch = mask && !op.gradient && mask.seamless && !op.rotation && (op.scale == null || op.scale === 1) &&
-            Math.max(0, Math.min(100, Scratch.Cast.toNumber(mask.coverage) || 0)) > 0 && alpha > 0;
-        if (!canBatch) {
-            flushGroup();
-            continue;
-        }
-
-        const key = maskBatchKey(mask, alpha);
-        if (!group || group.key !== key) {
-            flushGroup();
-            const texture = maskTextures.get(mask.targetName + '\u0001' + mask.costumeName);
-            if (!texture) continue;
-            group = {
-                key,
-                mask,
-                alpha,
-                texture,
-                items: [],
-                minX: Infinity,
-                minY: Infinity,
-                maxX: -Infinity,
-                maxY: -Infinity
-            };
-        }
-
-        if (op.text === '\u00A0' || op.text === '') continue;
-
-        const glyph = getGlyphBitmap(op.glyphKey, op.color);
-        if (!glyph) {
-            flushGroup();
-            continue;
-        }
-        const drawXEm = op.x - (glyph.baselineOriginXEm + glyph.advance / 2);
-        const drawYEm = (op.y + (glyph.fontAscentEm - glyph.fontDescentEm) / 2) - glyph.baselineOriginYEm;
-        const px = Math.round(drawXEm * DEST_SCALE);
-        const py = Math.round(drawYEm * DEST_SCALE);
-        group.items.push({op, glyph, px, py});
-        group.minX = Math.min(group.minX, px);
-        group.minY = Math.min(group.minY, py);
-        group.maxX = Math.max(group.maxX, px + glyph.canvas.width);
-        group.maxY = Math.max(group.maxY, py + glyph.canvas.height);
-    }
-    flushGroup();
-
-    return {groups, batchedOps};
-}
-
-const maskBatchCanvasesByState = new Map();
-
-function drawBatchedMaskGroups(ctx, stateId, groups, pixelW, pixelH) {
-    if (!groups.length) return;
-    let canvas = maskBatchCanvasesByState.get(stateId);
-    if (!canvas) {
-        canvas = new OffscreenCanvas(pixelW, pixelH);
-        maskBatchCanvasesByState.set(stateId, canvas);
-    }
-    if (canvas.width !== pixelW || canvas.height !== pixelH) {
-        canvas.width = pixelW;
-        canvas.height = pixelH;
-    }
-    const batchCtx = canvas.getContext('2d');
-
-    for (let i = 0; i < groups.length; i++) {
-        const group = groups[i];
-        const mask = group.mask;
-        batchCtx.setTransform(1, 0, 0, 1, 0, 0);
-        batchCtx.globalAlpha = 1;
-        batchCtx.globalCompositeOperation = 'source-over';
-        batchCtx.clearRect(0, 0, pixelW, pixelH);
-        const pattern = batchCtx.createPattern(group.texture.canvas, 'repeat');
-        if (!pattern) continue;
-        const matrix = new DOMMatrix();
-        matrix.translateSelf((Scratch.Cast.toNumber(mask.x) || 0) * DEST_SCALE, -(Scratch.Cast.toNumber(mask.y) || 0) * DEST_SCALE);
-        const rotation = Scratch.Cast.toNumber(mask.rotation) || 0;
-        if (rotation !== 0) matrix.rotateSelf(rotation);
-        const zoom = Math.max(0.01, (Scratch.Cast.toNumber(mask.zoom) || 100) / 100);
-        matrix.scaleSelf(zoom, zoom);
-        pattern.setTransform(matrix);
-        batchCtx.fillStyle = pattern;
-        batchCtx.fillRect(0, 0, pixelW, pixelH);
-
-        batchCtx.globalCompositeOperation = 'destination-in';
-        for (let j = 0; j < group.items.length; j++) {
-            const item = group.items[j];
-            batchCtx.globalAlpha = group.alpha;
-            batchCtx.drawImage(item.glyph.shape.canvas, item.px, item.py);
-        }
-        batchCtx.globalAlpha = 1;
-
-        const coverage = Math.max(0, Math.min(100, Scratch.Cast.toNumber(mask.coverage) || 0)) / 100;
-        if (coverage < 1) {
-            const blurPx = Math.max(0, Scratch.Cast.toNumber(mask.blur) || 0) * DEST_SCALE;
-            const bandHalf = Math.max(0.5, blurPx / 2);
-            const direction = mask.direction || WIPE_DIRECTION_BOTTOM_UP;
-            const axisIsX = direction === WIPE_DIRECTION_LEFT_RIGHT || direction === WIPE_DIRECTION_RIGHT_LEFT;
-            const growsPositive = direction === WIPE_DIRECTION_LEFT_RIGHT || direction === WIPE_DIRECTION_UP_DOWN;
-            const axisStart = axisIsX ? group.minX : group.minY;
-            const axisSize = axisIsX ? group.maxX - group.minX : group.maxY - group.minY;
-            const revealEdge = growsPositive ? axisStart + axisSize * coverage : axisStart + axisSize - axisSize * coverage;
-            const gradStart = growsPositive ? revealEdge - bandHalf : revealEdge + bandHalf;
-            const gradEnd = growsPositive ? revealEdge + bandHalf : revealEdge - bandHalf;
-            const gradient = axisIsX ?
-                batchCtx.createLinearGradient(gradStart, 0, gradEnd, 0) :
-                batchCtx.createLinearGradient(0, gradStart, 0, gradEnd);
-            gradient.addColorStop(0, 'rgba(255,255,255,1)');
-            gradient.addColorStop(1, 'rgba(255,255,255,0)');
-            batchCtx.fillStyle = gradient;
-            batchCtx.fillRect(0, 0, pixelW, pixelH);
-        }
-
-        ctx.drawImage(canvas, 0, 0);
-    }
-}
-
 const READBACK_CANVAS = new OffscreenCanvas(1, 1);
 const READBACK_CTX = READBACK_CANVAS.getContext('2d', {
     willReadFrequently: true
@@ -3574,7 +3311,7 @@ function maskGroupKey(mask) {
         Math.round(mask.x * 4) + '\u0001' + Math.round(mask.y * 4);
 }
 
-function computeSeamlessMaskSpansByIndex(paintOps) {
+function computeSeamlessMaskSpansByIndex(paintOps, areaW, areaH) {
     const spans = new Map();
     let groupIndices = null;
     let groupKey = null;
@@ -3583,14 +3320,14 @@ function computeSeamlessMaskSpansByIndex(paintOps) {
     const flushGroup = () => {
         if (!groupIndices || !groupIndices.length) return;
         if (!isFinite(minX) || !isFinite(maxX) || !isFinite(minY) || !isFinite(maxY)) return;
-        const spanW = Math.max(1, maxX - minX);
-        const spanH = Math.max(1, maxY - minY);
+        const spanW = areaW;
+        const spanH = areaH;
         for (const gi of groupIndices) {
             spans.set(gi, {
                 spanW,
                 spanH,
-                originX: minX,
-                originY: minY
+                originX: 0,
+                originY: 0
             });
         }
     };
@@ -3641,11 +3378,11 @@ function computeSeamlessMaskSpansByIndex(paintOps) {
 
 const maskSpansCacheByState = new Map();
 
-function getSeamlessMaskSpans(stateId, paintOps, layoutDocKey, geometryVersion) {
+function getSeamlessMaskSpans(stateId, paintOps, layoutDocKey, geometryVersion, areaW, areaH) {
     const cacheKey = layoutDocKey + '\u0003' + geometryVersion;
     let entry = maskSpansCacheByState.get(stateId);
     if (entry && entry.cacheKey === cacheKey) return entry.spans;
-    const spans = computeSeamlessMaskSpansByIndex(paintOps);
+    const spans = computeSeamlessMaskSpansByIndex(paintOps, areaW, areaH);
     maskSpansCacheByState.set(stateId, { cacheKey, spans });
     return spans;
 }
@@ -3703,11 +3440,14 @@ function computeGradientSpansByIndex(paintOps) {
         const py = Math.round(drawYEm * DEST_SCALE);
         const w = shape.canvas.width;
         const h = shape.canvas.height;
+        const padYPx = Math.round((shape.baselineOriginYEm - shape.fontAscentEm) * DEST_SCALE);
+        const inkTop = py + padYPx;
+        const inkBottom = py + h - padYPx;
 
         minX = Math.min(minX, px);
         maxX = Math.max(maxX, px + w);
-        minY = Math.min(minY, py);
-        maxY = Math.max(maxY, py + h);
+        minY = Math.min(minY, inkTop);
+        maxY = Math.max(maxY, inkBottom);
     }
     flushGroup();
 
@@ -3762,9 +3502,8 @@ function compositeGlyphsToCanvas(stateId, settings, paintOps, docW, docH, textWi
         ctx.restore();
     }
 
-    const maskSpansByIndex = getSeamlessMaskSpans(stateId, paintOps, settings.layoutKey + '\u0003' + docW + '\u0003' + docH, settings.charMaskGeometryVersion);
+    const maskSpansByIndex = getSeamlessMaskSpans(stateId, paintOps, settings.layoutKey + '\u0003' + docW + '\u0003' + docH, settings.charMaskGeometryVersion, docW * DEST_SCALE, docH * DEST_SCALE);
     const gradientSpansByIndex = getGradientSpans(stateId, paintOps, settings.layoutKey + '\u0003' + docW + '\u0003' + docH, settings.charMaskGeometryVersion);
-    const batchedMasks = collectBatchedMaskGroups(paintOps, maskTextures);
     const gradientScratchCanvases = [];
 
     const applyCharTransformOp = (op, hasRotation, hasScale) => {
@@ -3860,7 +3599,7 @@ function compositeGlyphsToCanvas(stateId, settings, paintOps, docW, docH, textWi
             if (hasOpacity) ctx.globalAlpha = 1;
         }
 
-        if (op.mask && !op.gradient && !batchedMasks.batchedOps.has(op)) {
+        if (op.mask && !op.gradient) {
             const texture = maskTextures.get(op.mask.targetName + '\u0001' + op.mask.costumeName);
             if (texture) {
                 const px = Math.round(drawXEm * DEST_SCALE);
@@ -3924,8 +3663,6 @@ function compositeGlyphsToCanvas(stateId, settings, paintOps, docW, docH, textWi
         if (hasTransform) resetTransform();
     }
 
-    drawBatchedMaskGroups(ctx, stateId, batchedMasks.groups, pixelW, pixelH);
-
     for (let gi = 0; gi < gradientScratchCanvases.length; gi++) {
         releasePooledCanvas(tintedCanvasPool, gradientScratchCanvases[gi]);
     }
@@ -3941,6 +3678,12 @@ self.onmessage = async (event) => {
 
     if (msg.type === 'composite') {
         try {
+            const neededKeys = new Set();
+            for (let i = 0; i < msg.paintOps.length; i++) {
+                const opKey = msg.paintOps[i].glyphKey;
+                if (opKey) neededKeys.add(opKey);
+            }
+
             for (const [key, bitmap] of msg.glyphUpdates) {
                 const canvas = acquirePooledCanvas(glyphShapeCanvasPool, bitmap.width, bitmap.height);
                 const gctx = canvas.getContext('2d');
@@ -3950,10 +3693,18 @@ self.onmessage = async (event) => {
                 bitmap.close();
                 const meta = msg.glyphMeta.get(key);
                 if (glyphShapesByKey.size >= GLYPH_CACHE_LIMIT && !glyphShapesByKey.has(key)) {
-                    const evictedKey = glyphShapesByKey.keys().next().value;
-                    const evictedShape = glyphShapesByKey.get(evictedKey);
-                    glyphShapesByKey.delete(evictedKey);
-                    if (evictedShape) releaseGlyphOwnedCanvases(evictedShape);
+                    let evictedKey;
+                    for (const candidateKey of glyphShapesByKey.keys()) {
+                        if (!neededKeys.has(candidateKey)) {
+                            evictedKey = candidateKey;
+                            break;
+                        }
+                    }
+                    if (evictedKey !== undefined) {
+                        const evictedShape = glyphShapesByKey.get(evictedKey);
+                        glyphShapesByKey.delete(evictedKey);
+                        if (evictedShape) releaseGlyphOwnedCanvases(evictedShape);
+                    }
                 }
                 glyphShapesByKey.set(key, {
                     canvas,
@@ -4013,7 +3764,6 @@ self.onmessage = async (event) => {
         }
     } else if (msg.type === 'dispose-state') {
         paintCanvasByState.delete(msg.stateId);
-        maskBatchCanvasesByState.delete(msg.stateId);
         maskSpansCacheByState.delete(msg.stateId);
     }
 };
@@ -4238,7 +3988,7 @@ self.onmessage = async (event) => {
             Math.round(mask.x * 4) + '\u0001' + Math.round(mask.y * 4);
     }
 
-    function computeSeamlessMaskSpansByIndex(paintOps) {
+    function computeSeamlessMaskSpansByIndex(paintOps, areaW, areaH) {
         const spans = new Map();
         let groupIndices = null;
         let groupKey = null;
@@ -4247,14 +3997,14 @@ self.onmessage = async (event) => {
         const flushGroup = () => {
             if (!groupIndices || !groupIndices.length) return;
             if (!isFinite(minX) || !isFinite(maxX) || !isFinite(minY) || !isFinite(maxY)) return;
-            const spanW = Math.max(1, maxX - minX);
-            const spanH = Math.max(1, maxY - minY);
+            const spanW = areaW;
+            const spanH = areaH;
             for (const gi of groupIndices) {
                 spans.set(gi, {
                     spanW,
                     spanH,
-                    originX: minX,
-                    originY: minY
+                    originX: 0,
+                    originY: 0
                 });
             }
         };
@@ -4306,12 +4056,12 @@ self.onmessage = async (event) => {
         return spans;
     }
 
-    function getSeamlessMaskSpans(state, paintOps, layoutDocKey) {
+    function getSeamlessMaskSpans(state, paintOps, layoutDocKey, areaW, areaH) {
         const cacheKey = layoutDocKey + '\u0003' + state.charMaskGeometryVersion;
         if (state.maskSpansCacheKey === cacheKey && state.maskSpansCache) {
             return state.maskSpansCache;
         }
-        const spans = computeSeamlessMaskSpansByIndex(paintOps);
+        const spans = computeSeamlessMaskSpansByIndex(paintOps, areaW, areaH);
         state.maskSpansCacheKey = cacheKey;
         state.maskSpansCache = spans;
         return spans;
@@ -4373,11 +4123,14 @@ self.onmessage = async (event) => {
             const py = Math.round(drawYEm * DEST_SCALE);
             const w = shape.canvas.width;
             const h = shape.canvas.height;
+            const padYPx = Math.round((shape.baselineOriginYEm - shape.fontAscentEm) * DEST_SCALE);
+            const inkTop = py + padYPx;
+            const inkBottom = py + h - padYPx;
 
             minX = Math.min(minX, px);
             maxX = Math.max(maxX, px + w);
-            minY = Math.min(minY, py);
-            maxY = Math.max(maxY, py + h);
+            minY = Math.min(minY, inkTop);
+            maxY = Math.max(maxY, inkBottom);
         }
         flushGroup();
 
@@ -4519,6 +4272,7 @@ self.onmessage = async (event) => {
     uniform vec2 u_wipeOriginPx;
     uniform float u_alpha;
     uniform int u_hasWipe;
+    uniform int u_wipeInvert;
     uniform vec2 u_wipeAxis;
     uniform float u_wipeStart;
     uniform float u_wipeEnd;
@@ -4533,7 +4287,8 @@ self.onmessage = async (event) => {
         float wipeAlpha = 1.0;
         if (u_hasWipe == 1) {
             float t = dot(absPx, u_wipeAxis);
-            wipeAlpha = 1.0 - smoothstep(u_wipeStart, u_wipeEnd, t);
+            float s = smoothstep(u_wipeStart, u_wipeEnd, t);
+            wipeAlpha = u_wipeInvert == 1 ? s : (1.0 - s);
         }
         float outA = patternColor.a * glyphA * u_alpha * wipeAlpha;
         fragColor = vec4(patternColor.rgb * outA, outA);
@@ -4624,7 +4379,7 @@ self.onmessage = async (event) => {
         const maskWipeUniforms = glUniformLocations(gl, maskWipeProgram, [
             'u_canvasSize', 'u_origin', 'u_size', 'u_pivot', 'u_rotation', 'u_scale',
             'u_glyphTex', 'u_patternTex', 'u_patternMatrix', 'u_texSizePx', 'u_wipeOriginPx', 'u_alpha',
-            'u_hasWipe', 'u_wipeAxis', 'u_wipeStart', 'u_wipeEnd'
+            'u_hasWipe', 'u_wipeInvert', 'u_wipeAxis', 'u_wipeStart', 'u_wipeEnd'
         ]);
 
         const glyphTextures = new WeakMap();
@@ -4842,6 +4597,7 @@ self.onmessage = async (event) => {
         gl.uniform1f(uni.u_alpha, alpha);
         if (wipeInfo) {
             gl.uniform1i(uni.u_hasWipe, 1);
+            gl.uniform1i(uni.u_wipeInvert, wipeInfo.invert ? 1 : 0);
             gl.uniform2f(uni.u_wipeAxis, wipeInfo.axisX, wipeInfo.axisY);
             gl.uniform1f(uni.u_wipeStart, wipeInfo.start);
             gl.uniform1f(uni.u_wipeEnd, wipeInfo.end);
@@ -4895,9 +4651,8 @@ self.onmessage = async (event) => {
             glDrawRoundRect(comp, x + width / 2, y + height / 2, width, height, radius, background.color, opacity);
         }
 
-        const maskSpansByIndex = getSeamlessMaskSpans(state, paintOps, state.layoutKey + '\u0003' + docW + '\u0003' + docH);
+        const maskSpansByIndex = getSeamlessMaskSpans(state, paintOps, state.layoutKey + '\u0003' + docW + '\u0003' + docH, docW * DEST_SCALE, docH * DEST_SCALE);
         const gradientSpansByIndex = getGradientSpans(state, paintOps, state.layoutKey + '\u0003' + docW + '\u0003' + docH);
-        const batchedMasks = collectBatchedMaskGroups(paintOps);
 
         for (let i = 0; i < paintOps.length; i++) {
             const op = paintOps[i];
@@ -4974,7 +4729,7 @@ self.onmessage = async (event) => {
                 op.gradient, gradSpan
             );
 
-            if (op.mask && !op.gradient && !batchedMasks.batchedOps.has(op)) {
+            if (op.mask && !op.gradient) {
                 const texture = getMaskTexture(op.mask.targetName, op.mask.costumeName);
                 if (texture) {
                     const maskOpacity = Math.max(0, Math.min(100, Scratch.Cast.toNumber(op.mask.opacity != null ? op.mask.opacity : 100))) / 100;
@@ -4991,50 +4746,48 @@ self.onmessage = async (event) => {
                         matrix.scaleSelf(zoom, zoom);
                         const glMatrix = domMatrixToGl3x3(matrix, texture.width, texture.height);
 
-                        const coverage = Math.max(0, Math.min(100, Scratch.Cast.toNumber(op.mask.coverage) || 0)) / 100;
-                        let wipeInfo = null;
-                        if (coverage < 1 && span) {
-                            const blurPx = Math.max(0, Scratch.Cast.toNumber(op.mask.blur) || 0) * DEST_SCALE;
-                            const bandHalf = Math.max(0.5, blurPx / 2);
-                            const direction = op.mask.direction || WIPE_DIRECTION_BOTTOM_UP;
-                            const axisIsX = direction === WIPE_DIRECTION_LEFT_RIGHT || direction === WIPE_DIRECTION_RIGHT_LEFT;
-                            const growsPositive = direction === WIPE_DIRECTION_LEFT_RIGHT || direction === WIPE_DIRECTION_UP_DOWN;
-                            const localOffsetX = span.localOffsetXPx !== undefined ? span.localOffsetXPx : (drawXPx - span.originX);
-                            const localOffsetY = span.localOffsetYPx !== undefined ? span.localOffsetYPx : (drawYPx - span.originY);
-                            const w = shape.canvas.width;
-                            const h = shape.canvas.height;
-                            const effSpanW = axisIsX ? span.spanW : w;
-                            const effSpanH = axisIsX ? h : span.spanH;
-                            let revealEdge, axisSize;
-                            if (axisIsX && direction === WIPE_DIRECTION_LEFT_RIGHT) {
-                                axisSize = span.spanW;
-                                revealEdge = span.spanW * coverage - localOffsetX;
-                            } else if (axisIsX) {
-                                axisSize = span.spanW;
-                                revealEdge = span.spanW - span.spanW * coverage - localOffsetX;
-                            } else if (direction === WIPE_DIRECTION_UP_DOWN) {
-                                axisSize = span.spanH;
-                                revealEdge = span.spanH * coverage - localOffsetY;
-                            } else {
-                                axisSize = span.spanH;
-                                revealEdge = span.spanH - span.spanH * coverage - localOffsetY;
+                        const coverage = Math.max(0, Math.min(100, Scratch.Cast.toNumber(op.mask.coverage != null ? op.mask.coverage : 100))) / 100;
+                        if (coverage > 0) {
+                            let wipeInfo = null;
+                            if (coverage < 1) {
+                                const seamless = !!op.mask.seamless;
+                                const w = shape.canvas.width;
+                                const h = shape.canvas.height;
+                                const localOffsetX = seamless && span ? (span.localOffsetXPx !== undefined ? span.localOffsetXPx : (drawXPx - span.originX)) : 0;
+                                const localOffsetY = seamless && span ? (span.localOffsetYPx !== undefined ? span.localOffsetYPx : (drawYPx - span.originY)) : 0;
+                                const effSpanW = seamless && span && span.spanW ? span.spanW : w;
+                                const effSpanH = seamless && span && span.spanH ? span.spanH : h;
+                                const blurPx = Math.max(0, Scratch.Cast.toNumber(op.mask.blur) || 0) * DEST_SCALE;
+                                const bandHalf = Math.max(0.5, blurPx / 2);
+                                const direction = op.mask.direction || WIPE_DIRECTION_BOTTOM_UP;
+                                const axisIsX = direction === WIPE_DIRECTION_LEFT_RIGHT || direction === WIPE_DIRECTION_RIGHT_LEFT;
+                                const growsPositive = direction === WIPE_DIRECTION_LEFT_RIGHT || direction === WIPE_DIRECTION_UP_DOWN;
+                                let revealEdge;
+                                if (axisIsX && direction === WIPE_DIRECTION_LEFT_RIGHT) {
+                                    revealEdge = effSpanW * coverage - localOffsetX;
+                                } else if (axisIsX) {
+                                    revealEdge = effSpanW - effSpanW * coverage - localOffsetX;
+                                } else if (direction === WIPE_DIRECTION_UP_DOWN) {
+                                    revealEdge = effSpanH * coverage - localOffsetY;
+                                } else {
+                                    revealEdge = effSpanH - effSpanH * coverage - localOffsetY;
+                                }
+                                const bandStart = revealEdge - bandHalf;
+                                const bandEnd = revealEdge + bandHalf;
+                                wipeInfo = {
+                                    axisX: axisIsX ? 1 : 0,
+                                    axisY: axisIsX ? 0 : 1,
+                                    start: Math.min(bandStart, bandEnd),
+                                    end: Math.max(bandStart, bandEnd),
+                                    invert: growsPositive ? 0 : 1
+                                };
+                                if (wipeInfo.end <= wipeInfo.start) {
+                                    wipeInfo.end = wipeInfo.start + 0.0001;
+                                }
                             }
-                            const gradStart = growsPositive ? revealEdge - bandHalf : revealEdge + bandHalf;
-                            const gradEnd = growsPositive ? revealEdge + bandHalf : revealEdge - bandHalf;
-                            wipeInfo = {
-                                axisX: axisIsX ? 1 : 0,
-                                axisY: axisIsX ? 0 : 1,
-                                start: Math.min(gradStart, gradEnd),
-                                end: Math.max(gradStart, gradEnd)
-                            };
-                            if (!growsPositive) {
-                                const tmp = wipeInfo.start;
-                                wipeInfo.start = wipeInfo.end;
-                                wipeInfo.end = tmp;
-                            }
-                        }
 
-                        glDrawMaskWipe(comp, shape, drawXPx, drawYPx, texture, glMatrix, wipeInfo, combinedAlpha);
+                            glDrawMaskWipe(comp, shape, drawXPx, drawYPx, texture, glMatrix, wipeInfo, combinedAlpha);
+                        }
                     }
                 }
             }
@@ -5061,8 +4814,6 @@ self.onmessage = async (event) => {
                 }
             }
         }
-
-        drawBatchedMaskGroupsGL(comp, batchedMasks.groups, pixelW, pixelH);
 
         if (comp.outputCanvas.width !== pixelW || comp.outputCanvas.height !== pixelH) {
             comp.outputCanvas.width = pixelW;
@@ -5110,54 +4861,6 @@ self.onmessage = async (event) => {
         }
     }
 
-    function drawBatchedMaskGroupsGL(comp, groups, pixelW, pixelH) {
-        if (!groups.length) return;
-        for (let i = 0; i < groups.length; i++) {
-            const group = groups[i];
-            const mask = group.mask;
-            const texture = group.texture;
-            const matrix = new DOMMatrix();
-            matrix.translateSelf((Scratch.Cast.toNumber(mask.x) || 0) * DEST_SCALE, -(Scratch.Cast.toNumber(mask.y) || 0) * DEST_SCALE);
-            const rotation = Scratch.Cast.toNumber(mask.rotation) || 0;
-            if (rotation !== 0) matrix.rotateSelf(rotation);
-            const zoom = Math.max(0.01, (Scratch.Cast.toNumber(mask.zoom) || 100) / 100);
-            matrix.scaleSelf(zoom, zoom);
-
-            const coverage = Math.max(0, Math.min(100, Scratch.Cast.toNumber(mask.coverage) || 0)) / 100;
-            let minX = group.minX, minY = group.minY, maxX = group.maxX, maxY = group.maxY;
-            let wipeInfo = null;
-            if (coverage < 1) {
-                const blurPx = Math.max(0, Scratch.Cast.toNumber(mask.blur) || 0) * DEST_SCALE;
-                const bandHalf = Math.max(0.5, blurPx / 2);
-                const direction = mask.direction || WIPE_DIRECTION_BOTTOM_UP;
-                const axisIsX = direction === WIPE_DIRECTION_LEFT_RIGHT || direction === WIPE_DIRECTION_RIGHT_LEFT;
-                const growsPositive = direction === WIPE_DIRECTION_LEFT_RIGHT || direction === WIPE_DIRECTION_UP_DOWN;
-                const axisStart = axisIsX ? minX : minY;
-                const axisSize = axisIsX ? maxX - minX : maxY - minY;
-                const revealEdge = growsPositive ? axisStart + axisSize * coverage : axisStart + axisSize - axisSize * coverage;
-                const gradStart = growsPositive ? revealEdge - bandHalf : revealEdge + bandHalf;
-                const gradEnd = growsPositive ? revealEdge + bandHalf : revealEdge - bandHalf;
-                wipeInfo = {
-                    axisX: axisIsX ? 1 : 0,
-                    axisY: axisIsX ? 0 : 1,
-                    start: Math.min(gradStart, gradEnd),
-                    end: Math.max(gradStart, gradEnd)
-                };
-                if (!growsPositive) {
-                    const tmp = wipeInfo.start;
-                    wipeInfo.start = wipeInfo.end;
-                    wipeInfo.end = tmp;
-                }
-            }
-
-            for (let j = 0; j < group.items.length; j++) {
-                const item = group.items[j];
-                const glMatrix = domMatrixToGl3x3(matrix, texture.width, texture.height);
-                glDrawMaskWipe(comp, item.glyph.shape, item.px, item.py, texture, glMatrix, wipeInfo, group.alpha, [item.px, item.py]);
-            }
-        }
-    }
-
     function compositeGlyphsToCanvasCanvas2D(state, paintOps, docW, docH, textWidth, textHeight, originX, originY) {
         let canvas = state.paintCanvas;
         if (!canvas) {
@@ -5195,9 +4898,8 @@ self.onmessage = async (event) => {
             ctx.restore();
         }
 
-        const maskSpansByIndex = getSeamlessMaskSpans(state, paintOps, state.layoutKey + '\u0003' + docW + '\u0003' + docH);
+        const maskSpansByIndex = getSeamlessMaskSpans(state, paintOps, state.layoutKey + '\u0003' + docW + '\u0003' + docH, docW * DEST_SCALE, docH * DEST_SCALE);
         const gradientSpansByIndex = getGradientSpans(state, paintOps, state.layoutKey + '\u0003' + docW + '\u0003' + docH);
-        const batchedMasks = collectBatchedMaskGroups(paintOps);
         const gradientScratchCanvases = [];
 
         const applyCharTransformOp = (op, hasRotation, hasScale) => {
@@ -5302,7 +5004,7 @@ self.onmessage = async (event) => {
                 if (hasOpacity) ctx.globalAlpha = 1;
             }
 
-            if (op.mask && !op.gradient && !batchedMasks.batchedOps.has(op)) {
+            if (op.mask && !op.gradient) {
                 const texture = getMaskTexture(op.mask.targetName, op.mask.costumeName);
                 if (texture) {
                     const px = Math.round(drawXEm * DEST_SCALE);
@@ -5365,8 +5067,6 @@ self.onmessage = async (event) => {
 
             if (hasTransform) resetTransform();
         }
-
-        drawBatchedMaskGroups(ctx, state, batchedMasks.groups, pixelW, pixelH);
 
         for (let gi = 0; gi < gradientScratchCanvases.length; gi++) {
             releasePooledCanvas(tintedCanvasPool, gradientScratchCanvases[gi]);
@@ -6719,7 +6419,6 @@ self.onmessage = async (event) => {
                         opcode: 'setCharacterMaskSeamless',
                         blockType: Scratch.BlockType.COMMAND,
                         text: 'set character [START] to [END] mask seamless [SEAMLESS]',
-                        hideFromPalette: true,
                         arguments: {
                             START: {
                                 type: Scratch.ArgumentType.NUMBER,
@@ -8217,6 +7916,24 @@ self.onmessage = async (event) => {
         }
 
         setCharacterMaskSeamless(args, util) {
+            const state = getState(util.target);
+            const {
+                start,
+                end
+            } = indexRange(Scratch.Cast.toNumber(args.START), Scratch.Cast.toNumber(args.END));
+            const seamless = Scratch.Cast.toString(args.SEAMLESS).toLowerCase() === 'on';
+            let changed = false;
+            for (let idx = start; idx <= end; idx++) {
+                const existing = state.charMasks[idx];
+                if (!existing || existing.seamless === seamless) continue;
+                existing.seamless = seamless;
+                changed = true;
+            }
+            if (changed) {
+                state.charMasksVersion++;
+                state.charMaskGeometryVersion++;
+                schedulePaint(util.target, state);
+            }
         }
 
         clearCharacterMask(args, util) {

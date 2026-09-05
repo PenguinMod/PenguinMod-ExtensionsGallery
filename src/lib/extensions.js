@@ -280,6 +280,14 @@ export default [
         creator: "Gen1xLol",
     },
     {
+        name: "NotifyPenguin V2",
+        description: "Allows sending real time & scheduled notifications to desktops and mobile devices, even when the project tab is closed!",
+        code: "Ikelene/notifyPenguinV2.js",
+        banner: "Ikelene/NotifyPenguinV2Banner.png",
+        creator: "Ikelene",
+        isGitHub: true,
+    },
+    {
         name: "Toast Notifications",
         description: "Did you want alerts? Notifications that are easily customizable? This is the only and best notification extension!",
         notes: "Additional code by themeatly2 and ddededodediamante",

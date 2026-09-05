@@ -616,6 +616,15 @@ export default [
         creator: "NishiOwO",
         isGitHub: true,
     },
+    {
+        name: "TurboSynth",
+        description: "Synthesizer that uses TurboSynth.",
+        code: "NishiOwO/turbosynth.js",
+        banner: "NishiOwO/turbosynth.svg",
+        documentation: "TurboSynth",
+        creator: "NishiOwO",
+        isGitHub: true,
+    },
     /*{
         name: "Scope Variable",
         description: "Manage your variables in a block-like structure.",

@@ -42,6 +42,8 @@ import ProjectInterfaces from "./ProjectInterfaces.md?raw";
 // Date Format V2
 import DateFormatV2 from "./DateFormatV2.md?raw";
 
+// HTML Documents
+import HTMLDocuments from "./HtmlDocuments.md?raw";
 // ODE
 import ODE from "./ODE.md?raw";
 
@@ -84,6 +86,10 @@ export default {
     // Project Interfaces
     "ProjectInterfaces": ProjectInterfaces,
 
+    "DateFormatV2": DateFormatV2
+
+    // HTML Documents
+    "HTMLDocuments": HTMLDocuments,
     "DateFormatV2": DateFormatV2,
 
     // ODE

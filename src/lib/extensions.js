@@ -616,6 +616,15 @@ export default [
         creatorAlias: "ElectricFuzzball_PM",
         isGitHub: true,
     },
+    {
+        name: "ODE",
+        description: "3D physics using ODE.",
+        code: "NishiOwO/ode.js",
+        banner: "NishiOwO/ode.svg",
+        documentation: "ODE",
+        creator: "NishiOwO",
+        isGitHub: true,
+    },
     /*{
         name: "Scope Variable",
         description: "Manage your variables in a block-like structure.",

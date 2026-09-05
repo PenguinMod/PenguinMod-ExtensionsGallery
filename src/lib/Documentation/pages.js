@@ -44,6 +44,8 @@ import DateFormatV2 from "./DateFormatV2.md?raw";
 
 // HTML Documents
 import HTMLDocuments from "./HtmlDocuments.md?raw";
+// ODE
+import ODE from "./ODE.md?raw";
 
 export default {
     // the key is the path to the docs page
@@ -88,4 +90,8 @@ export default {
 
     // HTML Documents
     "HTMLDocuments": HTMLDocuments,
+    "DateFormatV2": DateFormatV2,
+
+    // ODE
+    "ODE": ODE
 };

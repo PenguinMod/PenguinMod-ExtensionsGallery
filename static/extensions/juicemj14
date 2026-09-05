@@ -1,0 +1,156 @@
+(function(Scratch) {
+  'use strict';
+  
+  const icon = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PHRleHQgeD0iNSIgeT0iMzAiIGZvbnQtc2l6ZT0iMzAiPuKYoTwvdGV4dD48L3N2Zz4=';
+  
+  class BetterRandom {
+    getInfo() {
+      return {
+        id: 'betterRandom',
+        name: 'Better Random',
+        color1: '#FF8C1A',
+        color2: '#E6800A',
+        color3: '#CC7000',
+        menuIconURI: icon,
+        blocks: [
+          {
+            opcode: 'chance',
+            blockType: Scratch.BlockType.BOOLEAN,
+            text: '[CHANCE] % chance',
+            arguments: {
+              CHANCE: { type: Scratch.ArgumentType.NUMBER, defaultValue: 50 }
+            }
+          },
+          {
+            opcode: 'randomVariable',
+            blockType: Scratch.BlockType.REPORTER,
+            text: 'random [TYPE] between [MIN] and [MAX]',
+            arguments: {
+              TYPE: { type: Scratch.ArgumentType.STRING, menu: 'randomType', defaultValue: 'integer' },
+              MIN: { type: Scratch.ArgumentType.NUMBER, defaultValue: 1 },
+              MAX: { type: Scratch.ArgumentType.NUMBER, defaultValue: 10 }
+            }
+          },
+          {
+            opcode: 'pickRandom',
+            blockType: Scratch.BlockType.REPORTER,
+            text: 'pick random from [LIST]',
+            arguments: {
+              LIST: { type: Scratch.ArgumentType.STRING, defaultValue: 'apple,banana,cherry' }
+            }
+          },
+          {
+            opcode: 'weightedRandom',
+            blockType: Scratch.BlockType.REPORTER,
+            text: 'weighted random: items [ITEMS] weights [WEIGHTS]',
+            arguments: {
+              ITEMS: { type: Scratch.ArgumentType.STRING, defaultValue: 'win,lose,draw' },
+              WEIGHTS: { type: Scratch.ArgumentType.STRING, defaultValue: '10,5,2' }
+            }
+          },
+          {
+            opcode: 'randomSeed',
+            blockType: Scratch.BlockType.COMMAND,
+            text: 'set random seed to [SEED]',
+            arguments: {
+              SEED: { type: Scratch.ArgumentType.NUMBER, defaultValue: 12345 }
+            }
+          },
+          '--',
+          {
+            opcode: 'randomColor',
+            blockType: Scratch.BlockType.REPORTER,
+            text: 'random color',
+            blockIconURI: icon
+          },
+          {
+            opcode: 'randomPosition',
+            blockType: Scratch.BlockType.REPORTER,
+            text: 'random position [TYPE]',
+            arguments: {
+              TYPE: { type: Scratch.ArgumentType.STRING, menu: 'positionType', defaultValue: 'stage' }
+            }
+          }
+        ],
+        menus: {
+          randomType: ['integer', 'decimal', 'float'],
+          positionType: ['stage', 'screen', 'sprite area']
+        }
+      };
+    }
+    
+    chance(args) {
+      const chance = Math.max(0, Math.min(100, Number(args.CHANCE) || 0));
+      return Math.random() * 100 < chance;
+    }
+    
+    randomVariable(args) {
+      const min = Number(args.MIN) || 0;
+      const max = Number(args.MAX) || 0;
+      const type = String(args.TYPE);
+      return type === 'integer' ? 
+        Math.floor(Math.random() * (max - min + 1)) + min : 
+        Math.random() * (max - min) + min;
+    }
+    
+    pickRandom(args) {
+      const list = String(args.LIST).split(',').map(i => i.trim()).filter(i => i);
+      return list.length ? list[Math.floor(Math.random() * list.length)] : '';
+    }
+    
+    weightedRandom(args) {
+      const items = String(args.ITEMS).split(',').map(i => i.trim()).filter(i => i);
+      const weights = String(args.WEIGHTS).split(',').map(w => Math.max(0, Number(w.trim()) || 0));
+      if (!items.length) return '';
+      
+      const total = weights.reduce((s, w) => s + w, 0);
+      if (!total) return items[Math.floor(Math.random() * items.length)];
+      
+      let r = Math.random() * total;
+      for (let i = 0; i < items.length; i++) {
+        r -= weights[i] || 0;
+        if (r <= 0) return items[i];
+      }
+      return items[items.length - 1];
+    }
+    
+    randomSeed(args) {
+      let state = Number(args.SEED) || 0;
+      Math.random = function() {
+        state = (state * 9301 + 49297) % 233280;
+        return state / 233280;
+      };
+    }
+    
+    randomColor() {
+      const h = Math.floor(Math.random() * 360);
+      const s = 60 + Math.floor(Math.random() * 40);
+      const l = 40 + Math.floor(Math.random() * 40);
+      return `hsl(${h}, ${s}%, ${l}%)`;
+    }
+    
+    randomPosition(args) {
+      const type = String(args.TYPE);
+      const stageW = Scratch.vm?.runtime?.stageWidth || 480;
+      const stageH = Scratch.vm?.runtime?.stageHeight || 360;
+      
+      let x, y;
+      switch (type) {
+        case 'stage':
+          x = Math.floor(Math.random() * stageW) - stageW/2;
+          y = Math.floor(Math.random() * stageH) - stageH/2;
+          break;
+        case 'screen':
+          x = Math.floor(Math.random() * stageW) - stageW/2;
+          y = Math.floor(Math.random() * stageH) - stageH/2;
+          break;
+        default:
+          x = Math.random() * 200 - 100;
+          y = Math.random() * 200 - 100;
+      }
+      return JSON.stringify({x: Math.round(x), y: Math.round(y)});
+    }
+  }
+  
+  Scratch.extensions.register(new BetterRandom());
+})(Scratch);

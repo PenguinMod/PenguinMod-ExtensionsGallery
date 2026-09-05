@@ -2772,6 +2772,7 @@ Enjoy!! :D
     }
 
     function compositeGlyphsAndPush(target, state, paintOps, docW, docH, effectiveMaxWidth, totalHeight, originX, originY, anchorY) {
+        ensureRenderWorker();
         let canvas = null;
         if (!glCompositorFailed) {
             try {
@@ -5549,6 +5550,7 @@ self.onmessage = async (event) => {
                 anyDisclaimerApplicable = true;
                 if (!hasSeenDisclaimer(WORKER_DISCLAIMER_FLAG_KEY)) this.disclaimer();
             }
+            ensureRenderWorker();
             if (runtime.ext_irisText && runtime.ext_irisText !== this) {
                 runtime.removeListener('targetWasRemoved', runtime.ext_irisText._onTargetRemoved);
                 runtime.removeListener('PROJECT_STOP_ALL', runtime.ext_irisText._onProjectStopAll);

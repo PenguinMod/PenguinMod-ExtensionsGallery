@@ -6,6 +6,7 @@
 
     class PrevHTML {
         constructor(html) {
+            this.customId = "scrtwpmhtmldocuments_prevhtml"
             this.html = html
         }
         toString() {
@@ -19,9 +20,11 @@
             return wrap;
         }
     }
+    
 
     class HtmlCode {
         constructor(html) {
+            this.customId = "scrtwpmhtmldocuments_htmlcode"
             this.html = html
         }
         toString() {
@@ -43,9 +46,25 @@
         }
     }
 
-
+    const vms = Scratch.vm
+    console.log(vm)
     class HTMLDocuments {
         constructor(runtime) {
+            vms.runtime.registerSerializer(
+                "scrtwpmhtmldocuments_htmlcode",
+                        instance => ({ html: instance.html }), 
+                        instance => {
+                            return (new HtmlCode(instance.html))
+                        }
+            );
+            vms.runtime.registerSerializer(
+                "scrtwpmhtmldocuments_prevhtml",
+                        instance => ({ html: instance.html }), 
+                        instance => {
+                            return (new PrevHTML(instance.html))
+                        }
+            );
+
             this.pages = new Map()
             this.changePx = [
                 "block-size",

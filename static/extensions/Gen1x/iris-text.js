@@ -14,7 +14,7 @@ Enjoy!! :D
     'use strict';
 
     if (!Scratch.extensions.unsandboxed) {
-        throw new Error('Iris Text must run unsandboxed');
+        throw new Error('Iris Text must run unsandboxed!');
     }
 
     const vm = Scratch.vm;
@@ -510,6 +510,10 @@ Enjoy!! :D
             hasPaintedOnce: false,
             taggedIndicesCache: null,
             taggedIndicesCacheKey: null,
+            charLineIndicesCache: null,
+            charLineIndicesCacheKey: null,
+            wordSpansCache: null,
+            wordSpansCacheKey: null,
             paintOpPool: [],
             typingFullRaw: null,
             typingBoxKey: null,
@@ -872,6 +876,10 @@ Enjoy!! :D
         if (capture && capture !== sharedShadowSurface.canvas && typeof capture.close === 'function') capture.close();
     }
 
+    function evictGLTextureForShape(shape) {
+        if (glCompositorInstance) glCompositorInstance.evictGlyphTexture(shape);
+    }
+
     function evictOldestGlobalShadow() {
         const oldestKey = globalShadowLRU.keys().next().value;
         if (oldestKey === undefined) return;
@@ -879,6 +887,7 @@ Enjoy!! :D
         globalShadowLRU.delete(oldestKey);
         oldest.shape.shadows.delete(oldest.key);
         releaseShadowCapture(oldest.entry.canvas);
+        evictGLTextureForShape(oldest.entry);
     }
 
     function getShadowGlyphBitmap(shape, color, blurPx, offsetXPx, offsetYPx) {
@@ -934,6 +943,7 @@ Enjoy!! :D
             shape.shadows.delete(evictedKey);
             globalShadowLRU.delete(evicted.globalKey);
             releaseShadowCapture(evicted.canvas);
+            evictGLTextureForShape(evicted);
         }
         shape.shadows.set(key, entry);
 
@@ -957,6 +967,7 @@ Enjoy!! :D
             for (const shadowEntry of shape.shadows.values()) {
                 globalShadowLRU.delete(shadowEntry.globalKey);
                 releaseShadowCapture(shadowEntry.canvas);
+                evictGLTextureForShape(shadowEntry);
             }
         }
         const stencil = maskGlyphStencilCache.get(shape);
@@ -964,6 +975,7 @@ Enjoy!! :D
             maskGlyphStencilCache.delete(shape);
             releasePooledCanvas(stencilCanvasPool, stencil);
         }
+        evictGLTextureForShape(shape);
     }
 
     function getGlyphShape(char, fontFamily, size, weight, style) {
@@ -1763,18 +1775,20 @@ Enjoy!! :D
     const charAdvanceCache = new Map();
     const CHAR_ADVANCE_CACHE_LIMIT = 4000;
 
-    function charAdvanceCacheKey(fontStyle, letterSpacing, char) {
+    function charAdvanceCacheKey(fontStyle, letterSpacing, prevChar, char) {
         return fontStyle.styleHash + '\u0001' + fontStyle['font-size'] + '\u0001' +
-            (letterSpacing || 0) + '\u0001' + char;
+            (letterSpacing || 0) + '\u0001' + (prevChar === undefined ? '' : prevChar) + '\u0001' + char;
     }
 
     function measureCharsIndividually(measureCtx, run, letterSpacing) {
         const missing = [];
         for (let i = 0; i < run.chars.length; i++) {
             const ch = run.chars[i].char === ' ' ? '\u00A0' : run.chars[i].char;
-            const key = charAdvanceCacheKey(run.fontStyle, letterSpacing, ch);
+            const prevCh = i > 0 ? (run.chars[i - 1].char === ' ' ? '\u00A0' : run.chars[i - 1].char) : undefined;
+            const key = charAdvanceCacheKey(run.fontStyle, letterSpacing, prevCh, ch);
             if (!charAdvanceCache.has(key)) missing.push({
                 i,
+                prevCh,
                 ch,
                 key
             });
@@ -1784,8 +1798,24 @@ Enjoy!! :D
             measureCtx.font = canvasFontString(run.fontStyle);
             measureCtx.textBaseline = 'alphabetic';
             const spacing = letterSpacing || 0;
+            const soloWidths = new Map();
             for (let m = 0; m < missing.length; m++) {
-                const advance = measureCtx.measureText(missing[m].ch).width + spacing;
+                const {
+                    prevCh,
+                    ch
+                } = missing[m];
+                let advance;
+                if (prevCh === undefined) {
+                    advance = measureCtx.measureText(ch).width + spacing;
+                } else {
+                    let prevWidth = soloWidths.get(prevCh);
+                    if (prevWidth === undefined) {
+                        prevWidth = measureCtx.measureText(prevCh).width;
+                        soloWidths.set(prevCh, prevWidth);
+                    }
+                    const pairWidth = measureCtx.measureText(prevCh + ch).width;
+                    advance = (pairWidth - prevWidth) + spacing;
+                }
                 if (charAdvanceCache.size >= CHAR_ADVANCE_CACHE_LIMIT) {
                     charAdvanceCache.delete(charAdvanceCache.keys().next().value);
                 }
@@ -1797,7 +1827,8 @@ Enjoy!! :D
         let x = 0;
         for (let i = 0; i < run.chars.length; i++) {
             const ch = run.chars[i].char === ' ' ? '\u00A0' : run.chars[i].char;
-            const key = charAdvanceCacheKey(run.fontStyle, letterSpacing, ch);
+            const prevCh = i > 0 ? (run.chars[i - 1].char === ' ' ? '\u00A0' : run.chars[i - 1].char) : undefined;
+            const key = charAdvanceCacheKey(run.fontStyle, letterSpacing, prevCh, ch);
             const advance = charAdvanceCache.get(key);
             positions[i] = {
                 shapedX: x,
@@ -2741,7 +2772,18 @@ Enjoy!! :D
     }
 
     function compositeGlyphsAndPush(target, state, paintOps, docW, docH, effectiveMaxWidth, totalHeight, originX, originY, anchorY) {
-        const canvas = compositeGlyphsToCanvas(state, paintOps, docW, docH, effectiveMaxWidth, totalHeight, originX, originY);
+        let canvas = null;
+        if (!glCompositorFailed) {
+            try {
+                canvas = compositeGlyphsToCanvasWebGL2(state, paintOps, docW, docH, effectiveMaxWidth, totalHeight, originX, originY);
+            } catch (e) {
+                canvas = null;
+                glCompositorFailed = true;
+            }
+        }
+        if (!canvas) {
+            canvas = compositeGlyphsToCanvasCanvas2D(state, paintOps, docW, docH, effectiveMaxWidth, totalHeight, originX, originY);
+        }
         pushCanvasToDrawable(target, canvas, docW, docH, originX, anchorY != null ? anchorY : originY);
         return Promise.resolve();
     }
@@ -4358,7 +4400,764 @@ self.onmessage = async (event) => {
         return spans;
     }
 
-    function compositeGlyphsToCanvas(state, paintOps, docW, docH, textWidth, textHeight, originX, originY) {
+    const GL_QUAD_VS = `#version 300 es
+    layout(location=0) in vec2 a_corner;
+    uniform vec2 u_canvasSize;
+    uniform vec2 u_origin;
+    uniform vec2 u_size;
+    uniform vec2 u_pivot;
+    uniform float u_rotation;
+    uniform float u_scale;
+    out vec2 v_uv;
+    void main() {
+        vec2 local = a_corner * u_size;
+        vec2 rel = (a_corner * u_size) - u_pivot;
+        float c = cos(u_rotation);
+        float s = sin(u_rotation);
+        vec2 rotated = vec2(rel.x * c - rel.y * s, rel.x * s + rel.y * c) * u_scale;
+        vec2 pos = u_origin + u_pivot + rotated;
+        vec2 clip = (pos / u_canvasSize) * 2.0 - 1.0;
+        gl_Position = vec4(clip.x, -clip.y, 0.0, 1.0);
+        v_uv = a_corner;
+    }`;
+
+    const GL_GLYPH_FS = `#version 300 es
+    precision highp float;
+    in vec2 v_uv;
+    uniform sampler2D u_tex;
+    uniform vec4 u_tint;
+    uniform float u_alpha;
+    uniform int u_mode;
+    uniform vec4 u_gradStops[8];
+    uniform vec2 u_gradLocalOrigin;
+    uniform vec2 u_gradGlyphSize;
+    uniform int u_gradCount;
+    uniform vec2 u_gradAxis0;
+    uniform vec2 u_gradAxis1;
+    uniform vec2 u_gradCenter;
+    uniform float u_gradRadius;
+    uniform int u_gradType;
+    out vec4 fragColor;
+
+    vec4 sampleGradient(vec2 posPx) {
+        float t;
+        if (u_gradType == 1) {
+            t = clamp(distance(posPx, u_gradCenter) / max(u_gradRadius, 0.0001), 0.0, 1.0);
+        } else {
+            vec2 d = posPx - u_gradAxis0;
+            vec2 axis = u_gradAxis1 - u_gradAxis0;
+            float len2 = dot(axis, axis);
+            t = len2 > 0.0001 ? clamp(dot(d, axis) / len2, 0.0, 1.0) : 0.0;
+        }
+        int count = u_gradCount;
+        if (count <= 1) return u_gradStops[0];
+        float scaled = t * float(count - 1);
+        int i0 = int(floor(scaled));
+        i0 = clamp(i0, 0, count - 2);
+        float frac = scaled - float(i0);
+        vec4 c0 = u_gradStops[i0];
+        vec4 c1 = u_gradStops[i0 + 1];
+        return mix(c0, c1, frac);
+    }
+
+    void main() {
+        if (u_mode == 2) {
+            vec4 src = texture(u_tex, v_uv);
+            float outA = src.a * u_alpha;
+            fragColor = vec4(src.rgb * outA, outA);
+            return;
+        }
+        float a = texture(u_tex, v_uv).a;
+        vec4 base;
+        if (u_mode == 1) {
+            vec2 posPx = u_gradLocalOrigin + v_uv * u_gradGlyphSize;
+            base = sampleGradient(posPx);
+        } else {
+            base = u_tint;
+        }
+        float outA = base.a * a * u_alpha;
+        fragColor = vec4(base.rgb * outA, outA);
+    }`;
+
+    const GL_SOLID_FS = `#version 300 es
+    precision highp float;
+    in vec2 v_uv;
+    uniform vec4 u_color;
+    out vec4 fragColor;
+    void main() {
+        fragColor = vec4(u_color.rgb * u_color.a, u_color.a);
+    }`;
+
+    const GL_ROUNDRECT_FS = `#version 300 es
+    precision highp float;
+    in vec2 v_uv;
+    uniform vec2 u_size;
+    uniform float u_radius;
+    uniform vec4 u_color;
+    out vec4 fragColor;
+    void main() {
+        vec2 p = (v_uv - 0.5) * u_size;
+        vec2 halfSize = u_size * 0.5;
+        vec2 q = abs(p) - halfSize + u_radius;
+        float inner = min(max(q.x, q.y), 0.0);
+        float outer = length(max(q, 0.0));
+        float dist = inner + outer - u_radius;
+        float aa = 1.0;
+        float alpha = 1.0 - smoothstep(-aa, aa, dist);
+        float outA = u_color.a * alpha;
+        fragColor = vec4(u_color.rgb * outA, outA);
+    }`;
+
+    const GL_MASKWIPE_FS = `#version 300 es
+    precision highp float;
+    in vec2 v_uv;
+    uniform sampler2D u_glyphTex;
+    uniform sampler2D u_patternTex;
+    uniform mat3 u_patternMatrix;
+    uniform vec2 u_texSizePx;
+    uniform vec2 u_wipeOriginPx;
+    uniform float u_alpha;
+    uniform int u_hasWipe;
+    uniform vec2 u_wipeAxis;
+    uniform float u_wipeStart;
+    uniform float u_wipeEnd;
+    out vec4 fragColor;
+    void main() {
+        float glyphA = texture(u_glyphTex, v_uv).a;
+        if (glyphA <= 0.0) { discard; }
+        vec2 localPx = v_uv * u_texSizePx;
+        vec2 absPx = u_wipeOriginPx + localPx;
+        vec3 sampledUv = u_patternMatrix * vec3(absPx, 1.0);
+        vec4 patternColor = texture(u_patternTex, fract(sampledUv.xy));
+        float wipeAlpha = 1.0;
+        if (u_hasWipe == 1) {
+            float t = dot(absPx, u_wipeAxis);
+            wipeAlpha = 1.0 - smoothstep(u_wipeStart, u_wipeEnd, t);
+        }
+        float outA = patternColor.a * glyphA * u_alpha * wipeAlpha;
+        fragColor = vec4(patternColor.rgb * outA, outA);
+    }`;
+
+    function glCompileShader(gl, type, source) {
+        const shader = gl.createShader(type);
+        gl.shaderSource(shader, source);
+        gl.compileShader(shader);
+        if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
+            const info = gl.getShaderInfoLog(shader);
+            gl.deleteShader(shader);
+            throw new Error('could not compile shader: ' + info);
+        }
+        return shader;
+    }
+
+    function glLinkProgram(gl, vsSource, fsSource) {
+        const vs = glCompileShader(gl, gl.VERTEX_SHADER, vsSource);
+        const fs = glCompileShader(gl, gl.FRAGMENT_SHADER, fsSource);
+        const program = gl.createProgram();
+        gl.attachShader(program, vs);
+        gl.attachShader(program, fs);
+        gl.linkProgram(program);
+        gl.deleteShader(vs);
+        gl.deleteShader(fs);
+        if (!gl.getProgramParameter(program, gl.LINK_STATUS)) {
+            const info = gl.getProgramInfoLog(program);
+            gl.deleteProgram(program);
+            throw new Error('could not link program: ' + info);
+        }
+        return program;
+    }
+
+    function glUniformLocations(gl, program, names) {
+        const locations = {};
+        for (const name of names) locations[name] = gl.getUniformLocation(program, name);
+        return locations;
+    }
+
+    let glCompositorInstance = null;
+    let glCompositorFailed = false;
+
+    function createGLCompositor() {
+        const canvas = document.createElement('canvas');
+        canvas.width = 1;
+        canvas.height = 1;
+        const gl = canvas.getContext('webgl2', {
+            alpha: true,
+            premultipliedAlpha: true,
+            antialias: false,
+            preserveDrawingBuffer: false,
+            depth: false,
+            stencil: false
+        });
+        if (!gl) return null;
+
+        const quadBuffer = gl.createBuffer();
+        gl.bindBuffer(gl.ARRAY_BUFFER, quadBuffer);
+        gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([0, 0, 1, 0, 0, 1, 1, 1]), gl.STATIC_DRAW);
+
+        const quadVao = gl.createVertexArray();
+        gl.bindVertexArray(quadVao);
+        gl.bindBuffer(gl.ARRAY_BUFFER, quadBuffer);
+        gl.enableVertexAttribArray(0);
+        gl.vertexAttribPointer(0, 2, gl.FLOAT, false, 0, 0);
+        gl.bindVertexArray(null);
+
+        const glyphProgram = glLinkProgram(gl, GL_QUAD_VS, GL_GLYPH_FS);
+        const solidProgram = glLinkProgram(gl, GL_QUAD_VS, GL_SOLID_FS);
+        const roundRectProgram = glLinkProgram(gl, GL_QUAD_VS, GL_ROUNDRECT_FS);
+        const maskWipeProgram = glLinkProgram(gl, GL_QUAD_VS, GL_MASKWIPE_FS);
+
+        const glyphUniforms = glUniformLocations(gl, glyphProgram, [
+            'u_canvasSize', 'u_origin', 'u_size', 'u_pivot', 'u_rotation', 'u_scale',
+            'u_tex', 'u_tint', 'u_alpha', 'u_mode',
+            'u_gradStops[0]', 'u_gradLocalOrigin', 'u_gradGlyphSize', 'u_gradCount',
+            'u_gradAxis0', 'u_gradAxis1', 'u_gradCenter', 'u_gradRadius', 'u_gradType'
+        ]);
+        glyphUniforms.u_gradStopsBase = gl.getUniformLocation(glyphProgram, 'u_gradStops[0]');
+
+        const solidUniforms = glUniformLocations(gl, solidProgram, [
+            'u_canvasSize', 'u_origin', 'u_size', 'u_pivot', 'u_rotation', 'u_scale', 'u_color'
+        ]);
+        const roundRectUniforms = glUniformLocations(gl, roundRectProgram, [
+            'u_canvasSize', 'u_origin', 'u_size', 'u_pivot', 'u_rotation', 'u_scale', 'u_radius', 'u_color'
+        ]);
+        const maskWipeUniforms = glUniformLocations(gl, maskWipeProgram, [
+            'u_canvasSize', 'u_origin', 'u_size', 'u_pivot', 'u_rotation', 'u_scale',
+            'u_glyphTex', 'u_patternTex', 'u_patternMatrix', 'u_texSizePx', 'u_wipeOriginPx', 'u_alpha',
+            'u_hasWipe', 'u_wipeAxis', 'u_wipeStart', 'u_wipeEnd'
+        ]);
+
+        const glyphTextures = new WeakMap();
+        const maskPatternTextures = new Map();
+
+        function getGlyphTexture(shape, forceUpload) {
+            let tex = glyphTextures.get(shape);
+            if (!forceUpload && tex && tex.canvas === shape.canvas && tex.w === shape.canvas.width && tex.h === shape.canvas.height) {
+                return tex.texture;
+            }
+            if (!tex) {
+                tex = { texture: gl.createTexture() };
+                glyphTextures.set(shape, tex);
+            }
+            gl.bindTexture(gl.TEXTURE_2D, tex.texture);
+            gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, shape.canvas);
+            gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+            gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+            gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+            gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+            tex.canvas = shape.canvas;
+            tex.w = shape.canvas.width;
+            tex.h = shape.canvas.height;
+            return tex.texture;
+        }
+
+        function evictGlyphTexture(shape) {
+            const tex = glyphTextures.get(shape);
+            if (tex) {
+                gl.deleteTexture(tex.texture);
+                glyphTextures.delete(shape);
+            }
+        }
+
+        function getMaskPatternTexture(maskTexture) {
+            let entry = maskPatternTextures.get(maskTexture.cacheKey);
+            if (entry && entry.canvas === maskTexture.canvas) return entry.texture;
+            if (maskPatternTextures.size >= 64 && !entry) {
+                const oldestKey = maskPatternTextures.keys().next().value;
+                const oldest = maskPatternTextures.get(oldestKey);
+                gl.deleteTexture(oldest.texture);
+                maskPatternTextures.delete(oldestKey);
+            }
+            const texture = (entry && entry.texture) || gl.createTexture();
+            gl.bindTexture(gl.TEXTURE_2D, texture);
+            gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, maskTexture.canvas);
+            gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+            gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+            gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.REPEAT);
+            gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.REPEAT);
+            maskPatternTextures.set(maskTexture.cacheKey, { texture, canvas: maskTexture.canvas });
+            return texture;
+        }
+
+        const outputCanvas = document.createElement('canvas');
+        outputCanvas.width = 1;
+        outputCanvas.height = 1;
+        outputCanvas.reusable = false;
+        const outputCtx = outputCanvas.getContext('2d');
+
+        return {
+            gl, canvas, quadVao, outputCanvas, outputCtx,
+            glyphProgram, solidProgram, roundRectProgram, maskWipeProgram,
+            glyphUniforms, solidUniforms, roundRectUniforms, maskWipeUniforms,
+            getGlyphTexture, evictGlyphTexture, getMaskPatternTexture
+        };
+    }
+
+    function getGLCompositor() {
+        if (glCompositorFailed) return null;
+        if (glCompositorInstance) return glCompositorInstance;
+        try {
+            glCompositorInstance = createGLCompositor();
+        } catch (e) {
+            glCompositorInstance = null;
+        }
+        if (!glCompositorInstance) glCompositorFailed = true;
+        return glCompositorInstance;
+    }
+
+    function hexToRgbaArray(color, alpha) {
+        let r = 0, g = 0, b = 0, a = alpha == null ? 1 : alpha;
+        if (typeof color === 'string' && color[0] === '#') {
+            const hex = color.slice(1);
+            if (hex.length === 3) {
+                r = parseInt(hex[0] + hex[0], 16) / 255;
+                g = parseInt(hex[1] + hex[1], 16) / 255;
+                b = parseInt(hex[2] + hex[2], 16) / 255;
+            } else if (hex.length === 6 || hex.length === 8) {
+                r = parseInt(hex.slice(0, 2), 16) / 255;
+                g = parseInt(hex.slice(2, 4), 16) / 255;
+                b = parseInt(hex.slice(4, 6), 16) / 255;
+                if (hex.length === 8) a *= parseInt(hex.slice(6, 8), 16) / 255;
+            }
+        } else if (typeof color === 'string') {
+            const m = color.match(/rgba?\(([^)]+)\)/);
+            if (m) {
+                const parts = m[1].split(',').map(s => parseFloat(s));
+                r = (parts[0] || 0) / 255;
+                g = (parts[1] || 0) / 255;
+                b = (parts[2] || 0) / 255;
+                if (parts.length > 3) a *= parts[3];
+            }
+        }
+        return [r * a, g * a, b * a, a];
+    }
+
+    function drawGLQuad(comp, program, uniforms, originX, originY, w, h, pivotX, pivotY, rotation, scale) {
+        const gl = comp.gl;
+        gl.useProgram(program);
+        gl.bindVertexArray(comp.quadVao);
+        gl.uniform2f(uniforms.u_canvasSize, gl.drawingBufferWidth, gl.drawingBufferHeight);
+        gl.uniform2f(uniforms.u_origin, originX, originY);
+        gl.uniform2f(uniforms.u_size, w, h);
+        gl.uniform2f(uniforms.u_pivot, pivotX, pivotY);
+        gl.uniform1f(uniforms.u_rotation, rotation || 0);
+        gl.uniform1f(uniforms.u_scale, scale == null ? 1 : scale);
+    }
+
+    function glDrawGlyph(comp, shape, drawX, drawY, tintColor, alpha, rotationRad, scaleAmt, gradient, gradSpan, passthrough) {
+        const gl = comp.gl;
+        const w = shape.canvas.width;
+        const h = shape.canvas.height;
+        const uni = comp.glyphUniforms;
+        drawGLQuad(comp, comp.glyphProgram, uni, drawX, drawY, w, h, w / 2, h / 2, rotationRad, scaleAmt);
+        const forceUpload = shape.canvas === sharedShadowSurface.canvas;
+        gl.activeTexture(gl.TEXTURE0);
+        gl.bindTexture(gl.TEXTURE_2D, comp.getGlyphTexture(shape, forceUpload));
+        gl.uniform1i(uni.u_tex, 0);
+        gl.uniform1f(uni.u_alpha, alpha);
+
+        if (passthrough) {
+            gl.uniform1i(uni.u_mode, 2);
+            gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+            return;
+        }
+
+        if (gradient && gradSpan) {
+            gl.uniform1i(uni.u_mode, 1);
+            const colors = gradient.colors;
+            const flat = new Float32Array(8 * 4);
+            for (let i = 0; i < Math.min(colors.length, 8); i++) {
+                const c = hexToRgbaArray(colors[i], 1);
+                flat[i * 4] = c[0];
+                flat[i * 4 + 1] = c[1];
+                flat[i * 4 + 2] = c[2];
+                flat[i * 4 + 3] = c[3];
+            }
+            gl.uniform4fv(uni.u_gradStopsBase, flat);
+            gl.uniform1i(uni.u_gradCount, Math.max(1, Math.min(colors.length, 8)));
+            gl.uniform2f(uni.u_gradLocalOrigin, drawX, drawY);
+            gl.uniform2f(uni.u_gradGlyphSize, w, h);
+
+            const type = gradient.type || 'linear';
+            const spanW = gradSpan.spanW;
+            const spanH = gradSpan.spanH;
+            const cx = drawX + spanW / 2 - (gradSpan.localOffsetXPx || 0);
+            const cy = drawY + spanH / 2 - (gradSpan.localOffsetYPx || 0);
+            if (type === 'radial') {
+                gl.uniform1i(uni.u_gradType, 1);
+                gl.uniform2f(uni.u_gradCenter, cx, cy);
+                gl.uniform1f(uni.u_gradRadius, Math.max(1, Math.sqrt(spanW * spanW + spanH * spanH) / 2));
+            } else {
+                gl.uniform1i(uni.u_gradType, 0);
+                const angleRad = (gradient.angle || 0) * Math.PI / 180;
+                const dx = Math.cos(angleRad);
+                const dy = Math.sin(angleRad);
+                const halfW = spanW / 2;
+                const halfH = spanH / 2;
+                const half = Math.abs(dx) * halfW + Math.abs(dy) * halfH;
+                gl.uniform2f(uni.u_gradAxis0, cx - dx * half, cy - dy * half);
+                gl.uniform2f(uni.u_gradAxis1, cx + dx * half, cy + dy * half);
+            }
+        } else {
+            gl.uniform1i(uni.u_mode, 0);
+            gl.uniform4fv(uni.u_tint, hexToRgbaArray(tintColor, 1));
+        }
+
+        gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+    }
+
+    function glDrawSolidRect(comp, cx, cy, w, h, color, alpha) {
+        const gl = comp.gl;
+        const uni = comp.solidUniforms;
+        drawGLQuad(comp, comp.solidProgram, uni, cx - w / 2, cy - h / 2, w, h, 0, 0, 0, 1);
+        const c = hexToRgbaArray(color, alpha == null ? 1 : alpha);
+        gl.uniform4f(uni.u_color, c[0], c[1], c[2], c[3]);
+        gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+    }
+
+    function glDrawRoundRect(comp, cx, cy, w, h, radius, color, alpha) {
+        const gl = comp.gl;
+        const uni = comp.roundRectUniforms;
+        drawGLQuad(comp, comp.roundRectProgram, uni, cx - w / 2, cy - h / 2, w, h, 0, 0, 0, 1);
+        gl.uniform1f(uni.u_radius, radius);
+        const c = hexToRgbaArray(color, alpha == null ? 1 : alpha);
+        gl.uniform4f(uni.u_color, c[0], c[1], c[2], c[3]);
+        gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+    }
+
+    function glDrawMaskWipe(comp, shape, drawX, drawY, maskTexture, matrixValues, wipeInfo, alpha, wipeOriginPx) {
+        const gl = comp.gl;
+        const w = shape.canvas.width;
+        const h = shape.canvas.height;
+        const uni = comp.maskWipeUniforms;
+        drawGLQuad(comp, comp.maskWipeProgram, uni, drawX, drawY, w, h, 0, 0, 0, 1);
+        gl.activeTexture(gl.TEXTURE0);
+        gl.bindTexture(gl.TEXTURE_2D, comp.getGlyphTexture(shape));
+        gl.uniform1i(uni.u_glyphTex, 0);
+        gl.activeTexture(gl.TEXTURE1);
+        gl.bindTexture(gl.TEXTURE_2D, comp.getMaskPatternTexture(maskTexture));
+        gl.uniform1i(uni.u_patternTex, 1);
+        gl.uniformMatrix3fv(uni.u_patternMatrix, false, matrixValues);
+        gl.uniform2f(uni.u_texSizePx, w, h);
+        gl.uniform1f(uni.u_alpha, alpha);
+        if (wipeInfo) {
+            gl.uniform1i(uni.u_hasWipe, 1);
+            gl.uniform2f(uni.u_wipeAxis, wipeInfo.axisX, wipeInfo.axisY);
+            gl.uniform1f(uni.u_wipeStart, wipeInfo.start);
+            gl.uniform1f(uni.u_wipeEnd, wipeInfo.end);
+            gl.uniform2f(uni.u_wipeOriginPx, wipeOriginPx ? wipeOriginPx[0] : 0, wipeOriginPx ? wipeOriginPx[1] : 0);
+        } else {
+            gl.uniform1i(uni.u_hasWipe, 0);
+        }
+        gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+    }
+
+    function domMatrixToGl3x3(matrix, texW, texH) {
+        const inv = matrix.inverse();
+        return new Float32Array([
+            inv.a / texW, inv.b / texH, 0,
+            inv.c / texW, inv.d / texH, 0,
+            inv.e / texW, inv.f / texH, 1
+        ]);
+    }
+    function compositeGlyphsToCanvasWebGL2(state, paintOps, docW, docH, textWidth, textHeight, originX, originY) {
+        const comp = getGLCompositor();
+        if (!comp) return null;
+        const gl = comp.gl;
+        if (gl.isContextLost()) {
+            glCompositorInstance = null;
+            glCompositorFailed = true;
+            return null;
+        }
+
+        const pixelW = Math.max(1, Math.round(docW * DEST_SCALE));
+        const pixelH = Math.max(1, Math.round(docH * DEST_SCALE));
+        if (comp.canvas.width !== pixelW || comp.canvas.height !== pixelH) {
+            comp.canvas.width = pixelW;
+            comp.canvas.height = pixelH;
+        }
+        gl.viewport(0, 0, pixelW, pixelH);
+        gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+        gl.clearColor(0, 0, 0, 0);
+        gl.clear(gl.COLOR_BUFFER_BIT);
+        gl.enable(gl.BLEND);
+        gl.blendFunc(gl.ONE, gl.ONE_MINUS_SRC_ALPHA);
+
+        const background = state.textBackground;
+        if (background.enabled) {
+            const padding = Math.max(0, Scratch.Cast.toNumber(background.padding) || 0) * DEST_SCALE;
+            const width = textWidth * DEST_SCALE + padding * 2;
+            const height = textHeight * DEST_SCALE + padding * 2;
+            const x = originX * DEST_SCALE - width / 2;
+            const y = originY * DEST_SCALE - height / 2;
+            const opacity = Math.max(0, Math.min(100, Scratch.Cast.toNumber(background.opacity) || 0)) / 100;
+            const radius = Math.min(Math.max(0, Scratch.Cast.toNumber(background.radius) || 0) * DEST_SCALE, width / 2, height / 2);
+            glDrawRoundRect(comp, x + width / 2, y + height / 2, width, height, radius, background.color, opacity);
+        }
+
+        const maskSpansByIndex = getSeamlessMaskSpans(state, paintOps, state.layoutKey + '\u0003' + docW + '\u0003' + docH);
+        const gradientSpansByIndex = getGradientSpans(state, paintOps, state.layoutKey + '\u0003' + docW + '\u0003' + docH);
+        const batchedMasks = collectBatchedMaskGroups(paintOps);
+
+        for (let i = 0; i < paintOps.length; i++) {
+            const op = paintOps[i];
+            if (op.text === '\u00A0' || op.text === '') continue;
+
+            const fontFamily = op.font['font-family'];
+            const fontSize = op.font['font-size'];
+            const fontWeight = op.font['font-weight'];
+            const fontStyle = op.font['font-style'];
+
+            const shape = getGlyphShape(op.text, fontFamily, fontSize, fontWeight, fontStyle);
+
+            let gradSpan = null;
+            if (op.gradient) {
+                const span = gradientSpansByIndex.get(op.charIndex);
+                if (span) {
+                    let localOffsetXPx, localOffsetYPx;
+                    if (span.localOffsetXPx !== undefined) {
+                        localOffsetXPx = span.localOffsetXPx;
+                        localOffsetYPx = span.localOffsetYPx;
+                    } else {
+                        const advanceCenterXEmForSpan = shape.baselineOriginXEm + shape.advance / 2;
+                        const baselineYFromLineCenterForSpan = (shape.fontAscentEm - shape.fontDescentEm) / 2;
+                        const drawXEmForSpan = op.x - advanceCenterXEmForSpan;
+                        const drawYEmForSpan = (op.y + baselineYFromLineCenterForSpan) - shape.baselineOriginYEm;
+                        localOffsetXPx = Math.round(drawXEmForSpan * DEST_SCALE) - span.originX;
+                        localOffsetYPx = Math.round(drawYEmForSpan * DEST_SCALE) - span.originY;
+                    }
+                    gradSpan = { spanW: span.spanW, spanH: span.spanH, localOffsetXPx, localOffsetYPx };
+                }
+            }
+
+            const advanceCenterXEm = shape.baselineOriginXEm + shape.advance / 2;
+            const baselineYFromLineCenter = (shape.fontAscentEm - shape.fontDescentEm) / 2;
+            const drawXEm = op.x - advanceCenterXEm;
+            const drawYEm = (op.y + baselineYFromLineCenter) - shape.baselineOriginYEm;
+            const drawXPx = drawXEm * DEST_SCALE;
+            const drawYPx = drawYEm * DEST_SCALE;
+
+            const hasOpacity = op.opacity != null && op.opacity !== 1;
+            const opAlpha = hasOpacity ? op.opacity : 1;
+            const hasRotation = !!op.rotation;
+            const hasScale = op.scale != null && op.scale !== 1;
+            const rotationRad = hasRotation ? -op.rotation * Math.PI / 180 : 0;
+            const scaleAmt = hasScale ? op.scale : 1;
+            const pivotX = op.x * DEST_SCALE - drawXPx;
+            const pivotY = op.y * DEST_SCALE - drawYPx;
+
+            if (state.textShadow.enabled) {
+                const shadowBlurPx = Math.max(0, Scratch.Cast.toNumber(state.textShadow.blur) || 0) * DEST_SCALE;
+                const shadowOffsetXPx = (Scratch.Cast.toNumber(state.textShadow.offsetX) || 0) * DEST_SCALE;
+                const shadowOffsetYPx = (Scratch.Cast.toNumber(state.textShadow.offsetY) || 0) * DEST_SCALE;
+                const shadowBitmap = getShadowGlyphBitmap(shape, state.textShadow.color, shadowBlurPx, shadowOffsetXPx, shadowOffsetYPx);
+                const shadowAlpha = opAlpha * Math.max(0, Math.min(100, Scratch.Cast.toNumber(state.textShadow.opacity) || 0)) / 100;
+                glDrawGlyph(comp, shadowBitmap, drawXPx + shadowBitmap.offsetX, drawYPx + shadowBitmap.offsetY, null, shadowAlpha, 0, 1, null, null, true);
+            }
+
+            if (state.textBorder.enabled && Scratch.Cast.toNumber(state.textBorder.size) > 0) {
+                const borderAlpha = opAlpha * Math.max(0, Math.min(100, Scratch.Cast.toNumber(state.textBorder.opacity) || 0)) / 100;
+                const borderSize = Math.max(0, Scratch.Cast.toNumber(state.textBorder.size) || 0) * DEST_SCALE;
+                const borderOffsets = getBorderOffsets(borderSize);
+                for (const [offsetX, offsetY] of borderOffsets) {
+                    if (!hasRotation && !hasScale) {
+                        glDrawGlyph(comp, shape, drawXPx + offsetX, drawYPx + offsetY, state.textBorder.color, borderAlpha, 0, 1, null, null);
+                    } else {
+                        glDrawGlyph(comp, shape, drawXPx + offsetX, drawYPx + offsetY, state.textBorder.color, borderAlpha, rotationRad, scaleAmt, null, null);
+                    }
+                }
+            }
+
+            glDrawGlyph(
+                comp, shape, drawXPx, drawYPx,
+                op.color, opAlpha, rotationRad, scaleAmt,
+                op.gradient, gradSpan
+            );
+
+            if (op.mask && !op.gradient && !batchedMasks.batchedOps.has(op)) {
+                const texture = getMaskTexture(op.mask.targetName, op.mask.costumeName);
+                if (texture) {
+                    const maskOpacity = Math.max(0, Math.min(100, Scratch.Cast.toNumber(op.mask.opacity != null ? op.mask.opacity : 100))) / 100;
+                    const combinedAlpha = opAlpha * maskOpacity;
+                    if (combinedAlpha > 0) {
+                        const span = maskSpansByIndex.get(op.charIndex);
+                        const zoom = Math.max(0.01, (Scratch.Cast.toNumber(op.mask.zoom) || 100) / 100);
+                        const rotation = Scratch.Cast.toNumber(op.mask.rotation) || 0;
+                        const anchorX = (op.mask.x || 0) * DEST_SCALE - drawXPx;
+                        const anchorY = -(op.mask.y || 0) * DEST_SCALE - drawYPx;
+                        const matrix = new DOMMatrix();
+                        matrix.translateSelf(anchorX, anchorY);
+                        if (rotation !== 0) matrix.rotateSelf(rotation);
+                        matrix.scaleSelf(zoom, zoom);
+                        const glMatrix = domMatrixToGl3x3(matrix, texture.width, texture.height);
+
+                        const coverage = Math.max(0, Math.min(100, Scratch.Cast.toNumber(op.mask.coverage) || 0)) / 100;
+                        let wipeInfo = null;
+                        if (coverage < 1 && span) {
+                            const blurPx = Math.max(0, Scratch.Cast.toNumber(op.mask.blur) || 0) * DEST_SCALE;
+                            const bandHalf = Math.max(0.5, blurPx / 2);
+                            const direction = op.mask.direction || WIPE_DIRECTION_BOTTOM_UP;
+                            const axisIsX = direction === WIPE_DIRECTION_LEFT_RIGHT || direction === WIPE_DIRECTION_RIGHT_LEFT;
+                            const growsPositive = direction === WIPE_DIRECTION_LEFT_RIGHT || direction === WIPE_DIRECTION_UP_DOWN;
+                            const localOffsetX = span.localOffsetXPx !== undefined ? span.localOffsetXPx : (drawXPx - span.originX);
+                            const localOffsetY = span.localOffsetYPx !== undefined ? span.localOffsetYPx : (drawYPx - span.originY);
+                            const w = shape.canvas.width;
+                            const h = shape.canvas.height;
+                            const effSpanW = axisIsX ? span.spanW : w;
+                            const effSpanH = axisIsX ? h : span.spanH;
+                            let revealEdge, axisSize;
+                            if (axisIsX && direction === WIPE_DIRECTION_LEFT_RIGHT) {
+                                axisSize = span.spanW;
+                                revealEdge = span.spanW * coverage - localOffsetX;
+                            } else if (axisIsX) {
+                                axisSize = span.spanW;
+                                revealEdge = span.spanW - span.spanW * coverage - localOffsetX;
+                            } else if (direction === WIPE_DIRECTION_UP_DOWN) {
+                                axisSize = span.spanH;
+                                revealEdge = span.spanH * coverage - localOffsetY;
+                            } else {
+                                axisSize = span.spanH;
+                                revealEdge = span.spanH - span.spanH * coverage - localOffsetY;
+                            }
+                            const gradStart = growsPositive ? revealEdge - bandHalf : revealEdge + bandHalf;
+                            const gradEnd = growsPositive ? revealEdge + bandHalf : revealEdge - bandHalf;
+                            wipeInfo = {
+                                axisX: axisIsX ? 1 : 0,
+                                axisY: axisIsX ? 0 : 1,
+                                start: Math.min(gradStart, gradEnd),
+                                end: Math.max(gradStart, gradEnd)
+                            };
+                            if (!growsPositive) {
+                                const tmp = wipeInfo.start;
+                                wipeInfo.start = wipeInfo.end;
+                                wipeInfo.end = tmp;
+                            }
+                        }
+
+                        glDrawMaskWipe(comp, shape, drawXPx, drawYPx, texture, glMatrix, wipeInfo, combinedAlpha);
+                    }
+                }
+            }
+
+            if (op.strike) {
+                const lineWidth = Math.max(1, fontSize * 0.06) * DEST_SCALE;
+                const sy = op.y * DEST_SCALE;
+                const x0 = (op.x - op.width / 2) * DEST_SCALE;
+                const x1 = (op.x + op.width / 2) * DEST_SCALE;
+                if (x1 > x0) {
+                    glDrawSolidRect(comp, (x0 + x1) / 2, sy, x1 - x0, lineWidth, op.color, opAlpha);
+                }
+            }
+
+            if (op.underline) {
+                const lineWidth = Math.max(1, fontSize * 0.06) * DEST_SCALE;
+                const uy = (op.y + baselineYFromLineCenter + fontSize * 0.06) * DEST_SCALE;
+                const startX = (op.x - op.width / 2) * DEST_SCALE;
+                const endX = (op.x + op.width / 2) * DEST_SCALE;
+                if (hasRotation) {
+                    if (endX > startX) glDrawSolidRect(comp, (startX + endX) / 2, uy, endX - startX, lineWidth, op.color, opAlpha);
+                } else {
+                    drawUnderlineSegmentsGL(comp, shape, Math.round(drawXPx), Math.round(drawYPx), startX, endX, uy, lineWidth, op.color, opAlpha);
+                }
+            }
+        }
+
+        drawBatchedMaskGroupsGL(comp, batchedMasks.groups, pixelW, pixelH);
+
+        if (comp.outputCanvas.width !== pixelW || comp.outputCanvas.height !== pixelH) {
+            comp.outputCanvas.width = pixelW;
+            comp.outputCanvas.height = pixelH;
+        }
+        comp.outputCtx.setTransform(1, 0, 0, 1, 0, 0);
+        comp.outputCtx.clearRect(0, 0, pixelW, pixelH);
+        comp.outputCtx.drawImage(comp.canvas, 0, 0);
+        return comp.outputCanvas;
+    }
+
+    function drawUnderlineSegmentsGL(comp, glyph, glyphX, glyphY, startX, endX, y, lineWidth, color, alpha) {
+        const stroke = (x1, x2) => {
+            if (x2 <= x1) return;
+            glDrawSolidRect(comp, (x1 + x2) / 2, y, x2 - x1, lineWidth, color, alpha);
+        };
+        try {
+            const w = glyph.canvas.width;
+            const inkData = getGlyphInkColumns(glyph);
+            const rowStart = Math.max(0, Math.floor(y - glyphY - lineWidth / 2));
+            const rowEnd = Math.min(glyph.canvas.height - 1, Math.ceil(y - glyphY + lineWidth / 2));
+            const columnStart = Math.max(0, Math.floor(startX - glyphX));
+            const columnEnd = Math.min(w - 1, Math.ceil(endX - glyphX));
+            const ink = new Uint8Array(w);
+            for (let py = rowStart; py <= rowEnd; py++) {
+                for (let px = columnStart; px <= columnEnd; px++) {
+                    if (inkData[py * w + px]) ink[px] = 1;
+                }
+            }
+            const padding = Math.max(1, Math.ceil(lineWidth / 2) + 1);
+            let segmentStart = startX;
+            let px = columnStart;
+            while (px <= columnEnd) {
+                if (!ink[px]) { px++; continue; }
+                const inkStart = px;
+                while (px <= columnEnd && ink[px]) px++;
+                const skipStart = Math.max(startX, glyphX + inkStart - padding);
+                const skipEnd = Math.min(endX, glyphX + px + padding);
+                stroke(segmentStart, skipStart);
+                segmentStart = Math.max(segmentStart, skipEnd);
+            }
+            stroke(segmentStart, endX);
+        } catch (e) {
+            stroke(startX, endX);
+        }
+    }
+
+    function drawBatchedMaskGroupsGL(comp, groups, pixelW, pixelH) {
+        if (!groups.length) return;
+        for (let i = 0; i < groups.length; i++) {
+            const group = groups[i];
+            const mask = group.mask;
+            const texture = group.texture;
+            const matrix = new DOMMatrix();
+            matrix.translateSelf((Scratch.Cast.toNumber(mask.x) || 0) * DEST_SCALE, -(Scratch.Cast.toNumber(mask.y) || 0) * DEST_SCALE);
+            const rotation = Scratch.Cast.toNumber(mask.rotation) || 0;
+            if (rotation !== 0) matrix.rotateSelf(rotation);
+            const zoom = Math.max(0.01, (Scratch.Cast.toNumber(mask.zoom) || 100) / 100);
+            matrix.scaleSelf(zoom, zoom);
+
+            const coverage = Math.max(0, Math.min(100, Scratch.Cast.toNumber(mask.coverage) || 0)) / 100;
+            let minX = group.minX, minY = group.minY, maxX = group.maxX, maxY = group.maxY;
+            let wipeInfo = null;
+            if (coverage < 1) {
+                const blurPx = Math.max(0, Scratch.Cast.toNumber(mask.blur) || 0) * DEST_SCALE;
+                const bandHalf = Math.max(0.5, blurPx / 2);
+                const direction = mask.direction || WIPE_DIRECTION_BOTTOM_UP;
+                const axisIsX = direction === WIPE_DIRECTION_LEFT_RIGHT || direction === WIPE_DIRECTION_RIGHT_LEFT;
+                const growsPositive = direction === WIPE_DIRECTION_LEFT_RIGHT || direction === WIPE_DIRECTION_UP_DOWN;
+                const axisStart = axisIsX ? minX : minY;
+                const axisSize = axisIsX ? maxX - minX : maxY - minY;
+                const revealEdge = growsPositive ? axisStart + axisSize * coverage : axisStart + axisSize - axisSize * coverage;
+                const gradStart = growsPositive ? revealEdge - bandHalf : revealEdge + bandHalf;
+                const gradEnd = growsPositive ? revealEdge + bandHalf : revealEdge - bandHalf;
+                wipeInfo = {
+                    axisX: axisIsX ? 1 : 0,
+                    axisY: axisIsX ? 0 : 1,
+                    start: Math.min(gradStart, gradEnd),
+                    end: Math.max(gradStart, gradEnd)
+                };
+                if (!growsPositive) {
+                    const tmp = wipeInfo.start;
+                    wipeInfo.start = wipeInfo.end;
+                    wipeInfo.end = tmp;
+                }
+            }
+
+            for (let j = 0; j < group.items.length; j++) {
+                const item = group.items[j];
+                const glMatrix = domMatrixToGl3x3(matrix, texture.width, texture.height);
+                glDrawMaskWipe(comp, item.glyph.shape, item.px, item.py, texture, glMatrix, wipeInfo, group.alpha, [item.px, item.py]);
+            }
+        }
+    }
+
+    function compositeGlyphsToCanvasCanvas2D(state, paintOps, docW, docH, textWidth, textHeight, originX, originY) {
         let canvas = state.paintCanvas;
         if (!canvas) {
             canvas = document.createElement('canvas');
@@ -4697,6 +5496,47 @@ self.onmessage = async (event) => {
         return indices;
     }
 
+    function charLineIndices(target) {
+        const state = getState(target);
+        const shapeKey = getShapeKey(state);
+        if (state.charLineIndicesCache && state.charLineIndicesCacheKey === shapeKey) {
+            return state.charLineIndicesCache;
+        }
+        const chars = parseRichText(state.rawText, state.baseStyle);
+        const indices = [];
+        let line = 1;
+        for (let index = 0; index < chars.length; index++) {
+            if (chars[index].char === '\n') {
+                line++;
+                continue;
+            }
+            indices.push({ charIndex: index, line });
+        }
+        state.charLineIndicesCache = indices;
+        state.charLineIndicesCacheKey = shapeKey;
+        return indices;
+    }
+
+    const WORD_SPLIT_RE = /\S+/g;
+
+    function wordSpans(target) {
+        const state = getState(target);
+        const shapeKey = getShapeKey(state);
+        if (state.wordSpansCache && state.wordSpansCacheKey === shapeKey) {
+            return state.wordSpansCache;
+        }
+        const plain = stripMarkup(state.rawText);
+        const spans = [];
+        WORD_SPLIT_RE.lastIndex = 0;
+        let match;
+        while ((match = WORD_SPLIT_RE.exec(plain)) !== null) {
+            spans.push({ text: match[0], index: match.index, charIndex: match.index + 1 });
+        }
+        state.wordSpansCache = spans;
+        state.wordSpansCacheKey = shapeKey;
+        return spans;
+    }
+
     class IrisText {
         constructor() {
             this._onTargetRemoved = this._onTargetRemoved.bind(this);
@@ -4729,6 +5569,34 @@ self.onmessage = async (event) => {
 
             for (const index of indices) {
                 rootFrame.irisTagCharacterNumber = index + 1;
+                yield* func(thread, target, runtime, stage);
+            }
+        }
+
+        *_repeatCompiledCharInLine(func, thread, target, stage) {
+            const entries = charLineIndices(target);
+            const rootFrame = thread.stackFrames[0];
+            rootFrame.irisTagCharacterNumber = 0;
+            rootFrame.irisLineNumber = 0;
+
+            for (const entry of entries) {
+                rootFrame.irisTagCharacterNumber = entry.charIndex + 1;
+                rootFrame.irisLineNumber = entry.line;
+                yield* func(thread, target, runtime, stage);
+            }
+        }
+
+        *_repeatCompiledWord(func, thread, target, stage) {
+            const words = wordSpans(target);
+            const rootFrame = thread.stackFrames[0];
+            rootFrame.irisWordNumber = 0;
+            rootFrame.irisWordValue = '';
+            rootFrame.irisTagCharacterNumber = 0;
+
+            for (let i = 0; i < words.length; i++) {
+                rootFrame.irisWordNumber = i + 1;
+                rootFrame.irisWordValue = words[i].text;
+                rootFrame.irisTagCharacterNumber = words[i].charIndex;
                 yield* func(thread, target, runtime, stage);
             }
         }
@@ -4805,10 +5673,27 @@ self.onmessage = async (event) => {
                         tag: generator.descendInputOfBlock(block, 'TAG'),
                         substack: generator.descendSubstack(block, 'SUBSTACK')
                     }),
+                    repeatForCharInLine: (generator, block) => ({
+                        kind: 'stack',
+                        substack: generator.descendSubstack(block, 'SUBSTACK')
+                    }),
+                    repeatForEachWord: (generator, block) => ({
+                        kind: 'stack',
+                        substack: generator.descendSubstack(block, 'SUBSTACK')
+                    }),
                     currentCharValue: () => ({
                         kind: 'input'
                     }),
                     currentCharIndex: () => ({
+                        kind: 'input'
+                    }),
+                    currentLineIndex: () => ({
+                        kind: 'input'
+                    }),
+                    currentWordIndex: () => ({
+                        kind: 'input'
+                    }),
+                    currentWordValue: () => ({
                         kind: 'input'
                     })
                 },
@@ -4824,11 +5709,42 @@ self.onmessage = async (event) => {
                         compiler.source = temp;
                         compiler.source += `yield* runtime.ext_irisText._repeatCompiledTag(${compiler.descendInput(node.tag).asString()}, ${funcExpr}, thread, target, stage);\n`;
                     },
+                    repeatForCharInLine: (node, compiler, imports) => {
+                        const temp = compiler.source;
+                        compiler.source = '(function*(thread, target, runtime, stage) {\n';
+                        if (node.substack) {
+                            compiler.descendStack(node.substack, new imports.Frame(false));
+                        }
+                        compiler.source += '})';
+                        const funcExpr = compiler.source;
+                        compiler.source = temp;
+                        compiler.source += `yield* runtime.ext_irisText._repeatCompiledCharInLine(${funcExpr}, thread, target, stage);\n`;
+                    },
+                    repeatForEachWord: (node, compiler, imports) => {
+                        const temp = compiler.source;
+                        compiler.source = '(function*(thread, target, runtime, stage) {\n';
+                        if (node.substack) {
+                            compiler.descendStack(node.substack, new imports.Frame(false));
+                        }
+                        compiler.source += '})';
+                        const funcExpr = compiler.source;
+                        compiler.source = temp;
+                        compiler.source += `yield* runtime.ext_irisText._repeatCompiledWord(${funcExpr}, thread, target, stage);\n`;
+                    },
                     currentCharValue: (node, compiler, imports) => {
                         return new imports.TypedInput('(thread && thread._irisChar ? thread._irisChar.char : (target && target._irisTypingChar ? target._irisTypingChar.char : ""))', imports.TYPE_STRING);
                     },
                     currentCharIndex: (node, compiler, imports) => {
                         return new imports.TypedInput('(thread && thread.stackFrames[0] && thread.stackFrames[0].irisTagCharacterNumber !== undefined ? thread.stackFrames[0].irisTagCharacterNumber : (thread && thread._irisChar ? thread._irisChar.index + 1 : (target && target._irisTypingChar ? target._irisTypingChar.index + 1 : 0)))', imports.TYPE_NUMBER);
+                    },
+                    currentLineIndex: (node, compiler, imports) => {
+                        return new imports.TypedInput('(thread && thread.stackFrames[0] && thread.stackFrames[0].irisLineNumber !== undefined ? thread.stackFrames[0].irisLineNumber : 0)', imports.TYPE_NUMBER);
+                    },
+                    currentWordIndex: (node, compiler, imports) => {
+                        return new imports.TypedInput('(thread && thread.stackFrames[0] && thread.stackFrames[0].irisWordNumber !== undefined ? thread.stackFrames[0].irisWordNumber : 0)', imports.TYPE_NUMBER);
+                    },
+                    currentWordValue: (node, compiler, imports) => {
+                        return new imports.TypedInput('(thread && thread.stackFrames[0] && thread.stackFrames[0].irisWordValue !== undefined ? thread.stackFrames[0].irisWordValue : "")', imports.TYPE_STRING);
                     }
                 }
             };
@@ -5292,6 +6208,17 @@ self.onmessage = async (event) => {
                         }
                     },
                     {
+                        opcode: 'setLineHeight',
+                        blockType: Scratch.BlockType.COMMAND,
+                        text: 'set line height to [HEIGHT]',
+                        arguments: {
+                            HEIGHT: {
+                                type: Scratch.ArgumentType.NUMBER,
+                                defaultValue: 1.2
+                            }
+                        }
+                    },
+                    {
                         blockType: Scratch.BlockType.LABEL,
                         text: 'Settings'
                     },
@@ -5352,6 +6279,61 @@ self.onmessage = async (event) => {
                         opcode: 'currentCharIndex',
                         blockType: Scratch.BlockType.REPORTER,
                         text: 'character #',
+                        canDragDuplicate: true,
+                        hideFromPalette: true
+                    },
+                    '---',
+                    {
+                        opcode: 'repeatForCharInLine',
+                        blockType: Scratch.BlockType.LOOP,
+                        text: 'repeat for each character in line [CHAR] [LINE]',
+                        branchCount: 1,
+                        arguments: {
+                            CHAR: {
+                                type: Scratch.ArgumentType.STRING,
+                                fillIn: 'currentCharIndex'
+                            },
+                            LINE: {
+                                type: Scratch.ArgumentType.STRING,
+                                fillIn: 'currentLineIndex'
+                            }
+                        }
+                    },
+                    {
+                        opcode: 'currentLineIndex',
+                        blockType: Scratch.BlockType.REPORTER,
+                        text: 'line #',
+                        canDragDuplicate: true,
+                        hideFromPalette: true
+                    },
+                    '---',
+                    {
+                        opcode: 'repeatForEachWord',
+                        blockType: Scratch.BlockType.LOOP,
+                        text: 'repeat for each word in text [WORD] [CHAR]',
+                        branchCount: 1,
+                        arguments: {
+                            WORD: {
+                                type: Scratch.ArgumentType.STRING,
+                                fillIn: 'currentWordIndex'
+                            },
+                            CHAR: {
+                                type: Scratch.ArgumentType.STRING,
+                                fillIn: 'currentCharIndex'
+                            }
+                        }
+                    },
+                    {
+                        opcode: 'currentWordIndex',
+                        blockType: Scratch.BlockType.REPORTER,
+                        text: 'word #',
+                        canDragDuplicate: true,
+                        hideFromPalette: true
+                    },
+                    {
+                        opcode: 'currentWordValue',
+                        blockType: Scratch.BlockType.REPORTER,
+                        text: 'current word',
                         canDragDuplicate: true,
                         hideFromPalette: true
                     },
@@ -5735,6 +6717,7 @@ self.onmessage = async (event) => {
                         opcode: 'setCharacterMaskSeamless',
                         blockType: Scratch.BlockType.COMMAND,
                         text: 'set character [START] to [END] mask seamless [SEAMLESS]',
+                        hideFromPalette: true,
                         arguments: {
                             START: {
                                 type: Scratch.ArgumentType.NUMBER,
@@ -6495,6 +7478,14 @@ self.onmessage = async (event) => {
             schedulePaint(util.target, state);
         }
 
+        setLineHeight(args, util) {
+            const state = getState(util.target);
+            const lineHeight = Math.max(0, Scratch.Cast.toNumber(args.HEIGHT));
+            if (state.lineSpacing === lineHeight) return;
+            state.lineSpacing = lineHeight;
+            schedulePaint(util.target, state);
+        }
+
         setTextShadowEnabled(args, util) {
             const state = getState(util.target);
             state.textShadow.enabled = Scratch.Cast.toString(args.ENABLED).toLowerCase() === 'on';
@@ -6626,6 +7617,69 @@ self.onmessage = async (event) => {
             rootFrame.irisTagCharacterNumber = loop.position + 1;
             loop.position++;
             util.startBranch(1, true);
+        }
+
+        repeatForCharInLine(args, util) {
+            const frame = util.stackFrame;
+            const rootFrame = util.thread.stackFrames[0];
+            let loop = frame.irisCharInLineLoop;
+
+            if (!loop) {
+                loop = {
+                    entries: charLineIndices(util.target),
+                    position: 0
+                };
+                frame.irisCharInLineLoop = loop;
+                rootFrame.irisTagCharacterNumber = 0;
+                rootFrame.irisLineNumber = 0;
+            }
+
+            if (loop.position >= loop.entries.length) return;
+            const entry = loop.entries[loop.position];
+            rootFrame.irisTagCharacterNumber = entry.charIndex + 1;
+            rootFrame.irisLineNumber = entry.line;
+            loop.position++;
+            util.startBranch(1, true);
+        }
+
+        currentLineIndex(args, util) {
+            const rootFrame = util.thread && util.thread.stackFrames[0];
+            return (rootFrame && rootFrame.irisLineNumber !== undefined) ? rootFrame.irisLineNumber : 0;
+        }
+
+        repeatForEachWord(args, util) {
+            const frame = util.stackFrame;
+            const rootFrame = util.thread.stackFrames[0];
+            let loop = frame.irisEachWordLoop;
+
+            if (!loop) {
+                loop = {
+                    words: wordSpans(util.target),
+                    position: 0
+                };
+                frame.irisEachWordLoop = loop;
+                rootFrame.irisWordNumber = 0;
+                rootFrame.irisWordValue = '';
+                rootFrame.irisTagCharacterNumber = 0;
+            }
+
+            if (loop.position >= loop.words.length) return;
+            const word = loop.words[loop.position];
+            rootFrame.irisWordNumber = loop.position + 1;
+            rootFrame.irisWordValue = word.text;
+            rootFrame.irisTagCharacterNumber = word.charIndex;
+            loop.position++;
+            util.startBranch(1, true);
+        }
+
+        currentWordIndex(args, util) {
+            const rootFrame = util.thread && util.thread.stackFrames[0];
+            return (rootFrame && rootFrame.irisWordNumber !== undefined) ? rootFrame.irisWordNumber : 0;
+        }
+
+        currentWordValue(args, util) {
+            const rootFrame = util.thread && util.thread.stackFrames[0];
+            return (rootFrame && rootFrame.irisWordValue !== undefined) ? rootFrame.irisWordValue : '';
         }
 
         currentCharValue(args, util) {
@@ -7161,25 +8215,6 @@ self.onmessage = async (event) => {
         }
 
         setCharacterMaskSeamless(args, util) {
-            const state = getState(util.target);
-            const {
-                start,
-                end
-            } = indexRange(Scratch.Cast.toNumber(args.START), Scratch.Cast.toNumber(args.END));
-            const seamless = Scratch.Cast.toString(args.SEAMLESS) === 'on';
-            let changed = false;
-            for (let idx = start; idx <= end; idx++) {
-                const existing = state.charMasks[idx];
-                if (!existing) continue;
-                if (existing.seamless === seamless) continue;
-                existing.seamless = seamless;
-                changed = true;
-            }
-            if (changed) {
-                state.charMasksVersion++;
-                state.charMaskGeometryVersion++;
-                schedulePaint(util.target, state);
-            }
         }
 
         clearCharacterMask(args, util) {

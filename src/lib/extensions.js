@@ -706,12 +706,12 @@ export default [
         creator: "G1nX",
     },
     */
+    
+    {
+        name: "puterAI",
+        description: "Ask AI models from PenguinMod using Puter.",
+        code: "bta35628-cmd/ai-free.js",
+        creator: "bta35628-cmd",
+        isGitHub: true,
+    },
 ];
-
-{
-    name: "puterAI",
-    description: "Ask AI models from PenguinMod using Puter.",
-    code: "bta35628-cmd/ai-free.js",
-    creator: "bta35628-cmd",
-    isGitHub: true,
-},

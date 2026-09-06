@@ -17,10 +17,11 @@ These Complex numbers have the property to choose the representation you want to
 
 While developing this extension, I found a problem in the way that Scratch represents the Angles (Internally, and in ANGLE inputs).
 ![Representation of angles in Scratch](https://files.catbox.moe/7uz5t7.png)
-The angles basically start in 0° but 0° is the top (when it should be in the right), then the front is 90°(when it should be in the top), which it's confusing.
-The trigonometrical functions (even the ones defined in ([sin v] of ()) block), recieve as argument a different kind of angle.
+In Scratch, 90° is pointing right, with 0° pointing up, which is different from the common representation which is the opposite.
+The trigonometrical functions (even the ones defined in ([sin v] of ()) block, Scratch-core), recieve as argument a different kind of angle.
 Internally, Scratch has to do `90 - SCRATCH_ANGLE` in order to perform any trigonometrical operation. It converts the Scratch angle recieved commonly as input into a Plane angle(The one used in Mathematics).
 ![Complex Plane angles](https://files.catbox.moe/umf5i8.png)
+> ‍Kan8eDie, CC BY-SA 3.0 <https://creativecommons.org/licenses/by-sa/3.0>, via Wikimedia Commons
 In this documentation. I'm going to define `Scratch Angle` as the angles that are used in Scratch angle inputs, and `Complex Plane angle` as the angles that are used in Trigonometry (and Complex Analysis). And `to transform ANGLE into ANGLE` to the mathematical operation of converting one kind of angle into another, and viceversa.
 ```scratch
 set direction to (90) ::motion  // Arguments are in Scratch angles
@@ -31,7 +32,7 @@ direction ::motion reporter // Returns in Scratch angles
 In general.
 ```
 COMPLEX_PLANE_ANGLE = 90 - SCRATCH_ANGLE
-SCRATCH_ANGLE = -COMPLEX_PLANE_ANGLE + 90
+SCRATCH_ANGLE = 90 - COMPLEX_PLANE_ANGLE
 ```
 
 JwVector doesn't solve the problem, it just abstracts the vector functions for use only Scratch angles (in addition of casting degrees to radians and floating-point precision errors).

@@ -86,5 +86,5 @@ export default {
     "DateFormatV2": DateFormatV2,
 
     // Complex Numebrs
-    "SalagataComplex": PageComplexNumbers
+    "SalagataComplex": PageComplexNumbers,
 };

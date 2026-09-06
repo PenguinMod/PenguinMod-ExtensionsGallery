@@ -4,6 +4,7 @@
 (function (Scratch) {
   "use strict";
   const vm = Scratch.vm;
+  const runtime = vm.runtime;
 
   //3dMath variables
   const spriteData = {};
@@ -15,6 +16,40 @@
     rotation: [0, 0, 0],
     sinAndCos: [0, 1, 0, 1, 0, 1],
   };
+  let optimized = {
+    acceptParsed: 1,
+    returnParsed: 2,
+  };
+  let wasObject = false;
+  const circularReplacer = () => {
+    const stack = new Set();
+    return function replacer(_, value) {
+      if (typeof value === "bigint") {
+        return Number.isSafeInteger(value) ? Number(value) : value.toString() + "n";
+      }
+      if (typeof value === "object" && value !== null) {
+        if (stack.has(value)) return Array.isArray(value) ? "[...]" : "{...}";
+        stack.add(value);
+      }
+      return value;
+    };
+  };
+  // Modify Visual Report to stringify JSON
+  const ogVisReport = runtime.visualReport;
+  if (Scratch.extensions.isPenguinMod) {
+    runtime.visualReport = function (blockId, value) {
+      if (value.constructor?.name === "Object" || value.constructor?.name === "Array") {
+        // PM custom return constructors have a different name
+        value = JSON.stringify(value, circularReplacer());
+      }
+      return ogVisReport.call(this, blockId, value);
+    }
+  } else {
+    runtime.visualReport = function (target, blockId, value) {
+      if (typeof value === "object") value = JSON.stringify(value, circularReplacer());
+      return ogVisReport.call(this, target, blockId, value);
+    }
+  }
 
   //I'm going to write a whole library for pen+ interaction in the future.
   let penPLoaded = false;
@@ -126,6 +161,17 @@
             arguments: {
               a: { type: Scratch.ArgumentType.STRING, defaultValue: "[0,0,0]" },
               b: { type: Scratch.ArgumentType.STRING, defaultValue: "[0,0,0]" },
+            },
+          },
+          {
+            disableMonitor: true,
+            opcode: "mulScalarV3",
+            blockType: Scratch.BlockType.REPORTER,
+            hideFromPalette: true,
+            text: "V3: [a] * number [b]",
+            arguments: {
+              a: { type: Scratch.ArgumentType.STRING, defaultValue: "[0,0,0]" },
+              b: { type: Scratch.ArgumentType.NUMBER, defaultValue: "0" },
             },
           },
           {
@@ -779,6 +825,21 @@
             blockIconURI: penPIcon,
             filter: "sprite",
           },
+          //# Parsing for sped up operations
+          {
+            blockType: Scratch.BlockType.LABEL,
+            text: "Optimizations",
+          },
+          {
+            disableMonitor: true,
+            opcode: "setOpMode",
+            blockType: Scratch.BlockType.COMMAND,
+            text: "set [mode] to [enable]",
+            arguments: {
+              mode: { type: Scratch.ArgumentType.STRING, menu: "opMode" },
+              enable: { type: Scratch.ArgumentType.STRING, menu: "opEnable" }
+            },
+          },
         ],
         menus: {
           axisMenu: {
@@ -830,6 +891,21 @@
             items: "tdMathPPCosMen",
             acceptReporters: true,
           },
+          opMode: {
+            items: [
+              /*{ text: "accept parsed objects", value: "acceptParsed" },*/
+              { text: "return parsed objects", value: "returnParsed" },
+            ],
+            acceptReporters: true,
+          },
+          opEnable: {
+            items: [
+              { text: "enabled", value: "1" },
+              { text: "disabled", value: "0" },
+              { text: "auto", value: "2" }
+            ],
+            acceptReporters: true,
+          },
         },
         name: "3D Math",
         id: "obviousAlexCMath3d",
@@ -845,9 +921,9 @@
 
     draw3dTri({ point1, point2, point3 }, util) {
       if (!penPModule) throw "Pen+ module not found";
-      point1 = JSON.parse(point1);
-      point2 = JSON.parse(point2);
-      point3 = JSON.parse(point3);
+      point1 = this.parse(point1);
+      point2 = this.parse(point2);
+      point3 = this.parse(point3);
       //Check if points are valid
       if (!(point1.length >= 3 && point2.length >= 3 && point3.length >= 3))
         throw "All points are not Vector3s!";
@@ -967,9 +1043,9 @@
     }
     draw3dTexTri({ point1, point2, point3, texture }, util) {
       if (!penPModule) throw "Pen+ module not found";
-      point1 = JSON.parse(point1);
-      point2 = JSON.parse(point2);
-      point3 = JSON.parse(point3);
+      point1 = this.parse(point1);
+      point2 = this.parse(point2);
+      point3 = this.parse(point3);
       //Check if we have all needed points
       if (!(point1.length >= 3 && point2.length >= 3 && point3.length >= 3))
         throw "All points are not Vector3s!";
@@ -1091,54 +1167,87 @@
       if (!penPModule) throw "Pen+ module not found";
       return penPModule.costumeMenuFunction();
     }
+    parse(str) {
+      if (typeof str === "string") {
+        try {
+          return JSON.parse(str);
+        } catch (e) {
+          return null;
+        }
+      }
+      if (typeof str === "object") {
+        if (optimized.acceptParsed !== 0) {
+          wasObject = true
+          return str;
+        }
+      }
+    }
+    stringify(value) {
+      if ((wasObject || optimized.returnParsed == 1) && optimized.returnParsed !== 0) {
+        return value;
+      }
+      return JSON.stringify(value);
+    }
     newV3({ x, y, z }) {
-      return JSON.stringify([
+      wasObject = false;
+      return this.stringify([
         Scratch.Cast.toNumber(x) || 0,
         Scratch.Cast.toNumber(y) || 0,
         Scratch.Cast.toNumber(z) || 0,
       ]);
     }
     newV3fromValue({ value }) {
+      wasObject = false;
       if (typeof value == "number") {
-        return JSON.stringify([value, value, value]);
+        return this.stringify([value, value, value]);
       }
-      return JSON.stringify([0, 0, 0]);
+      return this.stringify([0, 0, 0]);
     }
     getAxisOfV3({ axis, vector }) {
       axis = Scratch.Cast.toNumber(axis);
-      vector = JSON.parse(vector);
+      vector = this.parse(vector);
       if (vector) {
         return vector[axis];
       }
       return 0;
     }
     addV3({ a, b }) {
-      a = JSON.parse(a);
-      b = JSON.parse(b);
+      a = this.parse(a);
+      b = this.parse(b);
       if (a && b) {
-        return JSON.stringify([a[0] + b[0], a[1] + b[1], a[2] + b[2]]);
+        return this.stringify([a[0] + b[0], a[1] + b[1], a[2] + b[2]]);
       }
-      return "[0,0,0]";
+      return this.stringify([0, 0, 0]);
     }
     subV3({ a, b }) {
-      a = JSON.parse(a);
-      b = JSON.parse(b);
+      a = this.parse(a);
+      b = this.parse(b);
       if (a && b) {
-        return JSON.stringify([a[0] - b[0], a[1] - b[1], a[2] - b[2]]);
+        return this.stringify([a[0] - b[0], a[1] - b[1], a[2] - b[2]]);
       }
-      return "[0,0,0]";
+      return this.stringify([0, 0, 0]);
     }
     mulV3({ a, b }) {
-      a = JSON.parse(a);
-      b = JSON.parse(b);
-      if (a && b) {
-        return JSON.stringify([a[0] * b[0], a[1] * b[1], a[2] * b[2]]);
+      a = this.parse(a);
+      if (Array.isArray(a) && typeof b == "number") {
+        return this.stringify([a[0] * b, a[1] * b, a[2] * b]);
       }
-      return "[0,0,0]";
+      b = this.parse(b);
+      if (a && b) {
+        return this.stringify([a[0] * b[0], a[1] * b[1], a[2] * b[2]]);
+      }
+      return this.stringify([0, 0, 0]);
+    }
+    mulScalarV3({ a, b }) {
+      a = this.parse(a);
+      if (Array.isArray(a) && typeof b == "number") {
+        return this.stringify([a[0] * b, a[1] * b, a[2] * b]);
+      }
+      return this.stringify([0, 0, 0]);
     }
     divV3({ a, b }) {
-      a = JSON.parse(a);
-      b = JSON.parse(b);
+      a = this.parse(a);
+      b = this.parse(b);
       if (a && b) {
         const c = [0, 0, 0];
         c[0] = a[0] / b[0];
@@ -1156,29 +1265,29 @@
           c[2] = 0;
         }
 
-        return JSON.stringify(c);
+        return this.stringify(c);
       }
-      return "[0,0,0]";
+      return this.stringify([0, 0, 0]);
     }
     dotProductOfV3({ a, b }) {
-      a = JSON.parse(a);
-      b = JSON.parse(b);
+      a = this.parse(a);
+      b = this.parse(b);
       if (a.length == 3 && b.length == 3) {
         return a[0] * b[0] + a[1] * b[1] + a[2] * b[2];
       }
       return 0;
     }
     dotProductOfV2({ a, b }) {
-      a = JSON.parse(a);
-      b = JSON.parse(b);
+      a = this.parse(a);
+      b = this.parse(b);
       if (a.length == 2 && b.length == 2) {
         return a[0] * b[0] + a[1] * b[1];
       }
       return 0;
     }
     crossProductOfV3({ a, b }) {
-      a = JSON.parse(a);
-      b = JSON.parse(b);
+      a = this.parse(a);
+      b = this.parse(b);
 
       if (a && b) {
         const c = [0, 0, 0];
@@ -1187,23 +1296,23 @@
         c[1] = a[2] * b[0] - a[0] * b[2];
         c[2] = a[0] * b[1] - a[1] * b[0];
 
-        return JSON.stringify(c);
+        return this.stringify(c);
       }
-      return "[0,0,0]";
+      return this.stringify([0, 0, 0]);
     }
     normalizeV3({ a }) {
-      a = JSON.parse(a);
+      a = this.parse(a);
       if (a) {
         const mag = Math.sqrt(
           Math.pow(a[0], 2) + Math.pow(a[1], 2) + Math.pow(a[2], 2)
         );
-        if (mag === 0) return "[0,0,0]"; // avoid division by zero
-        return JSON.stringify([a[0] * (1 / mag), a[1] * (1 / mag), a[2] * (1 / mag)]);
+        if (mag === 0) return this.stringify([0, 0, 0]); // avoid division by zero
+        return this.stringify([a[0] * (1 / mag), a[1] * (1 / mag), a[2] * (1 / mag)]);
       }
-      return "[0,0,0]";
+      return this.stringify([0, 0, 0]);
     }
     magnitudeV3({ a }) {
-      a = JSON.parse(a);
+      a = this.parse(a);
       if (a) {
         return Math.sqrt(
           Math.pow(a[0], 2) + Math.pow(a[1], 2) + Math.pow(a[2], 2)
@@ -1212,15 +1321,15 @@
       return 0;
     }
     magnitudeSqV3({ a }) {
-      a = JSON.parse(a);
+      a = this.parse(a);
       if (a) {
         return Math.pow(a[0], 2) + Math.pow(a[1], 2) + Math.pow(a[2], 2);
       }
       return 0;
     }
     distanceV3({ a, b }) {
-      a = JSON.parse(a);
-      b = JSON.parse(b);
+      a = this.parse(a);
+      b = this.parse(b);
       if (a && b) {
         return Math.sqrt(
           Math.pow(a[0] - b[0], 2) +
@@ -1231,34 +1340,33 @@
       return 0;
     }
     angleV3({ a, b }) {
-      a = JSON.parse(a);
-      b = JSON.parse(b);
+      a = this.parse(a);
+      b = this.parse(b);
       const dot = a[0] * b[0] + a[1] * b[1] + a[2] * b[2];
-      const magA2 = a[0]**2 + a[1]**2 + a[2]**2;
-      const magB2 = b[0]**2 + b[1]**2 + b[2]**2;
+      const magA2 = a[0] * a[0] + a[1] * a[1] + a[2] * a[2];
+      const magB2 = b[0] * b[0] + b[1] * b[1] + b[2] * b[2];
       const m = Math.sqrt(magA2 * magB2);
-      
+
       const ratio = dot / m;
-      const clamped = Math.max(-1, Math.min(1, ratio)); // clamp to valid range for acos
-      const result = Math.trunc((Math.acos(clamped) * r2d) * 1000) / 1000;
-      return isNaN(result) ? 0 : result;
+      const result = Math.acos(ratio) * r2d;
+      return isNaN(result) ? 90 : result;
     }
     projectV3({ project, len, dir }) {
-      len = JSON.parse(len);
-      dir = JSON.parse(dir);
+      len = this.parse(len);
+      dir = this.parse(dir);
       const dot = len[0] * dir[0] + len[1] * dir[1] + len[2] * dir[2];
-      const magSq = dir[0]**2 + dir[1]**2 + dir[2]**2;
+      const magSq = dir[0] ** 2 + dir[1] ** 2 + dir[2] ** 2;
       const mul = dot / magSq;
       const returnValue = [dir[0] * mul, dir[1] * mul, dir[2] * mul];
       if (project === "perp") {
-        return [len[0] - returnValue[0], len[1] - returnValue[1], len[2] - returnValue[2]];
+        return this.stringify([len[0] - returnValue[0], len[1] - returnValue[1], len[2] - returnValue[2]]);
       } else {
-        return returnValue;
+        return this.stringify(returnValue);
       }
     }
     reflectionV3({ source, normal, axis }) {
-      source = JSON.parse(source);
-      normal = JSON.parse(normal);
+      source = this.parse(source);
+      normal = this.parse(normal);
 
       const dot = source[0] * normal[0] + source[1] * normal[1] + source[2] * normal[2];
       const scale = dot * 2;
@@ -1269,19 +1377,19 @@
         normal[2] * scale
       ];
 
-      const result = JSON.stringify([
+      const result = this.stringify([
         source[0] - scaledNormal[0],
         source[1] - scaledNormal[1],
         source[2] - scaledNormal[2]
       ]);
-      return axis === 'axis' ? result : this.reflectAcrossV3({ source: JSON.stringify(source), normal: JSON.stringify(normal) });
+      return axis === 'axis' ? result : this.reflectAcrossV3({ source: this.stringify(source), normal: this.stringify(normal) });
     }
     reflectAcrossV3({ source, normal }) {
-      source = JSON.parse(source);
-      normal = JSON.parse(normal);
+      source = this.parse(source);
+      normal = this.parse(normal);
 
       const dot = source[0] * normal[0] + source[1] * normal[1] + source[2] * normal[2];
-      const magSq = normal[0]**2 + normal[1]**2 + normal[2]**2;
+      const magSq = normal[0] ** 2 + normal[1] ** 2 + normal[2] ** 2;
       const scale = dot / magSq;
 
       const projection = [
@@ -1296,15 +1404,15 @@
         projection[2] * 2
       ];
 
-      return JSON.stringify([
+      return this.stringify([
         doubleProjection[0] - source[0],
         doubleProjection[1] - source[1],
         doubleProjection[2] - source[2]
       ]);
     }
     rotateAroundPointV3({ a, b, yaw, pitch, roll }) {
-      a = JSON.parse(a);
-      b = JSON.parse(b);
+      a = this.parse(a);
+      b = this.parse(b);
 
       if (a && b) {
         a[0] -= b[0];
@@ -1339,12 +1447,12 @@
         a[1] += b[1];
         a[2] += b[2];
 
-        return JSON.stringify(a);
+        return this.stringify(a);
       }
-      return "[0,0,0]";
+      return this.stringify([0, 0, 0]);
     }
     rotateAroundCenterV3({ a, yaw, pitch, roll }) {
-      a = JSON.parse(a);
+      a = this.parse(a);
 
       if (a) {
         const sinAndCos = [
@@ -1371,32 +1479,32 @@
         a[0] = a[1] * sinAndCos[4] + a[0] * sinAndCos[5];
         a[1] = a[1] * sinAndCos[5] - temp * sinAndCos[4];
 
-        return JSON.stringify(a);
+        return this.stringify(a);
       }
-      return "[0,0,0]";
+      return this.stringify([0, 0, 0]);
     }
     newV2({ x, y }) {
-      return JSON.stringify([
+      return this.stringify([
         Scratch.Cast.toNumber(x) || 0,
         Scratch.Cast.toNumber(y) || 0,
       ]);
     }
     newV2fromValue({ value }) {
       if (typeof value == "number") {
-        return JSON.stringify([value, value]);
+        return this.stringify([value, value]);
       }
-      return JSON.stringify([0, 0]);
+      return this.stringify([0, 0]);
     }
     getAxisOfV2({ axis, vector }) {
       axis = Scratch.Cast.toNumber(axis);
-      vector = JSON.parse(vector);
+      vector = this.parse(vector);
       if (vector) {
         return vector[axis];
       }
       return 0;
     }
     project2DFromCam({ a }) {
-      a = JSON.parse(a);
+      a = this.parse(a);
 
       if (a) {
         a[0] -= camera.position[0];
@@ -1420,12 +1528,12 @@
 
         let project = fov / a[2];
 
-        return JSON.stringify([a[0] * project, a[1] * project]);
+        return this.stringify([a[0] * project, a[1] * project]);
       }
-      return "[0,0]";
+      return this.stringify([0, 0]);
     }
     project2DBehindCam({ a }) {
-      a = JSON.parse(a);
+      a = this.parse(a);
 
       if (a) {
         a[0] -= camera.position[0];
@@ -1456,8 +1564,8 @@
       return false;
     }
     project2DFromPos({ a, b, yaw, pitch, roll }) {
-      a = JSON.parse(a);
-      b = JSON.parse(b);
+      a = this.parse(a);
+      b = this.parse(b);
 
       if (a && b) {
         a[0] -= b[0];
@@ -1490,37 +1598,40 @@
 
         let project = fov / a[2];
 
-        return JSON.stringify([a[0] * project, a[1] * project]);
+        return this.stringify([a[0] * project, a[1] * project]);
       }
-      return "[0,0]";
+      return this.stringify([0, 0]);
     }
     addV2({ a, b }) {
-      a = JSON.parse(a);
-      b = JSON.parse(b);
+      a = this.parse(a);
+      b = this.parse(b);
       if (a && b) {
-        return JSON.stringify([a[0] + b[0], a[1] + b[1]]);
+        return this.stringify([a[0] + b[0], a[1] + b[1]]);
       }
-      return "[0,0]";
+      return this.stringify([0, 0]);
     }
     subV2({ a, b }) {
-      a = JSON.parse(a);
-      b = JSON.parse(b);
+      a = this.parse(a);
+      b = this.parse(b);
       if (a && b) {
-        return JSON.stringify([a[0] - b[0], a[1] - b[1], a[2] - b[2]]);
+        return this.stringify([a[0] - b[0], a[1] - b[1], a[2] - b[2]]);
       }
-      return "[0,0]";
+      return this.stringify([0, 0]);
     }
     mulV2({ a, b }) {
-      a = JSON.parse(a);
-      b = JSON.parse(b);
-      if (a && b) {
-        return JSON.stringify([a[0] * b[0], a[1] * b[1]]);
+      a = this.parse(a);
+      if (Array.isArray(a) && typeof b == "number") {
+        return this.stringify([a[0] * b, a[1] * b]);
       }
-      return "[0,0]";
+      b = this.parse(b);
+      if (a && b) {
+        return this.stringify([a[0] * b[0], a[1] * b[1]]);
+      }
+      return this.stringify([0, 0]);
     }
     divV2({ a, b }) {
-      a = JSON.parse(a);
-      b = JSON.parse(b);
+      a = this.parse(a);
+      b = this.parse(b);
       if (a && b) {
         const c = [0, 0];
         c[0] = a[0] / b[0];
@@ -1533,13 +1644,13 @@
           c[1] = 0;
         }
 
-        return JSON.stringify(c);
+        return this.stringify(c);
       }
-      return "[0,0]";
+      return this.stringify([0, 0]);
     }
     crossProductOfV2({ a, b }) {
-      a = JSON.parse(a);
-      b = JSON.parse(b);
+      a = this.parse(a);
+      b = this.parse(b);
 
       if (a && b) {
         const c = [0, 0];
@@ -1547,72 +1658,72 @@
         c[0] = a[1] - b[1];
         c[1] = b[0] - a[0];
 
-        return JSON.stringify(c);
+        return this.stringify(c);
       }
       return 0;
     }
     magnitudeV2({ a }) {
-      a = JSON.parse(a);
+      a = this.parse(a);
       if (a) {
         return Math.sqrt(Math.pow(a[0], 2) + Math.pow(a[1], 2));
       }
       return 0;
     }
     magnitudeSqV2({ a }) {
-      a = JSON.parse(a);
+      a = this.parse(a);
       if (a) {
         return Math.pow(a[0], 2) + Math.pow(a[1], 2);
       }
       return 0;
     }
     normalizeV2({ a }) {
-      a = JSON.parse(a);
+      a = this.parse(a);
       if (a) {
         const mag = Math.sqrt(
           Math.pow(a[0], 2) + Math.pow(a[1], 2)
         );
-        if (mag === 0) return "[0,0]"; // avoid division by zero
-        return JSON.stringify([a[0] * (1 / mag), a[1] * (1 / mag)]);
+        if (mag === 0) return this.stringify([0, 0]); // avoid division by zero
+        return this.stringify([a[0] * (1 / mag), a[1] * (1 / mag)]);
       }
-      return "[0,0]";
+      return this.stringify([0, 0]);
     }
     distanceV2({ a, b }) {
-      a = JSON.parse(a);
-      b = JSON.parse(b);
+      a = this.parse(a);
+      b = this.parse(b);
       if (a && b) {
         return Math.sqrt(Math.pow(a[0] - b[0], 2) + Math.pow(a[1] - b[1], 2));
       }
       return 0;
     }
     angleV2({ a, b }) {
-      a = JSON.parse(a);
-      b = JSON.parse(b);
+      a = this.parse(a);
+      b = this.parse(b);
       const dot = a[0] * b[0] + a[1] * b[1];
-      const magA2 = a[0]**2 + a[1]**2;
-      const magB2 = b[0]**2 + b[1]**2;
+      const magA2 = a[0] ** 2 + a[1] ** 2;
+      const magB2 = b[0] ** 2 + b[1] ** 2;
       const m = Math.sqrt(magA2 * magB2);
-      
+
       const ratio = dot / m;
       const clamped = Math.max(-1, Math.min(1, ratio)); // clamp to valid range for acos
       const result = Math.trunc((Math.acos(clamped) * r2d) * 1000) / 1000;
-      return isNaN(result) ? 0 : result;
+      return isNaN(result) ? 90 : result;
     }
     projectV2({ project, len, dir }) {
-      len = JSON.parse(len);
-      dir = JSON.parse(dir);
+      len = this.parse(len);
+      dir = this.parse(dir);
       const dot = len[0] * dir[0] + len[1] * dir[1];
-      const magSq = dir[0]**2 + dir[1]**2;
+      const magSq = dir[0] ** 2 + dir[1] ** 2;
       const mul = dot / magSq;
       const returnValue = [dir[0] * mul, dir[1] * mul];
       if (project === "perp") {
-        return [len[0] - returnValue[0], len[1] - returnValue[1]];
+        return this.stringify([len[0] - returnValue[0], len[1] - returnValue[1]]);
       } else {
-        return returnValue;
+        return this.stringify(returnValue);
       }
     }
     reflectionV2({ source, normal, axis }) {
-      source = JSON.parse(source);
-      normal = JSON.parse(normal);
+      source = this.parse(source);
+      normal = this.parse(normal);
 
       const dot = source[0] * normal[0] + source[1] * normal[1];
       const scale = dot * 2;
@@ -1622,19 +1733,19 @@
         normal[1] * scale
       ];
 
-      const result = JSON.stringify([
+      const result = this.stringify([
         source[0] - scaledNormal[0],
         source[1] - scaledNormal[1]
       ]);
-      
-      return axis === 'axis' ? result : this.reflectAcrossV2({ source: JSON.stringify(source), normal: JSON.stringify(normal) });
+
+      return axis === 'axis' ? result : this.reflectAcrossV2({ source: this.stringify(source), normal: this.stringify(normal) });
     }
     reflectAcrossV2({ source, normal }) {
-      source = JSON.parse(source);
-      normal = JSON.parse(normal);
+      source = this.parse(source);
+      normal = this.parse(normal);
 
       const dot = source[0] * normal[0] + source[1] * normal[1];
-      const magSq = normal[0]**2 + normal[1]**2;
+      const magSq = normal[0] ** 2 + normal[1] ** 2;
       const scale = dot / magSq;
 
       const projection = [
@@ -1647,14 +1758,14 @@
         projection[1] * 2
       ];
 
-      return JSON.stringify([
+      return this.stringify([
         doubleProjection[0] - source[0],
         doubleProjection[1] - source[1]
       ]);
     }
     rotateAroundPointV2({ a, b, yaw }) {
-      a = JSON.parse(a);
-      b = JSON.parse(b);
+      a = this.parse(a);
+      b = this.parse(b);
 
       if (a && b) {
         a[0] -= b[0];
@@ -1670,12 +1781,12 @@
         a[0] += b[0];
         a[1] += b[1];
 
-        return JSON.stringify(a);
+        return this.stringify(a);
       }
-      return "[0,0]";
+      return this.stringify([0, 0]);
     }
     rotateAroundCenterV2({ a, yaw }) {
-      a = JSON.parse(a);
+      a = this.parse(a);
 
       if (a) {
         const sinAndCos = [Math.sin(yaw * d2r), Math.cos(yaw * d2r)];
@@ -1685,19 +1796,19 @@
         a[0] = a[1] * sinAndCos[0] + a[0] * sinAndCos[1];
         a[1] = a[1] * sinAndCos[1] - temp * sinAndCos[0];
 
-        return JSON.stringify(a);
+        return this.stringify(a);
       }
-      return "[0,0]";
+      return this.stringify([0, 0]);
     }
     cam3DsetPosition({ a }) {
-      a = JSON.parse(a);
+      a = this.parse(a);
 
       if (a) {
         camera.position = a;
       }
     }
     cam3DchangePosition({ a }) {
-      a = JSON.parse(a);
+      a = this.parse(a);
 
       if (a[0] != undefined && a[1] != undefined && a[2] != undefined) {
         camera.position[0] += a[0];
@@ -1714,10 +1825,10 @@
       }
     }
     cam3DgetPosition() {
-      return JSON.stringify(camera.position);
+      return this.stringify(camera.position);
     }
     cam3DsetRotation({ a }) {
-      a = JSON.parse(a);
+      a = this.parse(a);
 
       if (a) {
         camera.rotation = a;
@@ -1733,7 +1844,7 @@
       }
     }
     cam3DchangeRotation({ a }) {
-      a = JSON.parse(a);
+      a = this.parse(a);
 
       if (a[0] != undefined && a[1] != undefined && a[2] != undefined) {
         camera.rotation[0] += a[0];
@@ -1766,7 +1877,7 @@
       }
     }
     cam3DgetRotation() {
-      return JSON.stringify(camera.rotation);
+      return this.stringify(camera.rotation);
     }
     setFov({ dist }) {
       fov = dist;
@@ -1786,7 +1897,7 @@
       const target = util.target;
       this.checkFor3dPositionData(target.id);
 
-      a = JSON.parse(a);
+      a = this.parse(a);
       if (a) {
         spriteData[target.id].position[0] = a[0];
         spriteData[target.id].position[1] = a[1];
@@ -1797,7 +1908,7 @@
       const target = util.target;
       this.checkFor3dPositionData(target.id);
 
-      a = JSON.parse(a);
+      a = this.parse(a);
 
       if (a) {
         //String literal for the funnies!
@@ -1810,7 +1921,7 @@
       const target = util.target;
       this.checkFor3dPositionData(target.id);
 
-      a = JSON.parse(a);
+      a = this.parse(a);
 
       if (a) {
         spriteData[target.id].position[0] += a[0];
@@ -1837,7 +1948,7 @@
     spr3DgetPosition(args, util) {
       const target = util.target;
       this.checkFor3dPositionData(target.id);
-      return JSON.stringify(spriteData[target.id].position);
+      return this.stringify(spriteData[target.id].position);
     }
     spr3DsetSize({ a }, util) {
       const target = util.target;
@@ -1899,6 +2010,9 @@
           myData.position[1] * project
         );
       }
+    }
+    setOpMode({ mode, enable }) {
+      optimized[mode] = enable;
     }
   }
   Scratch.extensions.register(new extension());

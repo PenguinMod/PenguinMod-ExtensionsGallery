@@ -17,61 +17,67 @@
     // function parseStringToComplex(str) {
         
     // }
-  Scratch.translate.setup({
-    es: {
-        "Complex Numbers": "Números Complejos",
-        "Complex Number Type for do complex analysis functions, perfect for rotation where vectors are slow": 
-        "El tipo de dato de Números complejos para realizar funciones de analisis complejo, perfecto para rotaciones donde los vectores son lentos",
-        "complex number from [REAL]": "número complejo desde [REAL]",
-        "complex number from [IMAGINARY]i": "número complejo desde [IMAGINARY]i",
-        "complex number [REAL] + [IMAGINARY]i": "número complejo [REAL] + [IMAGINARY]i",
-        "complex number modulus: [R] phase: [PHASE]": "número complejo de módulo: [R] fase: [PHASE]",
-        "complex number modulus: 1 phase: [PHASE]": "número complejo de módulo: 1 fase [PHASE]",
-        "real part [A]": "parte real [A]",
-        "imaginary part [A]": "parte imaginaria [A]",
-        "absolute value [A]": "valor absoluto [A]",
-        "phase [A]": "fase [A]",
-        "conjugate [A]": "conjugado [A]",
-        "[A] x [B] using [FORM]": "[A] x [B] usando [FORM]",
-        "[A] / [B] using [FORM]": "[A] / [B] usando [FORM]",
-        "[A] ^ [B] using [FORM]": "[A] ^ [B] usando [FORM]",
-        "multiply [A] with its conjugate":"multiplicar [A] con su conjugado",
-        "reciprocal [A]": "recíproca [A]",
-        "parse [A] to a complex number": "convertir [A] a un número complejo",
-        // "complex number in polar form modulus: [R] phase: [PHASE]": "número complejo en forma polar modulo: [R] fase [PHASE]",
-        "[COMPLEX] to [FORM] as text": "[COMPLEX] a [FORM] como texto",
-        "use [FORM] for [COMPLEX]": "usar [FORM] para [COMPLEX]",
-        // "multiply [A] with [B] using the polar form": "multiplicar [A] con [B] usando la forma polar",
-        // "divide [A] with [B] using the polar form": "dividir [A] con [B] usando la forma polar",
-        "[A] ^ [B] using the polar form": "[A] ^ [B] usando la forma polar",
-        "square root of [A]": "raíz cuadrada de [A]",
-        "[B]th root of [A] using the polar form": "[B]ésima raíz de [A] usando la forma polar",
-        "solutions of equation [A]x^2 + [B]x + [C] = 0": "soluciones de la ecuación [A]x^2 + [B]x + [C] = 0",
-        "[SOLUTION] solution of equation [A]x^2 + [B]x + [C] = 0": "[SOLUTION] solución de la ecuación [A]x^2 + [B]x + [C] = 0",
-        "positive": "positiva",
-        "negative": "negativa",
-        "first": "primera",
-        "second": "segunda",
-        "polar form": "forma polar",
-        "rectangular form": "forma rectangular",
-        // "roots of equation x^[A] - [B] = 0": "raices de la ecuación x^[A] - [B] = 0",
-        "roots of equation [C]x^[A] - [B] = 0": "raices de la ecuación [C]x^[A] - [B] = 0", 
-        // "[D]th root of equation x^[A] - [B] = 0": "[D]ava raíz de la ecuación x^[A] - [B] = 0",
-        "[D]th root of equation [C]x^[A] - [B] = 0": "[D]ava raíz de la ecuación [C]x^[A] - [B] = 0",
-        'position in [FORM]': "posición en [FORM]",
-        'go to [COMPLEX] using [FORM]': "ir a [COMPLEX] usando [FORM]",
-        'direction in [FORM]': "dirección en [FORM]",
-        'point in sense of [COMPLEX] using [FORM]': "apuntar en sentido de [COMPLEX] usando [FORM]",
-        'stretch in [FORM]': "estiramiento en [FORM]",
-        'set stretch to [COMPLEX] using [FORM]': "establecer estiramiento en [COMPLEX] usando [FORM]",
-        'mouse position in [FORM]': "posición del ratión en [FORM]",
-        "convert [COMPLEX] to vector": "convertir [COMPLEX] a vector",
-        "convert [VECTOR] to complex number": "convertir [VECTOR] a número complejo",
-        "transform [ANGLE] into Complex Plane Angle": "transformar [ANGLE] en ángulo del plano complejo",
-        "transform [ANGLE] into Scratch Angle": "transformar [ANGLE] en ángulo de Scratch",
-    },
-  });
-    
+    Scratch.translate.setup({
+        es: {
+            "Complex Numbers": "Números Complejos",
+            "Complex Number Type for do complex analysis functions, perfect for rotation where vectors are slow": 
+            "El tipo de dato de Números complejos para realizar funciones de analisis complejo, perfecto para rotaciones donde los vectores son lentos",
+            "complex number from [REAL]": "número complejo desde [REAL]",
+            "complex number from [IMAGINARY]i": "número complejo desde [IMAGINARY]i",
+            "complex number [REAL] + [IMAGINARY]i": "número complejo [REAL] + [IMAGINARY]i",
+            "complex number modulus: [R] phase: [PHASE]": "número complejo de módulo: [R] fase: [PHASE]",
+            "complex number modulus: 1 phase: [PHASE]": "número complejo de módulo: 1 fase [PHASE]",
+            "real part [A]": "parte real [A]",
+            "imaginary part [A]": "parte imaginaria [A]",
+            "absolute value [A]": "valor absoluto [A]",
+            "phase [A]": "fase [A]",
+            "conjugate [A]": "conjugado [A]",
+            "[A] x [B] using [FORM]": "[A] x [B] usando [FORM]",
+            "[A] / [B] using [FORM]": "[A] / [B] usando [FORM]",
+            "[A] ^ [B] using [FORM]": "[A] ^ [B] usando [FORM]",
+            "multiply [A] with its conjugate":"multiplicar [A] con su conjugado",
+            "reciprocal [A]": "recíproca [A]",
+            "parse [A] to a complex number": "convertir [A] a un número complejo",
+            // "complex number in polar form modulus: [R] phase: [PHASE]": "número complejo en forma polar modulo: [R] fase [PHASE]",
+            "[COMPLEX] to [FORM] as text": "[COMPLEX] a [FORM] como texto",
+            "use [FORM] for [COMPLEX]": "usar [FORM] para [COMPLEX]",
+            // "multiply [A] with [B] using the polar form": "multiplicar [A] con [B] usando la forma polar",
+            // "divide [A] with [B] using the polar form": "dividir [A] con [B] usando la forma polar",
+            "[A] ^ [B] using the polar form": "[A] ^ [B] usando la forma polar",
+            "square root of [A]": "raíz cuadrada de [A]",
+            "[B]th root of [A] using the polar form": "[B]ésima raíz de [A] usando la forma polar",
+            "solutions of equation [A]x^2 + [B]x + [C] = 0": "soluciones de la ecuación [A]x^2 + [B]x + [C] = 0",
+            "[SOLUTION] solution of equation [A]x^2 + [B]x + [C] = 0": "[SOLUTION] solución de la ecuación [A]x^2 + [B]x + [C] = 0",
+            "positive": "positiva",
+            "negative": "negativa",
+            "first": "primera",
+            "second": "segunda",
+            "polar form": "forma polar",
+            "rectangular form": "forma rectangular",
+            // "roots of equation x^[A] - [B] = 0": "raices de la ecuación x^[A] - [B] = 0",
+            "roots of equation [C]x^[A] - [B] = 0": "raices de la ecuación [C]x^[A] - [B] = 0", 
+            // "[D]th root of equation x^[A] - [B] = 0": "[D]ava raíz de la ecuación x^[A] - [B] = 0",
+            "[D]th root of equation [C]x^[A] - [B] = 0": "[D]ava raíz de la ecuación [C]x^[A] - [B] = 0",
+            'position in [FORM]': "posición en [FORM]",
+            'go to [COMPLEX] using [FORM]': "ir a [COMPLEX] usando [FORM]",
+            'direction in [FORM]': "dirección en [FORM]",
+            'point in sense of [COMPLEX] using [FORM]': "apuntar en sentido de [COMPLEX] usando [FORM]",
+            'stretch in [FORM]': "estiramiento en [FORM]",
+            'set stretch to [COMPLEX] using [FORM]': "establecer estiramiento en [COMPLEX] usando [FORM]",
+            'mouse position in [FORM]': "posición del ratión en [FORM]",
+            "convert [COMPLEX] to vector": "convertir [COMPLEX] a vector",
+            "convert [VECTOR] to complex number": "convertir [VECTOR] a número complejo",
+            "transform [ANGLE] into Complex Plane Angle": "transformar [ANGLE] en ángulo del plano complejo",
+            "transform [ANGLE] into Scratch Angle": "transformar [ANGLE] en ángulo de Scratch",
+        },
+    });
+        
+    const integrationsEnabled = {
+        jwVector: false,
+        jwArray: false,
+        dogeiscutSet: false,
+    }
+
     function radianToDegrees(radian) {
         return radian * (180 / Math.PI);
     }
@@ -131,6 +137,19 @@
         ((a > 180) ? a - 360 : a);
 
         return b;
+    }
+
+    function constrainAnglePositive(angle) {
+        const a = angle % 360
+        const s = Math.sign(a);
+
+        return (s === -1) ? a + 360 : a;
+    }
+
+    function constrainAngleClampedPositive(angle) {
+        const s = Math.sign(angle);
+
+        return (s === -1) ? angle + 360 : angle;
     }
 
     function clampAngleRadians(angle) {
@@ -269,12 +288,12 @@
          */
         constructor(real = 0,imaginary = 0, modulus, phase) {
             // console.log(modulus, angle)
-            if(!(typeof modulus == "undefined" || typeof phase == "undefined")) {
+            if(Boolean(modulus) || Boolean(phase)) {
                 this._fromPolar = true;
                 this._modulus = modulus;
                 this._phase = clampAngleDegrees(phase);
                 
-                switch (this._phase) {
+                switch (constrainAngleClampedPositive(this._phase)) {
                     case 360:
                     case 0:
                         this.real = modulus;
@@ -298,8 +317,8 @@
 
                     default:
                         
-                        this.real = (isNaN(real) | real == 0) ? modulus * Degrees.cos(phase) : real;
-                        this.imaginary = (isNaN(imaginary) | imaginary == 0) ? modulus * Degrees.sin(phase) : imaginary;
+                        this.real = (isNaN(real) || real == 0) ? modulus * Degrees.cos(phase) : real;
+                        this.imaginary = (isNaN(imaginary) || imaginary == 0) ? modulus * Degrees.sin(phase) : imaginary;
                         break;
                 }
             } else {
@@ -371,7 +390,11 @@
          * @returns {string} 
          */
         jwArrayHandler() {
-            return 'Complex';
+            if(this._fromPolar) {
+                return `Complex<${this.real},${this.imaginary},${this.modulus},${this.phase}>`;
+            } else {
+                return `Complex<${this.real},${this.imaginary}>`;
+            }
         }
         
         /**
@@ -409,7 +432,7 @@
         }
 
         /** 
-         * Returns the argument or phase of a complex number in radians
+         * Returns the argument or phase of a complex number in degrees
          * @returns {number} 
          */
         get phase() {
@@ -460,7 +483,7 @@
          *
          * @static
          * @param {number} modulus The absolute value, or modulus of the original number
-         * @param {number} phase The angle, in degrees
+         * @param {number} phase The angle, in degrees, as a complex plane angle
          * @returns {ComplexNumberType} 
          */
         static fromPolar(modulus, phase) {
@@ -512,6 +535,19 @@
             return new ComplexNumber.Type(...z)
         }
     }
+
+    // Scratch.vm.runtime.on("EXTENSION_ADDED", () => {
+    //     if(Scratch.vm.runtime.ext_jwArray) {
+    //         integrationsEnabled.jwArray = true;
+    //     }
+    //     if(Scratch.vm.runtime.ext_jwVector) {
+    //         integrationsEnabled.jwVector = true;
+    //     }
+    //     if(Scratch.vm.runtime.ext_dogeiscutSet) {
+    //         integrationsEnabled.dogeiscutSet = true;
+    //     }
+    //     Scratch.vm.runtime.extensionManager.refreshBlocks();
+    // });
 
     class ComplexNumberExtension {
         constructor() {
@@ -676,6 +712,38 @@
                         arguments: {
                             A: ComplexNumber.Argument,
                             B: ComplexNumber.Argument
+                        },
+                        ...ComplexNumber.Block
+                    },
+                    {
+                        opcode: "multiplyScalar",
+                        text: this.formatMessage("[A] x [B] using [FORM]"),
+                        arguments: {
+                            A: ComplexNumber.Argument,
+                            B: {
+                                type: Scratch.ArgumentType.NUMBER,
+                                defaultValue: 2
+                            },
+                            FORM: {
+                                type: Scratch.ArgumentType.STRING,
+                                menu: 'FORMS'
+                            }
+                        },
+                        ...ComplexNumber.Block
+                    },
+                    {
+                        opcode: "divideScalar",
+                        text: this.formatMessage("[A] / [B] using [FORM]"),
+                        arguments: {
+                            A: ComplexNumber.Argument,
+                            B: {
+                                type: Scratch.ArgumentType.NUMBER,
+                                defaultValue: 2
+                            },
+                            FORM: {
+                                type: Scratch.ArgumentType.STRING,
+                                menu: 'FORMS'
+                            }
                         },
                         ...ComplexNumber.Block
                     },
@@ -931,11 +999,11 @@
                         arguments: {
                             A: {
                                 type: Scratch.ArgumentType.NUMBER,
-                                defaultValue: 1
+                                defaultValue: 4
                             },
                             B: {
                                 type: Scratch.ArgumentType.NUMBER,
-                                defaultValue: 0
+                                defaultValue: 1
                             },
                             C: {
                                 type: Scratch.ArgumentType.NUMBER,
@@ -953,11 +1021,11 @@
                         arguments: {
                             A: {
                                 type: Scratch.ArgumentType.NUMBER,
-                                defaultValue: 1
+                                defaultValue: 4
                             },
                             B: {
                                 type: Scratch.ArgumentType.NUMBER,
-                                defaultValue: 0
+                                defaultValue: 1
                             },
                             C: {
                                 type: Scratch.ArgumentType.NUMBER,
@@ -1015,7 +1083,7 @@
                     },
                     {
                         opcode: 'pointTowards',
-                        text: this.formatMessage('point towards [COMPLEX] using [FORM]'),
+                        text: this.formatMessage('point in sense of [COMPLEX] using [FORM]'),
                         arguments: {
                             COMPLEX: ComplexNumber.Argument,
                             FORM: {
@@ -1109,6 +1177,7 @@
                         arguments: {
                             COMPLEX: ComplexNumber.Argument,
                         },
+                        color1: "#6babff",
                         blockType: Scratch.BlockType.REPORTER,
                         blockShape: Scratch.BlockShape.LEAF,
                         disableMonitor: true,
@@ -1129,33 +1198,107 @@
                         ...ComplexNumber.Block
                     },
 
-
-                    // ...(Scratch.vm.runtime.ext_jwArray ? ["---"] : []),
-                    // {
-                    //     opcode: "roots3",
-                    //     text: this.formatMessage("roots of equation [C]x^[A] - [B] = 0"),
-                    //     arguments: {
-                    //         A: {
-                    //             type: Scratch.ArgumentType.NUMBER,
-                    //             defaultValue: 1
-                    //         },
-                    //         B: {
-                    //             type: Scratch.ArgumentType.NUMBER,
-                    //             defaultValue: 0
-                    //         },
-                    //         C: {
-                    //             type: Scratch.ArgumentType.NUMBER,
-                    //             defaultValue: 1
-                    //         },
-                    //     },
+                    ...(Scratch.vm.runtime.ext_jwArray ? ["---"] : []),
+                    {
+                        opcode: "quadraticEquationJwArray",
+                        text: this.formatMessage("solutions of equation [A]x^2 + [B]x + [C] = 0"),
+                        arguments: {
+                            A: {
+                                type: Scratch.ArgumentType.NUMBER,
+                                defaultValue: 1
+                            },
+                            B: {
+                                type: Scratch.ArgumentType.NUMBER,
+                                defaultValue: 0
+                            },
+                            C: {
+                                type: Scratch.ArgumentType.NUMBER,
+                                defaultValue: 1
+                            },
+                        },
                         
-                    //     blockType: Scratch.BlockType.REPORTER,
-                    //     blockShape: Scratch.BlockShape.SQUARE,
-                    //     disableMonitor: true,
-                    //     hideFromPalette: !Scratch.vm.runtime.ext_jwArray,
-                    //     ...(Scratch.vm.jwArray ? Scratch.vm.jwArray.Block : {})
-                    // },
+                        color1: "#ff513d",
+                        blockType: Scratch.BlockType.REPORTER,
+                        blockShape: Scratch.BlockShape.SQUARE,
+                        disableMonitor: true,
+                        hideFromPalette: !Scratch.vm.runtime.ext_jwArray,
+                        ...(Scratch.vm.jwArray ? Scratch.vm.jwArray.Block : {})
+                    },
+                    {
+                        opcode: "rootsJwArray",
+                        text: this.formatMessage("roots of equation [C]x^[A] - [B] = 0"),
+                        arguments: {
+                            A: {
+                                type: Scratch.ArgumentType.NUMBER,
+                                defaultValue: 4
+                            },
+                            B: {
+                                type: Scratch.ArgumentType.NUMBER,
+                                defaultValue: 1
+                            },
+                            C: {
+                                type: Scratch.ArgumentType.NUMBER,
+                                defaultValue: 1
+                            },
+                        },
+                        color1: "#ff513d",
+                        blockType: Scratch.BlockType.REPORTER,
+                        blockShape: Scratch.BlockShape.SQUARE,
+                        disableMonitor: true,
+                        hideFromPalette: !Scratch.vm.runtime.ext_jwArray,
+                        ...(Scratch.vm.jwArray ? Scratch.vm.jwArray.Block : {})
+                    },
 
+                    ...(Scratch.vm.runtime.ext_dogeiscutSet ? ["---"] : []),
+                    {
+                        opcode: "quadraticEquationDogeiscutSet",
+                        text: this.formatMessage("solutions of equation [A]x^2 + [B]x + [C] = 0"),
+                        arguments: {
+                            A: {
+                                type: Scratch.ArgumentType.NUMBER,
+                                defaultValue: 1
+                            },
+                            B: {
+                                type: Scratch.ArgumentType.NUMBER,
+                                defaultValue: 0
+                            },
+                            C: {
+                                type: Scratch.ArgumentType.NUMBER,
+                                defaultValue: 1
+                            },
+                        },
+                        
+                        color1: "#1ABC9C",
+                        blockType: Scratch.BlockType.REPORTER,
+                        blockShape: Scratch.BlockShape.SQUARE,
+                        disableMonitor: true,
+                        hideFromPalette: !Scratch.vm.runtime.ext_dogeiscutSet,
+                        ...(Scratch.vm.dogeiscutSet  ? Scratch.vm.dogeiscutSet.Block : {})
+                    },
+                    {
+                        opcode: "rootsDogeiscutSet",
+                        text: this.formatMessage("roots of equation [C]x^[A] - [B] = 0"),
+                        arguments: {
+                            A: {
+                                type: Scratch.ArgumentType.NUMBER,
+                                defaultValue: 4
+                            },
+                            B: {
+                                type: Scratch.ArgumentType.NUMBER,
+                                defaultValue: 1
+                            },
+                            C: {
+                                type: Scratch.ArgumentType.NUMBER,
+                                defaultValue: 1
+                            },
+                        },
+                        color1: "#1ABC9C",
+                        blockType: Scratch.BlockType.REPORTER,
+                        blockShape: Scratch.BlockShape.SQUARE,
+                        disableMonitor: true,
+                        hideFromPalette: !Scratch.vm.runtime.ext_dogeiscutSet,
+                        ...(Scratch.vm.dogeiscutSet ? Scratch.vm.dogeiscutSet.Block : {})
+                    },
                 ],
                 menus: {
                     SOLUTIONS: {
@@ -1294,6 +1437,58 @@
             
             return new ComplexNumberType(A.real - B.real, A.imaginary  - B.imaginary);
         } 
+
+        multiplyScalar(args) {
+            const A = ComplexNumberType.toComplex(args.A);
+            const B = Scratch.Cast.toNumber(args.B);
+            const FORM = Scratch.Cast.toString(args.FORM);
+            
+            switch (FORM) {
+                case "polar":
+                    return new ComplexNumberType(
+                        A.real * B, 
+                        A.imaginary  * B
+                        , A.modulus * B
+                        , A.phase
+                    );
+            
+                case "rectangular":
+                    return new ComplexNumberType(
+                        A.real * B, 
+                        A.imaginary  * B
+                    );
+            }       
+            
+            
+            
+        }
+
+        divideScalar(args) {
+            const A = ComplexNumberType.toComplex(args.A);
+            const B = Scratch.Cast.toNumber(args.B);
+            const FORM = Scratch.Cast.toString(args.FORM);
+
+            if(B == 0) {
+                return NaN;
+            }
+
+            switch (FORM) {
+                case "polar":
+                    return new ComplexNumberType(
+                        A.real /  B , 
+                        A.imaginary /  B
+                        , A.modulus / B
+                        , A.phase
+                    );
+                case "rectangular":
+            
+                    return new ComplexNumberType(
+                        A.real /  B , 
+                        A.imaginary /  B
+                    );
+
+            }
+        }
 
         multiply(args) {
             const A = ComplexNumberType.toComplex(args.A);
@@ -1794,7 +1989,7 @@
             for (let k = 0; k < a; k++) {
                 
                 const phi = (0 + k * 360) / a;
-
+                // console.log(r,phi)
                 roots.push(new ComplexNumberType(
                     0, // r * Degrees.cos(phi),
                     0, // r * Degrees.sin(phi),
@@ -1937,6 +2132,37 @@
             return untransformAngle(angle);
         }
 
+        rootsJwArray(args) {
+            const a = Math.round(Math.abs(Scratch.Cast.toNumber(args.A)));
+            const b = Scratch.Cast.toNumber(args.B);
+            const c = Scratch.Cast.toNumber(args.C);
+
+            return Scratch.vm.jwArray.Type.toArray(this._poly(a,b,c),true);
+        }
+
+        quadraticEquationJwArray(args) {
+            const a = Math.round(Scratch.Cast.toNumber(args.A));
+            const b = Math.round(Scratch.Cast.toNumber(args.B));
+            const c = Math.round(Scratch.Cast.toNumber(args.C));
+
+            return Scratch.vm.jwArray.Type.toArray(this._quadratic(a,b,c),true);
+        }
+
+        rootsDogeiscutSet(args) {
+            const a = Math.round(Math.abs(Scratch.Cast.toNumber(args.A)));
+            const b = Scratch.Cast.toNumber(args.B);
+            const c = Scratch.Cast.toNumber(args.C);
+
+            return Scratch.vm.dogeiscutSet.Type.toSet(this._poly(a,b,c));
+        }
+
+        quadraticEquationDogeiscutSet(args) {
+            const a = Math.round(Scratch.Cast.toNumber(args.A));
+            const b = Math.round(Scratch.Cast.toNumber(args.B));
+            const c = Math.round(Scratch.Cast.toNumber(args.C));
+
+            return Scratch.vm.dogeiscutSet.Type.toSet(this._quadratic(a,b,c));
+        }
 
     }
     Scratch.extensions.register( new ComplexNumberExtension() )

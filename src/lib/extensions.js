@@ -615,6 +615,7 @@ export default [
         documentation: "ODE",
         creator: "NishiOwO",
         isGitHub: true,
+        tags: ["new"],
     },
     {
         name: "TurboSynth",
@@ -624,6 +625,7 @@ export default [
         documentation: "TurboSynth",
         creator: "NishiOwO",
         isGitHub: true,
+        tags: ["new"],
     },
     {
         name: "Libxmp",
@@ -632,6 +634,7 @@ export default [
         banner: "NishiOwO/libxmp.svg",
         creator: "NishiOwO",
         isGitHub: true,
+        tags: ["new"],
     },
     /*{
         name: "Scope Variable",

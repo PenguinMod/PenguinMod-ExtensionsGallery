@@ -46,6 +46,9 @@ import PageComplexNumbers from "./SalagataComplex.md?raw";
 // ODE
 import ODE from "./ODE.md?raw";
 
+// TurboSynth
+import TurboSynth from "./TurboSynth.md?raw";
+
 export default {
     // the key is the path to the docs page
     // so you can do "sharkpool-particle-tools" for example
@@ -90,5 +93,8 @@ export default {
     // Complex Numebrs
     "SalagataComplex": PageComplexNumbers,
     // ODE
-    "ODE": ODE
+    "ODE": ODE,
+
+    // TurboSynth
+    "TurboSynth": TurboSynth
 };

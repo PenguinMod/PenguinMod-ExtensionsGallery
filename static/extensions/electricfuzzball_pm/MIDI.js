@@ -1,5 +1,5 @@
 /* global Scratch, jwArray */
-//added joystick support yay
+// added patch reporter, is a drum? and a thingy velocity 0 thingy whatever the hell
 
 let jwArray = {
     Type: class {},
@@ -29,15 +29,22 @@ class MIDI {
         this.lastNotePressed = null;
         this.notePressedFlag = false;
         this.specificNotePressedFlags = {};
+        
+        this.lastNoteReleased = null;
+        this.noteReleasedFlag = false;
+
         this.notePressTimes = new Map();
         this.lastNNotes = [];
 
         this.pitchBend = 0;
         this.modWheel = 0;
         
-        // MPK Mini Plus Joystick State
+
         this.joystickX = 64; 
         this.joystickY = 64; 
+
+        this.lastProgram = 0; // gm mappings 0 to 127
+        this.channelPrograms = new Array(16).fill(0); // its 0 indexed pleasse dont murder me :3
 
         this.sequenceQueue = [];
 
@@ -73,6 +80,9 @@ class MIDI {
                 { opcode: "currentPad", blockType: Scratch.BlockType.REPORTER, text: "current pad ID" },
                 { opcode: "currentPadVelocity", blockType: Scratch.BlockType.REPORTER, text: "current pad velocity" },
 
+                { opcode: "currentInstrument", blockType: Scratch.BlockType.REPORTER, text: "current instrument number" },
+                { opcode: "isDrumInstrument", blockType: Scratch.BlockType.BOOLEAN, text: "is drum instrument?" },
+
                 { opcode: "notesPressed", blockType: Scratch.BlockType.REPORTER, text: "notes currently pressed", ...jwArray.Block },
                 { opcode: "notesByChannel", blockType: Scratch.BlockType.REPORTER, text: "notes by channel", ...jwArray.Block },
 
@@ -83,13 +93,14 @@ class MIDI {
                   arguments: { NOTE: { type: Scratch.ArgumentType.NUMBER, defaultValue: 60 } } },
 
                 { opcode: "whenNotePressed", blockType: Scratch.BlockType.HAT, text: "when MIDI note pressed" },
+                
+                { opcode: "whenNoteReleased", blockType: Scratch.BlockType.HAT, text: "when MIDI note released" },
                 { opcode: "whenSpecificNotePressed", blockType: Scratch.BlockType.HAT, text: "when note [NOTE] pressed",
                   arguments: { NOTE: { type: Scratch.ArgumentType.NUMBER, defaultValue: 60 } } },
 
                 { opcode: "getPitchBend", blockType: Scratch.BlockType.REPORTER, text: "pitch bend" },
                 { opcode: "getModWheel", blockType: Scratch.BlockType.REPORTER, text: "mod wheel" },
                 
-                // Joystick reporters
                 { opcode: "getJoystickX", blockType: Scratch.BlockType.REPORTER, text: "joystick tilt x" },
                 { opcode: "getJoystickY", blockType: Scratch.BlockType.REPORTER, text: "joystick tilt y" },
 
@@ -151,18 +162,21 @@ class MIDI {
         const PAD_NOTE_MIN = 36;
         const PAD_NOTE_MAX = 51;
         const CONTROL_CHANGE = 0xB0;
+        const PROGRAM_CHANGE = 0xC0;
         const PITCH_BEND = 0xE0;
 
         const command = status & 0xf0;
-        const channel = (status & 0x0f) + 1;
+        const channel = (status & 0x0f) + 1; // but this one is 1 indexed?????? idfk lmao
 
         if (command === CONTROL_CHANGE) {
-            // Your MPK reported CC#002 and CC#012
             if (note === 2) this.joystickX = velocity;
             if (note === 12) this.joystickY = velocity;
-            
-            // Standard Mod Wheel remains on CC 1
             if (note === 1) this.modWheel = velocity;
+        }
+
+        if (command === PROGRAM_CHANGE) {
+            this.lastProgram = note;
+            this.channelPrograms[channel - 1] = note;
         }
 
         if (command === PITCH_BEND) {
@@ -189,17 +203,31 @@ class MIDI {
         }
 
         if (isNoteOff) {
+            this.lastNoteReleased = note;
+            this.noteReleasedFlag = true;
+
             if (isPad) this._padOff(channel, note);
             else this._noteOff(channel, note);
             this.notePressTimes.delete(note);
         }
     }
 
-    // Boilerplate reporters
     getPitchBend() { return this.pitchBend; }
     getModWheel() { return this.modWheel; }
     getJoystickX() { return this.joystickX; }
     getJoystickY() { return this.joystickY; }
+
+    currentInstrument() { 
+        return this.lastProgram; 
+    }
+
+    isDrumInstrument() {
+
+        if (this.lastChannel === 10) return true;
+        
+        const activeProg = this.lastChannel > 0 ? this.channelPrograms[this.lastChannel - 1] : this.lastProgram;
+        return activeProg >= 112 && activeProg <= 119;
+    }
 
     whenSequencePlayed(args) {
         const target = args.SEQUENCE.trim().split(" ").map(Number);
@@ -212,6 +240,14 @@ class MIDI {
     whenNotePressed() {
         if (this.notePressedFlag) {
             this.notePressedFlag = false;
+            return true;
+        }
+        return false;
+    }
+
+    whenNoteReleased() {
+        if (this.noteReleasedFlag) {
+            this.noteReleasedFlag = false;
             return true;
         }
         return false;
@@ -271,4 +307,4 @@ class MIDI {
 }
 
 Scratch.extensions.register(new MIDI());
-// but nobody came...
+//meowwwww *paws at ddededodediamante*

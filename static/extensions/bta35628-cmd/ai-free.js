@@ -28,7 +28,7 @@
 
     getInfo() {
       return {
-        id: 'puterAI',
+        id: 'bta35628cmdputerai',
         name: 'puterAI',
         color1: '#6a0eab',
         color2: '#520b85',

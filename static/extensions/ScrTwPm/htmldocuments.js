@@ -46,18 +46,16 @@
         }
     }
 
-    const vms = Scratch.vm
-    console.log(vm)
     class HTMLDocuments {
         constructor(runtime) {
-            vms.runtime.registerSerializer(
+             Scratch.vm.runtime.registerSerializer(
                 "scrtwpmhtmldocuments_htmlcode",
                         instance => ({ html: instance.html }), 
                         instance => {
                             return (new HtmlCode(instance.html))
                         }
             );
-            vms.runtime.registerSerializer(
+            Scratch.vm.runtime.registerSerializer(
                 "scrtwpmhtmldocuments_prevhtml",
                         instance => ({ html: instance.html }), 
                         instance => {
@@ -1421,6 +1419,7 @@
                     // this.pages.get(args.PAGE)?.set("code", document.createRange().createContextualFragment(this.pages.get(args.PAGE).get("code")))
                     // 
                     return new Promise((resolve, reject) => {
+                        if(this.viewing.includes(args.PAGE) && document.querySelector(".htmlpage")){
                         try {
                             const elements = document.querySelectorAll(`.htmlpage.display${args.PAGE}`);
                             elements.forEach(el => el.remove());
@@ -1497,7 +1496,9 @@
                                 }
                             }
                         } catch (error) { }
+                    }
                         resolve();
+                        
                     });
 
 

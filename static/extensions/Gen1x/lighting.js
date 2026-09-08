@@ -380,6 +380,16 @@ self.onmessage = ({ data: msg }) => {
         cameraFollowName: 'default',
     };
 
+    const LIGHT_NUMERIC_PROPS = new Set([
+        'x', 'y', 'radius', 'width', 'height', 'direction', 'arc', 'softness',
+        'ltype', 'cr', 'cg', 'cb'
+    ]);
+
+    const LIGHT_ALL_PROPS = new Set([
+        'x', 'y', 'radius', 'width', 'height', 'direction', 'arc', 'softness',
+        'ltype', 'type', 'color', 'cr', 'cg', 'cb', 'cameraOverride'
+    ]);
+
     class LightExtension {
         constructor() {
             this.lights = {};
@@ -429,7 +439,7 @@ self.onmessage = ({ data: msg }) => {
 
             this.canvas = document.createElement('canvas');
             this.canvas.style.cssText =
-                'position:absolute;pointer-events:none;z-index:0;mix-blend-mode:multiply;display:block;clip-path:inset(0 round inherit);';
+                'position:absolute;pointer-events:none;z-index:0;mix-blend-mode:normal;display:block;clip-path:inset(0 round inherit);';
 
             this._loadingOverlay = null;
             this._createLoadingOverlay(3);
@@ -1391,41 +1401,40 @@ self.onmessage = ({ data: msg }) => {
 
         _getEffectiveExclusionSet() {
             const allTargets = Scratch.vm.runtime.targets.filter(t => !t.isStage);
+            const byId = new Map();
+            for (const t of allTargets) byId.set(t.id, t);
+
             const result = new Set();
+
+            const inclusionSet = this.inclusionMode === 'Blacklist' ? null : new Set(this._inclusionList);
+            const blacklistSet = this.inclusionMode === 'Blacklist' ? new Set(this._inclusionList) : null;
 
             for (const t of allTargets) {
                 if (this._excludedNames.has(t.sprite.name)) {
                     result.add(t);
                 }
+                if (this.inclusionMode === 'Blacklist') {
+                    if (blacklistSet.has(t.sprite.name)) result.add(t);
+                } else {
+                    if (!inclusionSet.has(t.sprite.name)) result.add(t);
+                }
             }
 
             for (const id of this._excludedTargetIds) {
-                const t = Scratch.vm.runtime.targets.find(t => t.id === id);
+                const t = byId.get(id);
                 if (t) result.add(t);
             }
 
-            if (this.inclusionMode === 'Blacklist') {
-                for (const name of this._inclusionList) {
-                    for (const t of allTargets) {
-                        if (t.sprite.name === name) result.add(t);
-                    }
-                }
-            } else {
-                for (const t of allTargets) {
-                    if (!this._inclusionList.includes(t.sprite.name)) result.add(t);
-                }
-            }
-
             for (const id of this._includedTargetIds) {
-                const t = Scratch.vm.runtime.targets.find(t => t.id === id);
+                const t = byId.get(id);
                 if (t) result.delete(t);
             }
 
             return result;
         }
 
-        _applyCutouts(ctx, w, h, pw, ph) {
-            const effectiveExclusions = this._getEffectiveExclusionSet();
+        _applyCutouts(ctx, w, h, pw, ph, precomputedExclusions) {
+            const effectiveExclusions = precomputedExclusions || this._getEffectiveExclusionSet();
             if (effectiveExclusions.size === 0) return;
             const renderer = Scratch.renderer;
             if (!renderer || typeof renderer.extractDrawableScreenSpace !== 'function') return;
@@ -1452,33 +1461,49 @@ self.onmessage = ({ data: msg }) => {
                 (a, b) => getLayerIndex(a) - getLayerIndex(b)
             );
 
+            const extractionCache = new Map();
             const extractSprite = target => {
                 if (!target || !target.visible || target.drawableID == null) return null;
+                if (extractionCache.has(target.drawableID)) return extractionCache.get(target.drawableID);
+                let result = null;
                 try {
                     const extracted = renderer.extractDrawableScreenSpace(target.drawableID);
-                    if (!extracted) return null;
-                    const imageData = extracted.imageData || extracted.data;
-                    if (!imageData || imageData.width <= 0 || imageData.height <= 0) return null;
-                    const { x, y, width, height } = extracted;
-                    if (width <= 0 || height <= 0) return null;
-                    const iw = imageData.width;
-                    const ih = imageData.height;
-                    const raw = imageData.data;
-                    const straight = new Uint8ClampedArray(raw.length);
-                    for (let i = 0; i < raw.length; i += 4) {
-                        const a = raw[i + 3];
-                        if (a === 0) continue;
-                        const inv = 255 / a;
-                        straight[i]     = Math.min(255, raw[i]     * inv);
-                        straight[i + 1] = Math.min(255, raw[i + 1] * inv);
-                        straight[i + 2] = Math.min(255, raw[i + 2] * inv);
-                        straight[i + 3] = a;
+                    const imageData = extracted && (extracted.imageData || extracted.data);
+                    if (imageData && imageData.width > 0 && imageData.height > 0) {
+                        const { x, y, width, height } = extracted;
+                        if (width > 0 && height > 0) {
+                            const iw = imageData.width;
+                            const ih = imageData.height;
+                            const raw = imageData.data;
+                            const straight = new Uint8ClampedArray(raw.length);
+                            for (let i = 0; i < raw.length; i += 4) {
+                                const a = raw[i + 3];
+                                if (a === 0) continue;
+                                const inv = 255 / a;
+                                straight[i]     = Math.min(255, raw[i]     * inv);
+                                straight[i + 1] = Math.min(255, raw[i + 1] * inv);
+                                straight[i + 2] = Math.min(255, raw[i + 2] * inv);
+                                straight[i + 3] = a;
+                            }
+                            const src = new OffscreenCanvas(iw, ih);
+                            src.getContext('2d').putImageData(new ImageData(straight, iw, ih), 0, 0);
+                            result = { src, x: x * scaleX, y: y * scaleY, w: width * scaleX, h: height * scaleY, layerIdx: getLayerIndex(target) };
+                        }
                     }
-                    const src = new OffscreenCanvas(iw, ih);
-                    src.getContext('2d').putImageData(new ImageData(straight, iw, ih), 0, 0);
-                    return { src, x: x * scaleX, y: y * scaleY, w: width * scaleX, h: height * scaleY, layerIdx: getLayerIndex(target) };
-                } catch (e) { return null; }
+                } catch (e) { result = null; }
+                extractionCache.set(target.drawableID, result);
+                return result;
             };
+
+            const minExclusionLayerIdx = sortedExclusions.reduce(
+                (min, t) => Math.min(min, getLayerIndex(t)), Infinity
+            );
+            const aboveCandidates = allTargets.filter(t =>
+                t.visible &&
+                t.drawableID != null &&
+                !effectiveExclusions.has(t) &&
+                getLayerIndex(t) > minExclusionLayerIdx
+            );
 
             for (const target of sortedExclusions) {
                 const sprite = extractSprite(target);
@@ -1489,12 +1514,7 @@ self.onmessage = ({ data: msg }) => {
 
                 maskCtx.drawImage(sprite.src, sprite.x, sprite.y, sprite.w, sprite.h);
 
-                const aboveTargets = allTargets.filter(t =>
-                    t.visible &&
-                    t.drawableID != null &&
-                    !effectiveExclusions.has(t) &&
-                    getLayerIndex(t) > sprite.layerIdx
-                );
+                const aboveTargets = aboveCandidates.filter(t => getLayerIndex(t) > sprite.layerIdx);
 
                 if (aboveTargets.length > 0) {
                     maskCtx.globalCompositeOperation = 'destination-out';
@@ -1639,7 +1659,7 @@ self.onmessage = ({ data: msg }) => {
         setLightCameraFollow(args) {
             const id = Scratch.Cast.toString(args.ID);
             const state = Scratch.Cast.toString(args.STATE);
-            if (!this.lights[id]) return;
+            if (!Object.prototype.hasOwnProperty.call(this.lights, id)) return;
             if (state === 'none') {
                 this.lights[id].cameraOverride = 'none';
             } else if (state === 'global') {
@@ -1655,14 +1675,14 @@ self.onmessage = ({ data: msg }) => {
         setLightCameraName(args) {
             const id = Scratch.Cast.toString(args.ID);
             const name = Scratch.Cast.toString(args.NAME) || 'default';
-            if (!this.lights[id]) return;
+            if (!Object.prototype.hasOwnProperty.call(this.lights, id)) return;
             this.lights[id].cameraOverride = name;
             this._markDirty();
         }
 
         getLightCameraFollow(args) {
             const id = Scratch.Cast.toString(args.ID);
-            if (!this.lights[id]) return '';
+            if (!Object.prototype.hasOwnProperty.call(this.lights, id)) return '';
             const ov = this.lights[id].cameraOverride;
             if (ov === null || ov === undefined) return 'global';
             if (ov === 'none') return 'none';
@@ -1753,7 +1773,8 @@ self.onmessage = ({ data: msg }) => {
         _render() {
             if (this._mode === 'none') return;
 
-            const hasCutouts = this._getEffectiveExclusionSet().size > 0;
+            const effectiveExclusions = this._getEffectiveExclusionSet();
+            const hasCutouts = effectiveExclusions.size > 0;
             const needsFrame = this._dirty || hasCutouts || (this.cameraFollow && isPenguinMod);
             if (!needsFrame) return;
 
@@ -1780,7 +1801,7 @@ self.onmessage = ({ data: msg }) => {
                 this.canvas.style.opacity = targetOpacity;
             }
 
-            const targetBlend = this.bgOpacity < 0.01 ? 'screen' : 'multiply';
+            const targetBlend = 'normal';
             if (this.canvas.style.mixBlendMode !== targetBlend) {
                 this.canvas.style.mixBlendMode = targetBlend;
             }
@@ -1828,7 +1849,7 @@ self.onmessage = ({ data: msg }) => {
                     this._displayCtx.imageSmoothingEnabled = false;
                     this._displayCtx.clearRect(0, 0, pw, ph);
                     this._drawBitmapPixelated(this._displayCtx, this._lastGLBitmap, pw, ph);
-                    this._applyCutouts(this._displayCtx, w, h, pw, ph);
+                    this._applyCutouts(this._displayCtx, w, h, pw, ph, effectiveExclusions);
                 }
                 return;
             }
@@ -1899,7 +1920,7 @@ self.onmessage = ({ data: msg }) => {
             this._displayCtx.imageSmoothingEnabled = false;
             this._displayCtx.clearRect(0, 0, pw, ph);
             if (this._lastGLBitmap) this._drawBitmapPixelated(this._displayCtx, this._lastGLBitmap, pw, ph);
-            this._applyCutouts(this._displayCtx, w, h, pw, ph);
+            this._applyCutouts(this._displayCtx, w, h, pw, ph, effectiveExclusions);
         }
 
         settingSetShadowOpacity(args) {
@@ -2741,7 +2762,7 @@ self.onmessage = ({ data: msg }) => {
 
         createPointLight(args) {
             const id = Scratch.Cast.toString(args.ID);
-            if (id === 'ALL') return;
+            if (id === 'ALL' || id === '__proto__' || id === 'constructor' || id === 'prototype') return;
             const li = {
                 type: 'point',
                 ltype: 0,
@@ -2762,7 +2783,7 @@ self.onmessage = ({ data: msg }) => {
 
         createSpotLight(args) {
             const id = Scratch.Cast.toString(args.ID);
-            if (id === 'ALL') return;
+            if (id === 'ALL' || id === '__proto__' || id === 'constructor' || id === 'prototype') return;
             const li = {
                 type: 'spot',
                 ltype: 1,
@@ -2783,7 +2804,7 @@ self.onmessage = ({ data: msg }) => {
 
         createAreaLight(args) {
             const id = Scratch.Cast.toString(args.ID);
-            if (id === 'ALL') return;
+            if (id === 'ALL' || id === '__proto__' || id === 'constructor' || id === 'prototype') return;
             const li = {
                 type: 'area',
                 ltype: 2,
@@ -2805,9 +2826,10 @@ self.onmessage = ({ data: msg }) => {
         setLightProp(args) {
             const id = Scratch.Cast.toString(args.ID);
             const prop = Scratch.Cast.toString(args.PROP);
+            if (!LIGHT_NUMERIC_PROPS.has(prop)) return;
             const ids = id === 'ALL' ? Object.keys(this.lights) : [id];
             for (const k of ids) {
-                if (this.lights[k]) this.lights[k][prop] = Scratch.Cast.toNumber(args.VAL);
+                if (Object.prototype.hasOwnProperty.call(this.lights, k)) this.lights[k][prop] = Scratch.Cast.toNumber(args.VAL);
             }
             if (ids.length) this._markDirty();
         }
@@ -2815,9 +2837,10 @@ self.onmessage = ({ data: msg }) => {
         changeLightProp(args) {
             const id = Scratch.Cast.toString(args.ID);
             const prop = Scratch.Cast.toString(args.PROP);
+            if (!LIGHT_NUMERIC_PROPS.has(prop)) return;
             const ids = id === 'ALL' ? Object.keys(this.lights) : [id];
             for (const k of ids) {
-                if (this.lights[k]) this.lights[k][prop] += Scratch.Cast.toNumber(args.VAL);
+                if (Object.prototype.hasOwnProperty.call(this.lights, k)) this.lights[k][prop] += Scratch.Cast.toNumber(args.VAL);
             }
             if (ids.length) this._markDirty();
         }
@@ -2826,7 +2849,7 @@ self.onmessage = ({ data: msg }) => {
             const id = Scratch.Cast.toString(args.ID);
             const ids = id === 'ALL' ? Object.keys(this.lights) : [id];
             for (const k of ids) {
-                if (this.lights[k]) {
+                if (Object.prototype.hasOwnProperty.call(this.lights, k)) {
                     this.lights[k].x = +args.X;
                     this.lights[k].y = +args.Y;
                 }
@@ -2838,7 +2861,7 @@ self.onmessage = ({ data: msg }) => {
             const id = Scratch.Cast.toString(args.ID);
             const ids = id === 'ALL' ? Object.keys(this.lights) : [id];
             for (const k of ids) {
-                if (this.lights[k]) {
+                if (Object.prototype.hasOwnProperty.call(this.lights, k)) {
                     this.lights[k].color = Scratch.Cast.toString(args.COLOR);
                     this._cacheRGB(this.lights[k], this.lights[k].color);
                 }
@@ -2849,7 +2872,10 @@ self.onmessage = ({ data: msg }) => {
         getLightProp(args) {
             const id = Scratch.Cast.toString(args.ID);
             const prop = Scratch.Cast.toString(args.PROP);
-            return this.lights[id] ? (this.lights[id][prop] ?? '') : '';
+            if (!LIGHT_ALL_PROPS.has(prop)) return '';
+            if (!Object.prototype.hasOwnProperty.call(this.lights, id)) return '';
+            const val = this.lights[id][prop];
+            return val !== undefined ? val : '';
         }
 
         getLightIds() {
@@ -2861,11 +2887,13 @@ self.onmessage = ({ data: msg }) => {
         }
 
         lightExists(args) {
-            return !!this.lights[Scratch.Cast.toString(args.ID)];
+            const id = Scratch.Cast.toString(args.ID);
+            return Object.prototype.hasOwnProperty.call(this.lights, id);
         }
 
         deleteLight(args) {
-            delete this.lights[Scratch.Cast.toString(args.ID)];
+            const id = Scratch.Cast.toString(args.ID);
+            if (Object.prototype.hasOwnProperty.call(this.lights, id)) delete this.lights[id];
             this._markDirty();
         }
 

@@ -37,8 +37,16 @@ import PaintUtils from "./PaintUtils.md?raw";
 import Resolution from "./Resolution.md?raw";
 
 // Project Interfaces
-
 import ProjectInterfaces from "./ProjectInterfaces.md?raw";
+
+// Date Format V2
+import DateFormatV2 from "./DateFormatV2.md?raw";
+
+// ODE
+import ODE from "./ODE.md?raw";
+
+// TurboSynth
+import TurboSynth from "./TurboSynth.md?raw";
 
 export default {
     // the key is the path to the docs page
@@ -77,5 +85,13 @@ export default {
     "Resolution": Resolution,
 
     // Project Interfaces
-    "ProjectInterfaces": ProjectInterfaces
+    "ProjectInterfaces": ProjectInterfaces,
+
+    "DateFormatV2": DateFormatV2,
+
+    // ODE
+    "ODE": ODE,
+
+    // TurboSynth
+    "TurboSynth": TurboSynth
 };

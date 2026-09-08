@@ -246,7 +246,9 @@
             })
         }
         
-        toMonitorContent = () => span(this.toString())
+        toMonitorContent() {
+            return span(escapeHTML(this.toString()))
+        }
 
         toReporterContent() {
             let root = document.createElement('div')

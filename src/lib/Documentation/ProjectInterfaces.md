@@ -43,14 +43,10 @@ Lets take an input element for example, under the "Inputs" section of the extens
 ## Advanced
 It's important to note that Project Interfaces uses [HTML elements](https://developer.mozilla.org/en-US/docs/Web/HTML/Reference/Elements) to create GUI's in projects.
 
-This extension has several blocks to further customize elements for those who have a deeper understanding of HTML and CSS.
-
 The "Create html element" block will allow you to create an element based of a HTML tag of your choice.
-The "Set custom CSS" block will override an elements CSS properties.
 
 ```scratch
 Create html element [h1] with ID [HTML header] :: #707eff
-Set custom CSS of [HTML header] to [background-color: red] :: #707eff
 ```
 
 ## Security

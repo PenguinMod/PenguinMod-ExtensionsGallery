@@ -53,7 +53,7 @@ function seededRandom(seed, min, max) {
   const a = 1664525;
   const c = 1013904223;
 
-  seed = (seed * a + c) % m;
+  seed = (((seed * a + c) % m) + m) % m;
 
   const normalized = seed / m;
 
@@ -243,7 +243,9 @@ class RandomUtils {
   }
 
   uuid(args) {
-    return fetch(`https://api.allorigins.win/raw?url=https://www.uuidtools.com/api/generate/${args.VERSION}/count/1`)
+    const allowedVersions = ['v1', 'v4'];
+    const version = allowedVersions.includes(args.VERSION) ? args.VERSION : 'v4';
+    return fetch(`https://api.allorigins.win/raw?url=https://www.uuidtools.com/api/generate/${version}/count/1`)
     .then((response) => {
       if (response.ok) {
         return response.json();

@@ -1,7 +1,7 @@
 /**!
  * Scope Variables
  * @author 0znzw <meow@miyo.icu> (@link https://scratch.mit.edu/users/0znzw/)
- * @version 2.0.1
+ * @version 2.1.1
  * @license MIT AND LGPL-3.0
  * Do not remove this comment
  */
@@ -76,19 +76,15 @@ void !function() {
       };
     };
 
-    if (!vm.exports.i_will_not_ask_for_help_when_these_break && Thread.prototype.tryCompile) {
+    const iwnafhwtb = vm.exports[Object.getOwnPropertyNames(vm.exports).find((prop) => vm.exports[prop].toString().includes('JSGenerator:') && !vm.exports[prop].toString().includes('Stub'))];
+    if (!iwnafhwtb && Thread.prototype.tryCompile) {
       throw new Error(`"${EXTENSION_ID}": Too old to run this extension.`);
     }
 
     const warn = console.warn;
     console.warn = () => {};
 
-    let exps;
-    if (vm.exports.these_broke_before_and_will_break_again) {
-      exps = vm.exports.these_broke_before_and_will_break_again();
-    } else {
-      exps = vm.exports.i_will_not_ask_for_help_when_these_break();
-    }
+    let exps = iwnafhwtb();
 
     console.warn = warn;
 

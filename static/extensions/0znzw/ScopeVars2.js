@@ -1,7 +1,7 @@
 /**!
  * Scope Variables
  * @author 0znzw <meow@miyo.icu> (@link https://scratch.mit.edu/users/0znzw/)
- * @version 2.0.0
+ * @version 2.0.1
  * @license MIT AND LGPL-3.0
  * Do not remove this comment
  */
@@ -120,7 +120,7 @@ void !function() {
       return __INSTANCE__;
     }
 
-    vm.enableDebug();
+    // vm.enableDebug();
 
     __INSTANCE__ = Extension();
     __INSTANCE__.exports = Extension.exports;
@@ -433,7 +433,7 @@ void !function() {
     } else {
       //#region STG (2)
 
-      if (INPUT_DEBUG) {
+      if (false/*INPUT_DEBUG*/) { // For debugging if needed.
         STGP.descendVisualReport = function descendVisualReport(block) {
           if (!this.thread.stackClick || block.next) {
             return null;

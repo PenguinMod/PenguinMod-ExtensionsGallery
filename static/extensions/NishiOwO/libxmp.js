@@ -18,7 +18,7 @@
   let g_keepplaying = {};
   let embedded = false;
   let full_libxmp = false;
-  var libxmp;
+  let volume = 100;
 
   /* DO NOT REMOVE THE COMMENT BELOW!!! */
 // This code implements the `-sMODULARIZE` settings by taking the generated
@@ -1953,7 +1953,7 @@ if (typeof exports === 'object' && typeof module === 'object') {
 embedded = true;
 
   if (embedded) {
-    xmp = libxmp;
+    xmp = libxmp; // eslint-disable-line
   } else {
     if (full_libxmp) {
       xmp = await Scratch.external.evalAndReturn(
@@ -2011,6 +2011,17 @@ embedded = true;
             blockType: Scratch.BlockType.COMMAND,
             text: Scratch.translate("stop all playing"),
           },
+          {
+            opcode: "setVolume",
+            blockType: Scratch.BlockType.COMMAND,
+            text: Scratch.translate("set volume to [VOLUME]%"),
+            arguments: {
+              VOLUME: {
+                type: Scratch.ArgumentType.NUMBER,
+                defaultValue: 100,
+              },
+            },
+          },
         ],
       };
     }
@@ -2054,8 +2065,8 @@ embedded = true;
 
               if (keep_playing()) {
                 for (let i = 0; i < len; i++) {
-                  lChannelData[i] = buffer[2 * i + 0 + 1];
-                  rChannelData[i] = buffer[2 * i + 1 + 1];
+                  lChannelData[i] = buffer[2 * i + 0 + 1] * (volume / 100);
+                  rChannelData[i] = buffer[2 * i + 1 + 1] * (volume / 100);
                 }
               } else {
                 for (let i = 0; i < len; i++) {
@@ -2100,6 +2111,13 @@ embedded = true;
 
     stopAll() {
       g_keepplaying = {};
+    }
+
+    setVolume(args) {
+      if (args.VOLUME > 100) args.VOLUME = 100;
+      if (args.VOLUME < 0) args.VOLUME = 0;
+
+      volume = args.VOLUME;
     }
   }
 

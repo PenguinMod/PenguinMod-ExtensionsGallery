@@ -881,7 +881,7 @@
         }
 
         createPage(args, util) {
-            if (!Object.keys(this.pages).includes(args.PAGE)) {
+            if (!this.pages.has(args.PAGE)) {
                 if (args.PAGE !== "") {
                     this.pages.set(args.PAGE, new Map().set("data", new Map().set("x", 5).set("y", 5).set("width", 470).set("height", 350)).set("code", dom.parseFromString("", 'text/html')).set("eves", new Map()))
 

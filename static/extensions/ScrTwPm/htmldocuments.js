@@ -20,7 +20,7 @@
             return wrap;
         }
     }
-    
+
 
     class HtmlCode {
         constructor(html) {
@@ -48,19 +48,19 @@
 
     class HTMLDocuments {
         constructor(runtime) {
-             Scratch.vm.runtime.registerSerializer(
+            Scratch.vm.runtime.registerSerializer(
                 "scrtwpmhtmldocuments_htmlcode",
-                        instance => ({ html: instance.html }), 
-                        instance => {
-                            return (new HtmlCode(instance.html))
-                        }
+                instance => ({ html: instance.html }),
+                instance => {
+                    return (new HtmlCode(instance.html))
+                }
             );
             Scratch.vm.runtime.registerSerializer(
                 "scrtwpmhtmldocuments_prevhtml",
-                        instance => ({ html: instance.html }), 
-                        instance => {
-                            return (new PrevHTML(instance.html))
-                        }
+                instance => ({ html: instance.html }),
+                instance => {
+                    return (new PrevHTML(instance.html))
+                }
             );
 
             this.pages = new Map()
@@ -208,6 +208,21 @@
                             PAGE: {
                                 type: Scratch.ArgumentType.STRING,
                                 defaultValue: "my-page"
+                            }
+                        }
+                    },
+                    {
+                        opcode: 'duplicatePage',
+                        blockType: Scratch.BlockType.COMMAND,
+                        text: 'duplicate page [PAGE] as [PAGE2]',
+                        arguments: {
+                            PAGE: {
+                                type: Scratch.ArgumentType.STRING,
+                                defaultValue: "my-page"
+                            },
+                            PAGE2: {
+                                type: Scratch.ArgumentType.STRING,
+                                defaultValue: "my-page-2"
                             }
                         }
                     },
@@ -875,6 +890,23 @@
                 }
             }
         }
+
+        duplicatePage(args, util) {
+            if ((this.pages).has(args.PAGE)) {
+                if (!this.pages.has(args.PAGE2)) {
+                    if (args.PAGE !== "" && args.PAGE2 !== "") {
+                        this.pages.set(args.PAGE2, new Map().set("data", this.pages.get(args.PAGE).get("data")).set("code", this.pages.get(args.PAGE).get("code")).set("eves", this.pages.get(args.PAGE).get("eves")))
+
+                    } else {
+                        throw new Error("Name cannot be empty")
+                    }
+                } else {
+                    throw new Error("Page already exists")
+                }
+            } else {
+                throw new Error("Page does not exist")
+            }
+        }
         clearPage(args, util) {
 
             // //if (Object.keys(this.pages).includes(args.PAGE)) {
@@ -1419,86 +1451,86 @@
                     // this.pages.get(args.PAGE)?.set("code", document.createRange().createContextualFragment(this.pages.get(args.PAGE).get("code")))
                     // 
                     return new Promise((resolve, reject) => {
-                        if(this.viewing.includes(args.PAGE) && document.querySelector(".htmlpage")){
-                        try {
-                            const elements = document.querySelectorAll(`.htmlpage.display${args.PAGE}`);
-                            elements.forEach(el => el.remove());
-                            const el = document.createElement("iframe");
-                            el.setAttribute("srcdoc", toAString.serializeToString(this.pages.get(args.PAGE).get("code")))
-                            el.setAttribute("class", `htmlpage display${args.PAGE}`)
-                            el.style.position = 'absolute';
-                            el.style.pointerEvents = 'auto';
-                            el.style.zIndex = '10';
-                            el.style.left = `${this.pages.get(args.PAGE).get("data").get("x")}px`;
-                            el.style.top = `${this.pages.get(args.PAGE).get("data").get("y")}px`;
-                            el.setAttribute("width", `${this.pages.get(args.PAGE).get("data").get("width")}px`)
-                            el.setAttribute("height", `${this.pages.get(args.PAGE).get("data").get("height")}px`)
-                            el.style.border = "1px solid black"
-                            const container = Scratch.renderer.canvas.parentElement;
-                            container.appendChild(el);
-                            if (!this.viewing.includes(args.PAGE)) {
-                                this.viewing.push(args.PAGE)
-                            }
-                            el.onload = () => {
-                                for (const [key, value] of this.pages.get(args.PAGE)?.get("eves")) {
-                                    // 
-
-                                    el.contentDocument.querySelector(`#${key}`).addEventListener(value, () => {
-                                        const triggerText = String(key);
-                                        const triggerTexta = String(args.PAGE);
-
-                                        const targetOpcode = 'scrtwpmhtmldocuments_eve';
-                                        const vm = Scratch.vm;
-
-                                        vm.runtime.targets.forEach(target => {
-                                            const blocks = target.blocks;
-                                            const scripts = blocks.getScripts();
-
-                                            scripts.forEach(rootBlockId => {
-                                                const block = blocks.getBlock(rootBlockId);
-
-                                                if (block && block.opcode === targetOpcode) {
-                                                    let hatValue = '';
-                                                    let hatValuea = '';
-
-                                                    if (block.fields && block.fields.ID && block.fields.PAGE) {
-                                                        hatValue = block.fields.ID.value;
-                                                        hatValuea = block.fields.PAGE.value;
-                                                    }
-                                                    else if (block.inputs && block.inputs.ID && block.inputs.PAGE) {
-                                                        const inputID = block.inputs.ID;
-                                                        const inputPAGE = block.inputs.PAGE;
-
-                                                        const shadowBlockID = blocks.getBlock(inputID.shadow);
-                                                        const shadowBlockPAGE = blocks.getBlock(inputPAGE.shadow);
-
-                                                        if (shadowBlockID && shadowBlockID.fields) {
-                                                            const fieldKey = Object.keys(shadowBlockID.fields)[0];
-                                                            hatValue = shadowBlockID.fields[fieldKey]?.value || '';
-                                                        }
-                                                        if (shadowBlockPAGE && shadowBlockPAGE.fields) {
-                                                            const fieldKeya = Object.keys(shadowBlockPAGE.fields)[0];
-                                                            hatValuea = shadowBlockPAGE.fields[fieldKeya]?.value || '';
-                                                        }
-                                                    }
-
-                                                    if (hatValue === triggerText && hatValuea === triggerTexta) {
-                                                        vm.runtime._pushThread(rootBlockId, target);
-                                                    }
-                                                }
-                                            });
-                                        });
-                                    }
-
-                                    )
-
-
+                        if (this.viewing.includes(args.PAGE) && document.querySelector(".htmlpage")) {
+                            try {
+                                const elements = document.querySelectorAll(`.htmlpage.display${args.PAGE}`);
+                                elements.forEach(el => el.remove());
+                                const el = document.createElement("iframe");
+                                el.setAttribute("srcdoc", toAString.serializeToString(this.pages.get(args.PAGE).get("code")))
+                                el.setAttribute("class", `htmlpage display${args.PAGE}`)
+                                el.style.position = 'absolute';
+                                el.style.pointerEvents = 'auto';
+                                el.style.zIndex = '10';
+                                el.style.left = `${this.pages.get(args.PAGE).get("data").get("x")}px`;
+                                el.style.top = `${this.pages.get(args.PAGE).get("data").get("y")}px`;
+                                el.setAttribute("width", `${this.pages.get(args.PAGE).get("data").get("width")}px`)
+                                el.setAttribute("height", `${this.pages.get(args.PAGE).get("data").get("height")}px`)
+                                el.style.border = "1px solid black"
+                                const container = Scratch.renderer.canvas.parentElement;
+                                container.appendChild(el);
+                                if (!this.viewing.includes(args.PAGE)) {
+                                    this.viewing.push(args.PAGE)
                                 }
-                            }
-                        } catch (error) { }
-                    }
+                                el.onload = () => {
+                                    for (const [key, value] of this.pages.get(args.PAGE)?.get("eves")) {
+                                        // 
+
+                                        el.contentDocument.querySelector(`#${key}`).addEventListener(value, () => {
+                                            const triggerText = String(key);
+                                            const triggerTexta = String(args.PAGE);
+
+                                            const targetOpcode = 'scrtwpmhtmldocuments_eve';
+                                            const vm = Scratch.vm;
+
+                                            vm.runtime.targets.forEach(target => {
+                                                const blocks = target.blocks;
+                                                const scripts = blocks.getScripts();
+
+                                                scripts.forEach(rootBlockId => {
+                                                    const block = blocks.getBlock(rootBlockId);
+
+                                                    if (block && block.opcode === targetOpcode) {
+                                                        let hatValue = '';
+                                                        let hatValuea = '';
+
+                                                        if (block.fields && block.fields.ID && block.fields.PAGE) {
+                                                            hatValue = block.fields.ID.value;
+                                                            hatValuea = block.fields.PAGE.value;
+                                                        }
+                                                        else if (block.inputs && block.inputs.ID && block.inputs.PAGE) {
+                                                            const inputID = block.inputs.ID;
+                                                            const inputPAGE = block.inputs.PAGE;
+
+                                                            const shadowBlockID = blocks.getBlock(inputID.shadow);
+                                                            const shadowBlockPAGE = blocks.getBlock(inputPAGE.shadow);
+
+                                                            if (shadowBlockID && shadowBlockID.fields) {
+                                                                const fieldKey = Object.keys(shadowBlockID.fields)[0];
+                                                                hatValue = shadowBlockID.fields[fieldKey]?.value || '';
+                                                            }
+                                                            if (shadowBlockPAGE && shadowBlockPAGE.fields) {
+                                                                const fieldKeya = Object.keys(shadowBlockPAGE.fields)[0];
+                                                                hatValuea = shadowBlockPAGE.fields[fieldKeya]?.value || '';
+                                                            }
+                                                        }
+
+                                                        if (hatValue === triggerText && hatValuea === triggerTexta) {
+                                                            vm.runtime._pushThread(rootBlockId, target);
+                                                        }
+                                                    }
+                                                });
+                                            });
+                                        }
+
+                                        )
+
+
+                                    }
+                                }
+                            } catch (error) { }
+                        }
                         resolve();
-                        
+
                     });
 
 

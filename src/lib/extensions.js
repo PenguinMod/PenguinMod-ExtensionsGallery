@@ -95,6 +95,14 @@ export default [
         isGitHub: true,
     },
     {
+        name: "Scope Variables",
+        description: "Manage your variables in a block-like structure.",
+        code: "0znzw/ScopeVars2.js",
+        banner: "0znzw/ScopeVars.avif",
+        creator: "yuri-kiss",
+        isGitHub: true,
+    },
+    {
         name: "Array Buffers",
         description: "Read, parse, and write raw data efficiently using Array Buffers",
         code: "AndrewGaming587/agBuffer.js",
@@ -636,16 +644,6 @@ export default [
         isGitHub: true,
         tags: ["new"],
     },
-    /*{
-        name: "Scope Variable",
-        description: "Manage your variables in a block-like structure.",
-        code: "0znzw/ScopeVars.js",
-        banner: "0znzw/ScopeVars.avif",
-        creator: "yuri-kiss",
-        isGitHub: true,
-        unstable: true,
-        unstableReason: "This extension uses unstable techniques that may not always work.",
-    },*/
     /*{
         name: "PenguinAI",
         description: "Talk to AI! Use Models like DALL-E-3, GPT, LLama, Claude, and more!",

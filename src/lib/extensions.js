@@ -102,7 +102,7 @@ export default [
         creator: "AndrewScripter587",
         creatorAlias: "AndrewGaming587",
         isGitHub: true,
-        tags: ["customtype", "data", "utility", "new", "large"],
+        tags: ["customtype", "data", "utility", "large"],
     },
     {
         name: "Extra Timers",
@@ -635,6 +635,18 @@ export default [
         creator: "NishiOwO",
         isGitHub: true,
         tags: ["new"],
+    },
+    {
+        name: "WebAssembly",
+        description: "A way to interface with Javascript's WebAssembly API from PenguinMod! Javascript V2 extension heavily recommended",
+        code: "AndrewGaming587/agBuffer.js",
+        banner: "AndrewGaming587/agBuffer.svg",
+        creator: "AndrewScripter587",
+        creatorAlias: "AndrewGaming587",
+        isGitHub: true,
+        tags: ["customtype", "utility", "new", "large"],
+        unstable: true,
+        unstableReason: "This extension uses unstable techniques that may not always work.",
     },
     /*{
         name: "Scope Variable",

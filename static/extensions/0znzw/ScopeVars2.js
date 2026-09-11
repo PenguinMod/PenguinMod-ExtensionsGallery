@@ -1,7 +1,7 @@
 /**!
  * Scope Variables
  * @author 0znzw <meow@miyo.icu> (@link https://scratch.mit.edu/users/0znzw/)
- * @version 2.1.1
+ * @version 2.1.2
  * @license MIT AND LGPL-3.0
  * Do not remove this comment
  */
@@ -81,12 +81,12 @@ void !function() {
       throw new Error(`"${EXTENSION_ID}": Too old to run this extension.`);
     }
 
-    const warn = console.warn;
+    const warn = Object.getOwnPropertyDescriptor(console, 'warn');
     console.warn = () => {};
 
-    let exps = iwnafhwtb();
+    const exps = iwnafhwtb();
 
-    console.warn = warn;
+    Object.defineProperty(console, 'warn', warn);
 
     if (!exps.JSGenerator || !exps.JSGenerator.unstable_exports) {
       throw new Error(`"${EXTENSION_ID}": Too old to run this extension.`);

@@ -38,6 +38,14 @@ Enjoy!! :D
     const WIPE_DIRECTION_UP_DOWN = 'up-down';
     const WIPE_DIRECTION_RIGHT_LEFT = 'right-left';
 
+    function clampPercent(value) {
+        return Math.max(0, Math.min(100, value));
+    }
+
+    function clampPercentToUnit(value) {
+        return clampPercent(value) / 100;
+    }
+
     const GRADIENT_TYPE_LINEAR = 'linear';
     const GRADIENT_TYPE_RADIAL = 'radial';
     const GRADIENT_TYPE_CONIC = 'conic';
@@ -221,7 +229,7 @@ Enjoy!! :D
         const parts = value.split('|');
         const color = (parts[0] || '').trim();
         if (!color) return null;
-        const opacity = Math.max(0, Math.min(100, Scratch.Cast.toNumber(parts.length > 1 ? parts[1] : '') || 0));
+        const opacity = clampPercent(Scratch.Cast.toNumber(parts.length > 1 ? parts[1] : '') || 0);
         const blur = Math.max(0, Scratch.Cast.toNumber(parts.length > 2 ? parts[2] : '') || 0);
         const offsetX = Scratch.Cast.toNumber(parts.length > 3 ? parts[3] : '') || 0;
         const offsetY = Scratch.Cast.toNumber(parts.length > 4 ? parts[4] : '') || 0;
@@ -239,7 +247,7 @@ Enjoy!! :D
         const parts = value.split('|');
         const color = (parts[0] || '').trim();
         if (!color) return null;
-        const opacity = Math.max(0, Math.min(100, Scratch.Cast.toNumber(parts.length > 1 ? parts[1] : '') || 0));
+        const opacity = clampPercent(Scratch.Cast.toNumber(parts.length > 1 ? parts[1] : '') || 0);
         const size = Math.max(0, Scratch.Cast.toNumber(parts.length > 2 ? parts[2] : '') || 0);
         return {
             color,
@@ -365,7 +373,7 @@ Enjoy!! :D
                             break;
                         }
                         case 'blur':
-                            top.blur = Math.max(0, Math.min(100, Scratch.Cast.toNumber(value)));
+                            top.blur = clampPercent(Scratch.Cast.toNumber(value));
                             break;
                         case 'shadow': {
                             const parsedShadow = parseShadowValue(value);
@@ -451,7 +459,7 @@ Enjoy!! :D
         if (typeof value.strike === 'boolean') style.strike = value.strike;
         if (Number.isFinite(value.size)) style.size = Math.max(1, value.size);
         if (typeof value.font === 'string') style.font = value.font;
-        if (Number.isFinite(value.blur)) style.blur = Math.max(0, Math.min(100, value.blur));
+        if (Number.isFinite(value.blur)) style.blur = clampPercent(value.blur);
         if (Array.isArray(value.tags) && value.tags.every(tag => typeof tag === 'string')) {
             style.tags = value.tags.slice();
         }
@@ -554,6 +562,11 @@ Enjoy!! :D
                 radius: 8,
                 padding: 8
             },
+            textBackgroundBorder: {
+                color: '#000000',
+                size: 0,
+                roundness: 100
+            },
             textBorder: {
                 enabled: false,
                 color: '#000000',
@@ -639,6 +652,7 @@ Enjoy!! :D
             const defaults = defaultState();
             state.textShadow = Object.assign(defaults.textShadow, state.textShadow || {});
             state.textBackground = Object.assign(defaults.textBackground, state.textBackground || {});
+            state.textBackgroundBorder = Object.assign(defaults.textBackgroundBorder, state.textBackgroundBorder || {});
             state.textBorder = Object.assign(defaults.textBorder, state.textBorder || {});
             state.typingSpeeds = Object.assign(defaults.typingSpeeds, state.typingSpeeds || {});
             state.customTypingSpeeds = Object.assign({}, state.customTypingSpeeds || {});
@@ -741,6 +755,7 @@ Enjoy!! :D
             maxHeight: state.maxHeight,
             textShadow: Object.assign({}, state.textShadow),
             textBackground: Object.assign({}, state.textBackground),
+            textBackgroundBorder: Object.assign({}, state.textBackgroundBorder),
             textBorder: Object.assign({}, state.textBorder)
         });
     }
@@ -800,6 +815,7 @@ Enjoy!! :D
 
         copySettings(settings.textShadow, state.textShadow, ['enabled', 'color', 'opacity', 'blur', 'offsetX', 'offsetY']);
         copySettings(settings.textBackground, state.textBackground, ['enabled', 'color', 'opacity', 'radius', 'padding']);
+        copySettings(settings.textBackgroundBorder, state.textBackgroundBorder, ['color', 'size', 'roundness']);
         copySettings(settings.textBorder, state.textBorder, ['enabled', 'color', 'opacity', 'size']);
         state.shapeKey = null;
         state.layoutKey = null;
@@ -846,30 +862,43 @@ Enjoy!! :D
         return true;
     }
 
+    function emptyAABB() {
+        return { minX: Infinity, maxX: -Infinity, minY: Infinity, maxY: -Infinity };
+    }
+
+    function aabbIsFinite(box) {
+        return Number.isFinite(box.minX) && Number.isFinite(box.maxX) &&
+            Number.isFinite(box.minY) && Number.isFinite(box.maxY);
+    }
+
+    function expandAABBToPoint(box, x, y) {
+        box.minX = Math.min(box.minX, x);
+        box.maxX = Math.max(box.maxX, x);
+        box.minY = Math.min(box.minY, y);
+        box.maxY = Math.max(box.maxY, y);
+        return box;
+    }
+
+    function pointsToAABB(points) {
+        const box = emptyAABB();
+        for (const [x, y] of points) expandAABBToPoint(box, x, y);
+        return box;
+    }
+
     function charLocalAABB(state, startIdx, endIdx) {
-        let minX = Infinity;
-        let maxX = -Infinity;
-        let minY = Infinity;
-        let maxY = -Infinity;
+        const box = emptyAABB();
         let found = false;
         for (let idx = startIdx; idx <= endIdx; idx++) {
-            const box = state.charBoxes[idx];
-            if (!box) continue;
+            const charBox = state.charBoxes[idx];
+            if (!charBox) continue;
             found = true;
-            const halfW = box.width / 2;
-            const halfH = box.height / 2;
-            minX = Math.min(minX, box.x - halfW);
-            maxX = Math.max(maxX, box.x + halfW);
-            minY = Math.min(minY, box.y - halfH);
-            maxY = Math.max(maxY, box.y + halfH);
+            const halfW = charBox.width / 2;
+            const halfH = charBox.height / 2;
+            expandAABBToPoint(box, charBox.x - halfW, charBox.y - halfH);
+            expandAABBToPoint(box, charBox.x + halfW, charBox.y + halfH);
         }
         if (!found) return null;
-        return {
-            minX,
-            maxX,
-            minY,
-            maxY
-        };
+        return box;
     }
 
     function localAABBToStageAABB(local, target) {
@@ -894,221 +923,13 @@ Enjoy!! :D
                 corners[i][0] = -corners[i][0];
             }
         }
-        let minX = Infinity;
-        let maxX = -Infinity;
-        let minY = Infinity;
-        let maxY = -Infinity;
-        for (const [x, y] of corners) {
-            minX = Math.min(minX, x);
-            maxX = Math.max(maxX, x);
-            minY = Math.min(minY, y);
-            maxY = Math.max(maxY, y);
-        }
+        const box = pointsToAABB(corners);
         return {
-            left: target.x + minX,
-            right: target.x + maxX,
-            bottom: target.y + minY,
-            top: target.y + maxY
+            left: target.x + box.minX,
+            right: target.x + box.maxX,
+            bottom: target.y + box.minY,
+            top: target.y + box.maxY
         };
-    }
-
-    function aabbOverlap(a, b) {
-        return a.left <= b.right && a.right >= b.left && a.bottom <= b.top && a.top >= b.bottom;
-    }
-
-    function aabbContainsPoint(box, x, y) {
-        return x >= box.left && x <= box.right && y >= box.bottom && y <= box.top;
-    }
-
-    function resolveTouchTargetSprite(runtime, targetName, selfTarget) {
-        const target = runtime.getSpriteTargetByName(targetName);
-        if (!target || target === selfTarget) return null;
-        return target;
-    }
-
-    function stagePointToLocalEm(target, stageX, stageY) {
-        let x = stageX - target.x;
-        let y = stageY - target.y;
-        const rotationStyle = target.rotationStyle;
-        if (rotationStyle === 'all around' || rotationStyle === undefined) {
-            const angle = ((target.direction - 90) * Math.PI) / 180;
-            const cos = Math.cos(angle);
-            const sin = Math.sin(angle);
-            const rx = x * cos - y * sin;
-            const ry = x * sin + y * cos;
-            x = rx;
-            y = ry;
-        } else if (rotationStyle === 'left-right' && target.direction < 0) {
-            x = -x;
-        }
-        const scale = (Number.isFinite(target.size) ? target.size : 100) / 100;
-        if (scale !== 0) {
-            x /= scale;
-            y /= scale;
-        }
-        return {
-            x,
-            y
-        };
-    }
-
-    function charGlyphInk(state, index) {
-        const box = state.charBoxes[index];
-        if (!box || !box.style || box.char == null || box.char === ' ') return null;
-        const style = box.style;
-        const fontStyle = shapingFontStyle(style);
-        const ch = box.char === ' ' ? '\u00A0' : box.char;
-        const shape = getGlyphShape(ch, fontStyle['font-family'], fontStyle['font-size'], fontStyle['font-weight'], fontStyle['font-style']);
-        if (!shape) return null;
-        const inkColumns = getGlyphInkColumns(shape);
-        if (!inkColumns) return null;
-
-        const advanceCenterXEm = shape.baselineOriginXEm + shape.advance / 2;
-        const baselineYFromLineCenter = (shape.fontAscentEm - shape.fontDescentEm) / 2;
-        const charCenterX = box.x;
-        const charCenterY = box.y;
-        const drawXEm = charCenterX - advanceCenterXEm;
-        const drawYEm = (charCenterY + baselineYFromLineCenter) - shape.baselineOriginYEm;
-
-        return {
-            inkColumns,
-            width: shape.canvas.width,
-            height: shape.canvas.height,
-            originXEm: drawXEm,
-            originYEm: drawYEm
-        };
-    }
-
-    function charInkContainsLocalPoint(ink, localX, localY) {
-        const px = Math.floor((localX - ink.originXEm) * GLYPH_OVERSAMPLE);
-        const py = Math.floor((localY - ink.originYEm) * GLYPH_OVERSAMPLE);
-        if (px < 0 || py < 0 || px >= ink.width || py >= ink.height) return false;
-        return ink.inkColumns[py * ink.width + px] === 1;
-    }
-
-    function charRangeInkAABBs(state, startIdx, endIdx) {
-        const results = [];
-        for (let idx = startIdx; idx <= endIdx; idx++) {
-            const ink = charGlyphInk(state, idx);
-            if (!ink) continue;
-            results.push({
-                ink,
-                minXEm: ink.originXEm,
-                maxXEm: ink.originXEm + ink.width / GLYPH_OVERSAMPLE,
-                minYEm: ink.originYEm,
-                maxYEm: ink.originYEm + ink.height / GLYPH_OVERSAMPLE
-            });
-        }
-        return results;
-    }
-
-    function charRangeTouchingInk(util, startIdx, endIdx, targetArg) {
-        const state = getState(util.target);
-        flushRenderIfDirty(util.target);
-        const inkEntries = charRangeInkAABBs(state, startIdx, endIdx);
-        if (!inkEntries.length) return false;
-        const selfTarget = util.target;
-
-        let minXEm = Infinity;
-        let maxXEm = -Infinity;
-        let minYEm = Infinity;
-        let maxYEm = -Infinity;
-        for (const entry of inkEntries) {
-            minXEm = Math.min(minXEm, entry.minXEm);
-            maxXEm = Math.max(maxXEm, entry.maxXEm);
-            minYEm = Math.min(minYEm, entry.minYEm);
-            maxYEm = Math.max(maxYEm, entry.maxYEm);
-        }
-        const stageBox = localAABBToStageAABB({
-            minX: minXEm,
-            maxX: maxXEm,
-            minY: minYEm,
-            maxY: maxYEm
-        }, selfTarget);
-
-        if (targetArg === '_mouse_') {
-            const mouse = runtime.ioDevices && runtime.ioDevices.mouse;
-            if (!mouse) return false;
-            const mouseX = mouse.getScratchX();
-            const mouseY = mouse.getScratchY();
-            if (!aabbContainsPoint(stageBox, mouseX, mouseY)) return false;
-            const local = stagePointToLocalEm(selfTarget, mouseX, mouseY);
-            for (const entry of inkEntries) {
-                if (charInkContainsLocalPoint(entry.ink, local.x, local.y)) return true;
-            }
-            return false;
-        }
-
-        const otherTarget = resolveTouchTargetSprite(runtime, targetArg, selfTarget);
-        if (!otherTarget) return false;
-        const renderer = runtime.renderer;
-        if (!renderer || otherTarget.drawableID === undefined || otherTarget.drawableID === null) return false;
-        const otherBounds = renderer.getBounds(otherTarget.drawableID);
-        if (!otherBounds) return false;
-        if (!aabbOverlap(stageBox, {
-                left: otherBounds.left,
-                right: otherBounds.right,
-                bottom: otherBounds.bottom,
-                top: otherBounds.top
-            })) return false;
-
-        const otherDrawable = renderer._allDrawables && renderer._allDrawables[otherTarget.drawableID];
-        if (!otherDrawable || typeof otherDrawable.isTouching !== 'function') return false;
-
-        const overlapLeft = Math.max(stageBox.left, otherBounds.left);
-        const overlapRight = Math.min(stageBox.right, otherBounds.right);
-        const overlapBottom = Math.max(stageBox.bottom, otherBounds.bottom);
-        const overlapTop = Math.min(stageBox.top, otherBounds.top);
-        const startX = Math.floor(overlapLeft);
-        const endX = Math.ceil(overlapRight);
-        const startY = Math.floor(overlapBottom);
-        const endY = Math.ceil(overlapTop);
-        const point = [0, 0];
-        for (let sy = startY; sy <= endY; sy++) {
-            for (let sx = startX; sx <= endX; sx++) {
-                const local = stagePointToLocalEm(selfTarget, sx, sy);
-                let inkHit = false;
-                for (const entry of inkEntries) {
-                    if (charInkContainsLocalPoint(entry.ink, local.x, local.y)) {
-                        inkHit = true;
-                        break;
-                    }
-                }
-                if (!inkHit) continue;
-                point[0] = sx;
-                point[1] = sy;
-                if (otherDrawable.isTouching(point)) return true;
-            }
-        }
-        return false;
-    }
-
-    function charRangeTouchesTarget(util, startIdx, endIdx, targetArg) {
-        const state = getState(util.target);
-        flushRenderIfDirty(util.target);
-        const local = charLocalAABB(state, startIdx, endIdx);
-        if (!local) return false;
-        const selfTarget = util.target;
-        const stageBox = localAABBToStageAABB(local, selfTarget);
-
-        if (targetArg === '_mouse_') {
-            const mouse = runtime.ioDevices && runtime.ioDevices.mouse;
-            if (!mouse) return false;
-            return aabbContainsPoint(stageBox, mouse.getScratchX(), mouse.getScratchY());
-        }
-
-        const otherTarget = resolveTouchTargetSprite(runtime, targetArg, selfTarget);
-        if (!otherTarget) return false;
-        const renderer = runtime.renderer;
-        if (!renderer || otherTarget.drawableID === undefined || otherTarget.drawableID === null) return false;
-        const otherBounds = renderer.getBounds(otherTarget.drawableID);
-        if (!otherBounds) return false;
-        return aabbOverlap(stageBox, {
-            left: otherBounds.left,
-            right: otherBounds.right,
-            bottom: otherBounds.bottom,
-            top: otherBounds.top
-        });
     }
 
     function indexRange(startArg, endArg) {
@@ -1498,7 +1319,7 @@ Enjoy!! :D
     }
 
     function drawMaskedGlyph(destCtx, char, fontFamily, size, weight, style, mask, texture, worldDrawX, worldDrawY, spanW, spanH, spanOriginX, spanOriginY, destX, destY, alpha) {
-        const coverage = Math.max(0, Math.min(100, Scratch.Cast.toNumber(mask.coverage) || 0)) / 100;
+        const coverage = clampPercentToUnit(Scratch.Cast.toNumber(mask.coverage) || 0);
         if (coverage <= 0) return;
 
         const shape = getGlyphShape(char, fontFamily, size, weight, style);
@@ -2329,6 +2150,16 @@ Enjoy!! :D
         return key;
     }
 
+    function getGlyphShapeForFontStyle(char, fontStyleObj) {
+        return getGlyphShape(
+            char,
+            fontStyleObj['font-family'],
+            fontStyleObj['font-size'],
+            fontStyleObj['font-weight'],
+            fontStyleObj['font-style']
+        );
+    }
+
     function computeFinalGradientSpans(state, measured) {
         const spans = new Map();
         if (!measured.lines.length) return spans;
@@ -2339,28 +2170,25 @@ Enjoy!! :D
 
         let groupOccurrenceIndex = null;
         let groupChars = null;
-        let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
+        let box = emptyAABB();
 
         const flushGroup = () => {
             if (!groupChars || !groupChars.length) return;
-            if (isFinite(minX) && isFinite(maxX) && isFinite(minY) && isFinite(maxY)) {
-                const spanW = Math.max(1, maxX - minX);
-                const spanH = Math.max(1, maxY - minY);
+            if (aabbIsFinite(box)) {
+                const spanW = Math.max(1, box.maxX - box.minX);
+                const spanH = Math.max(1, box.maxY - box.minY);
                 for (const gc of groupChars) {
                     spans.set(gc.charIndex, {
                         spanW,
                         spanH,
-                        localOffsetXPx: gc.px - minX,
-                        localOffsetYPx: gc.py - minY
+                        localOffsetXPx: gc.px - box.minX,
+                        localOffsetYPx: gc.py - box.minY
                     });
                 }
             }
             groupOccurrenceIndex = null;
             groupChars = null;
-            minX = Infinity;
-            maxX = -Infinity;
-            minY = Infinity;
-            maxY = -Infinity;
+            box = emptyAABB();
         };
 
         for (let li = 0; li < measured.lines.length; li++) {
@@ -2379,10 +2207,6 @@ Enjoy!! :D
 
             for (const run of runs) {
                 const runOriginX = lineX + run.runStartX;
-                const fontFamily = run.fontStyle['font-family'];
-                const fontSize = run.fontStyle['font-size'];
-                const fontWeight = run.fontStyle['font-weight'];
-                const fontStyle = run.fontStyle['font-style'];
 
                 for (let i = 0; i < run.chars.length; i++) {
                     const rc = run.chars[i];
@@ -2407,7 +2231,7 @@ Enjoy!! :D
                         continue;
                     }
 
-                    const shape = getGlyphShape(ch, fontFamily, fontSize, fontWeight, fontStyle);
+                    const shape = getGlyphShapeForFontStyle(ch, run.fontStyle);
                     if (!shape) continue;
 
                     const charCenterX = runOriginX + pos.shapedX + pos.advance / 2;
@@ -2425,10 +2249,8 @@ Enjoy!! :D
                     const inkBottom = py + h - padYPx;
 
                     groupChars.push({ charIndex, px, py });
-                    minX = Math.min(minX, px);
-                    maxX = Math.max(maxX, px + w);
-                    minY = Math.min(minY, inkTop);
-                    maxY = Math.max(maxY, inkBottom);
+                    expandAABBToPoint(box, px, inkTop);
+                    expandAABBToPoint(box, px + w, inkBottom);
                 }
             }
         }
@@ -2934,6 +2756,7 @@ Enjoy!! :D
         const decorationPad = Math.max(
             0,
             Scratch.Cast.toNumber(state.textBackground.padding) || 0,
+            (Scratch.Cast.toNumber(state.textBackground.padding) || 0) + (Scratch.Cast.toNumber(state.textBackgroundBorder.size) || 0),
             Scratch.Cast.toNumber(state.textBorder.size) || 0,
             (Scratch.Cast.toNumber(state.textShadow.blur) || 0) + Math.abs(Scratch.Cast.toNumber(state.textShadow.offsetX) || 0),
             (Scratch.Cast.toNumber(state.textShadow.blur) || 0) + Math.abs(Scratch.Cast.toNumber(state.textShadow.offsetY) || 0),
@@ -3279,15 +3102,25 @@ Enjoy!! :D
             Math.round(mask.x * 4) + '\u0001' + Math.round(mask.y * 4);
     }
 
+    function glyphDrawRectPx(op, shape) {
+        const advanceCenterXEm = shape.baselineOriginXEm + shape.advance / 2;
+        const baselineYFromLineCenter = (shape.fontAscentEm - shape.fontDescentEm) / 2;
+        const drawXEm = op.x - advanceCenterXEm;
+        const drawYEm = (op.y + baselineYFromLineCenter) - shape.baselineOriginYEm;
+        const px = Math.round(drawXEm * DEST_SCALE);
+        const py = Math.round(drawYEm * DEST_SCALE);
+        return { px, py, w: shape.canvas.width, h: shape.canvas.height };
+    }
+
     function computeSeamlessMaskSpansByIndex(paintOps, areaW, areaH) {
         const spans = new Map();
         let groupIndices = null;
         let groupKey = null;
-        let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
+        let box = emptyAABB();
 
         const flushGroup = () => {
             if (!groupIndices || !groupIndices.length) return;
-            if (!isFinite(minX) || !isFinite(maxX) || !isFinite(minY) || !isFinite(maxY)) return;
+            if (!aabbIsFinite(box)) return;
             const spanW = areaW;
             const spanH = areaH;
             for (const gi of groupIndices) {
@@ -3314,33 +3147,17 @@ Enjoy!! :D
                 flushGroup();
                 groupIndices = [];
                 groupKey = key;
-                minX = Infinity;
-                maxX = -Infinity;
-                minY = Infinity;
-                maxY = -Infinity;
+                box = emptyAABB();
             }
             groupIndices.push(op.charIndex);
 
             if (op.text === '\u00A0' || op.text === '') continue;
 
-            const fontFamily = op.font['font-family'];
-            const fontSize = op.font['font-size'];
-            const fontWeight = op.font['font-weight'];
-            const fontStyle = op.font['font-style'];
-            const shape = getGlyphShape(op.text, fontFamily, fontSize, fontWeight, fontStyle);
-            const advanceCenterXEm = shape.baselineOriginXEm + shape.advance / 2;
-            const baselineYFromLineCenter = (shape.fontAscentEm - shape.fontDescentEm) / 2;
-            const drawXEm = op.x - advanceCenterXEm;
-            const drawYEm = (op.y + baselineYFromLineCenter) - shape.baselineOriginYEm;
-            const px = Math.round(drawXEm * DEST_SCALE);
-            const py = Math.round(drawYEm * DEST_SCALE);
-            const w = shape.canvas.width;
-            const h = shape.canvas.height;
+            const shape = getGlyphShapeForFontStyle(op.text, op.font);
+            const rect = glyphDrawRectPx(op, shape);
 
-            minX = Math.min(minX, px);
-            maxX = Math.max(maxX, px + w);
-            minY = Math.min(minY, py);
-            maxY = Math.max(maxY, py + h);
+            expandAABBToPoint(box, rect.px, rect.py);
+            expandAABBToPoint(box, rect.px + rect.w, rect.py + rect.h);
         }
         flushGroup();
 
@@ -3362,19 +3179,19 @@ Enjoy!! :D
         const spans = new Map();
         let groupIndices = null;
         let groupId = null;
-        let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
+        let box = emptyAABB();
 
         const flushGroup = () => {
             if (!groupIndices || !groupIndices.length) return;
-            if (!isFinite(minX) || !isFinite(maxX) || !isFinite(minY) || !isFinite(maxY)) return;
-            const spanW = Math.max(1, maxX - minX);
-            const spanH = Math.max(1, maxY - minY);
+            if (!aabbIsFinite(box)) return;
+            const spanW = Math.max(1, box.maxX - box.minX);
+            const spanH = Math.max(1, box.maxY - box.minY);
             for (const gi of groupIndices) {
                 spans.set(gi, {
                     spanW,
                     spanH,
-                    originX: minX,
-                    originY: minY
+                    originX: box.minX,
+                    originY: box.minY
                 });
             }
         };
@@ -3392,36 +3209,20 @@ Enjoy!! :D
                 flushGroup();
                 groupIndices = [];
                 groupId = op.gradientSpanId;
-                minX = Infinity;
-                maxX = -Infinity;
-                minY = Infinity;
-                maxY = -Infinity;
+                box = emptyAABB();
             }
             groupIndices.push(op.charIndex);
 
             if (op.text === '\u00A0' || op.text === '') continue;
 
-            const fontFamily = op.font['font-family'];
-            const fontSize = op.font['font-size'];
-            const fontWeight = op.font['font-weight'];
-            const fontStyle = op.font['font-style'];
-            const shape = getGlyphShape(op.text, fontFamily, fontSize, fontWeight, fontStyle);
-            const advanceCenterXEm = shape.baselineOriginXEm + shape.advance / 2;
-            const baselineYFromLineCenter = (shape.fontAscentEm - shape.fontDescentEm) / 2;
-            const drawXEm = op.x - advanceCenterXEm;
-            const drawYEm = (op.y + baselineYFromLineCenter) - shape.baselineOriginYEm;
-            const px = Math.round(drawXEm * DEST_SCALE);
-            const py = Math.round(drawYEm * DEST_SCALE);
-            const w = shape.canvas.width;
-            const h = shape.canvas.height;
+            const shape = getGlyphShapeForFontStyle(op.text, op.font);
+            const rect = glyphDrawRectPx(op, shape);
             const padYPx = Math.round((shape.baselineOriginYEm - shape.fontAscentEm) * DEST_SCALE);
-            const inkTop = py + padYPx;
-            const inkBottom = py + h - padYPx;
+            const inkTop = rect.py + padYPx;
+            const inkBottom = rect.py + rect.h - padYPx;
 
-            minX = Math.min(minX, px);
-            maxX = Math.max(maxX, px + w);
-            minY = Math.min(minY, inkTop);
-            maxY = Math.max(maxY, inkBottom);
+            expandAABBToPoint(box, rect.px, inkTop);
+            expandAABBToPoint(box, rect.px + rect.w, inkBottom);
         }
         flushGroup();
 
@@ -3562,6 +3363,38 @@ Enjoy!! :D
         fragColor = vec4(u_color.rgb * outA, outA);
     }`;
 
+    const GL_BORDERED_ROUNDRECT_FS = `#version 300 es
+    precision highp float;
+    in vec2 v_uv;
+    uniform vec2 u_size;
+    uniform float u_outerRadius;
+    uniform float u_borderInset;
+    uniform float u_innerRadius;
+    uniform vec4 u_fillColor;
+    uniform vec4 u_borderColor;
+    out vec4 fragColor;
+    float sdRoundRect(vec2 p, vec2 halfSize, float radius) {
+        vec2 q = abs(p) - halfSize + radius;
+        float inner = min(max(q.x, q.y), 0.0);
+        float outer = length(max(q, 0.0));
+        return inner + outer - radius;
+    }
+    void main() {
+        vec2 p = (v_uv - 0.5) * u_size;
+        vec2 outerHalf = u_size * 0.5;
+        vec2 innerHalf = outerHalf - vec2(u_borderInset);
+        float aa = 1.0;
+        float outerDist = sdRoundRect(p, outerHalf, u_outerRadius);
+        float outerAlpha = 1.0 - smoothstep(-aa, aa, outerDist);
+        float innerDist = sdRoundRect(p, innerHalf, u_innerRadius);
+        float fillCoverage = 1.0 - smoothstep(-aa, aa, innerDist);
+        vec4 fillPremult = vec4(u_fillColor.rgb * u_fillColor.a, u_fillColor.a);
+        vec4 borderPremult = vec4(u_borderColor.rgb * u_borderColor.a, u_borderColor.a);
+        vec4 composited = mix(borderPremult, fillPremult, fillCoverage);
+        composited *= outerAlpha;
+        fragColor = composited;
+    }`;
+
     const GL_MASKWIPE_FS = `#version 300 es
     precision highp float;
     in vec2 v_uv;
@@ -3661,6 +3494,7 @@ Enjoy!! :D
         const glyphProgram = glLinkProgram(gl, GL_QUAD_VS, GL_GLYPH_FS);
         const solidProgram = glLinkProgram(gl, GL_QUAD_VS, GL_SOLID_FS);
         const roundRectProgram = glLinkProgram(gl, GL_QUAD_VS, GL_ROUNDRECT_FS);
+        const borderedRoundRectProgram = glLinkProgram(gl, GL_QUAD_VS, GL_BORDERED_ROUNDRECT_FS);
         const maskWipeProgram = glLinkProgram(gl, GL_QUAD_VS, GL_MASKWIPE_FS);
 
         const glyphUniforms = glUniformLocations(gl, glyphProgram, [
@@ -3677,6 +3511,10 @@ Enjoy!! :D
         ]);
         const roundRectUniforms = glUniformLocations(gl, roundRectProgram, [
             'u_canvasSize', 'u_origin', 'u_size', 'u_pivot', 'u_rotation', 'u_scale', 'u_radius', 'u_color'
+        ]);
+        const borderedRoundRectUniforms = glUniformLocations(gl, borderedRoundRectProgram, [
+            'u_canvasSize', 'u_origin', 'u_size', 'u_pivot', 'u_rotation', 'u_scale',
+            'u_outerRadius', 'u_borderInset', 'u_innerRadius', 'u_fillColor', 'u_borderColor'
         ]);
         const maskWipeUniforms = glUniformLocations(gl, maskWipeProgram, [
             'u_canvasSize', 'u_origin', 'u_size', 'u_pivot', 'u_rotation', 'u_scale',
@@ -3744,8 +3582,8 @@ Enjoy!! :D
 
         return {
             gl, canvas, quadVao, outputCanvas, outputCtx,
-            glyphProgram, solidProgram, roundRectProgram, maskWipeProgram,
-            glyphUniforms, solidUniforms, roundRectUniforms, maskWipeUniforms,
+            glyphProgram, solidProgram, roundRectProgram, borderedRoundRectProgram, maskWipeProgram,
+            glyphUniforms, solidUniforms, roundRectUniforms, borderedRoundRectUniforms, maskWipeUniforms,
             getGlyphTexture, evictGlyphTexture, getMaskPatternTexture
         };
     }
@@ -3869,6 +3707,28 @@ Enjoy!! :D
         gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
     }
 
+    function drawGlyphShadow(comp, shape, shadowSettings, drawXPx, drawYPx, opAlpha, rotationRad, scaleAmt) {
+        const shadowBlurPx = Math.max(0, Scratch.Cast.toNumber(shadowSettings.blur) || 0) * DEST_SCALE;
+        const shadowOffsetXPx = (Scratch.Cast.toNumber(shadowSettings.offsetX) || 0) * DEST_SCALE;
+        const shadowOffsetYPx = (Scratch.Cast.toNumber(shadowSettings.offsetY) || 0) * DEST_SCALE;
+        const shadowBitmap = getShadowGlyphBitmap(shape, shadowSettings.color, shadowBlurPx, shadowOffsetXPx, shadowOffsetYPx);
+        const shadowAlpha = opAlpha * clampPercentToUnit(Scratch.Cast.toNumber(shadowSettings.opacity) || 0);
+        glDrawGlyph(comp, shadowBitmap, drawXPx + shadowBitmap.offsetX, drawYPx + shadowBitmap.offsetY, null, shadowAlpha, rotationRad, scaleAmt, null, null, true, null, null);
+    }
+
+    function drawGlyphBorder(comp, shape, borderSettings, drawXPx, drawYPx, opAlpha, rotationRad, scaleAmt, hasRotation, hasScale) {
+        const borderAlpha = opAlpha * clampPercentToUnit(Scratch.Cast.toNumber(borderSettings.opacity) || 0);
+        const borderSize = Math.max(0, Scratch.Cast.toNumber(borderSettings.size) || 0) * DEST_SCALE;
+        const borderOffsets = getBorderOffsets(borderSize);
+        for (const [offsetX, offsetY] of borderOffsets) {
+            if (!hasRotation && !hasScale) {
+                glDrawGlyph(comp, shape, drawXPx + offsetX, drawYPx + offsetY, borderSettings.color, borderAlpha, 0, 1, null, null);
+            } else {
+                glDrawGlyph(comp, shape, drawXPx + offsetX, drawYPx + offsetY, borderSettings.color, borderAlpha, rotationRad, scaleAmt, null, null, false, null, null);
+            }
+        }
+    }
+
     function glDrawSolidRect(comp, cx, cy, w, h, color, alpha) {
         const gl = comp.gl;
         const uni = comp.solidUniforms;
@@ -3885,6 +3745,20 @@ Enjoy!! :D
         gl.uniform1f(uni.u_radius, radius);
         const c = hexToRgbaArray(color, alpha == null ? 1 : alpha);
         gl.uniform4f(uni.u_color, c[0], c[1], c[2], c[3]);
+        gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+    }
+
+    function glDrawBorderedRoundRect(comp, cx, cy, borderWidth, borderHeight, outerRadius, borderInset, innerRadius, fillColor, fillAlpha, borderColor, borderAlpha) {
+        const gl = comp.gl;
+        const uni = comp.borderedRoundRectUniforms;
+        drawGLQuad(comp, comp.borderedRoundRectProgram, uni, cx - borderWidth / 2, cy - borderHeight / 2, borderWidth, borderHeight, 0, 0, 0, 1);
+        gl.uniform1f(uni.u_outerRadius, outerRadius);
+        gl.uniform1f(uni.u_borderInset, borderInset);
+        gl.uniform1f(uni.u_innerRadius, innerRadius);
+        const fc = hexToRgbaArray(fillColor, fillAlpha == null ? 1 : fillAlpha);
+        gl.uniform4f(uni.u_fillColor, fc[0], fc[1], fc[2], fc[3]);
+        const bc = hexToRgbaArray(borderColor, borderAlpha == null ? 1 : borderAlpha);
+        gl.uniform4f(uni.u_borderColor, bc[0], bc[1], bc[2], bc[3]);
         gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
     }
 
@@ -3948,15 +3822,35 @@ Enjoy!! :D
         gl.blendFunc(gl.ONE, gl.ONE_MINUS_SRC_ALPHA);
 
         const background = state.textBackground;
-        if (background.enabled) {
+        const backgroundBorderSize = Math.max(0, Scratch.Cast.toNumber(state.textBackgroundBorder.size) || 0) * DEST_SCALE;
+        if (background.enabled || backgroundBorderSize > 0) {
             const padding = Math.max(0, Scratch.Cast.toNumber(background.padding) || 0) * DEST_SCALE;
             const width = textWidth * DEST_SCALE + padding * 2;
             const height = textHeight * DEST_SCALE + padding * 2;
             const x = (originX + textBoxOffsetX) * DEST_SCALE - width / 2;
             const y = originY * DEST_SCALE - height / 2;
-            const opacity = Math.max(0, Math.min(100, Scratch.Cast.toNumber(background.opacity) || 0)) / 100;
-            const radius = Math.min(Math.max(0, Scratch.Cast.toNumber(background.radius) || 0) * DEST_SCALE, width / 2, height / 2);
-            glDrawRoundRect(comp, x + width / 2, y + height / 2, width, height, radius, background.color, opacity);
+            const rawRadius = Math.max(0, Scratch.Cast.toNumber(background.radius) || 0) * DEST_SCALE;
+            const radius = Math.min(rawRadius, width / 2, height / 2);
+            const borderRoundness = clampPercentToUnit(Scratch.Cast.toNumber(state.textBackgroundBorder.roundness));
+            if (backgroundBorderSize > 0 && background.enabled) {
+                const borderWidth = width + backgroundBorderSize * 2;
+                const borderHeight = height + backgroundBorderSize * 2;
+                const borderRadius = Math.min(rawRadius + backgroundBorderSize * borderRoundness, borderWidth / 2, borderHeight / 2);
+                const opacity = clampPercentToUnit(Scratch.Cast.toNumber(background.opacity) || 0);
+                glDrawBorderedRoundRect(
+                    comp, x + width / 2, y + height / 2, borderWidth, borderHeight,
+                    borderRadius, backgroundBorderSize, radius,
+                    background.color, opacity, state.textBackgroundBorder.color, 1
+                );
+            } else if (backgroundBorderSize > 0) {
+                const borderWidth = width + backgroundBorderSize * 2;
+                const borderHeight = height + backgroundBorderSize * 2;
+                const borderRadius = Math.min(rawRadius + backgroundBorderSize * borderRoundness, borderWidth / 2, borderHeight / 2);
+                glDrawRoundRect(comp, x + width / 2, y + height / 2, borderWidth, borderHeight, borderRadius, state.textBackgroundBorder.color, 1);
+            } else if (background.enabled) {
+                const opacity = clampPercentToUnit(Scratch.Cast.toNumber(background.opacity) || 0);
+                glDrawRoundRect(comp, x + width / 2, y + height / 2, width, height, radius, background.color, opacity);
+            }
         }
 
         const maskSpansByIndex = getSeamlessMaskSpans(state, paintOps, state.layoutKey + '\u0003' + docW + '\u0003' + docH, docW * DEST_SCALE, docH * DEST_SCALE);
@@ -3966,12 +3860,7 @@ Enjoy!! :D
             const op = paintOps[i];
             if (op.text === '\u00A0' || op.text === '') continue;
 
-            const fontFamily = op.font['font-family'];
-            const fontSize = op.font['font-size'];
-            const fontWeight = op.font['font-weight'];
-            const fontStyle = op.font['font-style'];
-
-            const shape = getGlyphShape(op.text, fontFamily, fontSize, fontWeight, fontStyle);
+            const shape = getGlyphShapeForFontStyle(op.text, op.font);
             const isColorEmoji = shape.isColorGlyph && state.emojiMode === 2;
 
             let gradSpan = null;
@@ -4012,45 +3901,17 @@ Enjoy!! :D
             const blurPx = op.blur > 0 ? (op.blur / 100) * fontSize * 0.5 * DEST_SCALE : 0;
 
             const charShadow = op.shadow;
-            if (charShadow) {
-                const shadowBlurPx = Math.max(0, Scratch.Cast.toNumber(charShadow.blur) || 0) * DEST_SCALE;
-                const shadowOffsetXPx = (Scratch.Cast.toNumber(charShadow.offsetX) || 0) * DEST_SCALE;
-                const shadowOffsetYPx = (Scratch.Cast.toNumber(charShadow.offsetY) || 0) * DEST_SCALE;
-                const shadowBitmap = getShadowGlyphBitmap(shape, charShadow.color, shadowBlurPx, shadowOffsetXPx, shadowOffsetYPx);
-                const shadowAlpha = opAlpha * Math.max(0, Math.min(100, Scratch.Cast.toNumber(charShadow.opacity) || 0)) / 100;
-                glDrawGlyph(comp, shadowBitmap, drawXPx + shadowBitmap.offsetX, drawYPx + shadowBitmap.offsetY, null, shadowAlpha, rotationRad, scaleAmt, null, null, true, null, null);
-            } else if (state.textShadow.enabled) {
-                const shadowBlurPx = Math.max(0, Scratch.Cast.toNumber(state.textShadow.blur) || 0) * DEST_SCALE;
-                const shadowOffsetXPx = (Scratch.Cast.toNumber(state.textShadow.offsetX) || 0) * DEST_SCALE;
-                const shadowOffsetYPx = (Scratch.Cast.toNumber(state.textShadow.offsetY) || 0) * DEST_SCALE;
-                const shadowBitmap = getShadowGlyphBitmap(shape, state.textShadow.color, shadowBlurPx, shadowOffsetXPx, shadowOffsetYPx);
-                const shadowAlpha = opAlpha * Math.max(0, Math.min(100, Scratch.Cast.toNumber(state.textShadow.opacity) || 0)) / 100;
-                glDrawGlyph(comp, shadowBitmap, drawXPx + shadowBitmap.offsetX, drawYPx + shadowBitmap.offsetY, null, shadowAlpha, rotationRad, scaleAmt, null, null, true, null, null);
+            const activeShadow = charShadow || (state.textShadow.enabled ? state.textShadow : null);
+            if (activeShadow) {
+                drawGlyphShadow(comp, shape, activeShadow, drawXPx, drawYPx, opAlpha, rotationRad, scaleAmt);
             }
 
             const charBorder = op.border;
-            if (!isColorEmoji && charBorder && Scratch.Cast.toNumber(charBorder.size) > 0) {
-                const borderAlpha = opAlpha * Math.max(0, Math.min(100, Scratch.Cast.toNumber(charBorder.opacity) || 0)) / 100;
-                const borderSize = Math.max(0, Scratch.Cast.toNumber(charBorder.size) || 0) * DEST_SCALE;
-                const borderOffsets = getBorderOffsets(borderSize);
-                for (const [offsetX, offsetY] of borderOffsets) {
-                    if (!hasRotation && !hasScale) {
-                        glDrawGlyph(comp, shape, drawXPx + offsetX, drawYPx + offsetY, charBorder.color, borderAlpha, 0, 1, null, null);
-                    } else {
-                        glDrawGlyph(comp, shape, drawXPx + offsetX, drawYPx + offsetY, charBorder.color, borderAlpha, rotationRad, scaleAmt, null, null, false, null, null);
-                    }
-                }
-            } else if (!isColorEmoji && state.textBorder.enabled && Scratch.Cast.toNumber(state.textBorder.size) > 0) {
-                const borderAlpha = opAlpha * Math.max(0, Math.min(100, Scratch.Cast.toNumber(state.textBorder.opacity) || 0)) / 100;
-                const borderSize = Math.max(0, Scratch.Cast.toNumber(state.textBorder.size) || 0) * DEST_SCALE;
-                const borderOffsets = getBorderOffsets(borderSize);
-                for (const [offsetX, offsetY] of borderOffsets) {
-                    if (!hasRotation && !hasScale) {
-                        glDrawGlyph(comp, shape, drawXPx + offsetX, drawYPx + offsetY, state.textBorder.color, borderAlpha, 0, 1, null, null);
-                    } else {
-                        glDrawGlyph(comp, shape, drawXPx + offsetX, drawYPx + offsetY, state.textBorder.color, borderAlpha, rotationRad, scaleAmt, null, null, false, null, null);
-                    }
-                }
+            const charBorderValid = charBorder && Scratch.Cast.toNumber(charBorder.size) > 0;
+            const globalBorderValid = state.textBorder.enabled && Scratch.Cast.toNumber(state.textBorder.size) > 0;
+            const activeBorder = charBorderValid ? charBorder : (globalBorderValid ? state.textBorder : null);
+            if (!isColorEmoji && activeBorder) {
+                drawGlyphBorder(comp, shape, activeBorder, drawXPx, drawYPx, opAlpha, rotationRad, scaleAmt, hasRotation, hasScale);
             }
 
             if (blurPx > 0 && !op.gradient && !isColorEmoji) {
@@ -4068,7 +3929,7 @@ Enjoy!! :D
             if (op.mask && !op.gradient && !isColorEmoji) {
                 const texture = getMaskTexture(op.mask.targetName, op.mask.costumeName);
                 if (texture) {
-                    const maskOpacity = Math.max(0, Math.min(100, Scratch.Cast.toNumber(op.mask.opacity != null ? op.mask.opacity : 100))) / 100;
+                    const maskOpacity = clampPercentToUnit(Scratch.Cast.toNumber(op.mask.opacity != null ? op.mask.opacity : 100));
                     const combinedAlpha = opAlpha * maskOpacity;
                     if (combinedAlpha > 0) {
                         const span = maskSpansByIndex.get(op.charIndex);
@@ -4082,7 +3943,7 @@ Enjoy!! :D
                         matrix.scaleSelf(zoom, zoom);
                         const glMatrix = domMatrixToGl3x3(matrix, texture.width, texture.height);
 
-                        const coverage = Math.max(0, Math.min(100, Scratch.Cast.toNumber(op.mask.coverage != null ? op.mask.coverage : 100))) / 100;
+                        const coverage = clampPercentToUnit(Scratch.Cast.toNumber(op.mask.coverage != null ? op.mask.coverage : 100));
                         if (coverage > 0) {
                             let wipeInfo = null;
                             if (coverage < 1) {
@@ -4967,6 +4828,52 @@ Enjoy!! :D
                         }
                     },
                     {
+                        opcode: 'setBackgroundBorder',
+                        blockType: Scratch.BlockType.COMMAND,
+                        text: 'set background border color to [COLOR] size to [SIZE]',
+                        arguments: {
+                            COLOR: {
+                                type: Scratch.ArgumentType.COLOR
+                            },
+                            SIZE: {
+                                type: Scratch.ArgumentType.NUMBER,
+                                defaultValue: 2
+                            }
+                        }
+                    },
+                    {
+                        opcode: 'setBackgroundBorderColor',
+                        blockType: Scratch.BlockType.COMMAND,
+                        text: 'set background border color to [COLOR]',
+                        arguments: {
+                            COLOR: {
+                                type: Scratch.ArgumentType.COLOR
+                            }
+                        }
+                    },
+                    {
+                        opcode: 'setBackgroundBorderSize',
+                        blockType: Scratch.BlockType.COMMAND,
+                        text: 'set background border size to [SIZE]',
+                        arguments: {
+                            SIZE: {
+                                type: Scratch.ArgumentType.NUMBER,
+                                defaultValue: 2
+                            }
+                        }
+                    },
+                    {
+                        opcode: 'setBackgroundBorderRoundness',
+                        blockType: Scratch.BlockType.COMMAND,
+                        text: 'set background border roundness to [ROUNDNESS] %',
+                        arguments: {
+                            ROUNDNESS: {
+                                type: Scratch.ArgumentType.NUMBER,
+                                defaultValue: 100
+                            }
+                        }
+                    },
+                    {
                         blockType: Scratch.BlockType.LABEL,
                         text: 'Text Border'
                     },
@@ -5806,52 +5713,6 @@ Enjoy!! :D
                             }
                         }
                     },
-                    {
-                        opcode: 'charTouching',
-                        blockType: Scratch.BlockType.BOOLEAN,
-                        text: 'character [INDEX] touching [TARGET] [MODE]?',
-                        arguments: {
-                            INDEX: {
-                                type: Scratch.ArgumentType.NUMBER,
-                                defaultValue: 1
-                            },
-                            TARGET: {
-                                type: Scratch.ArgumentType.STRING,
-                                menu: 'TOUCH_TARGET',
-                                defaultValue: '_mouse_'
-                            },
-                            MODE: {
-                                type: Scratch.ArgumentType.STRING,
-                                menu: 'TOUCH_MODE',
-                                defaultValue: 'bounding box'
-                            }
-                        }
-                    },
-                    {
-                        opcode: 'charRangeTouching',
-                        blockType: Scratch.BlockType.BOOLEAN,
-                        text: 'character [START] to [END] touching [TARGET] [MODE]?',
-                        arguments: {
-                            START: {
-                                type: Scratch.ArgumentType.NUMBER,
-                                defaultValue: 1
-                            },
-                            END: {
-                                type: Scratch.ArgumentType.NUMBER,
-                                defaultValue: 1
-                            },
-                            TARGET: {
-                                type: Scratch.ArgumentType.STRING,
-                                menu: 'TOUCH_TARGET',
-                                defaultValue: '_mouse_'
-                            },
-                            MODE: {
-                                type: Scratch.ArgumentType.STRING,
-                                menu: 'TOUCH_MODE',
-                                defaultValue: 'bounding box'
-                            }
-                        }
-                    },
 					'---',
                     {
                         opcode: 'getCharCount',
@@ -6113,12 +5974,6 @@ Enjoy!! :D
                     },
                     DIMENSION: {
                         items: ['width', 'height']
-                    },
-                    TOUCH_TARGET: {
-                        items: 'getTouchTargetMenuItems'
-                    },
-                    TOUCH_MODE: {
-                        items: ['bounding box', 'ink']
                     }
                 }
             };
@@ -6355,42 +6210,6 @@ Enjoy!! :D
             return items;
         }
 
-        getTouchTargetMenuItems() {
-            const items = [{
-                text: 'mouse pointer',
-                value: '_mouse_'
-            }];
-            const names = new Set();
-            const editingTarget = runtime.getEditingTarget && runtime.getEditingTarget();
-            for (const target of runtime.targets) {
-                if (target.isStage || target.isOriginal === false) continue;
-                if (editingTarget && target === editingTarget) continue;
-                const name = target.getName();
-                if (!names.has(name)) {
-                    names.add(name);
-                    items.push({
-                        text: name,
-                        value: name
-                    });
-                }
-            }
-            if (!editingTarget) {
-                items.length = 1;
-                for (const target of runtime.targets) {
-                    if (target.isStage || target.isOriginal === false) continue;
-                    const name = target.getName();
-                    if (!names.has(name)) {
-                        names.add(name);
-                        items.push({
-                            text: name,
-                            value: name
-                        });
-                    }
-                }
-            }
-            return items;
-        }
-
         getMaskCostumeMenuItems() {
             const items = [];
             const seen = new Set();
@@ -6576,7 +6395,7 @@ Enjoy!! :D
 
         setTextShadowOpacity(args, util) {
             const state = getState(util.target);
-            state.textShadow.opacity = Math.max(0, Math.min(100, Scratch.Cast.toNumber(args.PCT)));
+            state.textShadow.opacity = clampPercent(Scratch.Cast.toNumber(args.PCT));
             schedulePaint(util.target, state);
         }
 
@@ -6609,7 +6428,7 @@ Enjoy!! :D
 
         setTextBackgroundOpacity(args, util) {
             const state = getState(util.target);
-            state.textBackground.opacity = Math.max(0, Math.min(100, Scratch.Cast.toNumber(args.PCT)));
+            state.textBackground.opacity = clampPercent(Scratch.Cast.toNumber(args.PCT));
             schedulePaint(util.target, state);
         }
 
@@ -6641,13 +6460,40 @@ Enjoy!! :D
 
         setTextBorderOpacity(args, util) {
             const state = getState(util.target);
-            state.textBorder.opacity = Math.max(0, Math.min(100, Scratch.Cast.toNumber(args.PCT)));
+            state.textBorder.opacity = clampPercent(Scratch.Cast.toNumber(args.PCT));
             schedulePaint(util.target, state);
         }
 
         setTextBorderSize(args, util) {
             const state = getState(util.target);
             state.textBorder.size = Math.max(0, Scratch.Cast.toNumber(args.SIZE));
+            schedulePaint(util.target, state);
+        }
+
+        setBackgroundBorder(args, util) {
+            const state = getState(util.target);
+            const color = Scratch.Cast.toString(args.COLOR);
+            const size = Math.max(0, Scratch.Cast.toNumber(args.SIZE));
+            state.textBackgroundBorder.color = color;
+            state.textBackgroundBorder.size = size;
+            schedulePaint(util.target, state);
+        }
+
+        setBackgroundBorderColor(args, util) {
+            const state = getState(util.target);
+            state.textBackgroundBorder.color = Scratch.Cast.toString(args.COLOR);
+            schedulePaint(util.target, state);
+        }
+
+        setBackgroundBorderSize(args, util) {
+            const state = getState(util.target);
+            state.textBackgroundBorder.size = Math.max(0, Scratch.Cast.toNumber(args.SIZE));
+            schedulePaint(util.target, state);
+        }
+
+        setBackgroundBorderRoundness(args, util) {
+            const state = getState(util.target);
+            state.textBackgroundBorder.roundness = clampPercent(Scratch.Cast.toNumber(args.ROUNDNESS));
             schedulePaint(util.target, state);
         }
 
@@ -6843,7 +6689,7 @@ Enjoy!! :D
         setCharOpacity(args, util) {
             const state = getState(util.target);
             const idx = Scratch.Cast.toNumber(args.INDEX) - 1;
-            const opacity = Math.max(0, Math.min(100, Scratch.Cast.toNumber(args.PCT))) / 100;
+            const opacity = clampPercentToUnit(Scratch.Cast.toNumber(args.PCT));
             const exists = !!state.charOverrides[idx];
             const o = getCharOverride(state, idx);
             if (exists && o.opacity === opacity) return;
@@ -6895,7 +6741,7 @@ Enjoy!! :D
             const validProps = ['x', 'y', 'rotation', 'opacity', 'scale'];
             if (!validProps.includes(property)) return;
             let targetValue = Scratch.Cast.toNumber(args.VALUE);
-            if (property === 'opacity') targetValue = Math.max(0, Math.min(100, targetValue)) / 100;
+            if (property === 'opacity') targetValue = clampPercentToUnit(targetValue);
             if (property === 'scale') targetValue = Math.max(0, targetValue) / 100;
             const duration = Math.max(0, Scratch.Cast.toNumber(args.SECS));
             const easingName = Scratch.Cast.toString(args.EASING).toLowerCase();
@@ -6944,7 +6790,7 @@ Enjoy!! :D
                     return;
                 }
                 let targetValue = Scratch.Cast.toNumber(args.VALUE);
-                if (property === 'opacity') targetValue = Math.max(0, Math.min(100, targetValue)) / 100;
+                if (property === 'opacity') targetValue = clampPercentToUnit(targetValue);
                 if (property === 'scale') targetValue = Math.max(0, targetValue) / 100;
                 const duration = Math.max(0, Scratch.Cast.toNumber(args.SECS));
                 const easingName = Scratch.Cast.toString(args.EASING).toLowerCase();
@@ -7370,27 +7216,6 @@ Enjoy!! :D
             return dimension === 'height' ? box.height : box.width;
         }
 
-        charTouching(args, util) {
-            const idx = Scratch.Cast.toNumber(args.INDEX) - 1;
-            const targetArg = Scratch.Cast.toString(args.TARGET);
-            const mode = Scratch.Cast.toString(args.MODE).toLowerCase();
-            return mode === 'ink' ?
-                charRangeTouchingInk(util, idx, idx, targetArg) :
-                charRangeTouchesTarget(util, idx, idx, targetArg);
-        }
-
-        charRangeTouching(args, util) {
-            const {
-                start,
-                end
-            } = indexRange(Scratch.Cast.toNumber(args.START), Scratch.Cast.toNumber(args.END));
-            const targetArg = Scratch.Cast.toString(args.TARGET);
-            const mode = Scratch.Cast.toString(args.MODE).toLowerCase();
-            return mode === 'ink' ?
-                charRangeTouchingInk(util, start, end, targetArg) :
-                charRangeTouchesTarget(util, start, end, targetArg);
-        }
-
         getCharCount(args, util) {
             const state = getState(util.target);
             return stripMarkup(state.rawText).length;
@@ -7441,7 +7266,7 @@ Enjoy!! :D
         shadowMarkup(args) {
             const text = Scratch.Cast.toString(args.TEXT);
             const color = Scratch.Cast.toString(args.COLOR);
-            const opacity = Math.max(0, Math.min(100, Scratch.Cast.toNumber(args.OPACITY) || 0));
+            const opacity = clampPercent(Scratch.Cast.toNumber(args.OPACITY) || 0);
             const blur = Math.max(0, Scratch.Cast.toNumber(args.BLUR) || 0);
             const offsetX = Scratch.Cast.toNumber(args.OFFSET_X) || 0;
             const offsetY = Scratch.Cast.toNumber(args.OFFSET_Y) || 0;
@@ -7451,7 +7276,7 @@ Enjoy!! :D
         borderMarkup(args) {
             const text = Scratch.Cast.toString(args.TEXT);
             const color = Scratch.Cast.toString(args.COLOR);
-            const opacity = Math.max(0, Math.min(100, Scratch.Cast.toNumber(args.OPACITY) || 0));
+            const opacity = clampPercent(Scratch.Cast.toNumber(args.OPACITY) || 0);
             const size = Math.max(0, Scratch.Cast.toNumber(args.SIZE) || 0);
             return `[border=${color}|${opacity}|${size}]${text}[/border]`;
         }

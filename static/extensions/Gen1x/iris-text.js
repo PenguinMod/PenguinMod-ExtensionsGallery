@@ -23,7 +23,6 @@ Enjoy!! :D
     const STATE_KEY = 'irisText';
     const DEFAULT_TEXT = 'Hello world!';
 
-    const WORKER_DISCLAIMER_FLAG_KEY = 'irisText_seenWorkerDisclaimer';
     const BROWSER_DISCLAIMER_FLAG_KEY = 'irisText_seenBrowserDisclaimer';
 
     const blockIconURI = 'data:image/png;base64,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';
@@ -86,9 +85,19 @@ Enjoy!! :D
         [SCRATCH_ID]: 'sans-serif'
     };
 
+    const EMOJI_FONT_STACK = '"Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji"';
+
     function cssFontFamily(fontId) {
         const fallback = FONT_FALLBACKS[fontId] || 'sans-serif';
-        return `"${fontId}", ${fallback}`;
+        return `"${fontId}", ${EMOJI_FONT_STACK}, ${fallback}`;
+    }
+
+    const EMOJI_CHAR_RE = /\p{Extended_Pictographic}|\p{Emoji_Presentation}|\p{Regional_Indicator}|[#*0-9]\uFE0F?\u20E3/u;
+
+    function isEmojiChar(char) {
+        if (!char) return false;
+        EMOJI_CHAR_RE.lastIndex = 0;
+        return EMOJI_CHAR_RE.test(char);
     }
 
     function randomFontOtherThan(currentFont) {
@@ -176,7 +185,7 @@ Enjoy!! :D
         ];
     }
 
-    const KNOWN_TAGS = ['color', 'b', 'i', 'u', 's', 'size', 'font', 'gradient'];
+    const KNOWN_TAGS = ['color', 'b', 'i', 'u', 's', 'size', 'font', 'gradient', 'blur', 'shadow', 'border'];
     const SELF_CLOSING_TAGS = ['wait'];
     const TAG_RE = /\[(\/?)([a-z0-9_-]+)(?:=([^\]]+))?\]/gi;
     const TAG_RE_STRIP = /\[(\/?)([a-z0-9_-]+)(?:=([^\]]+))?\]/gi;
@@ -207,13 +216,60 @@ Enjoy!! :D
         };
     }
 
+    function parseShadowValue(value) {
+        if (!value) return null;
+        const parts = value.split('|');
+        const color = (parts[0] || '').trim();
+        if (!color) return null;
+        const opacity = Math.max(0, Math.min(100, Scratch.Cast.toNumber(parts.length > 1 ? parts[1] : '') || 0));
+        const blur = Math.max(0, Scratch.Cast.toNumber(parts.length > 2 ? parts[2] : '') || 0);
+        const offsetX = Scratch.Cast.toNumber(parts.length > 3 ? parts[3] : '') || 0;
+        const offsetY = Scratch.Cast.toNumber(parts.length > 4 ? parts[4] : '') || 0;
+        return {
+            color,
+            opacity,
+            blur,
+            offsetX,
+            offsetY
+        };
+    }
+
+    function parseBorderValue(value) {
+        if (!value) return null;
+        const parts = value.split('|');
+        const color = (parts[0] || '').trim();
+        if (!color) return null;
+        const opacity = Math.max(0, Math.min(100, Scratch.Cast.toNumber(parts.length > 1 ? parts[1] : '') || 0));
+        const size = Math.max(0, Scratch.Cast.toNumber(parts.length > 2 ? parts[2] : '') || 0);
+        return {
+            color,
+            opacity,
+            size
+        };
+    }
+
     let gradientSpanIdSeq = 1;
+
+    const graphemeSegmenter = typeof Intl !== 'undefined' && typeof Intl.Segmenter === 'function' ?
+        new Intl.Segmenter(undefined, { granularity: 'grapheme' }) : null;
+
+    function splitGraphemes(str) {
+        if (!str) return [];
+        if (graphemeSegmenter) {
+            const out = [];
+            for (const seg of graphemeSegmenter.segment(str)) out.push(seg.segment);
+            return out;
+        }
+        return Array.from(str);
+    }
 
     function parseRichText(text, base) {
         const families = new Set([base.font]);
         const stack = [Object.assign({
             customTags: [],
-            gradientOccurrenceIndex: -1
+            gradientOccurrenceIndex: -1,
+            shadow: null,
+            border: null
         }, base)];
         const out = [];
         TAG_RE.lastIndex = 0;
@@ -222,24 +278,31 @@ Enjoy!! :D
         let gradientOccurrenceSeq = 0;
         while ((match = TAG_RE.exec(text)) !== null || i < text.length) {
             const tagStart = match ? match.index : text.length;
-            while (i < tagStart) {
-                const style = stack[stack.length - 1];
-                out.push({
-                    char: text[i],
-                    color: style.color,
-                    bold: style.bold,
-                    italic: style.italic,
-                    underline: style.underline,
-                    strike: style.strike,
-                    size: style.size,
-                    font: style.font,
-                    tags: style.customTags,
-                    gradient: style.gradient,
-                    gradientSpanId: style.gradientSpanId,
-                    gradientOccurrenceIndex: style.gradientOccurrenceIndex
-                });
-                families.add(style.font);
-                i++;
+            if (i < tagStart) {
+                const segment = text.slice(i, tagStart);
+                const graphemes = splitGraphemes(segment);
+                for (const g of graphemes) {
+                    const style = stack[stack.length - 1];
+                    out.push({
+                        char: g,
+                        color: style.color,
+                        bold: style.bold,
+                        italic: style.italic,
+                        underline: style.underline,
+                        strike: style.strike,
+                        size: style.size,
+                        font: style.font,
+                        blur: style.blur,
+                        tags: style.customTags,
+                        gradient: style.gradient,
+                        gradientSpanId: style.gradientSpanId,
+                        gradientOccurrenceIndex: style.gradientOccurrenceIndex,
+                        shadow: style.shadow,
+                        border: style.border
+                    });
+                    families.add(style.font);
+                }
+                i = tagStart;
             }
             if (!match) break;
             const closing = match[1] === '/';
@@ -261,10 +324,13 @@ Enjoy!! :D
                     strike: prev.strike,
                     size: prev.size,
                     font: prev.font,
+                    blur: prev.blur,
                     customTags: prev.customTags,
                     gradient: prev.gradient,
                     gradientSpanId: prev.gradientSpanId,
-                    gradientOccurrenceIndex: prev.gradientOccurrenceIndex
+                    gradientOccurrenceIndex: prev.gradientOccurrenceIndex,
+                    shadow: prev.shadow,
+                    border: prev.border
                 };
                 if (KNOWN_TAGS.indexOf(tag) !== -1) {
                     switch (tag) {
@@ -298,6 +364,19 @@ Enjoy!! :D
                             top.gradientOccurrenceIndex = parsed ? gradientOccurrenceSeq++ : top.gradientOccurrenceIndex;
                             break;
                         }
+                        case 'blur':
+                            top.blur = Math.max(0, Math.min(100, Scratch.Cast.toNumber(value)));
+                            break;
+                        case 'shadow': {
+                            const parsedShadow = parseShadowValue(value);
+                            top.shadow = parsedShadow || top.shadow;
+                            break;
+                        }
+                        case 'border': {
+                            const parsedBorder = parseBorderValue(value);
+                            top.border = parsedBorder || top.border;
+                            break;
+                        }
                     }
                 } else {
                     top.customTags = top.customTags.concat([tag]);
@@ -319,6 +398,7 @@ Enjoy!! :D
             strike: style.strike,
             size: style.size,
             font: style.font,
+            blur: style.blur,
             tags: Array.isArray(style.tags) ? style.tags.slice() : []
         };
     }
@@ -332,6 +412,7 @@ Enjoy!! :D
         if (snapshot.strike !== style.strike) return false;
         if (snapshot.size !== style.size) return false;
         if (snapshot.font !== style.font) return false;
+        if (snapshot.blur !== style.blur) return false;
         const tags = Array.isArray(style.tags) ? style.tags : null;
         const snapTags = snapshot.tags;
         if (!tags) return snapTags.length === 0;
@@ -355,6 +436,7 @@ Enjoy!! :D
             char.strike = override.strike;
             char.size = override.size;
             char.font = override.font;
+            char.blur = override.blur;
             if (families) families.add(override.font);
         }
     }
@@ -369,6 +451,7 @@ Enjoy!! :D
         if (typeof value.strike === 'boolean') style.strike = value.strike;
         if (Number.isFinite(value.size)) style.size = Math.max(1, value.size);
         if (typeof value.font === 'string') style.font = value.font;
+        if (Number.isFinite(value.blur)) style.blur = Math.max(0, Math.min(100, value.blur));
         if (Array.isArray(value.tags) && value.tags.every(tag => typeof tag === 'string')) {
             style.tags = value.tags.slice();
         }
@@ -396,9 +479,12 @@ Enjoy!! :D
             strike: false,
             size: 32,
             font: HANDWRITING_ID,
+            blur: 0,
             customTags: [],
             gradient: null,
-            gradientSpanId: null
+            gradientSpanId: null,
+            shadow: null,
+            border: null
         };
     }
 
@@ -440,6 +526,7 @@ Enjoy!! :D
             baseStyle: defaultBaseStyle(),
             align: 'center',
             smoothing: true,
+            emojiMode: 1,
             growDownwardOnly: false,
             letterSpacing: 0,
             lineSpacing: 1.2,
@@ -556,6 +643,7 @@ Enjoy!! :D
             state.typingSpeeds = Object.assign(defaults.typingSpeeds, state.typingSpeeds || {});
             state.customTypingSpeeds = Object.assign({}, state.customTypingSpeeds || {});
             if (typeof state.smoothing !== 'boolean') state.smoothing = defaults.smoothing;
+            if (state.emojiMode !== 1 && state.emojiMode !== 2) state.emojiMode = defaults.emojiMode;
             if (typeof state.growDownwardOnly !== 'boolean') state.growDownwardOnly = defaults.growDownwardOnly;
             state.charStyleOverrides = Object.assign({}, state.charStyleOverrides || {});
             if (typeof state.resetCharTransformsOnText !== 'boolean') state.resetCharTransformsOnText = defaults.resetCharTransformsOnText;
@@ -591,7 +679,7 @@ Enjoy!! :D
         let match;
 
         const addCharacters = value => {
-            for (const char of Array.from(value)) {
+            for (const char of splitGraphemes(value)) {
                 steps.push({
                     content: char,
                     char
@@ -642,6 +730,7 @@ Enjoy!! :D
             },
             align: state.align,
             smoothing: state.smoothing,
+            emojiMode: state.emojiMode,
             growDownwardOnly: state.growDownwardOnly,
             resetCharTransformsOnText: state.resetCharTransformsOnText,
             letterSpacing: state.letterSpacing,
@@ -673,6 +762,7 @@ Enjoy!! :D
             state.align = settings.align;
         }
         if (typeof settings.smoothing === 'boolean') state.smoothing = settings.smoothing;
+        if (settings.emojiMode === 1 || settings.emojiMode === 2) state.emojiMode = settings.emojiMode;
         if (typeof settings.growDownwardOnly === 'boolean') state.growDownwardOnly = settings.growDownwardOnly;
         if (typeof settings.resetCharTransformsOnText === 'boolean') state.resetCharTransformsOnText = settings.resetCharTransformsOnText;
         if (Number.isFinite(settings.letterSpacing)) state.letterSpacing = settings.letterSpacing;
@@ -756,6 +846,271 @@ Enjoy!! :D
         return true;
     }
 
+    function charLocalAABB(state, startIdx, endIdx) {
+        let minX = Infinity;
+        let maxX = -Infinity;
+        let minY = Infinity;
+        let maxY = -Infinity;
+        let found = false;
+        for (let idx = startIdx; idx <= endIdx; idx++) {
+            const box = state.charBoxes[idx];
+            if (!box) continue;
+            found = true;
+            const halfW = box.width / 2;
+            const halfH = box.height / 2;
+            minX = Math.min(minX, box.x - halfW);
+            maxX = Math.max(maxX, box.x + halfW);
+            minY = Math.min(minY, box.y - halfH);
+            maxY = Math.max(maxY, box.y + halfH);
+        }
+        if (!found) return null;
+        return {
+            minX,
+            maxX,
+            minY,
+            maxY
+        };
+    }
+
+    function localAABBToStageAABB(local, target) {
+        const scale = (Number.isFinite(target.size) ? target.size : 100) / 100;
+        const corners = [
+            [local.minX * scale, local.minY * scale],
+            [local.maxX * scale, local.minY * scale],
+            [local.maxX * scale, local.maxY * scale],
+            [local.minX * scale, local.maxY * scale]
+        ];
+        const rotationStyle = target.rotationStyle;
+        if (rotationStyle === 'all around' || rotationStyle === undefined) {
+            const angle = ((90 - target.direction) * Math.PI) / 180;
+            const cos = Math.cos(angle);
+            const sin = Math.sin(angle);
+            for (let i = 0; i < corners.length; i++) {
+                const [x, y] = corners[i];
+                corners[i] = [x * cos - y * sin, x * sin + y * cos];
+            }
+        } else if (rotationStyle === 'left-right' && target.direction < 0) {
+            for (let i = 0; i < corners.length; i++) {
+                corners[i][0] = -corners[i][0];
+            }
+        }
+        let minX = Infinity;
+        let maxX = -Infinity;
+        let minY = Infinity;
+        let maxY = -Infinity;
+        for (const [x, y] of corners) {
+            minX = Math.min(minX, x);
+            maxX = Math.max(maxX, x);
+            minY = Math.min(minY, y);
+            maxY = Math.max(maxY, y);
+        }
+        return {
+            left: target.x + minX,
+            right: target.x + maxX,
+            bottom: target.y + minY,
+            top: target.y + maxY
+        };
+    }
+
+    function aabbOverlap(a, b) {
+        return a.left <= b.right && a.right >= b.left && a.bottom <= b.top && a.top >= b.bottom;
+    }
+
+    function aabbContainsPoint(box, x, y) {
+        return x >= box.left && x <= box.right && y >= box.bottom && y <= box.top;
+    }
+
+    function resolveTouchTargetSprite(runtime, targetName, selfTarget) {
+        const target = runtime.getSpriteTargetByName(targetName);
+        if (!target || target === selfTarget) return null;
+        return target;
+    }
+
+    function stagePointToLocalEm(target, stageX, stageY) {
+        let x = stageX - target.x;
+        let y = stageY - target.y;
+        const rotationStyle = target.rotationStyle;
+        if (rotationStyle === 'all around' || rotationStyle === undefined) {
+            const angle = ((target.direction - 90) * Math.PI) / 180;
+            const cos = Math.cos(angle);
+            const sin = Math.sin(angle);
+            const rx = x * cos - y * sin;
+            const ry = x * sin + y * cos;
+            x = rx;
+            y = ry;
+        } else if (rotationStyle === 'left-right' && target.direction < 0) {
+            x = -x;
+        }
+        const scale = (Number.isFinite(target.size) ? target.size : 100) / 100;
+        if (scale !== 0) {
+            x /= scale;
+            y /= scale;
+        }
+        return {
+            x,
+            y
+        };
+    }
+
+    function charGlyphInk(state, index) {
+        const box = state.charBoxes[index];
+        if (!box || !box.style || box.char == null || box.char === ' ') return null;
+        const style = box.style;
+        const fontStyle = shapingFontStyle(style);
+        const ch = box.char === ' ' ? '\u00A0' : box.char;
+        const shape = getGlyphShape(ch, fontStyle['font-family'], fontStyle['font-size'], fontStyle['font-weight'], fontStyle['font-style']);
+        if (!shape) return null;
+        const inkColumns = getGlyphInkColumns(shape);
+        if (!inkColumns) return null;
+
+        const advanceCenterXEm = shape.baselineOriginXEm + shape.advance / 2;
+        const baselineYFromLineCenter = (shape.fontAscentEm - shape.fontDescentEm) / 2;
+        const charCenterX = box.x;
+        const charCenterY = box.y;
+        const drawXEm = charCenterX - advanceCenterXEm;
+        const drawYEm = (charCenterY + baselineYFromLineCenter) - shape.baselineOriginYEm;
+
+        return {
+            inkColumns,
+            width: shape.canvas.width,
+            height: shape.canvas.height,
+            originXEm: drawXEm,
+            originYEm: drawYEm
+        };
+    }
+
+    function charInkContainsLocalPoint(ink, localX, localY) {
+        const px = Math.floor((localX - ink.originXEm) * GLYPH_OVERSAMPLE);
+        const py = Math.floor((localY - ink.originYEm) * GLYPH_OVERSAMPLE);
+        if (px < 0 || py < 0 || px >= ink.width || py >= ink.height) return false;
+        return ink.inkColumns[py * ink.width + px] === 1;
+    }
+
+    function charRangeInkAABBs(state, startIdx, endIdx) {
+        const results = [];
+        for (let idx = startIdx; idx <= endIdx; idx++) {
+            const ink = charGlyphInk(state, idx);
+            if (!ink) continue;
+            results.push({
+                ink,
+                minXEm: ink.originXEm,
+                maxXEm: ink.originXEm + ink.width / GLYPH_OVERSAMPLE,
+                minYEm: ink.originYEm,
+                maxYEm: ink.originYEm + ink.height / GLYPH_OVERSAMPLE
+            });
+        }
+        return results;
+    }
+
+    function charRangeTouchingInk(util, startIdx, endIdx, targetArg) {
+        const state = getState(util.target);
+        flushRenderIfDirty(util.target);
+        const inkEntries = charRangeInkAABBs(state, startIdx, endIdx);
+        if (!inkEntries.length) return false;
+        const selfTarget = util.target;
+
+        let minXEm = Infinity;
+        let maxXEm = -Infinity;
+        let minYEm = Infinity;
+        let maxYEm = -Infinity;
+        for (const entry of inkEntries) {
+            minXEm = Math.min(minXEm, entry.minXEm);
+            maxXEm = Math.max(maxXEm, entry.maxXEm);
+            minYEm = Math.min(minYEm, entry.minYEm);
+            maxYEm = Math.max(maxYEm, entry.maxYEm);
+        }
+        const stageBox = localAABBToStageAABB({
+            minX: minXEm,
+            maxX: maxXEm,
+            minY: minYEm,
+            maxY: maxYEm
+        }, selfTarget);
+
+        if (targetArg === '_mouse_') {
+            const mouse = runtime.ioDevices && runtime.ioDevices.mouse;
+            if (!mouse) return false;
+            const mouseX = mouse.getScratchX();
+            const mouseY = mouse.getScratchY();
+            if (!aabbContainsPoint(stageBox, mouseX, mouseY)) return false;
+            const local = stagePointToLocalEm(selfTarget, mouseX, mouseY);
+            for (const entry of inkEntries) {
+                if (charInkContainsLocalPoint(entry.ink, local.x, local.y)) return true;
+            }
+            return false;
+        }
+
+        const otherTarget = resolveTouchTargetSprite(runtime, targetArg, selfTarget);
+        if (!otherTarget) return false;
+        const renderer = runtime.renderer;
+        if (!renderer || otherTarget.drawableID === undefined || otherTarget.drawableID === null) return false;
+        const otherBounds = renderer.getBounds(otherTarget.drawableID);
+        if (!otherBounds) return false;
+        if (!aabbOverlap(stageBox, {
+                left: otherBounds.left,
+                right: otherBounds.right,
+                bottom: otherBounds.bottom,
+                top: otherBounds.top
+            })) return false;
+
+        const otherDrawable = renderer._allDrawables && renderer._allDrawables[otherTarget.drawableID];
+        if (!otherDrawable || typeof otherDrawable.isTouching !== 'function') return false;
+
+        const overlapLeft = Math.max(stageBox.left, otherBounds.left);
+        const overlapRight = Math.min(stageBox.right, otherBounds.right);
+        const overlapBottom = Math.max(stageBox.bottom, otherBounds.bottom);
+        const overlapTop = Math.min(stageBox.top, otherBounds.top);
+        const startX = Math.floor(overlapLeft);
+        const endX = Math.ceil(overlapRight);
+        const startY = Math.floor(overlapBottom);
+        const endY = Math.ceil(overlapTop);
+        const point = [0, 0];
+        for (let sy = startY; sy <= endY; sy++) {
+            for (let sx = startX; sx <= endX; sx++) {
+                const local = stagePointToLocalEm(selfTarget, sx, sy);
+                let inkHit = false;
+                for (const entry of inkEntries) {
+                    if (charInkContainsLocalPoint(entry.ink, local.x, local.y)) {
+                        inkHit = true;
+                        break;
+                    }
+                }
+                if (!inkHit) continue;
+                point[0] = sx;
+                point[1] = sy;
+                if (otherDrawable.isTouching(point)) return true;
+            }
+        }
+        return false;
+    }
+
+    function charRangeTouchesTarget(util, startIdx, endIdx, targetArg) {
+        const state = getState(util.target);
+        flushRenderIfDirty(util.target);
+        const local = charLocalAABB(state, startIdx, endIdx);
+        if (!local) return false;
+        const selfTarget = util.target;
+        const stageBox = localAABBToStageAABB(local, selfTarget);
+
+        if (targetArg === '_mouse_') {
+            const mouse = runtime.ioDevices && runtime.ioDevices.mouse;
+            if (!mouse) return false;
+            return aabbContainsPoint(stageBox, mouse.getScratchX(), mouse.getScratchY());
+        }
+
+        const otherTarget = resolveTouchTargetSprite(runtime, targetArg, selfTarget);
+        if (!otherTarget) return false;
+        const renderer = runtime.renderer;
+        if (!renderer || otherTarget.drawableID === undefined || otherTarget.drawableID === null) return false;
+        const otherBounds = renderer.getBounds(otherTarget.drawableID);
+        if (!otherBounds) return false;
+        return aabbOverlap(stageBox, {
+            left: otherBounds.left,
+            right: otherBounds.right,
+            bottom: otherBounds.bottom,
+            top: otherBounds.top
+        });
+    }
+
     function indexRange(startArg, endArg) {
         let start = Math.round(startArg) - 1;
         let end = Math.round(endArg) - 1;
@@ -773,7 +1128,9 @@ Enjoy!! :D
     const GLYPH_OVERSAMPLE = 3;
     const GLYPH_PADDING_EM = 0.35;
     const glyphCache = new Map();
-    let framePinnedGlyphKeys = null;    const glyphMeasureCanvas = document.createElement('canvas');
+    let framePinnedGlyphKeys = null;
+    let framePinnedGlyphKeysRefCount = 0;
+    const glyphMeasureCanvas = document.createElement('canvas');
     const glyphMeasureCtx = glyphMeasureCanvas.getContext('2d', {
         willReadFrequently: false
     });
@@ -809,6 +1166,7 @@ Enjoy!! :D
         const px = Math.max(1, Math.round(size * GLYPH_OVERSAMPLE));
         const pad = Math.max(2, Math.round(size * GLYPH_PADDING_EM * GLYPH_OVERSAMPLE));
         const fontStr = `${style} ${weight} ${px}px ${fontFamily}`;
+        const isColorGlyph = isEmojiChar(char);
 
         glyphMeasureCtx.font = fontStr;
         glyphMeasureCtx.textBaseline = 'alphabetic';
@@ -821,8 +1179,8 @@ Enjoy!! :D
             (typeof metrics.fontBoundingBoxDescent === 'number' ? metrics.fontBoundingBoxDescent : null) ??
             metrics.actualBoundingBoxDescent ?? (px * 0.3)
         );
-        const leftBearing = Math.ceil(Math.max(0, metrics.actualBoundingBoxLeft || 0));
-        const rightBearing = Math.ceil(Math.max(
+        const leftBearing = isColorGlyph ? 0 : Math.ceil(Math.max(0, metrics.actualBoundingBoxLeft || 0));
+        const rightBearing = isColorGlyph ? Math.ceil(Math.max(metrics.width || 0, 1)) : Math.ceil(Math.max(
             metrics.actualBoundingBoxRight || 0,
             metrics.width || 0
         ));
@@ -848,11 +1206,13 @@ Enjoy!! :D
             canvas,
             tinted: new Map(),
             shadows: new Map(),
+            blurred: new Map(),
             advance: advance / GLYPH_OVERSAMPLE,
             baselineOriginXEm: baselineX / GLYPH_OVERSAMPLE,
             baselineOriginYEm: baselineY / GLYPH_OVERSAMPLE,
             fontAscentEm: ascent / GLYPH_OVERSAMPLE,
-            fontDescentEm: descent / GLYPH_OVERSAMPLE
+            fontDescentEm: descent / GLYPH_OVERSAMPLE,
+            isColorGlyph
         };
     }
 
@@ -962,6 +1322,12 @@ Enjoy!! :D
                 releasePooledCanvas(tintedCanvasPool, tintedCanvas);
             }
         }
+        if (shape.blurred) {
+            for (const blurredEntry of shape.blurred.values()) {
+                releasePooledCanvas(tintedCanvasPool, blurredEntry.canvas);
+                evictGLTextureForShape(blurredEntry);
+            }
+        }
         if (shape.shadows) {
             for (const shadowEntry of shape.shadows.values()) {
                 globalShadowLRU.delete(shadowEntry.globalKey);
@@ -975,6 +1341,33 @@ Enjoy!! :D
             releasePooledCanvas(stencilCanvasPool, stencil);
         }
         evictGLTextureForShape(shape);
+    }
+
+    function pinGlyphKeysForFrame(keys) {
+        if (!framePinnedGlyphKeys) framePinnedGlyphKeys = new Map();
+        for (const key of keys) {
+            framePinnedGlyphKeys.set(key, (framePinnedGlyphKeys.get(key) || 0) + 1);
+        }
+        framePinnedGlyphKeysRefCount++;
+        return keys;
+    }
+
+    function unpinGlyphKeysForFrame(keys) {
+        if (framePinnedGlyphKeys) {
+            for (const key of keys) {
+                const count = framePinnedGlyphKeys.get(key) || 0;
+                if (count <= 1) {
+                    framePinnedGlyphKeys.delete(key);
+                } else {
+                    framePinnedGlyphKeys.set(key, count - 1);
+                }
+            }
+        }
+        framePinnedGlyphKeysRefCount--;
+        if (framePinnedGlyphKeysRefCount <= 0) {
+            framePinnedGlyphKeysRefCount = 0;
+            framePinnedGlyphKeys = null;
+        }
     }
 
     function getGlyphShape(char, fontFamily, size, weight, style) {
@@ -1204,7 +1597,8 @@ Enjoy!! :D
         releaseMaskScratchCanvas(scratch);
     }
 
-    function tintGlyph(shape, color) {
+    function tintGlyph(shape, color, emojiMode) {
+        if (shape.isColorGlyph && emojiMode === 2) return shape.canvas;
         let tintedCanvas = shape.tinted.get(color);
         if (tintedCanvas) return tintedCanvas;
 
@@ -1228,6 +1622,49 @@ Enjoy!! :D
         return tintedCanvas;
     }
 
+    const BLUR_QUANTUM_PX = 0.5;
+    const BLUR_MAX_PX = 40;
+
+    function quantizeBlurPx(blurPx) {
+        const clamped = Math.min(BLUR_MAX_PX, blurPx);
+        return Math.round(clamped / BLUR_QUANTUM_PX) * BLUR_QUANTUM_PX;
+    }
+
+    function getBlurredGlyphBitmap(shape, color, blurPxRaw) {
+        const blurPx = quantizeBlurPx(blurPxRaw);
+        const key = color + '\u0001' + blurPx;
+        let entry = shape.blurred.get(key);
+        if (entry) return entry;
+
+        const source = tintGlyph(shape, color);
+        const padPx = Math.ceil(blurPx * 3) + 2;
+        const w = source.width + padPx * 2;
+        const h = source.height + padPx * 2;
+        const canvas = acquirePooledCanvas(tintedCanvasPool, w, h);
+        const bctx = canvas.getContext('2d');
+        bctx.setTransform(1, 0, 0, 1, 0, 0);
+        bctx.clearRect(0, 0, w, h);
+        bctx.filter = `blur(${blurPx}px)`;
+        bctx.drawImage(source, padPx, padPx);
+        bctx.filter = 'none';
+
+        entry = {
+            canvas,
+            offsetX: -padPx,
+            offsetY: -padPx
+        };
+
+        if (shape.blurred.size >= TINT_CACHE_LIMIT) {
+            const evictedKey = shape.blurred.keys().next().value;
+            const evicted = shape.blurred.get(evictedKey);
+            releasePooledCanvas(tintedCanvasPool, evicted.canvas);
+            evictGLTextureForShape(evicted);
+            shape.blurred.delete(evictedKey);
+        }
+        shape.blurred.set(key, entry);
+        return entry;
+    }
+
     function buildGradientCanvasStyle(ctx, gradient, spanW, spanH, localOffsetXPx, localOffsetYPx) {
         const colors = gradient.colors;
         const last = colors.length - 1;
@@ -1244,8 +1681,8 @@ Enjoy!! :D
             return canvasGradient;
         }
 
-        if (type === GRADIENT_TYPE_CONIC && typeof ctx.createConicGradient === 'function') {
-            const startAngleRad = (gradient.angle || 0) * Math.PI / 180;
+        if (type === GRADIENT_TYPE_CONIC) {
+            const startAngleRad = (gradient.angle || 0) * Math.PI / 180 - Math.PI / 2;
             const canvasGradient = ctx.createConicGradient(startAngleRad, cx, cy);
             for (let c = 0; c <= last; c++) {
                 canvasGradient.addColorStop(last === 0 ? 0 : c / last, colors[c]);
@@ -1396,19 +1833,10 @@ Enjoy!! :D
     }
 
     function invalidateGlyphCacheForFamily(fontFamily) {
-        const evictedKeys = [];
         for (const key of glyphCache.keys()) {
             if (key.indexOf('\u0001' + fontFamily + '\u0001') !== -1) {
                 glyphCache.delete(key);
-                evictedKeys.push(key);
             }
-        }
-        if (evictedKeys.length && renderWorker) {
-            for (const key of evictedKeys) workerKnownGlyphKeys.delete(key);
-            renderWorker.postMessage({
-                type: 'evict-glyphs',
-                glyphKeys: evictedKeys
-            });
         }
     }
 
@@ -1771,7 +2199,10 @@ Enjoy!! :D
                     if (spaceIdx !== -1 && spaceIdx < currentLine.length - 1) {
                         const nextLineInitial = currentLine.splice(spaceIdx + 1);
                         let nextLineWidth = 0;
-                        for (let k = 0; k < nextLineInitial.length; k++) nextLineWidth += nextLineInitial[k]._width;
+                        for (let k = 0; k < nextLineInitial.length; k++) {
+                            nextLineWidth += nextLineInitial[k]._width;
+                            if (nextLineInitial[k]._trailingCollapse) nextLineWidth += nextLineInitial[k]._trailingCollapse;
+                        }
                         currentLineWidth -= nextLineWidth;
 
                         lines.push(currentLine);
@@ -1792,6 +2223,7 @@ Enjoy!! :D
 
                 currentLine.push(rc);
                 currentLineWidth += w;
+                if (rc._trailingCollapse) currentLineWidth += rc._trailingCollapse;
             }
 
             if (currentLine.length > 0) {
@@ -1826,14 +2258,16 @@ Enjoy!! :D
                 run.positions = [];
                 let charX = 0;
                 for (let i = 0; i < run.chars.length; i++) {
-                    const w = run.chars[i]._width;
+                    const rc = run.chars[i];
+                    const w = rc._width;
                     run.positions.push({
                         shapedX: charX,
                         advance: w
                     });
-                    addTagIndex(charsByTag, run.startIndex + i, run.chars[i].tags);
-                    charX += w;
-                    runStartX += w;
+                    addTagIndex(charsByTag, run.startIndex + i, rc.tags);
+                    const cursorAdvance = rc._trailingCollapse ? w + rc._trailingCollapse : w;
+                    charX += cursorAdvance;
+                    runStartX += cursorAdvance;
                 }
                 run.runWidth = runStartX - run.runStartX;
             }
@@ -1849,12 +2283,32 @@ Enjoy!! :D
             }
         }
 
+        let maxShadowExtent = 0;
+        for (const rc of richChars) {
+            const charShadow = rc.shadow;
+            if (!charShadow) continue;
+            const extentX = (Scratch.Cast.toNumber(charShadow.blur) || 0) + Math.abs(Scratch.Cast.toNumber(charShadow.offsetX) || 0);
+            const extentY = (Scratch.Cast.toNumber(charShadow.blur) || 0) + Math.abs(Scratch.Cast.toNumber(charShadow.offsetY) || 0);
+            if (extentX > maxShadowExtent) maxShadowExtent = extentX;
+            if (extentY > maxShadowExtent) maxShadowExtent = extentY;
+        }
+
+        let maxBorderExtent = 0;
+        for (const rc of richChars) {
+            const charBorder = rc.border;
+            if (!charBorder) continue;
+            const size = Scratch.Cast.toNumber(charBorder.size) || 0;
+            if (size > maxBorderExtent) maxBorderExtent = size;
+        }
+
         return {
             lines,
             lineWidths,
             maxWidth,
             lineRuns,
-            charsByTag
+            charsByTag,
+            maxShadowExtent,
+            maxBorderExtent
         };
     }
 
@@ -2042,10 +2496,37 @@ Enjoy!! :D
             hash = (hash * 33) ^ ((op.letterSpacing * 100) | 0);
             hash = (hash * 33) ^ (op.underline ? 1 : 0);
             hash = (hash * 33) ^ (op.strike ? 1 : 0);
+            hash = (hash * 33) ^ ((op.blur * 100) | 0);
             hash = fingerprintMaskInto(hash, op.mask);
             hash = fingerprintGradientInto(hash, op.gradient);
+            hash = fingerprintShadowInto(hash, op.shadow);
+            hash = fingerprintBorderInto(hash, op.border);
         }
         return hash | 0;
+    }
+
+    function fingerprintBorderInto(hash, border) {
+        if (border) {
+            hash = (hash * 33) ^ hashString(border.color);
+            hash = (hash * 33) ^ ((border.opacity * 100) | 0);
+            hash = (hash * 33) ^ ((border.size * 100) | 0);
+        } else {
+            hash = (hash * 33) ^ 0x3c3c;
+        }
+        return hash;
+    }
+
+    function fingerprintShadowInto(hash, shadow) {
+        if (shadow) {
+            hash = (hash * 33) ^ hashString(shadow.color);
+            hash = (hash * 33) ^ ((shadow.opacity * 100) | 0);
+            hash = (hash * 33) ^ ((shadow.blur * 100) | 0);
+            hash = (hash * 33) ^ ((shadow.offsetX * 100) | 0);
+            hash = (hash * 33) ^ ((shadow.offsetY * 100) | 0);
+        } else {
+            hash = (hash * 33) ^ 0x5a5a;
+        }
+        return hash;
     }
 
     function fingerprintGradientInto(hash, gradient) {
@@ -2442,7 +2923,9 @@ Enjoy!! :D
             lines,
             lineWidths,
             maxWidth,
-            lineRuns
+            lineRuns,
+            maxShadowExtent,
+            maxBorderExtent
         } = layout;
 
         const lineHeight = state.baseStyle.size * state.lineSpacing;
@@ -2453,7 +2936,9 @@ Enjoy!! :D
             Scratch.Cast.toNumber(state.textBackground.padding) || 0,
             Scratch.Cast.toNumber(state.textBorder.size) || 0,
             (Scratch.Cast.toNumber(state.textShadow.blur) || 0) + Math.abs(Scratch.Cast.toNumber(state.textShadow.offsetX) || 0),
-            (Scratch.Cast.toNumber(state.textShadow.blur) || 0) + Math.abs(Scratch.Cast.toNumber(state.textShadow.offsetY) || 0)
+            (Scratch.Cast.toNumber(state.textShadow.blur) || 0) + Math.abs(Scratch.Cast.toNumber(state.textShadow.offsetY) || 0),
+            maxShadowExtent || 0,
+            maxBorderExtent || 0
         );
         const pad = Math.max(64, state.baseStyle.size * 2, decorationPad + state.baseStyle.size);
 
@@ -2469,6 +2954,37 @@ Enjoy!! :D
         const originX = docW / 2;
         const originY = state.growDownwardOnly ? (pad + totalHeight / 2) : docH / 2;
         const anchorY = state.growDownwardOnly ? (pad + lineHeight / 2) : originY;
+
+        let textBoxOffsetX = 0;
+        let textBoxWidth = maxWidth;
+        if (lineWidths.length > 0) {
+            const typingBoxLineWidths = state.typingBoxLineWidths;
+            const isFinalTypingLine = !!typingBoxLineWidths && typingBoxLineWidths.length === lines.length;
+            let textBoxMinX = Infinity;
+            let textBoxMaxX = -Infinity;
+            for (let li = 0; li < lineWidths.length; li++) {
+                const lineW = lineWidths[li];
+                const centerLineW = isFinalTypingLine ? typingBoxLineWidths[li] : lineW;
+                let effectiveLineW = lineW;
+                if (state.align === 'justify' && li < lineWidths.length - 1 && effectiveMaxWidth > lineW) {
+                    effectiveLineW = effectiveMaxWidth;
+                }
+                let lineMinX;
+                if (state.align === 'left' || state.align === 'justify') {
+                    lineMinX = -effectiveMaxWidth / 2;
+                } else if (state.align === 'right') {
+                    lineMinX = effectiveMaxWidth / 2 - centerLineW;
+                    effectiveLineW = lineW;
+                } else {
+                    lineMinX = -centerLineW / 2;
+                    effectiveLineW = lineW;
+                }
+                textBoxMinX = Math.min(textBoxMinX, lineMinX);
+                textBoxMaxX = Math.max(textBoxMaxX, lineMinX + effectiveLineW);
+            }
+            textBoxOffsetX = (textBoxMinX + textBoxMaxX) / 2;
+            textBoxWidth = textBoxMaxX - textBoxMinX;
+        }
 
         const geometryKey = getPaintOpsGeometryKey(state, layoutKey) + '\u0004' + docW + '\u0004' + docH + '\u0004' + (state.growDownwardOnly ? 1 : 0);
         const paintOpsKey = geometryKey + '\u0004' + state.charMasksVersion + '\u0004' + state.charTransformsVersion;
@@ -2579,6 +3095,9 @@ Enjoy!! :D
                         op.gradient = o.color ? null : (rc.gradient || null);
                         op.gradientSpanId = o.color ? null : (rc.gradientSpanId || null);
                         op.gradientOccurrenceIndex = o.color ? -1 : (rc.gradientOccurrenceIndex != null ? rc.gradientOccurrenceIndex : -1);
+                        op.blur = rc.blur || 0;
+                        op.shadow = rc.shadow || null;
+                        op.border = rc.border || null;
                         paintOps.push(op);
 
                         if (rc.char === ' ') spacesBefore++;
@@ -2628,7 +3147,7 @@ Enjoy!! :D
         }
 
         state.renderQueued = false;
-        compositeGlyphsAndPush(target, state, paintOps, docW, docH, effectiveMaxWidth, totalHeight, originX, originY, anchorY);
+        compositeGlyphsAndPush(target, state, paintOps, docW, docH, textBoxWidth, totalHeight, textBoxOffsetX, originX, originY, anchorY);
         state.paintDirty = false;
         state.hasPaintedOnce = true;
         state.renderInFlight = false;
@@ -2640,33 +3159,28 @@ Enjoy!! :D
         return Promise.resolve();
     }
 
-    function compositeGlyphsAndPush(target, state, paintOps, docW, docH, effectiveMaxWidth, totalHeight, originX, originY, anchorY) {
-        ensureRenderWorker();
+    function compositeGlyphsAndPush(target, state, paintOps, docW, docH, textWidth, textHeight, textBoxOffsetX, originX, originY, anchorY) {
         const pinnedKeys = new Set();
         for (let i = 0; i < paintOps.length; i++) {
             const op = paintOps[i];
             if (op.text === '\u00A0' || op.text === '') continue;
             pinnedKeys.add(glyphCacheKey(op.text, op.font['font-family'], op.font['font-size'], op.font['font-weight'], op.font['font-style']));
         }
-        framePinnedGlyphKeys = pinnedKeys;
-        let canvas = null;
+        pinGlyphKeysForFrame(pinnedKeys);
+        let canvas;
         try {
-            if (!glCompositorFailed) {
-                try {
-                    canvas = compositeGlyphsToCanvasWebGL2(state, paintOps, docW, docH, effectiveMaxWidth, totalHeight, originX, originY);
-                } catch (e) {
-                    canvas = null;
-                    glCompositorFailed = true;
-                }
-            }
-            if (!canvas) {
-                canvas = compositeGlyphsToCanvasCanvas2D(state, paintOps, docW, docH, effectiveMaxWidth, totalHeight, originX, originY);
-            }
+            canvas = compositeGlyphsToCanvasWebGL2(state, paintOps, docW, docH, textWidth, textHeight, textBoxOffsetX, originX, originY);
         } finally {
-            framePinnedGlyphKeys = null;
+            unpinGlyphKeysForFrame(pinnedKeys);
+        }
+        if (!canvas) {
+            if (!webglUnavailableLogged) {
+                webglUnavailableLogged = true;
+                console.error('[Iris Text] WebGL2 is not available in this environment; text cannot be rendered.');
+            }
+            return;
         }
         pushCanvasToDrawable(target, canvas, docW, docH, originX, anchorY != null ? anchorY : originY);
-        return Promise.resolve();
     }
 
     const loadedDocumentFonts = new Set();
@@ -2758,1229 +3272,6 @@ Enjoy!! :D
 
     const DEST_SCALE = GLYPH_OVERSAMPLE;
 
-    const WORKER_SOURCE = `
-const GRADIENT_TYPE_LINEAR = '${GRADIENT_TYPE_LINEAR}';
-const GRADIENT_TYPE_RADIAL = '${GRADIENT_TYPE_RADIAL}';
-const GRADIENT_TYPE_CONIC = '${GRADIENT_TYPE_CONIC}';
-const WIPE_DIRECTION_BOTTOM_UP = '${WIPE_DIRECTION_BOTTOM_UP}';
-const WIPE_DIRECTION_LEFT_RIGHT = '${WIPE_DIRECTION_LEFT_RIGHT}';
-const WIPE_DIRECTION_UP_DOWN = '${WIPE_DIRECTION_UP_DOWN}';
-const WIPE_DIRECTION_RIGHT_LEFT = '${WIPE_DIRECTION_RIGHT_LEFT}';
-
-const DEST_SCALE = 3;
-const TINT_CACHE_LIMIT = 512;
-const SHADOW_CACHE_LIMIT = 512;
-const STENCIL_CACHE_LIMIT = 400;
-const CANVAS_SIZE_BUCKET = 32;
-const GLYPH_CACHE_LIMIT = 2000;
-
-// defined here cuz this is a worker and im not sure if workers can access Scratch
-const Scratch = {
-    Cast: {
-        toNumber(value) {
-            const n = Number(value);
-            return n === n ? n : 0;
-        }
-    }
-};
-
-const glyphShapesByKey = new Map();
-
-const glyphShapeCanvasPool = [];
-const tintedCanvasPool = [];
-const stencilCanvasPool = [];
-const GENERIC_POOL_LIMIT = 256;
-
-function acquirePooledCanvas(pool, w, h) {
-    const canvas = pool.pop() || new OffscreenCanvas(w, h);
-    if (canvas.width !== w) canvas.width = w;
-    if (canvas.height !== h) canvas.height = h;
-    return canvas;
-}
-
-function releasePooledCanvas(pool, canvas) {
-    if (canvas && pool.length < GENERIC_POOL_LIMIT) pool.push(canvas);
-}
-
-function bucketSize(n) {
-    return Math.max(CANVAS_SIZE_BUCKET, Math.ceil(n / CANVAS_SIZE_BUCKET) * CANVAS_SIZE_BUCKET);
-}
-
-const GLOBAL_SHADOW_CANVAS_LIMIT = 256;
-const globalShadowLRU = new Map();
-let shadowGlobalKeySeq = 1;
-
-const sharedShadowSurface = (() => {
-    const canvas = new OffscreenCanvas(1, 1);
-    return {
-        canvas,
-        ctx: canvas.getContext('2d')
-    };
-})();
-
-function releaseShadowCapture(capture) {
-    if (capture && capture !== sharedShadowSurface.canvas && typeof capture.close === 'function') capture.close();
-}
-
-function releaseGlyphOwnedCanvases(shape) {
-    releasePooledCanvas(glyphShapeCanvasPool, shape.canvas);
-    if (shape.tinted) {
-        for (const tintedCanvas of shape.tinted.values()) {
-            releasePooledCanvas(tintedCanvasPool, tintedCanvas);
-        }
-    }
-    if (shape.shadows) {
-        for (const shadowEntry of shape.shadows.values()) {
-            globalShadowLRU.delete(shadowEntry.globalKey);
-            releaseShadowCapture(shadowEntry.canvas);
-        }
-    }
-    const stencil = maskGlyphStencilCache.get(shape);
-    if (stencil) {
-        maskGlyphStencilCache.delete(shape);
-        releasePooledCanvas(stencilCanvasPool, stencil);
-    }
-}
-
-function getGlyphShape(glyphKey) {
-    return glyphShapesByKey.get(glyphKey) || null;
-}
-
-function tintGlyph(shape, color) {
-    let tintedCanvas = shape.tinted.get(color);
-    if (tintedCanvas) return tintedCanvas;
-
-    tintedCanvas = acquirePooledCanvas(tintedCanvasPool, shape.canvas.width, shape.canvas.height);
-    const tctx = tintedCanvas.getContext('2d');
-    tctx.setTransform(1, 0, 0, 1, 0, 0);
-    tctx.globalCompositeOperation = 'source-over';
-    tctx.clearRect(0, 0, tintedCanvas.width, tintedCanvas.height);
-    tctx.fillStyle = color;
-    tctx.fillRect(0, 0, tintedCanvas.width, tintedCanvas.height);
-    tctx.globalCompositeOperation = 'destination-in';
-    tctx.drawImage(shape.canvas, 0, 0);
-
-    if (shape.tinted.size >= TINT_CACHE_LIMIT) {
-        const evictedColor = shape.tinted.keys().next().value;
-        releasePooledCanvas(tintedCanvasPool, shape.tinted.get(evictedColor));
-        shape.tinted.delete(evictedColor);
-        if (shape.bitmaps) shape.bitmaps.delete(evictedColor);
-    }
-    shape.tinted.set(color, tintedCanvas);
-    return tintedCanvas;
-}
-
-function buildGradientCanvasStyle(ctx, gradient, spanW, spanH, localOffsetXPx, localOffsetYPx) {
-    const colors = gradient.colors;
-    const last = colors.length - 1;
-    const cx = spanW / 2 - localOffsetXPx;
-    const cy = spanH / 2 - localOffsetYPx;
-    const type = gradient.type || GRADIENT_TYPE_LINEAR;
-
-    if (type === GRADIENT_TYPE_RADIAL) {
-        const radius = Math.max(1, Math.sqrt(spanW * spanW + spanH * spanH) / 2);
-        const canvasGradient = ctx.createRadialGradient(cx, cy, 0, cx, cy, radius);
-        for (let c = 0; c <= last; c++) {
-            canvasGradient.addColorStop(last === 0 ? 0 : c / last, colors[c]);
-        }
-        return canvasGradient;
-    }
-
-    if (type === GRADIENT_TYPE_CONIC && typeof ctx.createConicGradient === 'function') {
-        const startAngleRad = (gradient.angle || 0) * Math.PI / 180;
-        const canvasGradient = ctx.createConicGradient(startAngleRad, cx, cy);
-        for (let c = 0; c <= last; c++) {
-            canvasGradient.addColorStop(last === 0 ? 0 : c / last, colors[c]);
-        }
-        return canvasGradient;
-    }
-
-    const angleRad = (gradient.angle || 0) * Math.PI / 180;
-    const dx = Math.cos(angleRad);
-    const dy = Math.sin(angleRad);
-    const halfW = spanW / 2;
-    const halfH = spanH / 2;
-    const half = Math.abs(dx) * halfW + Math.abs(dy) * halfH;
-    const x0 = cx - dx * half;
-    const y0 = cy - dy * half;
-    const x1 = cx + dx * half;
-    const y1 = cy + dy * half;
-    const canvasGradient = ctx.createLinearGradient(x0, y0, x1, y1);
-    for (let c = 0; c <= last; c++) {
-        canvasGradient.addColorStop(last === 0 ? 0 : c / last, colors[c]);
-    }
-    return canvasGradient;
-}
-
-function tintGlyphGradient(shape, gradient, spanW, spanH, localOffsetXPx, localOffsetYPx) {
-    const scratchCanvas = acquirePooledCanvas(tintedCanvasPool, shape.canvas.width, shape.canvas.height);
-    const tctx = scratchCanvas.getContext('2d');
-    tctx.setTransform(1, 0, 0, 1, 0, 0);
-    tctx.globalCompositeOperation = 'source-over';
-    tctx.clearRect(0, 0, scratchCanvas.width, scratchCanvas.height);
-    tctx.fillStyle = buildGradientCanvasStyle(tctx, gradient, spanW, spanH, localOffsetXPx, localOffsetYPx);
-    tctx.fillRect(0, 0, scratchCanvas.width, scratchCanvas.height);
-    tctx.globalCompositeOperation = 'destination-in';
-    tctx.drawImage(shape.canvas, 0, 0);
-    return scratchCanvas;
-}
-
-const borderOffsetsCache = new Map();
-
-function getBorderOffsets(borderSize) {
-    const key = Math.round(borderSize * 4);
-    let offsets = borderOffsetsCache.get(key);
-    if (offsets) return offsets;
-
-    const steps = Math.max(8, Math.ceil((Math.PI * 2 * borderSize) / 1.5));
-    offsets = [];
-    for (let i = 0; i < steps; i++) {
-        const angle = (i / steps) * Math.PI * 2;
-        offsets.push([Math.cos(angle) * borderSize, Math.sin(angle) * borderSize]);
-    }
-
-    if (borderOffsetsCache.size >= 64) {
-        const evictedKey = borderOffsetsCache.keys().next().value;
-        borderOffsetsCache.delete(evictedKey);
-    }
-    borderOffsetsCache.set(key, offsets);
-    return offsets;
-}
-
-function getGlyphBitmap(glyphKey, color) {
-    const shape = getGlyphShape(glyphKey);
-    if (!shape) return null;
-    let bitmap = shape.bitmaps.get(color);
-    if (bitmap) return bitmap;
-    const canvas = tintGlyph(shape, color);
-    bitmap = {
-        canvas,
-        advance: shape.advance,
-        baselineOriginXEm: shape.baselineOriginXEm,
-        baselineOriginYEm: shape.baselineOriginYEm,
-        fontAscentEm: shape.fontAscentEm,
-        fontDescentEm: shape.fontDescentEm,
-        shape
-    };
-    if (shape.bitmaps.size >= TINT_CACHE_LIMIT) {
-        shape.bitmaps.delete(shape.bitmaps.keys().next().value);
-    }
-    shape.bitmaps.set(color, bitmap);
-    return bitmap;
-}
-
-function evictOldestGlobalShadow() {
-    const oldestKey = globalShadowLRU.keys().next().value;
-    if (oldestKey === undefined) return;
-    const oldest = globalShadowLRU.get(oldestKey);
-    globalShadowLRU.delete(oldestKey);
-    oldest.shape.shadows.delete(oldest.key);
-    releaseShadowCapture(oldest.entry.canvas);
-}
-
-function getShadowGlyphBitmap(shape, color, blurPx, offsetXPx, offsetYPx) {
-    const key = color + '\u0001' + blurPx + '\u0001' + offsetXPx + '\u0001' + offsetYPx;
-    let entry = shape.shadows.get(key);
-    if (entry) {
-        const globalKey = entry.globalKey;
-        globalShadowLRU.delete(globalKey);
-        globalShadowLRU.set(globalKey, {
-            shape,
-            key,
-            entry
-        });
-        return entry;
-    }
-
-    const padPx = Math.ceil(blurPx * 3) + Math.ceil(Math.max(Math.abs(offsetXPx), Math.abs(offsetYPx))) + 2;
-    const w = shape.canvas.width + padPx * 2;
-    const h = shape.canvas.height + padPx * 2;
-    const surface = sharedShadowSurface;
-    if (surface.canvas.width !== w) surface.canvas.width = w;
-    if (surface.canvas.height !== h) surface.canvas.height = h;
-    const ctx = surface.canvas.getContext('2d');
-    surface.ctx = ctx;
-    ctx.setTransform(1, 0, 0, 1, 0, 0);
-    ctx.clearRect(0, 0, w, h);
-    ctx.shadowColor = color;
-    ctx.shadowBlur = blurPx;
-    ctx.shadowOffsetX = offsetXPx;
-    ctx.shadowOffsetY = offsetYPx;
-    ctx.drawImage(shape.canvas, padPx, padPx);
-    ctx.globalCompositeOperation = 'destination-out';
-    ctx.shadowColor = 'transparent';
-    ctx.shadowOffsetX = 0;
-    ctx.shadowOffsetY = 0;
-    ctx.drawImage(shape.canvas, padPx, padPx);
-    ctx.globalCompositeOperation = 'source-over';
-
-    const canSnapshot = typeof surface.canvas.transferToImageBitmap === 'function';
-    const canvas = canSnapshot ? surface.canvas.transferToImageBitmap() : surface.canvas;
-    entry = {
-        canvas,
-        offsetX: -padPx,
-        offsetY: -padPx
-    };
-    if (!canSnapshot) return entry;
-
-    const globalKey = shadowGlobalKeySeq++;
-    entry.globalKey = globalKey;
-    if (shape.shadows.size >= SHADOW_CACHE_LIMIT) {
-        const evictedKey = shape.shadows.keys().next().value;
-        const evicted = shape.shadows.get(evictedKey);
-        shape.shadows.delete(evictedKey);
-        globalShadowLRU.delete(evicted.globalKey);
-        releaseShadowCapture(evicted.canvas);
-    }
-    shape.shadows.set(key, entry);
-
-    if (globalShadowLRU.size >= GLOBAL_SHADOW_CANVAS_LIMIT) evictOldestGlobalShadow();
-    globalShadowLRU.set(globalKey, {
-        shape,
-        key,
-        entry
-    });
-    return entry;
-}
-
-const maskGlyphStencilCache = new Map();
-const maskScratchCanvasPool = [];
-
-const sharedPatternSurface = (() => {
-    const canvas = new OffscreenCanvas(1, 1);
-    return {
-        canvas,
-        ctx: canvas.getContext('2d'),
-        cacheKey: null,
-        pattern: null,
-        capW: canvas.width,
-        capH: canvas.height
-    };
-})();
-
-function sampleMaskPattern(texture, matrix, w, h) {
-    const surface = sharedPatternSurface;
-    let patternDirty = surface.cacheKey !== texture.cacheKey;
-    if (surface.capW < w || surface.capH < h) {
-        surface.capW = Math.max(surface.capW, bucketSize(w));
-        surface.capH = Math.max(surface.capH, bucketSize(h));
-        surface.canvas.width = surface.capW;
-        surface.canvas.height = surface.capH;
-        patternDirty = true;
-    }
-    if (patternDirty) {
-        surface.pattern = surface.ctx.createPattern(texture.canvas, 'repeat');
-        surface.cacheKey = texture.cacheKey;
-    }
-    if (!surface.pattern) return null;
-
-    surface.pattern.setTransform(matrix);
-    surface.ctx.setTransform(1, 0, 0, 1, 0, 0);
-    surface.ctx.globalAlpha = 1;
-    surface.ctx.globalCompositeOperation = 'source-over';
-    surface.ctx.clearRect(0, 0, w, h);
-    surface.ctx.fillStyle = surface.pattern;
-    surface.ctx.fillRect(0, 0, w, h);
-
-    return surface.canvas;
-}
-
-function getMaskGlyphStencil(shape) {
-    let stencil = maskGlyphStencilCache.get(shape);
-    if (stencil) return stencil;
-    stencil = acquirePooledCanvas(stencilCanvasPool, shape.canvas.width, shape.canvas.height);
-    const sctx = stencil.getContext('2d');
-    sctx.setTransform(1, 0, 0, 1, 0, 0);
-    sctx.globalCompositeOperation = 'source-over';
-    sctx.clearRect(0, 0, stencil.width, stencil.height);
-    sctx.fillStyle = '#ffffff';
-    sctx.fillRect(0, 0, stencil.width, stencil.height);
-    sctx.globalCompositeOperation = 'destination-in';
-    sctx.drawImage(shape.canvas, 0, 0);
-    if (maskGlyphStencilCache.size >= STENCIL_CACHE_LIMIT) {
-        const evictedShape = maskGlyphStencilCache.keys().next().value;
-        releasePooledCanvas(stencilCanvasPool, maskGlyphStencilCache.get(evictedShape));
-        maskGlyphStencilCache.delete(evictedShape);
-    }
-    maskGlyphStencilCache.set(shape, stencil);
-    return stencil;
-}
-
-function acquireMaskScratchCanvas(w, h) {
-    let best = -1;
-    let bestArea = Infinity;
-    for (let i = 0; i < maskScratchCanvasPool.length; i++) {
-        const c = maskScratchCanvasPool[i];
-        if (c.width >= w && c.height >= h) {
-            const area = c.width * c.height;
-            if (area < bestArea) {
-                bestArea = area;
-                best = i;
-            }
-        }
-    }
-    let canvas;
-    if (best !== -1) {
-        canvas = maskScratchCanvasPool.splice(best, 1)[0];
-    } else {
-        canvas = maskScratchCanvasPool.length ? maskScratchCanvasPool.pop() : new OffscreenCanvas(1, 1);
-        const cw = Math.max(canvas.width, bucketSize(w));
-        const ch = Math.max(canvas.height, bucketSize(h));
-        if (canvas.width !== cw) canvas.width = cw;
-        if (canvas.height !== ch) canvas.height = ch;
-    }
-    return canvas;
-}
-
-function releaseMaskScratchCanvas(canvas) {
-    if (maskScratchCanvasPool.length < 64) maskScratchCanvasPool.push(canvas);
-}
-
-function drawMaskedGlyph(destCtx, glyphKey, mask, texture, worldDrawX, worldDrawY, spanW, spanH, spanOriginX, spanOriginY, destX, destY, alpha) {
-    const coverage = Math.max(0, Math.min(100, Scratch.Cast.toNumber(mask.coverage) || 0)) / 100;
-    if (coverage <= 0) return;
-
-    const shape = getGlyphShape(glyphKey);
-    if (!shape) return;
-    const w = shape.canvas.width;
-    const h = shape.canvas.height;
-
-    const zoom = Math.max(0.01, (Scratch.Cast.toNumber(mask.zoom) || 100) / 100);
-    const rotation = Scratch.Cast.toNumber(mask.rotation) || 0;
-    const anchorX = (mask.x || 0) * DEST_SCALE - destX;
-    const anchorY = -(mask.y || 0) * DEST_SCALE - destY;
-
-    const matrix = new DOMMatrix();
-    matrix.translateSelf(anchorX, anchorY);
-    if (rotation !== 0) matrix.rotateSelf(rotation);
-    matrix.scaleSelf(zoom, zoom);
-
-    const sampled = sampleMaskPattern(texture, matrix, w, h);
-    if (!sampled) return;
-
-    const scratch = acquireMaskScratchCanvas(w, h);
-    const sctx = scratch.getContext('2d');
-    sctx.setTransform(1, 0, 0, 1, 0, 0);
-    sctx.clearRect(0, 0, w, h);
-    sctx.globalAlpha = 1;
-    sctx.globalCompositeOperation = 'source-over';
-    sctx.drawImage(sampled, 0, 0, w, h, 0, 0, w, h);
-
-    const stencil = getMaskGlyphStencil(shape);
-    sctx.globalCompositeOperation = 'destination-in';
-    sctx.drawImage(stencil, 0, 0);
-    sctx.globalCompositeOperation = 'source-over';
-
-    if (coverage < 1) {
-        const seamless = !!mask.seamless;
-        const localOffsetX = seamless ? (worldDrawX - spanOriginX) : 0;
-        const localOffsetY = seamless ? (worldDrawY - spanOriginY) : 0;
-        const effSpanW = seamless && spanW ? spanW : w;
-        const effSpanH = seamless && spanH ? spanH : h;
-        const blurPx = Math.max(0, Scratch.Cast.toNumber(mask.blur) || 0) * DEST_SCALE;
-        const direction = mask.direction || WIPE_DIRECTION_BOTTOM_UP;
-        const bandHalf = Math.max(0.5, blurPx / 2);
-
-        let revealEdge, axisIsX, growsPositive;
-        if (direction === WIPE_DIRECTION_LEFT_RIGHT) {
-            revealEdge = effSpanW * coverage - localOffsetX;
-            axisIsX = true;
-            growsPositive = true;
-        } else if (direction === WIPE_DIRECTION_RIGHT_LEFT) {
-            revealEdge = effSpanW - effSpanW * coverage - localOffsetX;
-            axisIsX = true;
-            growsPositive = false;
-        } else if (direction === WIPE_DIRECTION_UP_DOWN) {
-            revealEdge = effSpanH * coverage - localOffsetY;
-            axisIsX = false;
-            growsPositive = true;
-        } else {
-            revealEdge = effSpanH - effSpanH * coverage - localOffsetY;
-            axisIsX = false;
-            growsPositive = false;
-        }
-
-        const axisSize = axisIsX ? w : h;
-        const gradStart = growsPositive ? revealEdge - bandHalf : revealEdge + bandHalf;
-        const gradEnd = growsPositive ? revealEdge + bandHalf : revealEdge - bandHalf;
-        const bandFrom = Math.min(gradStart, gradEnd);
-        const bandTo = Math.max(gradStart, gradEnd);
-
-        if (bandTo <= 0) {
-            if (growsPositive) {
-                releaseMaskScratchCanvas(scratch);
-                return;
-            }
-        } else if (bandFrom >= axisSize) {
-            if (!growsPositive) {
-                releaseMaskScratchCanvas(scratch);
-                return;
-            }
-        } else {
-            sctx.globalCompositeOperation = 'destination-in';
-            const gradient = axisIsX ?
-                sctx.createLinearGradient(gradStart, 0, gradEnd, 0) :
-                sctx.createLinearGradient(0, gradStart, 0, gradEnd);
-            gradient.addColorStop(0, 'rgba(255,255,255,1)');
-            gradient.addColorStop(1, 'rgba(255,255,255,0)');
-            sctx.fillStyle = gradient;
-            sctx.fillRect(0, 0, w, h);
-            sctx.globalCompositeOperation = 'source-over';
-        }
-    }
-
-    destCtx.save();
-    destCtx.globalAlpha = alpha;
-    destCtx.drawImage(scratch, 0, 0, w, h, destX, destY, w, h);
-    destCtx.restore();
-
-    releaseMaskScratchCanvas(scratch);
-}
-
-const READBACK_CANVAS = new OffscreenCanvas(1, 1);
-const READBACK_CTX = READBACK_CANVAS.getContext('2d', {
-    willReadFrequently: true
-});
-
-function getGlyphInkColumns(glyph) {
-    if (glyph.inkColumns) return glyph.inkColumns;
-    const w = glyph.canvas.width;
-    const h = glyph.canvas.height;
-    if (READBACK_CANVAS.width !== w) READBACK_CANVAS.width = w;
-    if (READBACK_CANVAS.height !== h) READBACK_CANVAS.height = h;
-    READBACK_CTX.setTransform(1, 0, 0, 1, 0, 0);
-    READBACK_CTX.clearRect(0, 0, w, h);
-    READBACK_CTX.drawImage(glyph.canvas, 0, 0);
-    const image = READBACK_CTX.getImageData(0, 0, w, h);
-    const inkColumns = new Uint8Array(w * h);
-    for (let i = 0; i < inkColumns.length; i++) {
-        inkColumns[i] = image.data[i * 4 + 3] > 16 ? 1 : 0;
-    }
-    glyph.inkColumns = inkColumns;
-    return inkColumns;
-}
-
-function strokeUnderline(ctx, glyph, glyphX, glyphY, startX, endX, y, lineWidth) {
-    const stroke = (x1, x2) => {
-        if (x2 <= x1) return;
-        ctx.beginPath();
-        ctx.moveTo(x1, y);
-        ctx.lineTo(x2, y);
-        ctx.stroke();
-    };
-
-    try {
-        const w = glyph.canvas.width;
-        const inkData = getGlyphInkColumns(glyph);
-        const rowStart = Math.max(0, Math.floor(y - glyphY - lineWidth / 2));
-        const rowEnd = Math.min(glyph.canvas.height - 1, Math.ceil(y - glyphY + lineWidth / 2));
-        const columnStart = Math.max(0, Math.floor(startX - glyphX));
-        const columnEnd = Math.min(w - 1, Math.ceil(endX - glyphX));
-        const ink = new Uint8Array(w);
-
-        for (let py = rowStart; py <= rowEnd; py++) {
-            for (let px = columnStart; px <= columnEnd; px++) {
-                if (inkData[py * w + px]) ink[px] = 1;
-            }
-        }
-
-        const padding = Math.max(1, Math.ceil(lineWidth / 2) + 1);
-        let segmentStart = startX;
-        let px = columnStart;
-        while (px <= columnEnd) {
-            if (!ink[px]) {
-                px++;
-                continue;
-            }
-            const inkStart = px;
-            while (px <= columnEnd && ink[px]) px++;
-            const skipStart = Math.max(startX, glyphX + inkStart - padding);
-            const skipEnd = Math.min(endX, glyphX + px + padding);
-            stroke(segmentStart, skipStart);
-            segmentStart = Math.max(segmentStart, skipEnd);
-        }
-        stroke(segmentStart, endX);
-    } catch (e) {
-        stroke(startX, endX);
-    }
-}
-
-function maskGroupKey(mask) {
-    return mask.targetName + '\u0001' + mask.costumeName + '\u0001' +
-        (mask.direction || WIPE_DIRECTION_BOTTOM_UP) + '\u0001' +
-        Math.round(mask.x * 4) + '\u0001' + Math.round(mask.y * 4);
-}
-
-function computeSeamlessMaskSpansByIndex(paintOps, areaW, areaH) {
-    const spans = new Map();
-    let groupIndices = null;
-    let groupKey = null;
-    let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
-
-    const flushGroup = () => {
-        if (!groupIndices || !groupIndices.length) return;
-        if (!isFinite(minX) || !isFinite(maxX) || !isFinite(minY) || !isFinite(maxY)) return;
-        const spanW = areaW;
-        const spanH = areaH;
-        for (const gi of groupIndices) {
-            spans.set(gi, {
-                spanW,
-                spanH,
-                originX: 0,
-                originY: 0
-            });
-        }
-    };
-
-    for (let i = 0; i < paintOps.length; i++) {
-        const op = paintOps[i];
-        if (!op.mask || !op.mask.seamless) {
-            flushGroup();
-            groupIndices = null;
-            groupKey = null;
-            continue;
-        }
-
-        const key = maskGroupKey(op.mask);
-        if (groupKey !== key) {
-            flushGroup();
-            groupIndices = [];
-            groupKey = key;
-            minX = Infinity;
-            maxX = -Infinity;
-            minY = Infinity;
-            maxY = -Infinity;
-        }
-        groupIndices.push(op.charIndex);
-
-        if (op.text === '\u00A0' || op.text === '') continue;
-
-        const shape = getGlyphShape(op.glyphKey);
-        if (!shape) continue;
-        const advanceCenterXEm = shape.baselineOriginXEm + shape.advance / 2;
-        const baselineYFromLineCenter = (shape.fontAscentEm - shape.fontDescentEm) / 2;
-        const drawXEm = op.x - advanceCenterXEm;
-        const drawYEm = (op.y + baselineYFromLineCenter) - shape.baselineOriginYEm;
-        const px = Math.round(drawXEm * DEST_SCALE);
-        const py = Math.round(drawYEm * DEST_SCALE);
-        const w = shape.canvas.width;
-        const h = shape.canvas.height;
-
-        minX = Math.min(minX, px);
-        maxX = Math.max(maxX, px + w);
-        minY = Math.min(minY, py);
-        maxY = Math.max(maxY, py + h);
-    }
-    flushGroup();
-
-    return spans;
-}
-
-const maskSpansCacheByState = new Map();
-
-function getSeamlessMaskSpans(stateId, paintOps, layoutDocKey, geometryVersion, areaW, areaH) {
-    const cacheKey = layoutDocKey + '\u0003' + geometryVersion;
-    let entry = maskSpansCacheByState.get(stateId);
-    if (entry && entry.cacheKey === cacheKey) return entry.spans;
-    const spans = computeSeamlessMaskSpansByIndex(paintOps, areaW, areaH);
-    maskSpansCacheByState.set(stateId, { cacheKey, spans });
-    return spans;
-}
-
-function computeGradientSpansByIndex(paintOps) {
-    const spans = new Map();
-    let groupIndices = null;
-    let groupId = null;
-    let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
-
-    const flushGroup = () => {
-        if (!groupIndices || !groupIndices.length) return;
-        if (!isFinite(minX) || !isFinite(maxX) || !isFinite(minY) || !isFinite(maxY)) return;
-        const spanW = Math.max(1, maxX - minX);
-        const spanH = Math.max(1, maxY - minY);
-        for (const gi of groupIndices) {
-            spans.set(gi, {
-                spanW,
-                spanH,
-                originX: minX,
-                originY: minY
-            });
-        }
-    };
-
-    for (let i = 0; i < paintOps.length; i++) {
-        const op = paintOps[i];
-        if (!op.gradient || !op.gradientSpanId) {
-            flushGroup();
-            groupIndices = null;
-            groupId = null;
-            continue;
-        }
-
-        if (groupId !== op.gradientSpanId) {
-            flushGroup();
-            groupIndices = [];
-            groupId = op.gradientSpanId;
-            minX = Infinity;
-            maxX = -Infinity;
-            minY = Infinity;
-            maxY = -Infinity;
-        }
-        groupIndices.push(op.charIndex);
-
-        if (op.text === '\u00A0' || op.text === '') continue;
-
-        const shape = getGlyphShape(op.glyphKey);
-        if (!shape) continue;
-        const advanceCenterXEm = shape.baselineOriginXEm + shape.advance / 2;
-        const baselineYFromLineCenter = (shape.fontAscentEm - shape.fontDescentEm) / 2;
-        const drawXEm = op.x - advanceCenterXEm;
-        const drawYEm = (op.y + baselineYFromLineCenter) - shape.baselineOriginYEm;
-        const px = Math.round(drawXEm * DEST_SCALE);
-        const py = Math.round(drawYEm * DEST_SCALE);
-        const w = shape.canvas.width;
-        const h = shape.canvas.height;
-        const padYPx = Math.round((shape.baselineOriginYEm - shape.fontAscentEm) * DEST_SCALE);
-        const inkTop = py + padYPx;
-        const inkBottom = py + h - padYPx;
-
-        minX = Math.min(minX, px);
-        maxX = Math.max(maxX, px + w);
-        minY = Math.min(minY, inkTop);
-        maxY = Math.max(maxY, inkBottom);
-    }
-    flushGroup();
-
-    return spans;
-}
-
-const gradientSpansCacheByState = new Map();
-
-function getGradientSpans(stateId, paintOps, layoutDocKey, geometryVersion) {
-    const cacheKey = layoutDocKey + '\u0003' + geometryVersion;
-    let entry = gradientSpansCacheByState.get(stateId);
-    if (entry && entry.cacheKey === cacheKey) return entry.spans;
-    const spans = computeGradientSpansByIndex(paintOps);
-    gradientSpansCacheByState.set(stateId, { cacheKey, spans });
-    return spans;
-}
-
-const paintCanvasByState = new Map();
-
-function compositeGlyphsToCanvas(stateId, settings, paintOps, docW, docH, textWidth, textHeight, originX, originY, maskTextures) {
-    let canvas = paintCanvasByState.get(stateId);
-    const pixelW = Math.max(1, Math.round(docW * DEST_SCALE));
-    const pixelH = Math.max(1, Math.round(docH * DEST_SCALE));
-    if (!canvas) {
-        canvas = new OffscreenCanvas(pixelW, pixelH);
-        paintCanvasByState.set(stateId, canvas);
-    }
-    if (canvas.width !== pixelW || canvas.height !== pixelH) {
-        canvas.width = pixelW;
-        canvas.height = pixelH;
-    }
-    const ctx = canvas.getContext('2d');
-    ctx.imageSmoothingEnabled = !!settings.smoothing;
-    ctx.setTransform(1, 0, 0, 1, 0, 0);
-    ctx.clearRect(0, 0, pixelW, pixelH);
-    ctx.textBaseline = 'alphabetic';
-
-    const background = settings.textBackground;
-    if (background.enabled) {
-        const padding = Math.max(0, Scratch.Cast.toNumber(background.padding) || 0) * DEST_SCALE;
-        const width = textWidth * DEST_SCALE + padding * 2;
-        const height = textHeight * DEST_SCALE + padding * 2;
-        const x = originX * DEST_SCALE - width / 2;
-        const y = originY * DEST_SCALE - height / 2;
-        ctx.save();
-        ctx.globalAlpha = Math.max(0, Math.min(100, Scratch.Cast.toNumber(background.opacity) || 0)) / 100;
-        ctx.fillStyle = background.color;
-        const radius = Math.min(Math.max(0, Scratch.Cast.toNumber(background.radius) || 0) * DEST_SCALE, width / 2, height / 2);
-        ctx.beginPath();
-        ctx.roundRect(x, y, width, height, radius);
-        ctx.fill();
-        ctx.restore();
-    }
-
-    const maskSpansByIndex = getSeamlessMaskSpans(stateId, paintOps, settings.layoutKey + '\u0003' + docW + '\u0003' + docH, settings.charMaskGeometryVersion, docW * DEST_SCALE, docH * DEST_SCALE);
-    const gradientSpansByIndex = getGradientSpans(stateId, paintOps, settings.layoutKey + '\u0003' + docW + '\u0003' + docH, settings.charMaskGeometryVersion);
-    const gradientScratchCanvases = [];
-
-    const applyCharTransformOp = (op, hasRotation, hasScale) => {
-        const cx = op.x * DEST_SCALE;
-        const cy = op.y * DEST_SCALE;
-        ctx.translate(cx, cy);
-        if (hasRotation) ctx.rotate(-op.rotation * Math.PI / 180);
-        if (hasScale) ctx.scale(op.scale, op.scale);
-        ctx.translate(-cx, -cy);
-    };
-    const resetTransform = () => ctx.setTransform(1, 0, 0, 1, 0, 0);
-
-    for (let i = 0; i < paintOps.length; i++) {
-        const op = paintOps[i];
-        if (op.text === '\u00A0' || op.text === '') continue;
-
-        let glyph;
-        if (op.gradient) {
-            const shape = getGlyphShape(op.glyphKey);
-            const span = shape && gradientSpansByIndex.get(op.charIndex);
-            if (shape && span) {
-                const advanceCenterXEm = shape.baselineOriginXEm + shape.advance / 2;
-                const baselineYFromLineCenter = (shape.fontAscentEm - shape.fontDescentEm) / 2;
-                const drawXEmForSpan = op.x - advanceCenterXEm;
-                const drawYEmForSpan = (op.y + baselineYFromLineCenter) - shape.baselineOriginYEm;
-                const localOffsetXPx = Math.round(drawXEmForSpan * DEST_SCALE) - span.originX;
-                const localOffsetYPx = Math.round(drawYEmForSpan * DEST_SCALE) - span.originY;
-                const gradientCanvas = tintGlyphGradient(shape, op.gradient, span.spanW, span.spanH, localOffsetXPx, localOffsetYPx);
-                gradientScratchCanvases.push(gradientCanvas);
-                glyph = {
-                    canvas: gradientCanvas,
-                    advance: shape.advance,
-                    baselineOriginXEm: shape.baselineOriginXEm,
-                    baselineOriginYEm: shape.baselineOriginYEm,
-                    fontAscentEm: shape.fontAscentEm,
-                    fontDescentEm: shape.fontDescentEm,
-                    shape
-                };
-            }
-        }
-        if (!glyph) glyph = getGlyphBitmap(op.glyphKey, op.color);
-        if (!glyph) continue;
-        const fontSize = op.fontSize;
-
-        const advanceCenterXEm = glyph.baselineOriginXEm + glyph.advance / 2;
-        const baselineYFromLineCenter = (glyph.fontAscentEm - glyph.fontDescentEm) / 2;
-        const drawXEm = op.x - advanceCenterXEm;
-        const drawYEm = (op.y + baselineYFromLineCenter) - glyph.baselineOriginYEm;
-
-        const hasOpacity = op.opacity != null && op.opacity !== 1;
-        const hasRotation = !!op.rotation;
-        const hasScale = op.scale != null && op.scale !== 1;
-        const hasTransform = hasRotation || hasScale;
-
-        if (hasTransform) applyCharTransformOp(op, hasRotation, hasScale);
-
-        if (settings.textShadow.enabled) {
-            const shadowShape = glyph.shape;
-            const shadowBlurPx = Math.max(0, Scratch.Cast.toNumber(settings.textShadow.blur) || 0) * DEST_SCALE;
-            const shadowOffsetXPx = (Scratch.Cast.toNumber(settings.textShadow.offsetX) || 0) * DEST_SCALE;
-            const shadowOffsetYPx = (Scratch.Cast.toNumber(settings.textShadow.offsetY) || 0) * DEST_SCALE;
-            const shadowBitmap = getShadowGlyphBitmap(shadowShape, settings.textShadow.color, shadowBlurPx, shadowOffsetXPx, shadowOffsetYPx);
-            ctx.globalAlpha = (hasOpacity ? op.opacity : 1) * Math.max(0, Math.min(100, Scratch.Cast.toNumber(settings.textShadow.opacity) || 0)) / 100;
-            ctx.drawImage(shadowBitmap.canvas, drawXEm * DEST_SCALE + shadowBitmap.offsetX, drawYEm * DEST_SCALE + shadowBitmap.offsetY);
-            ctx.globalAlpha = 1;
-        }
-
-        if (settings.textBorder.enabled && Scratch.Cast.toNumber(settings.textBorder.size) > 0) {
-            const shape = glyph.shape;
-            const borderGlyph = tintGlyph(shape, settings.textBorder.color);
-            ctx.globalAlpha = (hasOpacity ? op.opacity : 1) * Math.max(0, Math.min(100, Scratch.Cast.toNumber(settings.textBorder.opacity) || 0)) / 100;
-            const borderSize = Math.max(0, Scratch.Cast.toNumber(settings.textBorder.size) || 0) * DEST_SCALE;
-            const borderOffsets = getBorderOffsets(borderSize);
-            for (const [offsetX, offsetY] of borderOffsets) {
-                ctx.drawImage(borderGlyph, drawXEm * DEST_SCALE + offsetX, drawYEm * DEST_SCALE + offsetY);
-            }
-            ctx.globalAlpha = 1;
-        }
-
-        if (!hasTransform) {
-            const px = Math.round(drawXEm * DEST_SCALE);
-            const py = Math.round(drawYEm * DEST_SCALE);
-            if (hasOpacity) {
-                ctx.globalAlpha = op.opacity;
-                ctx.drawImage(glyph.canvas, px, py);
-                ctx.globalAlpha = 1;
-            } else {
-                ctx.drawImage(glyph.canvas, px, py);
-            }
-        } else {
-            if (hasOpacity) ctx.globalAlpha = op.opacity;
-            ctx.drawImage(glyph.canvas, drawXEm * DEST_SCALE, drawYEm * DEST_SCALE);
-            if (hasOpacity) ctx.globalAlpha = 1;
-        }
-
-        if (op.mask && !op.gradient) {
-            const texture = maskTextures.get(op.mask.targetName + '\u0001' + op.mask.costumeName);
-            if (texture) {
-                const px = Math.round(drawXEm * DEST_SCALE);
-                const py = Math.round(drawYEm * DEST_SCALE);
-                const span = maskSpansByIndex.get(op.charIndex);
-                const maskOpacity = Math.max(0, Math.min(100, Scratch.Cast.toNumber(op.mask.opacity != null ? op.mask.opacity : 100))) / 100;
-                const combinedAlpha = (hasOpacity ? op.opacity : 1) * maskOpacity;
-                if (combinedAlpha > 0) {
-                    if (!hasTransform) {
-                        drawMaskedGlyph(
-                            ctx, op.glyphKey,
-                            op.mask, texture, px, py,
-                            span ? span.spanW : 0, span ? span.spanH : 0,
-                            span ? span.originX : 0, span ? span.originY : 0,
-                            px, py, combinedAlpha
-                        );
-                    } else {
-                        drawMaskedGlyph(
-                            ctx, op.glyphKey,
-                            op.mask, texture, px, py,
-                            span ? span.spanW : 0, span ? span.spanH : 0,
-                            span ? span.originX : 0, span ? span.originY : 0,
-                            drawXEm * DEST_SCALE, drawYEm * DEST_SCALE, combinedAlpha
-                        );
-                    }
-                }
-            }
-        }
-
-        if (op.strike) {
-            if (hasOpacity) ctx.globalAlpha = op.opacity;
-            ctx.strokeStyle = op.color;
-            ctx.lineWidth = Math.max(1, fontSize * 0.06) * DEST_SCALE;
-            const sy = op.y * DEST_SCALE;
-            ctx.beginPath();
-            ctx.moveTo((op.x - op.width / 2) * DEST_SCALE, sy);
-            ctx.lineTo((op.x + op.width / 2) * DEST_SCALE, sy);
-            ctx.stroke();
-            if (hasOpacity) ctx.globalAlpha = 1;
-        }
-
-        if (op.underline) {
-            if (hasOpacity) ctx.globalAlpha = op.opacity;
-            ctx.strokeStyle = op.color;
-            const lineWidth = Math.max(1, fontSize * 0.06) * DEST_SCALE;
-            ctx.lineWidth = lineWidth;
-            const uy = (op.y + baselineYFromLineCenter + fontSize * 0.06) * DEST_SCALE;
-            const startX = (op.x - op.width / 2) * DEST_SCALE;
-            const endX = (op.x + op.width / 2) * DEST_SCALE;
-            if (hasRotation) {
-                ctx.beginPath();
-                ctx.moveTo(startX, uy);
-                ctx.lineTo(endX, uy);
-                ctx.stroke();
-            } else {
-                strokeUnderline(ctx, glyph, Math.round(drawXEm * DEST_SCALE), Math.round(drawYEm * DEST_SCALE), startX, endX, uy, lineWidth);
-            }
-            if (hasOpacity) ctx.globalAlpha = 1;
-        }
-
-        if (hasTransform) resetTransform();
-    }
-
-    for (let gi = 0; gi < gradientScratchCanvases.length; gi++) {
-        releasePooledCanvas(tintedCanvasPool, gradientScratchCanvases[gi]);
-    }
-
-    return canvas;
-}
-
-const maskTexturesByKey = new Map();
-
-self.onmessage = async (event) => {
-    const msg = event.data;
-    if (!msg) return;
-
-    if (msg.type === 'composite') {
-        try {
-            const neededKeys = new Set();
-            for (let i = 0; i < msg.paintOps.length; i++) {
-                const opKey = msg.paintOps[i].glyphKey;
-                if (opKey) neededKeys.add(opKey);
-            }
-
-            for (const [key, bitmap] of msg.glyphUpdates) {
-                const canvas = acquirePooledCanvas(glyphShapeCanvasPool, bitmap.width, bitmap.height);
-                const gctx = canvas.getContext('2d');
-                gctx.setTransform(1, 0, 0, 1, 0, 0);
-                gctx.clearRect(0, 0, canvas.width, canvas.height);
-                gctx.drawImage(bitmap, 0, 0);
-                bitmap.close();
-                const meta = msg.glyphMeta.get(key);
-                if (glyphShapesByKey.size >= GLYPH_CACHE_LIMIT && !glyphShapesByKey.has(key)) {
-                    let evictedKey;
-                    for (const candidateKey of glyphShapesByKey.keys()) {
-                        if (!neededKeys.has(candidateKey)) {
-                            evictedKey = candidateKey;
-                            break;
-                        }
-                    }
-                    if (evictedKey !== undefined) {
-                        const evictedShape = glyphShapesByKey.get(evictedKey);
-                        glyphShapesByKey.delete(evictedKey);
-                        if (evictedShape) releaseGlyphOwnedCanvases(evictedShape);
-                    }
-                }
-                glyphShapesByKey.set(key, {
-                    canvas,
-                    tinted: new Map(),
-                    shadows: new Map(),
-                    bitmaps: new Map(),
-                    advance: meta.advance,
-                    baselineOriginXEm: meta.baselineOriginXEm,
-                    baselineOriginYEm: meta.baselineOriginYEm,
-                    fontAscentEm: meta.fontAscentEm,
-                    fontDescentEm: meta.fontDescentEm
-                });
-            }
-
-            for (const [key, bitmap] of msg.maskTextureUpdates) {
-                if (bitmap === null) {
-                    maskTexturesByKey.delete(key);
-                    continue;
-                }
-                const canvas = new OffscreenCanvas(bitmap.width, bitmap.height);
-                canvas.getContext('2d').drawImage(bitmap, 0, 0);
-                bitmap.close();
-                maskTexturesByKey.set(key, { canvas, cacheKey: key });
-            }
-
-            const canvas = compositeGlyphsToCanvas(
-                msg.stateId, msg.settings, msg.paintOps,
-                msg.docW, msg.docH, msg.textWidth, msg.textHeight,
-                msg.originX, msg.originY, maskTexturesByKey
-            );
-
-            const resultBitmap = canvas.transferToImageBitmap ?
-                canvas.transferToImageBitmap() :
-                await createImageBitmap(canvas);
-
-            self.postMessage({
-                type: 'composite-result',
-                requestId: msg.requestId,
-                stateId: msg.stateId,
-                bitmap: resultBitmap,
-                pixelW: canvas.width,
-                pixelH: canvas.height
-            }, [resultBitmap]);
-        } catch (err) {
-            self.postMessage({
-                type: 'composite-error',
-                requestId: msg.requestId,
-                stateId: msg.stateId,
-                message: err && err.message ? err.message : String(err)
-            });
-        }
-    } else if (msg.type === 'evict-glyphs') {
-        for (const key of msg.glyphKeys) {
-            const shape = glyphShapesByKey.get(key);
-            glyphShapesByKey.delete(key);
-            if (shape) releaseGlyphOwnedCanvases(shape);
-        }
-    } else if (msg.type === 'dispose-state') {
-        paintCanvasByState.delete(msg.stateId);
-        maskSpansCacheByState.delete(msg.stateId);
-    }
-};
-`;
-
-    let renderWorker = null;
-    let renderWorkerFailed = false;
-    let renderWorkerRequestId = 0;
-    const renderWorkerPending = new Map();
-    const workerKnownGlyphKeys = new Set();
-    const workerKnownMaskKeys = new Set();
-    const stateWorkerIds = new WeakMap();
-    let nextStateWorkerId = 1;
-
-    function supportsRenderWorker() {
-        return typeof Worker !== 'undefined' &&
-            typeof OffscreenCanvas !== 'undefined' &&
-            typeof createImageBitmap !== 'undefined';
-    }
-
-    function detectNonChromiumBrowser() {
-        if (typeof navigator === 'undefined') return null;
-        const ua = navigator.userAgent || '';
-        const isChromium = typeof navigator.userAgentData !== 'undefined' && Array.isArray(navigator.userAgentData.brands) ?
-            navigator.userAgentData.brands.some(b => /chromium/i.test(b.brand)) :
-            (/chrome|chromium|crios|edg|opr|brave/i.test(ua) && !/firefox|fxios/i.test(ua));
-        if (isChromium) return null;
-
-        if (/firefox|fxios/i.test(ua)) return 'Firefox';
-        if (/edg\//i.test(ua)) return null;
-        if (/opr\//i.test(ua) || /opera/i.test(ua)) return null;
-        if (/crios/i.test(ua)) return null;
-        if (/safari/i.test(ua) && !/chrome|chromium|crios|android/i.test(ua)) return 'Safari';
-        if (/samsungbrowser/i.test(ua)) return 'Samsung Internet';
-        if (/ucbrowser/i.test(ua)) return 'UC Browser';
-        if (/msie|trident/i.test(ua)) return 'Internet Explorer';
-        return 'your current browser';
-    }
-
-    function hasSeenDisclaimer(flagKey) {
-        try {
-            return typeof localStorage !== 'undefined' && localStorage.getItem(flagKey) === '1';
-        } catch (e) {
-            return false;
-        }
-    }
-
-    function markDisclaimerSeen(flagKey) {
-        try {
-            if (typeof localStorage !== 'undefined') localStorage.setItem(flagKey, '1');
-        } catch (e) {
-            // ...
-        }
-    }
-
-    let anyDisclaimerApplicable = false;
-
-    function getStateWorkerId(state) {
-        let id = stateWorkerIds.get(state);
-        if (!id) {
-            id = nextStateWorkerId++;
-            stateWorkerIds.set(state, id);
-        }
-        return id;
-    }
-
-    function handleRenderWorkerMessage(event) {
-        const msg = event.data;
-        if (!msg) return;
-        const pending = renderWorkerPending.get(msg.requestId);
-        if (!pending) return;
-        renderWorkerPending.delete(msg.requestId);
-        if (msg.type === 'composite-result') {
-            pending.resolve({
-                bitmap: msg.bitmap,
-                pixelW: msg.pixelW,
-                pixelH: msg.pixelH
-            });
-        } else {
-            pending.reject(new Error(msg.message || 'render worker error'));
-        }
-    }
-
-    function ensureRenderWorker() {
-        if (renderWorker || renderWorkerFailed) return renderWorker;
-        if (!supportsRenderWorker()) {
-            renderWorkerFailed = true;
-            console.log('[Iris Text] SOMEHOW, the render worker is not supported in this environment (wow!). falling back to the main thread.');
-            return null;
-        }
-        try {
-            const blob = new Blob([WORKER_SOURCE], {
-                type: 'text/javascript'
-            });
-            const url = URL.createObjectURL(blob);
-            renderWorker = new Worker(url);
-            renderWorker.onmessage = handleRenderWorkerMessage;
-            renderWorker.onerror = () => {
-                renderWorkerFailed = true;
-                console.log('[Iris Text] uh-oh, the render crashed... falling back to the main thread.');
-                for (const pending of renderWorkerPending.values()) {
-                    pending.reject(new Error('render worker crashed'));
-                }
-                renderWorkerPending.clear();
-                if (renderWorker) {
-                    renderWorker.terminate();
-                    renderWorker = null;
-                }
-            };
-            console.log('[Iris Text] the render worker has started. using worker rendering.');
-        } catch (e) {
-            renderWorkerFailed = true;
-            renderWorker = null;
-            console.log('[Iris Text] render worker failed to start (' + (e && e.message ? e.message : e) + '). using main-thread rendering.');
-        }
-        return renderWorker;
-    }
-
-    function disposeStateFromWorker(state) {
-        const id = stateWorkerIds.get(state);
-        if (id === undefined || !renderWorker) return;
-        renderWorker.postMessage({
-            type: 'dispose-state',
-            stateId: id
-        });
-    }
-
-    async function compositeGlyphsViaWorker(state, paintOps, docW, docH, textWidth, textHeight, originX, originY) {
-        const worker = ensureRenderWorker();
-        if (!worker) return null;
-
-        const glyphJobs = [];
-        const neededMaskKeys = new Set();
-
-        for (let i = 0; i < paintOps.length; i++) {
-            const op = paintOps[i];
-            if (op.text === '\u00A0' || op.text === '') continue;
-            const fontFamily = op.font['font-family'];
-            const fontSize = op.font['font-size'];
-            const fontWeight = op.font['font-weight'];
-            const fontStyle = op.font['font-style'];
-            const key = glyphCacheKey(op.text, fontFamily, fontSize, fontWeight, fontStyle);
-            op.glyphKey = key;
-            op.fontSize = fontSize;
-            if (!workerKnownGlyphKeys.has(key) && !glyphJobs.some(j => j.key === key)) {
-                const shape = getGlyphShape(op.text, fontFamily, fontSize, fontWeight, fontStyle);
-                glyphJobs.push({ key, shape });
-                workerKnownGlyphKeys.add(key);
-            }
-            if (op.mask) {
-                neededMaskKeys.add(op.mask.targetName + '\u0001' + op.mask.costumeName);
-            }
-        }
-
-        const maskJobs = [];
-        for (const maskKey of neededMaskKeys) {
-            if (workerKnownMaskKeys.has(maskKey)) continue;
-            const [targetName, costumeName] = maskKey.split('\u0001');
-            const texture = getMaskTexture(targetName, costumeName);
-            if (!texture) continue;
-            maskJobs.push({ maskKey, texture });
-            workerKnownMaskKeys.add(maskKey);
-        }
-
-        const [glyphBitmaps, maskBitmaps] = await Promise.all([
-            Promise.all(glyphJobs.map(j => createImageBitmap(j.shape.canvas))),
-            Promise.all(maskJobs.map(j => createImageBitmap(j.texture.canvas)))
-        ]);
-
-        const glyphUpdates = glyphJobs.map((j, idx) => [j.key, glyphBitmaps[idx]]);
-        const glyphMeta = glyphJobs.map(j => [j.key, {
-            advance: j.shape.advance,
-            baselineOriginXEm: j.shape.baselineOriginXEm,
-            baselineOriginYEm: j.shape.baselineOriginYEm,
-            fontAscentEm: j.shape.fontAscentEm,
-            fontDescentEm: j.shape.fontDescentEm
-        }]);
-        const maskTextureUpdates = maskJobs.map((j, idx) => [j.maskKey, maskBitmaps[idx]]);
-
-        const stateId = getStateWorkerId(state);
-        const requestId = ++renderWorkerRequestId;
-
-        const settings = {
-            smoothing: state.smoothing,
-            textBackground: state.textBackground,
-            textShadow: state.textShadow,
-            textBorder: state.textBorder,
-            layoutKey: state.layoutKey,
-            charMaskGeometryVersion: state.charMaskGeometryVersion
-        };
-
-        const transferList = glyphUpdates.map(([, bitmap]) => bitmap)
-            .concat(maskTextureUpdates.map(([, bitmap]) => bitmap));
-
-        const resultPromise = new Promise((resolve, reject) => {
-            renderWorkerPending.set(requestId, { resolve, reject });
-        });
-
-        worker.postMessage({
-            type: 'composite',
-            requestId,
-            stateId,
-            settings,
-            paintOps,
-            docW,
-            docH,
-            textWidth,
-            textHeight,
-            originX,
-            originY,
-            glyphUpdates,
-            glyphMeta: new Map(glyphMeta),
-            maskTextureUpdates
-        }, transferList);
-
-        return resultPromise;
-    }
 
     function maskGroupKey(mask) {
         return mask.targetName + '\u0001' + mask.costumeName + '\u0001' +
@@ -4191,12 +3482,21 @@ self.onmessage = async (event) => {
     uniform vec2 u_gradCenter;
     uniform float u_gradRadius;
     uniform int u_gradType;
+    uniform float u_gradStartAngle;
     out vec4 fragColor;
+
+    const float PI = 3.14159265358979;
 
     vec4 sampleGradient(vec2 posPx) {
         float t;
         if (u_gradType == 1) {
             t = clamp(distance(posPx, u_gradCenter) / max(u_gradRadius, 0.0001), 0.0, 1.0);
+        } else if (u_gradType == 2) {
+            vec2 d = posPx - u_gradCenter;
+            float ang = atan(d.x, -d.y) - u_gradStartAngle;
+            ang = mod(ang, 2.0 * PI);
+            if (ang < 0.0) ang += 2.0 * PI;
+            t = ang / (2.0 * PI);
         } else {
             vec2 d = posPx - u_gradAxis0;
             vec2 axis = u_gradAxis1 - u_gradAxis0;
@@ -4331,6 +3631,7 @@ self.onmessage = async (event) => {
 
     let glCompositorInstance = null;
     let glCompositorFailed = false;
+    let webglUnavailableLogged = false;
 
     function createGLCompositor() {
         const canvas = document.createElement('canvas');
@@ -4366,7 +3667,8 @@ self.onmessage = async (event) => {
             'u_canvasSize', 'u_origin', 'u_size', 'u_pivot', 'u_rotation', 'u_scale',
             'u_tex', 'u_tint', 'u_alpha', 'u_mode',
             'u_gradStops[0]', 'u_gradLocalOrigin', 'u_gradGlyphSize', 'u_gradCount',
-            'u_gradAxis0', 'u_gradAxis1', 'u_gradCenter', 'u_gradRadius', 'u_gradType'
+            'u_gradAxis0', 'u_gradAxis1', 'u_gradCenter', 'u_gradRadius', 'u_gradType',
+            'u_gradStartAngle'
         ]);
         glyphUniforms.u_gradStopsBase = gl.getUniformLocation(glyphProgram, 'u_gradStops[0]');
 
@@ -4499,12 +3801,14 @@ self.onmessage = async (event) => {
         gl.uniform1f(uniforms.u_scale, scale == null ? 1 : scale);
     }
 
-    function glDrawGlyph(comp, shape, drawX, drawY, tintColor, alpha, rotationRad, scaleAmt, gradient, gradSpan, passthrough) {
+    function glDrawGlyph(comp, shape, drawX, drawY, tintColor, alpha, rotationRad, scaleAmt, gradient, gradSpan, passthrough, pivotOverrideX, pivotOverrideY) {
         const gl = comp.gl;
         const w = shape.canvas.width;
         const h = shape.canvas.height;
         const uni = comp.glyphUniforms;
-        drawGLQuad(comp, comp.glyphProgram, uni, drawX, drawY, w, h, w / 2, h / 2, rotationRad, scaleAmt);
+        const pivotX = pivotOverrideX != null ? pivotOverrideX - drawX : w / 2;
+        const pivotY = pivotOverrideY != null ? pivotOverrideY - drawY : h / 2;
+        drawGLQuad(comp, comp.glyphProgram, uni, drawX, drawY, w, h, pivotX, pivotY, rotationRad, scaleAmt);
         const forceUpload = shape.canvas === sharedShadowSurface.canvas;
         gl.activeTexture(gl.TEXTURE0);
         gl.bindTexture(gl.TEXTURE_2D, comp.getGlyphTexture(shape, forceUpload));
@@ -4542,6 +3846,10 @@ self.onmessage = async (event) => {
                 gl.uniform1i(uni.u_gradType, 1);
                 gl.uniform2f(uni.u_gradCenter, cx, cy);
                 gl.uniform1f(uni.u_gradRadius, Math.max(1, Math.sqrt(spanW * spanW + spanH * spanH) / 2));
+            } else if (type === 'conic') {
+                gl.uniform1i(uni.u_gradType, 2);
+                gl.uniform2f(uni.u_gradCenter, cx, cy);
+                gl.uniform1f(uni.u_gradStartAngle, (gradient.angle || 0) * Math.PI / 180);
             } else {
                 gl.uniform1i(uni.u_gradType, 0);
                 const angleRad = (gradient.angle || 0) * Math.PI / 180;
@@ -4616,7 +3924,7 @@ self.onmessage = async (event) => {
             inv.e / texW, inv.f / texH, 1
         ]);
     }
-    function compositeGlyphsToCanvasWebGL2(state, paintOps, docW, docH, textWidth, textHeight, originX, originY) {
+    function compositeGlyphsToCanvasWebGL2(state, paintOps, docW, docH, textWidth, textHeight, textBoxOffsetX, originX, originY) {
         const comp = getGLCompositor();
         if (!comp) return null;
         const gl = comp.gl;
@@ -4644,7 +3952,7 @@ self.onmessage = async (event) => {
             const padding = Math.max(0, Scratch.Cast.toNumber(background.padding) || 0) * DEST_SCALE;
             const width = textWidth * DEST_SCALE + padding * 2;
             const height = textHeight * DEST_SCALE + padding * 2;
-            const x = originX * DEST_SCALE - width / 2;
+            const x = (originX + textBoxOffsetX) * DEST_SCALE - width / 2;
             const y = originY * DEST_SCALE - height / 2;
             const opacity = Math.max(0, Math.min(100, Scratch.Cast.toNumber(background.opacity) || 0)) / 100;
             const radius = Math.min(Math.max(0, Scratch.Cast.toNumber(background.radius) || 0) * DEST_SCALE, width / 2, height / 2);
@@ -4664,9 +3972,10 @@ self.onmessage = async (event) => {
             const fontStyle = op.font['font-style'];
 
             const shape = getGlyphShape(op.text, fontFamily, fontSize, fontWeight, fontStyle);
+            const isColorEmoji = shape.isColorGlyph && state.emojiMode === 2;
 
             let gradSpan = null;
-            if (op.gradient) {
+            if (op.gradient && !isColorEmoji) {
                 const span = gradientSpansByIndex.get(op.charIndex);
                 if (span) {
                     let localOffsetXPx, localOffsetYPx;
@@ -4700,17 +4009,38 @@ self.onmessage = async (event) => {
             const scaleAmt = hasScale ? op.scale : 1;
             const pivotX = op.x * DEST_SCALE - drawXPx;
             const pivotY = op.y * DEST_SCALE - drawYPx;
+            const blurPx = op.blur > 0 ? (op.blur / 100) * fontSize * 0.5 * DEST_SCALE : 0;
 
-            if (state.textShadow.enabled) {
+            const charShadow = op.shadow;
+            if (charShadow) {
+                const shadowBlurPx = Math.max(0, Scratch.Cast.toNumber(charShadow.blur) || 0) * DEST_SCALE;
+                const shadowOffsetXPx = (Scratch.Cast.toNumber(charShadow.offsetX) || 0) * DEST_SCALE;
+                const shadowOffsetYPx = (Scratch.Cast.toNumber(charShadow.offsetY) || 0) * DEST_SCALE;
+                const shadowBitmap = getShadowGlyphBitmap(shape, charShadow.color, shadowBlurPx, shadowOffsetXPx, shadowOffsetYPx);
+                const shadowAlpha = opAlpha * Math.max(0, Math.min(100, Scratch.Cast.toNumber(charShadow.opacity) || 0)) / 100;
+                glDrawGlyph(comp, shadowBitmap, drawXPx + shadowBitmap.offsetX, drawYPx + shadowBitmap.offsetY, null, shadowAlpha, rotationRad, scaleAmt, null, null, true, null, null);
+            } else if (state.textShadow.enabled) {
                 const shadowBlurPx = Math.max(0, Scratch.Cast.toNumber(state.textShadow.blur) || 0) * DEST_SCALE;
                 const shadowOffsetXPx = (Scratch.Cast.toNumber(state.textShadow.offsetX) || 0) * DEST_SCALE;
                 const shadowOffsetYPx = (Scratch.Cast.toNumber(state.textShadow.offsetY) || 0) * DEST_SCALE;
                 const shadowBitmap = getShadowGlyphBitmap(shape, state.textShadow.color, shadowBlurPx, shadowOffsetXPx, shadowOffsetYPx);
                 const shadowAlpha = opAlpha * Math.max(0, Math.min(100, Scratch.Cast.toNumber(state.textShadow.opacity) || 0)) / 100;
-                glDrawGlyph(comp, shadowBitmap, drawXPx + shadowBitmap.offsetX, drawYPx + shadowBitmap.offsetY, null, shadowAlpha, 0, 1, null, null, true);
+                glDrawGlyph(comp, shadowBitmap, drawXPx + shadowBitmap.offsetX, drawYPx + shadowBitmap.offsetY, null, shadowAlpha, rotationRad, scaleAmt, null, null, true, null, null);
             }
 
-            if (state.textBorder.enabled && Scratch.Cast.toNumber(state.textBorder.size) > 0) {
+            const charBorder = op.border;
+            if (!isColorEmoji && charBorder && Scratch.Cast.toNumber(charBorder.size) > 0) {
+                const borderAlpha = opAlpha * Math.max(0, Math.min(100, Scratch.Cast.toNumber(charBorder.opacity) || 0)) / 100;
+                const borderSize = Math.max(0, Scratch.Cast.toNumber(charBorder.size) || 0) * DEST_SCALE;
+                const borderOffsets = getBorderOffsets(borderSize);
+                for (const [offsetX, offsetY] of borderOffsets) {
+                    if (!hasRotation && !hasScale) {
+                        glDrawGlyph(comp, shape, drawXPx + offsetX, drawYPx + offsetY, charBorder.color, borderAlpha, 0, 1, null, null);
+                    } else {
+                        glDrawGlyph(comp, shape, drawXPx + offsetX, drawYPx + offsetY, charBorder.color, borderAlpha, rotationRad, scaleAmt, null, null, false, null, null);
+                    }
+                }
+            } else if (!isColorEmoji && state.textBorder.enabled && Scratch.Cast.toNumber(state.textBorder.size) > 0) {
                 const borderAlpha = opAlpha * Math.max(0, Math.min(100, Scratch.Cast.toNumber(state.textBorder.opacity) || 0)) / 100;
                 const borderSize = Math.max(0, Scratch.Cast.toNumber(state.textBorder.size) || 0) * DEST_SCALE;
                 const borderOffsets = getBorderOffsets(borderSize);
@@ -4718,18 +4048,24 @@ self.onmessage = async (event) => {
                     if (!hasRotation && !hasScale) {
                         glDrawGlyph(comp, shape, drawXPx + offsetX, drawYPx + offsetY, state.textBorder.color, borderAlpha, 0, 1, null, null);
                     } else {
-                        glDrawGlyph(comp, shape, drawXPx + offsetX, drawYPx + offsetY, state.textBorder.color, borderAlpha, rotationRad, scaleAmt, null, null);
+                        glDrawGlyph(comp, shape, drawXPx + offsetX, drawYPx + offsetY, state.textBorder.color, borderAlpha, rotationRad, scaleAmt, null, null, false, null, null);
                     }
                 }
             }
 
-            glDrawGlyph(
-                comp, shape, drawXPx, drawYPx,
-                op.color, opAlpha, rotationRad, scaleAmt,
-                op.gradient, gradSpan
-            );
+            if (blurPx > 0 && !op.gradient && !isColorEmoji) {
+                const blurredBitmap = getBlurredGlyphBitmap(shape, op.color, blurPx);
+                glDrawGlyph(comp, blurredBitmap, drawXPx + blurredBitmap.offsetX, drawYPx + blurredBitmap.offsetY, null, opAlpha, rotationRad, scaleAmt, null, null, true, null, null);
+            } else {
+                glDrawGlyph(
+                    comp, shape, drawXPx, drawYPx,
+                    op.color, opAlpha, rotationRad, scaleAmt,
+                    isColorEmoji ? null : op.gradient, gradSpan,
+                    isColorEmoji, null, null
+                );
+            }
 
-            if (op.mask && !op.gradient) {
+            if (op.mask && !op.gradient && !isColorEmoji) {
                 const texture = getMaskTexture(op.mask.targetName, op.mask.costumeName);
                 if (texture) {
                     const maskOpacity = Math.max(0, Math.min(100, Scratch.Cast.toNumber(op.mask.opacity != null ? op.mask.opacity : 100))) / 100;
@@ -4859,220 +4195,6 @@ self.onmessage = async (event) => {
         } catch (e) {
             stroke(startX, endX);
         }
-    }
-
-    function compositeGlyphsToCanvasCanvas2D(state, paintOps, docW, docH, textWidth, textHeight, originX, originY) {
-        let canvas = state.paintCanvas;
-        if (!canvas) {
-            canvas = document.createElement('canvas');
-            canvas.reusable = false;
-            state.paintCanvas = canvas;
-            state.paintCtx = canvas.getContext('2d');
-        }
-        const pixelW = Math.max(1, Math.round(docW * DEST_SCALE));
-        const pixelH = Math.max(1, Math.round(docH * DEST_SCALE));
-        if (canvas.width !== pixelW || canvas.height !== pixelH) {
-            canvas.width = pixelW;
-            canvas.height = pixelH;
-        }
-        const ctx = state.paintCtx;
-        ctx.imageSmoothingEnabled = !!state.smoothing;
-        ctx.setTransform(1, 0, 0, 1, 0, 0);
-        ctx.clearRect(0, 0, pixelW, pixelH);
-        ctx.textBaseline = 'alphabetic';
-
-        const background = state.textBackground;
-        if (background.enabled) {
-            const padding = Math.max(0, Scratch.Cast.toNumber(background.padding) || 0) * DEST_SCALE;
-            const width = textWidth * DEST_SCALE + padding * 2;
-            const height = textHeight * DEST_SCALE + padding * 2;
-            const x = originX * DEST_SCALE - width / 2;
-            const y = originY * DEST_SCALE - height / 2;
-            ctx.save();
-            ctx.globalAlpha = Math.max(0, Math.min(100, Scratch.Cast.toNumber(background.opacity) || 0)) / 100;
-            ctx.fillStyle = background.color;
-            const radius = Math.min(Math.max(0, Scratch.Cast.toNumber(background.radius) || 0) * DEST_SCALE, width / 2, height / 2);
-            ctx.beginPath();
-            ctx.roundRect(x, y, width, height, radius);
-            ctx.fill();
-            ctx.restore();
-        }
-
-        const maskSpansByIndex = getSeamlessMaskSpans(state, paintOps, state.layoutKey + '\u0003' + docW + '\u0003' + docH, docW * DEST_SCALE, docH * DEST_SCALE);
-        const gradientSpansByIndex = getGradientSpans(state, paintOps, state.layoutKey + '\u0003' + docW + '\u0003' + docH);
-        const gradientScratchCanvases = [];
-
-        const applyCharTransformOp = (op, hasRotation, hasScale) => {
-            const cx = op.x * DEST_SCALE;
-            const cy = op.y * DEST_SCALE;
-            ctx.translate(cx, cy);
-            if (hasRotation) ctx.rotate(-op.rotation * Math.PI / 180);
-            if (hasScale) ctx.scale(op.scale, op.scale);
-            ctx.translate(-cx, -cy);
-        };
-        const resetTransform = () => ctx.setTransform(1, 0, 0, 1, 0, 0);
-
-        for (let i = 0; i < paintOps.length; i++) {
-            const op = paintOps[i];
-            if (op.text === '\u00A0' || op.text === '') continue;
-
-            const fontFamily = op.font['font-family'];
-            const fontSize = op.font['font-size'];
-            const fontWeight = op.font['font-weight'];
-            const fontStyle = op.font['font-style'];
-
-            let glyph;
-            if (op.gradient) {
-                const shape = getGlyphShape(op.text, fontFamily, fontSize, fontWeight, fontStyle);
-                const span = shape && gradientSpansByIndex.get(op.charIndex);
-                if (shape && span) {
-                    let localOffsetXPx, localOffsetYPx;
-                    if (span.localOffsetXPx !== undefined) {
-                        localOffsetXPx = span.localOffsetXPx;
-                        localOffsetYPx = span.localOffsetYPx;
-                    } else {
-                        const advanceCenterXEmForSpan = shape.baselineOriginXEm + shape.advance / 2;
-                        const baselineYFromLineCenterForSpan = (shape.fontAscentEm - shape.fontDescentEm) / 2;
-                        const drawXEmForSpan = op.x - advanceCenterXEmForSpan;
-                        const drawYEmForSpan = (op.y + baselineYFromLineCenterForSpan) - shape.baselineOriginYEm;
-                        localOffsetXPx = Math.round(drawXEmForSpan * DEST_SCALE) - span.originX;
-                        localOffsetYPx = Math.round(drawYEmForSpan * DEST_SCALE) - span.originY;
-                    }
-                    const gradientCanvas = tintGlyphGradient(shape, op.gradient, span.spanW, span.spanH, localOffsetXPx, localOffsetYPx);
-                    gradientScratchCanvases.push(gradientCanvas);
-                    glyph = {
-                        canvas: gradientCanvas,
-                        advance: shape.advance,
-                        baselineOriginXEm: shape.baselineOriginXEm,
-                        baselineOriginYEm: shape.baselineOriginYEm,
-                        fontAscentEm: shape.fontAscentEm,
-                        fontDescentEm: shape.fontDescentEm,
-                        shape
-                    };
-                }
-            }
-            if (!glyph) glyph = getGlyphBitmap(op.text, fontFamily, fontSize, fontWeight, fontStyle, op.color);
-
-            const advanceCenterXEm = glyph.baselineOriginXEm + glyph.advance / 2;
-            const baselineYFromLineCenter = (glyph.fontAscentEm - glyph.fontDescentEm) / 2;
-            const drawXEm = op.x - advanceCenterXEm;
-            const drawYEm = (op.y + baselineYFromLineCenter) - glyph.baselineOriginYEm;
-
-            const hasOpacity = op.opacity != null && op.opacity !== 1;
-            const hasRotation = !!op.rotation;
-            const hasScale = op.scale != null && op.scale !== 1;
-            const hasTransform = hasRotation || hasScale;
-
-            if (hasTransform) applyCharTransformOp(op, hasRotation, hasScale);
-
-            if (state.textShadow.enabled) {
-                const shadowShape = glyph.shape || getGlyphShape(op.text, fontFamily, fontSize, fontWeight, fontStyle);
-                const shadowBlurPx = Math.max(0, Scratch.Cast.toNumber(state.textShadow.blur) || 0) * DEST_SCALE;
-                const shadowOffsetXPx = (Scratch.Cast.toNumber(state.textShadow.offsetX) || 0) * DEST_SCALE;
-                const shadowOffsetYPx = (Scratch.Cast.toNumber(state.textShadow.offsetY) || 0) * DEST_SCALE;
-                const shadowBitmap = getShadowGlyphBitmap(shadowShape, state.textShadow.color, shadowBlurPx, shadowOffsetXPx, shadowOffsetYPx);
-                ctx.globalAlpha = (hasOpacity ? op.opacity : 1) * Math.max(0, Math.min(100, Scratch.Cast.toNumber(state.textShadow.opacity) || 0)) / 100;
-                ctx.drawImage(shadowBitmap.canvas, drawXEm * DEST_SCALE + shadowBitmap.offsetX, drawYEm * DEST_SCALE + shadowBitmap.offsetY);
-                ctx.globalAlpha = 1;
-            }
-
-            if (state.textBorder.enabled && Scratch.Cast.toNumber(state.textBorder.size) > 0) {
-                const shape = glyph.shape || getGlyphShape(op.text, fontFamily, fontSize, fontWeight, fontStyle);
-                const borderGlyph = tintGlyph(shape, state.textBorder.color);
-                ctx.globalAlpha = (hasOpacity ? op.opacity : 1) * Math.max(0, Math.min(100, Scratch.Cast.toNumber(state.textBorder.opacity) || 0)) / 100;
-                const borderSize = Math.max(0, Scratch.Cast.toNumber(state.textBorder.size) || 0) * DEST_SCALE;
-                const borderOffsets = getBorderOffsets(borderSize);
-                for (const [offsetX, offsetY] of borderOffsets) {
-                    ctx.drawImage(borderGlyph, drawXEm * DEST_SCALE + offsetX, drawYEm * DEST_SCALE + offsetY);
-                }
-                ctx.globalAlpha = 1;
-            }
-
-            if (!hasTransform) {
-                const px = Math.round(drawXEm * DEST_SCALE);
-                const py = Math.round(drawYEm * DEST_SCALE);
-                if (hasOpacity) {
-                    ctx.globalAlpha = op.opacity;
-                    ctx.drawImage(glyph.canvas, px, py);
-                    ctx.globalAlpha = 1;
-                } else {
-                    ctx.drawImage(glyph.canvas, px, py);
-                }
-            } else {
-                if (hasOpacity) ctx.globalAlpha = op.opacity;
-                ctx.drawImage(glyph.canvas, drawXEm * DEST_SCALE, drawYEm * DEST_SCALE);
-                if (hasOpacity) ctx.globalAlpha = 1;
-            }
-
-            if (op.mask && !op.gradient) {
-                const texture = getMaskTexture(op.mask.targetName, op.mask.costumeName);
-                if (texture) {
-                    const px = Math.round(drawXEm * DEST_SCALE);
-                    const py = Math.round(drawYEm * DEST_SCALE);
-                    const span = maskSpansByIndex.get(op.charIndex);
-                    const maskOpacity = Math.max(0, Math.min(100, Scratch.Cast.toNumber(op.mask.opacity != null ? op.mask.opacity : 100))) / 100;
-                    const combinedAlpha = (hasOpacity ? op.opacity : 1) * maskOpacity;
-                    if (combinedAlpha > 0) {
-                        if (!hasTransform) {
-                            drawMaskedGlyph(
-                                ctx, op.text, fontFamily, fontSize, fontWeight, fontStyle,
-                                op.mask, texture, px, py,
-                                span ? span.spanW : 0, span ? span.spanH : 0,
-                                span ? span.originX : 0, span ? span.originY : 0,
-                                px, py, combinedAlpha
-                            );
-                        } else {
-                            drawMaskedGlyph(
-                                ctx, op.text, fontFamily, fontSize, fontWeight, fontStyle,
-                                op.mask, texture, px, py,
-                                span ? span.spanW : 0, span ? span.spanH : 0,
-                                span ? span.originX : 0, span ? span.originY : 0,
-                                drawXEm * DEST_SCALE, drawYEm * DEST_SCALE, combinedAlpha
-                            );
-                        }
-                    }
-                }
-            }
-
-            if (op.strike) {
-                if (hasOpacity) ctx.globalAlpha = op.opacity;
-                ctx.strokeStyle = op.color;
-                ctx.lineWidth = Math.max(1, fontSize * 0.06) * DEST_SCALE;
-                const sy = op.y * DEST_SCALE;
-                ctx.beginPath();
-                ctx.moveTo((op.x - op.width / 2) * DEST_SCALE, sy);
-                ctx.lineTo((op.x + op.width / 2) * DEST_SCALE, sy);
-                ctx.stroke();
-                if (hasOpacity) ctx.globalAlpha = 1;
-            }
-
-            if (op.underline) {
-                if (hasOpacity) ctx.globalAlpha = op.opacity;
-                ctx.strokeStyle = op.color;
-                const lineWidth = Math.max(1, fontSize * 0.06) * DEST_SCALE;
-                ctx.lineWidth = lineWidth;
-                const uy = (op.y + baselineYFromLineCenter + fontSize * 0.06) * DEST_SCALE;
-                const startX = (op.x - op.width / 2) * DEST_SCALE;
-                const endX = (op.x + op.width / 2) * DEST_SCALE;
-                if (hasRotation) {
-                    ctx.beginPath();
-                    ctx.moveTo(startX, uy);
-                    ctx.lineTo(endX, uy);
-                    ctx.stroke();
-                } else {
-                    strokeUnderline(ctx, glyph, Math.round(drawXEm * DEST_SCALE), Math.round(drawYEm * DEST_SCALE), startX, endX, uy, lineWidth);
-                }
-                if (hasOpacity) ctx.globalAlpha = 1;
-            }
-
-            if (hasTransform) resetTransform();
-        }
-
-        for (let gi = 0; gi < gradientScratchCanvases.length; gi++) {
-            releasePooledCanvas(tintedCanvasPool, gradientScratchCanvases[gi]);
-        }
-
-        return canvas;
     }
 
     function installLinearFiltering(skin, state) {
@@ -5238,6 +4360,43 @@ self.onmessage = async (event) => {
         return spans;
     }
 
+    function detectNonChromiumBrowser() {
+        if (typeof navigator === 'undefined') return null;
+        const ua = navigator.userAgent || '';
+        const isChromium = typeof navigator.userAgentData !== 'undefined' && Array.isArray(navigator.userAgentData.brands) ?
+            navigator.userAgentData.brands.some(b => /chromium/i.test(b.brand)) :
+            (/chrome|chromium|crios|edg|opr|brave/i.test(ua) && !/firefox|fxios/i.test(ua));
+        if (isChromium) return null;
+
+        if (/firefox|fxios/i.test(ua)) return 'Firefox';
+        if (/edg\//i.test(ua)) return null;
+        if (/opr\//i.test(ua) || /opera/i.test(ua)) return null;
+        if (/crios/i.test(ua)) return null;
+        if (/safari/i.test(ua) && !/chrome|chromium|crios|android/i.test(ua)) return 'Safari';
+        if (/samsungbrowser/i.test(ua)) return 'Samsung Internet';
+        if (/ucbrowser/i.test(ua)) return 'UC Browser';
+        if (/msie|trident/i.test(ua)) return 'Internet Explorer';
+        return 'your current browser';
+    }
+
+    function hasSeenDisclaimer(flagKey) {
+        try {
+            return typeof localStorage !== 'undefined' && localStorage.getItem(flagKey) === '1';
+        } catch (e) {
+            return false;
+        }
+    }
+
+    function markDisclaimerSeen(flagKey) {
+        try {
+            if (typeof localStorage !== 'undefined') localStorage.setItem(flagKey, '1');
+        } catch (e) {
+            // ...
+        }
+    }
+
+    let anyDisclaimerApplicable = false;
+
     class IrisText {
         constructor() {
             this._onTargetRemoved = this._onTargetRemoved.bind(this);
@@ -5246,11 +4405,7 @@ self.onmessage = async (event) => {
             if (nonChromiumBrowser) {
                 anyDisclaimerApplicable = true;
                 if (!hasSeenDisclaimer(BROWSER_DISCLAIMER_FLAG_KEY)) this.browserDisclaimer(nonChromiumBrowser);
-            } else if (!supportsRenderWorker()) {
-                anyDisclaimerApplicable = true;
-                if (!hasSeenDisclaimer(WORKER_DISCLAIMER_FLAG_KEY)) this.disclaimer();
             }
-            ensureRenderWorker();
             if (runtime.ext_irisText && runtime.ext_irisText !== this) {
                 runtime.removeListener('targetWasRemoved', runtime.ext_irisText._onTargetRemoved);
                 runtime.removeListener('PROJECT_STOP_ALL', runtime.ext_irisText._onProjectStopAll);
@@ -5301,38 +4456,6 @@ self.onmessage = async (event) => {
                 rootFrame.irisTagCharacterNumber = words[i].charIndex;
                 yield* func(thread, target, runtime, stage);
             }
-        }
-
-        async disclaimer() {
-            const disclaimerText = `Hey there! You are currently seeing this prompt because <b>your current environment lacks support for proper multi-threading</b>.
-            
-            Please be aware that this will make Iris Text VERY slow with certain operations. <b>Moving to another browser, preferably Chromium-based,</b> will mitigate this issue.
-            
-            Sorry for the inconvenience, and enjoy using Iris Text! :D`;
-
-            if (typeof scaffolding !== "undefined") return;
-            if (ScratchBlocks.customPrompt) {
-                const modal = await ScratchBlocks.customPrompt({
-                        title: "Disclaimer!"
-                    }, {
-                        content: {
-                            width: "500px"
-                        }
-                    },
-                    [{
-                        name: "OK",
-                        role: "ok",
-                        callback: () => console.log("Confirmed")
-                    }]
-                );
-
-                const p = document.createElement("p");
-                p.innerHTML = disclaimerText.replace(/\n/g, "<br>");
-                modal.appendChild(p);
-            } else {
-                alert(disclaimerText);
-            }
-            markDisclaimerSeen(WORKER_DISCLAIMER_FLAG_KEY);
         }
 
         async browserDisclaimer(browserName) {
@@ -5458,7 +4581,6 @@ self.onmessage = async (event) => {
                 runtime.renderer.destroySkin(state.skinId);
                 state.skinId = null;
             }
-            if (state) disposeStateFromWorker(state);
             clearCharAnimationsForTarget(target.id);
             if (!charAnimations.size) releaseAnimationTicker();
         }
@@ -5580,6 +4702,35 @@ self.onmessage = async (event) => {
                         }
                     },
                     {
+                        opcode: 'setSmoothingForThisSprite',
+                        blockType: Scratch.BlockType.COMMAND,
+                        text: 'turn smoothing [ENABLED] for [SPRITE]',
+                        arguments: {
+                            ENABLED: {
+                                type: Scratch.ArgumentType.STRING,
+                                menu: 'ONOFF',
+                                defaultValue: 'on'
+                            },
+                            SPRITE: {
+                                type: Scratch.ArgumentType.STRING,
+                                menu: 'SPRITE',
+                                defaultValue: '_myself_'
+                            }
+                        }
+                    },
+                    {
+                        opcode: 'setEmojiMode',
+                        blockType: Scratch.BlockType.COMMAND,
+                        text: 'set emoji mode to [MODE]',
+                        arguments: {
+                            MODE: {
+                                type: Scratch.ArgumentType.STRING,
+                                menu: 'EMOJI_MODE',
+                                defaultValue: 'colored'
+                            }
+                        }
+                    },
+                    {
                         opcode: 'setGrowDownwardOnly',
                         blockType: Scratch.BlockType.COMMAND,
                         text: 'grow downward only [ENABLED]',
@@ -5644,6 +4795,17 @@ self.onmessage = async (event) => {
                                 menu: 'TYPING_GROUP',
                                 defaultValue: 'default'
                             },
+                            SECONDS: {
+                                type: Scratch.ArgumentType.NUMBER,
+                                defaultValue: 0.05
+                            }
+                        }
+                    },
+                    {
+                        opcode: 'setAllTypingSpeeds',
+                        blockType: Scratch.BlockType.COMMAND,
+                        text: 'set typing speed for all categories to [SECONDS] seconds',
+                        arguments: {
                             SECONDS: {
                                 type: Scratch.ArgumentType.NUMBER,
                                 defaultValue: 0.05
@@ -6627,6 +5789,69 @@ self.onmessage = async (event) => {
                             }
                         }
                     },
+                    {
+                        opcode: 'getCharDimension',
+                        blockType: Scratch.BlockType.REPORTER,
+                        text: 'character [INDEX] [DIMENSION]',
+                        disableMonitor: true,
+                        arguments: {
+                            INDEX: {
+                                type: Scratch.ArgumentType.NUMBER,
+                                defaultValue: 1
+                            },
+                            DIMENSION: {
+                                type: Scratch.ArgumentType.STRING,
+                                menu: 'DIMENSION',
+                                defaultValue: 'width'
+                            }
+                        }
+                    },
+                    {
+                        opcode: 'charTouching',
+                        blockType: Scratch.BlockType.BOOLEAN,
+                        text: 'character [INDEX] touching [TARGET] [MODE]?',
+                        arguments: {
+                            INDEX: {
+                                type: Scratch.ArgumentType.NUMBER,
+                                defaultValue: 1
+                            },
+                            TARGET: {
+                                type: Scratch.ArgumentType.STRING,
+                                menu: 'TOUCH_TARGET',
+                                defaultValue: '_mouse_'
+                            },
+                            MODE: {
+                                type: Scratch.ArgumentType.STRING,
+                                menu: 'TOUCH_MODE',
+                                defaultValue: 'bounding box'
+                            }
+                        }
+                    },
+                    {
+                        opcode: 'charRangeTouching',
+                        blockType: Scratch.BlockType.BOOLEAN,
+                        text: 'character [START] to [END] touching [TARGET] [MODE]?',
+                        arguments: {
+                            START: {
+                                type: Scratch.ArgumentType.NUMBER,
+                                defaultValue: 1
+                            },
+                            END: {
+                                type: Scratch.ArgumentType.NUMBER,
+                                defaultValue: 1
+                            },
+                            TARGET: {
+                                type: Scratch.ArgumentType.STRING,
+                                menu: 'TOUCH_TARGET',
+                                defaultValue: '_mouse_'
+                            },
+                            MODE: {
+                                type: Scratch.ArgumentType.STRING,
+                                menu: 'TOUCH_MODE',
+                                defaultValue: 'bounding box'
+                            }
+                        }
+                    },
 					'---',
                     {
                         opcode: 'getCharCount',
@@ -6698,6 +5923,58 @@ self.onmessage = async (event) => {
                         }
                     },
                     {
+                        opcode: 'shadowMarkup',
+                        blockType: Scratch.BlockType.REPORTER,
+                        text: 'shadow [TEXT] with color [COLOR] opacity [OPACITY] % blur [BLUR] offset x [OFFSET_X] y [OFFSET_Y]',
+                        arguments: {
+                            TEXT: {
+                                type: Scratch.ArgumentType.STRING,
+                                defaultValue: 'dramatic'
+                            },
+                            COLOR: {
+                                type: Scratch.ArgumentType.COLOR
+                            },
+                            OPACITY: {
+                                type: Scratch.ArgumentType.NUMBER,
+                                defaultValue: 50
+                            },
+                            BLUR: {
+                                type: Scratch.ArgumentType.NUMBER,
+                                defaultValue: 8
+                            },
+                            OFFSET_X: {
+                                type: Scratch.ArgumentType.NUMBER,
+                                defaultValue: 0
+                            },
+                            OFFSET_Y: {
+                                type: Scratch.ArgumentType.NUMBER,
+                                defaultValue: 0
+                            }
+                        }
+                    },
+                    {
+                        opcode: 'borderMarkup',
+                        blockType: Scratch.BlockType.REPORTER,
+                        text: 'border [TEXT] with color [COLOR] opacity [OPACITY] % size [SIZE]',
+                        arguments: {
+                            TEXT: {
+                                type: Scratch.ArgumentType.STRING,
+                                defaultValue: 'outlined'
+                            },
+                            COLOR: {
+                                type: Scratch.ArgumentType.COLOR
+                            },
+                            OPACITY: {
+                                type: Scratch.ArgumentType.NUMBER,
+                                defaultValue: 100
+                            },
+                            SIZE: {
+                                type: Scratch.ArgumentType.NUMBER,
+                                defaultValue: 2
+                            }
+                        }
+                    },
+                    {
                         opcode: 'styleMarkup',
                         blockType: Scratch.BlockType.REPORTER,
                         text: 'style [TEXT] as [STYLE]',
@@ -6725,6 +6002,21 @@ self.onmessage = async (event) => {
                             SIZE: {
                                 type: Scratch.ArgumentType.NUMBER,
                                 defaultValue: 48
+                            }
+                        }
+                    },
+                    {
+                        opcode: 'blurMarkup',
+                        blockType: Scratch.BlockType.REPORTER,
+                        text: 'blur [TEXT] by [INTENSITY] %',
+                        arguments: {
+                            TEXT: {
+                                type: Scratch.ArgumentType.STRING,
+                                defaultValue: 'hazy'
+                            },
+                            INTENSITY: {
+                                type: Scratch.ArgumentType.NUMBER,
+                                defaultValue: 50
                             }
                         }
                     },
@@ -6775,6 +6067,9 @@ self.onmessage = async (event) => {
                     ONOFF: {
                         items: ['on', 'off']
                     },
+                    EMOJI_MODE: {
+                        items: ['colored', 'native']
+                    },
                     ALIGN: {
                         items: ['left', 'center', 'right', 'justify']
                     },
@@ -6815,6 +6110,15 @@ self.onmessage = async (event) => {
                     },
                     WAIT_MODE: {
                         items: ['wait', "don't wait"]
+                    },
+                    DIMENSION: {
+                        items: ['width', 'height']
+                    },
+                    TOUCH_TARGET: {
+                        items: 'getTouchTargetMenuItems'
+                    },
+                    TOUCH_MODE: {
+                        items: ['bounding box', 'ink']
                     }
                 }
             };
@@ -6875,7 +6179,9 @@ self.onmessage = async (event) => {
             state.rawText = existingText + linePrefix + text;
             state.finalText = stripMarkup(state.rawText);
             state.visible = true;
-            schedulePaint(util.target, state);
+            state.paintDirty = true;
+            state.paintFingerprint = null;
+            scheduleTextRender(util.target);
         }
 
         _typeText(args, util, appendLine) {
@@ -7049,6 +6355,42 @@ self.onmessage = async (event) => {
             return items;
         }
 
+        getTouchTargetMenuItems() {
+            const items = [{
+                text: 'mouse pointer',
+                value: '_mouse_'
+            }];
+            const names = new Set();
+            const editingTarget = runtime.getEditingTarget && runtime.getEditingTarget();
+            for (const target of runtime.targets) {
+                if (target.isStage || target.isOriginal === false) continue;
+                if (editingTarget && target === editingTarget) continue;
+                const name = target.getName();
+                if (!names.has(name)) {
+                    names.add(name);
+                    items.push({
+                        text: name,
+                        value: name
+                    });
+                }
+            }
+            if (!editingTarget) {
+                items.length = 1;
+                for (const target of runtime.targets) {
+                    if (target.isStage || target.isOriginal === false) continue;
+                    const name = target.getName();
+                    if (!names.has(name)) {
+                        names.add(name);
+                        items.push({
+                            text: name,
+                            value: name
+                        });
+                    }
+                }
+            }
+            return items;
+        }
+
         getMaskCostumeMenuItems() {
             const items = [];
             const seen = new Set();
@@ -7114,6 +6456,27 @@ self.onmessage = async (event) => {
             schedulePaint(util.target, state);
         }
 
+        setSmoothingForThisSprite(args, util) {
+            const sprite = Scratch.Cast.toString(args.SPRITE);
+            const target = sprite === '_myself_' ?
+                util.target :
+                runtime.getSpriteTargetByName(sprite);
+            if (!target) return;
+            const state = getState(target);
+            const smoothing = Scratch.Cast.toString(args.ENABLED).toLowerCase() === 'on';
+            if (state.smoothing === smoothing) return;
+            state.smoothing = smoothing;
+            schedulePaint(target, state);
+        }
+
+        setEmojiMode(args, util) {
+            const state = getState(util.target);
+            const mode = Scratch.Cast.toString(args.MODE).toLowerCase() === 'native' ? 2 : 1;
+            if (state.emojiMode === mode) return;
+            state.emojiMode = mode;
+            schedulePaint(util.target, state);
+        }
+
         setGrowDownwardOnly(args, util) {
             const state = getState(util.target);
             const growDownwardOnly = Scratch.Cast.toString(args.ENABLED).toLowerCase() === 'on';
@@ -7129,10 +6492,20 @@ self.onmessage = async (event) => {
             state.typingSpeeds[group] = Math.max(0, Scratch.Cast.toNumber(args.SECONDS));
         }
 
+        setAllTypingSpeeds(args, util) {
+            const state = getState(util.target);
+            const seconds = Math.max(0, Scratch.Cast.toNumber(args.SECONDS));
+            for (const group in state.typingSpeeds) {
+                if (_hasOwn.call(state.typingSpeeds, group)) {
+                    state.typingSpeeds[group] = seconds;
+                }
+            }
+        }
+
         setCustomTypingSpeed(args, util) {
             const state = getState(util.target);
             const delay = Math.max(0, Scratch.Cast.toNumber(args.SECONDS));
-            for (const char of Array.from(Scratch.Cast.toString(args.CHARS))) {
+            for (const char of splitGraphemes(Scratch.Cast.toString(args.CHARS))) {
                 state.customTypingSpeeds[char] = delay;
             }
         }
@@ -7987,6 +7360,37 @@ self.onmessage = async (event) => {
             return plain[idx] || '';
         }
 
+        getCharDimension(args, util) {
+            const state = getState(util.target);
+            flushRenderIfDirty(util.target);
+            const idx = Scratch.Cast.toNumber(args.INDEX) - 1;
+            const box = state.charBoxes[idx];
+            if (!box) return 0;
+            const dimension = Scratch.Cast.toString(args.DIMENSION).toLowerCase();
+            return dimension === 'height' ? box.height : box.width;
+        }
+
+        charTouching(args, util) {
+            const idx = Scratch.Cast.toNumber(args.INDEX) - 1;
+            const targetArg = Scratch.Cast.toString(args.TARGET);
+            const mode = Scratch.Cast.toString(args.MODE).toLowerCase();
+            return mode === 'ink' ?
+                charRangeTouchingInk(util, idx, idx, targetArg) :
+                charRangeTouchesTarget(util, idx, idx, targetArg);
+        }
+
+        charRangeTouching(args, util) {
+            const {
+                start,
+                end
+            } = indexRange(Scratch.Cast.toNumber(args.START), Scratch.Cast.toNumber(args.END));
+            const targetArg = Scratch.Cast.toString(args.TARGET);
+            const mode = Scratch.Cast.toString(args.MODE).toLowerCase();
+            return mode === 'ink' ?
+                charRangeTouchingInk(util, start, end, targetArg) :
+                charRangeTouchesTarget(util, start, end, targetArg);
+        }
+
         getCharCount(args, util) {
             const state = getState(util.target);
             return stripMarkup(state.rawText).length;
@@ -8034,6 +7438,24 @@ self.onmessage = async (event) => {
             return `[gradient=${colors.join(',')}|${angle}|${type}]${text}[/gradient]`;
         }
 
+        shadowMarkup(args) {
+            const text = Scratch.Cast.toString(args.TEXT);
+            const color = Scratch.Cast.toString(args.COLOR);
+            const opacity = Math.max(0, Math.min(100, Scratch.Cast.toNumber(args.OPACITY) || 0));
+            const blur = Math.max(0, Scratch.Cast.toNumber(args.BLUR) || 0);
+            const offsetX = Scratch.Cast.toNumber(args.OFFSET_X) || 0;
+            const offsetY = Scratch.Cast.toNumber(args.OFFSET_Y) || 0;
+            return `[shadow=${color}|${opacity}|${blur}|${offsetX}|${offsetY}]${text}[/shadow]`;
+        }
+
+        borderMarkup(args) {
+            const text = Scratch.Cast.toString(args.TEXT);
+            const color = Scratch.Cast.toString(args.COLOR);
+            const opacity = Math.max(0, Math.min(100, Scratch.Cast.toNumber(args.OPACITY) || 0));
+            const size = Math.max(0, Scratch.Cast.toNumber(args.SIZE) || 0);
+            return `[border=${color}|${opacity}|${size}]${text}[/border]`;
+        }
+
         styleMarkup(args) {
             const text = Scratch.Cast.toString(args.TEXT);
             const map = {
@@ -8050,6 +7472,12 @@ self.onmessage = async (event) => {
             const text = Scratch.Cast.toString(args.TEXT);
             const size = Scratch.Cast.toNumber(args.SIZE);
             return `[size=${size}]${text}[/size]`;
+        }
+
+        blurMarkup(args) {
+            const text = Scratch.Cast.toString(args.TEXT);
+            const intensity = Math.min(100, Math.max(0, Scratch.Cast.toNumber(args.INTENSITY)));
+            return `[blur=${intensity}]${text}[/blur]`;
         }
 
         fontMarkup(args) {

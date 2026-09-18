@@ -841,7 +841,7 @@
 
                             // Window & Document
                             "load", "DOMContentLoaded", "beforeunload", "unload", "resize",
-                            "scroll", "error", "visibilitychange",
+                            "scroll", "visibilitychange",
 
                             // Drag & Drop
                             "dragstart", "drag", "dragenter", "dragover", "dragleave", "drop", "dragend",
@@ -1732,12 +1732,13 @@
 
 
                                 let body = this.pages.get(args.PAGE)?.get("code").querySelector(nest === "" ? "body" : `#${nest}`)
-                                // 
-
-                                let text = document.createRange().createContextualFragment(args.TEXT)
-                                let elements = text.querySelectorAll(`script`);
-                                elements.forEach(el => el.remove());
-                                text = toAString.serializeToString(text)
+                                let text = args.TEXT
+                                text = text.replaceAll("<", "&lt;")
+                                text = text.replaceAll(">", "&gt;")
+                                // let text = document.createRange().createContextualFragment(args.TEXT)
+                                // let elements = text.querySelectorAll(`script`);
+                                // elements.forEach(el => el.remove());
+                                // text = toAString.serializeToString(text)
                                 body.innerHTML += text
 
 

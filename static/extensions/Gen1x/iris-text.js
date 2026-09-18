@@ -3898,7 +3898,7 @@ Enjoy!! :D
             const scaleAmt = hasScale ? op.scale : 1;
             const pivotX = op.x * DEST_SCALE - drawXPx;
             const pivotY = op.y * DEST_SCALE - drawYPx;
-            const blurPx = op.blur > 0 ? (op.blur / 100) * fontSize * 0.5 * DEST_SCALE : 0;
+            const blurPx = op.blur > 0 ? (op.blur / 100) * op.font['font-size'] * 0.5 * DEST_SCALE : 0;
 
             const charShadow = op.shadow;
             const activeShadow = charShadow || (state.textShadow.enabled ? state.textShadow : null);
@@ -3990,7 +3990,7 @@ Enjoy!! :D
             }
 
             if (op.strike) {
-                const lineWidth = Math.max(1, fontSize * 0.06) * DEST_SCALE;
+                const lineWidth = Math.max(1, op.font['font-size'] * 0.06) * DEST_SCALE;
                 const sy = op.y * DEST_SCALE;
                 const x0 = (op.x - op.width / 2) * DEST_SCALE;
                 const x1 = (op.x + op.width / 2) * DEST_SCALE;
@@ -4000,8 +4000,8 @@ Enjoy!! :D
             }
 
             if (op.underline) {
-                const lineWidth = Math.max(1, fontSize * 0.06) * DEST_SCALE;
-                const uy = (op.y + baselineYFromLineCenter + fontSize * 0.06) * DEST_SCALE;
+                const lineWidth = Math.max(1, op.font['font-size'] * 0.06) * DEST_SCALE;
+                const uy = (op.y + baselineYFromLineCenter + op.font['font-size'] * 0.06) * DEST_SCALE;
                 const startX = (op.x - op.width / 2) * DEST_SCALE;
                 const endX = (op.x + op.width / 2) * DEST_SCALE;
                 if (hasRotation) {

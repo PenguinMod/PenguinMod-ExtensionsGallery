@@ -158,10 +158,6 @@
     constructor(runtime) {
       this.runtime = runtime;
       this.loaders = new Map();
-      this.container = null;
-      this._observedCanvas = null;
-      this._looping = false;
-      this._rafId = null;
       injectBaseStylesheet();
     }
 
@@ -309,83 +305,18 @@
       };
     }
 
-    // re-checked every frame instead of cached once, since fullscreen or a stage size change can swap the canvas or reparent it
-    _ensureContainer() {
-      const canvas = this.runtime.renderer && this.runtime.renderer.canvas;
-      if (!canvas || !canvas.parentElement) return this.container;
-
-      const parent = canvas.parentElement;
-
-      if (this.container && this.container.parentElement === parent && document.body.contains(this.container)) {
-        return this.container;
-      }
-
-      if (getComputedStyle(parent).position === "static") {
-        parent.style.position = "relative";
-      }
-
-      let container = this.container;
-      if (!container || !document.body.contains(container)) {
-        const orphaned = container; // still holds live loader elements
-        container = document.createElement("div");
-        container.id = "pma-loader-container";
-        container.style.position = "absolute";
-        container.style.top = "0";
-        container.style.left = "0";
-        container.style.right = "0";
-        container.style.bottom = "0";
-        container.style.overflow = "hidden";
-        container.style.pointerEvents = "none";
-        container.style.zIndex = "300";
-        if (orphaned) {
-          while (orphaned.firstChild) container.appendChild(orphaned.firstChild);
-        }
-        this.container = container;
-      }
-
-      if (container.parentElement !== parent) {
-        parent.appendChild(container);
-      }
-
-      return container;
-    }
-
-    _repositionAll() {
-      for (const id of this.loaders.keys()) this._applyTransform(id);
-    }
-
-    _startLoop() {
-      if (this._looping) return;
-      this._looping = true;
-      const step = () => {
-        if (this.loaders.size === 0) {
-          this._looping = false;
-          return;
-        }
-        this._ensureContainer();
-        this._repositionAll();
-        this._rafId = requestAnimationFrame(step);
-      };
-      this._rafId = requestAnimationFrame(step);
-    }
-
     _applyTransform(id) {
       const loader = this.loaders.get(id);
-      const container = this.container;
-      if (!loader || !container) return;
+      if (!loader) return;
 
-      const rect = container.getBoundingClientRect();
-      if (rect.width === 0 || rect.height === 0) return;
+      const renderer = this.runtime.renderer;
+      const nativeSize = renderer && renderer.getNativeSize ? renderer.getNativeSize() : [DEFAULT_STAGE_W, DEFAULT_STAGE_H];
+      const stageWidth = nativeSize[0] || DEFAULT_STAGE_W;
+      const stageHeight = nativeSize[1] || DEFAULT_STAGE_H;
 
-      const stageWidth = this.runtime.stageWidth || DEFAULT_STAGE_W;
-      const pxPerUnit = rect.width / stageWidth;
-
-      const leftPx = rect.width / 2 + loader.x * pxPerUnit;
-      const topPx = rect.height / 2 - loader.y * pxPerUnit;
-
-      loader.wrapper.style.left = `${leftPx}px`;
-      loader.wrapper.style.top = `${topPx}px`;
-      loader.wrapper.style.fontSize = `${Math.max(1, loader.size * pxPerUnit)}px`;
+      loader.wrapper.style.left = `${stageWidth / 2 + loader.x}px`;
+      loader.wrapper.style.top = `${stageHeight / 2 - loader.y}px`;
+      loader.wrapper.style.fontSize = `${Math.max(1, loader.size)}px`;
     }
 
     _renderPreset(loader) {
@@ -394,19 +325,15 @@
     }
 
     _getOrNull(id) {
-      return this.loaders.get(String(id)) || null;
+      return this.loaders.get(Scratch.Cast.toString(id)) || null;
     }
 
     createLoader(args) {
-      const id = String(args.ID);
-      const container = this._ensureContainer();
-      if (!container) return;
-
-      let loader = this.loaders.get(id);
+      const id = Scratch.Cast.toString(args.ID);
+      let loader = this._getOrNull(id);
       if (!loader) {
         const wrapper = document.createElement("div");
         wrapper.className = "pma-loader-wrapper";
-        container.appendChild(wrapper);
         loader = {
           wrapper,
           x: 0,
@@ -415,24 +342,25 @@
           speed: 1,
           color: "#8b5cf6",
           style: "ring",
-          visible: true,
         };
         this.loaders.set(id, loader);
-        this._startLoop();
+        const renderer = this.runtime.renderer;
+        if (renderer) renderer.addOverlay(wrapper, "scale");
       }
 
-      loader.style = String(args.STYLE);
+      loader.style = Scratch.Cast.toString(args.STYLE);
       loader.wrapper.style.setProperty("--pma-color", loader.color);
       loader.wrapper.style.setProperty("--pma-speed", String(loader.speed));
-      loader.wrapper.style.display = loader.visible ? "" : "none";
       this._renderPreset(loader);
       this._applyTransform(id);
     }
 
     removeLoader(args) {
-      const id = String(args.ID);
-      const loader = this.loaders.get(id);
+      const id = Scratch.Cast.toString(args.ID);
+      const loader = this._getOrNull(id);
       if (!loader) return;
+      const renderer = this.runtime.renderer;
+      if (renderer) renderer.removeOverlay(loader.wrapper);
       loader.wrapper.remove();
       this.loaders.delete(id);
     }
@@ -446,44 +374,42 @@
     showLoader(args) {
       const loader = this._getOrNull(args.ID);
       if (!loader) return;
-      loader.visible = true;
       loader.wrapper.style.display = "";
     }
 
     hideLoader(args) {
       const loader = this._getOrNull(args.ID);
       if (!loader) return;
-      loader.visible = false;
       loader.wrapper.style.display = "none";
     }
 
     setLoaderPosition(args) {
       const loader = this._getOrNull(args.ID);
       if (!loader) return;
-      loader.x = Number(args.X) || 0;
-      loader.y = Number(args.Y) || 0;
-      this._applyTransform(String(args.ID));
+      loader.x = Scratch.Cast.toNumber(args.X);
+      loader.y = Scratch.Cast.toNumber(args.Y);
+      this._applyTransform(Scratch.Cast.toString(args.ID));
     }
 
     changeLoaderPosition(args) {
       const loader = this._getOrNull(args.ID);
       if (!loader) return;
-      loader.x += Number(args.X) || 0;
-      loader.y += Number(args.Y) || 0;
-      this._applyTransform(String(args.ID));
+      loader.x += Scratch.Cast.toNumber(args.X);
+      loader.y += Scratch.Cast.toNumber(args.Y);
+      this._applyTransform(Scratch.Cast.toString(args.ID));
     }
 
     setLoaderSize(args) {
       const loader = this._getOrNull(args.ID);
       if (!loader) return;
-      loader.size = Math.max(1, Number(args.SIZE) || 60);
-      this._applyTransform(String(args.ID));
+      loader.size = Math.max(1, Scratch.Cast.toNumber(args.SIZE));
+      this._applyTransform(Scratch.Cast.toString(args.ID));
     }
 
     setLoaderSpeed(args) {
       const loader = this._getOrNull(args.ID);
       if (!loader) return;
-      let speed = Number(args.SPEED);
+      let speed = Scratch.Cast.toNumber(args.SPEED);
       if (!isFinite(speed) || speed === 0) speed = 1;
       speed = Math.min(50, Math.max(0.05, Math.abs(speed)));
       loader.speed = speed;
@@ -493,7 +419,7 @@
     setLoaderColor(args) {
       const loader = this._getOrNull(args.ID);
       if (!loader) return;
-      const hex = String(args.COLOR);
+      const hex = Scratch.Color.rgbToHex(Scratch.Cast.toRgbColorObject(args.COLOR));
       loader.color = hex;
       loader.wrapper.style.setProperty("--pma-color", hex);
     }
@@ -501,18 +427,18 @@
     setLoaderStyle(args) {
       const loader = this._getOrNull(args.ID);
       if (!loader) return;
-      loader.style = String(args.STYLE);
+      loader.style = Scratch.Cast.toString(args.STYLE);
       this._renderPreset(loader);
-      this._applyTransform(String(args.ID));
+      this._applyTransform(Scratch.Cast.toString(args.ID));
     }
 
     loaderExists(args) {
-      return this.loaders.has(String(args.ID));
+      return this.loaders.has(Scratch.Cast.toString(args.ID));
     }
 
     loaderVisible(args) {
       const loader = this._getOrNull(args.ID);
-      return !!loader && loader.visible;
+      return !!loader && loader.wrapper.style.display !== "none";
     }
 
     getLoaderX(args) {

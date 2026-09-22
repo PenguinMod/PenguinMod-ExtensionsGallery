@@ -154,7 +154,6 @@
     dJointAddPUTorques;
   let ode;
   let embedded = false;
-  var ODEWASM;
   let worlds = {};
   let geoms = {};
   let bodies = {};
@@ -2601,7 +2600,7 @@ if (typeof exports === 'object' && typeof module === 'object') {
 embedded = true;
 
   if (embedded) {
-    ode = ODEWASM;
+    ode = ODEWASM; // eslint-disable-line
   } else {
     ode = await Scratch.external.evalAndReturn(
       "https://raw.githubusercontent.com/NishiOwO/tw-ode/e5f54b5e05ae363e937740af0c81b217e06c15e8/odejs.js",
@@ -4093,6 +4092,7 @@ embedded = true;
           {
             opcode: "divVecToVector",
             blockType: Scratch.BlockType.REPORTER,
+            ...blk_array_obj,
             text: Scratch.translate("div vector [INPUT] to vector"),
             arguments: {
               INPUT: {
@@ -4108,6 +4108,7 @@ embedded = true;
               INPUT: {
                 type: arg_array,
                 defaultValue: from_array([0, 0, 0]),
+                ...arg_array_obj,
               },
             },
           },
@@ -4115,6 +4116,7 @@ embedded = true;
             opcode: "divQuatToQuaternion",
             text: Scratch.translate("div quaternion [INPUT] to quaternion"),
             blockType: Scratch.BlockType.REPORTER,
+            ...blk_array_obj,
             arguments: {
               INPUT: {
                 ...divVecQuat.Quat.Argument,
@@ -4129,6 +4131,7 @@ embedded = true;
               INPUT: {
                 type: arg_array,
                 defaultValue: from_array([0, 0, 0, 0]),
+                ...arg_array_obj,
               },
             },
           }

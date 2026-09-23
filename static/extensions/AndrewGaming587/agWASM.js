@@ -133,7 +133,7 @@
                 if (vm.dogeiscutObject.Type && importObject instanceof vm.dogeiscutObject.Type) importObject = importObject.toJSON()
                 source ??= 0;
                 
-                if (debug.bindImportsToInstance) {
+                if (vm.agWASM.debug.bindImportsToInstance) {
                     // console.log(importObject)
                     importObject = Object.fromEntries(Object.entries(importObject).map(([key, value]) => {
                         return [key,WASMInstanceType.bindImports(value,this)];
@@ -141,6 +141,7 @@
                     // console.log(importObject)
 
                 }
+                
                 this.importObject = importObject;
                 if (((typeof source === "object" && "customId" in source && source.customId === "agWASMInst") || source instanceof WASMInstanceType)) return source;
                 if (source instanceof WASMModuleType) {
@@ -150,7 +151,8 @@
                         Object.values(importObject).forEach(namespace => {
                             // This could be useful
                             namespace._instance = this.instance;
-                        })
+                        });
+                        if (result.exports._agWASM_init) result.exports._agWASM_init(this)
                     })
                     window.agWASMInstDebug = this;
                 }

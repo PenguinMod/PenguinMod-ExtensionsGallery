@@ -4,6 +4,7 @@
 // ID: spritesheeter
 // Description: Load and manipulate spritesheets with customizable frames and XML support
 // By: MubiLop
+// boo
 
 (function(Scratch) {
     'use strict';

@@ -20,6 +20,24 @@
 
     const menuIconURI = 'data:image/svg+xml;base64,PHN2ZyB2ZXJzaW9uPSIxLjEiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyIgeG1sbnM6eGxpbms9Imh0dHA6Ly93d3cudzMub3JnLzE5OTkveGxpbmsiIHdpZHRoPSIzMDAiIGhlaWdodD0iMzAwIiB2aWV3Qm94PSIwLDAsMzAwLDMwMCI+PGcgdHJhbnNmb3JtPSJ0cmFuc2xhdGUoLTE1MCwwKSI+PGcgc3Ryb2tlLW1pdGVybGltaXQ9IjEwIj48cGF0aCBkPSJNMTUwLDMwMHYtMzAwaDMwMHYzMDB6IiBmaWxsPSIjNjc2NzY3IiBzdHJva2U9Im5vbmUiIHN0cm9rZS13aWR0aD0iMC41Ii8+PHBhdGggZD0iTTE1MCwzMDB2LTMwMGgzMDBsLTExOS4wOTA1LDE3Ny4wMzY2M3oiIGZpbGw9IiM0NTQ1NDUiIHN0cm9rZT0ibm9uZSIgc3Ryb2tlLXdpZHRoPSIwLjUiLz48cGF0aCBkPSJNMzExLjM3NzUzLDE0OS45OTk5OWMwLC0yMS40NjQyMSAxNy40MDAxOSwtMzguODY0MzkgMzguODY0NCwtMzguODY0MzljMjEuNDY0MjEsMCAzOC44NjQ0LDE3LjQwMDE4IDM4Ljg2NDQsMzguODY0NGMwLDIxLjQ2NDIxIC0xNy40MDAxOSwzOC44NjQ0IC0zOC44NjQzOSwzOC44NjQ0Yy0yMS40NjQyMSwwIC0zOC44NjQzOSwtMTcuNDAwMTggLTM4Ljg2NDM5LC0zOC44NjQzOXpNMzUwLjI0MTk0LDE3OS4xNDE4NGMxNi4wOTQ2LDAgMjkuMTQxODUsLTEzLjA0NzI2IDI5LjE0MTg1LC0yOS4xNDE4NWMwLC0xNi4wOTQ1OSAtMTMuMDQ3MjYsLTI5LjE0MTg1IC0yOS4xNDE4NSwtMjkuMTQxODVjLTE2LjA5NDYsMCAtMjkuMTQxODUsMTMuMDQ3MjYgLTI5LjE0MTg1LDI5LjE0MTg1YzAsMTYuMDk0NTkgMTMuMDQ3MjUsMjkuMTQxODUgMjkuMTQxODUsMjkuMTQxODV6IiBmaWxsPSIjZmY5OTAwIiBzdHJva2U9IiNmZjk5MDAiIHN0cm9rZS13aWR0aD0iNyIvPjxwYXRoIGQ9Ik0yMTAuODkzNjcsMTU2LjE3NzI4di0xMi4zNTQ1N2gxMDYuODk5NDR2MTIuMzU0NTd6IiBmaWxsPSIjZmY5OTAwIiBzdHJva2U9Im5vbmUiIHN0cm9rZS13aWR0aD0iMCIvPjxwYXRoIGQ9Ik0yMTAuODkzNjcsMTc5LjEwODM0di0zNS4yODU2M2gxMy4yMzIxMXYzNS4yODU2M3oiIGZpbGw9IiNmZjk5MDAiIHN0cm9rZT0ibm9uZSIgc3Ryb2tlLXdpZHRoPSIwIi8+PHBhdGggZD0iTTI0OS41MTY3MSwxNjcuODA1NXYtMjMuMjU2NDRoOC4wMTk0NnYyMy4yNTY0NHoiIGZpbGw9IiNmZjk5MDAiIHN0cm9rZT0ibm9uZSIgc3Ryb2tlLXdpZHRoPSIwIi8+PC9nPjwvZz48L3N2Zz48IS0tcm90YXRpb25DZW50ZXI6MTUwOjE1MC0tPg==';
 
+    class Key {
+        constructor(value, options) {
+            this.value = value;
+            this.options = options;
+        }
+        
+        toString() {
+            return this.value;
+        }    
+        
+        toReporterContent() { 
+            const wrap = document.createElement('b');  
+            wrap.textContent = `《${this.options.name} ${this.options.for} key》`;
+            
+            return wrap; 
+        }
+    }
+    
     class Extension {
         getInfo() {
             return {
@@ -74,7 +92,7 @@
                         blockType: Scratch.BlockType.REPORTER,
                         arguments: {
                             VALUE: { type: Scratch.ArgumentType.STRING, defaultValue: 'apple' },
-                            KEY: { type: Scratch.ArgumentType.EMPTY, shape: Scratch.BlockShape.OCTAGONAL }
+                            KEY: { type: Scratch.ArgumentType.EMPTY, shape: Scratch.BlockShape.OCTAGONAL, exemptFromNormalization: true }
                         }
                     },
                     {
@@ -84,7 +102,7 @@
                         arguments: {
                             SIGNATURE: { type: Scratch.ArgumentType.STRING, defaultValue: 'signature' },
                             VALUE: { type: Scratch.ArgumentType.STRING, defaultValue: 'apple' },
-                            KEY: { type: Scratch.ArgumentType.EMPTY, shape: Scratch.BlockShape.OCTAGONAL }
+                            KEY: { type: Scratch.ArgumentType.EMPTY, shape: Scratch.BlockShape.OCTAGONAL, exemptFromNormalization: true }
                         }
                     },
 
@@ -103,7 +121,7 @@
                         blockType: Scratch.BlockType.REPORTER,
                         arguments: {
                             PLAINTEXT: { type: Scratch.ArgumentType.STRING, defaultValue: 'apple' },
-                            KEY: { type: Scratch.ArgumentType.EMPTY, shape: Scratch.BlockShape.OCTAGONAL }
+                            KEY: { type: Scratch.ArgumentType.EMPTY, shape: Scratch.BlockShape.OCTAGONAL, exemptFromNormalization: true }
                         }
                     },
                     {
@@ -112,7 +130,7 @@
                         blockType: Scratch.BlockType.REPORTER,
                         arguments: {
                             CIPHERTEXT: { type: Scratch.ArgumentType.STRING, defaultValue: 'encrypted' },
-                            KEY: { type: Scratch.ArgumentType.EMPTY, shape: Scratch.BlockShape.OCTAGONAL }
+                            KEY: { type: Scratch.ArgumentType.EMPTY, shape: Scratch.BlockShape.OCTAGONAL, exemptFromNormalization: true }
                         }
                     },
 
@@ -131,7 +149,7 @@
                         blockType: Scratch.BlockType.REPORTER,
                         arguments: {
                             VALUE: { type: Scratch.ArgumentType.STRING, defaultValue: 'apple' },
-                            KEY: { type: Scratch.ArgumentType.EMPTY, shape: Scratch.BlockShape.OCTAGONAL }
+                            KEY: { type: Scratch.ArgumentType.EMPTY, shape: Scratch.BlockShape.OCTAGONAL, exemptFromNormalization: true }
                         }
                     },
                     {
@@ -141,7 +159,7 @@
                         arguments: {
                             SIGNATURE: { type: Scratch.ArgumentType.STRING, defaultValue: 'signature' },
                             VALUE: { type: Scratch.ArgumentType.STRING, defaultValue: 'apple' },
-                            KEY: { type: Scratch.ArgumentType.EMPTY, shape: Scratch.BlockShape.OCTAGONAL }
+                            KEY: { type: Scratch.ArgumentType.EMPTY, shape: Scratch.BlockShape.OCTAGONAL, exemptFromNormalization: true }
                         }
                     },
                     {
@@ -210,7 +228,7 @@
                 hash: { name: 'SHA-512' }
             }, true, ['sign', 'verify']);
             const jwk = await crypto.subtle.exportKey('jwk', key);
-            return JSON.stringify(jwk);
+            return new Key(JSON.stringify(jwk), { 'name': 'HMAC', 'for': 'encryption' });
         }
 
         async signValue(args) {
@@ -254,7 +272,7 @@
                 length: 256
             }, true, ['encrypt', 'decrypt']);
             const jwk = await crypto.subtle.exportKey('jwk', key);
-            return JSON.stringify(jwk);
+            return new Key(JSON.stringify(jwk), { 'name': 'AES-GCM', 'for': 'encryption' });
         }
 
         async encryptAES(args) {
@@ -311,13 +329,13 @@
                 publicKey: await crypto.subtle.exportKey('jwk', keyPair.publicKey),
                 privateKey: await crypto.subtle.exportKey('jwk', keyPair.privateKey)
             };
-            return JSON.stringify(ret);
+            return new Key(JSON.stringify(ret), { 'name': 'RSA-PSS', 'for': 'encryption' });
         }
 
         async rsaSign(args) {
             let jwk;
             try {
-                jwk = JSON.parse(String(args.KEY));
+                jwk = JSON.parse(String(args.KEY).toString());
             } catch {
                 return '';
             }
@@ -330,7 +348,7 @@
         async rsaVerify(args) {
             let jwk;
             try {
-                jwk = JSON.parse(String(args.KEY));
+                jwk = JSON.parse(String(args.KEY).toString());
             } catch {
                 return '';
             }
@@ -343,13 +361,12 @@
             }
         }
 
-        // these two key methods have more validation (i cried while making them)
+        // bye bye validation
         async rsaPublicKey(args) {
-            if (typeof args.KEY !== 'string') return '';
             try {
                 const key = JSON.parse(args.KEY);
                 if (key && key.publicKey) {
-                    return JSON.stringify(key.publicKey);
+                    return new Key(JSON.stringify(key.publicKey), { 'name': 'RSA-PSS', 'for': 'public' });
                 }
                 return '';
             } catch (error) {
@@ -358,11 +375,10 @@
         }
 
         async rsaPrivateKey(args) {
-            if (typeof args.KEY !== 'string') return '';
             try {
                 const key = JSON.parse(args.KEY);
                 if (key && key.privateKey) {
-                    return JSON.stringify(key.privateKey);
+                    return new Key(JSON.stringify(key.privateKey), { 'name': 'RSA-PSS', 'for': 'private' });
                 }
                 return '';
             } catch (error) {

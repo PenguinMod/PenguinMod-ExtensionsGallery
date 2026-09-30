@@ -2617,10 +2617,6 @@
 
 
 
-        eve() {
-            return true;
-        }
-
         current() {
             if (document.querySelector(".htmlpage")) {
                 return (JSON.stringify(this.viewing))

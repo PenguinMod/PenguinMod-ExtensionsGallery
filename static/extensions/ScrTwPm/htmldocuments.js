@@ -39,7 +39,7 @@
             wrap.style.border = "solid 10px #ffffff00"
             wrap.style.backgroundColor = "#ffffff00"
             wrap.style.boxSizing = "border-box"
-            wrap.style.fontFamily = "Consolas"
+            wrap.style.fontFamily = "Inconsolata"
             wrap.style.height = "fit-content"
             wrap.style.width = "fit-content"
             return wrap;
@@ -52,14 +52,14 @@
                 "scrtwpmhtmldocuments_htmlcode",
                 instance => ({ html: instance.html }),
                 instance => {
-                    return (new HtmlCode(instance.html))
+                    () => (new HtmlCode(instance.html))
                 }
             );
             Scratch.vm.runtime.registerSerializer(
                 "scrtwpmhtmldocuments_prevhtml",
                 instance => ({ html: instance.html }),
                 instance => {
-                    return (new PrevHTML(instance.html))
+                    () => (new HtmlCode(instance.html))
                 }
             );
 
@@ -901,10 +901,10 @@
                         throw new Error("Name cannot be empty")
                     }
                 } else {
-                    throw new Error("Page already exists")
+                    throw new Error(`${args.PAGE2} already exists`)
                 }
             } else {
-                throw new Error("Page does not exist")
+                throw new Error(`${args.PAGE} does not exist`)
             }
         }
         clearPage(args, util) {
@@ -952,7 +952,7 @@
                     el.style.top = `${this.pages.get(args.PAGE).get("data").get("y")}px`;
                     el.setAttribute("width", `${this.pages.get(args.PAGE).get("data").get("width")}px`)
                     el.setAttribute("height", `${this.pages.get(args.PAGE).get("data").get("height")}px`)
-                    el.style.border = "1px solid black"
+                    el.style.border = "none"
                     const container = Scratch.renderer.canvas.parentElement;
                     container.appendChild(el);
                     if (!this.viewing.includes(args.PAGE)) {
@@ -1465,7 +1465,7 @@
                                 el.style.top = `${this.pages.get(args.PAGE).get("data").get("y")}px`;
                                 el.setAttribute("width", `${this.pages.get(args.PAGE).get("data").get("width")}px`)
                                 el.setAttribute("height", `${this.pages.get(args.PAGE).get("data").get("height")}px`)
-                                el.style.border = "1px solid black"
+                                el.style.border = "none"
                                 const container = Scratch.renderer.canvas.parentElement;
                                 container.appendChild(el);
                                 if (!this.viewing.includes(args.PAGE)) {
@@ -2080,7 +2080,7 @@
                         el.style.top = `${this.pages.get(args.PAGE).get("data").get("y")}px`;
                         el.setAttribute("width", `${this.pages.get(args.PAGE).get("data").get("width")}px`)
                         el.setAttribute("height", `${this.pages.get(args.PAGE).get("data").get("height")}px`)
-                        el.style.border = "1px solid black"
+                        el.style.border = "none"
                         const container = Scratch.renderer.canvas.parentElement;
                         container.appendChild(el);
                         if (!this.viewing.includes(args.PAGE)) {
@@ -2175,7 +2175,7 @@
                         el.style.top = `${this.pages.get(args.PAGE).get("data").get("y")}px`;
                         el.setAttribute("width", `${this.pages.get(args.PAGE).get("data").get("width")}px`)
                         el.setAttribute("height", `${this.pages.get(args.PAGE).get("data").get("height")}px`)
-                        el.style.border = "1px solid black"
+                        el.style.border = "none"
                         const container = Scratch.renderer.canvas.parentElement;
                         container.appendChild(el);
                         if (!this.viewing.includes(args.PAGE)) {
@@ -2267,7 +2267,7 @@
                         el.style.top = `${this.pages.get(args.PAGE).get("data").get("y")}px`;
                         el.setAttribute("width", `${this.pages.get(args.PAGE).get("data").get("width")}px`)
                         el.setAttribute("height", `${this.pages.get(args.PAGE).get("data").get("height")}px`)
-                        el.style.border = "1px solid black"
+                        el.style.border = "none"
                         const container = Scratch.renderer.canvas.parentElement;
                         container.appendChild(el);
                         if (!this.viewing.includes(args.PAGE)) {
@@ -2497,7 +2497,7 @@
                             el.style.top = `${this.pages.get(args.PAGE).get("data").get("y")}px`;
                             el.setAttribute("width", `${this.pages.get(args.PAGE).get("data").get("width")}px`)
                             el.setAttribute("height", `${this.pages.get(args.PAGE).get("data").get("height")}px`)
-                            el.style.border = "1px solid black"
+                            el.style.border = "none"
                             const container = Scratch.renderer.canvas.parentElement;
                             container.appendChild(el);
                             if (!this.viewing.includes(args.PAGE)) {

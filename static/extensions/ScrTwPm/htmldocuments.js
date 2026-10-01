@@ -22,39 +22,39 @@
     }
 
 
-    class HtmlCode {
-        constructor(html) {
-            this.customId = "scrtwpmhtmldocuments_htmlcode"
-            this.html = html
-        }
-        toString() {
-            return this.html
-        }
-        toReporterContent() {
-            let wrap = document.createElement('div')
-            wrap.innerText = this.html
-            // wrap.style.backgroundColor = "black"
-            // wrap.style.color = "white"
-            // wrap.style.border = "solid 10px black"
-            wrap.style.border = "solid 10px #ffffff00"
-            wrap.style.backgroundColor = "#ffffff00"
-            wrap.style.boxSizing = "border-box"
-            wrap.style.fontFamily = "Inconsolata"
-            wrap.style.height = "fit-content"
-            wrap.style.width = "fit-content"
-            return wrap;
-        }
-    }
+    // class HtmlCode {
+    //     constructor(html) {
+    //         this.customId = "scrtwpmhtmldocuments_htmlcode"
+    //         this.html = html
+    //     }
+    //     toString() {
+    //         return this.html
+    //     }
+    //     toReporterContent() {
+    //         let wrap = document.createElement('div')
+    //         wrap.innerText = this.html
+    //         // wrap.style.backgroundColor = "black"
+    //         // wrap.style.color = "white"
+    //         // wrap.style.border = "solid 10px black"
+    //         wrap.style.border = "solid 10px #ffffff00"
+    //         wrap.style.backgroundColor = "#ffffff00"
+    //         wrap.style.boxSizing = "border-box"
+    //         wrap.style.fontFamily = "Inconsolata"
+    //         wrap.style.height = "fit-content"
+    //         wrap.style.width = "fit-content"
+    //         return wrap;
+    //     }
+    // }
 
     class HTMLDocuments {
         constructor(runtime) {
-            Scratch.vm.runtime.registerSerializer(
-                "scrtwpmhtmldocuments_htmlcode",
-                instance => ({ html: instance.html }),
-                instance => {
-                    () => (new HtmlCode(instance.html))
-                }
-            );
+            // Scratch.vm.runtime.registerSerializer(
+            //     "scrtwpmhtmldocuments_htmlcode",
+            //     instance => ({ html: instance.html }),
+            //     instance => {
+            //         () => (new HtmlCode(instance.html))
+            //     }
+            // );
             Scratch.vm.runtime.registerSerializer(
                 "scrtwpmhtmldocuments_prevhtml",
                 instance => ({ html: instance.html }),
@@ -881,14 +881,14 @@
         }
 
         createPage(args, util) {
-            if (!this.pages.has(args.PAGE)) {
-                if (args.PAGE !== "") {
-                    this.pages.set(args.PAGE, new Map().set("data", new Map().set("x", 5).set("y", 5).set("width", 470).set("height", 350)).set("code", dom.parseFromString("", 'text/html')).set("eves", new Map()))
+            // if (!this.pages.has(args.PAGE)) {
+            if (args.PAGE !== "") {
+                this.pages.set(args.PAGE, new Map().set("data", new Map().set("x", 5).set("y", 5).set("width", 470).set("height", 350)).set("code", dom.parseFromString("", 'text/html')).set("eves", new Map()))
 
-                } else {
-                    throw new Error("Name cannot be empty")
-                }
+            } else {
+                throw new Error("Name cannot be empty")
             }
+            // }
         }
 
         duplicatePage(args, util) {
@@ -953,11 +953,12 @@
                     el.setAttribute("width", `${this.pages.get(args.PAGE).get("data").get("width")}px`)
                     el.setAttribute("height", `${this.pages.get(args.PAGE).get("data").get("height")}px`)
                     el.style.border = "none"
-                    const container = Scratch.renderer.canvas.parentElement;
-                    container.appendChild(el);
+                    // const container = Scratch.renderer.canvas.parentElement;
+                    // container.appendChild(el);
                     if (!this.viewing.includes(args.PAGE)) {
                         this.viewing.push(args.PAGE)
                     }
+                    Scratch.vm.renderer.addOverlay(el);
                     el.onload = () => {
                         for (const [key, value] of this.pages.get(args.PAGE)?.get("eves")) {
                             // 
@@ -1466,11 +1467,13 @@
                                 el.setAttribute("width", `${this.pages.get(args.PAGE).get("data").get("width")}px`)
                                 el.setAttribute("height", `${this.pages.get(args.PAGE).get("data").get("height")}px`)
                                 el.style.border = "none"
-                                const container = Scratch.renderer.canvas.parentElement;
-                                container.appendChild(el);
+                                // const container = Scratch.renderer.canvas.parentElement;
+                                // container.appendChild(el);
                                 if (!this.viewing.includes(args.PAGE)) {
                                     this.viewing.push(args.PAGE)
                                 }
+                                Scratch.vm.renderer.addOverlay(el);
+
                                 el.onload = () => {
                                     for (const [key, value] of this.pages.get(args.PAGE)?.get("eves")) {
                                         // 
@@ -2081,11 +2084,12 @@
                         el.setAttribute("width", `${this.pages.get(args.PAGE).get("data").get("width")}px`)
                         el.setAttribute("height", `${this.pages.get(args.PAGE).get("data").get("height")}px`)
                         el.style.border = "none"
-                        const container = Scratch.renderer.canvas.parentElement;
-                        container.appendChild(el);
+                        // const container = Scratch.renderer.canvas.parentElement;
+                        // container.appendChild(el);
                         if (!this.viewing.includes(args.PAGE)) {
                             this.viewing.push(args.PAGE)
                         }
+                        Scratch.vm.renderer.addOverlay(el);
 
                         // }
 
@@ -2176,11 +2180,13 @@
                         el.setAttribute("width", `${this.pages.get(args.PAGE).get("data").get("width")}px`)
                         el.setAttribute("height", `${this.pages.get(args.PAGE).get("data").get("height")}px`)
                         el.style.border = "none"
-                        const container = Scratch.renderer.canvas.parentElement;
-                        container.appendChild(el);
+                        // const container = Scratch.renderer.canvas.parentElement;
+                        // container.appendChild(el);
                         if (!this.viewing.includes(args.PAGE)) {
                             this.viewing.push(args.PAGE)
                         }
+                        Scratch.vm.renderer.addOverlay(el);
+
                         // }
 
                         el.onload = () => {
@@ -2268,12 +2274,12 @@
                         el.setAttribute("width", `${this.pages.get(args.PAGE).get("data").get("width")}px`)
                         el.setAttribute("height", `${this.pages.get(args.PAGE).get("data").get("height")}px`)
                         el.style.border = "none"
-                        const container = Scratch.renderer.canvas.parentElement;
-                        container.appendChild(el);
+                        // const container = Scratch.renderer.canvas.parentElement;
+                        // container.appendChild(el);
                         if (!this.viewing.includes(args.PAGE)) {
                             this.viewing.push(args.PAGE)
                         }
-
+                        Scratch.vm.renderer.addOverlay(el);
                         // }
 
                         el.onload = () => {
@@ -2458,7 +2464,7 @@
                 let cleanString = el.replace(/<!--[\s\S]*?-->/g, "").replace(/xmlns="[\s\S]*?"/g, "").replaceAll(``, "");
                 let toChange = `<html><body>${cleanString}</body></html>`
                 if (args.GET === "code") {
-                    return (new HtmlCode(this.prettierInText(cleanString)))
+                    return (this.prettierInText(cleanString))
                 } else {
                     return (new PrevHTML(this.prettierInText(cleanString)))
                 }
@@ -2498,11 +2504,12 @@
                             el.setAttribute("width", `${this.pages.get(args.PAGE).get("data").get("width")}px`)
                             el.setAttribute("height", `${this.pages.get(args.PAGE).get("data").get("height")}px`)
                             el.style.border = "none"
-                            const container = Scratch.renderer.canvas.parentElement;
-                            container.appendChild(el);
+                            // const container = Scratch.renderer.canvas.parentElement;
+                            // container.appendChild(el);
                             if (!this.viewing.includes(args.PAGE)) {
                                 this.viewing.push(args.PAGE)
                             }
+                            Scratch.vm.renderer.addOverlay(el);
 
                             // }
 
@@ -2624,6 +2631,8 @@
                 return ('[]')
             }
         }
+
+        eve(args) { return true }
     }
 
     Scratch.extensions.register(new HTMLDocuments(Scratch.runtime));

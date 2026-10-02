@@ -941,6 +941,10 @@
 
         displayPage(args, util) {
             return new Promise((resolve, reject) => {
+                            const elements = document.querySelectorAll(`.htmlpage.display${args.PAGE}`);
+                            Array.from(elements).forEach(el => {
+                                Scratch.vm.renderer.removeOverlay(el);
+                            });
                 try {
                     const elements = document.querySelectorAll(`.htmlpage.display${args.PAGE}`);
                     elements.forEach(el => el.remove());
@@ -1459,6 +1463,10 @@
                     // this.pages.get(args.PAGE)?.set("code", document.createRange().createContextualFragment(this.pages.get(args.PAGE).get("code")))
                     // 
                     return new Promise((resolve, reject) => {
+                            const elements = document.querySelectorAll(`.htmlpage.display${args.PAGE}`);
+                            Array.from(elements).forEach(el => {
+                                Scratch.vm.renderer.removeOverlay(el);
+                            });
                         if (this.viewing.includes(args.PAGE) && document.querySelector(".htmlpage")) {
                             try {
                                 const elements = document.querySelectorAll(`.htmlpage.display${args.PAGE}`);
@@ -1479,6 +1487,10 @@
                                 if (!this.viewing.includes(args.PAGE)) {
                                     this.viewing.push(args.PAGE)
                                 }
+
+
+                                this.
+
                                 Scratch.vm.renderer.addOverlay(el);
 
                                 el.onload = () => {
@@ -1917,6 +1929,11 @@
 
         }
         property(args, util) {
+            if (!this.pages.get(args.PAGE)?.get("code").querySelector("style")) {
+                        let body = this.pages.get(args.PAGE)?.get("code").querySelector("head")
+                        let el = document.createElement("style")
+                        el = body.appendChild(el)
+            }
             if (this.getInfo().menus.properties.items.includes(args.PROPERTY)) {
                 if (this.pages.has(args.PAGE)) {
                     function containsCssUnit(str) {
@@ -1949,13 +1966,7 @@
 
                     let sheeter = ""
                     let ello = ""
-                    if (!this.pages.get(args.PAGE)?.get("code").querySelector("style")) {
-                        let body = this.pages.get(args.PAGE)?.get("code").querySelector("head")
-                        let el = document.createElement("style")
-                        el = body.appendChild(el)
-                        const sheet = el.sheet
-                        sheet.insertRule(`${args.TYPE}${args.NAME}{${args.PROPERTY}:${value};}`, sheet.cssRules.length);
-                    } else {
+
                         let el = this.pages.get(args.PAGE)?.get("code").querySelector("style")
                         ello = el
 
@@ -1977,7 +1988,7 @@
                             updatedText += sheeter.cssRules[i].cssText
                         }
                         ello.innerHTML = updatedText;
-                    }
+                    
 
                     // }
 
@@ -1989,6 +2000,7 @@
 
                 }
             }
+            
         }
 
 
@@ -2074,10 +2086,14 @@
         movePage(args, util) {
             //if (Object.keys(this.pages).includes(args.PAGE)) {
             return new Promise((resolve, reject) => {
+                            const elements = document.querySelectorAll(`.htmlpage.display${args.PAGE}`);
+                            Array.from(elements).forEach(el => {
+                                Scratch.vm.renderer.removeOverlay(el);
+                            });
                 try {
                     this.pages.get(args.PAGE).get("data").set("x", args.X)
                     this.pages.get(args.PAGE).get("data").set("y", args.Y)
-                    if (this.viewing.includes(args.PAGE) && document.querySelector(".htmlpage")) {
+                    if (this.viewing.includes(args.PAGE)) {
                         const elements = document.querySelectorAll(`.htmlpage.display${args.PAGE}`);
                         elements.forEach(el => el.remove());
                         const el = document.createElement("iframe");
@@ -2169,11 +2185,15 @@
         resizePage(args, util) {
 
             return new Promise((resolve, reject) => {
+                            const elements = document.querySelectorAll(`.htmlpage.display${args.PAGE}`);
+                            Array.from(elements).forEach(el => {
+                                Scratch.vm.renderer.removeOverlay(el);
+                            });
                 try {
                     //if (Object.keys(this.pages).includes(args.PAGE)) {
                     this.pages.get(args.PAGE).get("data").set("width", args.X)
                     this.pages.get(args.PAGE).get("data").set("height", args.Y)
-                    if (this.viewing.includes(args.PAGE) && document.querySelector(".htmlpage")) {
+                    if (this.viewing.includes(args.PAGE)) {
                         const elements = document.querySelectorAll(`.htmlpage.display${args.PAGE}`);
                         elements.forEach(el => el.remove());
                         const el = document.createElement("iframe");
@@ -2261,13 +2281,17 @@
         resetDefault(args, util) {
 
             return new Promise((resolve, reject) => {
+                            const elements = document.querySelectorAll(`.htmlpage.display${args.PAGE}`);
+                            Array.from(elements).forEach(el => {
+                                Scratch.vm.renderer.removeOverlay(el);
+                            });
                 try {
                     //if (Object.keys(this.pages).includes(args.PAGE)) {
                     this.pages.get(args.PAGE).get("data").set("width", Number(window.getComputedStyle(Scratch.renderer.canvas.parentElement).width.replace("px", "")) - 10)
                     this.pages.get(args.PAGE).get("data").set("height", Number(window.getComputedStyle(Scratch.renderer.canvas.parentElement).height.replace("px", "")) - 10)
                     this.pages.get(args.PAGE).get("data").set("x", 5)
                     this.pages.get(args.PAGE).get("data").set("y", 5)
-                    if (this.viewing.includes(args.PAGE) && document.querySelector(".htmlpage")) {
+                    if (this.viewing.includes(args.PAGE)) {
                         const elements = document.querySelectorAll(`.htmlpage.display${args.PAGE}`);
                         elements.forEach(el => el.remove());
                         const el = document.createElement("iframe");
@@ -2495,9 +2519,13 @@
 
             if (this.viewing.includes(args.PAGE) && document.querySelector(".htmlpage")) {
                 return new Promise((resolve, reject) => {
+                            const elements = document.querySelectorAll(`.htmlpage.display${args.PAGE}`);
+                            Array.from(elements).forEach(el => {
+                                Scratch.vm.renderer.removeOverlay(el);
+                            });
                     try {
                         //if (Object.keys(this.pages).includes(args.PAGE)) {
-                        if (this.viewing.includes(args.PAGE) && document.querySelector(".htmlpage")) {
+                        if (this.viewing.includes(args.PAGE)) {
                             const elements = document.querySelectorAll(`.htmlpage.display${args.PAGE}`);
                             elements.forEach(el => el.remove());
                             const el = document.createElement("iframe");

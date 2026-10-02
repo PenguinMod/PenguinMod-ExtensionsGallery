@@ -211,24 +211,21 @@
                             }
                         }
                     },
-                    // Buggy for some reason
-                    // when I duplicate the pages they always stick as duplicates of each other and updating one updates the other
-                    // I'll fix later...
-                    // {
-                    //     opcode: 'duplicatePage',
-                    //     blockType: Scratch.BlockType.COMMAND,
-                    //     text: 'duplicate page [PAGE] as [PAGE2]',
-                    //     arguments: {
-                    //         PAGE: {
-                    //             type: Scratch.ArgumentType.STRING,
-                    //             defaultValue: "my-page"
-                    //         },
-                    //         PAGE2: {
-                    //             type: Scratch.ArgumentType.STRING,
-                    //             defaultValue: "my-page-2"
-                    //         }
-                    //     }
-                    // },
+                    {
+                        opcode: 'duplicatePage',
+                        blockType: Scratch.BlockType.COMMAND,
+                        text: 'duplicate page [PAGE] as [PAGE2]',
+                        arguments: {
+                            PAGE: {
+                                type: Scratch.ArgumentType.STRING,
+                                defaultValue: "my-page"
+                            },
+                            PAGE2: {
+                                type: Scratch.ArgumentType.STRING,
+                                defaultValue: "my-page-2"
+                            }
+                        }
+                    },
                     {
                         opcode: 'allPages',
                         blockType: Scratch.BlockType.REPORTER,
@@ -898,7 +895,7 @@
             if (this.pages.has(args.PAGE)) {
                 if (!this.pages.has(args.PAGE2)) {
                     if (args.PAGE !== "" && args.PAGE2 !== "") {
-                        this.pages.set(args.PAGE2, new Map().set("data", this.pages.get(args.PAGE).get("data")).set("code", this.pages.get(args.PAGE).get("code")).set("eves", this.pages.get(args.PAGE).get("eves")))
+                        this.pages.set(args.PAGE2, new Map().set("data", this.pages.get(args.PAGE).get("data")).set("code", dom.parseFromString(this.pages.get(args.PAGE).get("code").documentElement.textContent, 'text/html')).set("eves", this.pages.get(args.PAGE).get("eves")))
                     } else {
                         throw new Error("Name cannot be empty")
                     }
@@ -941,10 +938,10 @@
 
         displayPage(args, util) {
             return new Promise((resolve, reject) => {
-                            const elements = document.querySelectorAll(`.htmlpage.display${args.PAGE}`);
-                            Array.from(elements).forEach(el => {
-                                Scratch.vm.renderer.removeOverlay(el);
-                            });
+                const elements = document.querySelectorAll(`.htmlpage.display${args.PAGE}`);
+                Array.from(elements).forEach(el => {
+                    Scratch.vm.renderer.removeOverlay(el);
+                });
                 try {
                     const elements = document.querySelectorAll(`.htmlpage.display${args.PAGE}`);
                     elements.forEach(el => el.remove());
@@ -1043,7 +1040,7 @@
         }
 
         noNestEl(args, util) {
-            
+
             if ((this.pages).has(args.PAGE)) {
                 if (args.ID !== "") {
                     if (!this.pages.get(args.PAGE)?.get("code").querySelector(`#${args.ID}`)) {
@@ -1463,10 +1460,10 @@
                     // this.pages.get(args.PAGE)?.set("code", document.createRange().createContextualFragment(this.pages.get(args.PAGE).get("code")))
                     // 
                     return new Promise((resolve, reject) => {
-                            const elements = document.querySelectorAll(`.htmlpage.display${args.PAGE}`);
-                            Array.from(elements).forEach(el => {
-                                Scratch.vm.renderer.removeOverlay(el);
-                            });
+                        const elements = document.querySelectorAll(`.htmlpage.display${args.PAGE}`);
+                        Array.from(elements).forEach(el => {
+                            Scratch.vm.renderer.removeOverlay(el);
+                        });
                         if (this.viewing.includes(args.PAGE) && document.querySelector(".htmlpage")) {
                             try {
                                 const elements = document.querySelectorAll(`.htmlpage.display${args.PAGE}`);
@@ -1491,7 +1488,7 @@
 
                                 this.
 
-                                Scratch.vm.renderer.addOverlay(el);
+                                    Scratch.vm.renderer.addOverlay(el);
 
                                 el.onload = () => {
                                     for (const [key, value] of this.pages.get(args.PAGE)?.get("eves")) {
@@ -1930,9 +1927,9 @@
         }
         property(args, util) {
             if (!this.pages.get(args.PAGE)?.get("code").querySelector("style")) {
-                        let body = this.pages.get(args.PAGE)?.get("code").querySelector("head")
-                        let el = document.createElement("style")
-                        el = body.appendChild(el)
+                let body = this.pages.get(args.PAGE)?.get("code").querySelector("head")
+                let el = document.createElement("style")
+                el = body.appendChild(el)
             }
             if (this.getInfo().menus.properties.items.includes(args.PROPERTY)) {
                 if (this.pages.has(args.PAGE)) {
@@ -1967,28 +1964,28 @@
                     let sheeter = ""
                     let ello = ""
 
-                        let el = this.pages.get(args.PAGE)?.get("code").querySelector("style")
-                        ello = el
+                    let el = this.pages.get(args.PAGE)?.get("code").querySelector("style")
+                    ello = el
 
-                        const sheet = el.sheet
+                    const sheet = el.sheet
 
-                        sheeter = sheet
-                        // if (args.TYPE === "") {
+                    sheeter = sheet
+                    // if (args.TYPE === "") {
 
-                        const rule = Array.from(sheet.cssRules).find(r => r.selectorText === `${args.TYPE}${args.NAME}`);
-                        if (rule) {
-                            rule.style.setProperty(args.PROPERTY, value);
-                        } else {
-                            sheet.insertRule(`${args.TYPE}${args.NAME}{${args.PROPERTY}:${value};}`, sheet["cssRules"].length);
-                        }
-                        // }
-                        let updatedText = "";
+                    const rule = Array.from(sheet.cssRules).find(r => r.selectorText === `${args.TYPE}${args.NAME}`);
+                    if (rule) {
+                        rule.style.setProperty(args.PROPERTY, value);
+                    } else {
+                        sheet.insertRule(`${args.TYPE}${args.NAME}{${args.PROPERTY}:${value};}`, sheet["cssRules"].length);
+                    }
+                    // }
+                    let updatedText = "";
 
-                        for (let i = 0; i < sheeter.cssRules.length; i++) {
-                            updatedText += sheeter.cssRules[i].cssText
-                        }
-                        ello.innerHTML = updatedText;
-                    
+                    for (let i = 0; i < sheeter.cssRules.length; i++) {
+                        updatedText += sheeter.cssRules[i].cssText
+                    }
+                    ello.innerHTML = updatedText;
+
 
                     // }
 
@@ -2000,7 +1997,7 @@
 
                 }
             }
-            
+
         }
 
 
@@ -2086,10 +2083,10 @@
         movePage(args, util) {
             //if (Object.keys(this.pages).includes(args.PAGE)) {
             return new Promise((resolve, reject) => {
-                            const elements = document.querySelectorAll(`.htmlpage.display${args.PAGE}`);
-                            Array.from(elements).forEach(el => {
-                                Scratch.vm.renderer.removeOverlay(el);
-                            });
+                const elements = document.querySelectorAll(`.htmlpage.display${args.PAGE}`);
+                Array.from(elements).forEach(el => {
+                    Scratch.vm.renderer.removeOverlay(el);
+                });
                 try {
                     this.pages.get(args.PAGE).get("data").set("x", args.X)
                     this.pages.get(args.PAGE).get("data").set("y", args.Y)
@@ -2185,10 +2182,10 @@
         resizePage(args, util) {
 
             return new Promise((resolve, reject) => {
-                            const elements = document.querySelectorAll(`.htmlpage.display${args.PAGE}`);
-                            Array.from(elements).forEach(el => {
-                                Scratch.vm.renderer.removeOverlay(el);
-                            });
+                const elements = document.querySelectorAll(`.htmlpage.display${args.PAGE}`);
+                Array.from(elements).forEach(el => {
+                    Scratch.vm.renderer.removeOverlay(el);
+                });
                 try {
                     //if (Object.keys(this.pages).includes(args.PAGE)) {
                     this.pages.get(args.PAGE).get("data").set("width", args.X)
@@ -2281,10 +2278,10 @@
         resetDefault(args, util) {
 
             return new Promise((resolve, reject) => {
-                            const elements = document.querySelectorAll(`.htmlpage.display${args.PAGE}`);
-                            Array.from(elements).forEach(el => {
-                                Scratch.vm.renderer.removeOverlay(el);
-                            });
+                const elements = document.querySelectorAll(`.htmlpage.display${args.PAGE}`);
+                Array.from(elements).forEach(el => {
+                    Scratch.vm.renderer.removeOverlay(el);
+                });
                 try {
                     //if (Object.keys(this.pages).includes(args.PAGE)) {
                     this.pages.get(args.PAGE).get("data").set("width", Number(window.getComputedStyle(Scratch.renderer.canvas.parentElement).width.replace("px", "")) - 10)
@@ -2519,10 +2516,10 @@
 
             if (this.viewing.includes(args.PAGE) && document.querySelector(".htmlpage")) {
                 return new Promise((resolve, reject) => {
-                            const elements = document.querySelectorAll(`.htmlpage.display${args.PAGE}`);
-                            Array.from(elements).forEach(el => {
-                                Scratch.vm.renderer.removeOverlay(el);
-                            });
+                    const elements = document.querySelectorAll(`.htmlpage.display${args.PAGE}`);
+                    Array.from(elements).forEach(el => {
+                        Scratch.vm.renderer.removeOverlay(el);
+                    });
                     try {
                         //if (Object.keys(this.pages).includes(args.PAGE)) {
                         if (this.viewing.includes(args.PAGE)) {

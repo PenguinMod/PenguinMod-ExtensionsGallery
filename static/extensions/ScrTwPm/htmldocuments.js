@@ -211,21 +211,24 @@
                             }
                         }
                     },
-                    {
-                        opcode: 'duplicatePage',
-                        blockType: Scratch.BlockType.COMMAND,
-                        text: 'duplicate page [PAGE] as [PAGE2]',
-                        arguments: {
-                            PAGE: {
-                                type: Scratch.ArgumentType.STRING,
-                                defaultValue: "my-page"
-                            },
-                            PAGE2: {
-                                type: Scratch.ArgumentType.STRING,
-                                defaultValue: "my-page-2"
-                            }
-                        }
-                    },
+                    // Buggy for some reason
+                    // when I duplicate the pages they always stick as duplicates of each other and updating one updates the other
+                    // I'll fix later...
+                    // {
+                    //     opcode: 'duplicatePage',
+                    //     blockType: Scratch.BlockType.COMMAND,
+                    //     text: 'duplicate page [PAGE] as [PAGE2]',
+                    //     arguments: {
+                    //         PAGE: {
+                    //             type: Scratch.ArgumentType.STRING,
+                    //             defaultValue: "my-page"
+                    //         },
+                    //         PAGE2: {
+                    //             type: Scratch.ArgumentType.STRING,
+                    //             defaultValue: "my-page-2"
+                    //         }
+                    //     }
+                    // },
                     {
                         opcode: 'allPages',
                         blockType: Scratch.BlockType.REPORTER,
@@ -892,11 +895,10 @@
         }
 
         duplicatePage(args, util) {
-            if ((this.pages).has(args.PAGE)) {
+            if (this.pages.has(args.PAGE)) {
                 if (!this.pages.has(args.PAGE2)) {
                     if (args.PAGE !== "" && args.PAGE2 !== "") {
                         this.pages.set(args.PAGE2, new Map().set("data", this.pages.get(args.PAGE).get("data")).set("code", this.pages.get(args.PAGE).get("code")).set("eves", this.pages.get(args.PAGE).get("eves")))
-
                     } else {
                         throw new Error("Name cannot be empty")
                     }
@@ -931,8 +933,8 @@
             return (JSON.stringify(Array.from(this.pages.keys())))
         }
         get() {
-            if (Object.keys(this.pages).includes("my-page")) {
-                return (JSON.stringify(this.pages["my-page"].code))
+            if (this.pages.has("my-page")) {
+                return (JSON.stringify(this.pages.get("my-page").get("code")))
             }
         }
 
@@ -1022,17 +1024,22 @@
 
         hidePageAll(args, util) {
             const elements = document.querySelectorAll('.htmlpage');
-            elements.forEach(el => el.remove());
+            Array.from(elements).forEach(el => {
+                Scratch.vm.renderer.removeOverlay(el);
+            });
             this.viewing = []
         }
 
         hidePage(args, util) {
             const elements = document.querySelectorAll(`.htmlpage.display${args.PAGE}`);
-            elements.forEach(el => el.remove());
+            Array.from(elements).forEach(el => {
+                Scratch.vm.renderer.removeOverlay(el);
+            });
             this.viewing.splice(this.viewing.indexOf(args.PAGE), 1)
         }
 
         noNestEl(args, util) {
+            
             if ((this.pages).has(args.PAGE)) {
                 if (args.ID !== "") {
                     if (!this.pages.get(args.PAGE)?.get("code").querySelector(`#${args.ID}`)) {

@@ -1895,6 +1895,12 @@ Enjoy!! :D
             (letterSpacing || 0) + '\u0001' + (prevChar === undefined ? '' : prevChar) + '\u0001' + char;
     }
 
+    function brokenNbspSpaceAdvance(measureCtx) {
+        const nbspAdvance = measureCtx.measureText('\u00A0').width;
+        const spaceAdvance = measureCtx.measureText('M M').width - measureCtx.measureText('MM').width;
+        return spaceAdvance > 0 && nbspAdvance < spaceAdvance * 0.5 ? spaceAdvance : null;
+    }
+
     function measureCharsIndividually(measureCtx, run, letterSpacing) {
         const missing = [];
         for (let i = 0; i < run.chars.length; i++) {
@@ -1914,13 +1920,19 @@ Enjoy!! :D
             measureCtx.textBaseline = 'alphabetic';
             const spacing = letterSpacing || 0;
             const soloWidths = new Map();
+            let nbspReplacementAdvance;
             for (let m = 0; m < missing.length; m++) {
                 const {
                     prevCh,
                     ch
                 } = missing[m];
                 let advance;
-                if (prevCh === undefined) {
+                if (ch === '\u00A0' && nbspReplacementAdvance === undefined) {
+                    nbspReplacementAdvance = brokenNbspSpaceAdvance(measureCtx);
+                }
+                if (ch === '\u00A0' && nbspReplacementAdvance !== null) {
+                    advance = nbspReplacementAdvance + spacing;
+                } else if (prevCh === undefined) {
                     advance = measureCtx.measureText(ch).width + spacing;
                 } else {
                     let prevWidth = soloWidths.get(prevCh);
@@ -3083,6 +3095,7 @@ Enjoy!! :D
                 if (ready) {
                     loadedDocumentFonts.add(fontId);
                     invalidateGlyphCacheForFamily(cssFontFamily(fontId));
+                    charAdvanceCache.clear();
                     requestRerenderVisibleTextTargets();
                 } else if (attempt < FONT_LOAD_MAX_RETRIES) {
                     setTimeout(() => ensureDocumentFont(fontId, attempt + 1), FONT_LOAD_RETRY_DELAY_MS);

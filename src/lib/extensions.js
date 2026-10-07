@@ -339,6 +339,15 @@ export default [
         creator: "NamelessCat",
     },
     {
+        name: "HTML Documents",
+        description: "Create HTML webpages and display them on the stage.",
+        code: "ScrTwPm/htmldocuments.js",
+        banner: "ScrTwPm/htmldocs.png",
+        creator: "ScrTwPm",
+        documentation: "HTMLDocuments",
+        isGitHub: true,
+    },
+    {
         name: "Translation Keys",
         description: "Use translation keys in your projects for multi-language support",
         code: "Embin/embintranslation.js",

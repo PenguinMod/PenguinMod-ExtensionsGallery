@@ -254,6 +254,18 @@ export default [
         tags: ["effects", "control", "data", "utility"]
     },
     {
+        name: "Complex Numbers",
+        description: "Complex Number Type for do complex analysis functions. Ideal for things were rotation is involved like bullet hells or rendering.", 
+        code: "salagata/complex.js", 
+        banner: "salagata/complex_placeholder.svg",
+        documentation: "SalagataComplex",
+        creator: "salagata", 
+        tags: ["new","complex", "math", "graphics", "customtype", "utility"], 
+        creatorAlias: "Reisen the Inaba", 
+        notes: "Additional help by jwklong extensions", 
+        isGitHub: true,
+    },
+    {
         name: "3D Vectors & Quaternions",
         description: "Perform 3D Math and Rotations with Vectors and Quaternions",
         code: "Div/divVecQuat.js",

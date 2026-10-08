@@ -5,15 +5,13 @@
         throw new Error('This extension must be loaded unsandboxed!');
     }
 
-    const vm = Scratch.vm;
-
     class StageMobileKeyboard {
         constructor() {
             this.currentInput = '';
             this.isCaps = false;
             this.mode = 'abc';
             this.container = null;
-            this.displayElement = null;
+            this.inputElement = null;
             this.keysContainer = null;
             this.aiTriggered = false;
             
@@ -78,7 +76,8 @@
                     {
                         opcode: 'whenAiPressed',
                         blockType: Scratch.BlockType.HAT,
-                        text: 'when AI button pressed'
+                        text: 'when AI button pressed',
+                        isEdgeActivated: false
                     },
                     {
                         opcode: 'setKeyboardText',
@@ -117,20 +116,25 @@
                 boxSizing: 'border-box'
             });
 
-            this.displayElement = document.createElement('div');
-            Object.assign(this.displayElement.style, {
+            this.inputElement = document.createElement('input');
+            this.inputElement.type = 'text';
+            this.inputElement.setAttribute('inputmode', 'none');
+            this.inputElement.readOnly = true;
+
+            Object.assign(this.inputElement.style, {
                 backgroundColor: '#2c2c2e',
                 color: '#ffffff',
                 fontSize: '14px',
                 padding: '6px 10px',
                 borderRadius: '6px',
                 minHeight: '20px',
-                wordBreak: 'break-all',
-                display: 'flex',
-                alignItems: 'center',
-                border: '1px solid #3a3a3c'
+                border: '1px solid #3a3a3c',
+                outline: 'none',
+                width: '100%',
+                boxSizing: 'border-box'
             });
-            this.container.appendChild(this.displayElement);
+
+            this.container.appendChild(this.inputElement);
 
             this.keysContainer = document.createElement('div');
             Object.assign(this.keysContainer.style, {
@@ -145,23 +149,20 @@
         }
 
         attachOverlay() {
-            if (vm && vm.renderer && typeof vm.renderer.addOverlay === 'function') {
-                vm.renderer.addOverlay(this.container, 'scale');
-            } else {
-                const canvas = document.querySelector('canvas');
-                if (canvas && canvas.parentElement) {
-                    canvas.parentElement.appendChild(this.container);
-                } else {
-                    document.body.appendChild(this.container);
+            try {
+                if (Scratch.vm && Scratch.vm.renderer && typeof Scratch.vm.renderer.addOverlay === 'function') {
+                    Scratch.vm.renderer.addOverlay(this.container, 'scale');
+                    return;
                 }
+            } catch (e) {
+                console.warn('Could not attach via vm.renderer:', e);
             }
-        }
 
-        detachOverlay() {
-            if (vm && vm.renderer && typeof vm.renderer.removeOverlay === 'function') {
-                vm.renderer.removeOverlay(this.container);
-            } else if (this.container && this.container.parentElement) {
-                this.container.parentElement.removeChild(this.container);
+            const canvas = document.querySelector('canvas');
+            if (canvas && canvas.parentElement) {
+                canvas.parentElement.appendChild(this.container);
+            } else {
+                document.body.appendChild(this.container);
             }
         }
 
@@ -182,8 +183,9 @@
                     if (key === '') return;
 
                     const btn = document.createElement('button');
-                    let displayText = key;
+                    btn.onmousedown = (e) => e.preventDefault();
 
+                    let displayText = key;
                     if ((this.mode === 'abc' || this.mode === 'accent') && key.length === 1) {
                         displayText = this.isCaps ? key.toUpperCase() : key.toLowerCase();
                     }
@@ -229,8 +231,6 @@
                         btn.style.color = '#000000';
                     }
 
-                    btn.onmousedown = () => btn.style.transform = 'scale(0.95)';
-                    btn.onmouseup = () => btn.style.transform = 'scale(1)';
                     btn.onclick = () => this.handleKeyPress(key);
 
                     rowDiv.appendChild(btn);
@@ -269,6 +269,9 @@
                     break;
                 case 'AI':
                     this.aiTriggered = true;
+                    if (Scratch.vm && Scratch.vm.runtime) {
+                        Scratch.vm.runtime.startHats('stageMobileKeyboard_whenAiPressed');
+                    }
                     setTimeout(() => { this.aiTriggered = false; }, 100);
                     break;
                 default:
@@ -281,8 +284,8 @@
         }
 
         updateDisplay() {
-            if (this.displayElement) {
-                this.displayElement.innerText = this.currentInput || '|';
+            if (this.inputElement) {
+                this.inputElement.value = this.currentInput;
             }
         }
 
@@ -318,14 +321,10 @@
         }
 
         whenAiPressed() {
-            if (this.aiTriggered) {
-                this.aiTriggered = false;
-                return true;
-            }
-            return false;
+            return this.aiTriggered;
         }
     }
 
     Scratch.extensions.register(new StageMobileKeyboard());
 })(Scratch);
-                
+                          

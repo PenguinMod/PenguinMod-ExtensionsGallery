@@ -111,7 +111,6 @@
                 pointerEvents: 'auto'
             });
 
-            // Prevent touch drag on stage when interacting with keyboard
             this.container.addEventListener('pointerdown', (e) => e.stopPropagation());
 
             this.inputElement = document.createElement('input');
@@ -142,31 +141,38 @@
             });
             this.container.appendChild(this.keysContainer);
 
-            this.attachOverlay();
             this.renderKeys();
         }
 
         attachOverlay() {
+            if (!this.container) return;
+
             try {
                 if (Scratch.vm && Scratch.vm.renderer && typeof Scratch.vm.renderer.addOverlay === 'function') {
                     Scratch.vm.renderer.addOverlay(this.container, 'scale');
                     return;
                 }
-            } catch (e) {
-                console.warn('Overlay attach fallback:', e);
+            } catch (err) {
+                console.warn('vm.renderer.addOverlay fallback:', err);
             }
 
             const canvas = document.querySelector('canvas');
             if (canvas && canvas.parentElement) {
-                canvas.parentElement.appendChild(this.container);
-            } else {
+                if (getComputedStyle(canvas.parentElement).position === 'static') {
+                    canvas.parentElement.style.position = 'relative';
+                }
+                if (this.container.parentElement !== canvas.parentElement) {
+                    canvas.parentElement.appendChild(this.container);
+                }
+            } else if (this.container.parentElement !== document.body) {
                 document.body.appendChild(this.container);
             }
         }
 
         renderKeys() {
+            if (!this.keysContainer) return;
             this.keysContainer.innerHTML = '';
-            const currentLayout = this.layouts[this.mode];
+            const currentLayout = this.layouts[this.mode] || this.layouts.abc;
 
             currentLayout.forEach(row => {
                 const rowDiv = document.createElement('div');
@@ -226,7 +232,6 @@
                         btn.style.color = '#000000';
                     }
 
-                    // Direct pointerdown handler prevents event swallowing by Scratch canvas
                     const handlePress = (e) => {
                         e.preventDefault();
                         e.stopPropagation();
@@ -284,4 +289,38 @@
             }
         }
 
+        openKeyboard(args) {
+            this.attachOverlay();
+            this.currentInput = String((args && args.TEXT) !== undefined ? args.TEXT : '');
+            this.mode = 'abc';
+            this.isCaps = false;
+            this.updateDisplay();
+            this.renderKeys();
+            if (this.container) {
+                this.container.style.display = 'flex';
+            }
+        }
+
+        closeKeyboard() {
+            if (this.container) {
+                this.container.style.display = 'none';
+            }
+        }
+
+        getTypedText() {
+            return this.currentInput;
+        }
+
+        setKeyboardText(args) {
+            this.currentInput = String((args && args.TEXT) !== undefined ? args.TEXT : '');
+            this.updateDisplay();
+        }
+
+        isKeyboardOpen() {
+            return this.container ? this.container.style.display !== 'none' : false;
+        }
+    }
+
+    Scratch.extensions.register(new StageMobileKeyboard());
+})(Scratch);
                     

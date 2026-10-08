@@ -636,6 +636,16 @@ export default [
         isGitHub: true,
         tags: ["new"],
     },
+    {
+        name: "TurboTranslate",
+        description: "Fast in-game translations and localization blocks with dictionary caching and language detection.",
+        code: "calloradc/turbotranslate.js",
+        banner: "calloradc/turbotranslate.svg",
+        creator: "calloradc",
+        isGitHub: true,
+        documentation: "turbotranslate",
+        tags: ["new"],
+    },
     /*{
         name: "Scope Variable",
         description: "Manage your variables in a block-like structure.",

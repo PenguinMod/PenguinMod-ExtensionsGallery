@@ -36,6 +36,7 @@
             return {
                 id: 'stageMobileKeyboard',
                 name: 'Stage Keyboard',
+                author: 'Reos',
                 color1: '#1C1C1E',
                 color2: '#2C2C2E',
                 blocks: [
@@ -70,7 +71,6 @@
         }
 
         findStageElement() {
-            // Find canvas or container parent in Scratch/PenguinMod DOM
             const canvas = document.querySelector('canvas');
             if (canvas && canvas.parentElement) {
                 const parent = canvas.parentElement;
@@ -104,7 +104,6 @@
                 boxSizing: 'border-box'
             });
 
-            // Compact Live Text Bar inside Stage
             this.displayElement = document.createElement('div');
             Object.assign(this.displayElement.style, {
                 backgroundColor: '#2c2c2e',
@@ -120,7 +119,6 @@
             });
             this.container.appendChild(this.displayElement);
 
-            // Keys Grid Container
             this.keysContainer = document.createElement('div');
             Object.assign(this.keysContainer.style, {
                 display: 'flex',
@@ -129,7 +127,6 @@
             });
             this.container.appendChild(this.keysContainer);
 
-            // Append to Stage Canvas wrapper instead of document body
             const targetParent = this.findStageElement();
             targetParent.appendChild(this.container);
 
@@ -166,7 +163,6 @@
 
                     btn.innerText = displayText;
 
-                    // Optimized sizing for stage boundaries
                     Object.assign(btn.style, {
                         flex: key === 'SPACE' ? '4' : (key === 'DONE' || key === '123' || key === 'ABC') ? '1.5' : '1',
                         height: '32px',
@@ -238,7 +234,6 @@
         }
 
         openKeyboard(args) {
-            // Re-check target parent to ensure stage connection
             if (this.container && this.container.parentElement !== this.findStageElement()) {
                 this.findStageElement().appendChild(this.container);
             }
@@ -270,4 +265,4 @@
 
     Scratch.extensions.register(new StageMobileKeyboard());
 })(Scratch);
-      
+                     

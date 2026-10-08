@@ -13,6 +13,7 @@
             this.container = null;
             this.displayElement = null;
             this.keysContainer = null;
+            this.stageObserver = null;
             
             this.layouts = {
                 abc: [
@@ -30,6 +31,7 @@
             };
 
             this.createUI();
+            this.setupReattachGuard();
         }
 
         getInfo() {
@@ -82,6 +84,34 @@
             return document.body;
         }
 
+        ensureAttached() {
+            const stage = this.findStageElement();
+            if (this.container && this.container.parentElement !== stage) {
+                stage.appendChild(this.container);
+            }
+        }
+
+        setupReattachGuard() {
+            // Listen for window resizes / full-screen triggers
+            window.addEventListener('resize', () => {
+                if (this.isKeyboardOpen()) {
+                    this.ensureAttached();
+                }
+            });
+
+            // Observe the document body to catch DOM resets during full-screen toggles
+            this.stageObserver = new MutationObserver(() => {
+                if (this.isKeyboardOpen()) {
+                    this.ensureAttached();
+                }
+            });
+
+            this.stageObserver.observe(document.body, {
+                childList: true,
+                subtree: true
+            });
+        }
+
         createUI() {
             this.container = document.createElement('div');
             Object.assign(this.container.style, {
@@ -127,9 +157,7 @@
             });
             this.container.appendChild(this.keysContainer);
 
-            const targetParent = this.findStageElement();
-            targetParent.appendChild(this.container);
-
+            this.ensureAttached();
             this.renderKeys();
         }
 
@@ -234,10 +262,7 @@
         }
 
         openKeyboard(args) {
-            if (this.container && this.container.parentElement !== this.findStageElement()) {
-                this.findStageElement().appendChild(this.container);
-            }
-
+            this.ensureAttached();
             this.currentInput = String(args.TEXT || '');
             this.mode = 'abc';
             this.isCaps = false;
@@ -265,4 +290,4 @@
 
     Scratch.extensions.register(new StageMobileKeyboard());
 })(Scratch);
-                     
+                

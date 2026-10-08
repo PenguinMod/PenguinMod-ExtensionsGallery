@@ -5,6 +5,8 @@
         throw new Error('This extension must be loaded unsandboxed!');
     }
 
+    const vm = Scratch.vm;
+
     class StageMobileKeyboard {
         constructor() {
             this.currentInput = '';
@@ -13,25 +15,30 @@
             this.container = null;
             this.displayElement = null;
             this.keysContainer = null;
-            this.stageObserver = null;
+            this.aiTriggered = false;
             
             this.layouts = {
                 abc: [
                     ['q','w','e','r','t','y','u','i','o','p'],
                     ['a','s','d','f','g','h','j','k','l'],
                     ['SHIFT','z','x','c','v','b','n','m','BACK'],
-                    ['123','SPACE','DONE']
+                    ['123','ACCENT','SPACE','AI','DONE']
                 ],
                 num: [
                     ['1','2','3','4','5','6','7','8','9','0'],
                     ['-','/',':',';','(',')','$','&','@','"'],
                     ['.','',',','?','!','\'','BACK'],
-                    ['ABC','SPACE','DONE']
+                    ['ABC','ACCENT','SPACE','AI','DONE']
+                ],
+                accent: [
+                    ['á','é','í','ó','ú','ñ','ä','ö','ü','ß'],
+                    ['à','è','ì','ò','ù','â','ê','î','ô','û'],
+                    ['SHIFT','ç','ã','õ','æ','œ','¿','¡','BACK'],
+                    ['ABC','123','SPACE','AI','DONE']
                 ]
             };
 
             this.createUI();
-            this.setupReattachGuard();
         }
 
         getInfo() {
@@ -67,49 +74,25 @@
                         opcode: 'isKeyboardOpen',
                         blockType: Scratch.BlockType.BOOLEAN,
                         text: 'is stage keyboard open?'
+                    },
+                    {
+                        opcode: 'whenAiPressed',
+                        blockType: Scratch.BlockType.HAT,
+                        text: 'when AI button pressed'
+                    },
+                    {
+                        opcode: 'setKeyboardText',
+                        blockType: Scratch.BlockType.COMMAND,
+                        text: 'set stage keyboard text to [TEXT]',
+                        arguments: {
+                            TEXT: {
+                                type: Scratch.ArgumentType.STRING,
+                                defaultValue: 'AI Response'
+                            }
+                        }
                     }
                 ]
             };
-        }
-
-        findStageElement() {
-            const canvas = document.querySelector('canvas');
-            if (canvas && canvas.parentElement) {
-                const parent = canvas.parentElement;
-                if (getComputedStyle(parent).position === 'static') {
-                    parent.style.position = 'relative';
-                }
-                return parent;
-            }
-            return document.body;
-        }
-
-        ensureAttached() {
-            const stage = this.findStageElement();
-            if (this.container && this.container.parentElement !== stage) {
-                stage.appendChild(this.container);
-            }
-        }
-
-        setupReattachGuard() {
-            // Listen for window resizes / full-screen triggers
-            window.addEventListener('resize', () => {
-                if (this.isKeyboardOpen()) {
-                    this.ensureAttached();
-                }
-            });
-
-            // Observe the document body to catch DOM resets during full-screen toggles
-            this.stageObserver = new MutationObserver(() => {
-                if (this.isKeyboardOpen()) {
-                    this.ensureAttached();
-                }
-            });
-
-            this.stageObserver.observe(document.body, {
-                childList: true,
-                subtree: true
-            });
         }
 
         createUI() {
@@ -141,7 +124,7 @@
                 fontSize: '14px',
                 padding: '6px 10px',
                 borderRadius: '6px',
-                minHeight: '18px',
+                minHeight: '20px',
                 wordBreak: 'break-all',
                 display: 'flex',
                 alignItems: 'center',
@@ -157,8 +140,29 @@
             });
             this.container.appendChild(this.keysContainer);
 
-            this.ensureAttached();
+            this.attachOverlay();
             this.renderKeys();
+        }
+
+        attachOverlay() {
+            if (vm && vm.renderer && typeof vm.renderer.addOverlay === 'function') {
+                vm.renderer.addOverlay(this.container, 'scale');
+            } else {
+                const canvas = document.querySelector('canvas');
+                if (canvas && canvas.parentElement) {
+                    canvas.parentElement.appendChild(this.container);
+                } else {
+                    document.body.appendChild(this.container);
+                }
+            }
+        }
+
+        detachOverlay() {
+            if (vm && vm.renderer && typeof vm.renderer.removeOverlay === 'function') {
+                vm.renderer.removeOverlay(this.container);
+            } else if (this.container && this.container.parentElement) {
+                this.container.parentElement.removeChild(this.container);
+            }
         }
 
         renderKeys() {
@@ -176,33 +180,37 @@
 
                 row.forEach(key => {
                     if (key === '') return;
-                    
+
                     const btn = document.createElement('button');
                     let displayText = key;
-                    
-                    if (this.mode === 'abc' && key.length === 1) {
+
+                    if ((this.mode === 'abc' || this.mode === 'accent') && key.length === 1) {
                         displayText = this.isCaps ? key.toUpperCase() : key.toLowerCase();
                     }
 
-                    if (key === 'SHIFT') displayText = '⇪';
-                    if (key === 'BACK') displayText = '⌫';
-                    if (key === 'DONE') displayText = 'return';
-                    if (key === 'SPACE') displayText = 'space';
+                    switch (key) {
+                        case 'SHIFT': displayText = '⇧'; break;
+                        case 'BACK': displayText = '⌫'; break;
+                        case 'DONE': displayText = 'return'; break;
+                        case 'SPACE': displayText = 'space'; break;
+                        case 'ACCENT': displayText = 'áéí'; break;
+                        case 'AI': displayText = '🤖 AI'; break;
+                    }
 
                     btn.innerText = displayText;
 
                     Object.assign(btn.style, {
-                        flex: key === 'SPACE' ? '4' : (key === 'DONE' || key === '123' || key === 'ABC') ? '1.5' : '1',
-                        height: '32px',
-                        fontSize: key.length === 1 ? '13px' : '10px',
-                        fontWeight: '500',
+                        flex: key === 'SPACE' ? '3.5' : (key === 'DONE' || key === '123' || key === 'ABC' || key === 'AI') ? '1.4' : '1',
+                        height: '36px',
+                        fontSize: key.length === 1 ? '15px' : (key === 'SHIFT' || key === 'BACK') ? '18px' : '11px',
+                        fontWeight: '600',
                         border: 'none',
-                        borderRadius: '4px',
+                        borderRadius: '5px',
                         backgroundColor: '#636366',
                         color: '#ffffff',
                         cursor: 'pointer',
                         padding: '0',
-                        boxShadow: '0 1px 0 rgba(0,0,0,0.3)',
+                        boxShadow: '0 1px 2px rgba(0,0,0,0.3)',
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'center'
@@ -210,8 +218,9 @@
 
                     if (key === 'DONE') {
                         btn.style.backgroundColor = '#0a84ff';
-                        btn.style.fontWeight = '600';
-                    } else if (key === 'SHIFT' || key === 'BACK' || key === '123' || key === 'ABC') {
+                    } else if (key === 'AI') {
+                        btn.style.backgroundColor = '#5e5ce6';
+                    } else if (key === 'SHIFT' || key === 'BACK' || key === '123' || key === 'ABC' || key === 'ACCENT') {
                         btn.style.backgroundColor = '#48484a';
                     }
 
@@ -232,24 +241,40 @@
         }
 
         handleKeyPress(key) {
-            if (key === 'BACK') {
-                this.currentInput = this.currentInput.slice(0, -1);
-            } else if (key === 'SPACE') {
-                this.currentInput += ' ';
-            } else if (key === 'SHIFT') {
-                this.isCaps = !this.isCaps;
-                this.renderKeys();
-            } else if (key === '123') {
-                this.mode = 'num';
-                this.renderKeys();
-            } else if (key === 'ABC') {
-                this.mode = 'abc';
-                this.renderKeys();
-            } else if (key === 'DONE') {
-                this.closeKeyboard();
-            } else {
-                const char = this.isCaps ? key.toUpperCase() : key.toLowerCase();
-                this.currentInput += char;
+            switch (key) {
+                case 'BACK':
+                    this.currentInput = this.currentInput.slice(0, -1);
+                    break;
+                case 'SPACE':
+                    this.currentInput += ' ';
+                    break;
+                case 'SHIFT':
+                    this.isCaps = !this.isCaps;
+                    this.renderKeys();
+                    break;
+                case '123':
+                    this.mode = 'num';
+                    this.renderKeys();
+                    break;
+                case 'ABC':
+                    this.mode = 'abc';
+                    this.renderKeys();
+                    break;
+                case 'ACCENT':
+                    this.mode = 'accent';
+                    this.renderKeys();
+                    break;
+                case 'DONE':
+                    this.closeKeyboard();
+                    break;
+                case 'AI':
+                    this.aiTriggered = true;
+                    setTimeout(() => { this.aiTriggered = false; }, 100);
+                    break;
+                default:
+                    const char = this.isCaps ? key.toUpperCase() : key.toLowerCase();
+                    this.currentInput += char;
+                    break;
             }
 
             this.updateDisplay();
@@ -262,7 +287,7 @@
         }
 
         openKeyboard(args) {
-            this.ensureAttached();
+            this.attachOverlay();
             this.currentInput = String(args.TEXT || '');
             this.mode = 'abc';
             this.isCaps = false;
@@ -283,8 +308,21 @@
             return this.currentInput;
         }
 
+        setKeyboardText(args) {
+            this.currentInput = String(args.TEXT || '');
+            this.updateDisplay();
+        }
+
         isKeyboardOpen() {
             return this.container ? this.container.style.display !== 'none' : false;
+        }
+
+        whenAiPressed() {
+            if (this.aiTriggered) {
+                this.aiTriggered = false;
+                return true;
+            }
+            return false;
         }
     }
 

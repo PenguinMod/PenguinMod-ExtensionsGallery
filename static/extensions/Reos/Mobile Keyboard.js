@@ -13,26 +13,25 @@
             this.container = null;
             this.inputElement = null;
             this.keysContainer = null;
-            this.aiTriggered = false;
             
             this.layouts = {
                 abc: [
                     ['q','w','e','r','t','y','u','i','o','p'],
                     ['a','s','d','f','g','h','j','k','l'],
                     ['SHIFT','z','x','c','v','b','n','m','BACK'],
-                    ['123','ACCENT','SPACE','AI','DONE']
+                    ['123','ACCENT','SPACE','DONE']
                 ],
                 num: [
                     ['1','2','3','4','5','6','7','8','9','0'],
                     ['-','/',':',';','(',')','$','&','@','"'],
                     ['.','',',','?','!','\'','BACK'],
-                    ['ABC','ACCENT','SPACE','AI','DONE']
+                    ['ABC','ACCENT','SPACE','DONE']
                 ],
                 accent: [
                     ['á','é','í','ó','ú','ñ','ä','ö','ü','ß'],
                     ['à','è','ì','ò','ù','â','ê','î','ô','û'],
                     ['SHIFT','ç','ã','õ','æ','œ','¿','¡','BACK'],
-                    ['ABC','123','SPACE','AI','DONE']
+                    ['ABC','123','SPACE','DONE']
                 ]
             };
 
@@ -74,19 +73,13 @@
                         text: 'is stage keyboard open?'
                     },
                     {
-                        opcode: 'whenAiPressed',
-                        blockType: Scratch.BlockType.HAT,
-                        text: 'when AI button pressed',
-                        isEdgeActivated: false
-                    },
-                    {
                         opcode: 'setKeyboardText',
                         blockType: Scratch.BlockType.COMMAND,
                         text: 'set stage keyboard text to [TEXT]',
                         arguments: {
                             TEXT: {
                                 type: Scratch.ArgumentType.STRING,
-                                defaultValue: 'AI Response'
+                                defaultValue: ''
                             }
                         }
                     }
@@ -155,7 +148,7 @@
                     return;
                 }
             } catch (e) {
-                console.warn('Could not attach via vm.renderer:', e);
+                console.warn('Overlay attach failed:', e);
             }
 
             const canvas = document.querySelector('canvas');
@@ -196,13 +189,12 @@
                         case 'DONE': displayText = 'return'; break;
                         case 'SPACE': displayText = 'space'; break;
                         case 'ACCENT': displayText = 'áéí'; break;
-                        case 'AI': displayText = '🤖 AI'; break;
                     }
 
                     btn.innerText = displayText;
 
                     Object.assign(btn.style, {
-                        flex: key === 'SPACE' ? '3.5' : (key === 'DONE' || key === '123' || key === 'ABC' || key === 'AI') ? '1.4' : '1',
+                        flex: key === 'SPACE' ? '3.5' : (key === 'DONE' || key === '123' || key === 'ABC') ? '1.4' : '1',
                         height: '36px',
                         fontSize: key.length === 1 ? '15px' : (key === 'SHIFT' || key === 'BACK') ? '18px' : '11px',
                         fontWeight: '600',
@@ -220,8 +212,6 @@
 
                     if (key === 'DONE') {
                         btn.style.backgroundColor = '#0a84ff';
-                    } else if (key === 'AI') {
-                        btn.style.backgroundColor = '#5e5ce6';
                     } else if (key === 'SHIFT' || key === 'BACK' || key === '123' || key === 'ABC' || key === 'ACCENT') {
                         btn.style.backgroundColor = '#48484a';
                     }
@@ -267,13 +257,6 @@
                 case 'DONE':
                     this.closeKeyboard();
                     break;
-                case 'AI':
-                    this.aiTriggered = true;
-                    if (Scratch.vm && Scratch.vm.runtime) {
-                        Scratch.vm.runtime.startHats('stageMobileKeyboard_whenAiPressed');
-                    }
-                    setTimeout(() => { this.aiTriggered = false; }, 100);
-                    break;
                 default:
                     const char = this.isCaps ? key.toUpperCase() : key.toLowerCase();
                     this.currentInput += char;
@@ -291,7 +274,7 @@
 
         openKeyboard(args) {
             this.attachOverlay();
-            this.currentInput = String(args.TEXT || '');
+            this.currentInput = String((args && args.TEXT) || '');
             this.mode = 'abc';
             this.isCaps = false;
             this.updateDisplay();
@@ -312,19 +295,15 @@
         }
 
         setKeyboardText(args) {
-            this.currentInput = String(args.TEXT || '');
+            this.currentInput = String((args && args.TEXT) || '');
             this.updateDisplay();
         }
 
         isKeyboardOpen() {
             return this.container ? this.container.style.display !== 'none' : false;
         }
-
-        whenAiPressed() {
-            return this.aiTriggered;
-        }
     }
 
     Scratch.extensions.register(new StageMobileKeyboard());
 })(Scratch);
-                          
+                            

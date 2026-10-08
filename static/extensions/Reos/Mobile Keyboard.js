@@ -106,8 +106,13 @@
                 gap: '6px',
                 fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
                 userSelect: 'none',
-                boxSizing: 'border-box'
+                webkitUserSelect: 'none',
+                boxSizing: 'border-box',
+                pointerEvents: 'auto'
             });
+
+            // Prevent touch drag on stage when interacting with keyboard
+            this.container.addEventListener('pointerdown', (e) => e.stopPropagation());
 
             this.inputElement = document.createElement('input');
             this.inputElement.type = 'text';
@@ -148,7 +153,7 @@
                     return;
                 }
             } catch (e) {
-                console.warn('Overlay attach failed:', e);
+                console.warn('Overlay attach fallback:', e);
             }
 
             const canvas = document.querySelector('canvas');
@@ -176,9 +181,8 @@
                     if (key === '') return;
 
                     const btn = document.createElement('button');
-                    btn.onmousedown = (e) => e.preventDefault();
-
                     let displayText = key;
+
                     if ((this.mode === 'abc' || this.mode === 'accent') && key.length === 1) {
                         displayText = this.isCaps ? key.toUpperCase() : key.toLowerCase();
                     }
@@ -207,7 +211,8 @@
                         boxShadow: '0 1px 2px rgba(0,0,0,0.3)',
                         display: 'flex',
                         alignItems: 'center',
-                        justifyContent: 'center'
+                        justifyContent: 'center',
+                        touchAction: 'manipulation'
                     });
 
                     if (key === 'DONE') {
@@ -221,7 +226,14 @@
                         btn.style.color = '#000000';
                     }
 
-                    btn.onclick = () => this.handleKeyPress(key);
+                    // Direct pointerdown handler prevents event swallowing by Scratch canvas
+                    const handlePress = (e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        this.handleKeyPress(key);
+                    };
+
+                    btn.addEventListener('pointerdown', handlePress);
 
                     rowDiv.appendChild(btn);
                 });
@@ -272,38 +284,4 @@
             }
         }
 
-        openKeyboard(args) {
-            this.attachOverlay();
-            this.currentInput = String((args && args.TEXT) || '');
-            this.mode = 'abc';
-            this.isCaps = false;
-            this.updateDisplay();
-            this.renderKeys();
-            if (this.container) {
-                this.container.style.display = 'flex';
-            }
-        }
-
-        closeKeyboard() {
-            if (this.container) {
-                this.container.style.display = 'none';
-            }
-        }
-
-        getTypedText() {
-            return this.currentInput;
-        }
-
-        setKeyboardText(args) {
-            this.currentInput = String((args && args.TEXT) || '');
-            this.updateDisplay();
-        }
-
-        isKeyboardOpen() {
-            return this.container ? this.container.style.display !== 'none' : false;
-        }
-    }
-
-    Scratch.extensions.register(new StageMobileKeyboard());
-})(Scratch);
-                            
+                    

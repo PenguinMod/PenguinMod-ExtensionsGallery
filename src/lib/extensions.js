@@ -707,10 +707,10 @@ export default [
     },
     */
 {
-  name: "Stage Keyboard"
-  description: "Get an on screen keyboard directly on your stage"
-  code: "Reos/Mobile Keyboard.js"
-  banner: "Reos/Banner.svg"
-  creator: "Reos"
+  name: "Stage Keyboard",
+  description: "Get an on screen keyboard directly on your stage",
+  code: "Reos/Mobile Keyboard.js",
+  banner: "Reos/Banner.svg",
+  creator: "Reos",
 },
 ];

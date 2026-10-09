@@ -714,4 +714,13 @@ export default [
   creator: "tg1556",
   creatorAlias: "Reos",
 },
+{
+  name: "Reos Auth",
+  description: "Login with Reos",
+  code: "Reos/ReosAuth.js",
+  banner: "Reos/B2.svg",
+  creator: "tg1556",
+  creatorAlias: "Reos",
+  is GitHub: "true",
+},
 ];

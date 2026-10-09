@@ -721,6 +721,6 @@ export default [
   banner: "Reos/B2.svg",
   creator: "tg1556",
   creatorAlias: "Reos",
-  is GitHub: "true",
+  is GitHub: true,
 },
 ];

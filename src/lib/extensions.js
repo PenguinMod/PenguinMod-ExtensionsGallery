@@ -706,4 +706,21 @@ export default [
         creator: "G1nX",
     },
     */
+{
+  name: "Stage Keyboard",
+  description: "Get an on screen keyboard directly on your stage",
+  code: "Reos/Mobile Keyboard.js",
+  banner: "Reos/Banner.svg",
+  creator: "tg1556",
+  creatorAlias: "Reos",
+},
+{
+  name: "Reos Auth",
+  description: "Login with Reos",
+  code: "Reos/ReosAuth.js",
+  banner: "Reos/B2.svg",
+  creator: "tg1556",
+  creatorAlias: "Reos",
+  isGitHub: true,
+},
 ];

@@ -711,6 +711,7 @@ export default [
   description: "Get an on screen keyboard directly on your stage",
   code: "Reos/Mobile Keyboard.js",
   banner: "Reos/Banner.svg",
-  creator: "Reos",
+  creator: "tg1556",
+  creatorAlias: "Reos",
 },
 ];

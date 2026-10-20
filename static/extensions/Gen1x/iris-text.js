@@ -6469,7 +6469,7 @@ Enjoy!! :D
                     {
                         opcode: 'setPerformanceEnabled',
                         blockType: Scratch.BlockType.COMMAND,
-                        text: 'performance [ENABLED]',
+                        text: 'performance report [ENABLED]',
                         arguments: {
                             ENABLED: {
                                 type: Scratch.ArgumentType.STRING,

@@ -20,23 +20,72 @@ Enjoy!! :D
     const vm = Scratch.vm;
     const runtime = vm.runtime;
 
-    const STATE_KEY = 'irisText';
-    const DEFAULT_TEXT = 'Hello world!';
+    const stateKey = 'irisText';
+    const defaultText = 'Hello world!';
 
-    const BROWSER_DISCLAIMER_FLAG_KEY = 'irisText_seenBrowserDisclaimer';
+    const perf = {
+        enabled: false,
+        stats: new Map()
+    };
+
+    function perfStart() {
+        return perf.enabled ? performance.now() : 0;
+    }
+
+    function perfRecord(name, elapsed) {
+        if (!perf.enabled) return;
+        let entry = perf.stats.get(name);
+        if (!entry) {
+            entry = {
+                count: 0,
+                total: 0,
+                max: 0
+            };
+            perf.stats.set(name, entry);
+        }
+        entry.count++;
+        entry.total += elapsed;
+        if (elapsed > entry.max) entry.max = elapsed;
+    }
+
+    function perfEnd(name, startTime) {
+        if (!startTime) return;
+        perfRecord(name, performance.now() - startTime);
+    }
+
+    function perfReport() {
+        const report = {};
+        for (const [name, entry] of perf.stats) {
+            report[name] = {
+                count: entry.count,
+                totalMs: +entry.total.toFixed(2),
+                avgMs: +(entry.total / entry.count).toFixed(3),
+                maxMs: +entry.max.toFixed(2)
+            };
+        }
+        return report;
+    }
+
+    function runWhenIdle(callback, timeout) {
+        if (typeof requestIdleCallback === 'function') {
+            requestIdleCallback(callback, {
+                timeout
+            });
+        } else {
+            setTimeout(callback, 60);
+        }
+    }
 
     const blockIconURI = 'data:image/png;base64,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';
 
-    const warningBlockIconURI = 'data:image/png;base64,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';
+    const colorPrimary = '#17B9C7';
+    const colorSecondary = '#149DA9';
+    const colorTertiary = '#0F808A';
 
-    const COLOR_PRIMARY = '#17B9C7';
-    const COLOR_SECONDARY = '#149DA9';
-    const COLOR_TERTIARY = '#0F808A';
-
-    const WIPE_DIRECTION_BOTTOM_UP = 'bottom-up';
-    const WIPE_DIRECTION_LEFT_RIGHT = 'left-right';
-    const WIPE_DIRECTION_UP_DOWN = 'up-down';
-    const WIPE_DIRECTION_RIGHT_LEFT = 'right-left';
+    const wipeDirectionBottomUp = 'bottom-up';
+    const wipeDirectionLeftRight = 'left-right';
+    const wipeDirectionUpDown = 'up-down';
+    const wipeDirectionRightLeft = 'right-left';
 
     function clampPercent(value) {
         return Math.max(0, Math.min(100, value));
@@ -46,136 +95,136 @@ Enjoy!! :D
         return clampPercent(value) / 100;
     }
 
-    const GRADIENT_TYPE_LINEAR = 'linear';
-    const GRADIENT_TYPE_RADIAL = 'radial';
-    const GRADIENT_TYPE_CONIC = 'conic';
+    const gradientTypeLinear = 'linear';
+    const gradientTypeRadial = 'radial';
+    const gradientTypeConic = 'conic';
 
     /* stolen from PM's animated text extension code :3 */
-    const SANS_SERIF_ID = 'Sans Serif';
-    const SERIF_ID = 'Serif';
-    const HANDWRITING_ID = 'Handwriting';
-    const MARKER_ID = 'Marker';
-    const CURLY_ID = 'Curly';
-    const PIXEL_ID = 'Pixel';
+    const sansSerifId = 'Sans Serif';
+    const serifId = 'Serif';
+    const handwritingId = 'Handwriting';
+    const markerId = 'Marker';
+    const curlyId = 'Curly';
+    const pixelId = 'Pixel';
 
-    const PLAYFUL_ID = 'Playful';
-    const BUBBLY_ID = 'Bubbly';
-    const BITSANDBYTES_ID = 'Bits and Bytes';
-    const TECHNOLOGICAL_ID = 'Technological';
-    const ARCADE_ID = 'Arcade';
-    const ARCHIVO_ID = 'Archivo';
-    const ARCHIVOBLACK_ID = 'Archivo Black';
-    const SCRATCH_ID = 'Scratch';
+    const playfulId = 'Playful';
+    const bubblyId = 'Bubbly';
+    const bitsAndBytesId = 'Bits and Bytes';
+    const technologicalId = 'Technological';
+    const arcadeId = 'Arcade';
+    const archivoId = 'Archivo';
+    const archivoBlackId = 'Archivo Black';
+    const scratchId = 'Scratch';
 
-    const RANDOM_ID = 'Random';
+    const randomId = 'Random';
 
-    const FONT_IDS = [
-        SANS_SERIF_ID, SERIF_ID, HANDWRITING_ID, MARKER_ID, CURLY_ID, PIXEL_ID,
-        PLAYFUL_ID, BUBBLY_ID, ARCADE_ID, BITSANDBYTES_ID, TECHNOLOGICAL_ID,
-        SCRATCH_ID, ARCHIVO_ID, ARCHIVOBLACK_ID
+    const fontIds = [
+        sansSerifId, serifId, handwritingId, markerId, curlyId, pixelId,
+        playfulId, bubblyId, arcadeId, bitsAndBytesId, technologicalId,
+        scratchId, archivoId, archivoBlackId
     ];
 
     // in case the rendering screws up:
-    const FONT_FALLBACKS = {
-        [SANS_SERIF_ID]: 'sans-serif',
-        [SERIF_ID]: 'serif',
-        [HANDWRITING_ID]: 'cursive',
-        [MARKER_ID]: 'fantasy',
-        [CURLY_ID]: 'cursive',
-        [PIXEL_ID]: 'monospace',
-        [PLAYFUL_ID]: 'cursive',
-        [BUBBLY_ID]: 'cursive',
-        [BITSANDBYTES_ID]: 'monospace',
-        [TECHNOLOGICAL_ID]: 'sans-serif',
-        [ARCADE_ID]: 'monospace',
-        [ARCHIVO_ID]: 'sans-serif',
-        [ARCHIVOBLACK_ID]: 'sans-serif',
-        [SCRATCH_ID]: 'sans-serif'
+    const fontFallbacks = {
+        [sansSerifId]: 'sans-serif',
+        [serifId]: 'serif',
+        [handwritingId]: 'cursive',
+        [markerId]: 'fantasy',
+        [curlyId]: 'cursive',
+        [pixelId]: 'monospace',
+        [playfulId]: 'cursive',
+        [bubblyId]: 'cursive',
+        [bitsAndBytesId]: 'monospace',
+        [technologicalId]: 'sans-serif',
+        [arcadeId]: 'monospace',
+        [archivoId]: 'sans-serif',
+        [archivoBlackId]: 'sans-serif',
+        [scratchId]: 'sans-serif'
     };
 
-    const EMOJI_FONT_STACK = '"Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji"';
+    const emojiFontStack = '"Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji"';
 
     function cssFontFamily(fontId) {
-        const fallback = FONT_FALLBACKS[fontId] || 'sans-serif';
-        return `"${fontId}", ${EMOJI_FONT_STACK}, ${fallback}`;
+        const fallback = fontFallbacks[fontId] || 'sans-serif';
+        return `"${fontId}", ${emojiFontStack}, ${fallback}`;
     }
 
-    const EMOJI_CHAR_RE = /\p{Extended_Pictographic}|\p{Emoji_Presentation}|\p{Regional_Indicator}|[#*0-9]\uFE0F?\u20E3/u;
+    const emojiCharRe = /\p{Extended_Pictographic}|\p{Emoji_Presentation}|\p{Regional_Indicator}|[#*0-9]\uFE0F?\u20E3/u;
 
     function isEmojiChar(char) {
         if (!char) return false;
-        EMOJI_CHAR_RE.lastIndex = 0;
-        return EMOJI_CHAR_RE.test(char);
+        emojiCharRe.lastIndex = 0;
+        return emojiCharRe.test(char);
     }
 
     function randomFontOtherThan(currentFont) {
-        const others = FONT_IDS.filter(id => id !== currentFont);
+        const others = fontIds.filter(id => id !== currentFont);
         return others[Math.floor(Math.random() * others.length)];
     }
 
     function buildFontMenuItems() {
         const builtIns = [{
                 text: 'Sans Serif',
-                value: SANS_SERIF_ID
+                value: sansSerifId
             },
             {
                 text: 'Serif',
-                value: SERIF_ID
+                value: serifId
             },
             {
                 text: 'Handwriting',
-                value: HANDWRITING_ID
+                value: handwritingId
             },
             {
                 text: 'Marker',
-                value: MARKER_ID
+                value: markerId
             },
             {
                 text: 'Curly',
-                value: CURLY_ID
+                value: curlyId
             },
             {
                 text: 'Pixel',
-                value: PIXEL_ID
+                value: pixelId
             },
             {
                 text: 'Playful',
-                value: PLAYFUL_ID
+                value: playfulId
             },
             {
                 text: 'Bubbly',
-                value: BUBBLY_ID
+                value: bubblyId
             },
             {
                 text: 'Arcade',
-                value: ARCADE_ID
+                value: arcadeId
             },
             {
                 text: 'Bits and Bytes',
-                value: BITSANDBYTES_ID
+                value: bitsAndBytesId
             },
             {
                 text: 'Technological',
-                value: TECHNOLOGICAL_ID
+                value: technologicalId
             },
             {
                 text: 'Scratch',
-                value: SCRATCH_ID
+                value: scratchId
             },
             {
                 text: 'Archivo',
-                value: ARCHIVO_ID
+                value: archivoId
             },
             {
                 text: 'Archivo Black',
-                value: ARCHIVOBLACK_ID
+                value: archivoBlackId
             }
         ];
 
         const customFonts = [];
         Array.from(document.fonts).forEach(face => {
             const family = face.family.replace(/^["']|["']$/g, '');
-            if (!FONT_IDS.includes(family) && !customFonts.some(f => f.value === family)) {
+            if (!fontIds.includes(family) && !customFonts.some(f => f.value === family)) {
                 customFonts.push({
                     text: family,
                     value: family
@@ -188,21 +237,21 @@ Enjoy!! :D
             ...customFonts,
             {
                 text: 'random font',
-                value: RANDOM_ID
+                value: randomId
             }
         ];
     }
 
-    const KNOWN_TAGS = ['color', 'b', 'i', 'u', 's', 'size', 'font', 'gradient', 'blur', 'shadow', 'border'];
-    const SELF_CLOSING_TAGS = ['wait'];
-    const TAG_RE = /\[(\/?)([a-z0-9_-]+)(?:=([^\]]+))?\]/gi;
-    const TAG_RE_STRIP = /\[(\/?)([a-z0-9_-]+)(?:=([^\]]+))?\]/gi;
+    const knownTags = ['color', 'b', 'i', 'u', 's', 'size', 'font', 'gradient', 'blur', 'shadow', 'border', 'layer'];
+    const selfClosingTags = ['wait'];
+    const tagRe = /\[(\/?)([a-z0-9_-]+)(?:=([^\]]+))?\]/gi;
+    const tagReStrip = /\[(\/?)([a-z0-9_-]+)(?:=([^\]]+))?\]/gi;
 
     function normalizeGradientType(value) {
         const t = (value || '').toString().toLowerCase().trim();
-        if (t === GRADIENT_TYPE_RADIAL) return GRADIENT_TYPE_RADIAL;
-        if (t === GRADIENT_TYPE_CONIC) return GRADIENT_TYPE_CONIC;
-        return GRADIENT_TYPE_LINEAR;
+        if (t === gradientTypeRadial) return gradientTypeRadial;
+        if (t === gradientTypeConic) return gradientTypeConic;
+        return gradientTypeLinear;
     }
 
     function parseGradientValue(value) {
@@ -256,6 +305,12 @@ Enjoy!! :D
         };
     }
 
+    function parseLayerValue(value, fallback) {
+        if (value === undefined || value === null || String(value).trim() === '') return fallback || 0;
+        const layer = Scratch.Cast.toNumber(value);
+        return Number.isFinite(layer) ? layer : (fallback || 0);
+    }
+
     let gradientSpanIdSeq = 1;
 
     const graphemeSegmenter = typeof Intl !== 'undefined' && typeof Intl.Segmenter === 'function' ?
@@ -277,14 +332,15 @@ Enjoy!! :D
             customTags: [],
             gradientOccurrenceIndex: -1,
             shadow: null,
-            border: null
+            border: null,
+            layer: 0
         }, base)];
         const out = [];
-        TAG_RE.lastIndex = 0;
+        tagRe.lastIndex = 0;
         let i = 0;
         let match;
         let gradientOccurrenceSeq = 0;
-        while ((match = TAG_RE.exec(text)) !== null || i < text.length) {
+        while ((match = tagRe.exec(text)) !== null || i < text.length) {
             const tagStart = match ? match.index : text.length;
             if (i < tagStart) {
                 const segment = text.slice(i, tagStart);
@@ -306,7 +362,8 @@ Enjoy!! :D
                         gradientSpanId: style.gradientSpanId,
                         gradientOccurrenceIndex: style.gradientOccurrenceIndex,
                         shadow: style.shadow,
-                        border: style.border
+                        border: style.border,
+                        layer: style.layer || 0
                     });
                     families.add(style.font);
                 }
@@ -316,7 +373,7 @@ Enjoy!! :D
             const closing = match[1] === '/';
             const tag = match[2].toLowerCase();
             const value = match[3];
-            if (SELF_CLOSING_TAGS.indexOf(tag) !== -1) {
+            if (selfClosingTags.indexOf(tag) !== -1) {
                 i = match.index + match[0].length;
                 continue;
             }
@@ -338,9 +395,10 @@ Enjoy!! :D
                     gradientSpanId: prev.gradientSpanId,
                     gradientOccurrenceIndex: prev.gradientOccurrenceIndex,
                     shadow: prev.shadow,
-                    border: prev.border
+                    border: prev.border,
+                    layer: prev.layer || 0
                 };
-                if (KNOWN_TAGS.indexOf(tag) !== -1) {
+                if (knownTags.indexOf(tag) !== -1) {
                     switch (tag) {
                         case 'color':
                             top.color = value || top.color;
@@ -361,7 +419,7 @@ Enjoy!! :D
                             top.size = Scratch.Cast.toNumber(value) || top.size;
                             break;
                         case 'font':
-                            top.font = value === RANDOM_ID ?
+                            top.font = value === randomId ?
                                 randomFontOtherThan(prev.font) :
                                 (value || top.font);
                             break;
@@ -385,6 +443,9 @@ Enjoy!! :D
                             top.border = parsedBorder || top.border;
                             break;
                         }
+                        case 'layer':
+                            top.layer = parseLayerValue(value, top.layer);
+                            break;
                     }
                 } else {
                     top.customTags = top.customTags.concat([tag]);
@@ -471,8 +532,8 @@ Enjoy!! :D
 
     function stripMarkup(text) {
         if (text === stripMarkupCacheKey) return stripMarkupCacheValue;
-        TAG_RE_STRIP.lastIndex = 0;
-        const result = text.replace(TAG_RE_STRIP, '');
+        tagReStrip.lastIndex = 0;
+        const result = text.replace(tagReStrip, '');
         stripMarkupCacheKey = text;
         stripMarkupCacheValue = result;
         return result;
@@ -486,29 +547,30 @@ Enjoy!! :D
             underline: false,
             strike: false,
             size: 32,
-            font: HANDWRITING_ID,
+            font: handwritingId,
             blur: 0,
             customTags: [],
             gradient: null,
             gradientSpanId: null,
             shadow: null,
-            border: null
+            border: null,
+            layer: 0
         };
     }
 
-    const WAIT_RE = /\[wait=([0-9]*\.?[0-9]+)\]/gi;
+    const waitRe = /\[wait=([0-9]*\.?[0-9]+)\]/gi;
 
     let splitWaitStagesCacheKey = null;
     let splitWaitStagesCacheValue = null;
 
     function splitWaitStages(text) {
         if (text === splitWaitStagesCacheKey) return splitWaitStagesCacheValue;
-        WAIT_RE.lastIndex = 0;
+        waitRe.lastIndex = 0;
         const stages = [];
         let i = 0;
         let match;
         let textSoFar = '';
-        while ((match = WAIT_RE.exec(text)) !== null) {
+        while ((match = waitRe.exec(text)) !== null) {
             textSoFar += text.slice(i, match.index);
             stages.push({
                 text: textSoFar,
@@ -644,10 +706,10 @@ Enjoy!! :D
     }
 
     function getState(target) {
-        let state = target.getCustomState(STATE_KEY);
+        let state = target.getCustomState(stateKey);
         if (!state) {
             state = defaultState();
-            target.setCustomState(STATE_KEY, state);
+            target.setCustomState(stateKey, state);
         } else if (!state.iiMigrated) {
             const defaults = defaultState();
             state.textShadow = Object.assign(defaults.textShadow, state.textShadow || {});
@@ -671,13 +733,13 @@ Enjoy!! :D
         return state;
     }
 
-    const TYPING_PUNCTUATION = '.,!?;:…';
-    const TYPING_SYMBOLS = '@#$%^&*+=<>/\\|~`_-()[]{}';
+    const typingPunctuation = '.,!?;:…';
+    const typingSymbols = '@#$%^&*+=<>/\\|~`_-()[]{}';
 
     function typingGroupForCharacter(char) {
         if (/^[0-9]$/.test(char)) return 'numbers';
-        if (TYPING_PUNCTUATION.includes(char)) return 'punctuation';
-        if (TYPING_SYMBOLS.includes(char)) return 'symbols';
+        if (typingPunctuation.includes(char)) return 'punctuation';
+        if (typingSymbols.includes(char)) return 'symbols';
         return 'default';
     }
 
@@ -688,7 +750,7 @@ Enjoy!! :D
 
     function splitTypingSteps(text) {
         const steps = [];
-        TAG_RE.lastIndex = 0;
+        tagRe.lastIndex = 0;
         let lastIndex = 0;
         let match;
 
@@ -701,11 +763,11 @@ Enjoy!! :D
             }
         };
 
-        while ((match = TAG_RE.exec(text)) !== null) {
+        while ((match = tagRe.exec(text)) !== null) {
             addCharacters(text.slice(lastIndex, match.index));
             const tag = match[2].toLowerCase();
             const value = match[3];
-            if (SELF_CLOSING_TAGS.indexOf(tag) !== -1) {
+            if (selfClosingTags.indexOf(tag) !== -1) {
                 if (tag === 'wait') {
                     steps.push({
                         content: '',
@@ -946,8 +1008,7 @@ Enjoy!! :D
         };
     }
 
-    const GLYPH_OVERSAMPLE = 3;
-    const GLYPH_PADDING_EM = 0.35;
+    const glyphOversample = 3;
     const glyphCache = new Map();
     let framePinnedGlyphKeys = null;
     let framePinnedGlyphKeysRefCount = 0;
@@ -959,13 +1020,15 @@ Enjoy!! :D
         glyphMeasureCtx.textRendering = 'optimizeLegibility';
     } catch (e) {}
 
-    const GLYPH_CACHE_LIMIT = 2000;
-    const TINT_CACHE_LIMIT = 512;
+    const glyphCacheLimit = 2000;
+    const glyphCacheByteLimit = 192 * 1024 * 1024;
+    let glyphCacheBytes = 0;
+    const tintCacheLimit = 512;
 
     const glyphShapeCanvasPool = [];
     const tintedCanvasPool = [];
     const stencilCanvasPool = [];
-    const GENERIC_POOL_LIMIT = 256;
+    const genericPoolLimit = 256;
 
     function acquirePooledCanvas(pool, w, h) {
         const canvas = pool.pop() || document.createElement('canvas');
@@ -975,7 +1038,12 @@ Enjoy!! :D
     }
 
     function releasePooledCanvas(pool, canvas) {
-        if (canvas && pool.length < GENERIC_POOL_LIMIT) pool.push(canvas);
+        if (!canvas) return;
+        if (typeof ImageBitmap !== 'undefined' && canvas instanceof ImageBitmap) {
+            canvas.close();
+            return;
+        }
+        if (pool.length < genericPoolLimit) pool.push(canvas);
     }
 
     function glyphCacheKey(char, fontFamily, size, weight, style) {
@@ -983,33 +1051,61 @@ Enjoy!! :D
             weight + '\u0001' + style;
     }
 
+    function computeGlyphBox(m, px, isColorGlyph) {
+        const fontAscent = typeof m.fontBoundingBoxAscent === 'number' ? m.fontBoundingBoxAscent : null;
+        const fontDescent = typeof m.fontBoundingBoxDescent === 'number' ? m.fontBoundingBoxDescent : null;
+        const ascent = Math.ceil(fontAscent ?? m.actualBoundingBoxAscent ?? (px * 0.9));
+        const descent = Math.ceil(fontDescent ?? m.actualBoundingBoxDescent ?? (px * 0.3));
+        const leftBearing = isColorGlyph ? 0 : Math.ceil(Math.max(0, m.actualBoundingBoxLeft || 0));
+        const rightBearing = isColorGlyph ? Math.ceil(Math.max(m.width || 0, 1)) : Math.ceil(Math.max(
+            m.actualBoundingBoxRight || 0,
+            m.width || 0
+        ));
+        const inkAscent = isColorGlyph ? 0 : Math.max(0, m.actualBoundingBoxAscent || 0);
+        const inkDescent = isColorGlyph ? 0 : Math.max(0, m.actualBoundingBoxDescent || 0);
+        const overshoot = Math.max(0, inkAscent - ascent, inkDescent - descent);
+        const pad = Math.max(2, Math.round(px * (isColorGlyph ? 0.35 : 0.15) + overshoot));
+        return {
+            ascent,
+            descent,
+            leftBearing,
+            rightBearing,
+            pad,
+            canvasW: Math.max(1, leftBearing + rightBearing + pad * 2),
+            canvasH: Math.max(1, ascent + descent + pad * 2),
+            baselineX: pad + leftBearing,
+            baselineY: pad + ascent,
+            advance: m.width
+        };
+    }
+
+    function buildGlyphShape(canvas, box, isColorGlyph) {
+        return {
+            canvas,
+            tinted: new Map(),
+            shadows: new Map(),
+            blurred: new Map(),
+            advance: box.advance / glyphOversample,
+            baselineOriginXEm: box.baselineX / glyphOversample,
+            baselineOriginYEm: box.baselineY / glyphOversample,
+            fontAscentEm: box.ascent / glyphOversample,
+            fontDescentEm: box.descent / glyphOversample,
+            isColorGlyph,
+            bytes: canvas.width * canvas.height * 4
+        };
+    }
+
     function rasterizeGlyph(char, fontFamily, size, weight, style) {
-        const px = Math.max(1, Math.round(size * GLYPH_OVERSAMPLE));
-        const pad = Math.max(2, Math.round(size * GLYPH_PADDING_EM * GLYPH_OVERSAMPLE));
+        const startTime = perfStart();
+        const px = Math.max(1, Math.round(size * glyphOversample));
         const fontStr = `${style} ${weight} ${px}px ${fontFamily}`;
         const isColorGlyph = isEmojiChar(char);
 
         glyphMeasureCtx.font = fontStr;
         glyphMeasureCtx.textBaseline = 'alphabetic';
-        const metrics = glyphMeasureCtx.measureText(char);
-        const ascent = Math.ceil(
-            (typeof metrics.fontBoundingBoxAscent === 'number' ? metrics.fontBoundingBoxAscent : null) ??
-            metrics.actualBoundingBoxAscent ?? (px * 0.9)
-        );
-        const descent = Math.ceil(
-            (typeof metrics.fontBoundingBoxDescent === 'number' ? metrics.fontBoundingBoxDescent : null) ??
-            metrics.actualBoundingBoxDescent ?? (px * 0.3)
-        );
-        const leftBearing = isColorGlyph ? 0 : Math.ceil(Math.max(0, metrics.actualBoundingBoxLeft || 0));
-        const rightBearing = isColorGlyph ? Math.ceil(Math.max(metrics.width || 0, 1)) : Math.ceil(Math.max(
-            metrics.actualBoundingBoxRight || 0,
-            metrics.width || 0
-        ));
-        const advance = metrics.width;
+        const box = computeGlyphBox(glyphMeasureCtx.measureText(char), px, isColorGlyph);
 
-        const canvasW = leftBearing + rightBearing + pad * 2;
-        const canvasH = ascent + descent + pad * 2;
-        const canvas = acquirePooledCanvas(glyphShapeCanvasPool, Math.max(1, canvasW), Math.max(1, canvasH));
+        const canvas = acquirePooledCanvas(glyphShapeCanvasPool, box.canvasW, box.canvasH);
         const ctx = canvas.getContext('2d');
         ctx.setTransform(1, 0, 0, 1, 0, 0);
         ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -1019,26 +1115,15 @@ Enjoy!! :D
         try {
             ctx.textRendering = 'optimizeLegibility';
         } catch (e) {}
-        const baselineX = pad + leftBearing;
-        const baselineY = pad + ascent;
-        ctx.fillText(char, baselineX, baselineY);
+        ctx.fillText(char, box.baselineX, box.baselineY);
 
-        return {
-            canvas,
-            tinted: new Map(),
-            shadows: new Map(),
-            blurred: new Map(),
-            advance: advance / GLYPH_OVERSAMPLE,
-            baselineOriginXEm: baselineX / GLYPH_OVERSAMPLE,
-            baselineOriginYEm: baselineY / GLYPH_OVERSAMPLE,
-            fontAscentEm: ascent / GLYPH_OVERSAMPLE,
-            fontDescentEm: descent / GLYPH_OVERSAMPLE,
-            isColorGlyph
-        };
+        const shape = buildGlyphShape(canvas, box, isColorGlyph);
+        perfEnd('glyph.rasterize.main', startTime);
+        return shape;
     }
 
-    const SHADOW_CACHE_LIMIT = 512;
-    const GLOBAL_SHADOW_CANVAS_LIMIT = 256;
+    const shadowCacheLimit = 512;
+    const globalShadowCanvasLimit = 256;
     const globalShadowLRU = new Map();
     let shadowGlobalKeySeq = 1;
 
@@ -1117,7 +1202,7 @@ Enjoy!! :D
 
         const globalKey = shadowGlobalKeySeq++;
         entry.globalKey = globalKey;
-        if (shape.shadows.size >= SHADOW_CACHE_LIMIT) {
+        if (shape.shadows.size >= shadowCacheLimit) {
             const evictedKey = shape.shadows.keys().next().value;
             const evicted = shape.shadows.get(evictedKey);
             shape.shadows.delete(evictedKey);
@@ -1127,7 +1212,7 @@ Enjoy!! :D
         }
         shape.shadows.set(key, entry);
 
-        if (globalShadowLRU.size >= GLOBAL_SHADOW_CANVAS_LIMIT) evictOldestGlobalShadow();
+        if (globalShadowLRU.size >= globalShadowCanvasLimit) evictOldestGlobalShadow();
         globalShadowLRU.set(globalKey, {
             shape,
             key,
@@ -1191,37 +1276,618 @@ Enjoy!! :D
         }
     }
 
+    function removeGlyphShape(key) {
+        const shape = glyphCache.get(key);
+        glyphCache.delete(key);
+        if (shape) {
+            glyphCacheBytes -= shape.bytes || 0;
+            releaseGlyphOwnedCanvases(shape);
+        }
+    }
+
+    function makeRoomInGlyphCache() {
+        while (glyphCache.size >= glyphCacheLimit || glyphCacheBytes > glyphCacheByteLimit) {
+            let evictedKey;
+            for (const candidateKey of glyphCache.keys()) {
+                if (!framePinnedGlyphKeys || !framePinnedGlyphKeys.has(candidateKey)) {
+                    evictedKey = candidateKey;
+                    break;
+                }
+            }
+            if (evictedKey === undefined) return;
+            removeGlyphShape(evictedKey);
+        }
+    }
+
     function getGlyphShape(char, fontFamily, size, weight, style) {
         const key = glyphCacheKey(char, fontFamily, size, weight, style);
         let entry = glyphCache.get(key);
         if (!entry) {
-            if (glyphCache.size >= GLYPH_CACHE_LIMIT) {
-                let evictedKey;
-                for (const candidateKey of glyphCache.keys()) {
-                    if (!framePinnedGlyphKeys || !framePinnedGlyphKeys.has(candidateKey)) {
-                        evictedKey = candidateKey;
-                        break;
-                    }
-                }
-                if (evictedKey !== undefined) {
-                    const evictedShape = glyphCache.get(evictedKey);
-                    glyphCache.delete(evictedKey);
-                    if (evictedShape) releaseGlyphOwnedCanvases(evictedShape);
-                }
-            }
+            makeRoomInGlyphCache();
             entry = rasterizeGlyph(char, fontFamily, size, weight, style);
             glyphCache.set(key, entry);
+            glyphCacheBytes += entry.bytes;
         }
         return entry;
     }
 
+    function glyphWorkerMain() {
+        const measureCtx = new OffscreenCanvas(1, 1).getContext('2d');
+        const rasterCanvas = new OffscreenCanvas(1, 1);
+        const rasterCtx = rasterCanvas.getContext('2d');
+        const genericFamilies = ['serif', 'sans-serif', 'monospace'];
+        const probeText = 'AaBbGgQqWwZz01@#';
+        try {
+            measureCtx.textRendering = 'optimizeLegibility';
+        } catch (e) {}
+
+        function primaryFamily(css) {
+            const match = /^"[^"]*"/.exec(css);
+            return match ? match[0] : css;
+        }
+
+        function probeWidth(family) {
+            measureCtx.font = '16px ' + family;
+            return measureCtx.measureText(probeText).width;
+        }
+
+        function fontIsRendering(id) {
+            const quoted = '"' + id + '"';
+            for (const generic of genericFamilies) {
+                if (Math.abs(probeWidth(quoted + ', ' + generic) - probeWidth(generic)) > 0.5) return true;
+            }
+            return false;
+        }
+
+        async function registerFont(message) {
+            let added = 0;
+            for (const face of message.faces) {
+                try {
+                    const fontFace = new FontFace(message.id, face.src, {
+                        weight: face.weight,
+                        style: face.style,
+                        stretch: face.stretch,
+                        unicodeRange: face.unicodeRange
+                    });
+                    fontFace.loaded.catch(() => {});
+                    self.fonts.add(fontFace);
+                    added++;
+                } catch (e) {}
+            }
+            let ok = false;
+            if (message.faces.length === 0) {
+                ok = fontIsRendering(message.id);
+            } else if (added > 0) {
+                const spec = '16px "' + message.id + '"';
+                try {
+                    await self.fonts.load(spec, 'M');
+                } catch (e) {}
+                ok = self.fonts.check(spec, 'M') && fontIsRendering(message.id);
+            }
+            self.postMessage({
+                t: 'fontStatus',
+                id: message.id,
+                ok
+            });
+        }
+
+        async function rasterBatch(message) {
+            const startedAt = performance.now();
+            const results = [];
+            const transfer = [];
+            try {
+                const loads = new Map();
+                for (const item of message.items) {
+                    const spec = item.style + ' ' + item.weight + ' 16px ' + primaryFamily(item.css);
+                    loads.set(spec, (loads.get(spec) || '') + item.char);
+                }
+                const failedSpecs = new Set();
+                await Promise.all(Array.from(loads, async ([spec, chars]) => {
+                    try {
+                        await self.fonts.load(spec, chars);
+                    } catch (e) {
+                        failedSpecs.add(spec);
+                    }
+                }));
+                for (const item of message.items) {
+                    const spec = item.style + ' ' + item.weight + ' 16px ' + primaryFamily(item.css);
+                    if (failedSpecs.has(spec)) {
+                        results.push({
+                            key: item.key,
+                            failed: true
+                        });
+                        continue;
+                    }
+                    const fontStr = item.style + ' ' + item.weight + ' ' + item.px + 'px ' + item.css;
+                    measureCtx.font = fontStr;
+                    measureCtx.textBaseline = 'alphabetic';
+                    const box = computeGlyphBox(measureCtx.measureText(item.char), item.px, false);
+                    rasterCanvas.width = box.canvasW;
+                    rasterCanvas.height = box.canvasH;
+                    rasterCtx.font = fontStr;
+                    rasterCtx.textBaseline = 'alphabetic';
+                    rasterCtx.fillStyle = '#ffffff';
+                    try {
+                        rasterCtx.textRendering = 'optimizeLegibility';
+                    } catch (e) {}
+                    rasterCtx.fillText(item.char, box.baselineX, box.baselineY);
+                    const bitmap = rasterCanvas.transferToImageBitmap();
+                    results.push({
+                        key: item.key,
+                        bitmap,
+                        box
+                    });
+                    transfer.push(bitmap);
+                }
+            } catch (e) {
+                results.length = 0;
+                transfer.length = 0;
+                for (const item of message.items) {
+                    results.push({
+                        key: item.key,
+                        failed: true
+                    });
+                }
+            }
+            self.postMessage({
+                t: 'rastered',
+                id: message.id,
+                results,
+                elapsed: performance.now() - startedAt
+            }, transfer);
+        }
+
+        self.onmessage = event => {
+            const message = event.data;
+            if (!message) return;
+            if (message.t === 'font') registerFont(message);
+            else if (message.t === 'raster') rasterBatch(message);
+        };
+
+        self.postMessage({
+            t: 'ready',
+            supported: typeof self.fonts !== 'undefined' && typeof FontFace === 'function'
+        });
+    }
+
+    const glyphWorkerBatchMin = 24;
+    const glyphWorkerChunk = 96;
+    const glyphWorkerChunkCost = 1500000;
+    const glyphWorkerCostMin = 270000;
+    const glyphWorkerMaxDeferrals = 3;
+    const glyphWorkerAnimationGapMs = 250;
+    const glyphWorkerTimeoutMs = 10000;
+    const glyphWorkerFailedKeyLimit = 4000;
+
+    const glyphWorker = {
+        worker: null,
+        url: null,
+        readyTimer: null,
+        enabled: true,
+        ready: false,
+        failed: false,
+        failReason: null,
+        nextBatchId: 1,
+        batches: new Map(),
+        pendingKeys: new Set(),
+        failedKeys: new Set(),
+        fontStates: new Map(),
+        waiters: new Map(),
+        prewarmed: false
+    };
+
+    function glyphWorkerUsable() {
+        return glyphWorker.enabled && glyphWorker.ready && !glyphWorker.failed;
+    }
+
+    function fontIdFromCss(css) {
+        const match = /^"([^"]*)"/.exec(css);
+        return match ? match[1] : null;
+    }
+
+    function glyphWorkerHasFont(css) {
+        const id = fontIdFromCss(css);
+        return id !== null && glyphWorker.fontStates.get(id) === 'ready';
+    }
+
+    function normalizeFontFamilyName(value) {
+        return String(value || '').trim().replace(/^["']|["']$/g, '').toLowerCase();
+    }
+
+    function absoluteFontSource(src, baseHref) {
+        return src.replace(/url\(\s*(?:"([^"]*)"|'([^']*)'|([^)\s]*))\s*\)/g, (whole, doubleQuoted, singleQuoted, bare) => {
+            const raw = doubleQuoted !== undefined ? doubleQuoted : (singleQuoted !== undefined ? singleQuoted : bare);
+            try {
+                return 'url("' + new URL(raw, baseHref).href + '")';
+            } catch (e) {
+                return whole;
+            }
+        });
+    }
+
+    function collectFontFaceDescriptors(fontId) {
+        const wanted = normalizeFontFamilyName(fontId);
+        const faces = [];
+        const visited = new Set();
+        const visitRules = (rules, baseHref) => {
+            for (let i = 0; i < rules.length; i++) {
+                const rule = rules[i];
+                if (typeof CSSFontFaceRule !== 'undefined' && rule instanceof CSSFontFaceRule) {
+                    const style = rule.style;
+                    if (normalizeFontFamilyName(style.getPropertyValue('font-family')) !== wanted) continue;
+                    const faceSrc = style.getPropertyValue('src');
+                    if (!faceSrc) continue;
+                    faces.push({
+                        src: absoluteFontSource(faceSrc, baseHref),
+                        weight: style.getPropertyValue('font-weight') || 'normal',
+                        style: style.getPropertyValue('font-style') || 'normal',
+                        stretch: style.getPropertyValue('font-stretch') || 'normal',
+                        unicodeRange: style.getPropertyValue('unicode-range') || 'U+0-10FFFF'
+                    });
+                } else if (typeof CSSImportRule !== 'undefined' && rule instanceof CSSImportRule) {
+                    if (rule.styleSheet) visitSheet(rule.styleSheet);
+                } else if (rule.cssRules) {
+                    visitRules(rule.cssRules, baseHref);
+                }
+            }
+        };
+        const visitSheet = sheet => {
+            if (!sheet || visited.has(sheet)) return;
+            visited.add(sheet);
+            let rules = null;
+            try {
+                rules = sheet.cssRules;
+            } catch (e) {
+                return;
+            }
+            if (rules) visitRules(rules, sheet.href || document.baseURI);
+        };
+        for (const sheet of Array.from(document.styleSheets)) visitSheet(sheet);
+        if (document.adoptedStyleSheets) {
+            for (const sheet of Array.from(document.adoptedStyleSheets)) visitSheet(sheet);
+        }
+        return faces;
+    }
+
+    function documentHasFontFace(fontId) {
+        const wanted = normalizeFontFamilyName(fontId);
+        try {
+            return Array.from(document.fonts).some(face => normalizeFontFamilyName(face.family) === wanted);
+        } catch (e) {
+            return true;
+        }
+    }
+
+    function registerWorkerFont(fontId) {
+        if (!glyphWorkerUsable() || glyphWorker.fontStates.has(fontId)) return;
+        const faces = collectFontFaceDescriptors(fontId);
+        if (!faces.length && documentHasFontFace(fontId)) {
+            glyphWorker.fontStates.set(fontId, 'unavailable');
+            return;
+        }
+        glyphWorker.fontStates.set(fontId, 'pending');
+        glyphWorker.worker.postMessage({
+            t: 'font',
+            id: fontId,
+            faces
+        });
+    }
+
+    function releaseGlyphWorkerResources() {
+        clearTimeout(glyphWorker.readyTimer);
+        glyphWorker.readyTimer = null;
+        for (const batch of glyphWorker.batches.values()) clearTimeout(batch.timer);
+        glyphWorker.batches.clear();
+        glyphWorker.pendingKeys.clear();
+        if (glyphWorker.worker) {
+            glyphWorker.worker.onmessage = null;
+            glyphWorker.worker.onerror = null;
+            glyphWorker.worker.onmessageerror = null;
+            glyphWorker.worker.terminate();
+            glyphWorker.worker = null;
+        }
+        if (glyphWorker.url) {
+            URL.revokeObjectURL(glyphWorker.url);
+            glyphWorker.url = null;
+        }
+    }
+
+    function flushAllGlyphWaiters() {
+        const targets = Array.from(glyphWorker.waiters.keys());
+        glyphWorker.waiters.clear();
+        for (const target of targets) scheduleRender(target);
+    }
+
+    function failGlyphWorker(reason) {
+        glyphWorker.failed = true;
+        glyphWorker.ready = false;
+        glyphWorker.failReason = reason;
+        glyphWorker.fontStates.clear();
+        releaseGlyphWorkerResources();
+        flushAllGlyphWaiters();
+    }
+
+    function destroyGlyphWorker() {
+        glyphWorker.enabled = false;
+        glyphWorker.ready = false;
+        glyphWorker.fontStates.clear();
+        releaseGlyphWorkerResources();
+        glyphWorker.waiters.clear();
+    }
+
+    function resolveGlyphWaiters(keys) {
+        for (const [target, needed] of glyphWorker.waiters) {
+            for (const key of keys) needed.delete(key);
+            if (!needed.size) {
+                glyphWorker.waiters.delete(target);
+                scheduleRender(target);
+            }
+        }
+    }
+
+    function insertGlyphShape(key, shape) {
+        makeRoomInGlyphCache();
+        glyphCache.set(key, shape);
+        glyphCacheBytes += shape.bytes;
+    }
+
+    const glyphUploadBudgetMs = 4;
+    const glyphUploadQueue = [];
+    let glyphUploadScheduled = false;
+
+    function pumpGlyphUploads() {
+        glyphUploadScheduled = false;
+        const startTime = perfStart();
+        const compositor = getGLCompositor();
+        const deadline = performance.now() + glyphUploadBudgetMs;
+        const doneKeys = [];
+        while (glyphUploadQueue.length) {
+            const entry = glyphUploadQueue.shift();
+            if (compositor && glyphCache.get(entry.key) === entry.shape) compositor.getGlyphTexture(entry.shape);
+            doneKeys.push(entry.key);
+            if (performance.now() >= deadline) break;
+        }
+        perfEnd('glyph.upload', startTime);
+        resolveGlyphWaiters(doneKeys);
+        if (glyphUploadQueue.length) scheduleGlyphUploads();
+    }
+
+    function scheduleGlyphUploads() {
+        if (glyphUploadScheduled) return;
+        glyphUploadScheduled = true;
+        requestAnimationFrame(pumpGlyphUploads);
+    }
+
+    function receiveWorkerGlyphs(message) {
+        const batch = glyphWorker.batches.get(message.id);
+        if (!batch) {
+            for (const result of message.results) {
+                if (result.bitmap) result.bitmap.close();
+            }
+            return;
+        }
+        clearTimeout(batch.timer);
+        glyphWorker.batches.delete(message.id);
+        perfEnd('glyph.worker.roundtrip', batch.startedAt);
+        perfRecord('glyph.worker.raster', message.elapsed);
+        const immediateKeys = [];
+        let queued = false;
+        for (const result of message.results) {
+            glyphWorker.pendingKeys.delete(result.key);
+            if (result.failed || !result.bitmap) {
+                if (glyphWorker.failedKeys.size >= glyphWorkerFailedKeyLimit) glyphWorker.failedKeys.clear();
+                glyphWorker.failedKeys.add(result.key);
+                immediateKeys.push(result.key);
+                continue;
+            }
+            if (glyphCache.has(result.key)) {
+                result.bitmap.close();
+                immediateKeys.push(result.key);
+                continue;
+            }
+            const shape = buildGlyphShape(result.bitmap, result.box, false);
+            insertGlyphShape(result.key, shape);
+            glyphUploadQueue.push({
+                key: result.key,
+                shape
+            });
+            queued = true;
+        }
+        if (queued) scheduleGlyphUploads();
+        if (immediateKeys.length) resolveGlyphWaiters(immediateKeys);
+    }
+
+    function onGlyphWorkerMessage(event) {
+        const message = event.data;
+        if (!message) return;
+        if (message.t === 'ready') {
+            clearTimeout(glyphWorker.readyTimer);
+            glyphWorker.readyTimer = null;
+            if (!message.supported) {
+                failGlyphWorker('no-font-api');
+                return;
+            }
+            glyphWorker.ready = true;
+            for (const fontId of loadedDocumentFonts) registerWorkerFont(fontId);
+        } else if (message.t === 'fontStatus') {
+            glyphWorker.fontStates.set(message.id, message.ok ? 'ready' : 'unavailable');
+            if (message.ok && message.id === defaultBaseStyle().font) prewarmDefaultGlyphs();
+        } else if (message.t === 'rastered') {
+            receiveWorkerGlyphs(message);
+        }
+    }
+
+    function startGlyphWorker() {
+        if (glyphWorker.worker || glyphWorker.failed) return;
+        if (typeof Worker !== 'function' || typeof OffscreenCanvas !== 'function' || typeof Blob !== 'function' ||
+            typeof URL === 'undefined' || typeof URL.createObjectURL !== 'function') {
+            failGlyphWorker('unsupported');
+            return;
+        }
+        try {
+            const source = computeGlyphBox.toString() + '\n(' + glyphWorkerMain.toString() + ')();';
+            glyphWorker.url = URL.createObjectURL(new Blob([source], {
+                type: 'text/javascript'
+            }));
+            glyphWorker.worker = new Worker(glyphWorker.url);
+        } catch (e) {
+            failGlyphWorker('spawn');
+            return;
+        }
+        glyphWorker.worker.onmessage = onGlyphWorkerMessage;
+        glyphWorker.worker.onerror = () => failGlyphWorker('error');
+        glyphWorker.worker.onmessageerror = () => failGlyphWorker('messageerror');
+        glyphWorker.readyTimer = setTimeout(() => {
+            if (!glyphWorker.ready) failGlyphWorker('timeout');
+        }, glyphWorkerTimeoutMs);
+    }
+
+    function setGlyphWorkerEnabled(enabled) {
+        glyphWorker.enabled = !!enabled;
+        if (glyphWorker.enabled && glyphWorker.ready) {
+            for (const fontId of loadedDocumentFonts) registerWorkerFont(fontId);
+        }
+    }
+
+    function glyphWorkerStatus() {
+        const fonts = {};
+        for (const [id, state] of glyphWorker.fontStates) fonts[id] = state;
+        return {
+            hasWorker: !!glyphWorker.worker,
+            enabled: glyphWorker.enabled,
+            ready: glyphWorker.ready,
+            failed: glyphWorker.failed,
+            failReason: glyphWorker.failReason,
+            fonts,
+            pendingGlyphs: glyphWorker.pendingKeys.size,
+            cachedGlyphs: glyphCache.size
+        };
+    }
+
+    function glyphRasterCost(size) {
+        const px = Math.max(1, Math.round(size * glyphOversample));
+        return px * px * 1.3;
+    }
+
+    function chunkGlyphRequests(requests) {
+        const chunks = [];
+        let chunk = [];
+        let cost = 0;
+        for (const request of requests) {
+            chunk.push(request);
+            cost += glyphRasterCost(request.size);
+            if (chunk.length >= glyphWorkerChunk || cost >= glyphWorkerChunkCost) {
+                chunks.push(chunk);
+                chunk = [];
+                cost = 0;
+            }
+        }
+        if (chunk.length) chunks.push(chunk);
+        return chunks;
+    }
+
+    function dispatchGlyphRequests(requests) {
+        if (!requests.length || !glyphWorkerUsable()) return;
+        for (const chunk of chunkGlyphRequests(requests)) {
+            const id = glyphWorker.nextBatchId++;
+            const items = chunk.map(request => {
+                glyphWorker.pendingKeys.add(request.key);
+                return {
+                    key: request.key,
+                    char: request.char,
+                    css: request.css,
+                    px: Math.max(1, Math.round(request.size * glyphOversample)),
+                    weight: request.weight,
+                    style: request.style
+                };
+            });
+            glyphWorker.batches.set(id, {
+                keys: items.map(item => item.key),
+                startedAt: perfStart(),
+                timer: setTimeout(() => failGlyphWorker('timeout'), glyphWorkerTimeoutMs)
+            });
+            glyphWorker.worker.postMessage({
+                t: 'raster',
+                id,
+                items
+            });
+        }
+    }
+
+    function prewarmDefaultGlyphs() {
+        if (glyphWorker.prewarmed) return;
+        glyphWorker.prewarmed = true;
+        const base = defaultBaseStyle();
+        const css = cssFontFamily(base.font);
+        const requests = [];
+        for (let code = 33; code <= 126; code++) {
+            const char = String.fromCharCode(code);
+            const key = glyphCacheKey(char, css, base.size, 'normal', 'normal');
+            if (glyphCache.has(key) || glyphWorker.pendingKeys.has(key)) continue;
+            requests.push({
+                key,
+                char,
+                css,
+                size: base.size,
+                weight: 'normal',
+                style: 'normal'
+            });
+        }
+        dispatchGlyphRequests(requests);
+    }
+
+    function deferForWorkerGlyphs(target, state, paintOps) {
+        if (!glyphWorkerUsable()) return false;
+        if (state.hasPaintedOnce && state.lastPaintAt && performance.now() - state.lastPaintAt < glyphWorkerAnimationGapMs) return false;
+        if ((state.workerDeferrals || 0) >= glyphWorkerMaxDeferrals) return false;
+        let requests = null;
+        let needed = null;
+        let cost = 0;
+        for (let i = 0; i < paintOps.length; i++) {
+            const op = paintOps[i];
+            const char = op.text;
+            if (char === '\u00A0' || char === '') continue;
+            const font = op.font;
+            const key = glyphCacheKey(char, font['font-family'], font['font-size'], font['font-weight'], font['font-style']);
+            if (glyphCache.has(key)) continue;
+            if (glyphWorker.pendingKeys.has(key)) {
+                if (!needed) needed = new Set();
+                needed.add(key);
+                continue;
+            }
+            if (glyphWorker.failedKeys.has(key) || isEmojiChar(char) || !glyphWorkerHasFont(font['font-family'])) continue;
+            if (!requests) requests = new Map();
+            if (!requests.has(key)) {
+                cost += glyphRasterCost(font['font-size']);
+                requests.set(key, {
+                    key,
+                    char,
+                    css: font['font-family'],
+                    size: font['font-size'],
+                    weight: font['font-weight'],
+                    style: font['font-style']
+                });
+            }
+        }
+        if (!requests && !needed) return false;
+        if (!needed && requests.size < glyphWorkerBatchMin && cost < glyphWorkerCostMin) return false;
+        state.workerDeferrals = (state.workerDeferrals || 0) + 1;
+        if (requests) {
+            if (!needed) needed = new Set();
+            for (const key of requests.keys()) needed.add(key);
+            dispatchGlyphRequests(Array.from(requests.values()));
+        }
+        glyphWorker.waiters.set(target, needed);
+        return true;
+    }
+
     const maskGlyphStencilCache = new Map();
-    const STENCIL_CACHE_LIMIT = 400;
+    const stencilCacheLimit = 400;
     const maskScratchCanvasPool = [];
-    const CANVAS_SIZE_BUCKET = 32;
+    const canvasSizeBucket = 32;
 
     function bucketSize(n) {
-        return Math.max(CANVAS_SIZE_BUCKET, Math.ceil(n / CANVAS_SIZE_BUCKET) * CANVAS_SIZE_BUCKET);
+        return Math.max(canvasSizeBucket, Math.ceil(n / canvasSizeBucket) * canvasSizeBucket);
     }
 
     const sharedPatternSurface = (() => {
@@ -1277,7 +1943,7 @@ Enjoy!! :D
         sctx.fillRect(0, 0, stencil.width, stencil.height);
         sctx.globalCompositeOperation = 'destination-in';
         sctx.drawImage(shape.canvas, 0, 0);
-        if (maskGlyphStencilCache.size >= STENCIL_CACHE_LIMIT) {
+        if (maskGlyphStencilCache.size >= stencilCacheLimit) {
             const evictedShape = maskGlyphStencilCache.keys().next().value;
             releasePooledCanvas(stencilCanvasPool, maskGlyphStencilCache.get(evictedShape));
             maskGlyphStencilCache.delete(evictedShape);
@@ -1328,8 +1994,8 @@ Enjoy!! :D
 
         const zoom = Math.max(0.01, (Scratch.Cast.toNumber(mask.zoom) || 100) / 100);
         const rotation = Scratch.Cast.toNumber(mask.rotation);
-        const anchorX = (mask.x || 0) * DEST_SCALE - destX;
-        const anchorY = -(mask.y || 0) * DEST_SCALE - destY;
+        const anchorX = (mask.x || 0) * destScale - destX;
+        const anchorY = -(mask.y || 0) * destScale - destY;
 
         const matrix = new DOMMatrix();
         matrix.translateSelf(anchorX, anchorY);
@@ -1358,20 +2024,20 @@ Enjoy!! :D
             const localOffsetY = seamless ? (worldDrawY - spanOriginY) : 0;
             const effSpanW = seamless && spanW ? spanW : w;
             const effSpanH = seamless && spanH ? spanH : h;
-            const blurPx = Math.max(0, Scratch.Cast.toNumber(mask.blur)) * DEST_SCALE;
-            const direction = mask.direction || WIPE_DIRECTION_BOTTOM_UP;
+            const blurPx = Math.max(0, Scratch.Cast.toNumber(mask.blur)) * destScale;
+            const direction = mask.direction || wipeDirectionBottomUp;
             const bandHalf = Math.max(0.5, blurPx / 2);
 
             let revealEdge, axisIsX, growsPositive;
-            if (direction === WIPE_DIRECTION_LEFT_RIGHT) {
+            if (direction === wipeDirectionLeftRight) {
                 revealEdge = effSpanW * coverage - localOffsetX;
                 axisIsX = true;
                 growsPositive = true;
-            } else if (direction === WIPE_DIRECTION_RIGHT_LEFT) {
+            } else if (direction === wipeDirectionRightLeft) {
                 revealEdge = effSpanW - effSpanW * coverage - localOffsetX;
                 axisIsX = true;
                 growsPositive = false;
-            } else if (direction === WIPE_DIRECTION_UP_DOWN) {
+            } else if (direction === wipeDirectionUpDown) {
                 revealEdge = effSpanH * coverage - localOffsetY;
                 axisIsX = false;
                 growsPositive = true;
@@ -1433,7 +2099,7 @@ Enjoy!! :D
         tctx.globalCompositeOperation = 'destination-in';
         tctx.drawImage(shape.canvas, 0, 0);
 
-        if (shape.tinted.size >= TINT_CACHE_LIMIT) {
+        if (shape.tinted.size >= tintCacheLimit) {
             const evictedColor = shape.tinted.keys().next().value;
             releasePooledCanvas(tintedCanvasPool, shape.tinted.get(evictedColor));
             shape.tinted.delete(evictedColor);
@@ -1443,12 +2109,12 @@ Enjoy!! :D
         return tintedCanvas;
     }
 
-    const BLUR_QUANTUM_PX = 0.5;
-    const BLUR_MAX_PX = 40;
+    const blurQuantumPx = 0.5;
+    const blurMaxPx = 40;
 
     function quantizeBlurPx(blurPx) {
-        const clamped = Math.min(BLUR_MAX_PX, blurPx);
-        return Math.round(clamped / BLUR_QUANTUM_PX) * BLUR_QUANTUM_PX;
+        const clamped = Math.min(blurMaxPx, blurPx);
+        return Math.round(clamped / blurQuantumPx) * blurQuantumPx;
     }
 
     function getBlurredGlyphBitmap(shape, color, blurPxRaw) {
@@ -1475,7 +2141,7 @@ Enjoy!! :D
             offsetY: -padPx
         };
 
-        if (shape.blurred.size >= TINT_CACHE_LIMIT) {
+        if (shape.blurred.size >= tintCacheLimit) {
             const evictedKey = shape.blurred.keys().next().value;
             const evicted = shape.blurred.get(evictedKey);
             releasePooledCanvas(tintedCanvasPool, evicted.canvas);
@@ -1491,9 +2157,9 @@ Enjoy!! :D
         const last = colors.length - 1;
         const cx = spanW / 2 - localOffsetXPx;
         const cy = spanH / 2 - localOffsetYPx;
-        const type = gradient.type || GRADIENT_TYPE_LINEAR;
+        const type = gradient.type || gradientTypeLinear;
 
-        if (type === GRADIENT_TYPE_RADIAL) {
+        if (type === gradientTypeRadial) {
             const radius = Math.max(1, Math.sqrt(spanW * spanW + spanH * spanH) / 2);
             const canvasGradient = ctx.createRadialGradient(cx, cy, 0, cx, cy, radius);
             for (let c = 0; c <= last; c++) {
@@ -1502,7 +2168,7 @@ Enjoy!! :D
             return canvasGradient;
         }
 
-        if (type === GRADIENT_TYPE_CONIC) {
+        if (type === gradientTypeConic) {
             const startAngleRad = (gradient.angle || 0) * Math.PI / 180 - Math.PI / 2;
             const canvasGradient = ctx.createConicGradient(startAngleRad, cx, cy);
             for (let c = 0; c <= last; c++) {
@@ -1578,90 +2244,58 @@ Enjoy!! :D
             shape
         };
         if (!shape.bitmaps) shape.bitmaps = new Map();
-        if (shape.bitmaps.size >= TINT_CACHE_LIMIT) {
+        if (shape.bitmaps.size >= tintCacheLimit) {
             shape.bitmaps.delete(shape.bitmaps.keys().next().value);
         }
         shape.bitmaps.set(color, bitmap);
         return bitmap;
     }
 
-    const READBACK_CANVAS = document.createElement('canvas');
-    const READBACK_CTX = READBACK_CANVAS.getContext('2d', {
+    const readbackCanvas = document.createElement('canvas');
+    const readbackCtx = readbackCanvas.getContext('2d', {
         willReadFrequently: true
     });
 
-    function getGlyphInkColumns(glyph) {
-        if (glyph.inkColumns) return glyph.inkColumns;
+    function getGlyphInkBand(glyph, rowStart, rowEnd) {
         const w = glyph.canvas.width;
-        const h = glyph.canvas.height;
-        if (READBACK_CANVAS.width !== w) READBACK_CANVAS.width = w;
-        if (READBACK_CANVAS.height !== h) READBACK_CANVAS.height = h;
-        READBACK_CTX.setTransform(1, 0, 0, 1, 0, 0);
-        READBACK_CTX.clearRect(0, 0, w, h);
-        READBACK_CTX.drawImage(glyph.canvas, 0, 0);
-        const image = READBACK_CTX.getImageData(0, 0, w, h);
-        const inkColumns = new Uint8Array(w * h);
-        for (let i = 0; i < inkColumns.length; i++) {
-            inkColumns[i] = image.data[i * 4 + 3] > 16 ? 1 : 0;
+        const rows = rowEnd - rowStart + 1;
+        if (rows <= 0 || w <= 0) return new Uint8Array(Math.max(0, w));
+        const cacheKey = rowStart + ':' + rowEnd;
+        let bands = glyph.inkBands;
+        if (!bands) {
+            bands = new Map();
+            glyph.inkBands = bands;
         }
-        glyph.inkColumns = inkColumns;
-        return inkColumns;
-    }
-
-    function strokeUnderline(ctx, glyph, glyphX, glyphY, startX, endX, y, lineWidth) {
-        const stroke = (x1, x2) => {
-            if (x2 <= x1) return;
-            ctx.beginPath();
-            ctx.moveTo(x1, y);
-            ctx.lineTo(x2, y);
-            ctx.stroke();
-        };
-
-        try {
-            const w = glyph.canvas.width;
-            const inkData = getGlyphInkColumns(glyph);
-            const rowStart = Math.max(0, Math.floor(y - glyphY - lineWidth / 2));
-            const rowEnd = Math.min(glyph.canvas.height - 1, Math.ceil(y - glyphY + lineWidth / 2));
-            const columnStart = Math.max(0, Math.floor(startX - glyphX));
-            const columnEnd = Math.min(w - 1, Math.ceil(endX - glyphX));
-            const ink = new Uint8Array(w);
-
-            for (let py = rowStart; py <= rowEnd; py++) {
-                for (let px = columnStart; px <= columnEnd; px++) {
-                    if (inkData[py * w + px]) ink[px] = 1;
-                }
+        let ink = bands.get(cacheKey);
+        if (ink) return ink;
+        if (readbackCanvas.width !== w) readbackCanvas.width = w;
+        if (readbackCanvas.height !== rows) readbackCanvas.height = rows;
+        readbackCtx.setTransform(1, 0, 0, 1, 0, 0);
+        readbackCtx.clearRect(0, 0, w, rows);
+        readbackCtx.drawImage(glyph.canvas, 0, rowStart, w, rows, 0, 0, w, rows);
+        const data = readbackCtx.getImageData(0, 0, w, rows).data;
+        ink = new Uint8Array(w);
+        for (let y = 0; y < rows; y++) {
+            const rowOffset = y * w * 4;
+            for (let x = 0; x < w; x++) {
+                if (data[rowOffset + x * 4 + 3] > 16) ink[x] = 1;
             }
-
-            const padding = Math.max(1, Math.ceil(lineWidth / 2) + 1);
-            let segmentStart = startX;
-            let px = columnStart;
-            while (px <= columnEnd) {
-                if (!ink[px]) {
-                    px++;
-                    continue;
-                }
-                const inkStart = px;
-                while (px <= columnEnd && ink[px]) px++;
-                const skipStart = Math.max(startX, glyphX + inkStart - padding);
-                const skipEnd = Math.min(endX, glyphX + px + padding);
-                stroke(segmentStart, skipStart);
-                segmentStart = Math.max(segmentStart, skipEnd);
-            }
-            stroke(segmentStart, endX);
-        } catch (e) {
-            stroke(startX, endX);
         }
+        if (bands.size >= 8) bands.delete(bands.keys().next().value);
+        bands.set(cacheKey, ink);
+        return ink;
     }
 
     function invalidateGlyphCacheForFamily(fontFamily) {
-        for (const key of glyphCache.keys()) {
-            if (key.indexOf('\u0001' + fontFamily + '\u0001') !== -1) {
-                glyphCache.delete(key);
-            }
+        for (const key of Array.from(glyphCache.keys())) {
+            if (key.indexOf('\u0001' + fontFamily + '\u0001') !== -1) removeGlyphShape(key);
+        }
+        for (const key of glyphWorker.failedKeys) {
+            if (key.indexOf('\u0001' + fontFamily + '\u0001') !== -1) glyphWorker.failedKeys.delete(key);
         }
     }
 
-    const MASK_TEXTURE_RASTER_SIZE = 512;
+    const maskTextureRasterSize = 512;
     const maskTextureCache = new Map();
     const maskTexturePending = new Map();
 
@@ -1714,11 +2348,11 @@ Enjoy!! :D
         const aspect = nativeW / nativeH;
         let canvasW, canvasH;
         if (aspect >= 1) {
-            canvasW = MASK_TEXTURE_RASTER_SIZE;
-            canvasH = Math.max(1, Math.round(MASK_TEXTURE_RASTER_SIZE / aspect));
+            canvasW = maskTextureRasterSize;
+            canvasH = Math.max(1, Math.round(maskTextureRasterSize / aspect));
         } else {
-            canvasH = MASK_TEXTURE_RASTER_SIZE;
-            canvasW = Math.max(1, Math.round(MASK_TEXTURE_RASTER_SIZE * aspect));
+            canvasH = maskTextureRasterSize;
+            canvasW = Math.max(1, Math.round(maskTextureRasterSize * aspect));
         }
         const canvas = document.createElement('canvas');
         canvas.width = canvasW;
@@ -1762,11 +2396,11 @@ Enjoy!! :D
                 const aspect = nativeW / nativeH;
                 let canvasW, canvasH;
                 if (aspect >= 1) {
-                    canvasW = MASK_TEXTURE_RASTER_SIZE;
-                    canvasH = Math.max(1, Math.round(MASK_TEXTURE_RASTER_SIZE / aspect));
+                    canvasW = maskTextureRasterSize;
+                    canvasH = Math.max(1, Math.round(maskTextureRasterSize / aspect));
                 } else {
-                    canvasH = MASK_TEXTURE_RASTER_SIZE;
-                    canvasW = Math.max(1, Math.round(MASK_TEXTURE_RASTER_SIZE * aspect));
+                    canvasH = maskTextureRasterSize;
+                    canvasW = Math.max(1, Math.round(maskTextureRasterSize * aspect));
                 }
                 const canvas = document.createElement('canvas');
                 canvas.width = canvasW;
@@ -1813,7 +2447,7 @@ Enjoy!! :D
 
     function repaintAllTargetsUsingMasks() {
         for (const candidate of runtime.targets) {
-            const state = candidate.getCustomState(STATE_KEY);
+            const state = candidate.getCustomState(stateKey);
             if (!state || !state.visible) continue;
             if (!state.charMasks || !Object.keys(state.charMasks).length) continue;
             state.paintFingerprint = null;
@@ -1826,7 +2460,7 @@ Enjoy!! :D
     }
 
     const shapingFontStyleCache = new Map();
-    const SHAPING_FONT_STYLE_CACHE_LIMIT = 500;
+    const shapingFontStyleCacheLimit = 500;
 
     function shapingFontStyle(style) {
         const key = shapingFontStyleKey(style);
@@ -1843,7 +2477,7 @@ Enjoy!! :D
             'font-style': fontStyle,
             'styleHash': styleHash
         };
-        if (shapingFontStyleCache.size >= SHAPING_FONT_STYLE_CACHE_LIMIT) {
+        if (shapingFontStyleCache.size >= shapingFontStyleCacheLimit) {
             shapingFontStyleCache.delete(shapingFontStyleCache.keys().next().value);
         }
         shapingFontStyleCache.set(key, cached);
@@ -1888,7 +2522,7 @@ Enjoy!! :D
     }
 
     const charAdvanceCache = new Map();
-    const CHAR_ADVANCE_CACHE_LIMIT = 4000;
+    const charAdvanceCacheLimit = 4000;
 
     function charAdvanceCacheKey(fontStyle, letterSpacing, prevChar, char) {
         return fontStyle.styleHash + '\u0001' + fontStyle['font-size'] + '\u0001' +
@@ -1943,7 +2577,7 @@ Enjoy!! :D
                     const pairWidth = measureCtx.measureText(prevCh + ch).width;
                     advance = (pairWidth - prevWidth) + spacing;
                 }
-                if (charAdvanceCache.size >= CHAR_ADVANCE_CACHE_LIMIT) {
+                if (charAdvanceCache.size >= charAdvanceCacheLimit) {
                     charAdvanceCache.delete(charAdvanceCache.keys().next().value);
                 }
                 charAdvanceCache.set(missing[m].key, advance);
@@ -2252,11 +2886,11 @@ Enjoy!! :D
                     const baselineYFromLineCenter = (shape.fontAscentEm - shape.fontDescentEm) / 2;
                     const drawXEm = charCenterX - advanceCenterXEm;
                     const drawYEm = (charCenterY + baselineYFromLineCenter) - shape.baselineOriginYEm;
-                    const px = Math.round(drawXEm * DEST_SCALE);
-                    const py = Math.round(drawYEm * DEST_SCALE);
+                    const px = Math.round(drawXEm * destScale);
+                    const py = Math.round(drawYEm * destScale);
                     const w = shape.canvas.width;
                     const h = shape.canvas.height;
-                    const padYPx = Math.round((shape.baselineOriginYEm - shape.fontAscentEm) * DEST_SCALE);
+                    const padYPx = Math.round((shape.baselineOriginYEm - shape.fontAscentEm) * destScale);
                     const inkTop = py + padYPx;
                     const inkBottom = py + h - padYPx;
 
@@ -2331,6 +2965,7 @@ Enjoy!! :D
             hash = (hash * 33) ^ (op.underline ? 1 : 0);
             hash = (hash * 33) ^ (op.strike ? 1 : 0);
             hash = (hash * 33) ^ ((op.blur * 100) | 0);
+            hash = (hash * 33) ^ ((op.layer * 100) | 0);
             hash = fingerprintMaskInto(hash, op.mask);
             hash = fingerprintGradientInto(hash, op.gradient);
             hash = fingerprintShadowInto(hash, op.shadow);
@@ -2366,7 +3001,7 @@ Enjoy!! :D
     function fingerprintGradientInto(hash, gradient) {
         if (gradient) {
             hash = (hash * 33) ^ ((gradient.angle * 100) | 0);
-            hash = (hash * 33) ^ hashString(gradient.type || GRADIENT_TYPE_LINEAR);
+            hash = (hash * 33) ^ hashString(gradient.type || gradientTypeLinear);
             for (let c = 0; c < gradient.colors.length; c++) {
                 hash = (hash * 33) ^ hashString(gradient.colors[c]);
             }
@@ -2653,7 +3288,34 @@ Enjoy!! :D
         ensureRenderFlushTicker();
     }
 
+    let preDrawFlushActive = false;
+
+    function ensurePreDrawHook() {
+        const renderer = runtime.renderer;
+        if (!renderer || typeof renderer.draw !== 'function') return false;
+        if (!renderer.draw.irisTextWrapped) {
+            const originalDraw = renderer.draw;
+            const wrappedDraw = function () {
+                const hook = renderer.irisTextPreDraw;
+                if (hook) {
+                    try {
+                        hook();
+                    } catch (e) {
+                        console.error('[Iris Text]', e);
+                    }
+                }
+                return originalDraw.apply(this, arguments);
+            };
+            wrappedDraw.irisTextWrapped = true;
+            renderer.draw = wrappedDraw;
+        }
+        renderer.irisTextPreDraw = flushPendingRenders;
+        preDrawFlushActive = true;
+        return true;
+    }
+
     function scheduleRender(target) {
+        if (!preDrawFlushActive) ensurePreDrawHook();
         pendingRenderTargets.add(target);
         requestRenderFlush();
     }
@@ -2678,9 +3340,17 @@ Enjoy!! :D
     }
 
     function scheduleTextRender(target) {
-        pendingRenderTargets.delete(target);
         const state = getState(target);
-        if (state.visible) renderTarget(target);
+        if (!state.visible) {
+            pendingRenderTargets.delete(target);
+            return;
+        }
+        if (preDrawFlushActive || ensurePreDrawHook()) {
+            scheduleRender(target);
+            return;
+        }
+        pendingRenderTargets.delete(target);
+        renderTarget(target);
     }
 
     function schedulePaint(target, state) {
@@ -2701,7 +3371,7 @@ Enjoy!! :D
         return getPaintOpsGeometryKey(state, layoutKey) + '\u0004' + state.charMasksVersion + '\u0004' + state.charTransformsVersion;
     }
 
-    const EMPTY_OVERRIDE = {
+    const emptyOverride = {
         x: 0,
         y: 0,
         rotation: 0,
@@ -2724,6 +3394,15 @@ Enjoy!! :D
     }
 
     function renderTarget(target) {
+        const startTime = perfStart();
+        try {
+            return renderTargetNow(target);
+        } finally {
+            perfEnd('render.total', startTime);
+        }
+    }
+
+    function renderTargetNow(target) {
         const state = getState(target);
         if (!state.visible) return;
         if (state.renderInFlight) {
@@ -2738,6 +3417,7 @@ Enjoy!! :D
             const richChars = parseRichText(state.rawText, state.baseStyle);
             applyCharacterStyleOverrides(richChars, state.charStyleOverrides);
             const families = richChars.families;
+            state.layoutFamilies = families;
             let fontsPending = false;
             for (const family of families) {
                 if (!loadedDocumentFonts.has(family)) fontsPending = true;
@@ -2746,7 +3426,10 @@ Enjoy!! :D
             if (fontsPending && !state.hasPaintedOnce) {
                 return;
             }
+            ensureFontCoverage(richChars);
+            const layoutStart = perfStart();
             const measured = measureRichText(glyphMeasureCtx, richChars, state);
+            perfEnd('render.layout', layoutStart);
             layout = measured;
             state.shapeKey = shapeKey;
             state.layout = layout;
@@ -2899,8 +3582,8 @@ Enjoy!! :D
                         const pos = run.positions[i];
                         const index = run.startIndex + i;
                         const o = run.hasOverride ?
-                            (state.charOverrides[index] || EMPTY_OVERRIDE) :
-                            EMPTY_OVERRIDE;
+                            (state.charOverrides[index] || emptyOverride) :
+                            emptyOverride;
 
                         const charCenterX = runOriginX + pos.shapedX + pos.advance / 2 +
                             spacesBefore * justifyExtra + o.x;
@@ -2933,6 +3616,7 @@ Enjoy!! :D
                         op.blur = rc.blur || 0;
                         op.shadow = rc.shadow || null;
                         op.border = rc.border || null;
+                        op.layer = rc.layer || 0;
                         paintOps.push(op);
 
                         if (rc.char === ' ') spacesBefore++;
@@ -2981,8 +3665,18 @@ Enjoy!! :D
             }
         }
 
+        if (deferForWorkerGlyphs(target, state, paintOps)) {
+            state.paintFingerprint = null;
+            return;
+        }
+        glyphWorker.waiters.delete(target);
+
         state.renderQueued = false;
+        const compositeStart = perfStart();
         compositeGlyphsAndPush(target, state, paintOps, docW, docH, textBoxWidth, totalHeight, textBoxOffsetX, originX, originY, anchorY);
+        perfEnd('render.composite', compositeStart);
+        state.lastPaintAt = performance.now();
+        state.workerDeferrals = 0;
         state.paintDirty = false;
         state.hasPaintedOnce = true;
         state.renderInFlight = false;
@@ -2993,6 +3687,11 @@ Enjoy!! :D
         }
         return Promise.resolve();
     }
+
+    const lastCompositeCrop = {
+        x: 0,
+        y: 0
+    };
 
     function compositeGlyphsAndPush(target, state, paintOps, docW, docH, textWidth, textHeight, textBoxOffsetX, originX, originY, anchorY) {
         const pinnedKeys = new Set();
@@ -3015,18 +3714,32 @@ Enjoy!! :D
             }
             return;
         }
-        pushCanvasToDrawable(target, canvas, docW, docH, originX, anchorY != null ? anchorY : originY);
+        pushCanvasToDrawable(
+            target, canvas, docW, docH,
+            originX - lastCompositeCrop.x,
+            (anchorY != null ? anchorY : originY) - lastCompositeCrop.y
+        );
     }
 
     const loadedDocumentFonts = new Set();
     const pendingDocumentFonts = new Map();
-    const FONT_LOAD_MAX_RETRIES = 8;
-    const FONT_LOAD_RETRY_DELAY_MS = 150;
+    const fontLoadMaxRetries = 8;
+    const fontLoadRetryDelayMs = 150;
 
-    function rerenderVisibleTextTargets() {
+    function rerenderVisibleTextTargets(fonts) {
         for (const candidate of runtime.targets) {
-            const state = candidate.getCustomState(STATE_KEY);
+            const state = candidate.getCustomState(stateKey);
             if (!state || !state.visible) continue;
+            if (fonts && state.layoutFamilies instanceof Set) {
+                let usesFont = false;
+                for (const font of fonts) {
+                    if (state.layoutFamilies.has(font)) {
+                        usesFont = true;
+                        break;
+                    }
+                }
+                if (!usesFont) continue;
+            }
             state.shapeKey = null;
             state.layoutKey = null;
             state.layout = null;
@@ -3036,18 +3749,25 @@ Enjoy!! :D
     }
 
     let rerenderVisibleTextTargetsQueued = false;
+    let rerenderAllFonts = false;
+    const pendingRerenderFonts = new Set();
 
-    function requestRerenderVisibleTextTargets() {
+    function requestRerenderVisibleTextTargets(fontId) {
+        if (fontId === undefined) rerenderAllFonts = true;
+        else pendingRerenderFonts.add(fontId);
         if (rerenderVisibleTextTargetsQueued) return;
         rerenderVisibleTextTargetsQueued = true;
         Promise.resolve().then(() => {
             rerenderVisibleTextTargetsQueued = false;
-            rerenderVisibleTextTargets();
+            const fonts = rerenderAllFonts ? null : new Set(pendingRerenderFonts);
+            rerenderAllFonts = false;
+            pendingRerenderFonts.clear();
+            rerenderVisibleTextTargets(fonts);
         });
     }
 
-    const FONT_PROBE_TEXT = 'AaBbGgQqWwZz01@#';
-    const FONT_PROBE_CONTROL_FAMILIES = ['serif', 'sans-serif', 'monospace'];
+    const fontProbeText = 'AaBbGgQqWwZz01@#';
+    const fontProbeControlFamilies = ['serif', 'sans-serif', 'monospace'];
     let fontProbeCtx = null;
     let fontProbeControlWidths = null;
 
@@ -3061,19 +3781,19 @@ Enjoy!! :D
     function measureFontProbeWidth(fontFamilyCss) {
         const ctx = getFontProbeCtx();
         ctx.font = `16px ${fontFamilyCss}`;
-        return ctx.measureText(FONT_PROBE_TEXT).width;
+        return ctx.measureText(fontProbeText).width;
     }
 
     function getFontProbeControlWidths() {
         if (fontProbeControlWidths) return fontProbeControlWidths;
-        fontProbeControlWidths = FONT_PROBE_CONTROL_FAMILIES.map(measureFontProbeWidth);
+        fontProbeControlWidths = fontProbeControlFamilies.map(measureFontProbeWidth);
         return fontProbeControlWidths;
     }
 
     function isFontActuallyRendering(fontId) {
         const rawFamily = `"${fontId}"`;
         const controlWidths = getFontProbeControlWidths();
-        const testedWidths = FONT_PROBE_CONTROL_FAMILIES.map(fallback =>
+        const testedWidths = fontProbeControlFamilies.map(fallback =>
             measureFontProbeWidth(`${rawFamily}, ${fallback}`)
         );
         for (let i = 0; i < testedWidths.length; i++) {
@@ -3086,9 +3806,12 @@ Enjoy!! :D
         attempt = attempt || 0;
         if (!document.fonts || loadedDocumentFonts.has(fontId) || pendingDocumentFonts.has(fontId)) return;
         const fontSpec = `16px ${cssFontFamily(fontId)}`;
+        const loadStart = perfStart();
         const promise = document.fonts.load(fontSpec, 'M')
             .catch(() => [])
-            .then(() => {
+            .then(loadedFaces => {
+                perfEnd('font.load', loadStart);
+                for (const face of loadedFaces) knownLoadedFontFaces.add(face);
                 pendingDocumentFonts.delete(fontId);
                 const apiReady = typeof document.fonts.check === 'function' ? document.fonts.check(fontSpec, 'M') : true;
                 const ready = apiReady && isFontActuallyRendering(fontId);
@@ -3096,9 +3819,10 @@ Enjoy!! :D
                     loadedDocumentFonts.add(fontId);
                     invalidateGlyphCacheForFamily(cssFontFamily(fontId));
                     charAdvanceCache.clear();
-                    requestRerenderVisibleTextTargets();
-                } else if (attempt < FONT_LOAD_MAX_RETRIES) {
-                    setTimeout(() => ensureDocumentFont(fontId, attempt + 1), FONT_LOAD_RETRY_DELAY_MS);
+                    requestRerenderVisibleTextTargets(fontId);
+                    registerWorkerFont(fontId);
+                } else if (attempt < fontLoadMaxRetries) {
+                    setTimeout(() => ensureDocumentFont(fontId, attempt + 1), fontLoadRetryDelayMs);
                 } else {
                     loadedDocumentFonts.add(fontId);
                 }
@@ -3106,12 +3830,79 @@ Enjoy!! :D
         pendingDocumentFonts.set(fontId, promise);
     }
 
-    const DEST_SCALE = GLYPH_OVERSAMPLE;
+    const fontCharsChecked = new Map();
+    const knownLoadedFontFaces = new WeakSet();
+
+    function ensureFontCoverage(richChars) {
+        if (!document.fonts) return;
+        let missing = null;
+        for (let i = 0; i < richChars.length; i++) {
+            const rc = richChars[i];
+            const char = rc.char;
+            if (char === '\n' || char === ' ' || char === '\u00A0') continue;
+            if (!loadedDocumentFonts.has(rc.font)) continue;
+            let seen = fontCharsChecked.get(rc.font);
+            if (!seen) {
+                seen = new Set();
+                fontCharsChecked.set(rc.font, seen);
+            }
+            if (seen.has(char)) continue;
+            seen.add(char);
+            if (!missing) missing = new Map();
+            missing.set(rc.font, (missing.get(rc.font) || '') + char);
+        }
+        if (!missing) return;
+        for (const [fontId, chars] of missing) {
+            document.fonts.load(`16px "${fontId}"`, chars)
+                .catch(() => [])
+                .then(faces => {
+                    let discovered = false;
+                    for (const face of faces) {
+                        if (!knownLoadedFontFaces.has(face)) {
+                            knownLoadedFontFaces.add(face);
+                            discovered = true;
+                        }
+                    }
+                    if (!discovered) return;
+                    invalidateGlyphCacheForFamily(cssFontFamily(fontId));
+                    charAdvanceCache.clear();
+                    requestRerenderVisibleTextTargets(fontId);
+                });
+        }
+    }
+
+    function preloadBuiltInFonts() {
+        if (!document.fonts) return;
+        const defaultFont = defaultBaseStyle().font;
+        if (documentHasFontFace(defaultFont)) ensureDocumentFont(defaultFont);
+        const connection = typeof navigator !== 'undefined' ? navigator.connection : null;
+        if (connection && connection.saveData) return;
+        const queue = fontIds.filter(id => id !== defaultFont);
+        const loadNext = () => {
+            while (queue.length) {
+                const id = queue.shift();
+                if (!documentHasFontFace(id)) continue;
+                ensureDocumentFont(id);
+                runWhenIdle(loadNext, 3000);
+                return;
+            }
+        };
+        runWhenIdle(loadNext, 3000);
+    }
+
+    function startupWarmup() {
+        preloadBuiltInFonts();
+        runWhenIdle(() => {
+            getGLCompositor();
+        }, 2000);
+    }
+
+    const destScale = glyphOversample;
 
 
     function maskGroupKey(mask) {
         return mask.targetName + '\u0001' + mask.costumeName + '\u0001' +
-            (mask.direction || WIPE_DIRECTION_BOTTOM_UP) + '\u0001' +
+            (mask.direction || wipeDirectionBottomUp) + '\u0001' +
             Math.round(mask.x * 4) + '\u0001' + Math.round(mask.y * 4);
     }
 
@@ -3120,8 +3911,8 @@ Enjoy!! :D
         const baselineYFromLineCenter = (shape.fontAscentEm - shape.fontDescentEm) / 2;
         const drawXEm = op.x - advanceCenterXEm;
         const drawYEm = (op.y + baselineYFromLineCenter) - shape.baselineOriginYEm;
-        const px = Math.round(drawXEm * DEST_SCALE);
-        const py = Math.round(drawYEm * DEST_SCALE);
+        const px = Math.round(drawXEm * destScale);
+        const py = Math.round(drawYEm * destScale);
         return { px, py, w: shape.canvas.width, h: shape.canvas.height };
     }
 
@@ -3230,7 +4021,7 @@ Enjoy!! :D
 
             const shape = getGlyphShapeForFontStyle(op.text, op.font);
             const rect = glyphDrawRectPx(op, shape);
-            const padYPx = Math.round((shape.baselineOriginYEm - shape.fontAscentEm) * DEST_SCALE);
+            const padYPx = Math.round((shape.baselineOriginYEm - shape.fontAscentEm) * destScale);
             const inkTop = rect.py + padYPx;
             const inkBottom = rect.py + rect.h - padYPx;
 
@@ -3259,7 +4050,7 @@ Enjoy!! :D
         return spans;
     }
 
-    const GL_QUAD_VS = `#version 300 es
+    const glQuadVs = `#version 300 es
     layout(location=0) in vec2 a_corner;
     uniform vec2 u_canvasSize;
     uniform vec2 u_origin;
@@ -3280,7 +4071,7 @@ Enjoy!! :D
         v_uv = a_corner;
     }`;
 
-    const GL_GLYPH_FS = `#version 300 es
+    const glGlyphFs = `#version 300 es
     precision highp float;
     in vec2 v_uv;
     uniform sampler2D u_tex;
@@ -3347,7 +4138,7 @@ Enjoy!! :D
         fragColor = vec4(base.rgb * outA, outA);
     }`;
 
-    const GL_SOLID_FS = `#version 300 es
+    const glSolidFs = `#version 300 es
     precision highp float;
     in vec2 v_uv;
     uniform vec4 u_color;
@@ -3356,7 +4147,7 @@ Enjoy!! :D
         fragColor = vec4(u_color.rgb * u_color.a, u_color.a);
     }`;
 
-    const GL_ROUNDRECT_FS = `#version 300 es
+    const glRoundRectFs = `#version 300 es
     precision highp float;
     in vec2 v_uv;
     uniform vec2 u_size;
@@ -3376,7 +4167,7 @@ Enjoy!! :D
         fragColor = vec4(u_color.rgb * outA, outA);
     }`;
 
-    const GL_BORDERED_ROUNDRECT_FS = `#version 300 es
+    const glBorderedRoundRectFs = `#version 300 es
     precision highp float;
     in vec2 v_uv;
     uniform vec2 u_size;
@@ -3408,7 +4199,7 @@ Enjoy!! :D
         fragColor = composited;
     }`;
 
-    const GL_MASKWIPE_FS = `#version 300 es
+    const glMaskWipeFs = `#version 300 es
     precision highp float;
     in vec2 v_uv;
     uniform sampler2D u_glyphTex;
@@ -3504,11 +4295,11 @@ Enjoy!! :D
         gl.vertexAttribPointer(0, 2, gl.FLOAT, false, 0, 0);
         gl.bindVertexArray(null);
 
-        const glyphProgram = glLinkProgram(gl, GL_QUAD_VS, GL_GLYPH_FS);
-        const solidProgram = glLinkProgram(gl, GL_QUAD_VS, GL_SOLID_FS);
-        const roundRectProgram = glLinkProgram(gl, GL_QUAD_VS, GL_ROUNDRECT_FS);
-        const borderedRoundRectProgram = glLinkProgram(gl, GL_QUAD_VS, GL_BORDERED_ROUNDRECT_FS);
-        const maskWipeProgram = glLinkProgram(gl, GL_QUAD_VS, GL_MASKWIPE_FS);
+        const glyphProgram = glLinkProgram(gl, glQuadVs, glGlyphFs);
+        const solidProgram = glLinkProgram(gl, glQuadVs, glSolidFs);
+        const roundRectProgram = glLinkProgram(gl, glQuadVs, glRoundRectFs);
+        const borderedRoundRectProgram = glLinkProgram(gl, glQuadVs, glBorderedRoundRectFs);
+        const maskWipeProgram = glLinkProgram(gl, glQuadVs, glMaskWipeFs);
 
         const glyphUniforms = glUniformLocations(gl, glyphProgram, [
             'u_canvasSize', 'u_origin', 'u_size', 'u_pivot', 'u_rotation', 'u_scale',
@@ -3604,12 +4395,14 @@ Enjoy!! :D
     function getGLCompositor() {
         if (glCompositorFailed) return null;
         if (glCompositorInstance) return glCompositorInstance;
+        const startTime = perfStart();
         try {
             glCompositorInstance = createGLCompositor();
         } catch (e) {
             glCompositorInstance = null;
         }
         if (!glCompositorInstance) glCompositorFailed = true;
+        perfEnd('gl.compositor.create', startTime);
         return glCompositorInstance;
     }
 
@@ -3650,6 +4443,23 @@ Enjoy!! :D
         gl.uniform2f(uniforms.u_pivot, pivotX, pivotY);
         gl.uniform1f(uniforms.u_rotation, rotation || 0);
         gl.uniform1f(uniforms.u_scale, scale == null ? 1 : scale);
+        const bounds = comp.bounds;
+        if (bounds) {
+            const quadRotation = rotation || 0;
+            const quadScale = scale == null ? 1 : scale;
+            const cos = Math.cos(quadRotation);
+            const sin = Math.sin(quadRotation);
+            for (let corner = 0; corner < 4; corner++) {
+                const relX = (corner & 1 ? w : 0) - pivotX;
+                const relY = (corner & 2 ? h : 0) - pivotY;
+                const x = originX + pivotX + (relX * cos - relY * sin) * quadScale;
+                const y = originY + pivotY + (relX * sin + relY * cos) * quadScale;
+                if (x < bounds.minX) bounds.minX = x;
+                if (x > bounds.maxX) bounds.maxX = x;
+                if (y < bounds.minY) bounds.minY = y;
+                if (y > bounds.maxY) bounds.maxY = y;
+            }
+        }
     }
 
     function glDrawGlyph(comp, shape, drawX, drawY, tintColor, alpha, rotationRad, scaleAmt, gradient, gradSpan, passthrough, pivotOverrideX, pivotOverrideY) {
@@ -3721,9 +4531,9 @@ Enjoy!! :D
     }
 
     function drawGlyphShadow(comp, shape, shadowSettings, drawXPx, drawYPx, opAlpha, rotationRad, scaleAmt) {
-        const shadowBlurPx = Math.max(0, Scratch.Cast.toNumber(shadowSettings.blur)) * DEST_SCALE;
-        const shadowOffsetXPx = Scratch.Cast.toNumber(shadowSettings.offsetX) * DEST_SCALE;
-        const shadowOffsetYPx = Scratch.Cast.toNumber(shadowSettings.offsetY) * DEST_SCALE;
+        const shadowBlurPx = Math.max(0, Scratch.Cast.toNumber(shadowSettings.blur)) * destScale;
+        const shadowOffsetXPx = Scratch.Cast.toNumber(shadowSettings.offsetX) * destScale;
+        const shadowOffsetYPx = Scratch.Cast.toNumber(shadowSettings.offsetY) * destScale;
         const shadowBitmap = getShadowGlyphBitmap(shape, shadowSettings.color, shadowBlurPx, shadowOffsetXPx, shadowOffsetYPx);
         const shadowAlpha = opAlpha * clampPercentToUnit(Scratch.Cast.toNumber(shadowSettings.opacity));
         glDrawGlyph(comp, shadowBitmap, drawXPx + shadowBitmap.offsetX, drawYPx + shadowBitmap.offsetY, null, shadowAlpha, rotationRad, scaleAmt, null, null, true, null, null);
@@ -3731,7 +4541,7 @@ Enjoy!! :D
 
     function drawGlyphBorder(comp, shape, borderSettings, drawXPx, drawYPx, opAlpha, rotationRad, scaleAmt, hasRotation, hasScale) {
         const borderAlpha = opAlpha * clampPercentToUnit(Scratch.Cast.toNumber(borderSettings.opacity));
-        const borderSize = Math.max(0, Scratch.Cast.toNumber(borderSettings.size)) * DEST_SCALE;
+        const borderSize = Math.max(0, Scratch.Cast.toNumber(borderSettings.size)) * destScale;
         const borderOffsets = getBorderOffsets(borderSize);
         for (const [offsetX, offsetY] of borderOffsets) {
             if (!hasRotation && !hasScale) {
@@ -3811,6 +4621,23 @@ Enjoy!! :D
             inv.e / texW, inv.f / texH, 1
         ]);
     }
+    function getLayeredPaintOps(state, paintOps) {
+        if (state.layeredPaintOpsSource === paintOps && state.layeredPaintOps) return state.layeredPaintOps;
+        let hasLayers = false;
+        for (let i = 0; i < paintOps.length; i++) {
+            if (paintOps[i].layer) {
+                hasLayers = true;
+                break;
+            }
+        }
+        const ordered = hasLayers ?
+            paintOps.slice().sort((a, b) => a.layer - b.layer) :
+            paintOps;
+        state.layeredPaintOpsSource = paintOps;
+        state.layeredPaintOps = ordered;
+        return ordered;
+    }
+
     function compositeGlyphsToCanvasWebGL2(state, paintOps, docW, docH, textWidth, textHeight, textBoxOffsetX, originX, originY) {
         const comp = getGLCompositor();
         if (!comp) return null;
@@ -3821,8 +4648,8 @@ Enjoy!! :D
             return null;
         }
 
-        const pixelW = Math.max(1, Math.round(docW * DEST_SCALE));
-        const pixelH = Math.max(1, Math.round(docH * DEST_SCALE));
+        const pixelW = Math.max(1, Math.round(docW * destScale));
+        const pixelH = Math.max(1, Math.round(docH * destScale));
         if (comp.canvas.width !== pixelW || comp.canvas.height !== pixelH) {
             comp.canvas.width = pixelW;
             comp.canvas.height = pixelH;
@@ -3833,16 +4660,22 @@ Enjoy!! :D
         gl.clear(gl.COLOR_BUFFER_BIT);
         gl.enable(gl.BLEND);
         gl.blendFunc(gl.ONE, gl.ONE_MINUS_SRC_ALPHA);
+        comp.bounds = {
+            minX: Infinity,
+            minY: Infinity,
+            maxX: -Infinity,
+            maxY: -Infinity
+        };
 
         const background = state.textBackground;
-        const backgroundBorderSize = Math.max(0, Scratch.Cast.toNumber(state.textBackgroundBorder.size)) * DEST_SCALE;
+        const backgroundBorderSize = Math.max(0, Scratch.Cast.toNumber(state.textBackgroundBorder.size)) * destScale;
         if (background.enabled || backgroundBorderSize > 0) {
-            const padding = Math.max(0, Scratch.Cast.toNumber(background.padding)) * DEST_SCALE;
-            const width = textWidth * DEST_SCALE + padding * 2;
-            const height = textHeight * DEST_SCALE + padding * 2;
-            const x = (originX + textBoxOffsetX) * DEST_SCALE - width / 2;
-            const y = originY * DEST_SCALE - height / 2;
-            const rawRadius = Math.max(0, Scratch.Cast.toNumber(background.radius)) * DEST_SCALE;
+            const padding = Math.max(0, Scratch.Cast.toNumber(background.padding)) * destScale;
+            const width = textWidth * destScale + padding * 2;
+            const height = textHeight * destScale + padding * 2;
+            const x = (originX + textBoxOffsetX) * destScale - width / 2;
+            const y = originY * destScale - height / 2;
+            const rawRadius = Math.max(0, Scratch.Cast.toNumber(background.radius)) * destScale;
             const radius = Math.min(rawRadius, width / 2, height / 2);
             const borderRoundness = clampPercentToUnit(Scratch.Cast.toNumber(state.textBackgroundBorder.roundness));
             if (backgroundBorderSize > 0 && background.enabled) {
@@ -3866,11 +4699,12 @@ Enjoy!! :D
             }
         }
 
-        const maskSpansByIndex = getSeamlessMaskSpans(state, paintOps, state.layoutKey + '\u0003' + docW + '\u0003' + docH, docW * DEST_SCALE, docH * DEST_SCALE);
+        const maskSpansByIndex = getSeamlessMaskSpans(state, paintOps, state.layoutKey + '\u0003' + docW + '\u0003' + docH, docW * destScale, docH * destScale);
         const gradientSpansByIndex = getGradientSpans(state, paintOps, state.layoutKey + '\u0003' + docW + '\u0003' + docH);
 
-        for (let i = 0; i < paintOps.length; i++) {
-            const op = paintOps[i];
+        const drawOrder = getLayeredPaintOps(state, paintOps);
+        for (let i = 0; i < drawOrder.length; i++) {
+            const op = drawOrder[i];
             if (op.text === '\u00A0' || op.text === '') continue;
 
             const shape = getGlyphShapeForFontStyle(op.text, op.font);
@@ -3889,8 +4723,8 @@ Enjoy!! :D
                         const baselineYFromLineCenterForSpan = (shape.fontAscentEm - shape.fontDescentEm) / 2;
                         const drawXEmForSpan = op.x - advanceCenterXEmForSpan;
                         const drawYEmForSpan = (op.y + baselineYFromLineCenterForSpan) - shape.baselineOriginYEm;
-                        localOffsetXPx = Math.round(drawXEmForSpan * DEST_SCALE) - span.originX;
-                        localOffsetYPx = Math.round(drawYEmForSpan * DEST_SCALE) - span.originY;
+                        localOffsetXPx = Math.round(drawXEmForSpan * destScale) - span.originX;
+                        localOffsetYPx = Math.round(drawYEmForSpan * destScale) - span.originY;
                     }
                     gradSpan = { spanW: span.spanW, spanH: span.spanH, localOffsetXPx, localOffsetYPx };
                 }
@@ -3900,8 +4734,8 @@ Enjoy!! :D
             const baselineYFromLineCenter = (shape.fontAscentEm - shape.fontDescentEm) / 2;
             const drawXEm = op.x - advanceCenterXEm;
             const drawYEm = (op.y + baselineYFromLineCenter) - shape.baselineOriginYEm;
-            const drawXPx = drawXEm * DEST_SCALE;
-            const drawYPx = drawYEm * DEST_SCALE;
+            const drawXPx = drawXEm * destScale;
+            const drawYPx = drawYEm * destScale;
 
             const hasOpacity = op.opacity != null && op.opacity !== 1;
             const opAlpha = hasOpacity ? op.opacity : 1;
@@ -3909,9 +4743,7 @@ Enjoy!! :D
             const hasScale = op.scale != null && op.scale !== 1;
             const rotationRad = hasRotation ? -op.rotation * Math.PI / 180 : 0;
             const scaleAmt = hasScale ? op.scale : 1;
-            const pivotX = op.x * DEST_SCALE - drawXPx;
-            const pivotY = op.y * DEST_SCALE - drawYPx;
-            const blurPx = op.blur > 0 ? (op.blur / 100) * op.font['font-size'] * 0.5 * DEST_SCALE : 0;
+            const blurPx = op.blur > 0 ? (op.blur / 100) * op.font['font-size'] * 0.5 * destScale : 0;
 
             const charShadow = op.shadow;
             const activeShadow = charShadow || (state.textShadow.enabled ? state.textShadow : null);
@@ -3948,8 +4780,8 @@ Enjoy!! :D
                         const span = maskSpansByIndex.get(op.charIndex);
                         const zoom = Math.max(0.01, (Scratch.Cast.toNumber(op.mask.zoom) || 100) / 100);
                         const rotation = Scratch.Cast.toNumber(op.mask.rotation);
-                        const anchorX = (op.mask.x || 0) * DEST_SCALE - drawXPx;
-                        const anchorY = -(op.mask.y || 0) * DEST_SCALE - drawYPx;
+                        const anchorX = (op.mask.x || 0) * destScale - drawXPx;
+                        const anchorY = -(op.mask.y || 0) * destScale - drawYPx;
                         const matrix = new DOMMatrix();
                         matrix.translateSelf(anchorX, anchorY);
                         if (rotation !== 0) matrix.rotateSelf(rotation);
@@ -3967,17 +4799,17 @@ Enjoy!! :D
                                 const localOffsetY = seamless && span ? (span.localOffsetYPx !== undefined ? span.localOffsetYPx : (drawYPx - span.originY)) : 0;
                                 const effSpanW = seamless && span && span.spanW ? span.spanW : w;
                                 const effSpanH = seamless && span && span.spanH ? span.spanH : h;
-                                const blurPx = Math.max(0, Scratch.Cast.toNumber(op.mask.blur)) * DEST_SCALE;
+                                const blurPx = Math.max(0, Scratch.Cast.toNumber(op.mask.blur)) * destScale;
                                 const bandHalf = Math.max(0.5, blurPx / 2);
-                                const direction = op.mask.direction || WIPE_DIRECTION_BOTTOM_UP;
-                                const axisIsX = direction === WIPE_DIRECTION_LEFT_RIGHT || direction === WIPE_DIRECTION_RIGHT_LEFT;
-                                const growsPositive = direction === WIPE_DIRECTION_LEFT_RIGHT || direction === WIPE_DIRECTION_UP_DOWN;
+                                const direction = op.mask.direction || wipeDirectionBottomUp;
+                                const axisIsX = direction === wipeDirectionLeftRight || direction === wipeDirectionRightLeft;
+                                const growsPositive = direction === wipeDirectionLeftRight || direction === wipeDirectionUpDown;
                                 let revealEdge;
-                                if (axisIsX && direction === WIPE_DIRECTION_LEFT_RIGHT) {
+                                if (axisIsX && direction === wipeDirectionLeftRight) {
                                     revealEdge = effSpanW * coverage - localOffsetX;
                                 } else if (axisIsX) {
                                     revealEdge = effSpanW - effSpanW * coverage - localOffsetX;
-                                } else if (direction === WIPE_DIRECTION_UP_DOWN) {
+                                } else if (direction === wipeDirectionUpDown) {
                                     revealEdge = effSpanH * coverage - localOffsetY;
                                 } else {
                                     revealEdge = effSpanH - effSpanH * coverage - localOffsetY;
@@ -4003,20 +4835,20 @@ Enjoy!! :D
             }
 
             if (op.strike) {
-                const lineWidth = Math.max(1, op.font['font-size'] * 0.06) * DEST_SCALE;
-                const sy = op.y * DEST_SCALE;
-                const x0 = (op.x - op.width / 2) * DEST_SCALE;
-                const x1 = (op.x + op.width / 2) * DEST_SCALE;
+                const lineWidth = Math.max(1, op.font['font-size'] * 0.06) * destScale;
+                const sy = op.y * destScale;
+                const x0 = (op.x - op.width / 2) * destScale;
+                const x1 = (op.x + op.width / 2) * destScale;
                 if (x1 > x0) {
                     glDrawSolidRect(comp, (x0 + x1) / 2, sy, x1 - x0, lineWidth, op.color, opAlpha);
                 }
             }
 
             if (op.underline) {
-                const lineWidth = Math.max(1, op.font['font-size'] * 0.06) * DEST_SCALE;
-                const uy = (op.y + baselineYFromLineCenter + op.font['font-size'] * 0.06) * DEST_SCALE;
-                const startX = (op.x - op.width / 2) * DEST_SCALE;
-                const endX = (op.x + op.width / 2) * DEST_SCALE;
+                const lineWidth = Math.max(1, op.font['font-size'] * 0.06) * destScale;
+                const uy = (op.y + baselineYFromLineCenter + op.font['font-size'] * 0.06) * destScale;
+                const startX = (op.x - op.width / 2) * destScale;
+                const endX = (op.x + op.width / 2) * destScale;
                 if (hasRotation) {
                     if (endX > startX) glDrawSolidRect(comp, (startX + endX) / 2, uy, endX - startX, lineWidth, op.color, opAlpha);
                 } else {
@@ -4025,13 +4857,33 @@ Enjoy!! :D
             }
         }
 
-        if (comp.outputCanvas.width !== pixelW || comp.outputCanvas.height !== pixelH) {
-            comp.outputCanvas.width = pixelW;
-            comp.outputCanvas.height = pixelH;
+        const bounds = comp.bounds;
+        comp.bounds = null;
+        let cropX = 0;
+        let cropY = 0;
+        let cropW = pixelW;
+        let cropH = pixelH;
+        if (bounds && bounds.maxX >= bounds.minX && bounds.maxY >= bounds.minY) {
+            const x0 = Math.max(0, Math.floor((bounds.minX - 2) / destScale) * destScale);
+            const y0 = Math.max(0, Math.floor((bounds.minY - 2) / destScale) * destScale);
+            const x1 = Math.min(pixelW, Math.ceil((bounds.maxX + 2) / destScale) * destScale);
+            const y1 = Math.min(pixelH, Math.ceil((bounds.maxY + 2) / destScale) * destScale);
+            if (x1 > x0 && y1 > y0) {
+                cropX = x0;
+                cropY = y0;
+                cropW = x1 - x0;
+                cropH = y1 - y0;
+            }
+        }
+        if (comp.outputCanvas.width !== cropW || comp.outputCanvas.height !== cropH) {
+            comp.outputCanvas.width = cropW;
+            comp.outputCanvas.height = cropH;
         }
         comp.outputCtx.setTransform(1, 0, 0, 1, 0, 0);
-        comp.outputCtx.clearRect(0, 0, pixelW, pixelH);
-        comp.outputCtx.drawImage(comp.canvas, 0, 0);
+        comp.outputCtx.clearRect(0, 0, cropW, cropH);
+        comp.outputCtx.drawImage(comp.canvas, cropX, cropY, cropW, cropH, 0, 0, cropW, cropH);
+        lastCompositeCrop.x = cropX / destScale;
+        lastCompositeCrop.y = cropY / destScale;
         return comp.outputCanvas;
     }
 
@@ -4042,17 +4894,11 @@ Enjoy!! :D
         };
         try {
             const w = glyph.canvas.width;
-            const inkData = getGlyphInkColumns(glyph);
             const rowStart = Math.max(0, Math.floor(y - glyphY - lineWidth / 2));
             const rowEnd = Math.min(glyph.canvas.height - 1, Math.ceil(y - glyphY + lineWidth / 2));
             const columnStart = Math.max(0, Math.floor(startX - glyphX));
             const columnEnd = Math.min(w - 1, Math.ceil(endX - glyphX));
-            const ink = new Uint8Array(w);
-            for (let py = rowStart; py <= rowEnd; py++) {
-                for (let px = columnStart; px <= columnEnd; px++) {
-                    if (inkData[py * w + px]) ink[px] = 1;
-                }
-            }
+            const ink = getGlyphInkBand(glyph, rowStart, rowEnd);
             const padding = Math.max(1, Math.ceil(lineWidth / 2) + 1);
             let segmentStart = startX;
             let px = columnStart;
@@ -4075,11 +4921,20 @@ Enjoy!! :D
         skin.useNearest = function(scale) {
             if (!state.smoothing) return true;
             const s = Math.max(Math.abs(scale[0]), Math.abs(scale[1]));
-            return s >= (DEST_SCALE * 100 - 5);
+            return s >= (destScale * 100 - 5);
         };
     }
 
     function pushCanvasToDrawable(target, canvas, width, height, anchorX, anchorY) {
+        const startTime = perfStart();
+        try {
+            pushCanvasToDrawableNow(target, canvas, width, height, anchorX, anchorY);
+        } finally {
+            perfEnd('render.pushSkin', startTime);
+        }
+    }
+
+    function pushCanvasToDrawableNow(target, canvas, width, height, anchorX, anchorY) {
         const state = getState(target);
         const renderer = runtime.renderer;
         if (!renderer) return;
@@ -4093,11 +4948,11 @@ Enjoy!! :D
             const skinId = renderer._nextSkinId++;
             const skin = new BitmapSkin(skinId, renderer);
             installLinearFiltering(skin, state);
-            skin.setBitmap(canvas, DEST_SCALE, rotationCenter);
+            skin.setBitmap(canvas, destScale, rotationCenter);
             renderer._allSkins[skinId] = skin;
             state.skinId = skinId;
         } else {
-            renderer.updateBitmapSkin(state.skinId, canvas, DEST_SCALE, rotationCenter);
+            renderer.updateBitmapSkin(state.skinId, canvas, destScale, rotationCenter);
             const current = renderer._allSkins[state.skinId];
             if (current && !Object.prototype.hasOwnProperty.call(current, 'useNearest')) {
                 installLinearFiltering(current, state);
@@ -4109,26 +4964,6 @@ Enjoy!! :D
             renderer.updateDrawableSkinId(target.drawableID, state.skinId);
         }
         runtime.requestRedraw();
-    }
-
-    function pushImageBitmapToDrawable(target, bitmap, pixelW, pixelH, docW, docH) {
-        const state = getState(target);
-        let scratch = state.workerResultCanvas;
-        if (!scratch) {
-            scratch = document.createElement('canvas');
-            scratch.reusable = false;
-            state.workerResultCanvas = scratch;
-        }
-        if (scratch.width !== pixelW || scratch.height !== pixelH) {
-            scratch.width = pixelW;
-            scratch.height = pixelH;
-        }
-        const sctx = scratch.getContext('2d');
-        sctx.setTransform(1, 0, 0, 1, 0, 0);
-        sctx.clearRect(0, 0, pixelW, pixelH);
-        sctx.drawImage(bitmap, 0, 0);
-        bitmap.close();
-        pushCanvasToDrawable(target, scratch, docW, docH);
     }
 
     function clearTarget(target) {
@@ -4214,7 +5049,7 @@ Enjoy!! :D
         return indices;
     }
 
-    const WORD_SPLIT_RE = /\S+/g;
+    const wordSplitRe = /\S+/g;
 
     function wordSpans(target) {
         const state = getState(target);
@@ -4224,9 +5059,9 @@ Enjoy!! :D
         }
         const plain = stripMarkup(state.rawText);
         const spans = [];
-        WORD_SPLIT_RE.lastIndex = 0;
+        wordSplitRe.lastIndex = 0;
         let match;
-        while ((match = WORD_SPLIT_RE.exec(plain)) !== null) {
+        while ((match = wordSplitRe.exec(plain)) !== null) {
             spans.push({ text: match[0], index: match.index, charIndex: match.index + 1 });
         }
         state.wordSpansCache = spans;
@@ -4234,55 +5069,14 @@ Enjoy!! :D
         return spans;
     }
 
-    function detectNonChromiumBrowser() {
-        if (typeof navigator === 'undefined') return null;
-        const ua = navigator.userAgent || '';
-        const isChromium = typeof navigator.userAgentData !== 'undefined' && Array.isArray(navigator.userAgentData.brands) ?
-            navigator.userAgentData.brands.some(b => /chromium/i.test(b.brand)) :
-            (/chrome|chromium|crios|edg|opr|brave/i.test(ua) && !/firefox|fxios/i.test(ua));
-        if (isChromium) return null;
-
-        if (/firefox|fxios/i.test(ua)) return 'Firefox';
-        if (/edg\//i.test(ua)) return null;
-        if (/opr\//i.test(ua) || /opera/i.test(ua)) return null;
-        if (/crios/i.test(ua)) return null;
-        if (/safari/i.test(ua) && !/chrome|chromium|crios|android/i.test(ua)) return 'Safari';
-        if (/samsungbrowser/i.test(ua)) return 'Samsung Internet';
-        if (/ucbrowser/i.test(ua)) return 'UC Browser';
-        if (/msie|trident/i.test(ua)) return 'Internet Explorer';
-        return 'your current browser';
-    }
-
-    function hasSeenDisclaimer(flagKey) {
-        try {
-            return typeof localStorage !== 'undefined' && localStorage.getItem(flagKey) === '1';
-        } catch (e) {
-            return false;
-        }
-    }
-
-    function markDisclaimerSeen(flagKey) {
-        try {
-            if (typeof localStorage !== 'undefined') localStorage.setItem(flagKey, '1');
-        } catch (e) {
-            // ...
-        }
-    }
-
-    let anyDisclaimerApplicable = false;
-
     class IrisText {
         constructor() {
             this._onTargetRemoved = this._onTargetRemoved.bind(this);
             this._onProjectStopAll = this._onProjectStopAll.bind(this);
-            const nonChromiumBrowser = detectNonChromiumBrowser();
-            if (nonChromiumBrowser) {
-                anyDisclaimerApplicable = true;
-                if (!hasSeenDisclaimer(BROWSER_DISCLAIMER_FLAG_KEY)) this.browserDisclaimer(nonChromiumBrowser);
-            }
             if (runtime.ext_irisText && runtime.ext_irisText !== this) {
                 runtime.removeListener('targetWasRemoved', runtime.ext_irisText._onTargetRemoved);
                 runtime.removeListener('PROJECT_STOP_ALL', runtime.ext_irisText._onProjectStopAll);
+                if (typeof runtime.ext_irisText._destroyGlyphWorker === 'function') runtime.ext_irisText._destroyGlyphWorker();
             }
             runtime.on('targetWasRemoved', this._onTargetRemoved);
             runtime.on('PROJECT_STOP_ALL', this._onProjectStopAll);
@@ -4290,6 +5084,33 @@ Enjoy!! :D
             if (typeof runtime.registerCompiledExtensionBlocks === 'function') {
                 runtime.registerCompiledExtensionBlocks('irisText', this.getCompileInfo());
             }
+            ensurePreDrawHook();
+            startGlyphWorker();
+            startupWarmup();
+        }
+
+        setPerfEnabled(enabled) {
+            perf.enabled = !!enabled;
+        }
+
+        resetPerf() {
+            perf.stats.clear();
+        }
+
+        getPerfReport() {
+            return perfReport();
+        }
+
+        setGlyphWorkerEnabled(enabled) {
+            setGlyphWorkerEnabled(enabled);
+        }
+
+        getGlyphWorkerStatus() {
+            return glyphWorkerStatus();
+        }
+
+        _destroyGlyphWorker() {
+            destroyGlyphWorker();
         }
 
         *_repeatCompiledTag(tagInput, func, thread, target, stage) {
@@ -4330,38 +5151,6 @@ Enjoy!! :D
                 rootFrame.irisTagCharacterNumber = words[i].charIndex;
                 yield* func(thread, target, runtime, stage);
             }
-        }
-
-        async browserDisclaimer(browserName) {
-            const disclaimerText = `Hello! You're currently using <b>${browserName}</b>. Now, that's great and all, but <b>this extension is known to fail in most non-chromium browsers</b> out there. It will most likely be extremely slow.
-            
-            I really recommend switching browsers. If the block icon doesn't have a warning triangle next to it, then you're clear!
-            
-            In either case, <b>have fun using Iris Text</b>! :)`;
-
-            if (typeof scaffolding !== "undefined") return;
-            if (ScratchBlocks.customPrompt) {
-                const modal = await ScratchBlocks.customPrompt({
-                        title: "Disclaimer!"
-                    }, {
-                        content: {
-                            width: "500px"
-                        }
-                    },
-                    [{
-                        name: "OK",
-                        role: "ok",
-                        callback: () => console.log("Confirmed")
-                    }]
-                );
-
-                const p = document.createElement("p");
-                p.innerHTML = disclaimerText.replace(/\n/g, "<br>");
-                modal.appendChild(p);
-            } else {
-                alert(disclaimerText);
-            }
-            markDisclaimerSeen(BROWSER_DISCLAIMER_FLAG_KEY);
         }
 
         getCompileInfo() {
@@ -4450,7 +5239,8 @@ Enjoy!! :D
         }
 
         _onTargetRemoved(target) {
-            const state = target.getCustomState(STATE_KEY);
+            glyphWorker.waiters.delete(target);
+            const state = target.getCustomState(stateKey);
             if (state && state.skinId !== null && runtime.renderer) {
                 runtime.renderer.destroySkin(state.skinId);
                 state.skinId = null;
@@ -4461,7 +5251,7 @@ Enjoy!! :D
 
         _onProjectStopAll() {
             runtime.targets.forEach(t => {
-                const state = t.getCustomState(STATE_KEY);
+                const state = t.getCustomState(stateKey);
                 if (state) state.isTyping = false;
             });
             charAnimations.clear();
@@ -4474,10 +5264,10 @@ Enjoy!! :D
                 id: 'g1nxIrisText',
                 name: 'Iris Text',
                 docsURI: 'https://hackmd.io/@Gen1x01/iris-text',
-                color1: COLOR_PRIMARY,
-                color2: COLOR_SECONDARY,
-                color3: COLOR_TERTIARY,
-                blockIconURI: anyDisclaimerApplicable ? warningBlockIconURI : blockIconURI,
+                color1: colorPrimary,
+                color2: colorSecondary,
+                color3: colorTertiary,
+                blockIconURI: blockIconURI,
                 blocks: [{
                         blockType: Scratch.BlockType.LABEL,
                         text: 'Display'
@@ -4489,7 +5279,7 @@ Enjoy!! :D
                         arguments: {
                             TEXT: {
                                 type: Scratch.ArgumentType.STRING,
-                                defaultValue: DEFAULT_TEXT
+                                defaultValue: defaultText
                             }
                         }
                     },
@@ -4547,7 +5337,7 @@ Enjoy!! :D
                             FONT: {
                                 type: Scratch.ArgumentType.STRING,
                                 menu: 'FONT',
-                                defaultValue: HANDWRITING_ID
+                                defaultValue: handwritingId
                             }
                         }
                     },
@@ -4627,7 +5417,7 @@ Enjoy!! :D
                         arguments: {
                             TEXT: {
                                 type: Scratch.ArgumentType.STRING,
-                                defaultValue: DEFAULT_TEXT
+                                defaultValue: defaultText
                             }
                         }
                     },
@@ -4638,7 +5428,7 @@ Enjoy!! :D
                         arguments: {
                             TEXT: {
                                 type: Scratch.ArgumentType.STRING,
-                                defaultValue: DEFAULT_TEXT
+                                defaultValue: defaultText
                             }
                         }
                     },
@@ -5674,6 +6464,49 @@ Enjoy!! :D
                     },
                     {
                         blockType: Scratch.BlockType.LABEL,
+                        text: 'Performance'
+                    },
+                    {
+                        opcode: 'setPerformanceEnabled',
+                        blockType: Scratch.BlockType.COMMAND,
+                        text: 'performance [ENABLED]',
+                        arguments: {
+                            ENABLED: {
+                                type: Scratch.ArgumentType.STRING,
+                                menu: 'ONOFF',
+                                defaultValue: 'off'
+                            }
+                        }
+                    },
+                    {
+                        opcode: 'resetPerformance',
+                        blockType: Scratch.BlockType.COMMAND,
+                        text: 'reset performance stats'
+                    },
+                    {
+                        opcode: 'getPerformanceReport',
+                        blockType: Scratch.BlockType.REPORTER,
+                        text: 'performance report'
+                    },
+                    {
+                        opcode: 'setGlyphWorkerEnabledBlock',
+                        blockType: Scratch.BlockType.COMMAND,
+                        text: 'glyph worker [ENABLED]',
+                        arguments: {
+                            ENABLED: {
+                                type: Scratch.ArgumentType.STRING,
+                                menu: 'ONOFF',
+                                defaultValue: 'on'
+                            }
+                        }
+                    },
+                    {
+                        opcode: 'getGlyphWorkerStatusBlock',
+                        blockType: Scratch.BlockType.REPORTER,
+                        text: 'glyph worker status'
+                    },
+                    {
+                        blockType: Scratch.BlockType.LABEL,
                         text: 'Text Info'
                     },
                     {
@@ -5788,7 +6621,7 @@ Enjoy!! :D
                             TYPE: {
                                 type: Scratch.ArgumentType.STRING,
                                 menu: 'GRADIENT_TYPE',
-                                defaultValue: GRADIENT_TYPE_LINEAR
+                                defaultValue: gradientTypeLinear
                             },
                             ANGLE: {
                                 type: Scratch.ArgumentType.NUMBER,
@@ -5895,6 +6728,21 @@ Enjoy!! :D
                         }
                     },
                     {
+                        opcode: 'layerMarkup',
+                        blockType: Scratch.BlockType.REPORTER,
+                        text: 'layer [TEXT] on layer [LAYER]',
+                        arguments: {
+                            TEXT: {
+                                type: Scratch.ArgumentType.STRING,
+                                defaultValue: 'on top'
+                            },
+                            LAYER: {
+                                type: Scratch.ArgumentType.NUMBER,
+                                defaultValue: 1
+                            }
+                        }
+                    },
+                    {
                         opcode: 'fontMarkup',
                         blockType: Scratch.BlockType.REPORTER,
                         text: 'font [TEXT] as [FONT]',
@@ -5906,7 +6754,7 @@ Enjoy!! :D
                             FONT: {
                                 type: Scratch.ArgumentType.STRING,
                                 menu: 'FONT',
-                                defaultValue: HANDWRITING_ID
+                                defaultValue: handwritingId
                             }
                         }
                     },
@@ -5951,7 +6799,7 @@ Enjoy!! :D
                         items: ['bold', 'italic', 'underline', 'strikethrough']
                     },
                     GRADIENT_TYPE: {
-                        items: [GRADIENT_TYPE_LINEAR, GRADIENT_TYPE_RADIAL, GRADIENT_TYPE_CONIC]
+                        items: [gradientTypeLinear, gradientTypeRadial, gradientTypeConic]
                     },
                     TYPING_GROUP: {
                         items: ['default', 'symbols', 'punctuation', 'numbers']
@@ -5968,7 +6816,7 @@ Enjoy!! :D
                         items: 'getMaskCostumeMenuItems'
                     },
                     WIPE_DIRECTION: {
-                        items: [WIPE_DIRECTION_BOTTOM_UP, WIPE_DIRECTION_LEFT_RIGHT, WIPE_DIRECTION_UP_DOWN, WIPE_DIRECTION_RIGHT_LEFT]
+                        items: [wipeDirectionBottomUp, wipeDirectionLeftRight, wipeDirectionUpDown, wipeDirectionRightLeft]
                     },
                     AXIS: {
                         items: ['x', 'y']
@@ -5990,6 +6838,26 @@ Enjoy!! :D
                     }
                 }
             };
+        }
+
+        setPerformanceEnabled(args, util) {
+            this.setPerfEnabled(args.ENABLED === 'on');
+        }
+
+        resetPerformance(args, util) {
+            this.resetPerf();
+        }
+
+        getPerformanceReport(args, util) {
+            return JSON.stringify(this.getPerfReport());
+        }
+
+        setGlyphWorkerEnabledBlock(args, util) {
+            this.setGlyphWorkerEnabled(args.ENABLED === 'on');
+        }
+
+        getGlyphWorkerStatusBlock(args, util) {
+            return JSON.stringify(this.getGlyphWorkerStatus());
         }
 
         setText(args, util) {
@@ -6191,7 +7059,7 @@ Enjoy!! :D
         setFont(args, util) {
             const state = getState(util.target);
             const requested = Scratch.Cast.toString(args.FONT);
-            const font = requested === RANDOM_ID ?
+            const font = requested === randomId ?
                 randomFontOtherThan(state.baseStyle.font) :
                 requested;
             if (state.baseStyle.font === font) return;
@@ -6962,7 +7830,7 @@ Enjoy!! :D
                     y: existing ? existing.y : 0,
                     zoom: existing ? existing.zoom : 100,
                     rotation: existing ? existing.rotation : 0,
-                    direction: existing ? existing.direction : WIPE_DIRECTION_BOTTOM_UP,
+                    direction: existing ? existing.direction : wipeDirectionBottomUp,
                     seamless: existing ? existing.seamless : false
                 });
                 paintNeeded = true;
@@ -7131,7 +7999,7 @@ Enjoy!! :D
                 start,
                 end
             } = indexRange(Scratch.Cast.toNumber(args.START), Scratch.Cast.toNumber(args.END));
-            const direction = Scratch.Cast.toString(args.DIRECTION) || WIPE_DIRECTION_BOTTOM_UP;
+            const direction = Scratch.Cast.toString(args.DIRECTION) || wipeDirectionBottomUp;
             let changed = false;
             for (let idx = start; idx <= end; idx++) {
                 const existing = state.charMasks[idx];
@@ -7318,10 +8186,16 @@ Enjoy!! :D
             return `[blur=${intensity}]${text}[/blur]`;
         }
 
+        layerMarkup(args) {
+            const text = Scratch.Cast.toString(args.TEXT);
+            const layer = parseLayerValue(Scratch.Cast.toNumber(args.LAYER), 0);
+            return `[layer=${layer}]${text}[/layer]`;
+        }
+
         fontMarkup(args) {
             const text = Scratch.Cast.toString(args.TEXT);
             const requested = Scratch.Cast.toString(args.FONT);
-            const font = requested === RANDOM_ID ? randomFontOtherThan(RANDOM_ID) : requested;
+            const font = requested === randomId ? randomFontOtherThan(randomId) : requested;
             return `[font=${font}]${text}[/font]`;
         }
 

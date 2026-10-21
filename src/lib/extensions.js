@@ -181,14 +181,6 @@ export default [
         isGitHub: true,
     },
     {
-        name: "Mathematics",
-        description: "Complicated maths extension for nerds.",
-        code: "jwklong/mathematics.js",
-        banner: "jwklong/mathematics.avif",
-        creator: "jwklong",
-        isGitHub: true,
-    },
-    {
         name: "Big Decimal",
         description: "High precision operations. (Support decimals)",
         code: "qxsck/big-decimal.js",

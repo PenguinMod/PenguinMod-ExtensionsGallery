@@ -547,15 +547,6 @@ export default [
         isGitHub: true,
     },
     {
-        name: "How many lines?",
-        description: "Blocks to determine the amount of new lines in a piece of text.",
-        code: "Monochromasity/howmanylines.js",
-        banner: "Monochromasity/placeholder-howmanylines.avif",
-        creator: "Monochromasity",
-        isGitHub: true,
-        tags: ["small"],
-    },
-    {
         name: "Paint Utils",
         description: "A colour extension that lets you mix colours.",
         code: "Fruits555000/PaintUtils.js",

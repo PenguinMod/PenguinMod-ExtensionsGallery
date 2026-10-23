@@ -244,8 +244,13 @@ Enjoy!! :D
 
     const knownTags = ['color', 'b', 'i', 'u', 's', 'size', 'font', 'gradient', 'blur', 'shadow', 'border', 'layer'];
     const selfClosingTags = ['wait'];
-    const tagRe = /\[(\/?)([a-z0-9_-]+)(?:=([^\]]+))?\]/gi;
-    const tagReStrip = /\[(\/?)([a-z0-9_-]+)(?:=([^\]]+))?\]/gi;
+    const tagRe = /(?<!\\)\[(\/?)([a-z0-9_-]+)(?:=([^\]]+))?\]/gi;
+    const tagReStrip = /(?<!\\)\[(\/?)([a-z0-9_-]+)(?:=([^\]]+))?\]/gi;
+    const escapedTagRe = /\\(?=[\[\]])/g;
+
+    function unescapeTagEscapes(text) {
+        return text.replace(escapedTagRe, '');
+    }
 
     function normalizeGradientType(value) {
         const t = (value || '').toString().toLowerCase().trim();
@@ -343,7 +348,7 @@ Enjoy!! :D
         while ((match = tagRe.exec(text)) !== null || i < text.length) {
             const tagStart = match ? match.index : text.length;
             if (i < tagStart) {
-                const segment = text.slice(i, tagStart);
+                const segment = unescapeTagEscapes(text.slice(i, tagStart));
                 const graphemes = splitGraphemes(segment);
                 for (const g of graphemes) {
                     const style = stack[stack.length - 1];
@@ -533,7 +538,7 @@ Enjoy!! :D
     function stripMarkup(text) {
         if (text === stripMarkupCacheKey) return stripMarkupCacheValue;
         tagReStrip.lastIndex = 0;
-        const result = text.replace(tagReStrip, '');
+        const result = unescapeTagEscapes(text.replace(tagReStrip, ''));
         stripMarkupCacheKey = text;
         stripMarkupCacheValue = result;
         return result;
@@ -558,7 +563,7 @@ Enjoy!! :D
         };
     }
 
-    const waitRe = /\[wait=([0-9]*\.?[0-9]+)\]/gi;
+    const waitRe = /(?<!\\)\[wait=([0-9]*\.?[0-9]+)\]/gi;
 
     let splitWaitStagesCacheKey = null;
     let splitWaitStagesCacheValue = null;

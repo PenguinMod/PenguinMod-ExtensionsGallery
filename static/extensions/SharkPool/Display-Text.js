@@ -4,7 +4,7 @@
 // By: SharkPool
 // License: MIT
 
-// Version V.1.5.22
+// Version V.1.5.221
 
 (function (Scratch) {
   "use strict";
@@ -602,7 +602,7 @@
 
     debug(args) {
       const toggle = args.TOGGLE === "on" ? "solid" : "none";
-      const elements = document.querySelectorAll(`pre[id^="SP_Text-Ext-"]`);
+      const elements = document.querySelectorAll(`div[id^="SP_Text-Ext-"]`);
       elements.forEach((element) => {
         element.style.border = toggle; element.style.borderWidth = "1px";
         element.style.borderColor = element.style.textAlign === "center" ? "#00ff00" : element.style.textAlign === "right" ? "blue" : "red";
@@ -628,12 +628,12 @@
       const settings = txtSettings[ID];
       const textDiv = document.createElement("div");
       textDiv.style.transformOrigin = "left top";
-      const txtElement = document.createElement("pre");
+      const txtElement = document.createElement("div");
       txtElement.innerHTML = txt2md(args.TXT);
       txtElement.id = `SP_Text-Ext-${ID}`;
       txtElement.classList.add(ID);
-      txtElement.setAttribute("style", "user-select: none; text-wrap: nowrap; overflow: visible; overflow-wrap: break-word; color: #000; font: inherit; margin: 0; left: 50%; top: 50%; transform: translate(calc(-50% + 0px), calc(-50% + 0px));")
-      txtElement.setAttribute("sptxtpos", "0|0");
+      txtElement.style.userSelect = "none";
+      txtElement.setAttribute("sptxtpos", "120|-10");
       txtElement.setAttribute("txtContent", args.TXT);
       textDiv.appendChild(txtElement);
       render.addOverlay(textDiv, "scale-centered");
@@ -644,7 +644,7 @@
     }
 
     replaceTxt(args) {
-      const elements = document.querySelectorAll(`pre[id="SP_Text-Ext-${this.fixID(args.ID)}"]`);
+      const elements = document.querySelectorAll(`div[id="SP_Text-Ext-${this.fixID(args.ID)}"]`);
       if (elements.length > 0) elements.forEach((element) => {
         element.setAttribute("txtContent", args.TXT);
         element.innerHTML = txt2md(args.TXT);
@@ -654,7 +654,7 @@
 
     removeTxt(args) {
       const ID = this.fixID(args.ID);
-      const elementsToRemove = document.querySelectorAll(`pre[id="SP_Text-Ext-${ID}"]`);
+      const elementsToRemove = document.querySelectorAll(`div[id="SP_Text-Ext-${ID}"]`);
       elementsToRemove.forEach((element) => {
         render.removeOverlay(element.parentNode);
         element.removeEventListener("click", this.handleClick);
@@ -676,7 +676,7 @@
 
     displayedTexts(args) {
       let texts = [];
-      const elements = document.querySelectorAll(`pre[id="SP_Text-Ext-${this.fixID(args.ID)}"]`);
+      const elements = document.querySelectorAll(`div[id="SP_Text-Ext-${this.fixID(args.ID)}"]`);
       elements.forEach((element) => { texts.push(element.getAttribute("txtContent")) });
       return JSON.stringify(texts);
     }
@@ -698,7 +698,7 @@
 
     setTextColor(args) {
       const ID = this.fixID(args.ID);
-      const elements = document.querySelectorAll(`pre[id="SP_Text-Ext-${ID}"]`);
+      const elements = document.querySelectorAll(`div[id="SP_Text-Ext-${ID}"]`);
       elements.forEach((element) => {
         element.style.color = args.COLOR;
         if (args.COLOR.includes("gradient")) {
@@ -718,7 +718,7 @@
 
     setTextDropShadow(args) {
       const ID = this.fixID(args.ID);
-      const elements = document.querySelectorAll(`pre[id="SP_Text-Ext-${ID}"]`);
+      const elements = document.querySelectorAll(`div[id="SP_Text-Ext-${ID}"]`);
       elements.forEach((element) => {
         element.style.textShadow = args.z === 0 ? "none" : `${args.x}px ${args.y * -1}px ${args.z}px ${args.COLOR}`;
       });
@@ -727,14 +727,14 @@
 
     setOverflow(args) {
       const ID = this.fixID(args.ID);
-      const elements = document.querySelectorAll(`pre[id="SP_Text-Ext-${ID}"]`);
+      const elements = document.querySelectorAll(`div[id="SP_Text-Ext-${ID}"]`);
       elements.forEach((element) => { element.style.overflow = args.TYPE });
       txtSettings[ID]["textOVR"] = { ...args };
     }
 
     setTextOutline(args) {
       const ID = this.fixID(args.ID);
-      const elements = document.querySelectorAll(`pre[id="SP_Text-Ext-${ID}"]`);
+      const elements = document.querySelectorAll(`div[id="SP_Text-Ext-${ID}"]`);
       elements.forEach((element) => {
         element.style.webkitTextStrokeColor = args.COLOR;
         element.style.webkitTextStrokeWidth = `${args.THICKNESS}px`;
@@ -750,7 +750,7 @@
     setLine(args) {
       const ID = this.fixID(args.ID);
       const lineType = args.TYPE2.replace("strike", "line-");
-      const elements = document.querySelectorAll(`pre[id="SP_Text-Ext-${ID}"]`);
+      const elements = document.querySelectorAll(`div[id="SP_Text-Ext-${ID}"]`);
       elements.forEach((element) => {
         element.style.textDecorationLine = lineType;
         element.style.textDecorationStyle = args.TYPE1;
@@ -762,7 +762,7 @@
 
     setMargins(args) {
       const ID = this.fixID(args.ID);
-      const elements = document.querySelectorAll(`pre[id="SP_Text-Ext-${ID}"]`);
+      const elements = document.querySelectorAll(`div[id="SP_Text-Ext-${ID}"]`);
       elements.forEach((element) => {
         element.style.width = args.WIDTH === -1 ? "max-content" : `${args.WIDTH}px`;
         element.style.height = args.HEIGHT === -1 ? "max-content" : `${args.HEIGHT}px`;
@@ -772,35 +772,35 @@
 
     setTextAlignment(args) {
       const ID = this.fixID(args.ID);
-      const elements = document.querySelectorAll(`pre[id="SP_Text-Ext-${ID}"]`);
+      const elements = document.querySelectorAll(`div[id="SP_Text-Ext-${ID}"]`);
       elements.forEach((element) => { element.style.textAlign = args.ALIGNMENT });
       txtSettings[ID]["txtALI"] = { ...args };
     }
 
     setTextFont(args) {
       const ID = this.fixID(args.ID);
-      const elements = document.querySelectorAll(`pre[id="SP_Text-Ext-${ID}"]`);
+      const elements = document.querySelectorAll(`div[id="SP_Text-Ext-${ID}"]`);
       elements.forEach((element) => { element.style.fontFamily = args.FONT });
       txtSettings[ID]["txtFont"] = { ...args };
     }
 
     setFontSize(args) {
       const ID = this.fixID(args.ID);
-      const elements = document.querySelectorAll(`pre[id="SP_Text-Ext-${ID}"]`);
+      const elements = document.querySelectorAll(`div[id="SP_Text-Ext-${ID}"]`);
       elements.forEach((element) => { element.style.fontSize = `${args.SIZE}px` });
       txtSettings[ID]["txtFontSZ"] = { ...args };
     }
 
     setThick(args) {
       const ID = this.fixID(args.ID);
-      const elements = document.querySelectorAll(`pre[id="SP_Text-Ext-${ID}"]`);
+      const elements = document.querySelectorAll(`div[id="SP_Text-Ext-${ID}"]`);
       elements.forEach((element) => { element.style.fontWeight = args.NUM * 9 });
       txtSettings[ID]["txtFontTK"] = { ...args };
     }
 
     setTextSpacing(args) {
       const ID = this.fixID(args.ID);
-      const elements = document.querySelectorAll(`pre[id="SP_Text-Ext-${ID}"]`);
+      const elements = document.querySelectorAll(`div[id="SP_Text-Ext-${ID}"]`);
       elements.forEach((element) => {
         element.style[args.ATT === "letter" ? "letterSpacing" : "lineHeight"] = `${args.SPACING}px`;
       });
@@ -813,34 +813,48 @@
       else {
         const pos = [Scratch.Cast.toNumber(args.X), Scratch.Cast.toNumber(args.Y)];
         runtime.once("AFTER_EXECUTE", () => {
-          const elements = document.querySelectorAll(`pre[id="SP_Text-Ext-${ID}"]`);
+          const elements = document.querySelectorAll(`div[id="SP_Text-Ext-${ID}"]`);
           const element = elements[elements.length - 1];
+          const centerW = parseFloat(element.style.width) / 2;
+          const computedStyle = window.getComputedStyle(element);
+          const lineHeight = computedStyle.getPropertyValue("line-height");
+          const fontSize = computedStyle.getPropertyValue("font-size");
+          const centerH = (lineHeight === "normal" ? parseFloat(fontSize) * 1.2 : parseFloat(lineHeight)) / 2;
 
           let transform = element.style.transform;
-          const string = `translate(calc(-50% + ${pos[0]}px), calc(-50% + ${(pos[1] * -1)}px))`;
-          if (transform.includes("translate")) transform = transform.replace(/translate\((?:[^()]+|\((?:[^()]+|\([^()]*\))*\))*\)/, string);
+          const string = `translate(${pos[0] - centerW}px, ${(pos[1] * -1) - centerH}px)`;
+          if (transform.includes("translate")) transform = transform.replace(/translate\([^)]*\)/, string);
           else transform += ` ${string}`;
           element.style.transform = transform.trim();
+          element.style.position = "absolute";
           element.setAttribute("sptxtpos", `${pos[0]}|${pos[1]}`);
         });
       }
     }
 
     setTextPosition(args) {
-      const elements = document.querySelectorAll(`pre[id="SP_Text-Ext-${this.fixID(args.ID)}"]`);
+      const elements = document.querySelectorAll(`div[id="SP_Text-Ext-${this.fixID(args.ID)}"]`);
       const pos = [Scratch.Cast.toNumber(args.X), Scratch.Cast.toNumber(args.Y)];
       elements.forEach((element) => {
+        let centerW = parseFloat(element.style.width) / 2;
+        if (isNaN(centerW)) centerW = (element.getBoundingClientRect().width ?? 0 ) / 2;
+        const computedStyle = window.getComputedStyle(element);
+        const lineHeight = computedStyle.getPropertyValue("line-height");
+        const fontSize = computedStyle.getPropertyValue("font-size");
+        const centerH = (lineHeight === "normal" ? parseFloat(fontSize) * 1.2 : parseFloat(lineHeight)) / 2;
+
         let transform = element.style.transform;
-        const string = `translate(calc(-50% + ${pos[0]}px), calc(-50% + ${(pos[1] * -1)}px))`;
-        if (transform.includes("translate")) transform = transform.replace(/translate\((?:[^()]+|\((?:[^()]+|\([^()]*\))*\))*\)/, string);
+        const string = `translate(${pos[0] - centerW}px, ${(pos[1] * -1) - centerH}px)`;
+        if (transform.includes("translate")) transform = transform.replace(/translate\([^)]*\)/, string);
         else transform += ` ${string}`;
         element.style.transform = transform.trim();
+        element.style.position = "absolute";
         element.setAttribute("sptxtpos", `${pos[0]}|${pos[1]}`);
       });
     }
 
     textPosition(args) {
-      const elements = document.querySelectorAll(`pre[id="SP_Text-Ext-${this.fixID(args.ID)}"]`);
+      const elements = document.querySelectorAll(`div[id="SP_Text-Ext-${this.fixID(args.ID)}"]`);
       let value;
       elements.forEach((element) => {
         if (args.ATT === "z layer") value = element.parentNode.parentNode.style.zIndex;
@@ -850,7 +864,7 @@
     }
 
     attOfText(args) {
-      const elements = document.querySelectorAll(`pre[id="SP_Text-Ext-${this.fixID(args.ID)}"]`);
+      const elements = document.querySelectorAll(`div[id="SP_Text-Ext-${this.fixID(args.ID)}"]`);
       const attrib = Scratch.Cast.toString(args.ATT);
       let value;
       if (attrib.includes("box2")) {
@@ -875,19 +889,19 @@
     }
   
     lineCnt(args) {
-      const elements = document.querySelectorAll(`pre[id="SP_Text-Ext-${this.fixID(args.ID)}"]`);
+      const elements = document.querySelectorAll(`div[id="SP_Text-Ext-${this.fixID(args.ID)}"]`);
       let value = [];
       elements.forEach((element) => { value.push(element.querySelectorAll("br").length + 1 || 1) });
       return value.length > 1 ? JSON.stringify(value) : (value[0] || 0);
     }
 
     setTextZIndex(args) {
-      const elements = document.querySelectorAll(`pre[id="SP_Text-Ext-${this.fixID(args.ID)}"]`);
+      const elements = document.querySelectorAll(`div[id="SP_Text-Ext-${this.fixID(args.ID)}"]`);
       elements.forEach((element) => { element.parentNode.parentNode.style.zIndex = Math.round(args.Z_INDEX) });
     }
 
     setEffect(args) {
-      const elements = document.querySelectorAll(`pre[id="SP_Text-Ext-${this.fixID(args.ID)}"]`);
+      const elements = document.querySelectorAll(`div[id="SP_Text-Ext-${this.fixID(args.ID)}"]`);
       const val = Scratch.Cast.toNumber(args.VALUE);
       elements.forEach((element) => {
         const parent = element.parentNode;
@@ -923,7 +937,7 @@
     }
 
     resetEffect(args) {
-      const elements = document.querySelectorAll(`pre[id="SP_Text-Ext-${this.fixID(args.ID)}"]`);
+      const elements = document.querySelectorAll(`div[id="SP_Text-Ext-${this.fixID(args.ID)}"]`);
       elements.forEach((element) => {
         element.parentNode.style.transform = (element.parentNode.style.transform || "")
           .replace(/scaleX\([^)]*\)/, "scaleX(1)").replace(/scaleY\([^)]*\)/, "scaleY(1)")
@@ -937,7 +951,7 @@
 
     amtOfEffect(args) {
       const effect = args.EFFECT;
-      const elements = document.querySelectorAll(`pre[id="SP_Text-Ext-${this.fixID(args.ID)}"]`);
+      const elements = document.querySelectorAll(`div[id="SP_Text-Ext-${this.fixID(args.ID)}"]`);
       let effectValue = effect === "rotate" ? 90 : effect.includes("scale") ? 100 : 0;
       elements.forEach((element) => {
         if (effect === "rotate" || effect.includes("scale") || effect.includes("skew")) {
@@ -971,7 +985,7 @@
       const match = args.ARC.match(regex);
       const outline = settings["textOUT"] !== undefined ? settings["textOUT"] : "";
       if (match && match[1]) {
-        const elements = document.querySelectorAll(`pre[id="SP_Text-Ext-${ID}"]`)
+        const elements = document.querySelectorAll(`div[id="SP_Text-Ext-${ID}"]`)
         elements.forEach((element) => {
           const existingSvg = element.querySelector("svg");
           if (existingSvg) {
@@ -1040,7 +1054,7 @@
 
     toggleSelect(args) {
       const type = args.TYPE === "on" ? "text" : "none";
-      const elements = document.querySelectorAll(`pre[id="SP_Text-Ext-${this.fixID(args.ID)}"]`);
+      const elements = document.querySelectorAll(`div[id="SP_Text-Ext-${this.fixID(args.ID)}"]`);
       elements.forEach((element) => {
         element.style.userSelect = type;
         element.style.webkitUserSelect = type;
@@ -1051,12 +1065,12 @@
 
     toggleWrap(args) {
       const type = args.TYPE === "on" ? "wrap" : "nowrap";
-      const elements = document.querySelectorAll(`pre[id="SP_Text-Ext-${this.fixID(args.ID)}"]`);
+      const elements = document.querySelectorAll(`div[id="SP_Text-Ext-${this.fixID(args.ID)}"]`);
       elements.forEach((element) => { element.style.textWrap = type });
     }
 
     makeClick(args) {
-      const elements = document.querySelectorAll(`pre[id="SP_Text-Ext-${this.fixID(args.ID)}"]`);
+      const elements = document.querySelectorAll(`div[id="SP_Text-Ext-${this.fixID(args.ID)}"]`);
       elements.forEach((element) => {
         if (args.TYPE === "on") {
           element.style.pointerEvents = "auto";

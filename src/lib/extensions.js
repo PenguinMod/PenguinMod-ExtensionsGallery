@@ -689,4 +689,13 @@ export default [
         creator: "G1nX",
     },
     */
+{
+        name: "StageKeyboard",
+        description: "Get an on screen keyboard directly on your stage.",
+        code: "Reos/StageKeyboard.js",
+        banner: "Reos/StageKeyboardBanner.png",
+        creator: "tg1556",
+        creatorAlias: "Reos",    
+            
+    },
 ];

@@ -629,7 +629,7 @@ export default [
         isGitHub: true,
         tags: ["customtype", "utility", "new", "large"],
         unstable: true,
-        unstableReason: "Not for beginners, make sure you have knowledge of Javascript and WebAssembly.",
+        unstableReason: "Contains WebAssembly features that are not yet supported in all browsers.",
     },
     /*{
         name: "Scope Variable",

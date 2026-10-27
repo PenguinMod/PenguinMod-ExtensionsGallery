@@ -2,15 +2,15 @@
 
 Written by AndrewGaming587
 
-### Warning: You should have decent knowledge of both WebAssembly and Javascript before using this extension. The Javascript V2 extension is heavily recommended to be installed and unsandboxed. 
+### Warning: You should have decent knowledge of both WebAssembly and JavaScript before using this extension. The JavaScript V2 extension is heavily recommended to be installed and unsandboxed. 
 
-This WebAssembly Extension is intended to be an extension used to allow PenguinMod projects to use the power of WebAssembly (WASM) in a way nearly identical to how you would use WASM in Javascript. Therefore, if you want to learn more about WebAssembly, it is highly recommended that you use [the WASM MDN docs](https://developer.mozilla.org/en-US/docs/WebAssembly) as this documentation is not to teach you about WASM, rather help explain the stuff that won't be in the MDN docs and also what everything would map to in terms of the blocks.
+This WebAssembly Extension is intended to be an extension used to allow PenguinMod projects to use the power of WebAssembly (WASM) in a way nearly identical to how you would use WASM in JavaScript. Therefore, if you want to learn more about WebAssembly, it is highly recommended that you use [the WASM MDN docs](https://developer.mozilla.org/en-US/docs/WebAssembly) as this documentation is not to teach you about WASM, rather help explain the stuff that won't be in the MDN docs and also what everything would map to in terms of the blocks.
 
 This documentation will not tell you how to make your own WebAssembly modules, you will need to learn that yourself, or use already existing modules.
 
 # Dependencies
 
-This extension requires jwklong's Arrays extension, dogeiscut's Objects extension, and my Array Buffers extension, all of which this extension will automatically add, and the Javascript V2 extension unsandboxed, and also jwklong's Integers extension if you plan to deal with any BigInts that may be required or output by any of the blocks, are both suggested but not automatically added.
+This extension requires jwklong's Arrays extension, dogeiscut's Objects extension, and my Array Buffers extension, all of which this extension will automatically add, and the JavaScript V2 extension unsandboxed, and also jwklong's Integers extension if you plan to deal with any BigInts that may be required or output by any of the blocks, are both suggested but not automatically added.
 
 # Custom Types
 
@@ -28,7 +28,7 @@ Basically it's the template used to make instances.
 Corresponds to a `WebAssembly.Module`.
 
 ### Instance
-Basically a use-ready "instance" of a webassembly module. Separate instances have separate memory, exports, imports, etc.
+Basically a use-ready "instance" of a WebAssembly module. Separate instances have separate memory, exports, imports, etc.
 
 Corresponds to a `WebAssembly.Instance`.
 

@@ -159,8 +159,8 @@
            return `/${this.source}/${this.flags}`
         }
 
-        jwArrayHandler = () => this.toString()
-        toMonitorContent = () => span(this.toString())
+        jwArrayHandler = () => escapeHTML(this.toString())
+        toMonitorContent = () => span(escapeHTML(this.toString()))
 
         toReporterContent() {
             let root = document.createElement('div')

@@ -30,7 +30,7 @@ export const Tags = [
         group: "extensiontypes",
     },
     {
-        name: "customtype",
+        name: "type",
         alias: "New Block Type",
         group: "extensiontypes",
     },

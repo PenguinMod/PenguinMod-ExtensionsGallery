@@ -128,7 +128,7 @@
             }
             toString() {
                 return "<WASM Instance>";
-            } 
+            }
             constructor(source,importObject = {}) {
                 if (vm.dogeiscutObject.Type && importObject instanceof vm.dogeiscutObject.Type) importObject = importObject.toJSON()
                 source ??= 0;
@@ -480,7 +480,7 @@
                 //shape: "agBuffer-arrayBuffer",
                 exemptFromNormalization: true,
                 check: ["WASMModule"]
-            },
+            },  
             InstType: WASMInstanceType,
             getJSV2Function: (name, util) => {
                 const jsv2 = vm?.runtime?.ext_SPjavascriptV2
@@ -663,7 +663,8 @@
                     "blocks": [
                     {
                         blockType: BlockType.LABEL,
-                        text: "Javascript V2 extension recommended"
+                        text: "Javascript V2 extension recommended",
+                        hideFromPalette: !!vm.runtime?.ext_SPjavascriptV2?.isEditorUnsandboxed
                     },
 
                     {

@@ -1,7 +1,7 @@
 /**!
  * Scope Variables
  * @author 0znzw <meow@miyo.icu> (@link https://scratch.mit.edu/users/0znzw/)
- * @version 2.1.2
+ * @version 2.1.3
  * @license MIT AND LGPL-3.0
  * Do not remove this comment
  */
@@ -99,7 +99,8 @@ void !function() {
       JSExports: Object.assign({}, vm.exports, exps, exps.JSGenerator.unstable_exports),
     };
   })();
-  
+
+  const DEBUG = false;
   let __INSTANCE__ = null;
   function Extension(...args) {
     if (__INSTANCE__) {
@@ -116,7 +117,9 @@ void !function() {
       return __INSTANCE__;
     }
 
-    // vm.enableDebug();
+    if (DEBUG) {
+      vm.enableDebug();
+    }
 
     __INSTANCE__ = Extension();
     __INSTANCE__.exports = Extension.exports;
@@ -129,14 +132,8 @@ void !function() {
     return getInstance();
   };
 
-  Object.setPrototypeOf(Extension.prototype, { __proto__: null });
+  Object.setPrototypeOf(Extension.prototype, { __proto__: Object });
   Extension.prototype.constructor = Extension;
-  Extension.prototype.toString = function toString() {
-    return `[object Object]`;
-  };
-  Extension.prototype.valueOf = function valueOf() {
-    return this;
-  };
 
   const { Cast, BlockType, ArgumentType } = Scratch;
   Extension.prototype.getInfo = function getInfo() {
@@ -151,7 +148,6 @@ void !function() {
           text: 'scope',
           branchCount: 1,
         },
-        /** @deprecated */
         {
           blockType: BlockType.COMMAND,
           opcode: 'set',
@@ -162,7 +158,6 @@ void !function() {
             A2: { exemptFromNormalization: true, type: ArgumentType.STRING },
           },
         },
-        /** @deprecated */
         {
           blockType: BlockType.REPORTER,
           opcode: 'get',
@@ -189,9 +184,6 @@ void !function() {
     }
     return thread[EXTENSION_ID];
   };
-  Extension.prototype._prefixVariable = function _prefixVariable(variable) {
-    return `@${Cast.toString(variable)}`;
-  };
 
   Extension.prototype.block_scope = function block_scope(_args, util) {
     const frame = util.thread.peekStackFrame();
@@ -201,13 +193,11 @@ void !function() {
     frame.executionContext[EXTENSION_ID] = { __proto__: this._getScope(util.thread) };
     return 1;
   };
-  /** @deprecated */
   Extension.prototype.block_legacyGet = function block_legacyGet(args, util) {
-    return this._getScope(util.thread)[this._prefixVariable(args.A1)] ?? '';
+    return this._getScope(util.thread)[Cast.toString(args.A1)] ?? '';
   };
-  /** @deprecated */
   Extension.prototype.block_legacySet = function block_legacySet(args, util) {
-    this._getScope(util.thread)[this._prefixVariable(args.A1)] = args.A2 ?? '';
+    this._getScope(util.thread)[Cast.toString(args.A1)] = args.A2 ?? '';
     return '';
   };
 
@@ -266,10 +256,10 @@ void !function() {
         }
 
         get(variable) {
-          return `(${this.variable}[${this.manager.prefixVariable(variable)}] ?? '')`;
+          return `(${this.variable}[${this.manager.descendVariable(variable)}] ?? '')`;
         }
         set(variable, value) {
-          return `${this.variable}[${this.manager.prefixVariable(variable)}] = ${value} ?? '';`;
+          return `${this.variable}[${this.manager.descendVariable(variable)}] = ${value} ?? '';`;
         }
       };
       static patch(JSG) {
@@ -293,7 +283,7 @@ void !function() {
         ]);
       }
 
-      prefixVariable(_variable) {
+      descendVariable(_variable) {
         throw new Error('Not implemented.');
       }
 
@@ -327,12 +317,28 @@ void !function() {
     if (JSExports.StackOpcode) {
       //#region STG (1)
 
+      if (DEBUG) {
+        STGP.descendVisualReport = function descendVisualReport(block) {
+          if (!this.thread.stackClick || block.next) {
+            return null;
+          }
+          try {
+            const input = this.descendInput(block);
+            return new JSExports.IntermediateStackBlock(JSExports.StackOpcode.VISUAL_REPORT, {
+              input,
+            }, input.yields);
+          } catch (err) {
+            console.error(err);
+            return null;
+          }
+        };
+      }
+
       const STGP_descendInput = STGP.descendInput;
       STGP.descendInput = function descendInput(...args) {
         const block = args[0];
         let node;
         switch(block && block.opcode) {
-          /** @deprecated */
           case `${EXTENSION_ID}_get`:
             node = new JSExports.IntermediateInput(block.opcode, JSExports.InputType.ANY, {
               name: this.descendInputOfBlock(block, 'A1', true),
@@ -356,7 +362,6 @@ void !function() {
               substack: this.descendSubstack(block, 'SUBSTACK'),
             }, false);
             break;
-          /** @deprecated */
           case `${EXTENSION_ID}_set`:
             node = new JSExports.IntermediateStackBlock(block.opcode, {
               name: this.descendInputOfBlock(block, 'A1', true),
@@ -364,8 +369,8 @@ void !function() {
             }, false);
             break;
           default:
-            if (block && block.opcode.startsWith(`${EXTENSION_ID}_`)) {
-              return this.descendVisualReport(block);
+            if (DEBUG && block && block.opcode.startsWith(`${EXTENSION_ID}_`)) {
+              return this.descendVisualReport(block) ?? STGP_descendStackedBlock.apply(this, args);
             }
             return STGP_descendStackedBlock.apply(this, args);
         }
@@ -376,11 +381,8 @@ void !function() {
 
       //#region JSG (1)
 
-      ScopeManager.prototype.prefixVariable = function prefixVariable(variable) {
-        if (variable.opcode === JSExports.InputOpcode.CONSTANT) {
-          return JSON.stringify(`@${'' + variable.inputs.value}`);
-        }
-        return `('@' + ${this._jsg.descendInput(variable)})`;
+      ScopeManager.prototype.descendVariable = function descendVariable(variable) {
+        return `(${this._jsg.descendInput(variable)})`;
       };
 
       const JSGP_compile = JSGP.compile;
@@ -397,7 +399,6 @@ void !function() {
         const node = args[0];
 
         switch(node && node.type) {
-          /** @deprecated */
           case `${EXTENSION_ID}_get`:
             const scope = ScopeManager.findScope(this);
             return scope.get(node.inputs.name);
@@ -416,7 +417,6 @@ void !function() {
             manager.descendScopedStack(node.inputs.substack);
             break;
           };
-          /** @deprecated */
           case `${EXTENSION_ID}_set`: {
             const scope = ScopeManager.findScope(this);
             this.source += scope.set(node.inputs.name, this.descendInput(node.inputs.value));
@@ -429,29 +429,11 @@ void !function() {
     } else {
       //#region STG (2)
 
-      if (false/*INPUT_DEBUG*/) { // For debugging if needed.
-        STGP.descendVisualReport = function descendVisualReport(block) {
-          if (!this.thread.stackClick || block.next) {
-            return null;
-          }
-          try {
-            return {
-              kind: 'visualReport',
-              input: this.descendInput(block)
-            };
-          } catch (e) {
-            console.error(e);
-            return null;
-          }
-        };
-      }
-
       const STGP_descendInput = STGP.descendInput;
       STGP.descendInput = function descendInput(...args) {
         const block = args[0];
         let node;
         switch(block && block.opcode) {
-          /** @deprecated */
           case `${EXTENSION_ID}_get`:
             node = {
               inputs: {
@@ -479,7 +461,6 @@ void !function() {
               },
             };
             break;
-          /** @deprecated */
           case `${EXTENSION_ID}_set`:
             node = {
               inputs: {
@@ -489,8 +470,18 @@ void !function() {
             };
             break;
           default:
-            if (block && block.opcode.startsWith(`${EXTENSION_ID}_`)) {
-              return this.descendVisualReport(block);
+            if (DEBUG && block && block.opcode.startsWith(`${EXTENSION_ID}_`)) {
+              if (this.thread.stackClick) {
+                try {
+                  const input = this.descendInput(block);
+                  return {
+                    kind: 'visualReport',
+                    input: input,
+                  };
+                } catch (err) {
+                  console.error(err);
+                }
+              }
             }
             return STGP_descendStackedBlock.apply(this, args);
         }
@@ -501,14 +492,8 @@ void !function() {
 
       //#region JSG (2)
 
-      ScopeManager.prototype.prefixVariable = function prefixVariable(variable) {
-        if (variable instanceof JSExports.ConstantInput) {
-          return JSON.stringify(`@${variable.asUnknown()}`);
-        }
-        if (variable && typeof variable.asUnknown === 'function') {
-          return `('@' + ${variable.asUnknown()})`;
-        }
-        return JSON.stringify(`@${'' + variable}`);
+      ScopeManager.prototype.descendVariable = function descendVariable(variable) {
+        return `(${variable.asString()})`;
       };
 
       const JSGP_compile = JSGP.compile;
@@ -525,7 +510,6 @@ void !function() {
         const node = args[0];
 
         switch(node && node.type) {
-          /** @deprecated */
           case `${EXTENSION_ID}_get`:
             const scope = ScopeManager.findScope(this);
             return new JSExports.TypedInput(
@@ -547,7 +531,6 @@ void !function() {
             manager.descendScopedStack(node.inputs.substack);
             break;
           };
-          /** @deprecated */
           case `${EXTENSION_ID}_set`: {
             const scope = ScopeManager.findScope(this);
             this.source += scope.set(this.descendInput(node.inputs.name), this.descendInput(node.inputs.value).asUnknown());

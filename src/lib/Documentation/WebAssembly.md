@@ -86,5 +86,54 @@ Using JSV2 is heavily recommended for importing functions into WebAssembly insta
 **Using Emscripten to create WASM stuff to use with this extension is not recommended as it can be a pain to get it to work with this extension!**
 
 # Blocks
-TODO: make this
+Note: when the term "Array Buffer" is used, it refers to an array buffer from the Array Buffers extension, which gets automatically added along with the WebAssembly extension. JavaScript ArrayBuffers aren't allowed because the blocks expect the Array Buffer custom type to map it to a JS ArrayBuffer.
+When the term "Object" is used, most of the time a JavaScript object _or_ a Objects extension object can be passed and it will work fine.
+## Module Creation Blocks
+```scratch
+create new module [Array Buffer] :: #644fef reporter
+create new module [Array Buffer] with compile options [Object] :: #644fef reporter
+```
+These blocks are equivalent to `WebAssembly.compile` in JavaScript and create a WebAssembly module from an Array Buffer.
+The latter accepts an Object for the optional compile options argument for the `WebAssembly.compile` function.
+
+## Instance Creation Blocks
+```scratch
+instantiate module [Module] :: #644fef reporter
+instantiate module [Module] with imports object [Object] :: #644fef reporter
+```
+These blocks are equivalent to `WebAssembly.instantiate` and create an instance from a module. The latter allows you to specify an import object which allows you to pass things like functions to the webassembly module for it to use. The import object needs to be structured the same way `WebAssembly.instantiate` expects; an Object containing "namespace" keys (where namespace is any string) that have object values that contain the imports themselves, so Function References, Tables, Memory, etc. An example object would be like so:
+```
+{
+  env: {
+    print: (Function Reference)
+  }
+}
+```
+
+## Export Handling Blocks
+```scratch
+get export [string] of [Instance]:: reporter #644fef
+```
+Returns an export of a WebAssembly Instance, mapped to one of the extension's custom types.
+
+```scratch
+(::ring)get all export names of [Instance]::ring #644fef
+get all exports of [Instance]::reporter #644fef
+```
+The former returns an Arrays extension array of all the exports' names exported by the WebAssembly instance provided.
+The latter returns an Objects extension object equivalent to the exports object itself but with all the values mapped to the proper custom types.
+## Function Blocks
+```scratch
+call function reference [Function Reference] with [Array]:: #644fef
+call function reference [Function Reference] with [Array]:: reporter #644fef
+```
+These blocks allow you to call a Function Reference. Arguments are passed as an array. On the PenguinMod Port, there is an additional dual block with similar function, but it also has an expandable input instead of an array for arguments.
+```scratch
+call export [string] of [Instance] with [Array]:: #644fef
+call export [string] of [Instance] with [Array]:: reporter #644fef
+```
+These blocks are short-hands for getting an export and immediately calling it.
+
+
+TODO: finish
 

@@ -83,6 +83,8 @@ When a WASM function that calls a suspending function is used from outside WASM,
 # Notes
 Using JSV2 is heavily recommended for importing functions into WebAssembly instances.
 
+This extension commonly throws errors because there is little to no error handling in the project in order to prioritize speed. If you're using this extension, you should be experienced enough to know how to use the try-catch block in PenguinMod.
+
 **Using Emscripten to create WASM stuff to use with this extension is not recommended as it can be a pain to get it to work with this extension!**
 
 # Blocks
@@ -133,7 +135,93 @@ call export [string] of [Instance] with [Array]:: #644fef
 call export [string] of [Instance] with [Array]:: reporter #644fef
 ```
 These blocks are short-hands for getting an export and immediately calling it.
+## Memory
+```scratch
+create new memory with initial pages [number]:: reporter #644fef
+create new memory with settings [Object]:: reporter #644fef
+```
+Creates a new WebAssembly Memory. Equivalent to the WebAssembly.Memory constructor. See the [MDN Docs](https://developer.mozilla.org/en-US/docs/WebAssembly/Reference/JavaScript_interface/Memory/Memory) for info on how to use these blocks.
+
+```scratch
+grow memory [Memory] by [integer] pages :: #644fef
+```
+Grows a Memory by a certain amount of pages. One page is 65536 bytes (64 KiB).
+
+```scratch
+(::ring)get attached array buffer of memory [Memory]::ring #644fef
+```
+Outputs the Array Buffer attached to the Memory. This Array Buffer is linked to the memory and any writes to the Array Buffer will write to the Memory and vice versa. If the Memory is grown, the Array Buffer will be detached and will become unusable, so be sure to implement error handling if you grow the memory while still using the array buffer instance.
+
+## Tables
+```scratch
+(::ring)new [table type v] wasm table with default size [integer]::ring #644fef
+(::ring)new [table type v] wasm table with default size [integer] and max size [integer]::ring #644fef
+(::ring)new [table type v] wasm table with default size [integer] and default value [depends]::ring #644fef
+(::ring)new [table type v] wasm table with default size [integer] max size [integer] and default value [depends]::ring #644fef
+```
+
+Creates a new WebAssembly Table. Table Type can be either: 
+- "anyfunc"
+- "externref"
+Externref tables can contain anything, though it's good practice to only use them for JavaScript objects or strings, not primitive types, and WebAssembly instances will treat them as externref values when reading from the table.
+Anyfunc tables can contain functions, and WebAssembly instances will treat them as funcref values when reading from the table.
+
+```scratch
+get item [integer] from wasm table [Table]:: reporter #644fef
+set item [integer] in wasm table [Table] to [depends]:: #644fef
+```
+
+These blocks are for reading and writing to tables.
+
+## Globals
+```scratch
+new mutable (wasm primitive v) with value [number]:: reporter #644fef
+new immutable (wasm primitive v) with value [number]:: reporter #644fef
+```
+
+Create a WebAssembly Global. These are references to a wasm primitive value that can be mutable or immutable. They can be shared.
 
 
-TODO: finish
+```scratch
+value of wasm global [Global]:: reporter #644fef
+set wasm global [Global] to [number]:: #644fef
+```
+
+Reading and writing to Globals. The set block will error if the Global is immutable.
+
+## Misc
+```scratch
+console.log [anything]:: #644fef
+```
+Simply just JavaScript `console.log`.
+
+```scratch
+get JSV2 global function named [string]:: reporter #644fef
+```
+Only exists if the JavaScript V2 extension is unsandboxed.
+Returns a javascript function corresponding to a function created with jsv2's function blocks. In the case of functions created with block code, the function will be async.
+
+# JS Promises & JS Promise Integration
+```scratch
+\(JSPI) suspending \(async) function [Function Reference]:: reporter #644fef
+\(JSPI) promising wasm \(async) function [Function Reference (WASM function only)]:: reporter #644fef
+```
+These blocks correspond to the features added by the JS Promise Integration proposal. These features aren't supported on all browsers, so it's recommended to find an alternative until these become globally supported. Thes blocks allow WASM to properly handle JS promises and async functions. Async functions or functions that return a promise must be wrapped using the former block, and WASM functions that call a suspending function created by the former must be passed into the latter or else calling the function will throw an error. A promising wasm function may return a promise. Handle these promises with the below blocks. Can be used to run block code from WASM
+
+```scratch
+wait for JS promise [JavaScript promise object]:: reporter #644fef
+wait for JS promise [JavaScript promise object]:: #644fef
+```
+These are essentially equivalent to JavaScript `await`, just that instead of halting async code to wait for a promise, it yields the scratch thread until the promise resolves, and in the case of the reporter, returns the output.
+
+# Debug & Additional Features
+```scratch
+set debug option (bindImportsToInstance v)  to <> :: #644fef
+```
+
+Sets a debug option or experimental feature boolean. Currently the only option is `bindImportsToInstance`.
+
+`bindImportsToInstance` automatically binds all functions to the WebAssembly Instance custom type so that the `this` JS keyword refers to the WebAssembly Instance custom type instead of `window`. Can be useful if you need to access properties of the WebAssembly Instance from a function. Does not affect arrow functions (functions created using `(args) => { body }`), so for functions that use this feature, define them like `function(args) { body }`.
+
+
 

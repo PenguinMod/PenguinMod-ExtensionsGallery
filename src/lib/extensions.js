@@ -629,6 +629,7 @@ export default [
         isGitHub: true,
         tags: ["customtype", "utility", "new", "large"],
         unstable: true,
+        documentation: "WebAssembly",
         unstableReason: "Contains WebAssembly features that are not yet supported in all browsers.",
     },
     /*{

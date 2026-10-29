@@ -1,7 +1,7 @@
 /**!
  * Scope Variables
  * @author 0znzw <yri5@duck.com> (@link https://scratch.mit.edu/users/0znzw/)
- * @version 2.2.0
+ * @version 2.2.1
  * @license MIT AND LGPL-3.0
  * Do not remove this comment.
  */
@@ -100,7 +100,7 @@ void !function() {
     };
   })();
 
-  const DEBUG = true;
+  const DEBUG = false;
   let __INSTANCE__ = null;
   function Extension(...args) {
     if (__INSTANCE__) {

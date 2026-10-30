@@ -404,7 +404,7 @@
                 root.style.flexDirection = 'column'
                 root.style.justifyContent = 'center'
                 root.appendChild(span("Function Reference:"))
-                root.appendChild(span(this.funct.toString()))
+                root.appendChild(span(escapeHTML(this.funct.toString())))
                 return root
             }
             toJSON() {

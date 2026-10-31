@@ -1,7 +1,7 @@
 /**!
  * Scope Variables
  * @author 0znzw <yri5@duck.com> (@link https://scratch.mit.edu/users/0znzw/)
- * @version 2.2.3
+ * @version 2.3.0
  * @license MIT AND LGPL-3.0
  * Do not remove this comment.
  */
@@ -166,6 +166,24 @@ void !function() {
           blockType: BlockType.COMMAND,
           opcode: 'set',
           func: 'block_varSet',
+          text: 'set this scopes variable [A1] to [A2]',
+          arguments: {
+            A1: {
+              exemptFromNormalization: true,
+              type: ArgumentType.STRING,
+              defaultValue: 'foo',
+            },
+            A2: {
+              exemptFromNormalization: true,
+              type: ArgumentType.STRING,
+              defaultValue: 'bar',
+            },
+          },
+        },
+        {
+          blockType: BlockType.COMMAND,
+          opcode: 'setSlow',
+          func: 'block_varSetSlow',
           text: 'set scoped variable [A1] to [A2]',
           arguments: {
             A1: {
@@ -202,14 +220,14 @@ void !function() {
           blockType: BlockType.COMMAND,
           opcode: 'varDeleteAll',
           func: 'block_varDeleteAll',
-          text: 'remove all scoped variables',
+          text: 'clear this scopes variables',
           arguments: {},
         },
         {
           blockType: BlockType.COMMAND,
           opcode: 'varDelete',
           func: 'block_varDelete',
-          text: 'remove scoped variable [A1]',
+          text: 'remove this scopes variable [A1]',
           arguments: {
             A1: {
               exemptFromNormalization: true,
@@ -251,6 +269,13 @@ void !function() {
           output: null,
         },
         '---',
+        {
+          blockType: BlockType.COMMAND,
+          opcode: 'scopeUnlink',
+          func: 'block_scopeUnlink',
+          text: 'disinherit parent variables',
+          arguments: {},
+        },
         {
           blockType: BlockType.REPORTER,
           opcode: 'scopeDump',
@@ -294,6 +319,14 @@ void !function() {
       thread[EXTENSION_ID] = { __proto__: null };
     }
     return thread[EXTENSION_ID];
+  };
+  Extension.prototype._findScope = function _findScope(thread, cond, doDefault) {
+    const root = this._getScope(thread);
+    let scope = root;
+    while (scope && !cond(scope)) {
+      scope = Object.getPrototypeOf(scope);
+    }
+    return doDefault ? (scope ?? root) : scope;
   };
   Extension.prototype._dumpScope = function _dumpScope(scope, merged) {
     const parent = Object.getPrototypeOf(scope);
@@ -340,7 +373,12 @@ void !function() {
     return this._getScope(util.thread)[Cast.toString(args.A1)] ?? '';
   };
   Extension.prototype.block_varSet = function block_varSet(args, util) {
-    this._getScope(util.thread)[Cast.toString(args.A1)] = args.A2 ?? '';
+    this._getScope(util.thread)[Cast.toString(args.A1)] = args.A2;
+    return '';
+  };
+  Extension.prototype.block_varSetSlow = function block_varSet(args, util) {
+    const A1 = Cast.toString(args.A1);
+    this._findScope(util.thread, (scope) => Object.prototype.hasOwnProperty.call(scope, A1),  true)[A1] = args.A2;
     return '';
   };
   Extension.prototype.block_varChangeBy = function block_varChangeBy(args, util) {
@@ -370,6 +408,10 @@ void !function() {
   };
   Extension.prototype.block_scopeDumpMerged = function block_scopeDumpMerged(_args, util) {
     return JSON.stringify(this._dumpScope(this._getScope(util.thread), true));
+  };
+  Extension.prototype.block_scopeUnlink = function block_scopeUnlink(_args, util) {
+    Object.setPrototypeOf(this._getScope(util.thread), null);
+    return '';
   };
 
   {
@@ -439,7 +481,25 @@ void !function() {
         }
 
         set(variable, value) {
-          return `${this.variable}[${variable}] = ${value} ?? '';`;
+          return `${this.variable}[${variable}] = ${value};`;
+        }
+        setSlow(variable, value) {
+          const varl = `varl_${this.manager.variables.next()}`;
+          const val = `val_${this.manager.variables.next()}`;
+          const scope = `scope_${this.manager.variables.next()}`;
+          return `;{
+            const ${varl} = ${variable};
+            const ${val} = ${value};
+            if (Object.prototype.hasOwnProperty.call(${this.variable}, ${varl})) {
+              ${this.variable}[${varl}] = ${val};
+            } else {
+              let ${scope} = Object.getPrototypeOf(${this.variable});
+              while(${scope} && !Object.prototype.hasOwnProperty.call(${scope}, ${varl})) {
+                ${scope} = Object.getPrototypeOf(${scope});
+              }
+              (${scope} ?? ${this.variable})[${varl}] = ${val};
+            }
+          };`;
         }
         changeBy(variable, value) {
           return `${this.variable}[${variable}] = (+${this.variable}[${variable}] || 0) + ${value};`;
@@ -448,15 +508,18 @@ void !function() {
           const i = `i_${this.manager.variables.next()}`;
           const keys = `keys_${this.manager.variables.next()}`;
           const keysLength = `keysLength_${this.manager.variables.next()}`;
-          return `
+          return `;{
             const ${keys} = Object.getOwnPropertyNames(${this.variable}), ${keysLength} = ${keys}.length;
             for (let ${i} = 0; ${i} < ${keysLength}; ++${i}) {
               delete ${this.variable}[${keys}[${i}]];
             };
-          `;
+          };`;
         }
         delete(variable) {
           return `void(delete ${this.variable}[${variable}]);`;
+        }
+        unlink() {
+          return `Object.setPrototypeOf(${this.variable}, null);`;
         }
       };
       static patch(JSG) {
@@ -573,12 +636,19 @@ void !function() {
               value: this.descendInputOfBlock(block, 'A2', true),
             }, false);
             break;
+          case `${EXTENSION_ID}_setSlow`:
+            node = new JSExports.IntermediateStackBlock(block.opcode, {
+              name: this.descendInputOfBlock(block, 'A1', true).toType(JSExports.InputType.STRING),
+              value: this.descendInputOfBlock(block, 'A2', true),
+            }, false);
+            break;
           case `${EXTENSION_ID}_varChangeBy`:
             node = new JSExports.IntermediateStackBlock(block.opcode, {
               name: this.descendInputOfBlock(block, 'A1', true).toType(JSExports.InputType.STRING),
               value: this.descendInputOfBlock(block, 'A2', true).toType(JSExports.InputType.NUMBER),
             }, false);
             break;
+          case `${EXTENSION_ID}_scopeUnlink`:
           case `${EXTENSION_ID}_varDeleteAll`:
             node = new JSExports.IntermediateStackBlock(block.opcode, {
             }, false);
@@ -650,6 +720,11 @@ void !function() {
             this.source += scope.set(this.descendInput(node.inputs.name), this.descendInput(node.inputs.value));
             break;
           };
+          case `${EXTENSION_ID}_setSlow`: {
+            const scope = ScopeManager.findScope(this);
+            this.source += scope.setSlow(this.descendInput(node.inputs.name), this.descendInput(node.inputs.value));
+            break;
+          };
           case `${EXTENSION_ID}_varChangeBy`: {
             const scope = ScopeManager.findScope(this);
             this.source += scope.changeBy(this.descendInput(node.inputs.name), this.descendInput(node.inputs.value));
@@ -663,6 +738,11 @@ void !function() {
           case `${EXTENSION_ID}_varDelete`: {
             const scope = ScopeManager.findScope(this);
             this.source += scope.delete(this.descendInput(node.inputs.name));
+            break;
+          };
+          case `${EXTENSION_ID}_scopeUnlink`: {
+            const scope = ScopeManager.findScope(this);
+            this.source += scope.unlink();
             break;
           };
           default:
@@ -711,6 +791,7 @@ void !function() {
             };
             break;
           case `${EXTENSION_ID}_set`:
+          case `${EXTENSION_ID}_setSlow`:
           case `${EXTENSION_ID}_varChangeBy`:
             node = {
               inputs: {
@@ -719,6 +800,7 @@ void !function() {
               },
             };
             break;
+          case `${EXTENSION_ID}_scopeUnlink`:
           case `${EXTENSION_ID}_varDeleteAll`:
             node = {
               inputs: {},
@@ -815,6 +897,11 @@ void !function() {
             this.source += scope.set(this.descendInput(node.inputs.name).asString(), this.descendInput(node.inputs.value).asUnknown());
             break;
           };
+          case `${EXTENSION_ID}_setSlow`: {
+            const scope = ScopeManager.findScope(this);
+            this.source += scope.setSlow(this.descendInput(node.inputs.name).asString(), this.descendInput(node.inputs.value).asUnknown());
+            break;
+          };
           case `${EXTENSION_ID}_varChangeBy`: {
             const scope = ScopeManager.findScope(this);
             this.source += scope.changeBy(this.descendInput(node.inputs.name).asString(), this.descendInput(node.inputs.value).asNumber());
@@ -828,6 +915,11 @@ void !function() {
           case `${EXTENSION_ID}_varDelete`: {
             const scope = ScopeManager.findScope(this);
             this.source += scope.delete(this.descendInput(node.inputs.name).asString());
+            break;
+          };
+          case `${EXTENSION_ID}_scopeUnlink`: {
+            const scope = ScopeManager.findScope(this);
+            this.source += scope.unlink();
             break;
           };
           default:

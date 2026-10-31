@@ -1,7 +1,7 @@
 /**!
  * Scope Variables
  * @author 0znzw <yri5@duck.com> (@link https://scratch.mit.edu/users/0znzw/)
- * @version 2.3.0
+ * @version 2.3.1
  * @license MIT AND LGPL-3.0
  * Do not remove this comment.
  */
@@ -148,7 +148,7 @@ void !function() {
   Extension.prototype.getInfo = function getInfo() {
     return {
       id: EXTENSION_ID,
-      name: `Scope Variables`,
+      name: Scratch.translate('Scope Variables'),
       color1: '#9a99ff',
       color2: '#a2a0ff',
       color3: '#7b7acc',
@@ -159,7 +159,7 @@ void !function() {
           blockType: BlockType.CONDITIONAL,
           opcode: 'scope',
           func: 'block_scope',
-          text: 'new scope',
+          text: Scratch.translate('new scope'),
           branchCount: 1,
         },
         '---',
@@ -167,7 +167,7 @@ void !function() {
           blockType: BlockType.COMMAND,
           opcode: 'set',
           func: 'block_varSet',
-          text: 'set this scopes variable [A1] to [A2]',
+          text: Scratch.translate('set this scopes variable [A1] to [A2]'),
           arguments: {
             A1: {
               exemptFromNormalization: true,
@@ -185,7 +185,7 @@ void !function() {
           blockType: BlockType.COMMAND,
           opcode: 'setSlow',
           func: 'block_varSetSlow',
-          text: 'set scoped variable [A1] to [A2]',
+          text: Scratch.translate('set scoped variable [A1] to [A2]'),
           arguments: {
             A1: {
               exemptFromNormalization: true,
@@ -203,7 +203,7 @@ void !function() {
           blockType: BlockType.COMMAND,
           opcode: 'varChangeBy',
           func: 'block_varChangeBy',
-          text: 'change scoped variable [A1] by [A2]',
+          text: Scratch.translate('change scoped variable [A1] by [A2]'),
           arguments: {
             A1: {
               exemptFromNormalization: true,
@@ -221,14 +221,14 @@ void !function() {
           blockType: BlockType.COMMAND,
           opcode: 'varDeleteAll',
           func: 'block_varDeleteAll',
-          text: 'clear this scopes variables',
+          text: Scratch.translate('clear this scopes variables'),
           arguments: {},
         },
         {
           blockType: BlockType.COMMAND,
           opcode: 'varDelete',
           func: 'block_varDelete',
-          text: 'remove this scopes variable [A1]',
+          text: Scratch.translate('remove this scopes variable [A1]'),
           arguments: {
             A1: {
               exemptFromNormalization: true,
@@ -242,7 +242,7 @@ void !function() {
           blockType: BlockType.BOOLEAN,
           opcode: 'varInScope',
           func: 'block_varInScope',
-          text: 'is scoped variable [A1] in scope?',
+          text: Scratch.translate('is scoped variable [A1] in scope?'),
           arguments: {
             A1: {
               exemptFromNormalization: true,
@@ -256,7 +256,7 @@ void !function() {
           blockType: BlockType.REPORTER,
           opcode: 'get',
           func: 'block_varGet',
-          text: 'get scoped variable [A1]',
+          text: Scratch.translate('get scoped variable [A1]'),
           arguments: {
             A1: {
               exemptFromNormalization: true,
@@ -274,14 +274,14 @@ void !function() {
           blockType: BlockType.COMMAND,
           opcode: 'scopeUnlink',
           func: 'block_scopeUnlink',
-          text: 'disinherit parent variables',
+          text: Scratch.translate('disinherit parent variables'),
           arguments: {},
         },
         {
           blockType: BlockType.REPORTER,
           opcode: 'scopeDump',
           func: 'block_scopeDump',
-          text: 'dump scope',
+          text: Scratch.translate('dump scope'),
           arguments: {},
           disableMonitor: true,
         },
@@ -289,7 +289,7 @@ void !function() {
           blockType: BlockType.REPORTER,
           opcode: 'scopeDumpMerged',
           func: 'block_scopeDumpMerged',
-          text: 'dump scope (flat)',
+          text: Scratch.translate('dump scope (flat)'),
           arguments: {},
           disableMonitor: true,
         },

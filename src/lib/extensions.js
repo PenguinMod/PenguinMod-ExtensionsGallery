@@ -7,6 +7,15 @@
 // a sakura
 export default [
     {
+        "name": "便利演算ユーティリティ OperationUT",
+        "description": "確率計算、文字列加工、リストの数値計算を追加する拡張機能。An extension that adds probability calculation, string processing, and numerical calculation of lists.",
+        "code": "Arts_launcher/benriut.js",
+        "banner": "Arts_launcher/benriut.avif",
+        "creator": "y-m-scratch-2",
+        "tags": ["math", "text", "utility"],
+        "isGitHub": false
+    },
+    {
         name: "Pen+",
         description: "Extended pen section! Adds blocks for drawing triangles using textures and tints, drawing images and editing their pixels, etc.",
         code: "ObviousAlexC/PenPlus.js",

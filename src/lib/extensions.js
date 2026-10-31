@@ -53,6 +53,7 @@ export default [
         isGitHub: true,
         creator: "Gen1xLol",
         tags: ["new"],
+        notes: "New thumbnail by CubeyCreator",
     },
     {
         name: "Boxed Physics",

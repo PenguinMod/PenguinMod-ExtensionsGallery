@@ -12,7 +12,7 @@ export default [
         "code": "Arts_launcher/benriut.js",
         "banner": "Arts_launcher/benriut.avif",
         "creator": "y-m-scratch-2",
-        "tags": ["math", "text", "utility"],
+        "tags": ["new", "math", "text", "utility"],
         "isGitHub": false
     },
     {

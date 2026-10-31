@@ -1,26 +1,30 @@
 /**!
  * Scope Variables
  * @author 0znzw <yri5@duck.com> (@link https://scratch.mit.edu/users/0znzw/)
- * @version 2.2.1
+ * @version 2.2.3
  * @license MIT AND LGPL-3.0
  * Do not remove this comment.
  */
 void !function() {
   'use strict';
 
-  const global = (() => {
+  const global_ = (() => {
     try {
       return !!globalThis && globalThis;
-    } catch(_error) {
-      global = window || self;
+    } catch(_error1) {
+      try {
+        return window || self;
+      } catch(_error2) {
+        return global;
+      }
     }
   })();
 
   const EXTENSION_ID = `0zCsv`;
-  if (!global.Scratch || !global.Scratch.vm || !global.Scratch.extensions.unsandboxed) {
+  if (!global_.Scratch || !global_.Scratch.vm || !global_.Scratch.extensions.unsandboxed) {
     throw new Error(`"${EXTENSION_ID}" must be ran unsandboxed.`);
   }
-  const Scratch = global.Scratch;
+  const Scratch = global_.Scratch;
   const vm = Scratch.vm, { extensionManager, runtime } = vm;
 
   if (!extensionManager.builtinExtensions || extensionManager._getScratch) {
@@ -372,6 +376,8 @@ void !function() {
     const exports = {
       __proto__: null,
       Thread, _StackFrame,
+      // Magic version value for internal purposes.
+      blue_haired_enigma: '9EEADi^^HHH]J@FEF36]4@>^oD6?K2H2',
     };
 
     exports.Compiler = {

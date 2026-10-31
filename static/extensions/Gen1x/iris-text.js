@@ -339,7 +339,7 @@ Enjoy!! :D
             x: values[0],
             y: values[1],
             rotation: values[2],
-            scale: values[3]
+            scaleStrength: 1 / Math.sqrt(Math.max(0.01, values[3] / 100)) - 1
         };
     }
 
@@ -3721,15 +3721,24 @@ Enjoy!! :D
         }
     }
 
+    const emptyPerspectiveGeometry = {
+        offsetX: null,
+        offsetY: null,
+        rotation: null,
+        scale: null,
+        maxShiftX: 0,
+        maxShiftY: 0,
+        maxCharacterExtent: 0
+    };
+
     function buildPerspectiveGeometry(lineRuns) {
-        const lines = new Map();
-        let maxShiftX = 0;
-        let maxShiftY = 0;
-        let maxCharacterExtent = 0;
+        const lineGeometries = new Array(lineRuns.length);
+        let charCount = 0;
 
         for (let lineIndex = 0; lineIndex < lineRuns.length; lineIndex++) {
             const lineGeometry = new Map();
             for (const run of lineRuns[lineIndex]) {
+                charCount = Math.max(charCount, run.startIndex + run.chars.length);
                 for (let i = 0; i < run.chars.length; i++) {
                     const rc = run.chars[i];
                     if (!rc.perspectives || !rc.perspectives.length) continue;
@@ -3754,9 +3763,23 @@ Enjoy!! :D
                     }
                 }
             }
+            if (lineGeometry.size) lineGeometries[lineIndex] = lineGeometry;
+        }
 
-            if (!lineGeometry.size) continue;
-            lines.set(lineIndex, lineGeometry);
+        if (!lineGeometries.some(Boolean)) return emptyPerspectiveGeometry;
+
+        const offsetX = new Float64Array(charCount);
+        const offsetY = new Float64Array(charCount);
+        const rotation = new Float64Array(charCount);
+        const scaleByIndex = new Float64Array(charCount);
+        scaleByIndex.fill(1);
+        let maxShiftX = 0;
+        let maxShiftY = 0;
+        let maxCharacterExtent = 0;
+
+        for (let lineIndex = 0; lineIndex < lineRuns.length; lineIndex++) {
+            const lineGeometry = lineGeometries[lineIndex];
+            if (!lineGeometry) continue;
             let lineShiftX = 0;
             let lineShiftY = 0;
             for (const run of lineRuns[lineIndex]) {
@@ -3766,6 +3789,7 @@ Enjoy!! :D
                     const index = run.startIndex + i;
                     let shiftX = 0;
                     let shiftY = 0;
+                    let perspectiveRotation = 0;
                     let scale = 1;
                     for (const perspective of rc.perspectives) {
                         const geometry = lineGeometry.get(perspective);
@@ -3773,16 +3797,19 @@ Enjoy!! :D
                         const centerRange = geometry.lastOffset - geometry.firstOffset;
                         const progress = geometry.offsets.size > 1 && centerRange > 0 ?
                             (centerOffset - geometry.firstOffset) / centerRange : 1;
-                        const targetScale = Math.max(0.01, perspective.scale / 100);
-                        const perspectiveStrength = 1 / Math.sqrt(targetScale) - 1;
                         const projectedOffset = centerRange > 0 ?
-                            centerRange * progress / (1 + perspectiveStrength * progress) :
+                            centerRange * progress / (1 + perspective.scaleStrength * progress) :
                             0;
                         shiftX += projectedOffset - centerRange * progress +
                             perspective.x * progress;
                         shiftY += perspective.y * progress;
-                        scale *= 1 / Math.pow(1 + perspectiveStrength * progress, 2);
+                        perspectiveRotation += perspective.rotation * progress;
+                        scale *= 1 / Math.pow(1 + perspective.scaleStrength * progress, 2);
                     }
+                    offsetX[index] = shiftX;
+                    offsetY[index] = shiftY;
+                    rotation[index] = perspectiveRotation;
+                    scaleByIndex[index] = scale;
                     lineShiftX = Math.max(lineShiftX, Math.abs(shiftX));
                     lineShiftY = Math.max(lineShiftY, Math.abs(shiftY));
                     maxCharacterExtent = Math.max(maxCharacterExtent, rc.size * scale);
@@ -3792,7 +3819,7 @@ Enjoy!! :D
             maxShiftY = Math.max(maxShiftY, lineShiftY);
         }
 
-        return { lines, maxShiftX, maxShiftY, maxCharacterExtent };
+        return { offsetX, offsetY, rotation, scale: scaleByIndex, maxShiftX, maxShiftY, maxCharacterExtent };
     }
 
     function renderTarget(target) {
@@ -3865,15 +3892,18 @@ Enjoy!! :D
             maxShadowExtent || 0,
             maxBorderExtent || 0
         );
-        const perspectivePad = Math.max(
-            perspectiveGeometry.maxShiftX,
-            perspectiveGeometry.maxShiftY
-        ) + perspectiveGeometry.maxCharacterExtent + decorationPad;
-        const pad = Math.max(
+        const basePad = Math.max(
             64,
             state.baseStyle.size * 2,
-            decorationPad + state.baseStyle.size,
-            perspectivePad
+            decorationPad + state.baseStyle.size
+        );
+        const padX = Math.max(
+            basePad,
+            perspectiveGeometry.maxShiftX + perspectiveGeometry.maxCharacterExtent + decorationPad
+        );
+        const padY = Math.max(
+            basePad,
+            perspectiveGeometry.maxShiftY + perspectiveGeometry.maxCharacterExtent + decorationPad
         );
 
         ensureTypingBox(state);
@@ -3882,12 +3912,12 @@ Enjoy!! :D
         if (state.typingBoxWidth > effectiveMaxWidth) effectiveMaxWidth = state.typingBoxWidth;
         if (state.typingBoxHeight > effectiveMaxHeight) effectiveMaxHeight = state.typingBoxHeight;
 
-        const docW = Math.ceil(effectiveMaxWidth + pad * 2);
-        const docH = Math.ceil(effectiveMaxHeight + pad * 2);
+        const docW = Math.ceil(effectiveMaxWidth + padX * 2);
+        const docH = Math.ceil(effectiveMaxHeight + padY * 2);
 
         const originX = docW / 2;
-        const originY = state.growDownwardOnly ? (pad + totalHeight / 2) : docH / 2;
-        const anchorY = state.growDownwardOnly ? (pad + lineHeight / 2) : originY;
+        const originY = state.growDownwardOnly ? (padY + totalHeight / 2) : docH / 2;
+        const anchorY = state.growDownwardOnly ? (padY + lineHeight / 2) : originY;
 
         let textBoxOffsetX = 0;
         let textBoxWidth = maxWidth;
@@ -3983,7 +4013,6 @@ Enjoy!! :D
 
                 const textStartY = originY - totalHeight / 2;
                 const baseCenterY = textStartY + (li * lineHeight) + lineHeight * 0.5;
-                const linePerspectiveGeometry = perspectiveGeometry.lines.get(li);
 
                 let spacesBefore = 0;
                 for (const run of runs) {
@@ -4002,29 +4031,14 @@ Enjoy!! :D
                             (state.charOverrides[index] || emptyOverride) :
                             emptyOverride;
 
-                        let perspectiveX = 0;
-                        let perspectiveY = 0;
-                        let perspectiveRotation = 0;
-                        let perspectiveScale = 1;
-                        for (const perspective of rc.perspectives) {
-                            const geometry = linePerspectiveGeometry && linePerspectiveGeometry.get(perspective);
-                            if (!geometry) continue;
-                            const centerOffset = geometry.offsets.get(index);
-                            const centerRange = geometry.lastOffset - geometry.firstOffset;
-                            const progress = geometry.offsets.size > 1 && centerRange > 0 ?
-                                (centerOffset - geometry.firstOffset) / centerRange : 1;
-                            const targetScale = Math.max(0.01, perspective.scale / 100);
-                            const perspectiveStrength = 1 / Math.sqrt(targetScale) - 1;
-                            const projectedOffset = centerRange > 0 ?
-                                centerRange * progress / (1 + perspectiveStrength * progress) :
-                                0;
-                            perspectiveX += projectedOffset - centerRange * progress +
-                                perspective.x * progress;
-                            perspectiveY += perspective.y * progress;
-                            perspectiveRotation += perspective.rotation * progress;
-                            perspectiveScale *= 1 /
-                                Math.pow(1 + perspectiveStrength * progress, 2);
-                        }
+                        const perspectiveX = perspectiveGeometry.offsetX ?
+                            perspectiveGeometry.offsetX[index] : 0;
+                        const perspectiveY = perspectiveGeometry.offsetY ?
+                            perspectiveGeometry.offsetY[index] : 0;
+                        const perspectiveRotation = perspectiveGeometry.rotation ?
+                            perspectiveGeometry.rotation[index] : 0;
+                        const perspectiveScale = perspectiveGeometry.scale ?
+                            perspectiveGeometry.scale[index] : 1;
                         const charCenterX = runOriginX + pos.shapedX + pos.advance / 2 +
                             spacesBefore * justifyExtra + o.x + perspectiveX;
                         const charCenterY = baseCenterY - o.y - perspectiveY;

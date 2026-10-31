@@ -76,7 +76,7 @@ void !function() {
       };
     };
 
-    const iwnafhwtb = vm.exports[Object.getOwnPropertyNames(vm.exports).find((prop) => vm.exports[prop].toString().includes('JSGenerator:') && !vm.exports[prop].toString().includes('Stub'))];
+    const iwnafhwtb = vm.exports[Object.getOwnPropertyNames(vm.exports).find((prop) => String(vm.exports[prop]).includes('JSGenerator:') && !String(vm.exports[prop]).includes('Stub'))];
     if (!iwnafhwtb && Thread.prototype.tryCompile) {
       throw new Error(`"${EXTENSION_ID}": Too old to run this extension.`);
     }
@@ -84,11 +84,16 @@ void !function() {
     const warn = Object.getOwnPropertyDescriptor(console, 'warn');
     console.warn = () => {};
 
-    const exps = iwnafhwtb();
+    let exps = null;
+    try {
+      exps = iwnafhwtb();
+    } catch(error) {
+      console.error('Error while getting the compiler exports.', error);
+    }
 
     Object.defineProperty(console, 'warn', warn);
 
-    if (!exps.JSGenerator || !exps.JSGenerator.unstable_exports) {
+    if (!exps || !exps.JSGenerator || !exps.JSGenerator.unstable_exports) {
       throw new Error(`"${EXTENSION_ID}": Too old to run this extension.`);
     }
 
@@ -542,7 +547,6 @@ void !function() {
           default:
             return STGP_descendInput.apply(this, args);
         }
-        node.type = block.opcode;
         node.$ = block;
         return node;
       };
@@ -566,7 +570,7 @@ void !function() {
           case `${EXTENSION_ID}_varChangeBy`:
             node = new JSExports.IntermediateStackBlock(block.opcode, {
               name: this.descendInputOfBlock(block, 'A1', true).toType(JSExports.InputType.STRING),
-              value: this.descendInputOfBlock(block, 'A2', true),
+              value: this.descendInputOfBlock(block, 'A2', true).toType(JSExports.InputType.NUMBER),
             }, false);
             break;
           case `${EXTENSION_ID}_varDeleteAll`:
@@ -584,19 +588,11 @@ void !function() {
             }
             return STGP_descendStackedBlock.apply(this, args);
         }
-        node.type = block.opcode;
         node.$ = block;
         return node;
       };
 
       //#region JSG (1)
-
-      ScopeManager.prototype.descendVariableString = function descendVariableString(variable) {
-        return `(${this._jsg.descendInput(variable)})`;
-      };
-      ScopeManager.prototype.descendVariableNumber = function descendVariableNumber(variable) {
-        return `(${this._jsg.descendInput(variable)})`;
-      };
 
       const JSGP_compile = JSGP.compile;
       JSGP.compile = function compile(...args) {
@@ -611,7 +607,7 @@ void !function() {
       JSGP.descendInput = function descendInput(...args) {
         const node = args[0];
 
-        switch(node && node.type) {
+        switch(node && node.$ && node.$.opcode) {
           case `${EXTENSION_ID}_get`: {
             const scope = ScopeManager.findScope(this);
             return scope.get(this.descendInput(node.inputs.name));
@@ -637,7 +633,7 @@ void !function() {
       JSGP.descendStackedBlock = function descendStackedBlock(...args) {
         const node = args[0];
 
-        switch(node && node.type) {
+        switch(node && node.$ && node.$.opcode) {
           case `${EXTENSION_ID}_scope`: {
             const manager = ScopeManager.patch(this);
             manager.descendScopedStack(node.inputs.substack);
@@ -692,7 +688,6 @@ void !function() {
           default:
             return STGP_descendInput.apply(this, args);
         }
-        node.type = block.opcode;
         node.$ = block;
         return node;
       };
@@ -746,7 +741,6 @@ void !function() {
             }
             return STGP_descendStackedBlock.apply(this, args);
         }
-        node.type = block.opcode;
         node.$ = block;
         return node;
       };
@@ -766,7 +760,7 @@ void !function() {
       JSGP.descendInput = function descendInput(...args) {
         const node = args[0];
 
-        switch(node && node.type) {
+        switch(node && node.$ && node.$.opcode) {
           case `${EXTENSION_ID}_get`: {
             const scope = ScopeManager.findScope(this);
             return new JSExports.TypedInput(
@@ -804,7 +798,7 @@ void !function() {
       JSGP.descendStackedBlock = function descendStackedBlock(...args) {
         const node = args[0];
 
-        switch(node && node.type) {
+        switch(node && node.$ && node.$.opcode) {
           case `${EXTENSION_ID}_scope`: {
             const manager = ScopeManager.patch(this);
             manager.descendScopedStack(node.inputs.substack);

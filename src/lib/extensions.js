@@ -80,6 +80,15 @@ export default [
         notes: "A bunch of new blocks were added by LSPECTRONIZTAR (with the help of Game Physics Cookbook by Gabor Szauer",
     },
     {
+        name: "iCastRays",
+        description: "Cast rays into other sprites in your project.",
+        code: "MubiLop/icastrays.js",
+        banner: "MubiLop/icastrays.svg",
+        creator: "cicerorph",
+        creatorAlias: "MubiLop",
+        isGitHub: true,
+    },
+    {
         name: "Beat Sync",
         description: "An extension designed to let you sync anything in your project to a musical beat, with incredible precision.",
         code: "Gen1x/beat_sync.js",

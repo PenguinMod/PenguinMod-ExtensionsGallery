@@ -257,12 +257,16 @@ Enjoy!! :D
 
     const knownTags = ['color', 'b', 'i', 'u', 's', 'size', 'font', 'gradient', 'blur', 'shadow', 'border', 'layer', 'effect', 'perspective'];
     const selfClosingTags = ['wait'];
-    const tagRe = /(?<!\\)\[(\/?)([a-z0-9_-]+)(?:=([^\]]+))?\]/gi;
-    const tagReStrip = /(?<!\\)\[(\/?)([a-z0-9_-]+)(?:=([^\]]+))?\]/gi;
-    const escapedTagRe = /\\(?=[\[\]])/g;
+    const tagRe = /(?<!\\)((?:\\\\)*)\[(\/?)([a-z0-9_-]+)(?:=([^\]]+))?\]/gi;
+    const tagReStrip = /(?<!\\)((?:\\\\)*)\[(\/?)([a-z0-9_-]+)(?:=([^\]]+))?\]/gi;
+    const escapedTagRe = /(\\+)(?=[\[\]])/g;
 
     function unescapeTagEscapes(text) {
-        return text.replace(escapedTagRe, '');
+        return text.replace(escapedTagRe, backslashes => '\\'.repeat(Math.floor(backslashes.length / 2)));
+    }
+
+    function unescapeTagBackslashPairs(text) {
+        return text.replace(/\\\\/g, '\\');
     }
 
     function normalizeGradientType(value) {
@@ -469,41 +473,44 @@ Enjoy!! :D
         let i = 0;
         let match;
         let gradientOccurrenceSeq = 0;
+        const appendText = segment => {
+            const graphemes = splitGraphemes(segment);
+            for (const g of graphemes) {
+                const style = stack[stack.length - 1];
+                out.push({
+                    char: g,
+                    color: style.color,
+                    bold: style.bold,
+                    italic: style.italic,
+                    underline: style.underline,
+                    strike: style.strike,
+                    size: style.size,
+                    font: style.font,
+                    blur: style.blur,
+                    tags: style.customTags,
+                    gradient: style.gradient,
+                    gradientSpanId: style.gradientSpanId,
+                    gradientOccurrenceIndex: style.gradientOccurrenceIndex,
+                    shadow: style.shadow,
+                    border: style.border,
+                    layer: style.layer || 0,
+                    effects: style.effects || null,
+                    perspectives: style.perspectives || []
+                });
+                families.add(style.font);
+            }
+        };
         while ((match = tagRe.exec(text)) !== null || i < text.length) {
             const tagStart = match ? match.index : text.length;
             if (i < tagStart) {
-                const segment = unescapeTagEscapes(text.slice(i, tagStart));
-                const graphemes = splitGraphemes(segment);
-                for (const g of graphemes) {
-                    const style = stack[stack.length - 1];
-                    out.push({
-                        char: g,
-                        color: style.color,
-                        bold: style.bold,
-                        italic: style.italic,
-                        underline: style.underline,
-                        strike: style.strike,
-                        size: style.size,
-                        font: style.font,
-                        blur: style.blur,
-                        tags: style.customTags,
-                        gradient: style.gradient,
-                        gradientSpanId: style.gradientSpanId,
-                        gradientOccurrenceIndex: style.gradientOccurrenceIndex,
-                        shadow: style.shadow,
-                        border: style.border,
-                        layer: style.layer || 0,
-                        effects: style.effects || null,
-                        perspectives: style.perspectives || []
-                    });
-                    families.add(style.font);
-                }
+                appendText(unescapeTagEscapes(text.slice(i, tagStart)));
                 i = tagStart;
             }
             if (!match) break;
-            const closing = match[1] === '/';
-            const tag = match[2].toLowerCase();
-            const value = match[3];
+            appendText(unescapeTagBackslashPairs(match[1]));
+            const closing = match[2] === '/';
+            const tag = match[3].toLowerCase();
+            const value = match[4];
             if (selfClosingTags.indexOf(tag) !== -1) {
                 i = match.index + match[0].length;
                 continue;
@@ -676,7 +683,7 @@ Enjoy!! :D
     function stripMarkup(text) {
         if (text === stripMarkupCacheKey) return stripMarkupCacheValue;
         tagReStrip.lastIndex = 0;
-        const result = unescapeTagEscapes(text.replace(tagReStrip, ''));
+        const result = unescapeTagEscapes(text.replace(tagReStrip, (tag, backslashes) => unescapeTagBackslashPairs(backslashes)));
         stripMarkupCacheKey = text;
         stripMarkupCacheValue = result;
         return result;
@@ -702,7 +709,7 @@ Enjoy!! :D
         };
     }
 
-    const waitRe = /(?<!\\)\[wait=([0-9]*\.?[0-9]+)\]/gi;
+    const waitRe = /(?<!\\)((?:\\\\)*)\[wait=([0-9]*\.?[0-9]+)\]/gi;
 
     let splitWaitStagesCacheKey = null;
     let splitWaitStagesCacheValue = null;
@@ -715,10 +722,10 @@ Enjoy!! :D
         let match;
         let textSoFar = '';
         while ((match = waitRe.exec(text)) !== null) {
-            textSoFar += text.slice(i, match.index);
+            textSoFar += text.slice(i, match.index) + match[1];
             stages.push({
                 text: textSoFar,
-                waitAfter: Math.max(0, Scratch.Cast.toNumber(match[1]))
+                waitAfter: Math.max(0, Scratch.Cast.toNumber(match[2]))
             });
             i = match.index + match[0].length;
         }
@@ -914,10 +921,16 @@ Enjoy!! :D
 
         while ((match = tagRe.exec(text)) !== null) {
             addCharacters(text.slice(lastIndex, match.index));
-            const tag = match[2].toLowerCase();
-            const value = match[3];
+            const tag = match[3].toLowerCase();
+            const value = match[4];
             if (selfClosingTags.indexOf(tag) !== -1) {
                 if (tag === 'wait') {
+                    if (match[1]) {
+                        steps.push({
+                            content: match[0],
+                            char: '\\'
+                        });
+                    }
                     steps.push({
                         content: '',
                         char: null,
@@ -932,7 +945,7 @@ Enjoy!! :D
             } else {
                 steps.push({
                     content: match[0],
-                    char: null
+                    char: match[1] ? '\\' : null
                 });
             }
             lastIndex = match.index + match[0].length;

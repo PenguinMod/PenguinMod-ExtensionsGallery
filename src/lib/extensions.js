@@ -531,7 +531,6 @@ export default [
         creator: "WAYLIVES",
         isGitHub: false,
     },
-    {
     /*{
         name: "More Types",
         description: "Adds more value types to PenguinMod, implementing Functions, Objects, Arrays, Sets, Maps, Symbols and Nothing.",

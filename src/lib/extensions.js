@@ -531,6 +531,14 @@ export default [
         creator: "WAYLIVES",
         isGitHub: false,
     },
+    {
+    name: "Smart Variables",
+    description: "Create and manage smart variables, lists, and dictionaries with powerful data manipulation blocks.",
+    code: "GID12345609/smartvariables.js",
+    creator: "GID12345609",
+    tags: ["data", "utility"],
+    isGitHub: true,
+},
     /*{
         name: "More Types",
         description: "Adds more value types to PenguinMod, implementing Functions, Objects, Arrays, Sets, Maps, Symbols and Nothing.",

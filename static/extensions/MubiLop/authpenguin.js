@@ -241,7 +241,8 @@
             }
         }
 
-        setServerUrl(args) {
+        async setServerUrl(args) {
+            if (await Scratch.canFetch(args.URL) === false) return;
             this.serverUrl = args.URL;
         }
 

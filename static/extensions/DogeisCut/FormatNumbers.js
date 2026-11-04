@@ -1,8 +1,11 @@
-// Name: Format Numbers
+// Name: Format Numbers (OUTDATED)
 // ID: dogeiscutformatnumbers
 // Description: Format large numbers into AD standard, fixed decimal, comma separated, or scientific notation.
 // By: DogeisCut <https://scratch.mit.edu/users/dogeiscut/>
 // License: MIT
+
+// This version of format numbers will no longer be maintained in favor of just using the TurboWarp version.
+// Thus, it has been hidden.
 
 // Version V.2.0.2
 
@@ -175,7 +178,7 @@
     getInfo() {
       return {
         id: "formatNumbers",
-        name: Scratch.translate("Format Numbers"),
+        name: Scratch.translate("Format Numbers (OUTDATED)"),
         color1: "#419873",
         color2: "#4CA981",
         blocks: [

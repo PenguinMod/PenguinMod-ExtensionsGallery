@@ -2,8 +2,9 @@
 // ID: SPdisText
 // Description: Display Text in Your Projects!
 // By: SharkPool
+// License: MIT
 
-// Version V.1.5.0
+// Version V.1.5.221
 
 (function (Scratch) {
   "use strict";
@@ -40,6 +41,21 @@
     });
   };
 
+  const sanitizeCSS = function (type, value) {
+    const styles = new Option().style;
+    switch (type) {
+      case "@c": 
+        styles.color = value;
+        return styles.color;
+      case "@f": 
+        styles.fontFamily = value;
+        return styles.fontFamily;
+      case "@h": 
+        styles.backgroundColor = value;
+        return styles.backgroundColor;
+    }
+  };
+
   const txt2md = function (txt) {
     const mdCache = [];
     let md = "";
@@ -55,8 +71,8 @@
             const testString = txt.substring(i + 2, txt.length);
             const ind = testString.indexOf(":");
             if (testString.indexOf(code) > -1 && ind) {
-              const color = testString.substring(0, ind);
-              md += `<${form.replace("---", color)}>`;
+              let value = sanitizeCSS(code, testString.substring(0, ind));
+              md += `<${form.replace("---", value)}>`;
               mdCache.push(form);
               i += ind + 1;
             } else {
@@ -93,7 +109,7 @@
     getInfo() {
       return {
         id: "SPdisText",
-        name: "Display Text",
+        name: "Display Text (Deprecated)",
         color1: "#778899",
         color2: "#5E707F",
         color3: "#3C4E5C",
@@ -177,7 +193,7 @@
             blockType: Scratch.BlockType.COMMAND,
             text: "set boldness of ID [ID] to [NUM]",
             arguments: {
-              NUM : { type: Scratch.ArgumentType.NUMBER, defaultValue: 100 },
+              NUM: { type: Scratch.ArgumentType.NUMBER, defaultValue: 100 },
               ID: { type: Scratch.ArgumentType.STRING, defaultValue: "my-text" }
             }
           },
@@ -413,6 +429,15 @@
           },
           "---",
           {
+            opcode: "toggleWrap",
+            blockType: Scratch.BlockType.COMMAND,
+            text: "toggle text wrap for ID [ID] [TYPE]",
+            arguments: {
+              ID: { type: Scratch.ArgumentType.STRING, defaultValue: "my-text" },
+              TYPE: { type: Scratch.ArgumentType.STRING, menu: "TOGGLE" }
+            },
+          },
+          {
             opcode: "toggleSelect",
             blockType: Scratch.BlockType.COMMAND,
             text: "toggle highlighting for ID [ID] [TYPE]",
@@ -466,9 +491,9 @@
           ALIGNMENTS: { acceptReporters: true, items: ["left", "right", "center"] },
           GRADIENTS: { acceptReporters: true, items: ["linear", "radial"] },
           THICK: [
-            { text : "thick", value : "900" },
-            { text : "medium", value : "600" },
-            { text : "none", value : "1" },
+            { text: "thick", value: "900" },
+            { text: "medium", value: "600" },
+            { text: "none", value: "1" },
           ],
           FORMATS: {
             acceptReporters: true,
@@ -549,6 +574,22 @@
       }
     }
 
+    getMaxLineWidth(element) {
+      const walker = document.createTreeWalker(element, NodeFilter.SHOW_TEXT, null);
+      const range = document.createRange();
+
+      let maxWidth = 0;
+      while (walker.nextNode()) {
+        const textNode = walker.currentNode;
+        if (!textNode.textContent.trim()) continue;
+
+        range.selectNodeContents(textNode);
+        const rects = range.getClientRects();
+        for (const rect of rects) { maxWidth = Math.max(maxWidth, rect.width) }
+      }
+      return maxWidth;
+    }
+
     // Block Funcs
     tutorial() {
       alert([
@@ -598,7 +639,7 @@
       render.addOverlay(textDiv, "scale-centered");
       allText.push(`#SP_Text-Ext-${ID}`);
       const box = txtElement.getBoundingClientRect();
-      if (settings.textMAR === undefined) this.setMargins({ ID, WIDTH : box.width / 2, HEIGHT : box.height });
+      if (settings.textMAR === undefined) this.setMargins({ ID, WIDTH: box.width / 2, HEIGHT: box.height });
       this.updateStyles(settings); // add formatting (if any)
     }
 
@@ -723,8 +764,8 @@
       const ID = this.fixID(args.ID);
       const elements = document.querySelectorAll(`div[id="SP_Text-Ext-${ID}"]`);
       elements.forEach((element) => {
-        element.style.width = `${args.WIDTH}px`;
-        element.style.height = `${args.HEIGHT}px`;
+        element.style.width = args.WIDTH === -1 ? "max-content" : `${args.WIDTH}px`;
+        element.style.height = args.HEIGHT === -1 ? "max-content" : `${args.HEIGHT}px`;
       });
       txtSettings[ID]["textMAR"] = { ...args };
     }
@@ -824,24 +865,25 @@
 
     attOfText(args) {
       const elements = document.querySelectorAll(`div[id="SP_Text-Ext-${this.fixID(args.ID)}"]`);
+      const attrib = Scratch.Cast.toString(args.ATT);
       let value;
-      if (args.ATT.includes("box2")) {
+      if (attrib.includes("box2")) {
         const calcs = [];
         elements.forEach((element) => {
-          const tempSpan = document.createElement("span");
-          tempSpan.innerHTML = element.textContent;
-          tempSpan.style.fontSize = element.style.fontSize;
-          tempSpan.style.fontFamily = getComputedStyle(element).fontFamily;
-          tempSpan.style.display = "inline";
-          document.body.appendChild(tempSpan);
-          calcs.push(tempSpan[`offset${args.ATT.includes("w") ? "Width" : "Height"}`]);
-          document.body.removeChild(tempSpan);
+          if (attrib.includes("w")) calcs.push(this.getMaxLineWidth(element));
+          else {
+            const tempH = element.style.height;
+            element.style.height = "min-content";
+            void element.offsetWidth;
+            calcs.push(element.getBoundingClientRect().height);
+            element.style.height = tempH;
+          }
         });
         return JSON.stringify(calcs);
       } else {
-        elements.forEach((element) => { value = element.style[args.ATT] });
-        value = args.ATT === "fontFamily" || args.ATT === "textAlign" || args.ATT === "overflow" ? value : parseFloat(value);
-        value = args.ATT === "fontWeight" ? value / 9 : value;
+        elements.forEach((element) => { value = element.style[attrib] });
+        value = attrib === "fontFamily" || attrib === "textAlign" || attrib === "overflow" ? value : parseFloat(value);
+        value = attrib === "fontWeight" ? value / 9 : value;
         return value || "";
       }
     }
@@ -937,8 +979,6 @@
     }
 
     setTextCurve(args) {
-      // TODO clean this up and add more availiable text stylings
-      // Perhaps make the entire extension rely on svgs?
       const ID = this.fixID(args.ID);
       const settings = txtSettings[ID];
       const regex = args.ARC.includes("<svg") ? /<path[^>]*d="([^"]*)"/ : /<path[^>]*d="([^"]*)"/;
@@ -958,8 +998,8 @@
             textPathFill.textContent = element.textContent;
 
             const textStroke = existingSvg.querySelector("text");
-            textStroke.setAttribute("fill", outline ? outline.inputs.COLOR ?? "#00000000" : "#00000000");
-            textStroke.setAttribute("stroke", outline ? outline.inputs.COLOR ?? "#00000000" : "#00000000");
+            textStroke.setAttribute("fill", outline ? outline.inputs.COLOR : "#00000000");
+            textStroke.setAttribute("stroke", outline ? outline.inputs.COLOR : "#00000000");
             textStroke.setAttribute("stroke-width", outline ? outline.inputs.THICKNESS ?? 1 : 1);
             const textPathStroke = existingSvg.querySelector("textPath");
             textPathStroke.setAttribute("href", `#MyPath-${ID}`);
@@ -1013,12 +1053,20 @@
     }
 
     toggleSelect(args) {
-      const type = args.TYPE === "on" ? "auto" : "none";
+      const type = args.TYPE === "on" ? "text" : "none";
       const elements = document.querySelectorAll(`div[id="SP_Text-Ext-${this.fixID(args.ID)}"]`);
       elements.forEach((element) => {
-        element.style.userSelect = type; element.style.webkitUserSelect = type; element.style.mozUserSelect = type;
-        element.style.pointerEvents = type;
+        element.style.userSelect = type;
+        element.style.webkitUserSelect = type;
+        element.style.mozUserSelect = type;
+        element.style.pointerEvents = args.TYPE === "on" ? "auto" : "none";
       });
+    }
+
+    toggleWrap(args) {
+      const type = args.TYPE === "on" ? "wrap" : "nowrap";
+      const elements = document.querySelectorAll(`div[id="SP_Text-Ext-${this.fixID(args.ID)}"]`);
+      elements.forEach((element) => { element.style.textWrap = type });
     }
 
     makeClick(args) {

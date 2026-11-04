@@ -377,13 +377,14 @@
       return `${apiURL}projects/getproject?projectID=${Cast.toString(args.id)}&requestType=thumbnail`;
     }
 
+    // TODO: either add parameter to get multiple or have a block to get multiple (either say multiple or 20)
     async rnd() {
       try {
         const response = await fetch(`${apiURL}projects/getrandomproject`);
         if (!response.ok) throw new Error("Failed to fetch random project");
         let data = await response.json();
 
-        return data.id;
+        return data[0].id;
       } catch {
         return "";
       }
@@ -393,17 +394,18 @@
       const id = this.generateIdWithArgs("latestProject", {});
       let data = this.getCached(id);
 
+      console.log(data);
+
       try {
         if (data === null) {
           const response = await fetch(`${apiURL}projects/getprojects`);
           if (!response.ok) throw new Error("Failed to fetch latest project");
           data = await response.json();
+          // Check if there are projects in the array
+          if (data && data.length) data = JSON.stringify(data[0]);
+          else return "{}";
         }
-
-        // Check if there are projects in the array
-        if (data && data.length) data = JSON.stringify(data[0]);
-        else return "{}";
-
+        
         this.setCached(id, data, true);
         return data;
       } catch {

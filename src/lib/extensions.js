@@ -84,6 +84,7 @@ export default [
         description: "Cast rays into other sprites in your project.",
         code: "MubiLop/icastrays.js",
         banner: "MubiLop/icastrays.svg",
+        documentation: "NumberUtilities",
         creator: "cicerorph",
         creatorAlias: "MubiLop",
         isGitHub: true,

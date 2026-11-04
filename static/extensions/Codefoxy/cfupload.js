@@ -197,7 +197,7 @@ const delay = ms => new Promise(res => setTimeout(res, ms));
           Apis: {
             acceptReporters: true,
             items: [
-              "catbox.moe",
+              //"catbox.moe", -- blocked by cors
               "file.io",
               "0x0.st",
               "pastebin.com",

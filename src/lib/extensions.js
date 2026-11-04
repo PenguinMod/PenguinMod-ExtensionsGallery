@@ -83,12 +83,13 @@ export default [
         description: "Cast rays into other sprites in your project.",
         code: "MubiLop/icastrays.js",
         banner: "MubiLop/icastrays.svg",
-        documentation: "NumberUtilities",
+        documentation: "ICastRays",
         creator: "cicerorph",
         creatorAlias: "MubiLop",
         isGitHub: true,
+        
     },
-    {
+    {tags: ["new"],
         name: "Beat Sync",
         description: "An extension designed to let you sync anything in your project to a musical beat, with incredible precision.",
         code: "Gen1x/beat_sync.js",

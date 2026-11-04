@@ -59,8 +59,6 @@ Content mode moves along the ray in small steps and checks if each point touches
 ```
 A smaller step is more accurate but slower. A larger step is faster but can skip over thin parts of a sprite. The step is limited between 0.1 and 20.
 
-Content mode needs the project's renderer to be available. If it isn't, the extension falls back to hitbox mode.
-
 ## Radial rays
 Radial blocks cast many rays at once. This is great for things like vision cones, 360 degree scanners, or checking all around a character.
 

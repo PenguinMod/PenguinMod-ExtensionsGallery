@@ -69,7 +69,7 @@ You can post your extension banner / thumbnail and or description in the pull re
 
 Once your pull request is merged, it'll be on the site or upcoming onto the site. You may get responses about things you should change or fix though.
 
-*Note: Vercel may comment on your pull request. This is the hosting service we use.*
+*Note: sakurabuilder may comment on your pull request. This bot allows you to preview how the page will look with your extension listed on the gallery.*
 
 *If it has a link to visit a preview, you can click on it and see your changes. See the Optional Steps for more info on how to edit the site to show your extension.*
 
@@ -158,7 +158,7 @@ will become
 
 *(visit https://scratchblocks.github.io to play with creating blocks like this)*
 
-Note that GitHub, Visual Studio Code or other Markdown editors likely will not support this. **This only works on the PenguinMod site.** This is also why Vercel may allow you to preview your pull request.
+Note that GitHub, Visual Studio Code or other Markdown editors likely will not support this. **This only works on the PenguinMod site.** This is also why sakurabuilder may allow you to preview your pull request.
 
 #### Adding the tutorial to the site
 So far we have covered creating and filling out the `.md` file, but it's not available yet.

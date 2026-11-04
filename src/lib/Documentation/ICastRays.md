@@ -20,7 +20,7 @@ To cast a ray, use the "cast ray" block.
 - **direction** works like Scratch's normal directions. 0 is up, 90 is right, 180 is down and -90 is left.
 - **length** is how far the ray can travel. If nothing is hit within this length, the ray misses.
 - **at** chooses what the ray can hit: any sprite except the one casting the ray, any sprite, or one specific sprite.
-- **using** chooses how sprites are tested (see [Hitbox vs content](#hitbox-vs-content)).
+- **using** chooses how sprites are tested (see **Hitbox vs content**).
 
 Casting a ray doesn't report anything by itself. The result is stored, and you read it with the blocks below.
 

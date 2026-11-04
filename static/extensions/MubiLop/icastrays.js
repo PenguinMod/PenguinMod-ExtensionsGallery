@@ -537,6 +537,7 @@
       return {
         id: 'mubiraycast',
         name: 'iCastRays',
+        docsURI: "https://extensions.penguinmod.com/docs/ICastRays",
         color1: '#6230b8',
         color2: '#4c2094',
         color3: '#3f1a78',

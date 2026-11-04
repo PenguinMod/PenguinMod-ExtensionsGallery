@@ -87,7 +87,7 @@ export default [
         creator: "cicerorph",
         creatorAlias: "MubiLop",
         isGitHub: true,
-        
+        tags: ["new"],        
     },
     {tags: ["new"],
         name: "Beat Sync",

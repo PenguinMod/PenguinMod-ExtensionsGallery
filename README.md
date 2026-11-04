@@ -1,9 +1,9 @@
 # Extension Gallery
 
 ## Licensing
-The source for [the extensions site](https://extensions.penguinmod.com)
-(including but not limited to: the source code, assets, extension thumbnails and extension documentation)
-are all licensed under [the MIT license](https://opensource.org/license/mit).
+The source code for [the extensions library site](https://extensions.penguinmod.com), along with its assets, extension thumbnails and extension documentation, are licensed under [the MIT license](https://opensource.org/license/mit).
+
+Extension code has its own licensing requirements. See [Extension code licensing](#extension-code-licensing) for more information.
 
 ### Extension code licensing
 See [the licensing file for extension code](/static/extensions/LICENSING.md).

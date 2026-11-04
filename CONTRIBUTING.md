@@ -11,8 +11,9 @@ to remake their **entire** project without editing their file manually.
 and [Gallery page](https://extensions.penguinmod.com/) to confirm.
 - Your extension should be created for a specific purpose. An extension with random blocks someone *might* need will likely not get accepted if the blocks are not in a certain theme, like math or rendering.
 - Your extension should be easily explainable in 1-2 sentences or a single picture. This is what will determine whether you can be on the gallery or not.
-- Your extension should be under the MIT license or the LGPL-3.0 license.
+- Your extension code should be under the MIT license or the LGPL-3.0 license.
     - See [the licensing file for extension code](/static/extensions/LICENSING.md) for information.
+    - Extension thumbnails and documentation must be licensed under the MIT license.
 - If your extension uses external content such as JS libraries or CSS stylesheets, you must include them inside the extension code itself.
     - You **CANNOT** fetch/import content from URLs that is a core part of your extension as it'll make the extension unusable offline, or in offline packaged projects.
     - This does not apply to content that obviously requires internet, like an extension that allows projects to use a public API.
@@ -27,13 +28,11 @@ and [Gallery page](https://extensions.penguinmod.com/) to confirm.
 ### Step 1.
 Create your extension. You can find a lot of details [here](https://docs.turbowarp.org/development/extensions/introduction).
 
-#### Important Guidelines:
-
 ### Step 2.
 Create info for your extension, like a description and a banner / thumbnail.
 The banner / thumbnail is not required, but it will be a solid color if not provided.
 
-Your banner / thumbnail must also be MIT licensed (basically just make it yourself and the image should be usable anywhere)
+Your banner / thumbnail must also be MIT licensed (basically just make it yourself and the image should be usable anywhere). See the licensing guidelines in [Guidelines for extensions](#guidelines-for-extensions).
 
 Ideally, this banner / thumbnail should be 600x300 pixels. (may be resized if it does not fit this size or edited to fit this size)
 
@@ -218,6 +217,8 @@ Each extension is incased in `{}` brackets. Look below on how to copy it.
     documentation: "page-name", // This is the page name for the documentation you created.
 
     // These next ones are optional. You can choose not to include them.
+    tags: ["new", "graphics"], // Optional. A list of tags to add to your extension. You can put anything here, but it may be adjusted later.
+    example: "Username/extension.pmp", // Optional. An example project to show off how to use the extension.
     creatorAlias: "Joe", // Optional. This will not change the creator link, but change the name that links to it.
     notes: "Additional help by someguy", // Optional. Allows you to note anyone else who helped you or any small info.
     unstable: false, // Optional. Will add a warning message that your extension is unstable.

@@ -526,7 +526,7 @@
              type: 'origin',
              text: xmlEscape(Cast.toString(args.TITLE)),
              message: xmlEscape(Cast.toString(args.MESSAGE)),
-             position: 'bottom-right'
+             position: xmlEscape(Cast.toString(args.POSITION))
           });
        }
 
@@ -551,7 +551,7 @@
        }
  
        // general function so its better to handle things
-       _createToast(options) {
+       async _createToast(options) {
           const container = createToastContainer(options.position);
           const toast = document.createElement('div');
           toast.className = 'toast';
@@ -578,13 +578,15 @@
           toast.style.transform = `translateY(${stackSize * 100}%)`;
           toast.style.transition = 'transform 0.3s ease-out';
  
-          if (options.image) {
+          if (options.image && await Scratch.canFetch(options.image)) {
              const img = document.createElement('img');
              img.src = options.image;
              img.alt = 'Toast icon';
+        
              if (options.imageRounded) {
                 img.style.borderRadius = '50%';
              }
+        
              toast.appendChild(img);
           }
  

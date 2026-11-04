@@ -1364,6 +1364,8 @@
             try {
                 this.uploadStatus = 'uploading';
                 this.uploadSuccessful = false;
+
+				if (await Scratch.canFetch(url) === false) throw new Error('User denied the fetch of the file on the external url'); 
                 
                 const response = await fetch(url);
                 if (!response.ok) {

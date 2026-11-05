@@ -100,6 +100,29 @@ Enjoy!! :D
     const wipeDirectionUpDown = 'up-down';
     const wipeDirectionRightLeft = 'right-left';
 
+    const maskTilingDefault = 'repeat';
+    const maskTilingModes = {
+        'repeat': [0, 0],
+        'mirror': [1, 1],
+        'stretch edges': [2, 2],
+        'none': [3, 3],
+        'repeat horizontally only': [0, 3],
+        'repeat vertically only': [3, 0],
+        'mirror horizontally only': [1, 3],
+        'mirror vertically only': [3, 1],
+        'repeat horizontally, mirror vertically': [0, 1],
+        'mirror horizontally, repeat vertically': [1, 0],
+        'repeat horizontally, stretch vertically': [0, 2],
+        'stretch horizontally, repeat vertically': [2, 0]
+    };
+    const maskTilingNames = Object.keys(maskTilingModes);
+
+    function resolveMaskTiling(state) {
+        const key = state ? state.maskTiling : null;
+        if (key && Object.prototype.hasOwnProperty.call(maskTilingModes, key)) return maskTilingModes[key];
+        return maskTilingModes[maskTilingDefault];
+    }
+
     function clampPercent(value) {
         return Math.max(0, Math.min(100, value));
     }
@@ -255,7 +278,7 @@ Enjoy!! :D
         ];
     }
 
-    const knownTags = ['color', 'b', 'i', 'u', 's', 'size', 'font', 'gradient', 'blur', 'shadow', 'border', 'layer', 'effect', 'perspective'];
+            const knownTags = ['color', 'b', 'i', 'u', 's', 'size', 'font', 'gradient', 'blur', 'shadow', 'border', 'layer', 'effect', 'perspective', 'dimensions', 'arrange'];
     const selfClosingTags = ['wait'];
     const tagRe = /(?<!\\)((?:\\\\)*)\[(\/?)([a-z0-9_-]+)(?:=([^\]]+))?\]/gi;
     const tagReStrip = /(?<!\\)((?:\\\\)*)\[(\/?)([a-z0-9_-]+)(?:=([^\]]+))?\]/gi;
@@ -270,7 +293,7 @@ Enjoy!! :D
     }
 
     function normalizeGradientType(value) {
-        const t = (value || '').toString().toLowerCase().trim();
+        const t = Scratch.Cast.toString(value || '').toLowerCase().trim();
         if (t === gradientTypeRadial) return gradientTypeRadial;
         if (t === gradientTypeConic) return gradientTypeConic;
         return gradientTypeLinear;
@@ -328,7 +351,7 @@ Enjoy!! :D
     }
 
     function parseLayerValue(value, fallback) {
-        if (value === undefined || value === null || String(value).trim() === '') return fallback || 0;
+        if (value === undefined || value === null || Scratch.Cast.toString(value).trim() === '') return fallback || 0;
         const layer = Scratch.Cast.toNumber(value);
         return Number.isFinite(layer) ? layer : (fallback || 0);
     }
@@ -343,8 +366,18 @@ Enjoy!! :D
             x: values[0],
             y: values[1],
             rotation: values[2],
-            scaleStrength: 1 / Math.sqrt(Math.max(0.01, values[3] / 100)) - 1
+            scaleStrength: 0.85 * (1 - clampRange(values[3], 0, 100) / 100)
         };
+    }
+
+    function parseDimensionsValue(value) {
+        if (!value) return null;
+        const parts = value.split(';');
+        if (parts.length !== 2) return null;
+        const width = Scratch.Cast.toNumber(parts[0]);
+        const height = Scratch.Cast.toNumber(parts[1]);
+        if (!Number.isFinite(width) || !Number.isFinite(height)) return null;
+        return { width, height };
     }
 
     const effectNames = ['color', 'fisheye', 'whirl', 'pixelate', 'mosaic', 'brightness', 'saturation', 'red', 'green', 'blue', 'opaque'];
@@ -370,7 +403,7 @@ Enjoy!! :D
     }
 
     function normalizeEffectName(raw) {
-        const name = String(raw === undefined || raw === null ? '' : raw).trim().toLowerCase();
+        const name = Scratch.Cast.toString(raw).trim().toLowerCase();
         return effectNameSet.has(name) ? name : null;
     }
 
@@ -457,6 +490,150 @@ Enjoy!! :D
         return Array.from(str);
     }
 
+    function compileArrangementExpression(source) {
+        const tokens = [];
+        let remaining = Scratch.Cast.toString(source || '');
+        while (remaining.trim()) {
+            remaining = remaining.trimStart();
+            const match = remaining.match(/^(?:(\d+(?:\.\d*)?|\.\d+)(?:e[+-]?\d+)?|[a-z_][a-z0-9_]*|[()+\-*/%^,])/i);
+            if (!match) return null;
+            tokens.push(match[0]);
+            remaining = remaining.slice(match[0].length);
+        }
+        if (!tokens.length) return null;
+        const squarePoint = (size, index, count) => {
+            if (count < 4) {
+                const t = index / Math.max(count, 1) * 4;
+                const side = Math.min(3, Math.floor(t));
+                const step = t - Math.floor(t);
+                if (side === 0) return { x: -size + 2 * size * step, y: -size };
+                if (side === 1) return { x: size, y: -size + 2 * size * step };
+                if (side === 2) return { x: size - 2 * size * step, y: size };
+                return { x: -size, y: size - 2 * size * step };
+            }
+            const extraPerSide = [0, 0, 0, 0];
+            const sideOrder = [0, 2, 1, 3];
+            for (let extra = 0; extra < count - 4; extra++) {
+                extraPerSide[sideOrder[extra % sideOrder.length]]++;
+            }
+            const points = [];
+            const corners = [
+                { x: -size, y: -size },
+                { x: size, y: -size },
+                { x: size, y: size },
+                { x: -size, y: size }
+            ];
+            for (let side = 0; side < 4; side++) {
+                const start = corners[side];
+                const end = corners[(side + 1) % 4];
+                points.push(start);
+                for (let point = 1; point <= extraPerSide[side]; point++) {
+                    const ratio = point / (extraPerSide[side] + 1);
+                    points.push({
+                        x: start.x + (end.x - start.x) * ratio,
+                        y: start.y + (end.y - start.y) * ratio
+                    });
+                }
+            }
+            return points[index] || corners[0];
+        };
+        let cursor = 0;
+        const functions = {
+            abs: Math.abs,
+            acos: Math.acos,
+            asin: Math.asin,
+            atan: Math.atan,
+            ceil: Math.ceil,
+            cos: Math.cos,
+            exp: Math.exp,
+            floor: Math.floor,
+            log: Math.log,
+            max: Math.max,
+            min: Math.min,
+            round: Math.round,
+            sin: Math.sin,
+            sqrt: Math.sqrt,
+            squarex: (size, index, count) => squarePoint(size, index, count).x,
+            squarey: (size, index, count) => squarePoint(size, index, count).y,
+            tan: Math.tan
+        };
+        const parsePrimary = () => {
+            const token = tokens[cursor++];
+            if (token === undefined) throw new Error('expression ended');
+            if (token === '(') {
+                const value = parseBinary(0);
+                if (tokens[cursor++] !== ')') throw new Error('missing close parenthesis');
+                return value;
+            }
+            if (token === '+' || token === '-') {
+                const value = parsePrimary();
+                return token === '+' ? value : (i, n) => -value(i, n);
+            }
+            if (/^(?:\d|\.)/.test(token)) {
+                const value = Scratch.Cast.toNumber(token);
+                return () => value;
+            }
+            const name = token.toLowerCase();
+            if (Object.prototype.hasOwnProperty.call(functions, name)) {
+                if (tokens[cursor++] !== '(') throw new Error('function requires arguments');
+                const args = [];
+                if (tokens[cursor] !== ')') {
+                    do {
+                        args.push(parseBinary(0));
+                        if (tokens[cursor] !== ',') break;
+                        cursor++;
+                    } while (true);
+                }
+                if (tokens[cursor++] !== ')') throw new Error('missing function close parenthesis');
+                return (i, n) => functions[name](...args.map(arg => arg(i, n)));
+            }
+            if (name === 'i' || name === 'index') return i => i;
+            if (name === 'n' || name === 'count') return (i, n) => n;
+            if (name === 'pi') return () => Math.PI;
+            if (name === 'tau') return () => Math.PI * 2;
+            throw new Error('unknown expression name');
+        };
+        const precedence = { '+': 1, '-': 1, '*': 2, '/': 2, '%': 2, '^': 3 };
+        const parseBinary = minPrecedence => {
+            let left = parsePrimary();
+            while (cursor < tokens.length) {
+                const operator = tokens[cursor];
+                const level = precedence[operator];
+                if (level === undefined || level < minPrecedence) break;
+                cursor++;
+                const right = parseBinary(level + (operator === '^' ? 0 : 1));
+                const previous = left;
+                if (operator === '+') left = (i, n) => previous(i, n) + right(i, n);
+                else if (operator === '-') left = (i, n) => previous(i, n) - right(i, n);
+                else if (operator === '*') left = (i, n) => previous(i, n) * right(i, n);
+                else if (operator === '/') left = (i, n) => previous(i, n) / right(i, n);
+                else if (operator === '%') left = (i, n) => previous(i, n) % right(i, n);
+                else left = (i, n) => Math.pow(previous(i, n), right(i, n));
+            }
+            return left;
+        };
+        try {
+            const expression = parseBinary(0);
+            if (cursor !== tokens.length) return null;
+            return (i, n) => {
+                const result = expression(i, n);
+                return Number.isFinite(result) ? clampRange(result, -100000, 100000) : 0;
+            };
+        } catch (e) {
+            return null;
+        }
+    }
+
+    function parseArrangementValue(value, id) {
+        if (!value) return null;
+        const separator = value.indexOf('|');
+        if (separator < 0 || value.indexOf('|', separator + 1) >= 0) return null;
+        const x = compileArrangementExpression(value.slice(0, separator));
+        const y = compileArrangementExpression(value.slice(separator + 1));
+        if (!x || !y) return null;
+        return { id, x, y };
+    }
+
     function parseRichText(text, base) {
         const families = new Set([base.font]);
         const stack = [Object.assign({
@@ -466,13 +643,16 @@ Enjoy!! :D
             border: null,
             layer: 0,
             effects: null,
-            perspectives: []
+            perspectives: [],
+            dimensions: null,
+            arrangement: null
         }, base)];
         const out = [];
         tagRe.lastIndex = 0;
         let i = 0;
         let match;
         let gradientOccurrenceSeq = 0;
+        let arrangementOccurrenceSeq = 0;
         const appendText = segment => {
             const graphemes = splitGraphemes(segment);
             for (const g of graphemes) {
@@ -495,7 +675,9 @@ Enjoy!! :D
                     border: style.border,
                     layer: style.layer || 0,
                     effects: style.effects || null,
-                    perspectives: style.perspectives || []
+                    perspectives: style.perspectives || [],
+                    dimensions: style.dimensions || null,
+                    arrangement: style.arrangement || null
                 });
                 families.add(style.font);
             }
@@ -536,7 +718,9 @@ Enjoy!! :D
                     border: prev.border,
                     layer: prev.layer || 0,
                     effects: prev.effects || null,
-                    perspectives: prev.perspectives || []
+                    perspectives: prev.perspectives || [],
+                    dimensions: prev.dimensions || null,
+                    arrangement: prev.arrangement || null
                 };
                 if (knownTags.indexOf(tag) !== -1) {
                     switch (tag) {
@@ -596,6 +780,12 @@ Enjoy!! :D
                             if (parsedPerspective) top.perspectives = top.perspectives.concat([parsedPerspective]);
                             break;
                         }
+                        case 'dimensions':
+                            top.dimensions = parseDimensionsValue(value) || top.dimensions;
+                            break;
+                        case 'arrange':
+                            top.arrangement = parseArrangementValue(value, arrangementOccurrenceSeq++) || top.arrangement;
+                            break;
                     }
                 } else {
                     top.customTags = top.customTags.concat([tag]);
@@ -605,6 +795,34 @@ Enjoy!! :D
             i = match.index + match[0].length;
         }
         out.families = families;
+        const arrangementGroups = new Map();
+        for (const char of out) {
+            if (!char.arrangement) continue;
+            let group = arrangementGroups.get(char.arrangement.id);
+            if (!group) {
+                group = { arrangement: char.arrangement, chars: [] };
+                arrangementGroups.set(char.arrangement.id, group);
+            }
+            group.chars.push(char);
+        }
+        for (const group of arrangementGroups.values()) {
+            const count = group.chars.length;
+            for (let index = 0; index < count; index++) {
+                const char = group.chars[index];
+                char.arrangementOffset = {
+                    x: group.arrangement.x(index, count),
+                    y: group.arrangement.y(index, count)
+                };
+            }
+        }
+        for (const char of out) {
+            if (!char.dimensions) continue;
+            const scaleX = Math.max(0.01, (base.size + char.dimensions.width) / base.size);
+            const scaleY = Math.max(0.01, (base.size + char.dimensions.height) / base.size);
+            char.dimensionScaleX = scaleX;
+            char.dimensionScaleY = scaleY;
+        }
+        out.dimensions = null;
         return out;
     }
 
@@ -656,6 +874,8 @@ Enjoy!! :D
             char.size = override.size;
             char.font = override.font;
             char.blur = override.blur;
+            if (Number.isFinite(override.dimensionOffsetX)) char.dimensionScaleX = Math.max(0.01, (char.size + override.dimensionOffsetX) / char.size);
+            if (Number.isFinite(override.dimensionOffsetY)) char.dimensionScaleY = Math.max(0.01, (char.size + override.dimensionOffsetY) / char.size);
             if (families) families.add(override.font);
         }
     }
@@ -747,6 +967,8 @@ Enjoy!! :D
             baseStyle: defaultBaseStyle(),
             align: 'center',
             smoothing: true,
+            mapMasksToStageCoordinates: false,
+            maskTiling: maskTilingDefault,
             cullOffscreen: true,
             cullRegion: null,
             cullBounds: null,
@@ -874,6 +1096,10 @@ Enjoy!! :D
             state.typingSpeeds = Object.assign(defaults.typingSpeeds, state.typingSpeeds || {});
             state.customTypingSpeeds = Object.assign({}, state.customTypingSpeeds || {});
             state.smoothing = state.smoothing === undefined ? defaults.smoothing : Scratch.Cast.toBoolean(state.smoothing);
+            state.mapMasksToStageCoordinates = state.mapMasksToStageCoordinates === undefined ?
+                defaults.mapMasksToStageCoordinates :
+                Scratch.Cast.toBoolean(state.mapMasksToStageCoordinates);
+            if (!Object.prototype.hasOwnProperty.call(maskTilingModes, state.maskTiling)) state.maskTiling = defaults.maskTiling;
             state.cullOffscreen = state.cullOffscreen === undefined ? defaults.cullOffscreen : Scratch.Cast.toBoolean(state.cullOffscreen);
             if (state.emojiMode !== 1 && state.emojiMode !== 2) state.emojiMode = defaults.emojiMode;
             state.growDownwardOnly = state.growDownwardOnly === undefined ? defaults.growDownwardOnly : Scratch.Cast.toBoolean(state.growDownwardOnly);
@@ -886,6 +1112,8 @@ Enjoy!! :D
             if (state.typingControl !== 'skip' && state.typingControl !== 'stop') state.typingControl = null;
             state.iiMigrated = true;
         }
+        if (state.mapMasksToStageCoordinates === undefined) state.mapMasksToStageCoordinates = false;
+        if (!Object.prototype.hasOwnProperty.call(maskTilingModes, state.maskTiling)) state.maskTiling = maskTilingDefault;
         return state;
     }
 
@@ -968,6 +1196,8 @@ Enjoy!! :D
             },
             align: state.align,
             smoothing: state.smoothing,
+            mapMasksToStageCoordinates: state.mapMasksToStageCoordinates,
+            maskTiling: state.maskTiling,
             cullOffscreen: state.cullOffscreen,
             emojiMode: state.emojiMode,
             growDownwardOnly: state.growDownwardOnly,
@@ -1002,6 +1232,12 @@ Enjoy!! :D
             state.align = settings.align;
         }
         if (settings.smoothing !== undefined) state.smoothing = Scratch.Cast.toBoolean(settings.smoothing);
+        if (typeof settings.mapMasksToStageCoordinates === 'boolean') {
+            state.mapMasksToStageCoordinates = settings.mapMasksToStageCoordinates;
+        }
+        if (typeof settings.maskTiling === 'string' && Object.prototype.hasOwnProperty.call(maskTilingModes, settings.maskTiling)) {
+            state.maskTiling = settings.maskTiling;
+        }
         if (settings.cullOffscreen !== undefined) state.cullOffscreen = Scratch.Cast.toBoolean(settings.cullOffscreen);
         if (settings.emojiMode === 1 || settings.emojiMode === 2) state.emojiMode = settings.emojiMode;
         if (settings.growDownwardOnly !== undefined) state.growDownwardOnly = Scratch.Cast.toBoolean(settings.growDownwardOnly);
@@ -1659,7 +1895,7 @@ Enjoy!! :D
     }
 
     function normalizeFontFamilyName(value) {
-        return String(value || '').trim().replace(/^["']|["']$/g, '').toLowerCase();
+        return Scratch.Cast.toString(value || '').trim().replace(/^["']|["']$/g, '').toLowerCase();
     }
 
     function absoluteFontSource(src, baseHref) {
@@ -1911,7 +2147,7 @@ Enjoy!! :D
     }
 
     function setGlyphWorkerEnabled(enabled) {
-        glyphWorker.enabled = !!enabled;
+        glyphWorker.enabled = Scratch.Cast.toBoolean(enabled);
         if (glyphWorker.enabled && glyphWorker.ready) {
             for (const fontId of loadedDocumentFonts) registerWorkerFont(fontId);
         }
@@ -2188,7 +2424,7 @@ Enjoy!! :D
         sctx.globalCompositeOperation = 'source-over';
 
         if (coverage < 1) {
-            const seamless = !!mask.seamless;
+            const seamless = mask.seamless !== false;
             const localOffsetX = seamless ? (worldDrawX - spanOriginX) : 0;
             const localOffsetY = seamless ? (worldDrawY - spanOriginY) : 0;
             const effSpanW = seamless && spanW ? spanW : w;
@@ -2592,12 +2828,32 @@ Enjoy!! :D
         });
     }
 
+    function getMaskPlacement(costume, targetName) {
+        if (targetName !== 'Stage') return null;
+        const renderer = runtime.renderer;
+        if (!renderer || !renderer._allSkins || typeof costume.skinId !== 'number') return null;
+        const skin = renderer._allSkins[costume.skinId];
+        if (!skin) return null;
+        const size = skin.size;
+        const center = skin.rotationCenter;
+        if (!size || !center) return null;
+        const width = Scratch.Cast.toNumber(size[0]);
+        const height = Scratch.Cast.toNumber(size[1]);
+        const centerX = Scratch.Cast.toNumber(center[0]);
+        const centerY = Scratch.Cast.toNumber(center[1]);
+        if (!(width > 0) || !(height > 0) || !Number.isFinite(centerX) || !Number.isFinite(centerY)) return null;
+        return { width, height, centerX, centerY };
+    }
+
     function getMaskTexture(targetName, costumeName) {
         const costume = findCostumeByRef(targetName, costumeName);
         if (!costume) return null;
         const key = maskCostumeKey(targetName, costume);
         const cached = maskTextureCache.get(key);
-        if (cached) return cached;
+        if (cached) {
+            cached.placement = getMaskPlacement(costume, targetName);
+            return cached;
+        }
 
         if (!maskTexturePending.has(key)) {
             const promise = rasterizeCostumeToCanvas(costume, targetName).then((result) => {
@@ -2797,7 +3053,7 @@ Enjoy!! :D
             if (runs.length) measureShapedRuns(measureCtx, runs, state.letterSpacing);
             for (const run of runs) {
                 for (let i = 0; i < run.chars.length; i++) {
-                    run.chars[i]._width = run.positions[i].advance;
+                    run.chars[i]._width = run.positions[i].advance * (run.chars[i].dimensionScaleX || 1);
                 }
             }
             hardLineRunsCache.push(runs);
@@ -2937,6 +3193,14 @@ Enjoy!! :D
             if (size > maxBorderExtent) maxBorderExtent = size;
         }
 
+        let arrangementExtentX = 0;
+        let arrangementExtentY = 0;
+        for (const rc of richChars) {
+            if (!rc.arrangementOffset) continue;
+            arrangementExtentX = Math.max(arrangementExtentX, Math.abs(rc.arrangementOffset.x));
+            arrangementExtentY = Math.max(arrangementExtentY, Math.abs(rc.arrangementOffset.y));
+        }
+
         return {
             lines,
             lineWidths,
@@ -2944,7 +3208,11 @@ Enjoy!! :D
             lineRuns,
             charsByTag,
             maxShadowExtent,
-            maxBorderExtent
+            maxBorderExtent,
+            dimensions: richChars.dimensions,
+            arrangementExtentX,
+            arrangementExtentY,
+            hasArrangement: arrangementExtentX > 0 || arrangementExtentY > 0 || richChars.some(rc => !!rc.arrangementOffset)
         };
     }
 
@@ -3053,19 +3321,23 @@ Enjoy!! :D
                     const charCenterY = baseCenterY;
                     const advanceCenterXEm = shape.baselineOriginXEm + shape.advance / 2;
                     const baselineYFromLineCenter = (shape.fontAscentEm - shape.fontDescentEm) / 2;
-                    const drawXEm = charCenterX - advanceCenterXEm;
-                    const drawYEm = (charCenterY + baselineYFromLineCenter) - shape.baselineOriginYEm;
+                    const dimensionScaleX = rc.dimensionScaleX || 1;
+                    const dimensionScaleY = rc.dimensionScaleY || 1;
+                    const drawXEm = charCenterX - advanceCenterXEm * dimensionScaleX;
+                    const drawYEm = charCenterY + baselineYFromLineCenter - shape.baselineOriginYEm * dimensionScaleY;
                     const px = Math.round(drawXEm * destScale);
                     const py = Math.round(drawYEm * destScale);
                     const w = shape.canvas.width;
                     const h = shape.canvas.height;
-                    const padYPx = Math.round((shape.baselineOriginYEm - shape.fontAscentEm) * destScale);
-                    const inkTop = py + padYPx;
-                    const inkBottom = py + h - padYPx;
+                    const scaledMinX = px;
+                    const scaledMaxX = px + w * dimensionScaleX;
+                    const padYPx = (shape.baselineOriginYEm - shape.fontAscentEm) * destScale;
+                    const inkTop = py + padYPx * dimensionScaleY;
+                    const inkBottom = py + (h - padYPx) * dimensionScaleY;
 
                     groupChars.push({ charIndex, px, py });
-                    expandAABBToPoint(box, px, inkTop);
-                    expandAABBToPoint(box, px + w, inkBottom);
+                    expandAABBToPoint(box, scaledMinX, inkTop);
+                    expandAABBToPoint(box, scaledMaxX, inkBottom);
                 }
             }
         }
@@ -3103,7 +3375,6 @@ Enjoy!! :D
 
         if (state.maxWidth && state.maxWidth > 0) width = Math.min(width, state.maxWidth);
         if (state.maxHeight && state.maxHeight > 0) height = Math.min(height, state.maxHeight);
-
         return {
             width,
             height
@@ -3115,9 +3386,13 @@ Enjoy!! :D
         return getExactTextDimensions(state);
     }
 
-    function fingerprintPaintOps(paintOps, docW, docH, align) {
+    function fingerprintPaintOps(paintOps, docW, docH, align, dimensions) {
         let hash = (docW * 2654435761) ^ (docH * 40503);
         hash = (hash * 33) ^ hashString(align);
+        if (dimensions) {
+            hash = (hash * 33) ^ ((dimensions.width * 1000) | 0);
+            hash = (hash * 33) ^ ((dimensions.height * 1000) | 0);
+        }
         hash = (hash * 33) ^ paintOps.length;
         for (let i = 0; i < paintOps.length; i++) {
             const op = paintOps[i];
@@ -3202,6 +3477,7 @@ Enjoy!! :D
             hash = (hash * 33) ^ ((mask.y * 100) | 0);
             hash = (hash * 33) ^ ((mask.zoom != null ? mask.zoom : 100) * 100 | 0);
             hash = (hash * 33) ^ ((mask.rotation != null ? mask.rotation : 0) * 100 | 0);
+            hash = (hash * 33) ^ (mask.seamless === false ? 0 : 1);
         } else {
             hash = (hash * 33) ^ 0x5a5a;
         }
@@ -3378,7 +3654,7 @@ Enjoy!! :D
     function applyEasing(name, dir, x) {
         const fn = EasingMethods[name] || linear;
         if (fn === linear) return linear(x);
-        const d = (dir || 'out').toString().toLowerCase().trim();
+        const d = Scratch.Cast.toString(dir || 'out').toLowerCase().trim();
         const normalizedDir = (d === 'in' || d === 'out' || d === 'in out') ? d : 'out';
         const res = fn(x, normalizedDir);
         return Number.isFinite(res) ? res : x;
@@ -3505,8 +3781,8 @@ Enjoy!! :D
         if (Number.isFinite(left) && Number.isFinite(right) && Number.isFinite(bottom) && Number.isFinite(top) && right > left && top > bottom) {
             return { left, right, bottom, top };
         }
-        const width = runtime.stageWidth > 0 ? runtime.stageWidth : 480;
-        const height = runtime.stageHeight > 0 ? runtime.stageHeight : 360;
+        const width = runtime.stageWidth;
+        const height = runtime.stageHeight;
         return { left: -width / 2, right: width / 2, bottom: -height / 2, top: height / 2 };
     }
 
@@ -3649,9 +3925,38 @@ Enjoy!! :D
         }
     }
 
+    function maskStageTransformChanged(target, state) {
+        const previous = state.maskStageTransform;
+        if (!previous) return false;
+        const current = getDrawableTransform(target);
+        if (!current) return false;
+        return previous.x !== current.x ||
+            previous.y !== current.y ||
+            previous.direction !== current.direction ||
+            previous.scaleX !== current.scaleX ||
+            previous.scaleY !== current.scaleY;
+    }
+
+    function refreshStageMappedMaskTargets() {
+        const targets = runtime.targets;
+        if (!targets) return;
+        for (let i = 0; i < targets.length; i++) {
+            const target = targets[i];
+            if (typeof target.getCustomState !== 'function') continue;
+            const state = target.getCustomState(stateKey);
+            if (!state || !state.visible || state.skinId === null || !state.maskStageTransform) continue;
+            if (state.renderInFlight || glyphWorker.waiters.has(target) || pendingRenderTargets.has(target)) continue;
+            if (!maskStageTransformChanged(target, state)) continue;
+            state.paintFingerprint = null;
+            state.paintDirty = true;
+            renderTarget(target);
+        }
+    }
+
     function preDrawUpdate() {
         flushPendingRenders();
         refreshCulledTargets();
+        refreshStageMappedMaskTargets();
     }
 
     function getEmptyCullCanvas() {
@@ -3736,118 +4041,129 @@ Enjoy!! :D
         }
     }
 
-    const emptyPerspectiveTransform = { offsetX: 0, offsetY: 0, rotation: 0, scale: 1 };
-    const emptyPerspectiveGeometry = { maxShiftX: 0, maxShiftY: 0, maxCharacterExtent: 0 };
+    const emptyPerspectiveGeometry = { maxShiftX: 0, maxShiftY: 0, maxCharacterExtent: 0, perspectives: [] };
+
+    function applyPerspectiveSpacing(lineRuns, lineWidths, align, state) {
+        let maxWidth = 0;
+        const spansByPerspective = new Map();
+        for (let lineIndex = 0; lineIndex < lineRuns.length; lineIndex++) {
+            const runs = lineRuns[lineIndex];
+            const lineWidth = lineWidths[lineIndex];
+            const lineOffset = align === 'right' ? -lineWidth : align === 'center' ? -lineWidth / 2 : 0;
+            for (const run of runs) {
+                for (let i = 0; i < run.chars.length; i++) {
+                    const rc = run.chars[i];
+                    const position = run.positions[i];
+                    const localStartX = run.runStartX + position.shapedX;
+                    const localEndX = localStartX + position.advance + (rc._trailingCollapse || 0);
+                    for (const perspective of rc.perspectives || []) {
+                        let span = spansByPerspective.get(perspective);
+                        if (!span) {
+                            span = { perspective, minX: Infinity, maxX: -Infinity, lines: new Map() };
+                            spansByPerspective.set(perspective, span);
+                        }
+                        const startX = lineOffset + localStartX;
+                        const endX = lineOffset + localEndX;
+                        let lineSpan = span.lines.get(lineIndex);
+                        if (!lineSpan) {
+                            lineSpan = { startX: localStartX, endX: localEndX, lineOffset, inkMinX: Infinity, inkMaxX: -Infinity, height: rc.size || 0 };
+                            span.lines.set(lineIndex, lineSpan);
+                        } else {
+                            lineSpan.startX = Math.min(lineSpan.startX, localStartX);
+                            lineSpan.endX = Math.max(lineSpan.endX, localEndX);
+                            lineSpan.height = Math.max(lineSpan.height, rc.size || 0);
+                        }
+                        if (rc.char !== ' ' && rc.char !== '\u00A0') {
+                            const shape = getGlyphShapeForFontStyle(rc.char, run.fontStyle);
+                            const shapeStartX = localStartX + (position.advance - shape.advance) / 2 - shape.baselineOriginXEm;
+                            const shapeEndX = shapeStartX + shape.canvas.width / glyphOversample;
+                            const shadow = rc.shadow || (state.textShadow.enabled ? state.textShadow : null);
+                            const border = rc.border || (state.textBorder.enabled ? state.textBorder : null);
+                            const padding = Math.max(
+                                (rc.blur || 0) / 100 * (rc.size || 0) * 0.5,
+                                shadow ? Math.max(0, shadow.blur) + Math.max(Math.abs(shadow.offsetX), Math.abs(shadow.offsetY)) : 0,
+                                border ? Math.max(0, border.size) : 0
+                            );
+                            const paddedStartX = lineOffset + shapeStartX - padding;
+                            const paddedEndX = lineOffset + shapeEndX + padding;
+                            lineSpan.inkMinX = Math.min(lineSpan.inkMinX, paddedStartX);
+                            lineSpan.inkMaxX = Math.max(lineSpan.inkMaxX, paddedEndX);
+                            span.minX = Math.min(span.minX, paddedStartX);
+                            span.maxX = Math.max(span.maxX, paddedEndX);
+                        }
+                    }
+                }
+            }
+        }
+        const lineContractions = lineRuns.map(() => []);
+        for (const span of spansByPerspective.values()) {
+            const sourceWidth = span.maxX - span.minX;
+            if (!(sourceWidth > 0)) continue;
+            const depth = clampRange(span.perspective.scaleStrength, 0, 0.85);
+            const projectX = x => {
+                const localX = x - span.minX;
+                return localX / (1 + depth * localX / sourceWidth);
+            };
+            for (const [lineIndex, lineSpan] of span.lines) {
+                if (!Number.isFinite(lineSpan.inkMaxX)) continue;
+                const projectedRightX = span.minX + projectX(lineSpan.inkMaxX);
+                lineContractions[lineIndex].push({
+                    endX: lineSpan.endX,
+                    delta: lineSpan.lineOffset + lineSpan.endX - projectedRightX
+                });
+            }
+        }
+        for (let lineIndex = 0; lineIndex < lineRuns.length; lineIndex++) {
+            const contractions = lineContractions[lineIndex]
+                .filter(span => Number.isFinite(span.delta) && Math.abs(span.delta) > 0.0001)
+                .sort((a, b) => a.endX - b.endX);
+            const runs = lineRuns[lineIndex];
+            const shiftedWidth = x => contractions.reduce((sum, span) =>
+                sum + (span.endX <= x ? span.delta : 0), 0);
+            for (const run of runs) {
+                const originalRunStart = run.runStartX;
+                const runShift = shiftedWidth(originalRunStart);
+                run.runStartX = originalRunStart - runShift;
+                let runEnd = run.runStartX;
+                for (let i = 0; i < run.positions.length; i++) {
+                    const position = run.positions[i];
+                    const originalX = originalRunStart + position.shapedX;
+                    const charShift = shiftedWidth(originalX);
+                    position.shapedX -= charShift - runShift;
+                    runEnd = Math.max(runEnd, run.runStartX + position.shapedX + position.advance);
+                }
+                run.runWidth = Math.max(0, runEnd - run.runStartX);
+            }
+            lineWidths[lineIndex] = Math.max(0, lineWidths[lineIndex] - contractions.reduce((sum, span) => sum + span.delta, 0));
+            maxWidth = Math.max(maxWidth, lineWidths[lineIndex]);
+        }
+        return maxWidth;
+    }
 
     function buildPerspectiveGeometry(lineRuns) {
-        const lineGeometries = new Array(lineRuns.length);
-
+        const perspectives = new Set();
+        let maxLineExtent = 0;
+        let maxLineHeight = 0;
         for (let lineIndex = 0; lineIndex < lineRuns.length; lineIndex++) {
-            const lineGeometry = new Map();
+            let lineExtent = 0;
             for (const run of lineRuns[lineIndex]) {
+                for (const position of run.positions) lineExtent += position.advance;
                 for (let i = 0; i < run.chars.length; i++) {
                     const rc = run.chars[i];
+                    maxLineHeight = Math.max(maxLineHeight, rc.size || 0);
                     if (!rc.perspectives || !rc.perspectives.length) continue;
-                    const index = run.startIndex + i;
-                    const advance = run.positions[i].advance;
-                    for (const perspective of rc.perspectives) {
-                        let geometry = lineGeometry.get(perspective);
-                        if (!geometry) {
-                            geometry = {
-                                offsets: new Map(),
-                                width: 0,
-                                firstOffset: 0,
-                                lastOffset: 0,
-                                lastIndex: index,
-                                lastAdvance: advance
-                            };
-                            lineGeometry.set(perspective, geometry);
-                        }
-                        const centerOffset = geometry.width + advance / 2;
-                        if (geometry.offsets.size === 0) geometry.firstOffset = centerOffset;
-                        geometry.lastOffset = centerOffset;
-                        geometry.lastIndex = index;
-                        geometry.lastAdvance = advance;
-                        geometry.offsets.set(index, centerOffset);
-                        geometry.width += advance;
-                    }
+                    for (const perspective of rc.perspectives) perspectives.add(perspective);
                 }
             }
-            if (lineGeometry.size) lineGeometries[lineIndex] = lineGeometry;
+            maxLineExtent = Math.max(maxLineExtent, lineExtent);
         }
-
-        if (!lineGeometries.some(Boolean)) return emptyPerspectiveGeometry;
-
-        let maxShiftX = 0;
-        let maxShiftY = 0;
-        let maxCharacterExtent = 0;
-
-        for (let lineIndex = 0; lineIndex < lineRuns.length; lineIndex++) {
-            const lineGeometry = lineGeometries[lineIndex];
-            if (!lineGeometry) continue;
-            let lineShiftX = 0;
-            let lineShiftY = 0;
-            let trailingShiftX = 0;
-            for (const run of lineRuns[lineIndex]) {
-                for (let i = 0; i < run.chars.length; i++) {
-                    const rc = run.chars[i];
-                    const index = run.startIndex + i;
-                    let shiftX = 0;
-                    let shiftY = 0;
-                    let perspectiveRotation = 0;
-                    let scale = 1;
-                    for (const perspective of rc.perspectives || []) {
-                        const geometry = lineGeometry.get(perspective);
-                        if (!geometry) continue;
-                        const centerOffset = geometry.offsets.get(index);
-                        if (!Number.isFinite(centerOffset)) continue;
-                        const centerRange = geometry.lastOffset - geometry.firstOffset;
-                        const progress = geometry.offsets.size > 1 && centerRange > 0 ?
-                            (centerOffset - geometry.firstOffset) / centerRange : 1;
-                        const projectedOffset = centerRange > 0 ?
-                            centerRange * progress / (1 + perspective.scaleStrength * progress) :
-                            0;
-                        shiftX += projectedOffset - centerRange * progress +
-                            perspective.x * progress;
-                        shiftY += perspective.y * progress;
-                        perspectiveRotation += perspective.rotation * progress;
-                        scale *= 1 / Math.pow(1 + perspective.scaleStrength * progress, 2);
-                    }
-                    shiftX += trailingShiftX;
-                    if (!Number.isFinite(shiftX) || !Number.isFinite(shiftY) ||
-                        !Number.isFinite(perspectiveRotation) || !Number.isFinite(scale)) {
-                        continue;
-                    }
-                    rc.perspectiveTransform = {
-                        offsetX: shiftX,
-                        offsetY: shiftY,
-                        rotation: perspectiveRotation,
-                        scale
-                    };
-                    lineShiftX = Math.max(lineShiftX, Math.abs(shiftX));
-                    lineShiftY = Math.max(lineShiftY, Math.abs(shiftY));
-                    maxCharacterExtent = Math.max(maxCharacterExtent, rc.size * scale);
-
-                    let completedShiftX = 0;
-                    for (const perspective of rc.perspectives || []) {
-                        const geometry = lineGeometry.get(perspective);
-                        if (!geometry || geometry.lastIndex !== index) continue;
-                        const centerRange = geometry.lastOffset - geometry.firstOffset;
-                        const endScale = 1 / Math.pow(1 + perspective.scaleStrength, 2);
-                        const centerShift = (centerRange > 0 ?
-                            centerRange / (1 + perspective.scaleStrength) - centerRange : 0) +
-                            perspective.x;
-                        completedShiftX += centerShift +
-                            (endScale - 1) * geometry.lastAdvance / 2;
-                    }
-                    trailingShiftX += completedShiftX;
-                }
-            }
-            maxShiftX = Math.max(maxShiftX, lineShiftX);
-            maxShiftY = Math.max(maxShiftY, lineShiftY);
-        }
-
-        return { maxShiftX, maxShiftY, maxCharacterExtent };
+        if (!perspectives.size) return emptyPerspectiveGeometry;
+        const perspectiveList = Array.from(perspectives);
+        const maxShiftX = perspectiveList.reduce((max, item) => Math.max(max, Math.abs(item.x)), 0);
+        const maxShiftY = perspectiveList.reduce((max, item) => Math.max(max, Math.abs(item.y)), 0);
+        const maxCharacterExtent = perspectiveList.some(item => item.rotation) ?
+            Math.max(maxLineExtent, maxLineHeight * lineRuns.length) : 0;
+        return { maxShiftX, maxShiftY, maxCharacterExtent, perspectives: perspectiveList };
     }
 
     function renderTarget(target) {
@@ -3893,6 +4209,10 @@ Enjoy!! :D
             state.fontsPendingAtMeasure = fontsPending;
         }
         state.layoutKey = layoutKey;
+        if (!layout.perspectiveSpacingApplied) {
+            layout.maxWidth = applyPerspectiveSpacing(layout.lineRuns, layout.lineWidths, state.align, state);
+            layout.perspectiveSpacingApplied = true;
+        }
         const {
             lines,
             lineWidths,
@@ -3927,10 +4247,12 @@ Enjoy!! :D
         );
         const padX = Math.max(
             basePad,
+            basePad + (layout.arrangementExtentX || 0),
             perspectiveGeometry.maxShiftX + perspectiveGeometry.maxCharacterExtent + decorationPad
         );
         const padY = Math.max(
             basePad,
+            basePad + (layout.arrangementExtentY || 0),
             perspectiveGeometry.maxShiftY + perspectiveGeometry.maxCharacterExtent + decorationPad
         );
 
@@ -4059,17 +4381,16 @@ Enjoy!! :D
                             (state.charOverrides[index] || emptyOverride) :
                             emptyOverride;
 
-                        const perspective = rc.perspectiveTransform || emptyPerspectiveTransform;
-                        const perspectiveX = perspective.offsetX;
-                        const perspectiveY = perspective.offsetY;
-                        const perspectiveRotation = perspective.rotation;
-                        const perspectiveScale = perspective.scale;
-                        const charCenterX = runOriginX + pos.shapedX + pos.advance / 2 +
-                            spacesBefore * justifyExtra + o.x + perspectiveX;
-                        const charCenterY = baseCenterY - o.y - perspectiveY;
-                        const rotation = (o.rotation || 0) + perspectiveRotation;
+                        const arrangementOffset = rc.arrangementOffset || emptyOverride;
+                        const charCenterX = rc.arrangementOffset ?
+                            originX + arrangementOffset.x + o.x :
+                            runOriginX + pos.shapedX + pos.advance / 2 + spacesBefore * justifyExtra + o.x;
+                        const charCenterY = rc.arrangementOffset ?
+                            originY - arrangementOffset.y - o.y :
+                            baseCenterY - o.y;
+                        const rotation = o.rotation || 0;
                         const opacity = o.opacity == null ? 1 : o.opacity;
-                        const scale = (o.scale == null ? 1 : o.scale) * perspectiveScale;
+                        const scale = o.scale == null ? 1 : o.scale;
                         const ch = rc.char === ' ' ? '\u00A0' : rc.char;
                         const mask = state.charMasks[index] || null;
 
@@ -4080,13 +4401,16 @@ Enjoy!! :D
                         op.rotation = rotation;
                         op.opacity = opacity;
                         op.scale = scale;
+                        op.perspectives = rc.perspectives || null;
                         op.color = o.color || rc.color;
                         op.font = style;
                         op.rawFontFamily = rc0.font;
                         op.letterSpacing = letterSpacing;
                         op.underline = underline;
                         op.strike = strike;
-                        op.width = pos.advance * perspectiveScale;
+                        op.width = pos.advance;
+                        op.dimensionScaleX = rc.dimensionScaleX || 1;
+                        op.dimensionScaleY = rc.dimensionScaleY || 1;
                         op.mask = mask;
                         op.charIndex = index;
                         op.gradient = o.color ? null : (rc.gradient || null);
@@ -4107,14 +4431,14 @@ Enjoy!! :D
                                 index,
                                 char: rc.char,
                                 tags: rc.tags,
-                                width: pos.advance,
-                                height: rc.size,
                                 style: characterStyleSnapshot(rc)
                             };
                             charBoxes[index] = box;
                         } else if (!styleSnapshotMatches(box.style, rc)) {
                             box.style = characterStyleSnapshot(rc);
                         }
+                        box.width = pos.advance;
+                        box.height = rc.size * (rc.dimensionScaleY || 1);
                         box.x = charCenterX - originX;
                         box.y = originY - charCenterY;
                     }
@@ -4132,7 +4456,7 @@ Enjoy!! :D
             state.drawableWidth = docW;
             state.drawableHeight = docH;
 
-            const fingerprint = fingerprintPaintOps(paintOps, docW, docH, state.align);
+            const fingerprint = fingerprintPaintOps(paintOps, docW, docH, state.align, layout.dimensions);
             if (fingerprint === state.paintFingerprint && state.skinId !== null) {
                 state.paintDirty = false;
                 return;
@@ -4146,7 +4470,8 @@ Enjoy!! :D
         }
 
         const cullInfo = state.cullOffscreen ? computeCull(target, state, docW, docH, originX, anchorY != null ? anchorY : originY) : null;
-        const cull = cullInfo && !cullInfo.unknown ? cullInfo : null;
+        const hasPerspective = !!(layout.perspectiveGeometry && layout.perspectiveGeometry.perspectives.length);
+        const cull = !layout.hasArrangement && !hasPerspective && cullInfo && !cullInfo.unknown ? cullInfo : null;
         if (deferForWorkerGlyphs(target, state, paintOps, cull)) {
             state.paintFingerprint = null;
             return;
@@ -4178,7 +4503,24 @@ Enjoy!! :D
         scale: glyphOversample
     };
 
+    function paintOpsHaveMask(paintOps) {
+        for (let i = 0; i < paintOps.length; i++) {
+            if (paintOps[i].mask) return true;
+        }
+        return false;
+    }
+
+    function getStageMaskTransform(target) {
+        const transform = getDrawableTransform(target);
+        if (!transform) return null;
+        if (!Number.isFinite(transform.x) || !Number.isFinite(transform.y) || !Number.isFinite(transform.direction)) return null;
+        if (!Number.isFinite(transform.scaleX) || !Number.isFinite(transform.scaleY)) return null;
+        if (Math.abs(transform.scaleX) < 1e-9 || Math.abs(transform.scaleY) < 1e-9) return null;
+        return transform;
+    }
+
     function compositeGlyphsAndPush(target, state, paintOps, docW, docH, textWidth, textHeight, textBoxOffsetX, originX, originY, anchorY, cull) {
+        state.maskStageTransform = null;
         if (cull && cull.empty) {
             pushCanvasToDrawable(target, getEmptyCullCanvas(), docW, docH, originX, anchorY != null ? anchorY : originY, destScale);
             return;
@@ -4191,9 +4533,16 @@ Enjoy!! :D
             pinnedKeys.add(glyphCacheKey(op.text, op.font['font-family'], op.font['font-size'], op.font['font-weight'], op.font['font-style']));
         }
         pinGlyphKeysForFrame(pinnedKeys);
+        const spriteAnchorY = anchorY != null ? anchorY : originY;
+        let maskStage = null;
+        if (state.mapMasksToStageCoordinates && paintOpsHaveMask(paintOps)) {
+            maskStage = getStageMaskTransform(target);
+            state.maskStageTransform = maskStage;
+            if (!preDrawFlushActive) ensurePreDrawHook();
+        }
         let canvas;
         try {
-            canvas = compositeGlyphsToCanvasWebGL2(state, paintOps, docW, docH, textWidth, textHeight, textBoxOffsetX, originX, originY, cull);
+            canvas = compositeGlyphsToCanvasWebGL2(state, paintOps, docW, docH, textWidth, textHeight, textBoxOffsetX, originX, originY, cull, maskStage, spriteAnchorY);
         } finally {
             unpinGlyphKeysForFrame(pinnedKeys);
         }
@@ -4393,21 +4742,24 @@ Enjoy!! :D
 
     function maskGroupKey(mask) {
         return mask.targetName + '\u0001' + mask.costumeName + '\u0001' +
-            (mask.direction || wipeDirectionBottomUp) + '\u0001' +
-            Math.round(mask.x * 4) + '\u0001' + Math.round(mask.y * 4);
+            (mask.x || 0) + '\u0001' + (mask.y || 0) + '\u0001' +
+            (mask.zoom != null ? mask.zoom : 100) + '\u0001' +
+            (mask.rotation || 0);
     }
 
     function glyphDrawRectPx(op, shape) {
         const advanceCenterXEm = shape.baselineOriginXEm + shape.advance / 2;
         const baselineYFromLineCenter = (shape.fontAscentEm - shape.fontDescentEm) / 2;
-        const drawXEm = op.x - advanceCenterXEm;
-        const drawYEm = (op.y + baselineYFromLineCenter) - shape.baselineOriginYEm;
+        const scaleX = op.dimensionScaleX || 1;
+        const scaleY = op.dimensionScaleY || 1;
+        const drawXEm = op.x - advanceCenterXEm * scaleX;
+        const drawYEm = op.y + baselineYFromLineCenter - shape.baselineOriginYEm * scaleY;
         const px = Math.round(drawXEm * destScale);
         const py = Math.round(drawYEm * destScale);
-        return { px, py, w: shape.canvas.width, h: shape.canvas.height };
+        return { px, py, w: shape.canvas.width * scaleX, h: shape.canvas.height * scaleY };
     }
 
-    function computeSeamlessMaskSpansByIndex(paintOps, areaW, areaH) {
+    function computeSeamlessMaskSpansByIndex(paintOps) {
         const spans = new Map();
         let groupIndices = null;
         let groupKey = null;
@@ -4416,21 +4768,21 @@ Enjoy!! :D
         const flushGroup = () => {
             if (!groupIndices || !groupIndices.length) return;
             if (!aabbIsFinite(box)) return;
-            const spanW = areaW;
-            const spanH = areaH;
+            const spanW = Math.max(1, box.maxX - box.minX);
+            const spanH = Math.max(1, box.maxY - box.minY);
             for (const gi of groupIndices) {
                 spans.set(gi, {
                     spanW,
                     spanH,
-                    originX: 0,
-                    originY: 0
+                    originX: box.minX,
+                    originY: box.minY
                 });
             }
         };
 
         for (let i = 0; i < paintOps.length; i++) {
             const op = paintOps[i];
-            if (!op.mask || !op.mask.seamless) {
+            if (!op.mask || op.mask.seamless === false) {
                 flushGroup();
                 groupIndices = null;
                 groupKey = null;
@@ -4459,12 +4811,12 @@ Enjoy!! :D
         return spans;
     }
 
-    function getSeamlessMaskSpans(state, paintOps, layoutDocKey, areaW, areaH) {
-        const cacheKey = layoutDocKey + '\u0003' + state.charMaskGeometryVersion;
+    function getSeamlessMaskSpans(state, paintOps, layoutDocKey) {
+        const cacheKey = layoutDocKey + '\u0003' + state.charMasksVersion;
         if (state.maskSpansCacheKey === cacheKey && state.maskSpansCache) {
             return state.maskSpansCache;
         }
-        const spans = computeSeamlessMaskSpansByIndex(paintOps, areaW, areaH);
+        const spans = computeSeamlessMaskSpansByIndex(paintOps);
         state.maskSpansCacheKey = cacheKey;
         state.maskSpansCache = spans;
         return spans;
@@ -4549,6 +4901,10 @@ Enjoy!! :D
     uniform vec2 u_pivot;
     uniform float u_rotation;
     uniform float u_scale;
+    uniform vec2 u_globalScale;
+    uniform vec4 u_perspectiveRect[4];
+    uniform vec4 u_perspectiveTransform[4];
+    uniform int u_perspectiveCount;
     out vec2 v_uv;
     void main() {
         vec2 local = a_corner * u_size;
@@ -4557,8 +4913,27 @@ Enjoy!! :D
         float s = sin(u_rotation);
         vec2 rotated = vec2(rel.x * c - rel.y * s, rel.x * s + rel.y * c) * u_scale;
         vec2 pos = u_origin + u_pivot + rotated;
+        float perspectiveW = 1.0;
+        for (int i = 0; i < 4; i++) {
+            if (i >= u_perspectiveCount) break;
+            vec4 rect = u_perspectiveRect[i];
+            vec4 transform = u_perspectiveTransform[i];
+            if (rect.z <= 0.0 || rect.w <= 0.0) continue;
+            vec2 q = (pos - rect.xy) / rect.zw;
+            if (q.x < -0.02 || q.x > 1.02 || q.y < -0.02 || q.y > 1.02) continue;
+            q -= vec2(0.5);
+            float rc = cos(transform.w);
+            float rs = sin(transform.w);
+            q = mat2(rc, rs, -rs, rc) * q;
+            q += vec2(0.5 + transform.y / rect.z, 0.5 + transform.z / rect.w);
+            float denominator = 1.0 + transform.x * q.x;
+            if (denominator <= 0.02) continue;
+            pos = rect.xy + vec2(q.x, q.y + transform.x * q.x) / denominator * rect.zw;
+            perspectiveW *= denominator;
+        }
+        pos *= u_globalScale;
         vec2 clip = (pos / u_canvasSize) * 2.0 - 1.0;
-        gl_Position = vec4(clip.x, -clip.y, 0.0, 1.0);
+        gl_Position = vec4(clip.x * perspectiveW, -clip.y * perspectiveW, 0.0, perspectiveW);
         v_uv = a_corner;
     }`;
 
@@ -4830,13 +5205,26 @@ Enjoy!! :D
     uniform vec2 u_texSizePx;
     uniform vec2 u_wipeOriginPx;
     uniform float u_alpha;
+    uniform vec4 u_baseColor;
+    uniform float u_maskOpacity;
     uniform int u_hasWipe;
     uniform int u_wipeInvert;
     uniform vec2 u_wipeAxis;
     uniform float u_wipeStart;
     uniform float u_wipeEnd;
+    uniform ivec2 u_patternWrap;
     out vec4 fragColor;
     ${glFxSource}
+    float wrapPatternAxis(float v, int mode, float halfTexel, inout bool outside) {
+        if (mode == 0) { return fract(v); }
+        if (mode == 1) {
+            float m = mod(v, 2.0);
+            v = m > 1.0 ? 2.0 - m : m;
+        } else if (mode == 3 && (v < 0.0 || v > 1.0)) {
+            outside = true;
+        }
+        return clamp(v, halfTexel, 1.0 - halfTexel);
+    }
     void main() {
         bool fxOn = u_fx != 0;
         vec2 tuv = fxOn ? fxWarp(v_uv) : v_uv;
@@ -4846,16 +5234,24 @@ Enjoy!! :D
         vec2 localPx = tuv * u_texSizePx;
         vec2 absPx = u_wipeOriginPx + localPx;
         vec3 sampledUv = u_patternMatrix * vec3(absPx, 1.0);
-        vec4 patternColor = texture(u_patternTex, fract(sampledUv.xy));
+        vec2 patternHalfTexel = 0.5 / vec2(textureSize(u_patternTex, 0));
+        bool patternOutside = false;
+        vec2 patternUv = vec2(
+            wrapPatternAxis(sampledUv.x, u_patternWrap.x, patternHalfTexel.x, patternOutside),
+            wrapPatternAxis(sampledUv.y, u_patternWrap.y, patternHalfTexel.y, patternOutside)
+        );
+        vec4 patternColor = patternOutside ? vec4(0.0) : texture(u_patternTex, patternUv);
         float wipeAlpha = 1.0;
         if (u_hasWipe == 1) {
             float t = dot(absPx, u_wipeAxis);
             float s = smoothstep(u_wipeStart, u_wipeEnd, t);
             wipeAlpha = u_wipeInvert == 1 ? s : (1.0 - s);
         }
-        float outA = patternColor.a * glyphA * u_alpha * wipeAlpha;
+        float maskBlend = clamp(patternColor.a * u_maskOpacity * wipeAlpha, 0.0, 1.0);
+        float outA = glyphA * u_alpha;
+        vec3 baseRgb = fxOn ? fxColor(u_baseColor.rgb) : u_baseColor.rgb;
         vec3 patternRgb = fxOn ? fxColor(patternColor.rgb) : patternColor.rgb;
-        fragColor = vec4(patternRgb * outA, outA);
+        fragColor = vec4(mix(baseRgb, patternRgb, maskBlend) * outA, outA);
     }`;
 
     function glCompileShader(gl, type, source) {
@@ -4930,34 +5326,40 @@ Enjoy!! :D
         const effectProgram = glLinkProgram(gl, glQuadVs, glEffectFs);
 
         const glyphUniforms = glUniformLocations(gl, glyphProgram, [
-            'u_canvasSize', 'u_origin', 'u_size', 'u_pivot', 'u_rotation', 'u_scale',
+            'u_canvasSize', 'u_origin', 'u_size', 'u_pivot', 'u_rotation', 'u_scale', 'u_globalScale',
             'u_tex', 'u_tint', 'u_alpha', 'u_mode',
             'u_gradStops[0]', 'u_gradLocalOrigin', 'u_gradGlyphSize', 'u_gradCount',
             'u_gradAxis0', 'u_gradAxis1', 'u_gradCenter', 'u_gradRadius', 'u_gradType',
             'u_gradStartAngle',
-            'u_fx', 'u_fxA', 'u_fxB', 'u_fxSkin', 'u_fxGeo', 'u_fxCol', 'u_fxRgb', 'u_fxRect'
+            'u_fx', 'u_fxA', 'u_fxB', 'u_fxSkin', 'u_fxGeo', 'u_fxCol', 'u_fxRgb', 'u_fxRect',
+            'u_perspectiveRect[0]', 'u_perspectiveTransform[0]', 'u_perspectiveCount'
         ]);
         glyphUniforms.u_gradStopsBase = gl.getUniformLocation(glyphProgram, 'u_gradStops[0]');
 
         const solidUniforms = glUniformLocations(gl, solidProgram, [
-            'u_canvasSize', 'u_origin', 'u_size', 'u_pivot', 'u_rotation', 'u_scale', 'u_color'
+            'u_canvasSize', 'u_origin', 'u_size', 'u_pivot', 'u_rotation', 'u_scale', 'u_globalScale', 'u_color',
+            'u_perspectiveRect[0]', 'u_perspectiveTransform[0]', 'u_perspectiveCount'
         ]);
         const roundRectUniforms = glUniformLocations(gl, roundRectProgram, [
-            'u_canvasSize', 'u_origin', 'u_size', 'u_pivot', 'u_rotation', 'u_scale', 'u_radius', 'u_color'
+            'u_canvasSize', 'u_origin', 'u_size', 'u_pivot', 'u_rotation', 'u_scale', 'u_globalScale', 'u_radius', 'u_color',
+            'u_perspectiveRect[0]', 'u_perspectiveTransform[0]', 'u_perspectiveCount'
         ]);
         const borderedRoundRectUniforms = glUniformLocations(gl, borderedRoundRectProgram, [
-            'u_canvasSize', 'u_origin', 'u_size', 'u_pivot', 'u_rotation', 'u_scale',
-            'u_outerRadius', 'u_borderInset', 'u_innerRadius', 'u_fillColor', 'u_borderColor'
+            'u_canvasSize', 'u_origin', 'u_size', 'u_pivot', 'u_rotation', 'u_scale', 'u_globalScale',
+            'u_outerRadius', 'u_borderInset', 'u_innerRadius', 'u_fillColor', 'u_borderColor',
+            'u_perspectiveRect[0]', 'u_perspectiveTransform[0]', 'u_perspectiveCount'
         ]);
         const maskWipeUniforms = glUniformLocations(gl, maskWipeProgram, [
-            'u_canvasSize', 'u_origin', 'u_size', 'u_pivot', 'u_rotation', 'u_scale',
-            'u_glyphTex', 'u_patternTex', 'u_patternMatrix', 'u_texSizePx', 'u_wipeOriginPx', 'u_alpha',
-            'u_hasWipe', 'u_wipeInvert', 'u_wipeAxis', 'u_wipeStart', 'u_wipeEnd',
-            'u_fx', 'u_fxA', 'u_fxB', 'u_fxSkin', 'u_fxGeo', 'u_fxCol', 'u_fxRgb'
+            'u_canvasSize', 'u_origin', 'u_size', 'u_pivot', 'u_rotation', 'u_scale', 'u_globalScale',
+            'u_glyphTex', 'u_patternTex', 'u_patternMatrix', 'u_texSizePx', 'u_wipeOriginPx', 'u_alpha', 'u_baseColor', 'u_maskOpacity',
+            'u_hasWipe', 'u_wipeInvert', 'u_wipeAxis', 'u_wipeStart', 'u_wipeEnd', 'u_patternWrap',
+            'u_fx', 'u_fxA', 'u_fxB', 'u_fxSkin', 'u_fxGeo', 'u_fxCol', 'u_fxRgb',
+            'u_perspectiveRect[0]', 'u_perspectiveTransform[0]', 'u_perspectiveCount'
         ]);
 
         const effectUniforms = glUniformLocations(gl, effectProgram, [
-            'u_canvasSize', 'u_origin', 'u_size', 'u_pivot', 'u_rotation', 'u_scale', 'u_tex'
+            'u_canvasSize', 'u_origin', 'u_size', 'u_pivot', 'u_rotation', 'u_scale', 'u_globalScale', 'u_tex',
+            'u_perspectiveRect[0]', 'u_perspectiveTransform[0]', 'u_perspectiveCount'
         ]);
 
         const viewportDims = gl.getParameter(gl.MAX_VIEWPORT_DIMS);
@@ -5101,7 +5503,7 @@ Enjoy!! :D
         return [r * a, g * a, b * a, a];
     }
 
-    function drawGLQuad(comp, program, uniforms, originX, originY, w, h, pivotX, pivotY, rotation, scale) {
+    function drawGLQuad(comp, program, uniforms, originX, originY, w, h, pivotX, pivotY, rotation, scale, scaleX, scaleY) {
         const gl = comp.gl;
         const ratio = comp.renderRatio;
         originX -= comp.offX;
@@ -5110,10 +5512,29 @@ Enjoy!! :D
         gl.bindVertexArray(comp.quadVao);
         gl.uniform2f(uniforms.u_canvasSize, gl.drawingBufferWidth, gl.drawingBufferHeight);
         gl.uniform2f(uniforms.u_origin, originX * ratio, originY * ratio);
-        gl.uniform2f(uniforms.u_size, w * ratio, h * ratio);
+        gl.uniform2f(uniforms.u_size, w * ratio * (scaleX || 1), h * ratio * (scaleY || 1));
         gl.uniform2f(uniforms.u_pivot, pivotX * ratio, pivotY * ratio);
         gl.uniform1f(uniforms.u_rotation, rotation || 0);
         gl.uniform1f(uniforms.u_scale, scale == null ? 1 : scale);
+        gl.uniform2f(uniforms.u_globalScale, comp.globalScaleX || 1, comp.globalScaleY || 1);
+        const perspectivePlanes = comp.perspectivePlanes || [];
+        const perspectiveRects = new Float32Array(16);
+        const perspectiveTransforms = new Float32Array(16);
+        const perspectiveCount = Math.min(4, perspectivePlanes.length);
+        for (let i = 0; i < perspectiveCount; i++) {
+            const plane = perspectivePlanes[i];
+            perspectiveRects[i * 4] = (plane.minX - comp.offX) * ratio;
+            perspectiveRects[i * 4 + 1] = (plane.minY - comp.offY) * ratio;
+            perspectiveRects[i * 4 + 2] = (plane.maxX - plane.minX) * ratio;
+            perspectiveRects[i * 4 + 3] = (plane.maxY - plane.minY) * ratio;
+            perspectiveTransforms[i * 4] = clampRange(plane.perspective.scaleStrength, 0, 0.85);
+            perspectiveTransforms[i * 4 + 1] = plane.perspective.x * destScale * ratio;
+            perspectiveTransforms[i * 4 + 2] = -plane.perspective.y * destScale * ratio;
+            perspectiveTransforms[i * 4 + 3] = -plane.perspective.rotation * Math.PI / 180;
+        }
+        gl.uniform1i(uniforms.u_perspectiveCount, perspectiveCount);
+        gl.uniform4fv(uniforms['u_perspectiveRect[0]'], perspectiveRects);
+        gl.uniform4fv(uniforms['u_perspectiveTransform[0]'], perspectiveTransforms);
         const bounds = comp.bounds;
         if (bounds) {
             const quadRotation = rotation || 0;
@@ -5123,8 +5544,30 @@ Enjoy!! :D
             for (let corner = 0; corner < 4; corner++) {
                 const relX = (corner & 1 ? w : 0) - pivotX;
                 const relY = (corner & 2 ? h : 0) - pivotY;
-                const x = originX + pivotX + (relX * cos - relY * sin) * quadScale;
-                const y = originY + pivotY + (relX * sin + relY * cos) * quadScale;
+                let x = originX + pivotX + (relX * cos - relY * sin) * quadScale;
+                let y = originY + pivotY + (relX * sin + relY * cos) * quadScale;
+                for (let i = 0; i < perspectiveCount; i++) {
+                    const plane = perspectivePlanes[i];
+                    const rectX = plane.minX - comp.offX;
+                    const rectY = plane.minY - comp.offY;
+                    const rectW = plane.maxX - plane.minX;
+                    const rectH = plane.maxY - plane.minY;
+                    let qx = (x - rectX) / rectW;
+                    let qy = (y - rectY) / rectH;
+                    if (qx < -0.02 || qx > 1.02 || qy < -0.02 || qy > 1.02) continue;
+                    qx -= 0.5;
+                    qy -= 0.5;
+                    const planeRotation = -plane.perspective.rotation * Math.PI / 180;
+                    const planeCos = Math.cos(planeRotation);
+                    const planeSin = Math.sin(planeRotation);
+                    const rotatedX = qx * planeCos - qy * planeSin + 0.5 + plane.perspective.x * destScale / rectW;
+                    const rotatedY = qx * planeSin + qy * planeCos + 0.5 - plane.perspective.y * destScale / rectH;
+                    const depth = clampRange(plane.perspective.scaleStrength, 0, 0.85);
+                    const denominator = 1 + depth * rotatedX;
+                    if (denominator <= 0.02) continue;
+                    x = rectX + rotatedX / denominator * rectW;
+                    y = rectY + (rotatedY + depth * rotatedX) / denominator * rectH;
+                }
                 if (x < bounds.minX) bounds.minX = x;
                 if (x > bounds.maxX) bounds.maxX = x;
                 if (y < bounds.minY) bounds.minY = y;
@@ -5156,6 +5599,7 @@ Enjoy!! :D
     function useItemFx(comp, item) {
         const fx = item.fx;
         comp.fx = fx;
+        comp.perspectivePlanes = item.perspectivePlanes || null;
         if (!fx) return;
         comp.fxX = item.drawXPx;
         comp.fxY = item.drawYPx;
@@ -5189,14 +5633,14 @@ Enjoy!! :D
         gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
     }
 
-    function glDrawGlyph(comp, shape, drawX, drawY, tintColor, alpha, rotationRad, scaleAmt, gradient, gradSpan, passthrough, pivotOverrideX, pivotOverrideY) {
+    function glDrawGlyph(comp, shape, drawX, drawY, tintColor, alpha, rotationRad, scaleAmt, gradient, gradSpan, passthrough, pivotOverrideX, pivotOverrideY, scaleX, scaleY) {
         const gl = comp.gl;
         const w = shape.canvas.width;
         const h = shape.canvas.height;
         const uni = comp.glyphUniforms;
         const pivotX = pivotOverrideX != null ? pivotOverrideX - drawX : w / 2;
         const pivotY = pivotOverrideY != null ? pivotOverrideY - drawY : h / 2;
-        drawGLQuad(comp, comp.glyphProgram, uni, drawX, drawY, w, h, pivotX, pivotY, rotationRad, scaleAmt);
+        drawGLQuad(comp, comp.glyphProgram, uni, drawX, drawY, w, h, pivotX, pivotY, rotationRad, scaleAmt, scaleX, scaleY);
         const forceUpload = shape.canvas === sharedShadowSurface.canvas;
         gl.activeTexture(gl.TEXTURE0);
         gl.bindTexture(gl.TEXTURE_2D, comp.getGlyphTexture(shape, forceUpload));
@@ -5298,10 +5742,13 @@ Enjoy!! :D
         gl.blendEquation(gl.FUNC_ADD);
         gl.bindFramebuffer(gl.FRAMEBUFFER, null);
         const savedBounds = comp.bounds;
+        const savedPerspectivePlanes = comp.perspectivePlanes;
         comp.bounds = null;
+        comp.perspectivePlanes = null;
         const ratio = comp.renderRatio;
         drawGLQuad(comp, comp.effectProgram, comp.effectUniforms, comp.offX, comp.offY, comp.effectW / ratio, comp.effectH / ratio, 0, 0, 0, 1);
         comp.bounds = savedBounds;
+        comp.perspectivePlanes = savedPerspectivePlanes;
         gl.activeTexture(gl.TEXTURE0);
         gl.bindTexture(gl.TEXTURE_2D, comp.effectTexture);
         gl.uniform1i(comp.effectUniforms.u_tex, 0);
@@ -5338,26 +5785,26 @@ Enjoy!! :D
         endEffectLayer(comp, buffered);
     }
 
-    function drawGlyphShadow(comp, shape, shadowSettings, drawXPx, drawYPx, opAlpha, rotationRad, scaleAmt) {
+    function drawGlyphShadow(comp, shape, shadowSettings, drawXPx, drawYPx, opAlpha, rotationRad, scaleAmt, scaleX, scaleY) {
         const shadowBlurPx = Math.max(0, Scratch.Cast.toNumber(shadowSettings.blur)) * destScale;
         const shadowOffsetXPx = Scratch.Cast.toNumber(shadowSettings.offsetX) * destScale;
         const shadowOffsetYPx = Scratch.Cast.toNumber(shadowSettings.offsetY) * destScale;
         const shadowBitmap = getShadowGlyphBitmap(shape, shadowSettings.color, shadowBlurPx, shadowOffsetXPx, shadowOffsetYPx);
         const shadowAlpha = opAlpha * clampPercentToUnit(Scratch.Cast.toNumber(shadowSettings.opacity));
         setEffectBlend(comp, shadowAlpha);
-        glDrawGlyph(comp, shadowBitmap, drawXPx + shadowBitmap.offsetX, drawYPx + shadowBitmap.offsetY, null, shadowAlpha, rotationRad, scaleAmt, null, null, true, null, null);
+        glDrawGlyph(comp, shadowBitmap, drawXPx + shadowBitmap.offsetX, drawYPx + shadowBitmap.offsetY, null, shadowAlpha, rotationRad, scaleAmt, null, null, true, null, null, scaleX, scaleY);
     }
 
-    function drawGlyphBorder(comp, shape, borderSettings, drawXPx, drawYPx, opAlpha, rotationRad, scaleAmt, hasRotation, hasScale) {
+    function drawGlyphBorder(comp, shape, borderSettings, drawXPx, drawYPx, opAlpha, rotationRad, scaleAmt, hasRotation, hasScale, scaleX, scaleY) {
         const borderAlpha = opAlpha * clampPercentToUnit(Scratch.Cast.toNumber(borderSettings.opacity));
         const borderSize = Math.max(0, Scratch.Cast.toNumber(borderSettings.size)) * destScale;
         const borderOffsets = getBorderOffsets(borderSize);
         setEffectBlend(comp, borderAlpha);
         for (const [offsetX, offsetY] of borderOffsets) {
             if (!hasRotation && !hasScale) {
-                glDrawGlyph(comp, shape, drawXPx + offsetX, drawYPx + offsetY, borderSettings.color, borderAlpha, 0, 1, null, null);
+                glDrawGlyph(comp, shape, drawXPx + offsetX, drawYPx + offsetY, borderSettings.color, borderAlpha, 0, 1, null, null, false, null, null, scaleX, scaleY);
             } else {
-                glDrawGlyph(comp, shape, drawXPx + offsetX, drawYPx + offsetY, borderSettings.color, borderAlpha, rotationRad, scaleAmt, null, null, false, null, null);
+                glDrawGlyph(comp, shape, drawXPx + offsetX, drawYPx + offsetY, borderSettings.color, borderAlpha, rotationRad, scaleAmt, null, null, false, null, null, scaleX, scaleY);
             }
         }
     }
@@ -5395,12 +5842,12 @@ Enjoy!! :D
         gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
     }
 
-    function glDrawMaskWipe(comp, shape, drawX, drawY, maskTexture, matrixValues, wipeInfo, alpha, wipeOriginPx) {
+    function glDrawMaskWipe(comp, shape, drawX, drawY, maskTexture, matrixValues, wipeInfo, baseColor, alpha, maskOpacity, rotationRad, scaleAmt, wipeOriginPx, patternWrap, scaleX, scaleY) {
         const gl = comp.gl;
         const w = shape.canvas.width;
         const h = shape.canvas.height;
         const uni = comp.maskWipeUniforms;
-        drawGLQuad(comp, comp.maskWipeProgram, uni, drawX, drawY, w, h, 0, 0, 0, 1);
+        drawGLQuad(comp, comp.maskWipeProgram, uni, drawX, drawY, w, h, w / 2, h / 2, rotationRad, scaleAmt, scaleX, scaleY);
         gl.activeTexture(gl.TEXTURE0);
         gl.bindTexture(gl.TEXTURE_2D, comp.getGlyphTexture(shape));
         gl.uniform1i(uni.u_glyphTex, 0);
@@ -5409,7 +5856,11 @@ Enjoy!! :D
         gl.uniform1i(uni.u_patternTex, 1);
         gl.uniformMatrix3fv(uni.u_patternMatrix, false, matrixValues);
         gl.uniform2f(uni.u_texSizePx, w, h);
+        const wrap = patternWrap || maskTilingModes[maskTilingDefault];
+        gl.uniform2i(uni.u_patternWrap, wrap[0], wrap[1]);
         gl.uniform1f(uni.u_alpha, alpha);
+        gl.uniform4fv(uni.u_baseColor, hexToRgbaArray(baseColor, 1));
+        gl.uniform1f(uni.u_maskOpacity, maskOpacity);
         setFxUniforms(comp, uni, drawX, drawY, w, h);
         if (wipeInfo) {
             gl.uniform1i(uni.u_hasWipe, 1);
@@ -5432,6 +5883,56 @@ Enjoy!! :D
             inv.e / texW, inv.f / texH, 1
         ]);
     }
+    const stageMaskIdentityTransform = { x: 0, y: 0, direction: 90, scaleX: 100, scaleY: 100 };
+
+    function buildStageMaskMatrix(mask, texture, zoom, rotation, drawXPx, drawYPx, glyphW, glyphH, glyphRotationRad, glyphScale, docOriginX, docOriginY, stageWidth, stageHeight, stageTransform, placement) {
+        const t = stageTransform || stageMaskIdentityTransform;
+        const spriteScaleX = t.scaleX / 100;
+        const spriteScaleY = t.scaleY / 100;
+        const safeGlyphScale = Math.abs(glyphScale) > 1e-6 ? glyphScale : 1;
+        const pivotX = glyphW / 2;
+        const pivotY = glyphH / 2;
+        const matrix = new DOMMatrix();
+        matrix.translateSelf(pivotX, pivotY);
+        matrix.scaleSelf(1 / safeGlyphScale, 1 / safeGlyphScale);
+        matrix.rotateSelf(-glyphRotationRad * 180 / Math.PI);
+        matrix.translateSelf(-(drawXPx + pivotX), -(drawYPx + pivotY));
+        matrix.scaleSelf(destScale, destScale);
+        matrix.translateSelf(docOriginX, docOriginY);
+        matrix.scaleSelf(1 / spriteScaleX, 1 / spriteScaleY);
+        matrix.rotateSelf(90 - t.direction);
+        matrix.translateSelf(-t.x, t.y);
+        matrix.translateSelf(mask.x || 0, -(mask.y || 0));
+        if (rotation !== 0) matrix.rotateSelf(rotation);
+        if (placement) {
+            matrix.scaleSelf(zoom, zoom);
+            matrix.translateSelf(-placement.centerX, -placement.centerY);
+            matrix.scaleSelf(placement.width / texture.width, placement.height / texture.height);
+        } else {
+            matrix.scaleSelf(zoom * stageWidth / texture.width, zoom * stageHeight / texture.height);
+            matrix.translateSelf(-texture.width / 2, -texture.height / 2);
+        }
+        return matrix;
+    }
+
+    function buildSpriteMaskMatrix(mask, texture, zoom, rotation, drawXPx, drawYPx, glyphW, glyphH, glyphRotationRad, glyphScale, docOriginX, docOriginY, spriteWidth, spriteHeight) {
+        const safeGlyphScale = Math.abs(glyphScale) > 1e-6 ? glyphScale : 1;
+        const pivotX = glyphW / 2;
+        const pivotY = glyphH / 2;
+        const matrix = new DOMMatrix();
+        matrix.translateSelf(pivotX, pivotY);
+        matrix.scaleSelf(1 / safeGlyphScale, 1 / safeGlyphScale);
+        matrix.rotateSelf(-glyphRotationRad * 180 / Math.PI);
+        matrix.translateSelf(-(drawXPx + pivotX), -(drawYPx + pivotY));
+        matrix.scaleSelf(destScale, destScale);
+        matrix.translateSelf(docOriginX, docOriginY);
+        matrix.translateSelf(mask.x || 0, -(mask.y || 0));
+        if (rotation !== 0) matrix.rotateSelf(rotation);
+        matrix.scaleSelf(zoom * spriteWidth / texture.width, zoom * spriteHeight / texture.height);
+        matrix.translateSelf(-texture.width / 2, -texture.height / 2);
+        return matrix;
+    }
+
     function getLayeredPaintOps(state, paintOps) {
         if (state.layeredPaintOpsSource === paintOps && state.layeredPaintOps) return state.layeredPaintOps;
         let hasLayers = false;
@@ -5449,7 +5950,7 @@ Enjoy!! :D
         return ordered;
     }
 
-    function compositeGlyphsToCanvasWebGL2(state, paintOps, docW, docH, textWidth, textHeight, textBoxOffsetX, originX, originY, cull) {
+    function compositeGlyphsToCanvasWebGL2(state, paintOps, docW, docH, textWidth, textHeight, textBoxOffsetX, originX, originY, cull, maskStage, spriteAnchorY) {
         const comp = getGLCompositor();
         if (!comp) return null;
         const gl = comp.gl;
@@ -5461,10 +5962,14 @@ Enjoy!! :D
 
         const regionX = cull ? cull.x0 : 0;
         const regionY = cull ? cull.y0 : 0;
-        const regionW = cull ? cull.x1 - cull.x0 : docW;
-        const regionH = cull ? cull.y1 - cull.y0 : docH;
+        const scaleX = 1;
+        const scaleY = 1;
+        const regionW = cull ? cull.x1 - cull.x0 : docW * scaleX;
+        const regionH = cull ? cull.y1 - cull.y0 : docH * scaleY;
         comp.offX = regionX * destScale;
         comp.offY = regionY * destScale;
+        comp.globalScaleX = scaleX;
+        comp.globalScaleY = scaleY;
         const renderScale = fitRenderScale(comp, regionW, regionH);
         comp.renderRatio = renderScale / destScale;
         const pixelW = Math.max(1, Math.ceil(regionW * renderScale - 1e-6));
@@ -5483,6 +5988,7 @@ Enjoy!! :D
         comp.effectActive = false;
         comp.effectBlendMax = false;
         comp.fx = null;
+        comp.perspectivePlanes = null;
         comp.bounds = {
             minX: Infinity,
             minY: Infinity,
@@ -5522,11 +6028,12 @@ Enjoy!! :D
             }
         }
 
-        const maskSpansByIndex = getSeamlessMaskSpans(state, paintOps, state.layoutKey + '\u0003' + docW + '\u0003' + docH, docW * destScale, docH * destScale);
+        const maskSpansByIndex = getSeamlessMaskSpans(state, paintOps, state.layoutKey + '\u0003' + docW + '\u0003' + docH);
         const gradientSpansByIndex = getGradientSpans(state, paintOps, state.layoutKey + '\u0003' + docW + '\u0003' + docH);
 
         const drawOrder = getLayeredPaintOps(state, paintOps);
         const prepared = [];
+        const perspectiveRegions = new Map();
         for (let i = 0; i < drawOrder.length; i++) {
             const op = drawOrder[i];
             if (op.text === '\u00A0' || op.text === '') continue;
@@ -5546,8 +6053,8 @@ Enjoy!! :D
                     } else {
                         const advanceCenterXEmForSpan = shape.baselineOriginXEm + shape.advance / 2;
                         const baselineYFromLineCenterForSpan = (shape.fontAscentEm - shape.fontDescentEm) / 2;
-                        const drawXEmForSpan = op.x - advanceCenterXEmForSpan;
-                        const drawYEmForSpan = (op.y + baselineYFromLineCenterForSpan) - shape.baselineOriginYEm;
+                        const drawXEmForSpan = op.x - advanceCenterXEmForSpan * (op.dimensionScaleX || 1);
+                        const drawYEmForSpan = op.y + baselineYFromLineCenterForSpan - shape.baselineOriginYEm * (op.dimensionScaleY || 1);
                         localOffsetXPx = Math.round(drawXEmForSpan * destScale) - span.originX;
                         localOffsetYPx = Math.round(drawYEmForSpan * destScale) - span.originY;
                     }
@@ -5557,10 +6064,31 @@ Enjoy!! :D
 
             const advanceCenterXEm = shape.baselineOriginXEm + shape.advance / 2;
             const baselineYFromLineCenter = (shape.fontAscentEm - shape.fontDescentEm) / 2;
-            const drawXEm = op.x - advanceCenterXEm;
-            const drawYEm = (op.y + baselineYFromLineCenter) - shape.baselineOriginYEm;
+            const drawXEm = op.x - advanceCenterXEm * (op.dimensionScaleX || 1);
+            const drawYEm = op.y + baselineYFromLineCenter - shape.baselineOriginYEm * (op.dimensionScaleY || 1);
             const drawXPx = drawXEm * destScale;
             const drawYPx = drawYEm * destScale;
+
+            const perspectiveShadow = op.shadow || (state.textShadow.enabled ? state.textShadow : null);
+            const perspectiveBorder = op.border || (state.textBorder.enabled ? state.textBorder : null);
+            const perspectivePadding = Math.max(
+                op.blur > 0 ? (op.blur / 100) * op.font['font-size'] * 0.5 * destScale : 0,
+                perspectiveShadow ? (Math.max(0, perspectiveShadow.blur) + Math.max(Math.abs(perspectiveShadow.offsetX), Math.abs(perspectiveShadow.offsetY))) * destScale : 0,
+                perspectiveBorder ? Math.max(0, perspectiveBorder.size) * destScale : 0
+            );
+            for (const perspective of op.perspectives || []) {
+                let region = perspectiveRegions.get(perspective);
+                if (!region) {
+                    region = { perspective, minX: drawXPx, minY: drawYPx, maxX: drawXPx + shape.canvas.width, maxY: drawYPx + shape.canvas.height, padding: perspectivePadding };
+                    perspectiveRegions.set(perspective, region);
+                } else {
+                    region.minX = Math.min(region.minX, drawXPx);
+                    region.minY = Math.min(region.minY, drawYPx);
+                    region.maxX = Math.max(region.maxX, drawXPx + shape.canvas.width);
+                    region.maxY = Math.max(region.maxY, drawYPx + shape.canvas.height);
+                    region.padding = Math.max(region.padding, perspectivePadding);
+                }
+            }
 
             const hasOpacity = op.opacity != null && op.opacity !== 1;
             const opAlpha = hasOpacity ? op.opacity : 1;
@@ -5582,9 +6110,30 @@ Enjoy!! :D
                 fx: op.fx || null,
                 op, shape, isColorEmoji, gradSpan, baselineYFromLineCenter,
                 drawXPx, drawYPx, opAlpha, hasRotation, hasScale, rotationRad, scaleAmt, blurPx,
+                dimensionScaleX: op.dimensionScaleX || 1, dimensionScaleY: op.dimensionScaleY || 1,
                 shadow: activeShadow,
                 border: !isColorEmoji && activeBorder ? activeBorder : null
             });
+        }
+
+        for (const region of perspectiveRegions.values()) {
+            const regionW = region.maxX - region.minX;
+            const regionH = region.maxY - region.minY;
+            const angle = region.perspective.rotation * Math.PI / 180;
+            const rotatedW = Math.abs(Math.cos(angle)) * regionW + Math.abs(Math.sin(angle)) * regionH;
+            const rotatedH = Math.abs(Math.cos(angle)) * regionH + Math.abs(Math.sin(angle)) * regionW;
+            const padX = (rotatedW - regionW) / 2 + Math.abs(region.perspective.x) * destScale + region.padding;
+            const padY = (rotatedH - regionH) / 2 + Math.abs(region.perspective.y) * destScale + region.padding;
+            region.minX -= padX;
+            region.minY -= padY;
+            region.maxX += padX;
+            region.maxY += padY;
+        }
+        for (const item of prepared) {
+            item.perspectivePlanes = (item.op.perspectives || [])
+                .map(perspective => perspectiveRegions.get(perspective))
+                .filter(Boolean)
+                .slice(0, 4);
         }
 
         let groupStart = 0;
@@ -5595,56 +6144,73 @@ Enjoy!! :D
 
             drawEffectLayer(comp, prepared, groupStart, groupEnd, 'shadow', pixelW, pixelH, item => {
                 useItemFx(comp, item);
-                drawGlyphShadow(comp, item.shape, item.shadow, item.drawXPx, item.drawYPx, item.opAlpha, item.rotationRad, item.scaleAmt);
+                drawGlyphShadow(comp, item.shape, item.shadow, item.drawXPx, item.drawYPx, item.opAlpha, item.rotationRad, item.scaleAmt, item.dimensionScaleX, item.dimensionScaleY);
                 comp.fx = null;
             });
             drawEffectLayer(comp, prepared, groupStart, groupEnd, 'border', pixelW, pixelH, item => {
                 useItemFx(comp, item);
-                drawGlyphBorder(comp, item.shape, item.border, item.drawXPx, item.drawYPx, item.opAlpha, item.rotationRad, item.scaleAmt, item.hasRotation, item.hasScale);
+                drawGlyphBorder(comp, item.shape, item.border, item.drawXPx, item.drawYPx, item.opAlpha, item.rotationRad, item.scaleAmt, item.hasRotation, item.hasScale, item.dimensionScaleX, item.dimensionScaleY);
                 comp.fx = null;
             });
 
             for (let i = groupStart; i < groupEnd; i++) {
                 const {
                     op, shape, isColorEmoji, gradSpan, baselineYFromLineCenter,
-                    drawXPx, drawYPx, opAlpha, hasRotation, rotationRad, scaleAmt, blurPx
+                    drawXPx, drawYPx, opAlpha, hasRotation, rotationRad, scaleAmt, blurPx, dimensionScaleX, dimensionScaleY
                 } = prepared[i];
                 useItemFx(comp, prepared[i]);
 
-                if (blurPx > 0 && !op.gradient && !isColorEmoji) {
-                    const blurredBitmap = getBlurredGlyphBitmap(shape, op.color, blurPx);
-                    glDrawGlyph(comp, blurredBitmap, drawXPx + blurredBitmap.offsetX, drawYPx + blurredBitmap.offsetY, null, opAlpha, rotationRad, scaleAmt, null, null, true, null, null);
-                } else {
-                    glDrawGlyph(
-                        comp, shape, drawXPx, drawYPx,
-                        op.color, opAlpha, rotationRad, scaleAmt,
-                        isColorEmoji ? null : op.gradient, gradSpan,
-                        isColorEmoji, null, null
-                    );
+                const texture = op.mask && !op.gradient && !isColorEmoji ? getMaskTexture(op.mask.targetName, op.mask.costumeName) : null;
+                const useMask = !!texture;
+                if (!useMask) {
+                    if (blurPx > 0 && !op.gradient && !isColorEmoji) {
+                        const blurredBitmap = getBlurredGlyphBitmap(shape, op.color, blurPx);
+                        glDrawGlyph(comp, blurredBitmap, drawXPx + blurredBitmap.offsetX, drawYPx + blurredBitmap.offsetY, null, opAlpha, rotationRad, scaleAmt, null, null, true, null, null, dimensionScaleX, dimensionScaleY);
+                    } else {
+                        glDrawGlyph(
+                            comp, shape, drawXPx, drawYPx,
+                            op.color, opAlpha, rotationRad, scaleAmt,
+                            isColorEmoji ? null : op.gradient, gradSpan,
+                            isColorEmoji, null, null, dimensionScaleX, dimensionScaleY
+                        );
+                    }
                 }
 
-                if (op.mask && !op.gradient && !isColorEmoji) {
-                    const texture = getMaskTexture(op.mask.targetName, op.mask.costumeName);
-                    if (texture) {
-                        const maskOpacity = clampPercentToUnit(Scratch.Cast.toNumber(op.mask.opacity != null ? op.mask.opacity : 100));
-                        const combinedAlpha = opAlpha * maskOpacity;
-                        if (combinedAlpha > 0) {
+                if (useMask) {
+                    const maskTexture = texture;
+                    const maskOpacity = clampPercentToUnit(Scratch.Cast.toNumber(op.mask.opacity != null ? op.mask.opacity : 100));
+                    if (opAlpha > 0) {
                             const span = maskSpansByIndex.get(op.charIndex);
                             const zoom = Math.max(0.01, (Scratch.Cast.toNumber(op.mask.zoom) || 100) / 100);
                             const rotation = Scratch.Cast.toNumber(op.mask.rotation);
-                            const anchorX = (op.mask.x || 0) * destScale - drawXPx;
-                            const anchorY = -(op.mask.y || 0) * destScale - drawYPx;
-                            const matrix = new DOMMatrix();
-                            matrix.translateSelf(anchorX, anchorY);
-                            if (rotation !== 0) matrix.rotateSelf(rotation);
-                            matrix.scaleSelf(zoom, zoom);
+                            const mapMaskToStageCoordinates = state.mapMasksToStageCoordinates;
+                            const seamless = op.mask.seamless !== false;
+                            let matrix;
+                            if (seamless && mapMaskToStageCoordinates && !(op.perspectives && op.perspectives.length)) {
+                                const stageWidth = runtime.stageWidth > 0 ? runtime.stageWidth : 480;
+                                const stageHeight = runtime.stageHeight > 0 ? runtime.stageHeight : 360;
+                                matrix = buildStageMaskMatrix(
+                                    op.mask, texture, zoom, rotation, drawXPx, drawYPx,
+                                    shape.canvas.width, shape.canvas.height, rotationRad, scaleAmt,
+                                    originX, spriteAnchorY, stageWidth, stageHeight, maskStage, texture.placement
+                                );
+                            } else {
+                                const maskSpaceWidth = seamless ? docW : shape.canvas.width;
+                                const maskSpaceHeight = seamless ? docH : shape.canvas.height;
+                                const maskOriginX = seamless ? originX : (drawXPx + shape.canvas.width / 2) / destScale;
+                                const maskOriginY = seamless ? spriteAnchorY : (drawYPx + shape.canvas.height / 2) / destScale;
+                                matrix = buildSpriteMaskMatrix(
+                                    op.mask, texture, zoom, rotation, drawXPx, drawYPx,
+                                    shape.canvas.width, shape.canvas.height, rotationRad, scaleAmt,
+                                    maskOriginX, maskOriginY, maskSpaceWidth, maskSpaceHeight
+                                );
+                            }
                             const glMatrix = domMatrixToGl3x3(matrix, texture.width, texture.height);
 
                             const coverage = clampPercentToUnit(Scratch.Cast.toNumber(op.mask.coverage != null ? op.mask.coverage : 100));
-                            if (coverage > 0) {
-                                let wipeInfo = null;
-                                if (coverage < 1) {
-                                    const seamless = !!op.mask.seamless;
+                            let wipeInfo = null;
+                            if (coverage > 0 && coverage < 1) {
+                                    const seamless = op.mask.seamless !== false;
                                     const w = shape.canvas.width;
                                     const h = shape.canvas.height;
                                     const localOffsetX = seamless && span ? (span.localOffsetXPx !== undefined ? span.localOffsetXPx : (drawXPx - span.originX)) : 0;
@@ -5678,11 +6244,8 @@ Enjoy!! :D
                                     if (wipeInfo.end <= wipeInfo.start) {
                                         wipeInfo.end = wipeInfo.start + 0.0001;
                                     }
-                                }
-
-                                glDrawMaskWipe(comp, shape, drawXPx, drawYPx, texture, glMatrix, wipeInfo, combinedAlpha);
                             }
-                        }
+                            glDrawMaskWipe(comp, shape, drawXPx, drawYPx, maskTexture, glMatrix, wipeInfo, op.color, opAlpha, coverage > 0 ? maskOpacity : 0, rotationRad, scaleAmt, null, resolveMaskTiling(state), dimensionScaleX, dimensionScaleY);
                     }
                 }
 
@@ -5717,6 +6280,7 @@ Enjoy!! :D
         const ratio = comp.renderRatio;
         const fullW = regionW * destScale;
         const fullH = regionH * destScale;
+        const perspectiveGeometry = state.layout && state.layout.perspectiveGeometry;
         const bounds = comp.bounds;
         comp.bounds = null;
         let cropX = 0;
@@ -5724,10 +6288,14 @@ Enjoy!! :D
         let cropEndX = fullW;
         let cropEndY = fullH;
         if (bounds && bounds.maxX >= bounds.minX && bounds.maxY >= bounds.minY) {
-            const x0 = Math.max(0, Math.floor((bounds.minX - 2) / destScale) * destScale);
-            const y0 = Math.max(0, Math.floor((bounds.minY - 2) / destScale) * destScale);
-            const x1 = Math.min(fullW, Math.ceil((bounds.maxX + 2) / destScale) * destScale);
-            const y1 = Math.min(fullH, Math.ceil((bounds.maxY + 2) / destScale) * destScale);
+            const perspectivePadX = perspectiveGeometry ?
+                (perspectiveGeometry.maxShiftX + perspectiveGeometry.maxCharacterExtent) * destScale : 0;
+            const perspectivePadY = perspectiveGeometry ?
+                (perspectiveGeometry.maxShiftY + perspectiveGeometry.maxCharacterExtent) * destScale : 0;
+            const x0 = Math.max(0, Math.floor((bounds.minX - 2 - perspectivePadX) / destScale) * destScale);
+            const y0 = Math.max(0, Math.floor((bounds.minY - 2 - perspectivePadY) / destScale) * destScale);
+            const x1 = Math.min(fullW, Math.ceil((bounds.maxX + 2 + perspectivePadX) / destScale) * destScale);
+            const y1 = Math.min(fullH, Math.ceil((bounds.maxY + 2 + perspectivePadY) / destScale) * destScale);
             if (x1 > x0 && y1 > y0) {
                 cropX = x0;
                 cropY = y0;
@@ -6014,7 +6582,7 @@ Enjoy!! :D
         }
 
         setPerfEnabled(enabled) {
-            perf.enabled = !!enabled;
+            perf.enabled = Scratch.Cast.toBoolean(enabled);
         }
 
         resetPerf() {
@@ -6733,6 +7301,18 @@ Enjoy!! :D
                         text: 'Settings'
                     },
                     {
+                        opcode: 'setMasksToStageCoordinates',
+                        blockType: Scratch.BlockType.COMMAND,
+                        text: 'map masks to stage coordinates [ENABLED]',
+                        arguments: {
+                            ENABLED: {
+                                type: Scratch.ArgumentType.STRING,
+                                menu: 'ONOFF',
+                                defaultValue: 'on'
+                            }
+                        }
+                    },
+                    {
                         opcode: 'exportSettings',
                         blockType: Scratch.BlockType.REPORTER,
                         text: 'export settings as JSON'
@@ -6970,6 +7550,26 @@ Enjoy!! :D
                         }
                     },
                     {
+                        opcode: 'setCharacterDimensions',
+                        blockType: Scratch.BlockType.COMMAND,
+                        text: 'set character [INDEX] dimension offsets x [X] y [Y]',
+                        arguments: {
+                            INDEX: { type: Scratch.ArgumentType.NUMBER, defaultValue: 1 },
+                            X: { type: Scratch.ArgumentType.NUMBER, defaultValue: 0 },
+                            Y: { type: Scratch.ArgumentType.NUMBER, defaultValue: 0 }
+                        }
+                    },
+                    {
+                        opcode: 'changeCharacterDimensions',
+                        blockType: Scratch.BlockType.COMMAND,
+                        text: 'change character [INDEX] dimension offsets by x [X] y [Y]',
+                        arguments: {
+                            INDEX: { type: Scratch.ArgumentType.NUMBER, defaultValue: 1 },
+                            X: { type: Scratch.ArgumentType.NUMBER, defaultValue: 0 },
+                            Y: { type: Scratch.ArgumentType.NUMBER, defaultValue: 0 }
+                        }
+                    },
+                    {
                         opcode: 'setCharOpacity',
                         blockType: Scratch.BlockType.COMMAND,
                         text: 'set character [INDEX] opacity to [PCT] %',
@@ -7185,6 +7785,19 @@ Enjoy!! :D
                         blockType: Scratch.BlockType.LABEL,
                         text: 'Character Mask'
                     },
+                    {
+                        opcode: 'setCharacterMaskTiling',
+                        blockType: Scratch.BlockType.COMMAND,
+                        text: 'set sprite mask tiling to [TILING]',
+                        arguments: {
+                            TILING: {
+                                type: Scratch.ArgumentType.STRING,
+                                menu: 'MASK_TILING',
+                                defaultValue: maskTilingDefault
+                            }
+                        }
+                    },
+                    '---',
                     {
                         opcode: 'setCharacterMask',
                         blockType: Scratch.BlockType.COMMAND,
@@ -7638,6 +8251,56 @@ Enjoy!! :D
                         }
                     },
                     {
+                        opcode: 'arrangeMarkup',
+                        blockType: Scratch.BlockType.REPORTER,
+                        text: 'arrange [TEXT] using shape code [CODE]',
+                        arguments: {
+                            TEXT: {
+                                type: Scratch.ArgumentType.STRING,
+                                defaultValue: 'ARRANGE'
+                            },
+                            CODE: {
+                                type: Scratch.ArgumentType.STRING,
+                                defaultValue: '100*cos(i*2*pi/max(n,1))|100*sin(i*2*pi/max(n,1))'
+                            }
+                        }
+                    },
+                    {
+                        opcode: 'arrangementCodePreset',
+                        blockType: Scratch.BlockType.REPORTER,
+                        text: 'shape code preset [SHAPE] size [SIZE]',
+                        arguments: {
+                            SHAPE: {
+                                type: Scratch.ArgumentType.STRING,
+                                menu: 'ARRANGEMENT_SHAPE',
+                                defaultValue: 'circle'
+                            },
+                            SIZE: {
+                                type: Scratch.ArgumentType.NUMBER,
+                                defaultValue: 100
+                            }
+                        }
+                    },
+                    {
+                        opcode: 'dimensionsMarkup',
+                        blockType: Scratch.BlockType.REPORTER,
+                        text: 'dimensions of [TEXT] offset by x [X] and y [Y]',
+                        arguments: {
+                            TEXT: {
+                                type: Scratch.ArgumentType.STRING,
+                                defaultValue: 'stretched text'
+                            },
+                            X: {
+                                type: Scratch.ArgumentType.NUMBER,
+                                defaultValue: 0
+                            },
+                            Y: {
+                                type: Scratch.ArgumentType.NUMBER,
+                                defaultValue: 0
+                            }
+                        }
+                    },
+                    {
                         opcode: 'perspectiveMarkup',
                         blockType: Scratch.BlockType.REPORTER,
                         text: 'perspective [TEXT] to x [X] y [Y] rotation [ROTATION] scale [SCALE] %',
@@ -7804,6 +8467,9 @@ Enjoy!! :D
                     GRADIENT_TYPE: {
                         items: [gradientTypeLinear, gradientTypeRadial, gradientTypeConic]
                     },
+                    ARRANGEMENT_SHAPE: {
+                        items: ['circle', 'square', 'line', 'wave', 'spiral']
+                    },
                     TYPING_GROUP: {
                         items: ['default', 'symbols', 'punctuation', 'numbers']
                     },
@@ -7820,6 +8486,9 @@ Enjoy!! :D
                     },
                     WIPE_DIRECTION: {
                         items: [wipeDirectionBottomUp, wipeDirectionLeftRight, wipeDirectionUpDown, wipeDirectionRightLeft]
+                    },
+                    MASK_TILING: {
+                        items: maskTilingNames
                     },
                     AXIS: {
                         items: ['x', 'y']
@@ -8159,6 +8828,14 @@ Enjoy!! :D
             const smoothing = Scratch.Cast.toString(args.ENABLED).toLowerCase() === 'on';
             if (state.smoothing === smoothing) return;
             state.smoothing = smoothing;
+            schedulePaint(util.target, state);
+        }
+
+        setMasksToStageCoordinates(args, util) {
+            const state = getState(util.target);
+            const enabled = Scratch.Cast.toString(args.ENABLED).toLowerCase() === 'on';
+            if (state.mapMasksToStageCoordinates === enabled) return;
+            state.mapMasksToStageCoordinates = enabled;
             schedulePaint(util.target, state);
         }
 
@@ -8868,7 +9545,7 @@ Enjoy!! :D
                     zoom: existing ? existing.zoom : 100,
                     rotation: existing ? existing.rotation : 0,
                     direction: existing ? existing.direction : wipeDirectionBottomUp,
-                    seamless: existing ? existing.seamless : false
+                    seamless: existing ? existing.seamless : true
                 });
                 paintNeeded = true;
             }
@@ -9073,6 +9750,16 @@ Enjoy!! :D
             }
         }
 
+        setCharacterMaskTiling(args, util) {
+            const state = getState(util.target);
+            const tiling = Scratch.Cast.toString(args.TILING).trim().toLowerCase();
+            if (!Object.prototype.hasOwnProperty.call(maskTilingModes, tiling)) return;
+            if (state.maskTiling === tiling) return;
+            state.maskTiling = tiling;
+            state.charMasksVersion++;
+            schedulePaint(util.target, state);
+        }
+
         clearCharacterMask(args, util) {
             const state = getState(util.target);
             const {
@@ -9132,6 +9819,28 @@ Enjoy!! :D
             if (!box) return 0;
             const dimension = Scratch.Cast.toString(args.DIMENSION).toLowerCase();
             return dimension === 'height' ? box.height : box.width;
+        }
+
+        setCharacterDimensions(args, util) {
+            this.changeCharacterDimensions({ INDEX: args.INDEX, X: args.X, Y: args.Y, MODE: 'set' }, util);
+        }
+
+        changeCharacterDimensions(args, util) {
+            const state = getState(util.target);
+            const idx = Math.floor(Scratch.Cast.toNumber(args.INDEX)) - 1;
+            if (idx < 0) return;
+            const x = Scratch.Cast.toNumber(args.X);
+            const y = Scratch.Cast.toNumber(args.Y);
+            const old = state.charStyleOverrides[idx] || {};
+            const next = Object.assign({}, old);
+            next.dimensionOffsetX = args.MODE === 'set' ? x : (next.dimensionOffsetX || 0) + x;
+            next.dimensionOffsetY = args.MODE === 'set' ? y : (next.dimensionOffsetY || 0) + y;
+            state.charStyleOverrides[idx] = next;
+            state.charStyleOverridesVersion++;
+            state.shapeKey = null;
+            state.layout = null;
+            state.paintFingerprint = null;
+            schedulePaint(util.target, state);
         }
 
         getCharCount(args, util) {
@@ -9197,6 +9906,41 @@ Enjoy!! :D
             const opacity = clampPercent(Scratch.Cast.toNumber(args.OPACITY));
             const size = Math.max(0, Scratch.Cast.toNumber(args.SIZE));
             return `[border=${color}|${opacity}|${size}]${text}[/border]`;
+        }
+
+        dimensionsMarkup(args) {
+            const text = Scratch.Cast.toString(args.TEXT);
+            const width = Scratch.Cast.toNumber(args.X);
+            const height = Scratch.Cast.toNumber(args.Y);
+            return `[dimensions=${width};${height}]${text}[/dimensions]`;
+        }
+
+        arrangeMarkup(args) {
+            const text = Scratch.Cast.toString(args.TEXT);
+            const code = Scratch.Cast.toString(args.CODE);
+            return `[arrange=${code}]${text}[/arrange]`;
+        }
+
+        arrangementCodePreset(args) {
+            const shape = Scratch.Cast.toString(args.SHAPE).toLowerCase();
+            const size = Scratch.Cast.toNumber(args.SIZE);
+            const angle = 'i*2*pi/max(n,1)';
+            const cosAngle = `cos(${angle})`;
+            const sinAngle = `sin(${angle})`;
+            if (shape === 'square') {
+                return `squareX(${size},i,n)|squareY(${size},i,n)`;
+            }
+            if (shape === 'line') {
+                return `${size}*(2*i-max(n-1,0))/max(n-1,1)|0`;
+            }
+            if (shape === 'wave') {
+                return `${size}*(2*i-max(n-1,0))/max(n-1,1)|sin(i*2*pi/max(n-1,1))*${size}`;
+            }
+            if (shape === 'spiral') {
+                const spiralAngle = 'i*2*pi/max(n-1,1)';
+                return `${size}*i/max(n-1,1)*cos(${spiralAngle})|${size}*i/max(n-1,1)*sin(${spiralAngle})`;
+            }
+            return `${size}*${cosAngle}|${size}*${sinAngle}`;
         }
 
         styleMarkup(args) {

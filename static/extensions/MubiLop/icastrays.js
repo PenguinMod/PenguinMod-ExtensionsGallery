@@ -62,6 +62,7 @@
 
   const lastMap = new Map();
   const radialMap = new Map();
+  const ignored = new Set();
 
   const sensorKey = (target, tag) => `${targetKey(target)}::${Cast.toString(tag || '')}`;
 
@@ -415,6 +416,7 @@
       if (t.isStage || !t.visible) continue;
       if (typeof t.drawableID !== 'number') continue;
       if (t.effects && t.effects.ghost >= 100) continue;
+      if (ignored.has(t.id) || ignored.has(t.getName())) continue;
       if (targetArg === ANY) {
         out.push(t);
       } else if (targetArg === OTHERS) {

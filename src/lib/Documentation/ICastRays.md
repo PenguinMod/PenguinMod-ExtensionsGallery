@@ -13,7 +13,7 @@ A "ray" starts at a point, travels in a direction for a given length, and stops 
 
 To cast a ray, use the "cast ray" block.
 ```scratch
-    cast ray from x: [0] y: [0] direction: [90] length: [480] at [any sprite except this one v] using [hitbox v] :: #6230b8
+    cast ray from x: [0] y: [0] direction: [90] length: [480] at [any sprite except myself v] using [hitbox v] :: #6230b8
 ```
 
 - **x / y** is where the ray starts.
@@ -28,7 +28,7 @@ Casting a ray doesn't report anything by itself. The result is stored, and you r
 After casting a ray, you can check if it hit something and read details about the hit.
 
 ```scratch
-    cast ray from x: (x position) y: (y position) direction: (direction) length: [200] at [any sprite except this one v] using [hitbox v] :: #6230b8
+    cast ray from x: (x position) y: (y position) direction: (direction) length: [200] at [any sprite except myself v] using [hitbox v] :: #6230b8
     if <ray hit something? :: #6230b8> then
         say (join [I see ] (ray [hit sprite v] :: #6230b8))
     end
@@ -44,7 +44,7 @@ Each sprite keeps its own last ray result, so rays from one sprite never overwri
 
 If you only need the distance, you can skip the cast block and use the reporter version.
 ```scratch
-    say (ray distance from x: [0] y: [0] direction: [90] length: [480] at [any sprite except this one v] using [hitbox v] :: #6230b8)
+    say (ray distance from x: [0] y: [0] direction: [90] length: [480] at [any sprite except myself v] using [hitbox v] :: #6230b8)
 ```
 
 ## Hitbox vs content
@@ -63,7 +63,7 @@ A smaller step is more accurate but slower. A larger step is faster but can skip
 Radial blocks cast many rays at once. This is great for things like vision cones, 360 degree scanners, or checking all around a character.
 
 ```scratch
-    cast [8] rays from x: [0] y: [0] center direction: [0] spread: [360] length: [480] at [any sprite except this one v] using [hitbox v] as sensor [my sensor] :: #6230b8
+    cast [8] rays from x: [0] y: [0] center direction: [0] spread: [360] length: [480] at [any sprite except myself v] using [hitbox v] as sensor [my sensor] :: #6230b8
 ```
 
 - **count** is how many rays to cast (up to 512).
@@ -76,8 +76,8 @@ A sensor is a name for a group of rays. This lets a single sprite have several r
 Casting again with the same sensor name replaces the previous results of that sensor. Sensors are stored per sprite.
 
 ```scratch
-    cast [5] rays from x: (x position) y: (y position) center direction: (direction) spread: [60] length: [150] at [any sprite except this one v] using [hitbox v] as sensor [front] :: #6230b8
-    cast [5] rays from x: (x position) y: (y position) center direction: ((direction) + [90]) spread: [30] length: [150] at [any sprite except this one v] using [hitbox v] as sensor [right] :: #6230b8
+    cast [5] rays from x: (x position) y: (y position) center direction: (direction) spread: [60] length: [150] at [any sprite except myself v] using [hitbox v] as sensor [front] :: #6230b8
+    cast [5] rays from x: (x position) y: (y position) center direction: ((direction) + [90]) spread: [30] length: [150] at [any sprite except myself v] using [hitbox v] as sensor [right] :: #6230b8
 ```
 
 ### Reading radial results
@@ -107,7 +107,7 @@ It can report the **index** of the closest ray, along with its distance, positio
 ```scratch
     when gf clicked
     forever
-        cast [7] rays from x: (x position) y: (y position) center direction: (direction) spread: [90] length: [100] at [any sprite except this one v] using [hitbox v] as sensor [front] :: #6230b8
+        cast [7] rays from x: (x position) y: (y position) center direction: (direction) spread: [90] length: [100] at [any sprite except myself v] using [hitbox v] as sensor [front] :: #6230b8
         if <any radial ray hit? (sensor [front]) :: #6230b8> then
             turn right (15) degrees
         else
@@ -136,4 +136,4 @@ Debug mode can slow your project down. Only use it while you are debugging, and 
 - The stage can't be hit by rays.
 - The maximum ray length is 1,000,000.
 - Prefer hitbox mode when you don't need pixel accuracy, especially when casting many rays every frame.
-- Use "any sprite except this one" when a sprite casts rays from itself, so the ray doesn't hit the sprite casting it.
+- Use "any sprite except myself" when a sprite casts rays from itself, so the ray doesn't hit the sprite casting it.

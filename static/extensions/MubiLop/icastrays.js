@@ -577,7 +577,6 @@
             arguments: rayArgs
           },
           {
-            opcode: 'doWeNeedAOpcode',
             blockType: BlockType.LABEL,
             text: 'Radial'
           },
@@ -644,7 +643,6 @@
             text: 'get all sensors'
           },
           {
-            opcode: 'doWeNeedAOpcode',
             blockType: BlockType.LABEL,
             text: 'Ignoring'
           },
@@ -696,7 +694,6 @@
             }
           },
           {
-            opcode: 'doWeNeedAOpcode',
             blockType: BlockType.LABEL,
             text: 'Additional/Debug'
           },

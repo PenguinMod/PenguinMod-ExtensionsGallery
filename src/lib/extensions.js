@@ -4,7 +4,6 @@
         to help copy & pasting work better
         pleas dont remove them :)
 */
-// a sakura
 export default [
     {
         name: "Pen+",
@@ -78,6 +77,17 @@ export default [
         banner: "ObviousAlexC/3DMath.svg",
         creator: "pinksheep2917",
         notes: "A bunch of new blocks were added by LSPECTRONIZTAR (with the help of Game Physics Cookbook by Gabor Szauer",
+    },
+    {
+        name: "iCastRays",
+        description: "Cast rays into other sprites in your project.",
+        code: "MubiLop/icastrays.js",
+        banner: "MubiLop/icastrays.svg",
+        documentation: "ICastRays",
+        creator: "cicerorph",
+        creatorAlias: "MubiLop",
+        isGitHub: true,
+        tags: ["new"],        
     },
     {
         name: "Beat Sync",

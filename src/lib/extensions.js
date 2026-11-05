@@ -89,7 +89,7 @@ export default [
         isGitHub: true,
         tags: ["new"],        
     },
-    {tags: ["new"],
+    {
         name: "Beat Sync",
         description: "An extension designed to let you sync anything in your project to a musical beat, with incredible precision.",
         code: "Gen1x/beat_sync.js",

@@ -26,6 +26,7 @@
   const MAX_LENGTH = 1e6;
   const ANY = '__any__';
   const OTHERS = '__others__';
+  const MYSELF = '__myself__';
 
   let stepSize = 1;
   let warnedNoContent = false;
@@ -62,7 +63,8 @@
 
   const lastMap = new Map();
   const radialMap = new Map();
-  const ignored = new Set();
+  const ignoreMap = new Map(); // sensorKey -> Set of sprite names / target ids
+  const globalIgnored = new Set(); // sprite names / target ids ignored by every ray
 
   const sensorKey = (target, tag) => `${targetKey(target)}::${Cast.toString(tag || '')}`;
 
@@ -410,13 +412,14 @@
     return { t: found, nx: sx, ny: sy };
   };
 
-  const getCandidates = (caller, targetArg) => {
+  const getCandidates = (caller, targetArg, ignoredSet) => {
     const out = [];
     for (const t of runtime.targets) {
       if (t.isStage || !t.visible) continue;
       if (typeof t.drawableID !== 'number') continue;
       if (t.effects && t.effects.ghost >= 100) continue;
-      if (ignored.has(t.id) || ignored.has(t.getName())) continue;
+      if (globalIgnored.has(t.id) || globalIgnored.has(t.getName())) continue;
+      if (ignoredSet && (ignoredSet.has(t.id) || ignoredSet.has(t.getName()))) continue;
       if (targetArg === ANY) {
         out.push(t);
       } else if (targetArg === OTHERS) {
@@ -428,13 +431,13 @@
     return out;
   };
 
-  const raycast = (caller, ox, oy, dir, len, targetArg, mode) => {
+  const raycast = (caller, ox, oy, dir, len, targetArg, mode, ignoredSet) => {
     const rad = dir * DEG;
     const dx = Math.sin(rad);
     const dy = Math.cos(rad);
 
     let best = null;
-    for (const target of getCandidates(caller, targetArg)) {
+    for (const target of getCandidates(caller, targetArg, ignoredSet)) {
       const bounds = getBounds(target);
       if (!bounds) continue;
       const limit = best ? best.t : len;
@@ -479,7 +482,8 @@
     const dir = num(args.DIR);
     const len = Math.min(MAX_LENGTH, Math.max(0, num(args.LEN)));
     const mode = Cast.toString(args.MODE).toLowerCase() === 'content' ? 'content' : 'hitbox';
-    return raycast(util.target, ox, oy, dir, len, Cast.toString(args.TARGET), mode);
+    const ignoredSet = ignoreMap.get(sensorKey(util.target, ''));
+    return raycast(util.target, ox, oy, dir, len, Cast.toString(args.TARGET), mode, ignoredSet);
   };
 
   const MAX_RADIAL_RAYS = 512;
@@ -493,6 +497,7 @@
     const len = Math.min(MAX_LENGTH, Math.max(0, num(args.LEN)));
     const mode = Cast.toString(args.MODE).toLowerCase() === 'content' ? 'content' : 'hitbox';
     const targetArg = Cast.toString(args.TARGET);
+    const ignoredSet = ignoreMap.get(sensorKey(util.target, args.GROUP));
 
     const results = [];
     for (let i = 0; i < count; i++) {
@@ -504,7 +509,7 @@
       } else {
         dir = start - spread / 2 + (spread / (count - 1)) * i;
       }
-      const r = raycast(util.target, ox, oy, dir, len, targetArg, mode);
+      const r = raycast(util.target, ox, oy, dir, len, targetArg, mode, ignoredSet);
       results.push({ dir: wrapAngle(dir), ...r });
     }
     return results;
@@ -641,6 +646,58 @@
           {
             opcode: 'doWeNeedAOpcode',
             blockType: BlockType.LABEL,
+            text: 'Ignoring'
+          },
+          {
+            opcode: 'setIgnored',
+            blockType: BlockType.COMMAND,
+            text: 'make sensor [GROUP] [STATE] [SPRITE]',
+            arguments: {
+              GROUP: { type: ArgumentType.STRING, defaultValue: '' },
+              STATE: { type: ArgumentType.STRING, menu: 'ignoreMenu', defaultValue: 'ignore' },
+              SPRITE: { type: ArgumentType.STRING, menu: 'spriteOnlyMenu', defaultValue: MYSELF }
+            }
+          },
+          {
+            opcode: 'clearIgnored',
+            blockType: BlockType.COMMAND,
+            text: 'stop ignoring all sprites (sensor [GROUP])',
+            arguments: groupArg
+          },
+          {
+            opcode: 'isIgnored',
+            blockType: BlockType.BOOLEAN,
+            text: 'sensor [GROUP] ignores [SPRITE]?',
+            arguments: {
+              GROUP: { type: ArgumentType.STRING, defaultValue: '' },
+              SPRITE: { type: ArgumentType.STRING, menu: 'spriteOnlyMenu', defaultValue: MYSELF }
+            }
+          },
+          {
+            opcode: 'setGlobalIgnored',
+            blockType: BlockType.COMMAND,
+            text: 'make all rays globally [STATE] [SPRITE]',
+            arguments: {
+              STATE: { type: ArgumentType.STRING, menu: 'ignoreMenu', defaultValue: 'ignore' },
+              SPRITE: { type: ArgumentType.STRING, menu: 'spriteOnlyMenu', defaultValue: MYSELF }
+            }
+          },
+          {
+            opcode: 'clearGlobalIgnored',
+            blockType: BlockType.COMMAND,
+            text: 'stop globally ignoring all sprites'
+          },
+          {
+            opcode: 'isGlobalIgnored',
+            blockType: BlockType.BOOLEAN,
+            text: 'rays globally ignore [SPRITE]?',
+            arguments: {
+              SPRITE: { type: ArgumentType.STRING, menu: 'spriteOnlyMenu', defaultValue: MYSELF }
+            }
+          },
+          {
+            opcode: 'doWeNeedAOpcode',
+            blockType: BlockType.LABEL,
             text: 'Additional/Debug'
           },
           {
@@ -667,6 +724,7 @@
         ],
         menus: {
           targetMenu: { acceptReporters: true, items: 'getTargetMenu' },
+          spriteOnlyMenu: { acceptReporters: true, items: 'getSpriteOnlyMenu' },
           modeMenu: {
             acceptReporters: true,
             items: [
@@ -679,6 +737,13 @@
             items: [
               { text: 'on', value: 'on' },
               { text: 'off', value: 'off' }
+            ]
+          },
+          ignoreMenu: {
+            acceptReporters: false,
+            items: [
+              { text: 'ignore', value: 'ignore' },
+              { text: 'detect', value: 'detect' }
             ]
           },
           resultMenu: {
@@ -729,6 +794,21 @@
         }
       }
       return items;
+    }
+
+    getSpriteOnlyMenu() {
+      const items = [{ text: 'myself', value: MYSELF }];
+      for (const t of runtime.targets) {
+        if (t.isOriginal && !t.isStage) {
+          items.push({ text: t.getName(), value: t.getName() });
+        }
+      }
+      return items;
+    }
+
+    _spriteKey(args, util) {
+      const s = Cast.toString(args.SPRITE);
+      return s === MYSELF ? util.target.id : s;
     }
 
     cast(args, util) {
@@ -824,6 +904,48 @@
       return sensors;
     }
 
+    setIgnored(args, util) {
+      const key = sensorKey(util.target, args.GROUP);
+      const sprite = this._spriteKey(args, util);
+      if (Cast.toString(args.STATE) === 'ignore') {
+        let set = ignoreMap.get(key);
+        if (!set) {
+          set = new Set();
+          cappedSet(ignoreMap, key, set, 256);
+        }
+        set.add(sprite);
+      } else {
+        const set = ignoreMap.get(key);
+        if (set) {
+          set.delete(sprite);
+          if (set.size === 0) ignoreMap.delete(key);
+        }
+      }
+    }
+
+    clearIgnored(args, util) {
+      ignoreMap.delete(sensorKey(util.target, args.GROUP));
+    }
+
+    isIgnored(args, util) {
+      const set = ignoreMap.get(sensorKey(util.target, args.GROUP));
+      return !!(set && set.has(this._spriteKey(args, util)));
+    }
+
+    setGlobalIgnored(args, util) {
+      const sprite = this._spriteKey(args, util);
+      if (Cast.toString(args.STATE) === 'ignore') globalIgnored.add(sprite);
+      else globalIgnored.delete(sprite);
+    }
+
+    clearGlobalIgnored() {
+      globalIgnored.clear();
+    }
+
+    isGlobalIgnored(args, util) {
+      return globalIgnored.has(this._spriteKey(args, util));
+    }
+
     setStep(args) {
       stepSize = Math.min(20, Math.max(0.1, num(args.STEP) || 1));
     }
@@ -836,6 +958,16 @@
       return debugEnabled;
     }
   }
+
+  runtime.on('PROJECT_STOP_ALL', () => {
+    ignoreMap.clear();
+    globalIgnored.clear();
+  });
+
+  runtime.on('targetWasRemoved', (t) => {
+    globalIgnored.delete(t.id);
+    for (const set of ignoreMap.values()) set.delete(t.id);
+  });
 
   Scratch.extensions.register(new ICastRays());
 })(Scratch);

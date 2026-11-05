@@ -718,7 +718,7 @@
 
     getTargetMenu() {
       const items = [
-        { text: 'any sprite except this one', value: OTHERS },
+        { text: 'any sprite except myself', value: OTHERS },
         { text: 'any sprite', value: ANY }
       ];
       for (const t of runtime.targets) {

@@ -5792,7 +5792,11 @@ Enjoy!! :D
         const shadowBitmap = getShadowGlyphBitmap(shape, shadowSettings.color, shadowBlurPx, shadowOffsetXPx, shadowOffsetYPx);
         const shadowAlpha = opAlpha * clampPercentToUnit(Scratch.Cast.toNumber(shadowSettings.opacity));
         setEffectBlend(comp, shadowAlpha);
-        glDrawGlyph(comp, shadowBitmap, drawXPx + shadowBitmap.offsetX, drawYPx + shadowBitmap.offsetY, null, shadowAlpha, rotationRad, scaleAmt, null, null, true, null, null, scaleX, scaleY);
+        glDrawGlyph(
+            comp, shadowBitmap, drawXPx + shadowBitmap.offsetX, drawYPx + shadowBitmap.offsetY,
+            null, shadowAlpha, rotationRad, scaleAmt, null, null, true,
+            drawXPx + shape.canvas.width / 2, drawYPx + shape.canvas.height / 2, scaleX, scaleY
+        );
     }
 
     function drawGlyphBorder(comp, shape, borderSettings, drawXPx, drawYPx, opAlpha, rotationRad, scaleAmt, hasRotation, hasScale, scaleX, scaleY) {
@@ -6073,7 +6077,7 @@ Enjoy!! :D
             const perspectiveBorder = op.border || (state.textBorder.enabled ? state.textBorder : null);
             const perspectivePadding = Math.max(
                 op.blur > 0 ? (op.blur / 100) * op.font['font-size'] * 0.5 * destScale : 0,
-                perspectiveShadow ? (Math.max(0, perspectiveShadow.blur) + Math.max(Math.abs(perspectiveShadow.offsetX), Math.abs(perspectiveShadow.offsetY))) * destScale : 0,
+                perspectiveShadow ? (Math.max(0, perspectiveShadow.blur) * 3 + Math.max(Math.abs(perspectiveShadow.offsetX), Math.abs(perspectiveShadow.offsetY))) * destScale + 2 : 0,
                 perspectiveBorder ? Math.max(0, perspectiveBorder.size) * destScale : 0
             );
             for (const perspective of op.perspectives || []) {

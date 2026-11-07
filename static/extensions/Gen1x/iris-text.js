@@ -797,6 +797,7 @@ Enjoy!! :D
         out.families = families;
         const arrangementGroups = new Map();
         for (const char of out) {
+            if (char.char === '\n') continue;
             if (!char.arrangement) continue;
             let group = arrangementGroups.get(char.arrangement.id);
             if (!group) {
@@ -3132,6 +3133,88 @@ Enjoy!! :D
             }
         }
 
+        const arrangementBounds = new Map();
+        for (const rc of richChars) {
+            if (!rc.arrangement || !rc.arrangementOffset) continue;
+            let bounds = arrangementBounds.get(rc.arrangement.id);
+            const halfAdvance = (rc._width || 0) / 2;
+            if (!bounds) {
+                bounds = {
+                    minX: rc.arrangementOffset.x - halfAdvance,
+                    maxX: rc.arrangementOffset.x + halfAdvance
+                };
+                arrangementBounds.set(rc.arrangement.id, bounds);
+            } else {
+                bounds.minX = Math.min(bounds.minX, rc.arrangementOffset.x - halfAdvance);
+                bounds.maxX = Math.max(bounds.maxX, rc.arrangementOffset.x + halfAdvance);
+            }
+        }
+
+        const lineTextWidths = [];
+        const lineBounds = [];
+        const lineArrangementYBounds = [];
+        const lineHasArrangement = [];
+        maxWidth = 0;
+        for (let li = 0; li < lines.length; li++) {
+            const line = lines[li];
+            const bounds = { minX: 0, maxX: 0 };
+            const yBounds = { minY: 0, maxY: 0 };
+            const arrangementStarts = new Map();
+            let hasArrangement = false;
+            let flowX = 0;
+            for (const rc of line) {
+                if (!rc.arrangementOffset) continue;
+                hasArrangement = true;
+                yBounds.minY = Math.min(yBounds.minY, rc.arrangementOffset.y);
+                yBounds.maxY = Math.max(yBounds.maxY, rc.arrangementOffset.y);
+            }
+            for (let ci = 0; ci < line.length; ci++) {
+                const rc = line[ci];
+                if (rc.arrangementOffset && rc.arrangement) {
+                    let start = arrangementStarts.get(rc.arrangement.id);
+                    if (start === undefined) {
+                        const arrangementBoundsForLine = arrangementBounds.get(rc.arrangement.id);
+                        if (!arrangementBoundsForLine) continue;
+                        start = flowX - arrangementBoundsForLine.minX;
+                        arrangementStarts.set(rc.arrangement.id, start);
+                        flowX += arrangementBoundsForLine.maxX - arrangementBoundsForLine.minX;
+                    }
+                    rc._flowCenterX = start + rc.arrangementOffset.x;
+                } else {
+                    rc._flowCenterX = flowX + (rc._width || 0) / 2;
+                    flowX += (rc._width || 0) + (rc._trailingCollapse || 0);
+                }
+            }
+            bounds.maxX = flowX;
+            lineTextWidths.push(flowX);
+            lineBounds.push(bounds);
+            lineArrangementYBounds.push(yBounds);
+            lineHasArrangement.push(hasArrangement);
+            lineWidths[li] = flowX;
+            maxWidth = Math.max(maxWidth, lineWidths[li]);
+        }
+
+        const lineHeight = state.baseStyle.size * state.lineSpacing;
+        const lineVerticalOffsets = new Array(lines.length).fill(0);
+        for (let li = 1; li < lines.length; li++) {
+            const previousBounds = lineArrangementYBounds[li - 1];
+            const currentBounds = lineArrangementYBounds[li];
+            const extraSpacing = Math.max(0, currentBounds.maxY - previousBounds.minY);
+            lineVerticalOffsets[li] = lineVerticalOffsets[li - 1] + extraSpacing;
+        }
+        let contentMinY = Infinity;
+        let contentMaxY = -Infinity;
+        for (let li = 0; li < lines.length; li++) {
+            const lineCenterY = li * lineHeight + lineVerticalOffsets[li] + lineHeight / 2;
+            const bounds = lineArrangementYBounds[li];
+            contentMinY = Math.min(contentMinY, lineCenterY - bounds.maxY - lineHeight / 2);
+            contentMaxY = Math.max(contentMaxY, lineCenterY - bounds.minY + lineHeight / 2);
+        }
+        const totalHeight = lines.length ? contentMaxY - contentMinY : 0;
+        const lineVerticalOriginOffset = lines.length ?
+            totalHeight / 2 - (contentMinY + contentMaxY) / 2 :
+            0;
+
         globalIndex = 0;
         let hardLineIndex = 0;
         let charsProcessed = 0;
@@ -3204,6 +3287,12 @@ Enjoy!! :D
         return {
             lines,
             lineWidths,
+            lineTextWidths,
+            lineBounds,
+            lineHasArrangement,
+            lineVerticalOffsets,
+            lineVerticalOriginOffset,
+            totalHeight,
             maxWidth,
             lineRuns,
             charsByTag,
@@ -3214,6 +3303,12 @@ Enjoy!! :D
             arrangementExtentY,
             hasArrangement: arrangementExtentX > 0 || arrangementExtentY > 0 || richChars.some(rc => !!rc.arrangementOffset)
         };
+    }
+
+    function getLineAlignmentShift(align, effectiveWidth, bounds) {
+        if (align === 'left' || align === 'justify') return -effectiveWidth / 2 - bounds.minX;
+        if (align === 'right') return effectiveWidth / 2 - bounds.maxX;
+        return -(bounds.minX + bounds.maxX) / 2;
     }
 
     function clearTypingBox(state) {
@@ -3248,8 +3343,12 @@ Enjoy!! :D
         if (!measured.lines.length) return spans;
 
         const lineHeight = state.baseStyle.size * state.lineSpacing;
-        const totalHeight = measured.lines.length * lineHeight;
+        const totalHeight = measured.totalHeight;
         const textStartY = -totalHeight / 2;
+        const effectiveWidth = Math.max(
+            state.maxWidth && state.maxWidth > 0 ? state.maxWidth : measured.maxWidth,
+            measured.maxWidth
+        );
 
         let groupOccurrenceIndex = null;
         let groupChars = null;
@@ -3276,17 +3375,18 @@ Enjoy!! :D
 
         for (let li = 0; li < measured.lines.length; li++) {
             const runs = measured.lineRuns[li];
-            const lineW = measured.lineWidths[li];
-            let lineX;
-            if (state.align === 'left' || state.align === 'justify') {
-                lineX = 0;
-            } else if (state.align === 'right') {
-                lineX = -lineW;
-            } else {
-                lineX = -lineW / 2;
-            }
+            const textLineW = measured.lineTextWidths[li];
+            const lineBounds = measured.lineBounds[li];
+            const bounds = {
+                minX: lineBounds.minX,
+                maxX: Math.max(lineBounds.maxX, textLineW)
+            };
+            const lineShift = getLineAlignmentShift(state.align, effectiveWidth, bounds);
+            const lineHasArrangement = measured.lineHasArrangement[li];
+            const lineX = lineShift;
 
-            const baseCenterY = textStartY + (li * lineHeight) + lineHeight * 0.5;
+            const baseCenterY = textStartY + measured.lineVerticalOriginOffset +
+                (li * lineHeight) + measured.lineVerticalOffsets[li] + lineHeight * 0.5;
 
             for (const run of runs) {
                 const runOriginX = lineX + run.runStartX;
@@ -3317,8 +3417,10 @@ Enjoy!! :D
                     const shape = getGlyphShapeForFontStyle(ch, run.fontStyle);
                     if (!shape) continue;
 
-                    const charCenterX = runOriginX + pos.shapedX + pos.advance / 2;
-                    const charCenterY = baseCenterY;
+                    const charCenterX = lineHasArrangement ?
+                        lineShift + rc._flowCenterX :
+                        runOriginX + pos.shapedX + pos.advance / 2;
+                    const charCenterY = baseCenterY - (rc.arrangementOffset ? rc.arrangementOffset.y : 0);
                     const advanceCenterXEm = shape.baselineOriginXEm + shape.advance / 2;
                     const baselineYFromLineCenter = (shape.fontAscentEm - shape.fontDescentEm) / 2;
                     const dimensionScaleX = rc.dimensionScaleX || 1;
@@ -3353,10 +3455,9 @@ Enjoy!! :D
         const richChars = parseRichText(state.typingFullRaw, state.baseStyle);
         applyCharacterStyleOverrides(richChars, state.charStyleOverrides);
         const measured = measureRichText(glyphMeasureCtx, richChars, state);
-        const lineHeight = state.baseStyle.size * state.lineSpacing;
         state.typingBoxKey = key;
         state.typingBoxWidth = measured.maxWidth;
-        state.typingBoxHeight = measured.lines.length * lineHeight;
+        state.typingBoxHeight = measured.totalHeight;
         state.typingBoxLineWidths = measured.lineWidths;
         state.typingBoxGradientSpans = computeFinalGradientSpans(state, measured);
     }
@@ -3365,9 +3466,8 @@ Enjoy!! :D
         const richChars = parseRichText(state.rawText, state.baseStyle);
         applyCharacterStyleOverrides(richChars, state.charStyleOverrides);
         const measured = measureRichText(glyphMeasureCtx, richChars, state);
-        const lineHeight = state.baseStyle.size * state.lineSpacing;
         let width = measured.maxWidth;
-        let height = measured.lines.length * lineHeight;
+        let height = measured.totalHeight;
 
         ensureTypingBox(state);
         if (state.typingBoxWidth > width) width = state.typingBoxWidth;
@@ -4186,7 +4286,8 @@ Enjoy!! :D
         const shapeKey = getShapeKey(state);
         const layoutKey = getLayoutKey(state);
         let layout = state.layout;
-        if (state.shapeKey !== shapeKey || state.layoutKey !== layoutKey || !layout || state.fontsPendingAtMeasure) {
+        if (state.shapeKey !== shapeKey || state.layoutKey !== layoutKey || !layout || state.fontsPendingAtMeasure ||
+            !layout.lineHasArrangement || !layout.lineVerticalOffsets || !layout.lineBounds) {
             const richChars = parseRichText(state.rawText, state.baseStyle);
             applyCharacterStyleOverrides(richChars, state.charStyleOverrides);
             const families = richChars.families;
@@ -4210,12 +4311,27 @@ Enjoy!! :D
         }
         state.layoutKey = layoutKey;
         if (!layout.perspectiveSpacingApplied) {
-            layout.maxWidth = applyPerspectiveSpacing(layout.lineRuns, layout.lineWidths, state.align, state);
+            let maxWidthAfterPerspective = applyPerspectiveSpacing(layout.lineRuns, layout.lineWidths, state.align, state);
+            for (let li = 0; li < layout.lineWidths.length; li++) {
+                if (!layout.lineHasArrangement || !layout.lineHasArrangement[li]) continue;
+                layout.lineWidths[li] = Math.max(
+                    layout.lineWidths[li],
+                    layout.lineBounds[li].maxX - layout.lineBounds[li].minX
+                );
+                maxWidthAfterPerspective = Math.max(maxWidthAfterPerspective, layout.lineWidths[li]);
+            }
+            layout.maxWidth = maxWidthAfterPerspective;
             layout.perspectiveSpacingApplied = true;
         }
         const {
             lines,
             lineWidths,
+            lineTextWidths,
+            lineBounds,
+            lineHasArrangement,
+            lineVerticalOffsets,
+            lineVerticalOriginOffset,
+            totalHeight,
             maxWidth,
             lineRuns,
             maxShadowExtent,
@@ -4228,7 +4344,6 @@ Enjoy!! :D
         }
 
         const lineHeight = state.baseStyle.size * state.lineSpacing;
-        const totalHeight = lines.length * lineHeight;
 
         const decorationPad = Math.max(
             0,
@@ -4257,7 +4372,7 @@ Enjoy!! :D
         );
 
         ensureTypingBox(state);
-        let effectiveMaxWidth = state.maxWidth && state.maxWidth > 0 ? state.maxWidth : maxWidth;
+        let effectiveMaxWidth = Math.max(state.maxWidth && state.maxWidth > 0 ? state.maxWidth : maxWidth, maxWidth);
         let effectiveMaxHeight = state.maxHeight && state.maxHeight > 0 ? state.maxHeight : totalHeight;
         if (state.typingBoxWidth > effectiveMaxWidth) effectiveMaxWidth = state.typingBoxWidth;
         if (state.typingBoxHeight > effectiveMaxHeight) effectiveMaxHeight = state.typingBoxHeight;
@@ -4277,24 +4392,14 @@ Enjoy!! :D
             let textBoxMinX = Infinity;
             let textBoxMaxX = -Infinity;
             for (let li = 0; li < lineWidths.length; li++) {
-                const lineW = lineWidths[li];
-                const centerLineW = isFinalTypingLine ? typingBoxLineWidths[li] : lineW;
-                let effectiveLineW = lineW;
-                if (state.align === 'justify' && li < lineWidths.length - 1 && effectiveMaxWidth > lineW) {
-                    effectiveLineW = effectiveMaxWidth;
-                }
-                let lineMinX;
-                if (state.align === 'left' || state.align === 'justify') {
-                    lineMinX = -effectiveMaxWidth / 2;
-                } else if (state.align === 'right') {
-                    lineMinX = effectiveMaxWidth / 2 - centerLineW;
-                    effectiveLineW = lineW;
-                } else {
-                    lineMinX = -centerLineW / 2;
-                    effectiveLineW = lineW;
-                }
-                textBoxMinX = Math.min(textBoxMinX, lineMinX);
-                textBoxMaxX = Math.max(textBoxMaxX, lineMinX + effectiveLineW);
+                const centerLineW = isFinalTypingLine ? typingBoxLineWidths[li] : lineTextWidths[li];
+                const bounds = {
+                    minX: lineBounds[li].minX,
+                    maxX: Math.max(lineBounds[li].maxX, centerLineW)
+                };
+                const lineShift = getLineAlignmentShift(state.align, effectiveMaxWidth, bounds);
+                textBoxMinX = Math.min(textBoxMinX, lineShift + bounds.minX);
+                textBoxMaxX = Math.max(textBoxMaxX, lineShift + bounds.maxX);
             }
             textBoxOffsetX = (textBoxMinX + textBoxMaxX) / 2;
             textBoxWidth = textBoxMaxX - textBoxMinX;
@@ -4343,26 +4448,22 @@ Enjoy!! :D
                 const line = lines[li];
                 const runs = lineRuns[li];
                 const lineW = lineWidths[li];
-                const centerLineW = isFinalTypingLine ? typingBoxLineWidths[li] : lineW;
+                const centerLineW = isFinalTypingLine ? typingBoxLineWidths[li] : lineTextWidths[li];
                 const justifySpaceCount = state.align === 'justify' && li < lines.length - 1 &&
                     effectiveMaxWidth > lineW ?
                     line.filter(rc => rc.char === ' ').length : 0;
                 const justifyExtra = justifySpaceCount > 0 ?
                     (effectiveMaxWidth - lineW) / justifySpaceCount : 0;
-                let lineX;
-
-                if (state.align === 'left') {
-                    lineX = originX - effectiveMaxWidth / 2;
-                } else if (state.align === 'right') {
-                    lineX = originX + effectiveMaxWidth / 2 - centerLineW;
-                } else if (state.align === 'justify') {
-                    lineX = originX - effectiveMaxWidth / 2;
-                } else {
-                    lineX = originX - centerLineW / 2;
-                }
+                const bounds = {
+                    minX: lineBounds[li].minX,
+                    maxX: Math.max(lineBounds[li].maxX, centerLineW)
+                };
+                const lineShift = getLineAlignmentShift(state.align, effectiveMaxWidth, bounds);
+                const lineX = originX + lineShift;
 
                 const textStartY = originY - totalHeight / 2;
-                const baseCenterY = textStartY + (li * lineHeight) + lineHeight * 0.5;
+                const baseCenterY = textStartY + lineVerticalOriginOffset +
+                    (li * lineHeight) + lineVerticalOffsets[li] + lineHeight * 0.5;
 
                 let spacesBefore = 0;
                 for (const run of runs) {
@@ -4382,12 +4483,10 @@ Enjoy!! :D
                             emptyOverride;
 
                         const arrangementOffset = rc.arrangementOffset || emptyOverride;
-                        const charCenterX = rc.arrangementOffset ?
-                            originX + arrangementOffset.x + o.x :
+                        const charCenterX = lineHasArrangement[li] ?
+                            originX + lineShift + rc._flowCenterX + (rc.arrangementOffset ? 0 : spacesBefore * justifyExtra) + o.x :
                             runOriginX + pos.shapedX + pos.advance / 2 + spacesBefore * justifyExtra + o.x;
-                        const charCenterY = rc.arrangementOffset ?
-                            originY - arrangementOffset.y - o.y :
-                            baseCenterY - o.y;
+                        const charCenterY = baseCenterY - (rc.arrangementOffset ? arrangementOffset.y : 0) - o.y;
                         const rotation = o.rotation || 0;
                         const opacity = o.opacity == null ? 1 : o.opacity;
                         const scale = o.scale == null ? 1 : o.scale;
@@ -8583,20 +8682,52 @@ Enjoy!! :D
 
         addLine(args, util) {
             const state = getState(util.target);
-            const text = Scratch.Cast.toString(args.TEXT);
-            const existingText = state.visible ? state.rawText : '';
-            const linePrefix = existingText ? '\n' : '';
-            if (state.resetCharTransformsOnText) resetCharacterTransformsState(state);
-            state.revealToken++;
-            state.typingControl = null;
-            state.isTyping = false;
-            clearTypingBox(state);
-            state.rawText = existingText + linePrefix + text;
-            state.finalText = stripMarkup(state.rawText);
-            state.visible = true;
-            state.paintDirty = true;
-            state.paintFingerprint = null;
-            scheduleTextRender(util.target);
+            const frame = util.stackFrame;
+
+            if (frame.irisStages === undefined) {
+                const text = Scratch.Cast.toString(args.TEXT);
+                const existingText = state.visible ? state.rawText : '';
+                const linePrefix = existingText ? '\n' : '';
+                if (state.resetCharTransformsOnText) resetCharacterTransformsState(state);
+                state.revealToken++;
+                state.typingControl = null;
+                state.isTyping = false;
+                clearTypingBox(state);
+                state.finalText = stripMarkup(existingText + linePrefix + text);
+                state.visible = true;
+                frame.irisStages = splitWaitStages(text);
+                frame.irisStageIndex = 0;
+                frame.irisToken = state.revealToken;
+                frame.irisWaitUntil = null;
+                frame.irisExistingText = existingText + linePrefix;
+            }
+
+            if (state.revealToken !== frame.irisToken) return;
+
+            if (frame.irisWaitUntil !== null) {
+                if (Date.now() < frame.irisWaitUntil) {
+                    util.yieldTick();
+                    return;
+                }
+                frame.irisWaitUntil = null;
+            }
+
+            const stage = frame.irisStages[frame.irisStageIndex];
+            const rawText = frame.irisExistingText + stage.text;
+            if (state.rawText !== rawText) {
+                state.rawText = rawText;
+                state.paintDirty = true;
+                state.paintFingerprint = null;
+            }
+            if (state.paintDirty || !state.hasPaintedOnce) {
+                scheduleTextRender(util.target);
+            }
+
+            frame.irisStageIndex++;
+            if (frame.irisStageIndex >= frame.irisStages.length) return;
+
+            frame.irisWaitUntil = Date.now() + stage.waitAfter * 1000;
+            util.yieldTick();
         }
 
         _typeText(args, util, appendLine) {

@@ -867,14 +867,14 @@ Enjoy!! :D
             const char = chars[index];
             const override = overrides[index];
             if (!char || !override) continue;
-            char.color = override.color;
-            char.bold = override.bold;
-            char.italic = override.italic;
-            char.underline = override.underline;
-            char.strike = override.strike;
-            char.size = override.size;
-            char.font = override.font;
-            char.blur = override.blur;
+            if (override.color !== undefined) char.color = override.color;
+            if (override.bold !== undefined) char.bold = override.bold;
+            if (override.italic !== undefined) char.italic = override.italic;
+            if (override.underline !== undefined) char.underline = override.underline;
+            if (override.strike !== undefined) char.strike = override.strike;
+            if (override.size !== undefined) char.size = override.size;
+            if (override.font !== undefined) char.font = override.font;
+            if (override.blur !== undefined) char.blur = override.blur;
             if (Number.isFinite(override.dimensionOffsetX)) char.dimensionScaleX = Math.max(0.01, (char.size + override.dimensionOffsetX) / char.size);
             if (Number.isFinite(override.dimensionOffsetY)) char.dimensionScaleY = Math.max(0.01, (char.size + override.dimensionOffsetY) / char.size);
             if (families) families.add(override.font);
@@ -1054,6 +1054,7 @@ Enjoy!! :D
             wordSpansCache: null,
             wordSpansCacheKey: null,
             paintOpPool: [],
+            renderResolution: 'global',
             typingFullRaw: null,
             typingBoxKey: null,
             typingBoxWidth: 0,
@@ -1097,6 +1098,7 @@ Enjoy!! :D
             state.typingSpeeds = Object.assign(defaults.typingSpeeds, state.typingSpeeds || {});
             state.customTypingSpeeds = Object.assign({}, state.customTypingSpeeds || {});
             state.smoothing = state.smoothing === undefined ? defaults.smoothing : Scratch.Cast.toBoolean(state.smoothing);
+            if (!['global', 'native', '1x', '2x', '3x', '4x'].includes(state.renderResolution)) state.renderResolution = defaults.renderResolution;
             state.mapMasksToStageCoordinates = state.mapMasksToStageCoordinates === undefined ?
                 defaults.mapMasksToStageCoordinates :
                 Scratch.Cast.toBoolean(state.mapMasksToStageCoordinates);
@@ -1113,6 +1115,7 @@ Enjoy!! :D
             if (state.typingControl !== 'skip' && state.typingControl !== 'stop') state.typingControl = null;
             state.iiMigrated = true;
         }
+        if (!['global', ...renderResolutionModes].includes(state.renderResolution)) state.renderResolution = 'global';
         if (state.mapMasksToStageCoordinates === undefined) state.mapMasksToStageCoordinates = false;
         if (!Object.prototype.hasOwnProperty.call(maskTilingModes, state.maskTiling)) state.maskTiling = maskTilingDefault;
         return state;
@@ -1197,6 +1200,7 @@ Enjoy!! :D
             },
             align: state.align,
             smoothing: state.smoothing,
+            renderResolution: state.renderResolution,
             mapMasksToStageCoordinates: state.mapMasksToStageCoordinates,
             maskTiling: state.maskTiling,
             cullOffscreen: state.cullOffscreen,
@@ -1233,6 +1237,7 @@ Enjoy!! :D
             state.align = settings.align;
         }
         if (settings.smoothing !== undefined) state.smoothing = Scratch.Cast.toBoolean(settings.smoothing);
+        if (['global', 'native', '1x', '2x', '3x', '4x'].includes(settings.renderResolution)) state.renderResolution = settings.renderResolution;
         if (typeof settings.mapMasksToStageCoordinates === 'boolean') {
             state.mapMasksToStageCoordinates = settings.mapMasksToStageCoordinates;
         }
@@ -1306,11 +1311,25 @@ Enjoy!! :D
 
     function resetCharacterTransformsState(state) {
         const hasEffects = !!state.charEffects && Object.keys(state.charEffects).length > 0;
-        if (!Object.keys(state.charOverrides).length && !hasEffects) return;
+        const hasDimensionOverrides = Object.keys(state.charStyleOverrides || {}).some(index => {
+            const override = state.charStyleOverrides[index];
+            return override && (override.dimensionOffsetX !== undefined || override.dimensionOffsetY !== undefined);
+        });
+        if (!Object.keys(state.charOverrides).length && !hasEffects && !hasDimensionOverrides) return;
         state.charOverrides = {};
         state.charEffects = {};
+        for (const index in state.charStyleOverrides) {
+            const override = state.charStyleOverrides[index];
+            if (!override) continue;
+            delete override.dimensionOffsetX;
+            delete override.dimensionOffsetY;
+            if (!Object.keys(override).length) delete state.charStyleOverrides[index];
+        }
         state.charOverridesVersion++;
         state.charTransformsVersion++;
+        state.charStyleOverridesVersion++;
+        state.shapeKey = null;
+        state.layout = null;
         state.paintDirty = true;
         state.paintFingerprint = null;
     }
@@ -1413,7 +1432,52 @@ Enjoy!! :D
         };
     }
 
-    const glyphOversample = 3;
+    const renderResolutionModes = ['native', '1x', '2x', '3x', '4x'];
+    let globalTextResolution = '3x';
+    let destScale = 1;
+    let lastNativeResolution = null;
+
+    function nativeResolutionScale() {
+        const canvas = runtime.renderer && runtime.renderer.canvas;
+        if (!canvas) return 1;
+        const stageWidth = runtime.stageWidth;
+        let displayWidth = canvas.clientWidth;
+        if (!(displayWidth > 0) && typeof canvas.getBoundingClientRect === 'function') {
+            displayWidth = canvas.getBoundingClientRect().width;
+        }
+        const devicePixelRatio = typeof window !== 'undefined' && window.devicePixelRatio > 0 ?
+            window.devicePixelRatio : 1;
+        const backingScale = canvas.width / stageWidth;
+        const displayScale = displayWidth > 0 ? displayWidth * devicePixelRatio / stageWidth : 0;
+        const ratio = Math.max(backingScale, displayScale);
+        return Number.isFinite(ratio) && ratio > 0 ? ratio : 1;
+    }
+
+    function resolutionScaleForMode(mode) {
+        if (mode === 'native') return nativeResolutionScale();
+        const scale = Number.parseFloat(mode);
+        return Number.isFinite(scale) && scale > 0 ? scale : nativeResolutionScale();
+    }
+
+    function resolutionScaleForState(state) {
+        const mode = state && state.renderResolution && state.renderResolution !== 'global' ?
+            state.renderResolution : globalTextResolution;
+        return resolutionScaleForMode(mode);
+    }
+
+    function refreshNativeResolutionTargets() {
+        const current = nativeResolutionScale();
+        if (lastNativeResolution === current) return;
+        lastNativeResolution = current;
+        const globalUsesNative = globalTextResolution === 'native';
+        for (const target of runtime.targets || []) {
+            const state = target.getCustomState(stateKey);
+            if (!state || !state.visible) continue;
+            if (state.renderResolution === 'native' || ((!state.renderResolution || state.renderResolution === 'global') && globalUsesNative)) {
+                schedulePaint(target, state);
+            }
+        }
+    }
     const glyphCache = new Map();
     let framePinnedGlyphKeys = null;
     let framePinnedGlyphKeysRefCount = 0;
@@ -1451,9 +1515,9 @@ Enjoy!! :D
         if (pool.length < genericPoolLimit) pool.push(canvas);
     }
 
-    function glyphCacheKey(char, fontFamily, size, weight, style) {
+    function glyphCacheKey(char, fontFamily, size, weight, style, scale = destScale) {
         return char + '\u0001' + fontFamily + '\u0001' + size + '\u0001' +
-            weight + '\u0001' + style;
+            weight + '\u0001' + style + '\u0001' + scale;
     }
 
     function computeGlyphBox(m, px, isColorGlyph) {
@@ -1484,17 +1548,17 @@ Enjoy!! :D
         };
     }
 
-    function buildGlyphShape(canvas, box, isColorGlyph) {
+    function buildGlyphShape(canvas, box, isColorGlyph, scale = destScale) {
         return {
             canvas,
             tinted: new Map(),
             shadows: new Map(),
             blurred: new Map(),
-            advance: box.advance / glyphOversample,
-            baselineOriginXEm: box.baselineX / glyphOversample,
-            baselineOriginYEm: box.baselineY / glyphOversample,
-            fontAscentEm: box.ascent / glyphOversample,
-            fontDescentEm: box.descent / glyphOversample,
+            advance: box.advance / scale,
+            baselineOriginXEm: box.baselineX / scale,
+            baselineOriginYEm: box.baselineY / scale,
+            fontAscentEm: box.ascent / scale,
+            fontDescentEm: box.descent / scale,
             isColorGlyph,
             bytes: canvas.width * canvas.height * 4
         };
@@ -1502,7 +1566,7 @@ Enjoy!! :D
 
     function rasterizeGlyph(char, fontFamily, size, weight, style) {
         const startTime = perfStart();
-        const px = Math.max(1, Math.round(size * glyphOversample));
+        const px = Math.max(1, Math.round(size * destScale));
         const fontStr = `${style} ${weight} ${px}px ${fontFamily}`;
         const isColorGlyph = isEmojiChar(char);
 
@@ -1820,7 +1884,8 @@ Enjoy!! :D
                     results.push({
                         key: item.key,
                         bitmap,
-                        box
+                        box,
+                        scale: item.scale
                     });
                     transfer.push(bitmap);
                 }
@@ -2090,7 +2155,7 @@ Enjoy!! :D
                 immediateKeys.push(result.key);
                 continue;
             }
-            const shape = buildGlyphShape(result.bitmap, result.box, false);
+            const shape = buildGlyphShape(result.bitmap, result.box, false, result.scale);
             insertGlyphShape(result.key, shape);
             glyphUploadQueue.push({
                 key: result.key,
@@ -2169,8 +2234,8 @@ Enjoy!! :D
         };
     }
 
-    function glyphRasterCost(size) {
-        const px = Math.max(1, Math.round(size * glyphOversample));
+    function glyphRasterCost(size, scale = destScale) {
+        const px = Math.max(1, Math.round(size * scale));
         return px * px * 1.3;
     }
 
@@ -2180,7 +2245,7 @@ Enjoy!! :D
         let cost = 0;
         for (const request of requests) {
             chunk.push(request);
-            cost += glyphRasterCost(request.size);
+            cost += glyphRasterCost(request.size, request.scale);
             if (chunk.length >= glyphWorkerChunk || cost >= glyphWorkerChunkCost) {
                 chunks.push(chunk);
                 chunk = [];
@@ -2201,7 +2266,8 @@ Enjoy!! :D
                     key: request.key,
                     char: request.char,
                     css: request.css,
-                    px: Math.max(1, Math.round(request.size * glyphOversample)),
+                    px: Math.max(1, Math.round(request.size * request.scale)),
+                    scale: request.scale,
                     weight: request.weight,
                     style: request.style
                 };
@@ -2227,13 +2293,15 @@ Enjoy!! :D
         const requests = [];
         for (let code = 33; code <= 126; code++) {
             const char = String.fromCharCode(code);
-            const key = glyphCacheKey(char, css, base.size, 'normal', 'normal');
+            const scale = resolutionScaleForMode(globalTextResolution);
+            const key = glyphCacheKey(char, css, base.size, 'normal', 'normal', scale);
             if (glyphCache.has(key) || glyphWorker.pendingKeys.has(key)) continue;
             requests.push({
                 key,
                 char,
                 css,
                 size: base.size,
+                scale,
                 weight: 'normal',
                 style: 'normal'
             });
@@ -2254,7 +2322,7 @@ Enjoy!! :D
             if (char === '\u00A0' || char === '') continue;
             if (cull && (cull.empty || !opMayBeVisible(op, cull))) continue;
             const font = op.font;
-            const key = glyphCacheKey(char, font['font-family'], font['font-size'], font['font-weight'], font['font-style']);
+            const key = glyphCacheKey(char, font['font-family'], font['font-size'], font['font-weight'], font['font-style'], destScale);
             if (glyphCache.has(key)) continue;
             if (glyphWorker.pendingKeys.has(key)) {
                 if (!needed) needed = new Set();
@@ -2264,12 +2332,13 @@ Enjoy!! :D
             if (glyphWorker.failedKeys.has(key) || isEmojiChar(char) || !glyphWorkerHasFont(font['font-family'])) continue;
             if (!requests) requests = new Map();
             if (!requests.has(key)) {
-                cost += glyphRasterCost(font['font-size']);
+                cost += glyphRasterCost(font['font-size'], destScale);
                 requests.set(key, {
                     key,
                     char,
                     css: font['font-family'],
                     size: font['font-size'],
+                    scale: destScale,
                     weight: font['font-weight'],
                     style: font['font-style']
                 });
@@ -4054,6 +4123,7 @@ Enjoy!! :D
     }
 
     function preDrawUpdate() {
+        refreshNativeResolutionTargets();
         flushPendingRenders();
         refreshCulledTargets();
         refreshStageMappedMaskTargets();
@@ -4176,7 +4246,7 @@ Enjoy!! :D
                         if (rc.char !== ' ' && rc.char !== '\u00A0') {
                             const shape = getGlyphShapeForFontStyle(rc.char, run.fontStyle);
                             const shapeStartX = localStartX + (position.advance - shape.advance) / 2 - shape.baselineOriginXEm;
-                            const shapeEndX = shapeStartX + shape.canvas.width / glyphOversample;
+                            const shapeEndX = shapeStartX + shape.canvas.width / destScale;
                             const shadow = rc.shadow || (state.textShadow.enabled ? state.textShadow : null);
                             const border = rc.border || (state.textBorder.enabled ? state.textBorder : null);
                             const padding = Math.max(
@@ -4268,9 +4338,12 @@ Enjoy!! :D
 
     function renderTarget(target) {
         const startTime = perfStart();
+        const previousScale = destScale;
+        destScale = resolutionScaleForState(getState(target));
         try {
             return renderTargetNow(target);
         } finally {
+            destScale = previousScale;
             perfEnd('render.total', startTime);
         }
     }
@@ -4599,7 +4672,7 @@ Enjoy!! :D
     const lastCompositeCrop = {
         x: 0,
         y: 0,
-        scale: glyphOversample
+        scale: destScale
     };
 
     function paintOpsHaveMask(paintOps) {
@@ -4629,7 +4702,7 @@ Enjoy!! :D
             const op = paintOps[i];
             if (op.text === '\u00A0' || op.text === '') continue;
             if (cull && !opMayBeVisible(op, cull)) continue;
-            pinnedKeys.add(glyphCacheKey(op.text, op.font['font-family'], op.font['font-size'], op.font['font-weight'], op.font['font-style']));
+            pinnedKeys.add(glyphCacheKey(op.text, op.font['font-family'], op.font['font-size'], op.font['font-weight'], op.font['font-style'], destScale));
         }
         pinGlyphKeysForFrame(pinnedKeys);
         const spriteAnchorY = anchorY != null ? anchorY : originY;
@@ -4835,9 +4908,6 @@ Enjoy!! :D
             getGLCompositor();
         }, 2000);
     }
-
-    const destScale = glyphOversample;
-
 
     function maskGroupKey(mask) {
         return mask.targetName + '\u0001' + mask.costumeName + '\u0001' +
@@ -5394,6 +5464,8 @@ Enjoy!! :D
 
     function createGLCompositor() {
         const canvas = document.createElement('canvas');
+        const outputCanvas = document.createElement('canvas');
+        const outputCtx = outputCanvas.getContext('2d');
         canvas.width = 1;
         canvas.height = 1;
         const gl = canvas.getContext('webgl2', {
@@ -5521,14 +5593,8 @@ Enjoy!! :D
             return texture;
         }
 
-        const outputCanvas = document.createElement('canvas');
-        outputCanvas.width = 1;
-        outputCanvas.height = 1;
-        outputCanvas.reusable = false;
-        const outputCtx = outputCanvas.getContext('2d');
-
         return {
-            gl, canvas, quadVao, outputCanvas, outputCtx, maxSide,
+            gl, canvas, outputCanvas, outputCtx, quadVao, maxSide,
             renderRatio: 1,
             offX: 0, offY: 0,
             fx: null, fxX: 0, fxY: 0, fxW: 1, fxH: 1, fxShape: null,
@@ -6974,6 +7040,47 @@ Enjoy!! :D
                                 type: Scratch.ArgumentType.STRING,
                                 menu: 'SPRITE',
                                 defaultValue: '_myself_'
+                            }
+                        }
+                    },
+                    {
+                        opcode: 'setGlobalTextResolution',
+                        blockType: Scratch.BlockType.COMMAND,
+                        text: 'set text resolution [RESOLUTION]',
+                        arguments: {
+                            RESOLUTION: {
+                                type: Scratch.ArgumentType.STRING,
+                                menu: 'TEXT_RESOLUTION',
+                                defaultValue: '3x'
+                            }
+                        }
+                    },
+                    {
+                        opcode: 'setTextResolutionForSprite',
+                        blockType: Scratch.BlockType.COMMAND,
+                        text: 'set text resolution [RESOLUTION] for [SPRITE]',
+                        arguments: {
+                            RESOLUTION: {
+                                type: Scratch.ArgumentType.STRING,
+                                menu: 'SPRITE_TEXT_RESOLUTION',
+                                defaultValue: '3x'
+                            },
+                            SPRITE: {
+                                type: Scratch.ArgumentType.STRING,
+                                menu: 'SPRITE',
+                                defaultValue: '_myself_'
+                            }
+                        }
+                    },
+                    {
+                        opcode: 'getTextResolution',
+                        blockType: Scratch.BlockType.REPORTER,
+                        text: 'text resolution for [TARGET]',
+                        arguments: {
+                            TARGET: {
+                                type: Scratch.ArgumentType.STRING,
+                                menu: 'TEXT_RESOLUTION_TARGET',
+                                defaultValue: '_global_'
                             }
                         }
                     },
@@ -8558,6 +8665,15 @@ Enjoy!! :D
                     ONOFF: {
                         items: ['on', 'off']
                     },
+                    TEXT_RESOLUTION: {
+                        items: renderResolutionModes
+                    },
+                    SPRITE_TEXT_RESOLUTION: {
+                        items: ['global', ...renderResolutionModes]
+                    },
+                    TEXT_RESOLUTION_TARGET: {
+                        items: 'getTextResolutionTargetMenuItems'
+                    },
                     EMOJI_MODE: {
                         items: ['colored', 'native']
                     },
@@ -8901,6 +9017,19 @@ Enjoy!! :D
             return items;
         }
 
+        getTextResolutionTargetMenuItems() {
+            return [{ text: 'global', value: '_global_' }, ...this.getSpriteMenuItems()];
+        }
+
+        getTextResolution(args, util) {
+            const targetName = Scratch.Cast.toString(args.TARGET);
+            if (targetName === '_global_') return globalTextResolution;
+            const target = targetName === '_myself_' ? util.target : runtime.getSpriteTargetByName(targetName);
+            if (!target) return '';
+            const state = getState(target);
+            return state.renderResolution === 'global' ? globalTextResolution : state.renderResolution;
+        }
+
         getMaskCostumeMenuItems() {
             const items = [];
             const seen = new Set();
@@ -8964,6 +9093,28 @@ Enjoy!! :D
             if (state.smoothing === smoothing) return;
             state.smoothing = smoothing;
             schedulePaint(util.target, state);
+        }
+
+        setGlobalTextResolution(args, util) {
+            const resolution = Scratch.Cast.toString(args.RESOLUTION).toLowerCase();
+            if (!renderResolutionModes.includes(resolution) || globalTextResolution === resolution) return;
+            globalTextResolution = resolution;
+            for (const target of runtime.targets || []) {
+                const state = target.getCustomState(stateKey);
+                if (state && state.visible && (!state.renderResolution || state.renderResolution === 'global')) schedulePaint(target, state);
+            }
+        }
+
+        setTextResolutionForSprite(args, util) {
+            const sprite = Scratch.Cast.toString(args.SPRITE);
+            const target = sprite === '_myself_' ? util.target : runtime.getSpriteTargetByName(sprite);
+            if (!target) return;
+            const resolution = Scratch.Cast.toString(args.RESOLUTION).toLowerCase();
+            if (!['global', ...renderResolutionModes].includes(resolution)) return;
+            const state = getState(target);
+            if (state.renderResolution === resolution) return;
+            state.renderResolution = resolution;
+            schedulePaint(target, state);
         }
 
         setMasksToStageCoordinates(args, util) {
@@ -9581,9 +9732,20 @@ Enjoy!! :D
             const idx = Scratch.Cast.toNumber(args.INDEX) - 1;
             this.stopCharAnimations(args, util);
             const hasEffects = !!state.charEffects && !!state.charEffects[idx];
-            if (state.charOverrides[idx] || hasEffects) {
+            const styleOverride = state.charStyleOverrides[idx];
+            const hasDimensions = !!styleOverride && (styleOverride.dimensionOffsetX !== undefined || styleOverride.dimensionOffsetY !== undefined);
+            if (state.charOverrides[idx] || hasEffects || hasDimensions) {
                 delete state.charOverrides[idx];
                 if (hasEffects) delete state.charEffects[idx];
+                if (hasDimensions) {
+                    delete styleOverride.dimensionOffsetX;
+                    delete styleOverride.dimensionOffsetY;
+                    if (!Object.keys(styleOverride).length) delete state.charStyleOverrides[idx];
+                    state.charStyleOverridesVersion++;
+                    state.shapeKey = null;
+                    state.layout = null;
+                    state.paintFingerprint = null;
+                }
                 state.charOverridesVersion++;
                 state.charTransformsVersion++;
                 schedulePaint(util.target, state);
@@ -9595,11 +9757,26 @@ Enjoy!! :D
             const target = util.target;
             clearCharAnimationsForTarget(target.id);
             const hasEffects = !!state.charEffects && Object.keys(state.charEffects).length > 0;
-            if (Object.keys(state.charOverrides).length || hasEffects) {
+            const hasDimensionOverrides = Object.keys(state.charStyleOverrides || {}).some(index => {
+                const override = state.charStyleOverrides[index];
+                return override && (override.dimensionOffsetX !== undefined || override.dimensionOffsetY !== undefined);
+            });
+            if (Object.keys(state.charOverrides).length || hasEffects || hasDimensionOverrides) {
                 state.charOverrides = {};
                 state.charEffects = {};
+                for (const index in state.charStyleOverrides) {
+                    const override = state.charStyleOverrides[index];
+                    if (!override) continue;
+                    delete override.dimensionOffsetX;
+                    delete override.dimensionOffsetY;
+                    if (!Object.keys(override).length) delete state.charStyleOverrides[index];
+                }
                 state.charOverridesVersion++;
                 state.charTransformsVersion++;
+                state.charStyleOverridesVersion++;
+                state.shapeKey = null;
+                state.layout = null;
+                state.paintFingerprint = null;
                 schedulePaint(util.target, state);
             }
         }

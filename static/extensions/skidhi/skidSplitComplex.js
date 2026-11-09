@@ -31,16 +31,11 @@
     };
     const complexArg = { shape: SHAPE, check: "SplitComplex" };
 
-    const runtime = Scratch.vm && Scratch.vm.runtime;
-        if (runtime && typeof runtime.registerSerializer === "function") {
-            runtime.registerSerializer(
-                "complexnum-Complex",
-                (z) => ({ real: String(z.real), imag: String(z.imag) }),
-                (data) => new Complex(Number(data.real), Number(data.imag))
-            );
-        } else {
-            console.warn("Complex: registerSerializer not found, values won't persist in saved projects");
-        }
+    runtime.registerSerializer(
+        "complexnum-Complex",
+        (z) => ({ real: String(z.real), imag: String(z.imag) }),
+        (data) => new Complex(Number(data.real), Number(data.imag))
+    );
 
     class Extension {
         getInfo() {

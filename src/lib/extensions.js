@@ -29,6 +29,15 @@ export default [
         isGitHub: true,
     },
     {
+        name: "Achievements",
+        description: "An extension about achievements.",
+        tags: ["new"],
+        code: "ZiploxWasTaken/achievements.js",
+        banner: "ZiploxWasTaken/Achievements.svg",
+        isGitHub: true,
+        creator: "ZiploxWasTaken",
+    },
+    {
         name: "Storage Plus",
         description: "A storage extension with many more features. Featuring server storage (with a fast server), local storage and more!",
         code: "Gen1x/storage_plus.js",

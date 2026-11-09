@@ -31,9 +31,9 @@
     };
     const complexArg = { shape: SHAPE, check: "SplitComplex" };
 
-    runtime.registerSerializer(
+    Scratch.vm.runtime.registerSerializer(
         "complexnum-Complex",
-        (z) => ({ real: String(z.real), imag: String(z.imag) }),
+        (value) => ({ real: String(z.real), imag: String(z.imag) }),
         (data) => new Complex(Number(data.real), Number(data.imag))
     );
 

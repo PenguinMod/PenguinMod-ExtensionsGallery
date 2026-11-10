@@ -11,7 +11,7 @@
             this.imag = imag;
         }
         get customId() {
-            return "complexnum-Complex";
+            return "skidhiSplitComplex";
         }
         toString() {
             const sign = this.imag < 0 ? "-" : "+";
@@ -29,18 +29,18 @@
         blockShape: SHAPE,
         forceOutputType: "SplitComplex",
     };
-    const complexArg = { shape: SHAPE, check: "SplitComplex" };
+    const complexArg = { shape: BUMPED, check: "SplitComplex" };
 
     Scratch.vm.runtime.registerSerializer(
-        "complexnum-Complex",
-        (value) => ({ real: String(z.real), imag: String(z.imag) }),
-        (data) => new Complex(Number(data.real), Number(data.imag))
+        "skidhiSplitComplex",
+        (value) => ({ real: String(value.real), imag: String(value.imag) }),
+        (data) => new SplitComplex(Number(data.real), Number(data.imag))
     );
 
     class Extension {
         getInfo() {
             return {
-                id: "splitcomplexnum",
+                id: "skidhiSplitComplex",
                 name: "Split Complex",
                 color1: "#14b655",
                 blocks: [
@@ -117,9 +117,9 @@
                         arguments: { A: complexArg },
                     },
                     {
-                        opcode: "normSqOf",
+                        opcode: "modOf",
                         blockType: Scratch.BlockType.REPORTER,
-                        text: "norm squared of [A]",
+                        text: "modulus of [A]",
                         arguments: { A: complexArg },
                     },
                     {
@@ -204,7 +204,7 @@
         imagOf(args) {
             return toSplit(args.A).imag;
         }
-        normSqOf(args) {
+        modOf(args) {
             const z = toSplit(args.A);
             return z.real * z.real - z.imag * z.imag;
         }

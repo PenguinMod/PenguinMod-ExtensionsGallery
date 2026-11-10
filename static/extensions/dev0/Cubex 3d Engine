@@ -1,0 +1,1705 @@
+// Name: Cubex
+// ID: cubex3dengine
+// Description: A compact 3D game engine with objects, models, lights, textures, picking and game-ready camera controls, powered by Three.js.
+// By: dev0
+// License: MIT
+//
+// IMPORTANT: Load this as an UNSANDBOXED extension
+// (PenguinMod: Extensions > Custom Extension > File/URL, tick "Run unsandboxed").
+
+(function (Scratch) {
+  'use strict';
+
+  if (!Scratch.extensions.unsandboxed) {
+    throw new Error('Cubex-3d-Engine must run unsandboxed.');
+  }
+
+  const THREE_URL = 'https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js';
+  const GLTF_LOADER_URL = 'https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js';
+  const OBJ_LOADER_URL = 'https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/OBJLoader.js';
+  const BEHIND_SCALE = 1.5; // base render scale for the "behind sprites" mode
+  // Clean, simple 3D cube icon.
+  const EXTENSION_ICON = 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA2NCA2NCI+CjxyZWN0IHg9IjIiIHk9IjIiIHdpZHRoPSI2MCIgaGVpZ2h0PSI2MCIgcng9IjMwIiBmaWxsPSIjMjc4N2RmIi8+CjxwYXRoIGQ9Ik0zMiAxMSA0OSAyMXYyMkwzMiA1MyAxNSA0M1YyMVoiIGZpbGw9Im5vbmUiIHN0cm9rZT0iI2ZmZiIgc3Ryb2tlLXdpZHRoPSI0IiBzdHJva2UtbGluZWpvaW49InJvdW5kIi8+CjxwYXRoIGQ9Ik0xNSAyMSAzMiAzMSA0OSAyMU0zMiAzMXYyMiIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjZmZmIiBzdHJva2Utd2lkdGg9IjQiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIvPgo8L3N2Zz4=';
+  const QUALITY_PRESETS = Object.freeze({
+    'very low': { renderScale: 0.5, shadowMapSize: 256 },
+    'low': { renderScale: 0.75, shadowMapSize: 512 },
+    'medium': { renderScale: 1, shadowMapSize: 1024 },
+    'high': { renderScale: 1.5, shadowMapSize: 2048 },
+    'ultra': { renderScale: 2, shadowMapSize: 4096 },
+  });
+  const scriptPromises = new Map();
+  const BEHIND_LAYER = 'video'; // Scratch layer group used by "behind sprites": above backdrop, below sprites
+  const vm = Scratch.vm;
+  const runtime = vm.runtime;
+  const Cast = Scratch.Cast;
+
+  const D2R = Math.PI / 180;
+  const R2D = 180 / Math.PI;
+  const MAX_PITCH = 89.9 * D2R;
+
+  // ---------- helpers ----------
+  const loadThree = () =>
+    new Promise((resolve, reject) => {
+      if (window.THREE) return resolve(window.THREE);
+      const s = document.createElement('script');
+      s.src = THREE_URL;
+      s.onload = () => resolve(window.THREE);
+      s.onerror = () => reject(new Error('Could not load Three.js'));
+      document.head.appendChild(s);
+    });
+
+  const loadScript = (url) => {
+    if (scriptPromises.has(url)) return scriptPromises.get(url);
+    const promise = new Promise((resolve, reject) => {
+      const script = document.createElement('script');
+      script.src = url;
+      script.onload = () => resolve();
+      script.onerror = () => reject(new Error('Could not load model loader: ' + url));
+      document.head.appendChild(script);
+    }).catch((error) => {
+      scriptPromises.delete(url);
+      throw error;
+    });
+    scriptPromises.set(url, promise);
+    return promise;
+  };
+
+  const loadImage = (src, cors) =>
+    new Promise((resolve, reject) => {
+      const img = new Image();
+      if (cors) img.crossOrigin = 'anonymous';
+      img.onload = () => resolve(img);
+      img.onerror = () => reject(new Error('Image failed to load'));
+      img.src = src;
+    });
+
+  const str = (v) => Cast.toString(v);
+  const num = (v) => {
+    const n = Cast.toNumber(v);
+    return Number.isFinite(n) ? n : 0;
+  };
+  const on = (v) => str(v) === 'on';
+  const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+  const round = (v, p) => Math.round(v * p) / p;
+  const axisOf = (v) => {
+    const a = str(v).toLowerCase();
+    return a === 'y' || a === 'z' ? a : 'x';
+  };
+
+  class Cubex3dEngine {
+    constructor() {
+      this.THREE = null;
+      this.ready = false;
+      this.starting = null;
+      this.scene = null;
+      this.persp = null;
+      this.ortho = null;
+      this.camera = null; // active camera
+      this.renderer = null;
+      this.canvas = null;
+      this.stageCanvas = null;
+      this.objs = new Map();
+      this.lights = new Map();
+      this.spins = new Map();
+      this.grid = null;
+      this.shadows = false;
+      this.quality = 'medium';
+      this._activeBehindScale = BEHIND_SCALE;
+      this.layer = 'front'; // 'front' = overlay canvas, 'behind' = drawn as a layer under the sprites
+      this.skin = null;
+      this.drawable = null;
+      this.bridge = null; // plain 2D canvas that carries the 3D picture into the Scratch layer
+      this.bctx = null;
+      this.layerState = 'front';
+      this.dirty = true; // only re-render when something changed
+      this.last = 0;
+      this.lastRender = 0;
+      this._stepSeen = false;
+      this._layoutKey = '';
+      this._raf = 0;
+      this._drag = null;
+      this.cam = null; // camera state (radians, yaw is counter-clockwise like Three.js)
+      this.camSettings = null;
+      this.vp = { on: false, target: null, dist: 8 }; // Blender-style mouse controls
+      this.look = { on: false, sens: 0.15 }; // first-person mouse look
+      this.follow = null;
+
+      // Render once per project frame so 3D runs at the project's FPS.
+      runtime.on('AFTER_EXECUTE', () => {
+        if (!this.ready) return;
+        this._stepSeen = true;
+        this._render();
+      });
+      runtime.on('PROJECT_STOP_ALL', () => {
+        this.spins.clear();
+        this.follow = null;
+      });
+
+      // Every command block marks the scene as changed, so an unchanged scene costs nothing.
+      this.getInfo()
+        .blocks.filter((b) => b && b.blockType === Scratch.BlockType.COMMAND)
+        .forEach((b) => {
+          const fn = this[b.opcode];
+          this[b.opcode] = (...a) => {
+            this.dirty = true;
+            return fn.apply(this, a);
+          };
+        });
+    }
+
+    // ---------- block definitions ----------
+    getInfo() {
+      const nameArg = (def) => ({ type: Scratch.ArgumentType.STRING, defaultValue: def });
+      const numArg = (def) => ({ type: Scratch.ArgumentType.NUMBER, defaultValue: def });
+      const menuArg = (menu, def) => ({ type: Scratch.ArgumentType.STRING, menu, defaultValue: def });
+      const colorArg = (def) => ({ type: Scratch.ArgumentType.COLOR, defaultValue: def });
+      const C = Scratch.BlockType.COMMAND;
+      const R = Scratch.BlockType.REPORTER;
+      const B = Scratch.BlockType.BOOLEAN;
+      const label = (text) => ({ blockType: Scratch.BlockType.LABEL, text });
+
+      return {
+        id: 'cubex3dengine',
+        name: 'Cubex',
+        color1: '#168BFF',
+        color2: '#0B67C8',
+        color3: '#064A9C',
+        menuIconURI: EXTENSION_ICON,
+        blocks: (() => {
+          const blocks = [
+          // ===== ENGINE =====
+          label('Engine'),
+          { opcode: 'start', blockType: C, text: 'start 3D engine' },
+          { opcode: 'stop', blockType: C, text: 'stop 3D engine' },
+          {
+            opcode: 'setLayer',
+            blockType: C,
+            text: 'put 2D sprites [LAYER] the 3D',
+            arguments: { LAYER: menuArg('layer', 'front') },
+          },
+          { opcode: 'layerStatus', blockType: R, text: '3D layer status' },
+          {
+            opcode: 'setBackground',
+            blockType: C,
+            text: 'set background color to [COLOR]',
+            arguments: { COLOR: colorArg('#87ceeb') },
+          },
+          { opcode: 'clearBackground', blockType: C, text: 'make background transparent' },
+          {
+            opcode: 'setFog',
+            blockType: C,
+            text: 'turn fog [STATE] color [COLOR] near [NEAR] far [FAR]',
+            arguments: { STATE: menuArg('onoff', 'on'), COLOR: colorArg('#87ceeb'), NEAR: numArg(10), FAR: numArg(50) },
+          },
+          { opcode: 'setGrid', blockType: C, text: 'turn grid [STATE]', arguments: { STATE: menuArg('onoff', 'on') } },
+          { opcode: 'setShadows', blockType: C, text: 'turn shadows [STATE]', arguments: { STATE: menuArg('onoff', 'on') } },
+          {
+            opcode: 'setQuality',
+            blockType: C,
+            text: 'set render quality to [QUALITY]',
+            arguments: { QUALITY: menuArg('quality', 'medium') },
+          },
+
+          // ===== OBJECTS =====
+          '---',
+          label('Objects'),
+          {
+            opcode: 'createObject',
+            blockType: C,
+            text: 'create [SHAPE] named [NAME] at x [X] y [Y] z [Z]',
+            arguments: { SHAPE: menuArg('shape', 'cube'), NAME: nameArg('box1'), X: numArg(0), Y: numArg(1), Z: numArg(0) },
+          },
+          {
+            opcode: 'duplicateObject',
+            blockType: C,
+            text: 'duplicate [NAME] as [NEW]',
+            arguments: { NAME: nameArg('box1'), NEW: nameArg('box2') },
+          },
+          { opcode: 'deleteObject', blockType: C, text: 'delete object [NAME]', arguments: { NAME: nameArg('box1') } },
+          { opcode: 'deleteAllObjects', blockType: C, text: 'delete all objects' },
+          { opcode: 'objectExists', blockType: B, text: 'object [NAME] exists?', arguments: { NAME: nameArg('box1') } },
+          { opcode: 'objectCount', blockType: R, text: 'object count' },
+          {
+            opcode: 'importModel',
+            blockType: C,
+            text: 'import [FORMAT] model from URL [URL] as [NAME] at x [X] y [Y] z [Z] scale [SCALE]',
+            arguments: {
+              FORMAT: menuArg('modelFormat', 'gltf'),
+              URL: nameArg('https://example.com/model.glb'),
+              NAME: nameArg('model1'),
+              X: numArg(0),
+              Y: numArg(0),
+              Z: numArg(0),
+              SCALE: numArg(1),
+            },
+          },
+
+          // ===== TRANSFORM =====
+          '---',
+          label('Position / Rotation / Size'),
+          {
+            opcode: 'goTo',
+            blockType: C,
+            text: 'move [NAME] to x [X] y [Y] z [Z]',
+            arguments: { NAME: nameArg('box1'), X: numArg(0), Y: numArg(1), Z: numArg(0) },
+          },
+          {
+            opcode: 'setObjectSize',
+            blockType: C,
+            text: 'set size of [NAME] to x [X] y [Y] z [Z]',
+            arguments: { NAME: nameArg('box1'), X: numArg(1), Y: numArg(1), Z: numArg(1) },
+          },
+          {
+            opcode: 'setProp',
+            blockType: C,
+            text: 'set [PROP] [AXIS] of [NAME] to [VALUE]',
+            arguments: { PROP: menuArg('transformProp', 'position'), AXIS: menuArg('axis', 'x'), NAME: nameArg('box1'), VALUE: numArg(0) },
+          },
+          {
+            opcode: 'changeProp',
+            blockType: C,
+            text: 'change [PROP] [AXIS] of [NAME] by [VALUE]',
+            arguments: { PROP: menuArg('transformProp', 'rotation'), AXIS: menuArg('axis', 'y'), NAME: nameArg('box1'), VALUE: numArg(15) },
+          },
+          {
+            opcode: 'lookAtPoint',
+            blockType: C,
+            text: 'point [NAME] at x [X] y [Y] z [Z]',
+            arguments: { NAME: nameArg('box1'), X: numArg(0), Y: numArg(0), Z: numArg(0) },
+          },
+          {
+            opcode: 'spin',
+            blockType: C,
+            text: 'spin [NAME] x [X] y [Y] z [Z] degrees per second (0 0 0 stops)',
+            arguments: { NAME: nameArg('box1'), X: numArg(0), Y: numArg(90), Z: numArg(0) },
+          },
+
+          // ===== LOOKS =====
+          '---',
+          label('Looks'),
+          {
+            opcode: 'setColor',
+            blockType: C,
+            text: 'set color of [NAME] to [COLOR]',
+            arguments: { NAME: nameArg('box1'), COLOR: colorArg('#ff3b30') },
+          },
+          {
+            opcode: 'setMaterial',
+            blockType: C,
+            text: 'set [PROP] of [NAME] to [VALUE] %',
+            arguments: { PROP: menuArg('materialProp', 'opacity'), NAME: nameArg('box1'), VALUE: numArg(100) },
+          },
+          {
+            opcode: 'setFlag',
+            blockType: C,
+            text: 'turn [FLAG] [STATE] for [NAME]',
+            arguments: { FLAG: menuArg('flag', 'visible'), STATE: menuArg('onoff', 'on'), NAME: nameArg('box1') },
+          },
+          {
+            opcode: 'setTextureCostume',
+            blockType: C,
+            text: 'set texture of [NAME] to costume [COSTUME] of [SPRITE]',
+            arguments: { NAME: nameArg('box1'), COSTUME: nameArg('costume1'), SPRITE: menuArg('sprite', '_myself_') },
+          },
+          {
+            opcode: 'setTexture',
+            blockType: C,
+            text: 'set texture of [NAME] to image URL [URL] (blank removes)',
+            arguments: { NAME: nameArg('box1'), URL: nameArg('') },
+          },
+          {
+            opcode: 'setTextureTiling',
+            blockType: C,
+            text: 'repeat texture of [NAME] [X] times across and [Y] times down',
+            arguments: { NAME: nameArg('box1'), X: numArg(1), Y: numArg(1) },
+          },
+
+          // ===== CAMERA =====
+          '---',
+          label('Camera'),
+          {
+            opcode: 'cameraGoTo',
+            blockType: C,
+            text: 'move camera to x [X] y [Y] z [Z]',
+            arguments: { X: numArg(0), Y: numArg(3), Z: numArg(8) },
+          },
+          {
+            opcode: 'cameraMove',
+            blockType: C,
+            text: 'move camera [DIR] by [STEPS]',
+            arguments: { DIR: menuArg('camDir', 'forward'), STEPS: numArg(1) },
+          },
+          {
+            opcode: 'cameraLookAt',
+            blockType: C,
+            text: 'point camera at x [X] y [Y] z [Z]',
+            arguments: { X: numArg(0), Y: numArg(0), Z: numArg(0) },
+          },
+          {
+            opcode: 'cameraRotate',
+            blockType: C,
+            text: 'set camera yaw [YAW] pitch [PITCH] roll [ROLL]',
+            arguments: { YAW: numArg(0), PITCH: numArg(0), ROLL: numArg(0) },
+          },
+          {
+            opcode: 'cameraTurn',
+            blockType: C,
+            text: 'turn camera [TURN] by [DEG] degrees',
+            arguments: { TURN: menuArg('turnDir', 'right'), DEG: numArg(5) },
+          },
+          {
+            opcode: 'cameraOrbit',
+            blockType: C,
+            text: 'orbit camera around x [X] y [Y] z [Z] distance [DIST] angle [ANGLE] elevation [ELEV]',
+            arguments: { X: numArg(0), Y: numArg(0), Z: numArg(0), DIST: numArg(8), ANGLE: numArg(0), ELEV: numArg(25) },
+          },
+          {
+            opcode: 'cameraFollow',
+            blockType: C,
+            text: 'make camera follow [NAME] at distance [DIST] smoothness [SMOOTH] % (blank stops)',
+            arguments: { NAME: nameArg('box1'), DIST: numArg(8), SMOOTH: numArg(50) },
+          },
+          {
+            opcode: 'attachPlayerCamera',
+            blockType: C,
+            text: 'attach camera to player [NAME] eye height [HEIGHT] distance [DIST] smoothing [SMOOTH] %',
+            arguments: { NAME: nameArg('player'), HEIGHT: numArg(1.6), DIST: numArg(0), SMOOTH: numArg(0) },
+          },
+          {
+            opcode: 'movePlayer',
+            blockType: C,
+            text: 'move player [NAME] [DIR] by [DIST]',
+            arguments: { NAME: nameArg('player'), DIR: menuArg('playerDir', 'forward'), DIST: numArg(0.1) },
+          },
+          {
+            opcode: 'cameraSetting',
+            blockType: C,
+            text: 'set camera [SETTING] to [VALUE]',
+            arguments: { SETTING: menuArg('cameraSetting', 'field of view'), VALUE: numArg(60) },
+          },
+          {
+            opcode: 'cameraProjection',
+            blockType: C,
+            text: 'set camera projection to [PROJ]',
+            arguments: { PROJ: menuArg('projection', 'perspective') },
+          },
+          {
+            opcode: 'cameraInfo',
+            blockType: R,
+            text: 'camera [PROP]',
+            arguments: { PROP: menuArg('cameraProp', 'x') },
+          },
+
+          // ===== VIEWPORT CONTROLS =====
+          '---',
+          label('Mouse Controls'),
+          {
+            opcode: 'viewportControls',
+            blockType: C,
+            text: 'turn viewport controls [STATE]',
+            arguments: { STATE: menuArg('onoff', 'on') },
+          },
+          {
+            opcode: 'mouseLook',
+            blockType: C,
+            text: 'turn mouse look [STATE] sensitivity [SENS] %',
+            arguments: { STATE: menuArg('onoff', 'on'), SENS: numArg(100) },
+          },
+
+          // ===== LIGHTS =====
+          '---',
+          label('Lights'),
+          {
+            opcode: 'addLight',
+            blockType: C,
+            text: 'add [TYPE] light named [NAME] color [COLOR] intensity [INT] at x [X] y [Y] z [Z]',
+            arguments: {
+              TYPE: menuArg('lightType', 'point'),
+              NAME: nameArg('lamp1'),
+              COLOR: colorArg('#ffffff'),
+              INT: numArg(1),
+              X: numArg(3),
+              Y: numArg(5),
+              Z: numArg(3),
+            },
+          },
+          {
+            opcode: 'moveLight',
+            blockType: C,
+            text: 'move light [NAME] to x [X] y [Y] z [Z]',
+            arguments: { NAME: nameArg('lamp1'), X: numArg(0), Y: numArg(5), Z: numArg(0) },
+          },
+          {
+            opcode: 'setLightIntensity',
+            blockType: C,
+            text: 'set light [NAME] intensity to [INT]',
+            arguments: { NAME: nameArg('lamp1'), INT: numArg(1) },
+          },
+          { opcode: 'deleteLight', blockType: C, text: 'delete light [NAME]', arguments: { NAME: nameArg('lamp1') } },
+
+          // ===== SENSING =====
+          '---',
+          label('Sensing'),
+          {
+            opcode: 'getProp',
+            blockType: R,
+            text: '[PROP] [AXIS] of [NAME]',
+            arguments: { PROP: menuArg('transformProp', 'position'), AXIS: menuArg('axis', 'x'), NAME: nameArg('box1') },
+          },
+          {
+            opcode: 'distance',
+            blockType: R,
+            text: 'distance between [A] and [B]',
+            arguments: { A: nameArg('box1'), B: nameArg('box2') },
+          },
+          {
+            opcode: 'touching',
+            blockType: B,
+            text: '[A] touching [B]?',
+            arguments: { A: nameArg('box1'), B: nameArg('box2') },
+          },
+          { opcode: 'objectUnderMouse', blockType: R, text: 'object under mouse' },
+          {
+            opcode: 'screenPos',
+            blockType: R,
+            text: 'stage [AXIS2D] of [NAME] on screen',
+            arguments: { AXIS2D: menuArg('axis2d', 'x'), NAME: nameArg('box1') },
+          },
+          ];
+          // Apply the extension palette to every block, including older blocks.
+          blocks.forEach((block) => {
+            if (block && typeof block === 'object' && block.opcode) {
+              block.color1 = '#168BFF';
+              block.color2 = '#0B67C8';
+              block.color3 = '#064A9C';
+            }
+          });
+          return blocks;
+        })(),
+        menus: {
+          axis: { acceptReporters: true, items: ['x', 'y', 'z'] },
+          axis2d: { acceptReporters: true, items: ['x', 'y'] },
+          onoff: { acceptReporters: true, items: ['on', 'off'] },
+          layer: {
+            acceptReporters: false,
+            items: [
+              { text: 'below', value: 'front' }, // sprites below the 3D = 3D drawn in front
+              { text: 'above', value: 'behind' }, // sprites above the 3D = 3D drawn behind the sprites
+            ],
+          },
+          shape: { acceptReporters: true, items: ['cube', 'sphere', 'cylinder', 'cone', 'torus', 'plane', 'floor'] },
+          quality: { acceptReporters: false, items: ['very low', 'low', 'medium', 'high', 'ultra'] },
+          modelFormat: {
+            acceptReporters: false,
+            items: [
+              { text: 'glTF / GLB', value: 'gltf' },
+              { text: 'OBJ', value: 'obj' },
+            ],
+          },
+          lightType: { acceptReporters: true, items: ['point', 'directional', 'ambient', 'spot'] },
+          transformProp: { acceptReporters: false, items: ['position', 'rotation', 'size'] },
+          materialProp: { acceptReporters: false, items: ['opacity', 'metalness', 'roughness', 'glow'] },
+          flag: { acceptReporters: false, items: ['visible', 'wireframe', 'cast shadow', 'receive shadow'] },
+          camDir: {
+            acceptReporters: true,
+            items: ['forward', 'backward', 'left', 'right', 'up', 'down', 'walk forward', 'walk backward'],
+          },
+          playerDir: { acceptReporters: true, items: ['forward', 'backward', 'left', 'right'] },
+          turnDir: { acceptReporters: true, items: ['right', 'left', 'up', 'down', 'roll right', 'roll left'] },
+          projection: { acceptReporters: false, items: ['perspective', 'orthographic'] },
+          cameraSetting: {
+            acceptReporters: false,
+            items: ['field of view', 'zoom %', 'near clip', 'far clip', 'orthographic size'],
+          },
+          cameraProp: { acceptReporters: true, items: ['x', 'y', 'z', 'yaw', 'pitch', 'roll', 'field of view', 'zoom'] },
+          sprite: { acceptReporters: true, items: 'getSpriteMenu' },
+        },
+      };
+    }
+
+    getSpriteMenu() {
+      const items = [
+        { text: 'this sprite', value: '_myself_' },
+        { text: 'Stage', value: '_stage_' },
+      ];
+      runtime.targets.forEach((t) => {
+        if (t.isOriginal && !t.isStage) items.push({ text: t.sprite.name, value: t.sprite.name });
+      });
+      return items;
+    }
+
+    // ---------- setup / teardown ----------
+    _o(name) {
+      return this.objs.get(str(name));
+    }
+
+    async _init() {
+      if (this.ready) return;
+      if (this.starting) return this.starting;
+      this.starting = (async () => {
+        const T = await loadThree();
+        this.THREE = T;
+        const stage = Scratch.renderer && Scratch.renderer.canvas;
+        if (!stage) throw new Error('Stage canvas not found');
+        this.stageCanvas = stage;
+
+        this.canvas = document.createElement('canvas');
+        this.canvas.style.cssText = 'position:absolute;pointer-events:none;z-index:5;';
+        this.canvas.addEventListener('webglcontextlost', (e) => e.preventDefault());
+        stage.parentElement.appendChild(this.canvas);
+
+        this.renderer = new T.WebGLRenderer({ canvas: this.canvas, antialias: true, alpha: true, powerPreference: 'high-performance' });
+        this.renderer.setClearColor(0x000000, 0);
+        this.renderer.shadowMap.enabled = false;
+        this.renderer.shadowMap.type = T.PCFSoftShadowMap;
+        this.renderer.shadowMap.autoUpdate = true;
+        this.scene = new T.Scene();
+        this.persp = new T.PerspectiveCamera(60, 4 / 3, 0.1, 1000);
+        this.ortho = new T.OrthographicCamera(-5, 5, 5, -5, 0.1, 1000);
+        this.camera = this.persp;
+        this.raycaster = new T.Raycaster();
+        this._v1 = new T.Vector3();
+        this._v2 = new T.Vector3();
+        this._euler = new T.Euler(0, 0, 0, 'YXZ');
+
+        this.camSettings = { projection: 'perspective', fov: 60, near: 0.1, far: 1000, zoom: 1, orthoSize: 10 };
+        this.cam = { pos: new T.Vector3(0, 3, 8), yaw: 0, pitch: 0, roll: 0 };
+        this.vp = { on: false, target: new T.Vector3(), dist: 8 };
+        this.look = { on: false, sens: 0.15 };
+        this.follow = null;
+        this._lookAtPoint(0, 0, 0);
+
+        // default lights so things are visible right away
+        this._makeLight('ambient', 'ambient', '#ffffff', 0.55, 0, 0, 0);
+        this._makeLight('directional', 'sun', '#ffffff', 0.9, 5, 10, 7);
+
+        this._bindInputs();
+        this.ready = true;
+        this._stepSeen = false;
+        this.dirty = true;
+        this.last = this.lastRender = performance.now();
+        this._applyLayer();
+        this._loop();
+      })();
+      try {
+        await this.starting;
+      } finally {
+        this.starting = null;
+      }
+    }
+
+    start() {
+      return this._init().catch((e) => console.error('[Cubex-3d-Engine]', e));
+    }
+
+    stop() {
+      if (!this.ready) return;
+      this.ready = false;
+      cancelAnimationFrame(this._raf);
+      if (this._unbind) this._unbind();
+      this._freeSkin();
+      Array.from(this.objs.keys()).forEach((n) => this._removeObject(n));
+      this.lights.forEach((l) => {
+        this.scene.remove(l);
+        if (l.dispose) l.dispose();
+      });
+      this.lights.clear();
+      if (this.grid) {
+        this.scene.remove(this.grid);
+        this.grid.geometry && this.grid.geometry.dispose();
+        if (this.grid.material) {
+          const mats = Array.isArray(this.grid.material) ? this.grid.material : [this.grid.material];
+          mats.forEach((m) => m && m.dispose());
+        }
+      }
+      this.renderer.dispose();
+      this.canvas.remove();
+      this.grid = this.canvas = this.renderer = this.scene = this.follow = null;
+    }
+
+    // ---------- layers ----------
+    // "front": a canvas laid over the stage.
+    // "behind": the 3D picture is turned into a Scratch layer between the backdrop and the sprites
+    //           (the stage canvas is opaque, so a canvas placed underneath it would never be visible).
+    _freeSkin() {
+      const r = Scratch.renderer;
+      try {
+        if (this.drawable !== null) r.destroyDrawable(this.drawable, BEHIND_LAYER);
+        if (this.skin !== null) r.destroySkin(this.skin);
+      } catch (e) { /* ignore */ }
+      this.drawable = this.skin = this.bridge = this.bctx = null;
+    }
+
+    _applyLayer() {
+      if (!this.ready) return;
+      this._layoutKey = '';
+      this._syncLayout(); // sizes the canvas for the chosen mode
+      if (this.layer === 'behind' && this.drawable === null) {
+        try {
+          const r = Scratch.renderer;
+          // The 3D picture is copied onto a normal 2D canvas first; that is what Scratch skins handle best.
+          this.bridge = document.createElement('canvas');
+          this.bridge.reusable = false;
+          this.bridge.width = this.canvas.width;
+          this.bridge.height = this.canvas.height;
+          this.bctx = this.bridge.getContext('2d');
+          this.skin = r.createBitmapSkin(this.bridge, this._activeBehindScale || BEHIND_SCALE);
+          // The "video" layer group sits above the backdrop but below the pen layer and every sprite,
+          // so all 2D sprites are always drawn on top of the 3D picture.
+          this.drawable = r.createDrawable(BEHIND_LAYER);
+          if (this.drawable === undefined || this.drawable === null) throw new Error('layer group "' + BEHIND_LAYER + '" unavailable');
+          r.updateDrawableSkinId(this.drawable, this.skin);
+          r.updateDrawablePosition(this.drawable, [0, 0]);
+          // clicks go straight through the 3D layer to the sprites and backdrop
+          if (r.markDrawableAsNoninteractive) r.markDrawableAsNoninteractive(this.drawable);
+          this.layerState = 'above sprites: 3D is behind the sprites';
+        } catch (e) {
+          console.warn('[Cubex-3d-Engine] "sprites above 3D" failed, falling back to 3D in front:', e);
+          this.layerState = 'failed (' + (e && e.message ? e.message : e) + '), 3D is in front';
+          this._freeSkin();
+          this.layer = 'front';
+        }
+      } else if (this.layer === 'front') {
+        this._freeSkin();
+        this.layerState = 'below sprites: 3D is in front';
+      }
+      // hidden but still laid out, so the browser keeps rendering it
+      this.canvas.style.visibility = this.layer === 'behind' ? 'hidden' : '';
+      this._layoutKey = '';
+      this.dirty = true;
+    }
+
+    layerStatus() {
+      return this.ready ? this.layerState : 'engine not started';
+    }
+
+    setLayer(args) {
+      this.layer = str(args.LAYER) === 'behind' ? 'behind' : 'front';
+      this._applyLayer();
+    }
+
+    // The GUI rebuilds the stage container when entering/leaving fullscreen,
+    // which removes the overlay canvas; re-attach it whenever needed.
+    _ensureAttached() {
+      const live = Scratch.renderer && Scratch.renderer.canvas;
+      if (live && live !== this.stageCanvas) {
+        this.stageCanvas = live;
+        this._layoutKey = '';
+      }
+      const parent = this.stageCanvas && this.stageCanvas.parentElement;
+      if (parent && this.canvas.parentElement !== parent) {
+        parent.appendChild(this.canvas);
+        this._layoutKey = '';
+      }
+    }
+
+    _syncLayout() {
+      let w;
+      let h;
+      let key;
+      if (this.layer === 'behind') {
+        this._activeBehindScale = BEHIND_SCALE * QUALITY_PRESETS[this.quality].renderScale;
+        w = Math.round(runtime.stageWidth * this._activeBehindScale);
+        h = Math.round(runtime.stageHeight * this._activeBehindScale);
+        key = 'b' + w + 'x' + h + ':' + this.quality;
+      } else {
+        this._ensureAttached();
+        const s = this.stageCanvas;
+        if (!s || !s.isConnected) return;
+        w = s.clientWidth;
+        h = s.clientHeight;
+        key = [s.offsetLeft, s.offsetTop, w, h, window.devicePixelRatio].join(',');
+      }
+      if (key === this._layoutKey || !w || !h) return;
+      this._layoutKey = key;
+      if (this.layer === 'behind') {
+        this.renderer.setPixelRatio(1);
+        this.canvas.style.width = this.canvas.style.height = '1px';
+      } else {
+        const c = this.canvas.style;
+        c.left = this.stageCanvas.offsetLeft + 'px';
+        c.top = this.stageCanvas.offsetTop + 'px';
+        c.width = w + 'px';
+        c.height = h + 'px';
+        this.renderer.setPixelRatio(Math.min(QUALITY_PRESETS[this.quality].renderScale, 2));
+      }
+      this.renderer.setSize(w, h, false);
+      this._aspect = w / h;
+      this._updateProjection();
+      this.dirty = true;
+    }
+
+    // ---------- render loop ----------
+    // Renders at the project's frame rate. A watchdog only steps in if the
+    // project is paused (or the editor never reports frames).
+    _loop() {
+      if (!this.ready) return;
+      this._raf = requestAnimationFrame(() => this._loop());
+      if (!this._stepSeen || performance.now() - this.lastRender > 250) this._render();
+    }
+
+    _render() {
+      if (!this.ready) return;
+      const now = performance.now();
+      const dt = clamp((now - this.last) / 1000, 0, 0.1);
+      this.last = now;
+
+      if (this.spins.size) {
+        this.spins.forEach((v, name) => {
+          const o = this.objs.get(name);
+          if (!o) return;
+          o.rotation.x += v.x * D2R * dt;
+          o.rotation.y += v.y * D2R * dt;
+          o.rotation.z += v.z * D2R * dt;
+        });
+        this.dirty = true;
+      }
+
+      if (this.follow) {
+        const o = this.objs.get(this.follow.name);
+        if (o) {
+          const want = this._v2.copy(o.position);
+          want.y += this.follow.eyeHeight || 0;
+          want.addScaledVector(this._fwd(this._v1), -this.follow.dist);
+          const s = clamp(this.follow.smooth / 100, 0, 0.99);
+          if (s <= 0) this.cam.pos.copy(want);
+          else this.cam.pos.lerp(want, 1 - Math.exp(-25 * (1 - s) * dt));
+          this.dirty = true;
+        }
+      }
+
+      this._syncLayout();
+      if (!this.dirty) return;
+      this.dirty = false;
+      this.lastRender = now;
+      this._applyCamera();
+      this.renderer.render(this.scene, this.camera);
+      if (this.layer === 'behind' && this.skin !== null) {
+        const b = this.bridge;
+        if (b.width !== this.canvas.width || b.height !== this.canvas.height) {
+          b.width = this.canvas.width;
+          b.height = this.canvas.height;
+        }
+        this.bctx.clearRect(0, 0, b.width, b.height);
+        this.bctx.drawImage(this.canvas, 0, 0);
+        Scratch.renderer.updateBitmapSkin(this.skin, b, this._activeBehindScale || BEHIND_SCALE);
+        runtime.requestRedraw();
+      }
+    }
+
+    // ---------- camera core ----------
+    _updateProjection() {
+      const s = this.camSettings;
+      const aspect = this._aspect || 4 / 3;
+      const p = this.persp;
+      p.aspect = aspect;
+      p.fov = s.fov;
+      p.near = s.near;
+      p.far = s.far;
+      p.zoom = s.zoom;
+      p.updateProjectionMatrix();
+      const o = this.ortho;
+      const hh = s.orthoSize / 2;
+      o.left = -hh * aspect;
+      o.right = hh * aspect;
+      o.top = hh;
+      o.bottom = -hh;
+      o.near = s.near;
+      o.far = s.far;
+      o.zoom = s.zoom;
+      o.updateProjectionMatrix();
+      this.camera = s.projection === 'orthographic' ? o : p;
+      this.dirty = true;
+    }
+
+    _applyCamera() {
+      const c = this.cam;
+      this.camera.position.copy(c.pos);
+      this.camera.rotation.order = 'YXZ';
+      this.camera.rotation.set(c.pitch, c.yaw, c.roll);
+      this.camera.updateMatrixWorld(true);
+    }
+
+    _fwd(out) {
+      const c = this.cam;
+      const cp = Math.cos(c.pitch);
+      return out.set(-Math.sin(c.yaw) * cp, Math.sin(c.pitch), -Math.cos(c.yaw) * cp);
+    }
+
+    _lookAtPoint(x, y, z) {
+      const c = this.cam;
+      const dx = x - c.pos.x;
+      const dy = y - c.pos.y;
+      const dz = z - c.pos.z;
+      const flat = Math.hypot(dx, dz);
+      if (flat < 1e-6 && Math.abs(dy) < 1e-6) return;
+      if (flat > 1e-6) c.yaw = Math.atan2(-dx, -dz);
+      c.pitch = clamp(Math.atan2(dy, flat), -MAX_PITCH, MAX_PITCH);
+    }
+
+    // With viewport controls on, keep the orbit target in front of the camera after block edits.
+    _camEdited() {
+      if (this.vp.on) this.vp.target.copy(this.cam.pos).addScaledVector(this._fwd(this._v1), this.vp.dist);
+    }
+
+    _vpUpdate() {
+      this.cam.pos.copy(this.vp.target).addScaledVector(this._fwd(this._v1), -this.vp.dist);
+      this.dirty = true;
+    }
+
+    _bindInputs() {
+      const onDown = (e) => {
+        if (!this.ready || e.target !== this.stageCanvas || (!this.vp.on && !this.look.on)) return;
+        this._drag = { btn: e.button };
+        if (this.look.on && !document.pointerLockElement && this.stageCanvas.requestPointerLock) {
+          try {
+            const p = this.stageCanvas.requestPointerLock();
+            if (p && p.catch) p.catch(() => {});
+          } catch (err) { /* ignore */ }
+        }
+      };
+      const onUp = () => {
+        this._drag = null;
+      };
+      const onMove = (e) => {
+        if (!this.ready) return;
+        const locked = document.pointerLockElement === this.stageCanvas;
+        if (!this._drag && !locked) return;
+        const dx = e.movementX || 0;
+        const dy = e.movementY || 0;
+        if (!dx && !dy) return;
+        const c = this.cam;
+        if (this.look.on) {
+          c.yaw -= dx * this.look.sens * D2R;
+          c.pitch = clamp(c.pitch - dy * this.look.sens * D2R, -MAX_PITCH, MAX_PITCH);
+          if (!this.follow) this._camEdited();
+          this.dirty = true;
+        } else if (this.vp.on && this._drag) {
+          if (this._drag.btn === 2 || this._drag.btn === 1 || e.shiftKey) {
+            // pan: slide the target along the camera's right/up axes
+            this._euler.set(c.pitch, c.yaw, c.roll, 'YXZ');
+            const right = this._v1.set(1, 0, 0).applyEuler(this._euler);
+            const up = this._v2.set(0, 1, 0).applyEuler(this._euler);
+            const k = this.vp.dist * 0.0015;
+            this.vp.target.addScaledVector(right, -dx * k).addScaledVector(up, dy * k);
+          } else {
+            c.yaw -= dx * 0.3 * D2R;
+            c.pitch = clamp(c.pitch - dy * 0.3 * D2R, -MAX_PITCH, MAX_PITCH);
+          }
+          this._vpUpdate();
+        }
+      };
+      const onWheel = (e) => {
+        if (!this.ready || !this.vp.on || e.target !== this.stageCanvas) return;
+        e.preventDefault();
+        this.vp.dist = clamp(this.vp.dist * Math.exp(e.deltaY * 0.0012), 0.05, 5000);
+        this._vpUpdate();
+      };
+      const onMenu = (e) => {
+        if (this.ready && this.vp.on && e.target === this.stageCanvas) e.preventDefault();
+      };
+      document.addEventListener('pointerdown', onDown, true);
+      window.addEventListener('pointerup', onUp, true);
+      window.addEventListener('pointermove', onMove, true);
+      document.addEventListener('wheel', onWheel, { capture: true, passive: false });
+      document.addEventListener('contextmenu', onMenu, true);
+      this._unbind = () => {
+        document.removeEventListener('pointerdown', onDown, true);
+        window.removeEventListener('pointerup', onUp, true);
+        window.removeEventListener('pointermove', onMove, true);
+        document.removeEventListener('wheel', onWheel, { capture: true });
+        document.removeEventListener('contextmenu', onMenu, true);
+        if (document.pointerLockElement && document.exitPointerLock) document.exitPointerLock();
+      };
+    }
+
+    // ---------- scene building ----------
+    _geometry(shape) {
+      const T = this.THREE;
+      switch (shape) {
+        case 'sphere': return new T.SphereGeometry(0.5, 32, 24);
+        case 'cylinder': return new T.CylinderGeometry(0.5, 0.5, 1, 32);
+        case 'cone': return new T.ConeGeometry(0.5, 1, 32);
+        case 'torus': return new T.TorusGeometry(0.5, 0.18, 16, 48);
+        case 'plane': return new T.PlaneGeometry(1, 1);
+        case 'floor': {
+          const g = new T.PlaneGeometry(20, 20);
+          g.rotateX(-Math.PI / 2);
+          return g;
+        }
+        default: return new T.BoxGeometry(1, 1, 1);
+      }
+    }
+
+    _forEachMaterial(root, callback) {
+      if (!root) return;
+      root.traverse((node) => {
+        if (!node.isMesh || !node.material) return;
+        const materials = Array.isArray(node.material) ? node.material : [node.material];
+        materials.forEach((material) => {
+          if (material) callback(material, node);
+        });
+      });
+    }
+
+    _disposeObjectTree(root) {
+      if (!root || !root.traverse) return;
+      const geometries = new Set();
+      const materials = new Set();
+      const textures = new Set();
+      root.traverse((node) => {
+        if (node.geometry) geometries.add(node.geometry);
+        if (!node.material) return;
+        const list = Array.isArray(node.material) ? node.material : [node.material];
+        list.forEach((material) => {
+          if (!material || materials.has(material)) return;
+          materials.add(material);
+          Object.keys(material).forEach((key) => {
+            const value = material[key];
+            if (value && value.isTexture) textures.add(value);
+          });
+        });
+      });
+      geometries.forEach((geometry) => geometry.dispose());
+      textures.forEach((texture) => texture.dispose());
+      materials.forEach((material) => material.dispose());
+    }
+
+    _cloneObjectTree(source) {
+      const clone = source.clone(true);
+      clone.traverse((node) => {
+        if (node.geometry) node.geometry = node.geometry.clone();
+        if (!node.material) return;
+        const cloneMaterial = (material) => {
+          const copy = material.clone();
+          Object.keys(copy).forEach((key) => {
+            const value = copy[key];
+            if (value && value.isTexture) copy[key] = value.clone();
+          });
+          return copy;
+        };
+        node.material = Array.isArray(node.material)
+          ? node.material.map(cloneMaterial)
+          : cloneMaterial(node.material);
+      });
+      return clone;
+    }
+
+    _removeObject(name) {
+      const o = this.objs.get(name);
+      if (!o) return;
+      this.scene.remove(o);
+      this._disposeObjectTree(o);
+      this.objs.delete(name);
+      this.spins.delete(name);
+    }
+
+    createObject(args) {
+      if (!this.ready) return;
+      const T = this.THREE;
+      const name = str(args.NAME);
+      const shape = str(args.SHAPE).toLowerCase();
+      const flat = shape === 'plane' || shape === 'floor';
+      this._removeObject(name);
+      // Solid shapes are front-sided (double-sided solids cause striped shadow artifacts).
+      const mesh = new T.Mesh(
+        this._geometry(shape),
+        new T.MeshStandardMaterial({
+          color: 0xffffff,
+          roughness: 0.5,
+          metalness: 0.1,
+          side: flat ? T.DoubleSide : T.FrontSide,
+          polygonOffset: flat,
+          polygonOffsetFactor: 1,
+          polygonOffsetUnits: 1,
+        })
+      );
+      mesh.position.set(num(args.X), num(args.Y), num(args.Z));
+      mesh.castShadow = shape !== 'floor';
+      mesh.receiveShadow = true;
+      this.scene.add(mesh);
+      this.objs.set(name, mesh);
+    }
+
+    async importModel(args) {
+      if (!this.ready) return;
+      const url = str(args.URL).trim();
+      const name = str(args.NAME).trim();
+      const format = str(args.FORMAT).toLowerCase() === 'obj' ? 'obj' : 'gltf';
+      if (!url || !name) {
+        console.warn('[Cubex-3d-Engine] Enter both a model URL and an object name.');
+        return;
+      }
+
+      try {
+        let root;
+        if (format === 'obj') {
+          await loadScript(OBJ_LOADER_URL);
+          if (!this.THREE.OBJLoader) throw new Error('OBJLoader did not register correctly');
+          const loader = new this.THREE.OBJLoader();
+          root = await new Promise((resolve, reject) => loader.load(url, resolve, undefined, reject));
+        } else {
+          await loadScript(GLTF_LOADER_URL);
+          if (!this.THREE.GLTFLoader) throw new Error('GLTFLoader did not register correctly');
+          const loader = new this.THREE.GLTFLoader();
+          const result = await new Promise((resolve, reject) => loader.load(url, resolve, undefined, reject));
+          root = result.scene || new this.THREE.Group();
+          if (!result.scene && result.scenes) result.scenes.forEach((scene) => root.add(scene));
+          root.userData.animationClips = result.animations || [];
+        }
+
+        // The engine may have been stopped while the network request was pending.
+        if (!this.ready || !this.scene) {
+          this._disposeObjectTree(root);
+          return;
+        }
+        this._removeObject(name);
+        root.name = name;
+        root.position.set(num(args.X), num(args.Y), num(args.Z));
+        root.scale.setScalar(num(args.SCALE));
+        root.traverse((node) => {
+          if (!node.isMesh) return;
+          node.castShadow = true;
+          node.receiveShadow = true;
+        });
+        this.scene.add(root);
+        this.objs.set(name, root);
+        this.dirty = true;
+      } catch (error) {
+        console.error('[Cubex-3d-Engine] Model import failed:', error && error.message ? error.message : error);
+      }
+    }
+
+    duplicateObject(args) {
+      const o = this._o(args.NAME);
+      const name = str(args.NEW);
+      if (!o || this.objs.get(name) === o) return;
+      this._removeObject(name);
+      const c = this._cloneObjectTree(o);
+      c.name = name;
+      this.scene.add(c);
+      this.objs.set(name, c);
+    }
+
+    deleteObject(args) {
+      if (this.ready) this._removeObject(str(args.NAME));
+    }
+
+    deleteAllObjects() {
+      if (this.ready) Array.from(this.objs.keys()).forEach((n) => this._removeObject(n));
+    }
+
+    objectExists(args) {
+      return this.objs.has(str(args.NAME));
+    }
+
+    objectCount() {
+      return this.objs.size;
+    }
+
+    // ---------- engine settings ----------
+    _qualityPreset() {
+      return QUALITY_PRESETS[this.quality] || QUALITY_PRESETS.medium;
+    }
+
+    _applyQualityToLights() {
+      if (!this.renderer) return;
+      const requested = this._qualityPreset().shadowMapSize;
+      const maxSize = this.renderer.capabilities.maxTextureSize || requested;
+      const size = Math.max(128, Math.min(requested, maxSize));
+      this.lights.forEach((light) => {
+        if (!light.shadow) return;
+        light.shadow.mapSize.set(size, size);
+        if (light.shadow.map) {
+          light.shadow.map.dispose();
+          light.shadow.map = null;
+        }
+        light.shadow.needsUpdate = true;
+      });
+    }
+
+    setQuality(args) {
+      const requested = str(args.QUALITY).toLowerCase();
+      this.quality = Object.prototype.hasOwnProperty.call(QUALITY_PRESETS, requested) ? requested : 'medium';
+      this._activeBehindScale = this._qualityPreset().renderScale;
+      if (!this.ready) return;
+      this._applyQualityToLights();
+      this._layoutKey = '';
+      if (this.layer === 'behind') {
+        this._freeSkin();
+        this._applyLayer();
+      } else {
+        this.dirty = true;
+      }
+    }
+
+    setBackground(args) {
+      if (!this.ready) return;
+      this.scene.background = new this.THREE.Color(str(args.COLOR));
+    }
+
+    clearBackground() {
+      if (!this.ready) return;
+      this.scene.background = null;
+    }
+
+    setFog(args) {
+      if (!this.ready) return;
+      this.scene.fog = on(args.STATE) ? new this.THREE.Fog(new this.THREE.Color(str(args.COLOR)), num(args.NEAR), num(args.FAR)) : null;
+    }
+
+    setGrid(args) {
+      if (!this.ready) return;
+      if (on(args.STATE) && !this.grid) {
+        this.grid = new this.THREE.GridHelper(20, 20, 0xffd500, 0x888888);
+        this.grid.position.y = 0.002;
+        this.scene.add(this.grid);
+      } else if (!on(args.STATE) && this.grid) {
+        this.scene.remove(this.grid);
+        this.grid.geometry && this.grid.geometry.dispose();
+        if (this.grid.material) {
+          const mats = Array.isArray(this.grid.material) ? this.grid.material : [this.grid.material];
+          mats.forEach((m) => m && m.dispose());
+        }
+        this.grid = null;
+      }
+    }
+
+    setShadows(args) {
+      if (!this.ready) return;
+      this.shadows = on(args.STATE);
+      this.renderer.shadowMap.enabled = this.shadows;
+      this.lights.forEach((l) => {
+        if (!l.isAmbientLight) l.castShadow = this.shadows;
+        if (l.shadow) {
+          l.shadow.needsUpdate = true;
+          if (l.shadow.camera) l.shadow.camera.updateProjectionMatrix();
+        }
+      });
+      this.objs.forEach((o) => {
+        this._forEachMaterial(o, (material) => { material.needsUpdate = true; });
+      });
+    }
+
+    // ---------- transform ----------
+    goTo(args) {
+      const o = this._o(args.NAME);
+      if (o) o.position.set(num(args.X), num(args.Y), num(args.Z));
+    }
+
+    setObjectSize(args) {
+      const o = this._o(args.NAME);
+      if (o) o.scale.set(num(args.X), num(args.Y), num(args.Z));
+    }
+
+    _target(o, prop) {
+      return prop === 'rotation' ? o.rotation : prop === 'size' ? o.scale : o.position;
+    }
+
+    setProp(args) {
+      const o = this._o(args.NAME);
+      if (!o) return;
+      const p = str(args.PROP);
+      this._target(o, p)[axisOf(args.AXIS)] = num(args.VALUE) * (p === 'rotation' ? D2R : 1);
+    }
+
+    changeProp(args) {
+      const o = this._o(args.NAME);
+      if (!o) return;
+      const p = str(args.PROP);
+      this._target(o, p)[axisOf(args.AXIS)] += num(args.VALUE) * (p === 'rotation' ? D2R : 1);
+    }
+
+    getProp(args) {
+      const o = this._o(args.NAME);
+      if (!o) return 0;
+      const p = str(args.PROP);
+      const v = this._target(o, p)[axisOf(args.AXIS)];
+      return p === 'rotation' ? round(v * R2D, 100) : round(v, 1000);
+    }
+
+    lookAtPoint(args) {
+      const o = this._o(args.NAME);
+      if (o) o.lookAt(num(args.X), num(args.Y), num(args.Z));
+    }
+
+    spin(args) {
+      const name = str(args.NAME);
+      if (!this.objs.has(name)) return;
+      const v = { x: num(args.X), y: num(args.Y), z: num(args.Z) };
+      if (!v.x && !v.y && !v.z) this.spins.delete(name);
+      else this.spins.set(name, v);
+    }
+
+    // ---------- looks ----------
+    setColor(args) {
+      const o = this._o(args.NAME);
+      if (!o) return;
+      const color = str(args.COLOR);
+      this._forEachMaterial(o, (material) => {
+        if (material.color) material.color.set(color);
+        if (material.emissive && material.emissive.getHex() !== 0 && material.color) material.emissive.copy(material.color);
+      });
+    }
+
+    setMaterial(args) {
+      const o = this._o(args.NAME);
+      if (!o) return;
+      const v = num(args.VALUE);
+      this._forEachMaterial(o, (m) => {
+        switch (str(args.PROP)) {
+          case 'opacity': {
+            const k = clamp(v, 0, 100) / 100;
+            m.transparent = k < 1;
+            m.opacity = k;
+            m.needsUpdate = true;
+            break;
+          }
+          case 'metalness': if ('metalness' in m) m.metalness = clamp(v, 0, 100) / 100; break;
+          case 'roughness': if ('roughness' in m) m.roughness = clamp(v, 0, 100) / 100; break;
+          case 'glow':
+            if (m.emissive) {
+              if (v > 0 && m.color) m.emissive.copy(m.color);
+              else m.emissive.setRGB(0, 0, 0);
+              m.emissiveIntensity = Math.max(0, v) / 100;
+            }
+            break;
+          default: break;
+        }
+      });
+    }
+
+    setFlag(args) {
+      const o = this._o(args.NAME);
+      if (!o) return;
+      const s = on(args.STATE);
+      const flag = str(args.FLAG);
+      if (flag === 'visible') o.visible = s;
+      o.traverse((node) => {
+        if (!node.isMesh) return;
+        if (flag === 'cast shadow') node.castShadow = s;
+        else if (flag === 'receive shadow') node.receiveShadow = s;
+        else if (flag === 'wireframe' && node.material) {
+          const materials = Array.isArray(node.material) ? node.material : [node.material];
+          materials.forEach((material) => { material.wireframe = s; });
+        }
+      });
+    }
+
+    // ---------- textures ----------
+    _toCanvas(img, scale) {
+      let w = Math.round((img.naturalWidth || img.width || 480) * scale);
+      let h = Math.round((img.naturalHeight || img.height || 360) * scale);
+      const k = Math.min(1, 4096 / Math.max(w, h));
+      w = Math.max(1, Math.round(w * k));
+      h = Math.max(1, Math.round(h * k));
+      const c = document.createElement('canvas');
+      c.width = w;
+      c.height = h;
+      c.getContext('2d').drawImage(img, 0, 0, w, h);
+      return c;
+    }
+
+    // loads an image from a blob/data URL, draws it, then frees the URL
+    async _blobToCanvas(blob, scale) {
+      const url = URL.createObjectURL(blob);
+      try {
+        return this._toCanvas(await loadImage(url, false), scale);
+      } finally {
+        URL.revokeObjectURL(url);
+      }
+    }
+
+    async _urlToCanvas(url) {
+      url = str(url).trim();
+      if (/^data:/i.test(url)) return this._toCanvas(await loadImage(url, false), 1);
+      try {
+        // fetch through the editor first (respects its permission prompt, avoids most CORS problems)
+        if (typeof Scratch.fetch === 'function') {
+          const blob = await (await Scratch.fetch(url)).blob();
+          return await this._blobToCanvas(blob, /svg/i.test(blob.type) ? 2 : 1);
+        }
+      } catch (e) { /* fall back to a direct load */ }
+      return this._toCanvas(await loadImage(url, true), 1);
+    }
+
+    async _costumeToCanvas(spriteArg, costumeArg, util) {
+      const s = str(spriteArg);
+      const target = s === '_myself_' ? util && util.target : s === '_stage_' ? runtime.getTargetForStage() : runtime.getSpriteTargetByName(s);
+      const costumes = target ? target.getCostumes() : [];
+      if (!costumes.length) return null;
+      let idx = costumes.findIndex((c) => c.name === str(costumeArg));
+      if (idx < 0 && Number.isFinite(Number(costumeArg))) {
+        idx = (((Math.round(Number(costumeArg)) - 1) % costumes.length) + costumes.length) % costumes.length;
+      }
+      const c = costumes[idx];
+      if (!c || !c.asset || !c.asset.data) return null;
+      const fmt = String(c.dataFormat || c.asset.dataFormat || 'png').toLowerCase();
+      const mime = fmt === 'svg' ? 'image/svg+xml' : fmt === 'jpg' ? 'image/jpeg' : 'image/' + fmt;
+      return this._blobToCanvas(new Blob([c.asset.data], { type: mime }), fmt === 'svg' ? 2 : 1);
+    }
+
+    _clearTexture(o) {
+      const disposed = new Set();
+      this._forEachMaterial(o, (material) => {
+        if (material.map && !disposed.has(material.map)) {
+          disposed.add(material.map);
+          material.map.dispose();
+        }
+        material.map = null;
+        material.alphaTest = 0;
+        material.needsUpdate = true;
+      });
+    }
+
+    async _textureFrom(name, getCanvas) {
+      const o = this.ready && this._o(name);
+      if (!o) return;
+      try {
+        const canvas = await getCanvas();
+        if (!canvas || !this.ready || this.objs.get(str(name)) !== o) return;
+        const T = this.THREE;
+        const tex = new T.CanvasTexture(canvas);
+        const rep = o.userData.repeat || [1, 1];
+        tex.wrapS = tex.wrapT = T.RepeatWrapping;
+        tex.repeat.set(rep[0], rep[1]);
+        tex.anisotropy = Math.min(8, this.renderer.capabilities.getMaxAnisotropy());
+        const disposed = new Set();
+        this._forEachMaterial(o, (material) => {
+          if (material.map && material.map !== tex && !disposed.has(material.map)) {
+            disposed.add(material.map);
+            material.map.dispose();
+          }
+          material.map = tex;
+          material.alphaTest = 0.02; // transparent pixels (PNG/costumes) are cut out cleanly
+          material.needsUpdate = true;
+        });
+        this.dirty = true;
+      } catch (e) {
+        console.warn('[Cubex-3d-Engine] Could not load texture:', e && e.message ? e.message : e);
+      }
+    }
+
+    setTextureCostume(args, util) {
+      return this._textureFrom(args.NAME, () => this._costumeToCanvas(args.SPRITE, args.COSTUME, util));
+    }
+
+    setTexture(args) {
+      if (!str(args.URL).trim()) {
+        const o = this._o(args.NAME);
+        if (o) this._clearTexture(o);
+        return;
+      }
+      return this._textureFrom(args.NAME, () => this._urlToCanvas(args.URL));
+    }
+
+    setTextureTiling(args) {
+      const o = this._o(args.NAME);
+      if (!o) return;
+      const x = num(args.X) || 1;
+      const y = num(args.Y) || 1;
+      o.userData.repeat = [x, y];
+      this._forEachMaterial(o, (material) => {
+        if (material.map) {
+          material.map.wrapS = material.map.wrapT = this.THREE.RepeatWrapping;
+          material.map.repeat.set(x, y);
+        }
+      });
+    }
+
+    // ---------- camera blocks ----------
+    cameraGoTo(args) {
+      if (!this.ready) return;
+      this.cam.pos.set(num(args.X), num(args.Y), num(args.Z));
+      this._camEdited();
+    }
+
+    cameraMove(args) {
+      if (!this.ready) return;
+      const n = num(args.STEPS);
+      const c = this.cam;
+      const f = this._fwd(this._v1);
+      const rx = Math.cos(c.yaw);
+      const rz = -Math.sin(c.yaw);
+      switch (str(args.DIR)) {
+        case 'forward': c.pos.addScaledVector(f, n); break;
+        case 'backward': c.pos.addScaledVector(f, -n); break;
+        case 'left': c.pos.x -= rx * n; c.pos.z -= rz * n; break;
+        case 'right': c.pos.x += rx * n; c.pos.z += rz * n; break;
+        case 'up': c.pos.y += n; break;
+        case 'down': c.pos.y -= n; break;
+        case 'walk forward': c.pos.x -= Math.sin(c.yaw) * n; c.pos.z -= Math.cos(c.yaw) * n; break;
+        case 'walk backward': c.pos.x += Math.sin(c.yaw) * n; c.pos.z += Math.cos(c.yaw) * n; break;
+        default: break;
+      }
+      this._camEdited();
+    }
+
+    cameraLookAt(args) {
+      if (!this.ready) return;
+      this._lookAtPoint(num(args.X), num(args.Y), num(args.Z));
+      this._camEdited();
+    }
+
+    // yaw increases to the RIGHT (like Scratch directions); 0 looks along -Z
+    cameraRotate(args) {
+      if (!this.ready) return;
+      const c = this.cam;
+      c.yaw = -num(args.YAW) * D2R;
+      c.pitch = clamp(num(args.PITCH) * D2R, -MAX_PITCH, MAX_PITCH);
+      c.roll = -num(args.ROLL) * D2R;
+      this._camEdited();
+    }
+
+    cameraTurn(args) {
+      if (!this.ready) return;
+      const c = this.cam;
+      const d = num(args.DEG) * D2R;
+      switch (str(args.TURN)) {
+        case 'right': c.yaw -= d; break;
+        case 'left': c.yaw += d; break;
+        case 'up': c.pitch = clamp(c.pitch + d, -MAX_PITCH, MAX_PITCH); break;
+        case 'down': c.pitch = clamp(c.pitch - d, -MAX_PITCH, MAX_PITCH); break;
+        case 'roll right': c.roll -= d; break;
+        case 'roll left': c.roll += d; break;
+        default: break;
+      }
+      this._camEdited();
+    }
+
+    cameraOrbit(args) {
+      if (!this.ready) return;
+      const a = num(args.ANGLE) * D2R;
+      const e = clamp(num(args.ELEV), -89, 89) * D2R;
+      const d = Math.max(0.01, num(args.DIST));
+      const cx = num(args.X);
+      const cy = num(args.Y);
+      const cz = num(args.Z);
+      this.cam.pos.set(cx + Math.sin(a) * Math.cos(e) * d, cy + Math.sin(e) * d, cz + Math.cos(a) * Math.cos(e) * d);
+      this._lookAtPoint(cx, cy, cz);
+      this.cam.roll = 0;
+      if (this.vp.on) {
+        this.vp.dist = d;
+        this.vp.target.set(cx, cy, cz);
+      }
+    }
+
+    cameraFollow(args) {
+      const name = str(args.NAME);
+      this.follow = this.ready && this.objs.has(name)
+        ? { name, dist: Math.max(0, num(args.DIST)), eyeHeight: 0, smooth: clamp(num(args.SMOOTH), 0, 99) }
+        : null;
+    }
+
+    attachPlayerCamera(args) {
+      const name = str(args.NAME);
+      if (!this.ready || !this.objs.has(name)) {
+        this.follow = null;
+        return;
+      }
+      const dist = Math.max(0, num(args.DIST));
+      this.follow = {
+        name,
+        dist,
+        eyeHeight: num(args.HEIGHT),
+        smooth: clamp(num(args.SMOOTH), 0, 99),
+      };
+      const player = this._o(name);
+      this.cam.pos.set(player.position.x, player.position.y + num(args.HEIGHT), player.position.z - dist);
+      this.dirty = true;
+    }
+
+    movePlayer(args) {
+      const player = this._o(args.NAME);
+      if (!this.ready || !player) return;
+      const distance = num(args.DIST);
+      // Horizontal movement follows camera heading, like a conventional WASD controller.
+      const yaw = this.cam ? this.cam.yaw : player.rotation.y;
+      const forwardX = -Math.sin(yaw);
+      const forwardZ = -Math.cos(yaw);
+      const rightX = Math.cos(yaw);
+      const rightZ = -Math.sin(yaw);
+      switch (str(args.DIR)) {
+        case 'forward':
+          player.position.x += forwardX * distance; player.position.z += forwardZ * distance;
+          player.rotation.y = yaw;
+          break;
+        case 'backward':
+          player.position.x -= forwardX * distance; player.position.z -= forwardZ * distance;
+          player.rotation.y = yaw + Math.PI;
+          break;
+        case 'left':
+          player.position.x -= rightX * distance; player.position.z -= rightZ * distance;
+          player.rotation.y = yaw - Math.PI / 2;
+          break;
+        case 'right':
+          player.position.x += rightX * distance; player.position.z += rightZ * distance;
+          player.rotation.y = yaw + Math.PI / 2;
+          break;
+        default: break;
+      }
+      this.dirty = true;
+    }
+
+    cameraSetting(args) {
+      if (!this.ready) return;
+      const s = this.camSettings;
+      const v = num(args.VALUE);
+      switch (str(args.SETTING)) {
+        case 'field of view': s.fov = clamp(v, 1, 170); break;
+        case 'zoom %': s.zoom = Math.max(1, v) / 100; break;
+        case 'near clip': s.near = Math.max(0.001, v); s.far = Math.max(s.far, s.near + 0.01); break;
+        case 'far clip': s.far = Math.max(s.near + 0.01, v); break;
+        case 'orthographic size': s.orthoSize = Math.max(0.1, v); break;
+        default: break;
+      }
+      this._updateProjection();
+    }
+
+    cameraProjection(args) {
+      if (!this.ready) return;
+      this.camSettings.projection = str(args.PROJ) === 'orthographic' ? 'orthographic' : 'perspective';
+      this._updateProjection();
+    }
+
+    cameraInfo(args) {
+      if (!this.ready) return 0;
+      const c = this.cam;
+      switch (str(args.PROP)) {
+        case 'x': return round(c.pos.x, 1000);
+        case 'y': return round(c.pos.y, 1000);
+        case 'z': return round(c.pos.z, 1000);
+        case 'yaw': return round(((((-c.yaw * R2D + 180) % 360) + 360) % 360) - 180, 100);
+        case 'pitch': return round(c.pitch * R2D, 100);
+        case 'roll': return round(-c.roll * R2D, 100);
+        case 'field of view': return this.camSettings.fov;
+        case 'zoom': return round(this.camSettings.zoom * 100, 100);
+        default: return 0;
+      }
+    }
+
+    // ---------- mouse controls ----------
+    viewportControls(args) {
+      if (!this.ready) return;
+      this.vp.on = on(args.STATE);
+      if (this.vp.on) {
+        const d = this.cam.pos.length();
+        this.vp.dist = d > 0.5 ? d : 8;
+        this._camEdited();
+      }
+    }
+
+    mouseLook(args) {
+      if (!this.ready) return;
+      this.look.on = on(args.STATE);
+      this.look.sens = Math.max(0.01, num(args.SENS) / 100) * 0.15;
+      if (!this.look.on && document.pointerLockElement && document.exitPointerLock) document.exitPointerLock();
+    }
+
+    // ---------- lights ----------
+    _makeLight(type, name, color, intensity, x, y, z) {
+      const T = this.THREE;
+      name = str(name);
+      type = str(type);
+      const old = this.lights.get(name);
+      if (old) {
+        this.scene.remove(old);
+        if (old.dispose) old.dispose();
+      }
+      const col = new T.Color(color);
+      let l;
+      if (type === 'ambient') l = new T.AmbientLight(col, intensity);
+      else if (type === 'directional') {
+        l = new T.DirectionalLight(col, intensity);
+        Object.assign(l.shadow.camera, { left: -10, right: 10, top: 10, bottom: -10, near: 0.5, far: 50 });
+        l.shadow.camera.updateProjectionMatrix();
+      } else if (type === 'spot') {
+        l = new T.SpotLight(col, intensity, 0, Math.PI / 5, 0.3);
+        l.shadow.mapSize.set(1024, 1024);
+      } else l = new T.PointLight(col, intensity, 0, 2);
+      if (l.shadow) {
+        // Very small offsets prevent detached shadows/light leaks beside thin walls.
+        // Use a tighter camera frustum and regular PCF filtering for more stable edges.
+        l.shadow.bias = -0.00002;
+        l.shadow.normalBias = 0.00005;
+        l.shadow.radius = 1;
+        const requested = this._qualityPreset().shadowMapSize;
+        const maxSize = this.renderer ? this.renderer.capabilities.maxTextureSize : requested;
+        const size = Math.max(128, Math.min(requested, maxSize || requested));
+        l.shadow.mapSize.set(size, size);
+      }
+      l.position.set(x, y, z);
+      l.castShadow = this.shadows && type !== 'ambient';
+      this.scene.add(l);
+      this.lights.set(name, l);
+    }
+
+    addLight(args) {
+      if (this.ready) this._makeLight(args.TYPE, args.NAME, str(args.COLOR), num(args.INT), num(args.X), num(args.Y), num(args.Z));
+    }
+
+    moveLight(args) {
+      const l = this.lights.get(str(args.NAME));
+      if (l) l.position.set(num(args.X), num(args.Y), num(args.Z));
+    }
+
+    setLightIntensity(args) {
+      const l = this.lights.get(str(args.NAME));
+      if (l) l.intensity = num(args.INT);
+    }
+
+    deleteLight(args) {
+      const name = str(args.NAME);
+      const l = this.lights.get(name);
+      if (!l) return;
+      this.scene.remove(l);
+      if (l.dispose) l.dispose();
+      this.lights.delete(name);
+    }
+
+    // ---------- sensing ----------
+    distance(args) {
+      const a = this._o(args.A);
+      const b = this._o(args.B);
+      return a && b ? round(a.position.distanceTo(b.position), 1000) : 0;
+    }
+
+    touching(args) {
+      const a = this._o(args.A);
+      const b = this._o(args.B);
+      if (!a || !b) return false;
+      const T = this.THREE;
+      a.updateMatrixWorld(true);
+      b.updateMatrixWorld(true);
+      return new T.Box3().setFromObject(a).intersectsBox(new T.Box3().setFromObject(b));
+    }
+
+    objectUnderMouse() {
+      if (!this.ready) return '';
+      const m = runtime.ioDevices.mouse;
+      this._applyCamera();
+      this.scene.updateMatrixWorld(true);
+      this.raycaster.setFromCamera(
+        { x: m.getScratchX() / (runtime.stageWidth / 2), y: m.getScratchY() / (runtime.stageHeight / 2) },
+        this.camera
+      );
+      const hit = this.raycaster.intersectObjects(Array.from(this.objs.values()).filter((o) => o.visible), true)[0];
+      if (!hit) return '';
+      let root = hit.object;
+      while (root.parent && root.parent !== this.scene) root = root.parent;
+      for (const [name, obj] of this.objs) if (obj === root) return name;
+      return '';
+    }
+
+    screenPos(args) {
+      const o = this._o(args.NAME);
+      if (!o || !this.ready) return 0;
+      this._applyCamera();
+      this.scene.updateMatrixWorld(true);
+      const v = o.getWorldPosition(new this.THREE.Vector3()).project(this.camera);
+      return round(str(args.AXIS2D) === 'y' ? v.y * (runtime.stageHeight / 2) : v.x * (runtime.stageWidth / 2), 100);
+    }
+  }
+
+  Scratch.extensions.register(new Cubex3dEngine());
+})(Scratch);

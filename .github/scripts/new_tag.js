@@ -5,7 +5,7 @@ const { pathToFileURL } = require('url');
 const { execFileSync } = require('child_process');
 
 const FILE = 'src/lib/extensions.js';
-const MAX_DAYS = 7;
+const MAX_DAYS = 30;
 
 const git = (...args) =>
   execFileSync('git', args, { encoding: 'utf8', maxBuffer: 64 * 1024 * 1024 });

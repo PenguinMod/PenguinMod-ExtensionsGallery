@@ -28,7 +28,7 @@ jobs:
           node-version: 22.x
 
       - name: remove expired "new" tags
-        run: node .github/scripts/new_tag.js
+        run: node .github/scripts/new_tag.cjs
 
       - name: commit and push
         id: commit

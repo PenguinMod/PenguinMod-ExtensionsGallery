@@ -8018,7 +8018,7 @@ Enjoy!! :D
                     {
                         opcode: 'imageMarkup',
                         blockType: Scratch.BlockType.REPORTER,
-                        text: 'icon [NAME] at size [SIZE]',
+                        text: 'icon [NAME] at size [SIZE] %',
                         arguments: {
                             NAME: { type: Scratch.ArgumentType.STRING, defaultValue: 'logo' },
                             SIZE: { type: Scratch.ArgumentType.STRING, menu: 'ICON_SIZE', defaultValue: 'default' }

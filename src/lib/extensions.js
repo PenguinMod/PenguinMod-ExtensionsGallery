@@ -4,7 +4,6 @@
         to help copy & pasting work better
         pleas dont remove them :)
 */
-// a sakura
 export default [
     {
         name: "Pen+",
@@ -52,7 +51,7 @@ export default [
         banner: "Gen1x/iris-text.avif",
         isGitHub: true,
         creator: "Gen1xLol",
-        tags: ["new"],
+        notes: "New thumbnail by CubeyCreator",
     },
     {
         name: "Boxed Physics",
@@ -68,7 +67,6 @@ export default [
         banner: "Gen1x/lighting.avif",
         isGitHub: true,
         creator: "Gen1xLol",
-        tags: ["new"],
     },
     {
         name: "3D Math",
@@ -77,6 +75,17 @@ export default [
         banner: "ObviousAlexC/3DMath.svg",
         creator: "pinksheep2917",
         notes: "A bunch of new blocks were added by LSPECTRONIZTAR (with the help of Game Physics Cookbook by Gabor Szauer",
+    },
+    {
+        name: "iCastRays",
+        description: "Cast rays into other sprites in your project.",
+        code: "MubiLop/icastrays.js",
+        banner: "MubiLop/icastrays.svg",
+        documentation: "ICastRays",
+        creator: "cicerorph",
+        creatorAlias: "MubiLop",
+        isGitHub: true,
+        tags: ["new"],        
     },
     {
         name: "Beat Sync",
@@ -95,6 +104,14 @@ export default [
         isGitHub: true,
     },
     {
+        name: "Scope Variables",
+        description: "Manage your variables in a block-like structure.",
+        code: "0znzw/ScopeVars2.js",
+        banner: "0znzw/ScopeVars.avif",
+        creator: "yuri-kiss",
+        isGitHub: true,
+    },
+    {
         name: "Array Buffers",
         description: "Read, parse, and write raw data efficiently using Array Buffers",
         code: "AndrewGaming587/agBuffer.js",
@@ -102,7 +119,7 @@ export default [
         creator: "AndrewScripter587",
         creatorAlias: "AndrewGaming587",
         isGitHub: true,
-        tags: ["customtype", "data", "utility", "large"],
+        tags: ["type", "data", "utility", "large"],
     },
     {
         name: "Extra Timers",
@@ -115,7 +132,7 @@ export default [
     },
     {
         name: "Dictation",
-        description: "Convert your voice into text. (not supported in all browsers)",
+        description: "Convert your voice into text",
         code: "pooiod/Dictation.js",
         banner: "pooiod/Dictation.svg",
         creator: "pooiod7",
@@ -253,7 +270,7 @@ export default [
         creator: "Dicuo",
         creatorAlias: "Div",
         isGitHub: true,
-        tags: ["new", "type", "3D", "data", "utility", "math"]
+        tags: ["type", "3D", "data", "utility", "math"]
     },
     {
         name: "Blobs",
@@ -598,7 +615,6 @@ export default [
         documentation: "ODE",
         creator: "NishiOwO",
         isGitHub: true,
-        tags: ["new"],
     },
     {
         name: "TurboSynth",
@@ -608,7 +624,6 @@ export default [
         documentation: "TurboSynth",
         creator: "NishiOwO",
         isGitHub: true,
-        tags: ["new"],
     },
     {
         name: "Libxmp",
@@ -617,7 +632,6 @@ export default [
         banner: "NishiOwO/libxmp.svg",
         creator: "NishiOwO",
         isGitHub: true,
-        tags: ["new"],
     },
     {
         name: "WebAssembly",
@@ -632,16 +646,6 @@ export default [
         documentation: "WebAssembly",
         unstableReason: "Contains WebAssembly features that are not yet supported in all browsers.",
     },
-    /*{
-        name: "Scope Variable",
-        description: "Manage your variables in a block-like structure.",
-        code: "0znzw/ScopeVars.js",
-        banner: "0znzw/ScopeVars.avif",
-        creator: "yuri-kiss",
-        isGitHub: true,
-        unstable: true,
-        unstableReason: "This extension uses unstable techniques that may not always work.",
-    },*/
     /*{
         name: "PenguinAI",
         description: "Talk to AI! Use Models like DALL-E-3, GPT, LLama, Claude, and more!",

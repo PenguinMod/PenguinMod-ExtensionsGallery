@@ -17,5 +17,8 @@
     "dependencies": {
         "localforage": "^1.10.0",
         "markdown-it": "^14.1.0"
+    },
+    "allowScripts": {
+        "esbuild@0.25.9": true
     }
 }

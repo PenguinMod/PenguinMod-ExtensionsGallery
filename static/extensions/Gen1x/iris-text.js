@@ -35,6 +35,118 @@ Enjoy!! :D
 
     const stateKey = 'irisText';
     const defaultText = 'Hello world!';
+    let globalImageDictionary = {};
+    const imageCharacterCache = new Map();
+    const imageCharacterTokens = new Map();
+    const imageTokenRegistry = new Map();
+    const globalImageSizes = new Map();
+    let globalDefaultImageSize = 100;
+    const imageSizeMin = 1;
+    const imageSizeMax = 1000;
+    const imageMarkupRe = /(\\*)\{(?:([^{}]+)\})?/g;
+
+    function imageReferenceParts(value) {
+        const separator = value.indexOf(':');
+        if (separator < 1 || separator === value.length - 1) return null;
+        return { targetName: value.slice(0, separator).trim(), costumeName: value.slice(separator + 1).trim() };
+    }
+
+    function requestImageCharacter(reference) {
+        let entry = imageCharacterCache.get(reference);
+        if (entry) return entry;
+        entry = { canvas: null, width: 1, height: 1, pending: true, shapes: new Map() };
+        imageCharacterCache.set(reference, entry);
+        const parts = imageReferenceParts(reference);
+        const costume = parts && findCostumeByRef(parts.targetName, parts.costumeName);
+        if (!costume) {
+            entry.pending = false;
+            return entry;
+        }
+        const fromSkin = rasterizeCostumeFromSkin(costume, parts.targetName);
+        if (fromSkin) {
+            Object.assign(entry, fromSkin);
+            entry.pending = false;
+            return entry;
+        }
+        rasterizeCostumeToCanvas(costume, parts.targetName).then(result => {
+            entry.pending = false;
+            if (result) Object.assign(entry, result);
+            entry.shapes.clear();
+            for (const target of runtime.targets || []) {
+                const state = target.getCustomState(stateKey);
+                if (state && state.visible && state.rawText.indexOf('{') !== -1) {
+                    state.shapeKey = null;
+                    state.layout = null;
+                    schedulePaint(target, state);
+                }
+            }
+        });
+        return entry;
+    }
+
+    function clampImagePercent(value) {
+        if (Number.isNaN(value)) return 100;
+        return Math.min(imageSizeMax, Math.max(imageSizeMin, value));
+    }
+
+    function parseImageSizeInput(value) {
+        const text = Scratch.Cast.toString(value).trim().replace(/%$/, '').trim();
+        if (!text || text.toLowerCase() === 'default') return null;
+        const number = Number(text);
+        return Number.isNaN(number) ? null : Math.round(clampImagePercent(number));
+    }
+
+    function parseImageMarkupContent(content) {
+        if (Object.prototype.hasOwnProperty.call(globalImageDictionary, content)) return { name: content, size: null };
+        const separator = content.lastIndexOf('=');
+        if (separator < 1) return null;
+        const name = content.slice(0, separator);
+        if (!Object.prototype.hasOwnProperty.call(globalImageDictionary, name)) return null;
+        return { name, size: parseImageSizeInput(content.slice(separator + 1)) };
+    }
+
+    function imageTokenForMarkup(name, size) {
+        if (!Object.prototype.hasOwnProperty.call(globalImageDictionary, name)) return null;
+        const key = size === null ? name : name + '\u0000' + size;
+        let token = imageTokenRegistry.get(key);
+        if (token === undefined) {
+            if (imageTokenRegistry.size >= 6400) return null;
+            token = String.fromCharCode(0xE000 + imageTokenRegistry.size);
+            imageTokenRegistry.set(key, token);
+        }
+        imageCharacterTokens.set(token, { name, reference: globalImageDictionary[name], size });
+        requestImageCharacter(globalImageDictionary[name]);
+        return token;
+    }
+
+    function imageScaledSize(size, info) {
+        let percent = info.size;
+        if (percent === null) percent = globalImageSizes.has(info.name) ? globalImageSizes.get(info.name) : globalDefaultImageSize;
+        return percent === 100 ? size : size * percent / 100;
+    }
+
+    function refreshImageTexts() {
+        for (const target of runtime.targets || []) {
+            const state = target.getCustomState(stateKey);
+            if (!state || !state.visible) continue;
+            if (state.rawText.indexOf('{') === -1 && !(state.typingFullRaw && state.typingFullRaw.indexOf('{') !== -1)) continue;
+            state.shapeKey = null;
+            state.layout = null;
+            schedulePaint(target, state);
+        }
+    }
+
+    function prepareImageMarkup(text) {
+        if (text.indexOf('{') === -1) return text;
+        return text.replace(imageMarkupRe, (whole, backslashes, content) => {
+            const kept = '\\'.repeat(Math.floor(backslashes.length / 2));
+            const markup = whole.slice(backslashes.length);
+            if (backslashes.length % 2 === 1 || content === undefined) return kept + markup;
+            const parsed = parseImageMarkupContent(content);
+            const token = parsed && imageTokenForMarkup(parsed.name, parsed.size);
+            return token ? kept + token : kept + markup;
+        });
+    }
 
     const perf = {
         enabled: false,
@@ -635,6 +747,7 @@ Enjoy!! :D
     }
 
     function parseRichText(text, base) {
+        text = prepareImageMarkup(text);
         const families = new Set([base.font]);
         const stack = [Object.assign({
             customTags: [],
@@ -657,14 +770,16 @@ Enjoy!! :D
             const graphemes = splitGraphemes(segment);
             for (const g of graphemes) {
                 const style = stack[stack.length - 1];
+                const imageInfo = imageCharacterTokens.get(g) || null;
                 out.push({
                     char: g,
+                    image: imageInfo,
                     color: style.color,
                     bold: style.bold,
                     italic: style.italic,
                     underline: style.underline,
                     strike: style.strike,
-                    size: style.size,
+                    size: imageInfo ? imageScaledSize(style.size, imageInfo) : style.size,
                     font: style.font,
                     blur: style.blur,
                     tags: style.customTags,
@@ -904,7 +1019,7 @@ Enjoy!! :D
     function stripMarkup(text) {
         if (text === stripMarkupCacheKey) return stripMarkupCacheValue;
         tagReStrip.lastIndex = 0;
-        const result = unescapeTagEscapes(text.replace(tagReStrip, (tag, backslashes) => unescapeTagBackslashPairs(backslashes)));
+        const result = unescapeTagEscapes(prepareImageMarkup(text).replace(tagReStrip, (tag, backslashes) => unescapeTagBackslashPairs(backslashes)));
         stripMarkupCacheKey = text;
         stripMarkupCacheValue = result;
         return result;
@@ -977,6 +1092,7 @@ Enjoy!! :D
             growDownwardOnly: false,
             letterSpacing: 0,
             lineSpacing: 1.2,
+            listingPadding: true,
             typingSpeeds: {
                 default: 0.05,
                 symbols: 0.05,
@@ -1069,6 +1185,7 @@ Enjoy!! :D
         const base = state.baseStyle;
         return [
             state.rawText,
+            state.listingPadding ? 1 : 0,
             base.color,
             base.bold ? 1 : 0,
             base.italic ? 1 : 0,
@@ -1098,6 +1215,7 @@ Enjoy!! :D
             state.typingSpeeds = Object.assign(defaults.typingSpeeds, state.typingSpeeds || {});
             state.customTypingSpeeds = Object.assign({}, state.customTypingSpeeds || {});
             state.smoothing = state.smoothing === undefined ? defaults.smoothing : Scratch.Cast.toBoolean(state.smoothing);
+            state.listingPadding = state.listingPadding === undefined ? defaults.listingPadding : Scratch.Cast.toBoolean(state.listingPadding);
             if (!['global', 'native', '1x', '2x', '3x', '4x'].includes(state.renderResolution)) state.renderResolution = defaults.renderResolution;
             state.mapMasksToStageCoordinates = state.mapMasksToStageCoordinates === undefined ?
                 defaults.mapMasksToStageCoordinates :
@@ -1116,6 +1234,7 @@ Enjoy!! :D
             state.iiMigrated = true;
         }
         if (!['global', ...renderResolutionModes].includes(state.renderResolution)) state.renderResolution = 'global';
+        if (state.listingPadding === undefined) state.listingPadding = true;
         if (state.mapMasksToStageCoordinates === undefined) state.mapMasksToStageCoordinates = false;
         if (!Object.prototype.hasOwnProperty.call(maskTilingModes, state.maskTiling)) state.maskTiling = maskTilingDefault;
         return state;
@@ -1143,12 +1262,21 @@ Enjoy!! :D
         let match;
 
         const addCharacters = value => {
-            for (const char of splitGraphemes(value)) {
-                steps.push({
-                    content: char,
-                    char
-                });
+            const addPlainCharacters = plain => {
+                for (const char of splitGraphemes(plain)) {
+                    steps.push({ content: char, char });
+                }
+            };
+            const images = /(\\*)\{([^{}]+)\}/g;
+            let last = 0;
+            let imageMatch;
+            while ((imageMatch = images.exec(value)) !== null) {
+                if (imageMatch[1].length % 2 === 1 || !parseImageMarkupContent(imageMatch[2])) continue;
+                addPlainCharacters(value.slice(last, imageMatch.index));
+                steps.push({ content: imageMatch[0], char: imageMatch[1] ? '\\' : null, image: !imageMatch[1] });
+                last = images.lastIndex;
             }
+            addPlainCharacters(value.slice(last));
         };
 
         while ((match = tagRe.exec(text)) !== null) {
@@ -1209,6 +1337,7 @@ Enjoy!! :D
             resetCharTransformsOnText: state.resetCharTransformsOnText,
             letterSpacing: state.letterSpacing,
             lineSpacing: state.lineSpacing,
+            listingPadding: state.listingPadding,
             typingSpeeds: Object.assign({}, state.typingSpeeds),
             customTypingSpeeds: Object.assign({}, state.customTypingSpeeds),
             maxWidth: state.maxWidth,
@@ -1250,6 +1379,7 @@ Enjoy!! :D
         if (settings.resetCharTransformsOnText !== undefined) state.resetCharTransformsOnText = Scratch.Cast.toBoolean(settings.resetCharTransformsOnText);
         if (Number.isFinite(settings.letterSpacing)) state.letterSpacing = settings.letterSpacing;
         if (Number.isFinite(settings.lineSpacing)) state.lineSpacing = Math.max(0, settings.lineSpacing);
+        if (typeof settings.listingPadding === 'boolean') state.listingPadding = settings.listingPadding;
         if (settings.typingSpeeds && typeof settings.typingSpeeds === 'object' && !Array.isArray(settings.typingSpeeds)) {
             for (const group of ['default', 'symbols', 'punctuation', 'numbers']) {
                 if (Number.isFinite(settings.typingSpeeds[group])) {
@@ -1438,7 +1568,7 @@ Enjoy!! :D
     let lastNativeResolution = null;
 
     function nativeResolutionScale() {
-        const canvas = runtime.renderer && runtime.renderer.canvas;
+        const canvas = runtime.renderer.canvas;
         if (!canvas) return 1;
         const stageWidth = runtime.stageWidth;
         let displayWidth = canvas.clientWidth;
@@ -1591,103 +1721,8 @@ Enjoy!! :D
         return shape;
     }
 
-    const shadowCacheLimit = 512;
-    const globalShadowCanvasLimit = 256;
-    const globalShadowLRU = new Map();
-    let shadowGlobalKeySeq = 1;
-
-    const sharedShadowSurface = (() => {
-        const canvas = typeof OffscreenCanvas === 'function' ? new OffscreenCanvas(1, 1) : document.createElement('canvas');
-        canvas.width = 1;
-        canvas.height = 1;
-        return {
-            canvas,
-            ctx: canvas.getContext('2d')
-        };
-    })();
-
-    function releaseShadowCapture(capture) {
-        if (capture && capture !== sharedShadowSurface.canvas && typeof capture.close === 'function') capture.close();
-    }
-
     function evictGLTextureForShape(shape) {
         if (glCompositorInstance) glCompositorInstance.evictGlyphTexture(shape);
-    }
-
-    function evictOldestGlobalShadow() {
-        const oldestKey = globalShadowLRU.keys().next().value;
-        if (oldestKey === undefined) return;
-        const oldest = globalShadowLRU.get(oldestKey);
-        globalShadowLRU.delete(oldestKey);
-        oldest.shape.shadows.delete(oldest.key);
-        releaseShadowCapture(oldest.entry.canvas);
-        evictGLTextureForShape(oldest.entry);
-    }
-
-    function getShadowGlyphBitmap(shape, color, blurPx, offsetXPx, offsetYPx) {
-        const key = color + '\u0001' + blurPx + '\u0001' + offsetXPx + '\u0001' + offsetYPx;
-        let entry = shape.shadows.get(key);
-        if (entry) {
-            const globalKey = entry.globalKey;
-            globalShadowLRU.delete(globalKey);
-            globalShadowLRU.set(globalKey, {
-                shape,
-                key,
-                entry
-            });
-            return entry;
-        }
-
-        const padPx = Math.ceil(blurPx * 3) + Math.ceil(Math.max(Math.abs(offsetXPx), Math.abs(offsetYPx))) + 2;
-        const w = shape.canvas.width + padPx * 2;
-        const h = shape.canvas.height + padPx * 2;
-        const surface = sharedShadowSurface;
-        if (surface.canvas.width !== w) surface.canvas.width = w;
-        if (surface.canvas.height !== h) surface.canvas.height = h;
-        const ctx = surface.canvas.getContext('2d');
-        surface.ctx = ctx;
-        ctx.setTransform(1, 0, 0, 1, 0, 0);
-        ctx.clearRect(0, 0, w, h);
-        ctx.shadowColor = color;
-        ctx.shadowBlur = blurPx;
-        ctx.shadowOffsetX = offsetXPx;
-        ctx.shadowOffsetY = offsetYPx;
-        ctx.drawImage(shape.canvas, padPx, padPx);
-        ctx.globalCompositeOperation = 'destination-out';
-        ctx.shadowColor = 'transparent';
-        ctx.shadowOffsetX = 0;
-        ctx.shadowOffsetY = 0;
-        ctx.drawImage(shape.canvas, padPx, padPx);
-        ctx.globalCompositeOperation = 'source-over';
-
-        const canSnapshot = typeof surface.canvas.transferToImageBitmap === 'function';
-        const canvas = canSnapshot ? surface.canvas.transferToImageBitmap() : surface.canvas;
-        entry = {
-            canvas,
-            offsetX: -padPx,
-            offsetY: -padPx
-        };
-        if (!canSnapshot) return entry;
-
-        const globalKey = shadowGlobalKeySeq++;
-        entry.globalKey = globalKey;
-        if (shape.shadows.size >= shadowCacheLimit) {
-            const evictedKey = shape.shadows.keys().next().value;
-            const evicted = shape.shadows.get(evictedKey);
-            shape.shadows.delete(evictedKey);
-            globalShadowLRU.delete(evicted.globalKey);
-            releaseShadowCapture(evicted.canvas);
-            evictGLTextureForShape(evicted);
-        }
-        shape.shadows.set(key, entry);
-
-        if (globalShadowLRU.size >= globalShadowCanvasLimit) evictOldestGlobalShadow();
-        globalShadowLRU.set(globalKey, {
-            shape,
-            key,
-            entry
-        });
-        return entry;
     }
 
     function releaseGlyphOwnedCanvases(shape) {
@@ -1701,13 +1736,6 @@ Enjoy!! :D
             for (const blurredEntry of shape.blurred.values()) {
                 releasePooledCanvas(tintedCanvasPool, blurredEntry.canvas);
                 evictGLTextureForShape(blurredEntry);
-            }
-        }
-        if (shape.shadows) {
-            for (const shadowEntry of shape.shadows.values()) {
-                globalShadowLRU.delete(shadowEntry.globalKey);
-                releaseShadowCapture(shadowEntry.canvas);
-                evictGLTextureForShape(shadowEntry);
             }
         }
         const stencil = maskGlyphStencilCache.get(shape);
@@ -2585,46 +2613,11 @@ Enjoy!! :D
     }
 
     const blurQuantumPx = 0.5;
-    const blurMaxPx = 40;
+    const blurMaxPx = 80;
 
     function quantizeBlurPx(blurPx) {
         const clamped = Math.min(blurMaxPx, blurPx);
         return Math.round(clamped / blurQuantumPx) * blurQuantumPx;
-    }
-
-    function getBlurredGlyphBitmap(shape, color, blurPxRaw) {
-        const blurPx = quantizeBlurPx(blurPxRaw);
-        const key = color + '\u0001' + blurPx;
-        let entry = shape.blurred.get(key);
-        if (entry) return entry;
-
-        const source = tintGlyph(shape, color);
-        const padPx = Math.ceil(blurPx * 3) + 2;
-        const w = source.width + padPx * 2;
-        const h = source.height + padPx * 2;
-        const canvas = acquirePooledCanvas(tintedCanvasPool, w, h);
-        const bctx = canvas.getContext('2d');
-        bctx.setTransform(1, 0, 0, 1, 0, 0);
-        bctx.clearRect(0, 0, w, h);
-        bctx.filter = `blur(${blurPx}px)`;
-        bctx.drawImage(source, padPx, padPx);
-        bctx.filter = 'none';
-
-        entry = {
-            canvas,
-            offsetX: -padPx,
-            offsetY: -padPx
-        };
-
-        if (shape.blurred.size >= tintCacheLimit) {
-            const evictedKey = shape.blurred.keys().next().value;
-            const evicted = shape.blurred.get(evictedKey);
-            releasePooledCanvas(tintedCanvasPool, evicted.canvas);
-            evictGLTextureForShape(evicted);
-            shape.blurred.delete(evictedKey);
-        }
-        shape.blurred.set(key, entry);
-        return entry;
     }
 
     function buildGradientCanvasStyle(ctx, gradient, spanW, spanH, localOffsetXPx, localOffsetYPx) {
@@ -2983,6 +2976,30 @@ Enjoy!! :D
         return `${fontStyle['font-style']} ${fontStyle['font-weight']} ${fontStyle['font-size']}px ${fontStyle['font-family']}`;
     }
 
+    const imageFontMetricsCache = new Map();
+
+    function imageFontMetrics(fontStyle, scale = 1) {
+        const key = fontStyle.styleHash + '\u0001' + fontStyle['font-size'] + '\u0001' + scale;
+        const cached = imageFontMetricsCache.get(key);
+        if (cached) return cached;
+        glyphMeasureCtx.font = `${fontStyle['font-style']} ${fontStyle['font-weight']} ${fontStyle['font-size'] * scale}px ${fontStyle['font-family']}`;
+        glyphMeasureCtx.textBaseline = 'alphabetic';
+        const metrics = glyphMeasureCtx.measureText('M');
+        const ascent = metrics.fontBoundingBoxAscent || metrics.actualBoundingBoxAscent || fontStyle['font-size'] * scale * 0.8;
+        const descent = metrics.fontBoundingBoxDescent || metrics.actualBoundingBoxDescent || fontStyle['font-size'] * scale * 0.2;
+        const inkAscent = metrics.actualBoundingBoxAscent || ascent;
+        const inkDescent = metrics.actualBoundingBoxDescent || 0;
+        const result = {
+            ascent: ascent / scale,
+            descent: descent / scale,
+            height: (ascent + descent) / scale,
+            inkCenterOffset: (inkAscent - inkDescent) / (2 * scale)
+        };
+        if (imageFontMetricsCache.size >= 500) imageFontMetricsCache.delete(imageFontMetricsCache.keys().next().value);
+        imageFontMetricsCache.set(key, result);
+        return result;
+    }
+
     function sameShapingStyle(a, b) {
         return a.font === b.font && a.size === b.size &&
             a.bold === b.bold && a.italic === b.italic &&
@@ -3101,6 +3118,19 @@ Enjoy!! :D
             run.fontStyle = shapingFontStyle(run.style);
             run.text = run.chars.map(rc => (rc.char === ' ' ? '\u00A0' : rc.char)).join('');
             measureCharsIndividually(measureCtx, run, letterSpacing);
+            let x = 0;
+            for (let i = 0; i < run.chars.length; i++) {
+                const rc = run.chars[i];
+                const position = run.positions[i];
+                position.shapedX = x;
+                if (rc.image) {
+                    const image = requestImageCharacter(rc.image.reference);
+                    const metrics = imageFontMetrics(run.fontStyle);
+                    position.advance = (image.height ? image.width / image.height : 1) * metrics.height + (letterSpacing || 0);
+                }
+                x += position.advance;
+            }
+            run.runWidth = x;
         }
     }
 
@@ -3138,6 +3168,7 @@ Enjoy!! :D
         let maxWidth = 0;
         const wrapLimit = state.maxWidth && state.maxWidth > 0 ? state.maxWidth : Infinity;
         const wrappedLineSourceHardLine = [];
+        const lineSourceHardLine = [];
 
         for (let hardLineIndex = 0; hardLineIndex < hardLines.length; hardLineIndex++) {
             const hardLine = hardLines[hardLineIndex];
@@ -3167,6 +3198,7 @@ Enjoy!! :D
                         }
                         currentLineWidth -= nextLineWidth;
 
+                        lineSourceHardLine[lines.length] = hardLineIndex;
                         lines.push(currentLine);
                         lineWidths.push(currentLineWidth);
                         if (currentLineWidth > maxWidth) maxWidth = currentLineWidth;
@@ -3174,6 +3206,7 @@ Enjoy!! :D
                         currentLine = nextLineInitial;
                         currentLineWidth = nextLineWidth;
                     } else {
+                        lineSourceHardLine[lines.length] = hardLineIndex;
                         lines.push(currentLine);
                         lineWidths.push(currentLineWidth);
                         if (currentLineWidth > maxWidth) maxWidth = currentLineWidth;
@@ -3189,10 +3222,12 @@ Enjoy!! :D
             }
 
             if (currentLine.length > 0) {
+                lineSourceHardLine[lines.length] = hardLineIndex;
                 lines.push(currentLine);
                 lineWidths.push(currentLineWidth);
                 if (currentLineWidth > maxWidth) maxWidth = currentLineWidth;
             } else if (hardLine.length === 0) {
+                lineSourceHardLine[lines.length] = hardLineIndex;
                 lines.push([]);
                 lineWidths.push(0);
             }
@@ -3200,7 +3235,15 @@ Enjoy!! :D
             if (lines.length - linesBeforeThisHardLine === 1) {
                 wrappedLineSourceHardLine[linesBeforeThisHardLine] = hardLineIndex;
             }
+
         }
+
+        const lineListIndents = lines.map((line, lineIndex) => {
+            if (!state.listingPadding) return 0;
+            const sourceLine = hardLines[lineSourceHardLine[lineIndex]] || [];
+            const start = sourceLine.map(rc => rc.char).join('').match(/^\s*(?:\d+[.)]|[-–—'’])\s+/u);
+            return start ? state.baseStyle.size * 0.75 : 0;
+        });
 
         const arrangementBounds = new Map();
         for (const rc of richChars) {
@@ -3230,7 +3273,7 @@ Enjoy!! :D
             const yBounds = { minY: 0, maxY: 0 };
             const arrangementStarts = new Map();
             let hasArrangement = false;
-            let flowX = 0;
+            let flowX = lineListIndents[li];
             for (const rc of line) {
                 if (!rc.arrangementOffset) continue;
                 hasArrangement = true;
@@ -3265,19 +3308,31 @@ Enjoy!! :D
 
         const lineHeight = state.baseStyle.size * state.lineSpacing;
         const lineVerticalOffsets = new Array(lines.length).fill(0);
+        const lineImageHeightExtras = lines.map(line => {
+            let imageHeight = 0;
+            for (const rc of line) {
+                if (!rc.image) continue;
+                const metrics = imageFontMetrics(shapingFontStyle(rc));
+                imageHeight = Math.max(imageHeight, metrics.height * (rc.dimensionScaleY || 1));
+            }
+            return Math.max(0, imageHeight + state.baseStyle.size * 0.4 - lineHeight);
+        });
+        if (lineImageHeightExtras.length) lineVerticalOffsets[0] = lineImageHeightExtras[0] / 2;
         for (let li = 1; li < lines.length; li++) {
             const previousBounds = lineArrangementYBounds[li - 1];
             const currentBounds = lineArrangementYBounds[li];
             const extraSpacing = Math.max(0, currentBounds.maxY - previousBounds.minY);
-            lineVerticalOffsets[li] = lineVerticalOffsets[li - 1] + extraSpacing;
+            lineVerticalOffsets[li] = lineVerticalOffsets[li - 1] + extraSpacing +
+                (lineImageHeightExtras[li - 1] + lineImageHeightExtras[li]) / 2;
         }
         let contentMinY = Infinity;
         let contentMaxY = -Infinity;
         for (let li = 0; li < lines.length; li++) {
             const lineCenterY = li * lineHeight + lineVerticalOffsets[li] + lineHeight / 2;
             const bounds = lineArrangementYBounds[li];
-            contentMinY = Math.min(contentMinY, lineCenterY - bounds.maxY - lineHeight / 2);
-            contentMaxY = Math.max(contentMaxY, lineCenterY - bounds.minY + lineHeight / 2);
+            const lineHalfHeight = (lineHeight + lineImageHeightExtras[li]) / 2;
+            contentMinY = Math.min(contentMinY, lineCenterY - bounds.maxY - lineHalfHeight);
+            contentMaxY = Math.max(contentMaxY, lineCenterY - bounds.minY + lineHalfHeight);
         }
         const totalHeight = lines.length ? contentMaxY - contentMinY : 0;
         const lineVerticalOriginOffset = lines.length ?
@@ -3295,7 +3350,7 @@ Enjoy!! :D
                 hardLineRunsCache[sourceHardLine] :
                 splitShapingRuns(line, state.charOverrides, globalIndex);
 
-            let runStartX = 0;
+            let runStartX = lineListIndents[li];
             for (const run of runs) {
                 run.fontStyle = shapingFontStyle(run.style);
                 run.runStartX = runStartX;
@@ -3331,8 +3386,8 @@ Enjoy!! :D
         for (const rc of richChars) {
             const charShadow = rc.shadow;
             if (!charShadow) continue;
-            const extentX = Scratch.Cast.toNumber(charShadow.blur) + Math.abs(Scratch.Cast.toNumber(charShadow.offsetX));
-            const extentY = Scratch.Cast.toNumber(charShadow.blur) + Math.abs(Scratch.Cast.toNumber(charShadow.offsetY));
+            const extentX = Scratch.Cast.toNumber(charShadow.blur) * 3 + Math.abs(Scratch.Cast.toNumber(charShadow.offsetX));
+            const extentY = Scratch.Cast.toNumber(charShadow.blur) * 3 + Math.abs(Scratch.Cast.toNumber(charShadow.offsetY));
             if (extentX > maxShadowExtent) maxShadowExtent = extentX;
             if (extentY > maxShadowExtent) maxShadowExtent = extentY;
         }
@@ -3343,6 +3398,12 @@ Enjoy!! :D
             if (!charBorder) continue;
             const size = Scratch.Cast.toNumber(charBorder.size);
             if (size > maxBorderExtent) maxBorderExtent = size;
+        }
+
+        let maxBlurExtent = 0;
+        for (const rc of richChars) {
+            const extent = (Scratch.Cast.toNumber(rc.blur) / 100) * (rc.size || base.size) * 2.5;
+            if (extent > maxBlurExtent) maxBlurExtent = extent;
         }
 
         let arrangementExtentX = 0;
@@ -3367,6 +3428,7 @@ Enjoy!! :D
             charsByTag,
             maxShadowExtent,
             maxBorderExtent,
+            maxBlurExtent,
             dimensions: richChars.dimensions,
             arrangementExtentX,
             arrangementExtentY,
@@ -3398,6 +3460,37 @@ Enjoy!! :D
     }
 
     function getGlyphShapeForFontStyle(char, fontStyleObj) {
+        const imageInfo = imageCharacterTokens.get(char);
+        if (imageInfo) {
+            const image = requestImageCharacter(imageInfo.reference);
+            const scale = Math.max(1, destScale);
+            const key = fontStyleObj['font-size'] + '\u0001' + scale;
+            const cached = image.shapes.get(key);
+            if (cached) return cached;
+            const metrics = imageFontMetrics(fontStyleObj, scale);
+            const height = Math.max(1, Math.round(metrics.height * scale));
+            const width = Math.max(1, Math.round(height * (image.height ? image.width / image.height : 1)));
+            const canvas = typeof OffscreenCanvas === 'function' ? new OffscreenCanvas(width, height) : document.createElement('canvas');
+            canvas.width = width;
+            canvas.height = height;
+            const ctx = canvas.getContext('2d');
+            if (image.canvas) ctx.drawImage(image.canvas, 0, 0, width, height);
+            const shape = {
+                canvas,
+                tinted: new Map(),
+                shadows: new Map(),
+                blurred: new Map(),
+                advance: width / scale,
+                baselineOriginXEm: 0,
+                baselineOriginYEm: height / (2 * scale) + metrics.inkCenterOffset,
+                fontAscentEm: metrics.ascent,
+                fontDescentEm: metrics.descent,
+                isColorGlyph: true,
+                bytes: width * height * 4
+            };
+            image.shapes.set(key, shape);
+            return shape;
+        }
         return getGlyphShape(
             char,
             fontStyleObj['font-family'],
@@ -4013,7 +4106,7 @@ Enjoy!! :D
         const blur = Math.max(0, Scratch.Cast.toNumber(settings.blur));
         const offsetX = Scratch.Cast.toNumber(settings.offsetX);
         const offsetY = Scratch.Cast.toNumber(settings.offsetY);
-        return blur * 2 + Math.hypot(offsetX, offsetY) + 2;
+        return blur * 3 + Math.hypot(offsetX, offsetY) + 2;
     }
 
     function borderReach(settings) {
@@ -4058,7 +4151,7 @@ Enjoy!! :D
         let reach = Math.max(size * 1.3, Math.abs(op.width || 0)) * Math.max(1, scale);
         reach += op.shadow ? shadowReach(op.shadow) : cull.globalShadowReach;
         reach += op.border && Scratch.Cast.toNumber(op.border.size) > 0 ? borderReach(op.border) : cull.globalBorderReach;
-        if (op.blur > 0) reach += (op.blur / 100) * size * 1.5;
+        if (op.blur > 0) reach += (op.blur / 100) * size * 2.5;
         return op.x + reach >= cull.x0 && op.x - reach <= cull.x1 && op.y + reach >= cull.y0 && op.y - reach <= cull.y1;
     }
 
@@ -4213,7 +4306,7 @@ Enjoy!! :D
 
     const emptyPerspectiveGeometry = { maxShiftX: 0, maxShiftY: 0, maxCharacterExtent: 0, perspectives: [] };
 
-    function applyPerspectiveSpacing(lineRuns, lineWidths, align, state) {
+    function applyPerspectiveSpacing(lineRuns, lineWidths, lineTextWidths, lineBounds, align, state) {
         let maxWidth = 0;
         const spansByPerspective = new Map();
         for (let lineIndex = 0; lineIndex < lineRuns.length; lineIndex++) {
@@ -4305,6 +4398,8 @@ Enjoy!! :D
                 run.runWidth = Math.max(0, runEnd - run.runStartX);
             }
             lineWidths[lineIndex] = Math.max(0, lineWidths[lineIndex] - contractions.reduce((sum, span) => sum + span.delta, 0));
+            lineTextWidths[lineIndex] = lineWidths[lineIndex];
+            if (lineBounds[lineIndex].minX === 0) lineBounds[lineIndex].maxX = lineWidths[lineIndex];
             maxWidth = Math.max(maxWidth, lineWidths[lineIndex]);
         }
         return maxWidth;
@@ -4384,7 +4479,9 @@ Enjoy!! :D
         }
         state.layoutKey = layoutKey;
         if (!layout.perspectiveSpacingApplied) {
-            let maxWidthAfterPerspective = applyPerspectiveSpacing(layout.lineRuns, layout.lineWidths, state.align, state);
+            let maxWidthAfterPerspective = applyPerspectiveSpacing(
+                layout.lineRuns, layout.lineWidths, layout.lineTextWidths, layout.lineBounds, state.align, state
+            );
             for (let li = 0; li < layout.lineWidths.length; li++) {
                 if (!layout.lineHasArrangement || !layout.lineHasArrangement[li]) continue;
                 layout.lineWidths[li] = Math.max(
@@ -4408,7 +4505,8 @@ Enjoy!! :D
             maxWidth,
             lineRuns,
             maxShadowExtent,
-            maxBorderExtent
+            maxBorderExtent,
+            maxBlurExtent
         } = layout;
         let perspectiveGeometry = layout.perspectiveGeometry;
         if (!perspectiveGeometry) {
@@ -4423,15 +4521,16 @@ Enjoy!! :D
             Scratch.Cast.toNumber(state.textBackground.padding),
             Scratch.Cast.toNumber(state.textBackground.padding) + Scratch.Cast.toNumber(state.textBackgroundBorder.size),
             Scratch.Cast.toNumber(state.textBorder.size),
-            Scratch.Cast.toNumber(state.textShadow.blur) + Math.abs(Scratch.Cast.toNumber(state.textShadow.offsetX)),
-            Scratch.Cast.toNumber(state.textShadow.blur) + Math.abs(Scratch.Cast.toNumber(state.textShadow.offsetY)),
+            Scratch.Cast.toNumber(state.textShadow.blur) * 3 + Math.abs(Scratch.Cast.toNumber(state.textShadow.offsetX)),
+            Scratch.Cast.toNumber(state.textShadow.blur) * 3 + Math.abs(Scratch.Cast.toNumber(state.textShadow.offsetY)),
             maxShadowExtent || 0,
             maxBorderExtent || 0
         );
         const basePad = Math.max(
             64,
             state.baseStyle.size * 2,
-            decorationPad + state.baseStyle.size
+            decorationPad + state.baseStyle.size,
+            decorationPad + (maxBlurExtent || 0) + 2
         );
         const padX = Math.max(
             basePad,
@@ -4568,6 +4667,7 @@ Enjoy!! :D
 
                         const op = opPool.length ? opPool.pop() : {};
                         op.text = ch;
+                        op.image = rc.image || null;
                         op.x = charCenterX;
                         op.y = charCenterY;
                         op.rotation = rotation;
@@ -5209,12 +5309,30 @@ Enjoy!! :D
     }
     `;
 
+    const glDitherSource = `
+    highp uint ditherPcg(highp uint v) {
+        highp uint state = v * 747796405u + 2891336453u;
+        highp uint word = ((state >> ((state >> 28u) + 4u)) ^ state) * 277803737u;
+        return (word >> 22u) ^ word;
+    }
+
+    float ditherNoise(vec2 fragCoord) {
+        highp uvec2 cell = uvec2(ivec2(fragCoord));
+        highp uint h1 = ditherPcg(cell.x + ditherPcg(cell.y));
+        highp uint h2 = ditherPcg(h1 + 2891336453u);
+        float r1 = float(h1 >> 8u) * (1.0 / 16777216.0);
+        float r2 = float(h2 >> 8u) * (1.0 / 16777216.0);
+        return r1 + r2 - 1.0;
+    }
+    `;
+
     const glGlyphFs = `#version 300 es
     precision highp float;
     in vec2 v_uv;
     uniform sampler2D u_tex;
     uniform vec4 u_tint;
     uniform float u_alpha;
+    uniform float u_dither;
     uniform int u_mode;
     uniform vec4 u_gradStops[8];
     uniform vec2 u_gradLocalOrigin;
@@ -5229,6 +5347,7 @@ Enjoy!! :D
     uniform vec4 u_fxRect;
     out vec4 fragColor;
     ${glFxSource}
+    ${glDitherSource}
 
     const float PI = 3.14159265358979;
 
@@ -5276,7 +5395,9 @@ Enjoy!! :D
         if (u_mode == 2) {
             vec4 src = texture(u_tex, tuv);
             float srcA = fxOn ? fxAlpha(src.a) : src.a;
-            float outA = srcA * u_alpha;
+            float noise = ditherNoise(gl_FragCoord.xy);
+            float dither = srcA > 0.00001 ? noise * u_dither : 0.0;
+            float outA = clamp(srcA * u_alpha + dither, 0.0, 1.0);
             vec3 srcRgb = fxOn ? fxColor(src.rgb) : src.rgb;
             fragColor = vec4(srcRgb * outA, outA);
             return;
@@ -5291,7 +5412,9 @@ Enjoy!! :D
             base = u_tint;
         }
         vec3 baseRgb = fxOn ? fxColor(base.rgb) : base.rgb;
-        float outA = base.a * a * u_alpha;
+        float noise = ditherNoise(gl_FragCoord.xy);
+        float dither = a > 0.00001 ? noise * u_dither : 0.0;
+        float outA = clamp(base.a * a * u_alpha + dither, 0.0, 1.0);
         fragColor = vec4(baseRgb * outA, outA);
     }`;
 
@@ -5376,6 +5499,7 @@ Enjoy!! :D
     uniform float u_alpha;
     uniform vec4 u_baseColor;
     uniform float u_maskOpacity;
+    uniform int u_useGlyphColor;
     uniform int u_hasWipe;
     uniform int u_wipeInvert;
     uniform vec2 u_wipeAxis;
@@ -5397,7 +5521,8 @@ Enjoy!! :D
     void main() {
         bool fxOn = u_fx != 0;
         vec2 tuv = fxOn ? fxWarp(v_uv) : v_uv;
-        float glyphA = texture(u_glyphTex, tuv).a;
+        vec4 glyph = texture(u_glyphTex, tuv);
+        float glyphA = glyph.a;
         if (fxOn) glyphA = fxAlpha(glyphA);
         if (glyphA <= 0.0) { discard; }
         vec2 localPx = tuv * u_texSizePx;
@@ -5418,7 +5543,8 @@ Enjoy!! :D
         }
         float maskBlend = clamp(patternColor.a * u_maskOpacity * wipeAlpha, 0.0, 1.0);
         float outA = glyphA * u_alpha;
-        vec3 baseRgb = fxOn ? fxColor(u_baseColor.rgb) : u_baseColor.rgb;
+        vec3 baseRgb = u_useGlyphColor == 1 ? glyph.rgb : u_baseColor.rgb;
+        if (fxOn) baseRgb = fxColor(baseRgb);
         vec3 patternRgb = fxOn ? fxColor(patternColor.rgb) : patternColor.rgb;
         fragColor = vec4(mix(baseRgb, patternRgb, maskBlend) * outA, outA);
     }`;
@@ -5495,10 +5621,100 @@ Enjoy!! :D
         const borderedRoundRectProgram = glLinkProgram(gl, glQuadVs, glBorderedRoundRectFs);
         const maskWipeProgram = glLinkProgram(gl, glQuadVs, glMaskWipeFs);
         const effectProgram = glLinkProgram(gl, glQuadVs, glEffectFs);
+        const imageBlurVs = `#version 300 es
+        layout(location=0) in vec2 a_corner;
+        out vec2 v_uv;
+        void main() {
+            gl_Position = vec4(a_corner * 2.0 - 1.0, 0.0, 1.0);
+            v_uv = a_corner;
+        }`;
+        const imageBlurFs = `#version 300 es
+        precision highp float;
+        in vec2 v_uv;
+        uniform sampler2D u_tex;
+        uniform vec2 u_sourceSize;
+        uniform vec2 u_outputSize;
+        uniform vec2 u_pad;
+        uniform vec2 u_direction;
+        uniform float u_scale;
+        uniform float u_radius;
+        uniform float u_dither;
+        out vec4 fragColor;
+        ${glDitherSource}
+        void main() {
+            vec2 pixel = (v_uv * u_outputSize - u_pad) / u_scale;
+            float sigma = max(u_radius, 0.5);
+            float extent = sigma * 3.5;
+            float stepPx = max(1.0, extent / 150.0);
+            int tapCount = int(ceil(extent / stepPx));
+            float invTwoSigmaSq = 0.5 / (sigma * sigma);
+            vec2 originUv = pixel / u_sourceSize;
+            vec2 stepUv = u_direction * (stepPx / u_scale) / u_sourceSize;
+            vec3 colorSum = vec3(0.0);
+            float alphaSum = 0.0;
+            float total = 0.0;
+            for (int i = -tapCount; i <= tapCount; i++) {
+                float offsetPx = float(i) * stepPx;
+                float weight = exp(-offsetPx * offsetPx * invTwoSigmaSq);
+                vec2 uv = originUv + stepUv * float(i);
+                total += weight;
+                if (all(greaterThanEqual(uv, vec2(0.0))) && all(lessThanEqual(uv, vec2(1.0)))) {
+                    vec4 sampleColor = texture(u_tex, uv);
+                    float contribution = sampleColor.a * weight;
+                    alphaSum += contribution;
+                    colorSum += sampleColor.rgb * contribution;
+                }
+            }
+            if (alphaSum <= 0.00001 || total <= 0.00001) {
+                fragColor = vec4(0.0);
+            } else {
+                float dither = ditherNoise(gl_FragCoord.xy) * u_dither / 255.0;
+                fragColor = vec4(clamp(colorSum / alphaSum + dither, 0.0, 1.0), clamp(alphaSum / total + dither, 0.0, 1.0));
+            }
+        }`;
+        const imageBlurProgram = glLinkProgram(gl, imageBlurVs, imageBlurFs);
+        const imageBlurUniforms = glUniformLocations(gl, imageBlurProgram, [
+            'u_tex', 'u_sourceSize', 'u_outputSize', 'u_pad', 'u_direction', 'u_scale', 'u_radius', 'u_dither'
+        ]);
+        const shapeDilateFs = `#version 300 es
+        precision highp float;
+        in vec2 v_uv;
+        uniform sampler2D u_tex;
+        uniform vec2 u_sourceSize;
+        uniform vec2 u_outputSize;
+        uniform vec2 u_pad;
+        uniform float u_scale;
+        uniform float u_radius;
+        out vec4 fragColor;
+        const float PI = 3.14159265358979;
+        void main() {
+            vec2 pixel = (v_uv * u_outputSize - u_pad) / u_scale;
+            float alpha = 0.0;
+            vec2 centerUv = pixel / u_sourceSize;
+            if (all(greaterThanEqual(centerUv, vec2(0.0))) && all(lessThanEqual(centerUv, vec2(1.0)))) {
+                alpha = texture(u_tex, centerUv).a;
+            }
+            for (int ring = 1; ring <= 3; ring++) {
+                float distancePx = u_radius * float(ring) / 3.0;
+                for (int i = 0; i < 48; i++) {
+                    float angle = 2.0 * PI * float(i) / 48.0;
+                    vec2 offset = vec2(cos(angle), sin(angle)) * distancePx / u_scale;
+                    vec2 uv = (pixel + offset) / u_sourceSize;
+                    if (all(greaterThanEqual(uv, vec2(0.0))) && all(lessThanEqual(uv, vec2(1.0)))) {
+                        alpha = max(alpha, texture(u_tex, uv).a);
+                    }
+                }
+            }
+            fragColor = vec4(1.0, 1.0, 1.0, alpha);
+        }`;
+        const shapeDilateProgram = glLinkProgram(gl, imageBlurVs, shapeDilateFs);
+        const shapeDilateUniforms = glUniformLocations(gl, shapeDilateProgram, [
+            'u_tex', 'u_sourceSize', 'u_outputSize', 'u_pad', 'u_scale', 'u_radius'
+        ]);
 
         const glyphUniforms = glUniformLocations(gl, glyphProgram, [
             'u_canvasSize', 'u_origin', 'u_size', 'u_pivot', 'u_rotation', 'u_scale', 'u_globalScale',
-            'u_tex', 'u_tint', 'u_alpha', 'u_mode',
+            'u_tex', 'u_tint', 'u_alpha', 'u_dither', 'u_mode',
             'u_gradStops[0]', 'u_gradLocalOrigin', 'u_gradGlyphSize', 'u_gradCount',
             'u_gradAxis0', 'u_gradAxis1', 'u_gradCenter', 'u_gradRadius', 'u_gradType',
             'u_gradStartAngle',
@@ -5522,7 +5738,7 @@ Enjoy!! :D
         ]);
         const maskWipeUniforms = glUniformLocations(gl, maskWipeProgram, [
             'u_canvasSize', 'u_origin', 'u_size', 'u_pivot', 'u_rotation', 'u_scale', 'u_globalScale',
-            'u_glyphTex', 'u_patternTex', 'u_patternMatrix', 'u_texSizePx', 'u_wipeOriginPx', 'u_alpha', 'u_baseColor', 'u_maskOpacity',
+            'u_glyphTex', 'u_patternTex', 'u_patternMatrix', 'u_texSizePx', 'u_wipeOriginPx', 'u_alpha', 'u_baseColor', 'u_maskOpacity', 'u_useGlyphColor',
             'u_hasWipe', 'u_wipeInvert', 'u_wipeAxis', 'u_wipeStart', 'u_wipeEnd', 'u_patternWrap',
             'u_fx', 'u_fxA', 'u_fxB', 'u_fxSkin', 'u_fxGeo', 'u_fxCol', 'u_fxRgb',
             'u_perspectiveRect[0]', 'u_perspectiveTransform[0]', 'u_perspectiveCount'
@@ -5540,11 +5756,29 @@ Enjoy!! :D
             viewportDims ? Math.min(viewportDims[0], viewportDims[1]) : Infinity
         );
         const maxSide = Number.isFinite(detectedMaxSide) && detectedMaxSide > 0 ? detectedMaxSide : 2048;
+        const floatColorBuffer = !!gl.getExtension('EXT_color_buffer_float') || !!gl.getExtension('EXT_color_buffer_half_float');
+        const useFloatBlurTargets = floatColorBuffer && (() => {
+            const probeTexture = gl.createTexture();
+            const probeFramebuffer = gl.createFramebuffer();
+            gl.bindTexture(gl.TEXTURE_2D, probeTexture);
+            gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA16F, 1, 1, 0, gl.RGBA, gl.HALF_FLOAT, null);
+            gl.bindFramebuffer(gl.FRAMEBUFFER, probeFramebuffer);
+            gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, probeTexture, 0);
+            const complete = gl.checkFramebufferStatus(gl.FRAMEBUFFER) === gl.FRAMEBUFFER_COMPLETE;
+            gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+            gl.deleteFramebuffer(probeFramebuffer);
+            gl.deleteTexture(probeTexture);
+            return complete;
+        })();
 
         const glyphTextures = new WeakMap();
         const maskPatternTextures = new Map();
+        const imageBlurCache = new WeakMap();
+        const shapeDilateCache = new WeakMap();
+        const imageBlurFramebuffer = gl.createFramebuffer();
 
         function getGlyphTexture(shape, forceUpload) {
+            if (shape.webglTexture) return shape.webglTexture;
             let tex = glyphTextures.get(shape);
             if (!forceUpload && tex && tex.canvas === shape.canvas && tex.w === shape.canvas.width && tex.h === shape.canvas.height) {
                 return tex.texture;
@@ -5571,6 +5805,171 @@ Enjoy!! :D
                 gl.deleteTexture(tex.texture);
                 glyphTextures.delete(shape);
             }
+            const blurred = imageBlurCache.get(shape);
+            if (blurred) {
+                for (const entry of blurred.values()) gl.deleteTexture(entry.webglTexture);
+                imageBlurCache.delete(shape);
+            }
+            const dilated = shapeDilateCache.get(shape);
+            if (dilated) {
+                for (const entry of dilated.values()) gl.deleteTexture(entry.webglTexture);
+                shapeDilateCache.delete(shape);
+            }
+        }
+
+        function getBlurredShape(shape, blurPxRaw) {
+            const radius = quantizeBlurPx(blurPxRaw);
+            if (!(radius > 0)) return null;
+            let cache = imageBlurCache.get(shape);
+            if (!cache) {
+                cache = new Map();
+                imageBlurCache.set(shape, cache);
+            }
+            const key = String(radius);
+            const cached = cache.get(key);
+            if (cached) return cached;
+            const pad = Math.ceil(radius * 5) + 2;
+            const fullOutputW = shape.canvas.width + pad * 2;
+            const fullOutputH = shape.canvas.height + pad * 2;
+            const textureScale = Math.min(1, maxSide / fullOutputW, maxSide / fullOutputH);
+            const outputW = Math.max(1, Math.ceil(fullOutputW * textureScale));
+            const outputH = Math.max(1, Math.ceil(fullOutputH * textureScale));
+            const makeTexture = (width, height) => {
+                const texture = gl.createTexture();
+                gl.bindTexture(gl.TEXTURE_2D, texture);
+                const internalFormat = useFloatBlurTargets ? gl.RGBA16F : gl.RGBA;
+                const type = useFloatBlurTargets ? gl.HALF_FLOAT : gl.UNSIGNED_BYTE;
+                gl.texImage2D(gl.TEXTURE_2D, 0, internalFormat, width, height, 0, gl.RGBA, type, null);
+                gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+                gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+                gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+                gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+                return texture;
+            };
+            const intermediate = makeTexture(outputW, outputH);
+            const resultTexture = makeTexture(outputW, outputH);
+            const previousFramebuffer = gl.getParameter(gl.FRAMEBUFFER_BINDING);
+            const previousViewport = gl.getParameter(gl.VIEWPORT);
+            const blendEnabled = gl.isEnabled(gl.BLEND);
+            gl.bindFramebuffer(gl.FRAMEBUFFER, imageBlurFramebuffer);
+            gl.viewport(0, 0, outputW, outputH);
+            gl.disable(gl.BLEND);
+            gl.useProgram(imageBlurProgram);
+            gl.bindVertexArray(quadVao);
+            gl.uniform1i(imageBlurUniforms.u_tex, 0);
+            gl.uniform2f(imageBlurUniforms.u_outputSize, outputW, outputH);
+            gl.uniform1f(imageBlurUniforms.u_dither, useFloatBlurTargets ? 0 : 1);
+            const drawBlurPass = (sourceTexture, sourceW, sourceH, targetTexture, padPx, direction, scale, passRadius) => {
+                gl.bindFramebuffer(gl.FRAMEBUFFER, imageBlurFramebuffer);
+                gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, targetTexture, 0);
+                gl.bindTexture(gl.TEXTURE_2D, sourceTexture);
+                gl.uniform2f(imageBlurUniforms.u_sourceSize, sourceW, sourceH);
+                gl.uniform2f(imageBlurUniforms.u_pad, padPx, padPx);
+                gl.uniform2f(imageBlurUniforms.u_direction, direction[0], direction[1]);
+                gl.uniform1f(imageBlurUniforms.u_scale, scale);
+                gl.uniform1f(imageBlurUniforms.u_radius, passRadius);
+                gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+            };
+            drawBlurPass(getGlyphTexture(shape), shape.canvas.width, shape.canvas.height, intermediate, pad * textureScale, [1, 0], textureScale, radius * textureScale);
+            drawBlurPass(intermediate, outputW, outputH, resultTexture, 0, [0, 1], 1, radius * textureScale);
+            gl.bindFramebuffer(gl.FRAMEBUFFER, previousFramebuffer);
+            gl.viewport(previousViewport[0], previousViewport[1], previousViewport[2], previousViewport[3]);
+            if (blendEnabled) gl.enable(gl.BLEND);
+            else gl.disable(gl.BLEND);
+            gl.blendFunc(gl.ONE, gl.ONE_MINUS_SRC_ALPHA);
+            gl.blendEquation(gl.FUNC_ADD);
+            gl.deleteTexture(intermediate);
+            const blurred = {
+                canvas: { width: fullOutputW, height: fullOutputH },
+                webglTexture: resultTexture,
+                offsetX: -pad,
+                offsetY: -pad,
+                isBlurredTexture: true,
+                advance: shape.advance,
+                baselineOriginXEm: shape.baselineOriginXEm,
+                baselineOriginYEm: shape.baselineOriginYEm,
+                fontAscentEm: shape.fontAscentEm,
+                fontDescentEm: shape.fontDescentEm,
+                isColorGlyph: true
+            };
+            if (cache.size >= 24) {
+                const oldestKey = cache.keys().next().value;
+                const oldest = cache.get(oldestKey);
+                gl.deleteTexture(oldest.webglTexture);
+                cache.delete(oldestKey);
+            }
+            cache.set(key, blurred);
+            return blurred;
+        }
+
+        function getDilatedShape(shape, radiusRaw) {
+            const radius = Math.max(0, radiusRaw);
+            if (!(radius > 0)) return shape;
+            let cache = shapeDilateCache.get(shape);
+            if (!cache) {
+                cache = new Map();
+                shapeDilateCache.set(shape, cache);
+            }
+            const key = String(Math.round(radius * 4) / 4);
+            const cached = cache.get(key);
+            if (cached) return cached;
+            const pad = Math.ceil(radius) + 2;
+            const fullOutputW = shape.canvas.width + pad * 2;
+            const fullOutputH = shape.canvas.height + pad * 2;
+            const textureScale = Math.min(1, maxSide / fullOutputW, maxSide / fullOutputH);
+            const outputW = Math.max(1, Math.ceil(fullOutputW * textureScale));
+            const outputH = Math.max(1, Math.ceil(fullOutputH * textureScale));
+            const texture = gl.createTexture();
+            gl.bindTexture(gl.TEXTURE_2D, texture);
+            gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, outputW, outputH, 0, gl.RGBA, gl.UNSIGNED_BYTE, null);
+            gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+            gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+            gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+            gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+            const previousFramebuffer = gl.getParameter(gl.FRAMEBUFFER_BINDING);
+            const previousViewport = gl.getParameter(gl.VIEWPORT);
+            const blendEnabled = gl.isEnabled(gl.BLEND);
+            gl.bindFramebuffer(gl.FRAMEBUFFER, imageBlurFramebuffer);
+            gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, texture, 0);
+            gl.viewport(0, 0, outputW, outputH);
+            gl.disable(gl.BLEND);
+            gl.useProgram(shapeDilateProgram);
+            gl.bindVertexArray(quadVao);
+            gl.activeTexture(gl.TEXTURE0);
+            gl.bindTexture(gl.TEXTURE_2D, getGlyphTexture(shape));
+            gl.uniform1i(shapeDilateUniforms.u_tex, 0);
+            gl.uniform2f(shapeDilateUniforms.u_sourceSize, shape.canvas.width, shape.canvas.height);
+            gl.uniform2f(shapeDilateUniforms.u_outputSize, outputW, outputH);
+            gl.uniform2f(shapeDilateUniforms.u_pad, pad * textureScale, pad * textureScale);
+            gl.uniform1f(shapeDilateUniforms.u_scale, textureScale);
+            gl.uniform1f(shapeDilateUniforms.u_radius, radius * textureScale);
+            gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+            gl.bindFramebuffer(gl.FRAMEBUFFER, previousFramebuffer);
+            gl.viewport(previousViewport[0], previousViewport[1], previousViewport[2], previousViewport[3]);
+            if (blendEnabled) gl.enable(gl.BLEND);
+            else gl.disable(gl.BLEND);
+            gl.blendFunc(gl.ONE, gl.ONE_MINUS_SRC_ALPHA);
+            gl.blendEquation(gl.FUNC_ADD);
+            const dilated = {
+                canvas: { width: fullOutputW, height: fullOutputH },
+                webglTexture: texture,
+                offsetX: -pad,
+                offsetY: -pad,
+                advance: shape.advance,
+                baselineOriginXEm: shape.baselineOriginXEm,
+                baselineOriginYEm: shape.baselineOriginYEm,
+                fontAscentEm: shape.fontAscentEm,
+                fontDescentEm: shape.fontDescentEm,
+                isColorGlyph: false
+            };
+            if (cache.size >= 16) {
+                const oldestKey = cache.keys().next().value;
+                const oldest = cache.get(oldestKey);
+                gl.deleteTexture(oldest.webglTexture);
+                cache.delete(oldestKey);
+            }
+            cache.set(key, dilated);
+            return dilated;
         }
 
         function getMaskPatternTexture(maskTexture) {
@@ -5603,7 +6002,7 @@ Enjoy!! :D
             effectActive: false, effectBlendMax: false,
             glyphProgram, solidProgram, roundRectProgram, borderedRoundRectProgram, maskWipeProgram,
             glyphUniforms, solidUniforms, roundRectUniforms, borderedRoundRectUniforms, maskWipeUniforms,
-            getGlyphTexture, evictGlyphTexture, getMaskPatternTexture
+            getGlyphTexture, evictGlyphTexture, getMaskPatternTexture, getBlurredShape, getDilatedShape
         };
     }
 
@@ -5806,11 +6205,12 @@ Enjoy!! :D
         const pivotX = pivotOverrideX != null ? pivotOverrideX - drawX : w / 2;
         const pivotY = pivotOverrideY != null ? pivotOverrideY - drawY : h / 2;
         drawGLQuad(comp, comp.glyphProgram, uni, drawX, drawY, w, h, pivotX, pivotY, rotationRad, scaleAmt, scaleX, scaleY);
-        const forceUpload = shape.canvas === sharedShadowSurface.canvas;
+        const forceUpload = false;
         gl.activeTexture(gl.TEXTURE0);
         gl.bindTexture(gl.TEXTURE_2D, comp.getGlyphTexture(shape, forceUpload));
         gl.uniform1i(uni.u_tex, 0);
         gl.uniform1f(uni.u_alpha, alpha);
+        gl.uniform1f(uni.u_dither, shape.isBlurredTexture ? 1 / 255 : 0);
         setFxUniforms(comp, uni, drawX, drawY, w, h);
 
         if (passthrough) {
@@ -5950,32 +6350,42 @@ Enjoy!! :D
         endEffectLayer(comp, buffered);
     }
 
-    function drawGlyphShadow(comp, shape, shadowSettings, drawXPx, drawYPx, opAlpha, rotationRad, scaleAmt, scaleX, scaleY) {
+    function drawGlyphShadow(comp, shape, shadowSettings, drawXPx, drawYPx, opAlpha, rotationRad, scaleAmt, scaleX, scaleY, extraBlurPx) {
         const shadowBlurPx = Math.max(0, Scratch.Cast.toNumber(shadowSettings.blur)) * destScale;
         const shadowOffsetXPx = Scratch.Cast.toNumber(shadowSettings.offsetX) * destScale;
         const shadowOffsetYPx = Scratch.Cast.toNumber(shadowSettings.offsetY) * destScale;
-        const shadowBitmap = getShadowGlyphBitmap(shape, shadowSettings.color, shadowBlurPx, shadowOffsetXPx, shadowOffsetYPx);
         const shadowAlpha = opAlpha * clampPercentToUnit(Scratch.Cast.toNumber(shadowSettings.opacity));
         setEffectBlend(comp, shadowAlpha);
+        const blurRadius = shadowBlurPx + Math.max(0, extraBlurPx || 0);
+        const shadowBitmap = blurRadius > 0 ? comp.getBlurredShape(shape, blurRadius) : shape;
+        const blurOffsetX = shadowBitmap.offsetX || 0;
+        const blurOffsetY = shadowBitmap.offsetY || 0;
         glDrawGlyph(
-            comp, shadowBitmap, drawXPx + shadowBitmap.offsetX, drawYPx + shadowBitmap.offsetY,
-            null, shadowAlpha, rotationRad, scaleAmt, null, null, true,
+            comp, shadowBitmap,
+            drawXPx + blurOffsetX * scaleX + shadowOffsetXPx,
+            drawYPx + blurOffsetY * scaleY + shadowOffsetYPx,
+            shadowSettings.color, shadowAlpha, rotationRad, scaleAmt, null, null, false,
             drawXPx + shape.canvas.width / 2, drawYPx + shape.canvas.height / 2, scaleX, scaleY
         );
     }
 
-    function drawGlyphBorder(comp, shape, borderSettings, drawXPx, drawYPx, opAlpha, rotationRad, scaleAmt, hasRotation, hasScale, scaleX, scaleY) {
+    function drawGlyphBorder(comp, shape, borderSettings, drawXPx, drawYPx, opAlpha, rotationRad, scaleAmt, hasRotation, hasScale, scaleX, scaleY, extraBlurPx) {
         const borderAlpha = opAlpha * clampPercentToUnit(Scratch.Cast.toNumber(borderSettings.opacity));
         const borderSize = Math.max(0, Scratch.Cast.toNumber(borderSettings.size)) * destScale;
-        const borderOffsets = getBorderOffsets(borderSize);
-        setEffectBlend(comp, borderAlpha);
-        for (const [offsetX, offsetY] of borderOffsets) {
-            if (!hasRotation && !hasScale) {
-                glDrawGlyph(comp, shape, drawXPx + offsetX, drawYPx + offsetY, borderSettings.color, borderAlpha, 0, 1, null, null, false, null, null, scaleX, scaleY);
-            } else {
-                glDrawGlyph(comp, shape, drawXPx + offsetX, drawYPx + offsetY, borderSettings.color, borderAlpha, rotationRad, scaleAmt, null, null, false, null, null, scaleX, scaleY);
+        const borderShape = comp.getDilatedShape(shape, borderSize) || shape;
+        let borderDrawX = drawXPx + (borderShape.offsetX || 0) * scaleX;
+        let borderDrawY = drawYPx + (borderShape.offsetY || 0) * scaleY;
+        let bitmap = borderShape;
+        if (extraBlurPx > 0) {
+            const blurred = comp.getBlurredShape(borderShape, extraBlurPx);
+            if (blurred) {
+                bitmap = blurred;
+                borderDrawX += blurred.offsetX * scaleX;
+                borderDrawY += blurred.offsetY * scaleY;
             }
         }
+        setEffectBlend(comp, borderAlpha);
+        glDrawGlyph(comp, bitmap, borderDrawX, borderDrawY, borderSettings.color, borderAlpha, rotationRad, scaleAmt, null, null, false, null, null, scaleX, scaleY);
     }
 
     function glDrawSolidRect(comp, cx, cy, w, h, color, alpha) {
@@ -6011,7 +6421,7 @@ Enjoy!! :D
         gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
     }
 
-    function glDrawMaskWipe(comp, shape, drawX, drawY, maskTexture, matrixValues, wipeInfo, baseColor, alpha, maskOpacity, rotationRad, scaleAmt, wipeOriginPx, patternWrap, scaleX, scaleY) {
+    function glDrawMaskWipe(comp, shape, drawX, drawY, maskTexture, matrixValues, wipeInfo, baseColor, alpha, maskOpacity, rotationRad, scaleAmt, wipeOriginPx, patternWrap, scaleX, scaleY, useGlyphColor) {
         const gl = comp.gl;
         const w = shape.canvas.width;
         const h = shape.canvas.height;
@@ -6030,6 +6440,7 @@ Enjoy!! :D
         gl.uniform1f(uni.u_alpha, alpha);
         gl.uniform4fv(uni.u_baseColor, hexToRgbaArray(baseColor, 1));
         gl.uniform1f(uni.u_maskOpacity, maskOpacity);
+        gl.uniform1i(uni.u_useGlyphColor, useGlyphColor ? 1 : 0);
         setFxUniforms(comp, uni, drawX, drawY, w, h);
         if (wipeInfo) {
             gl.uniform1i(uni.u_hasWipe, 1);
@@ -6209,7 +6620,7 @@ Enjoy!! :D
             if (cull && !opMayBeVisible(op, cull)) continue;
 
             const shape = getGlyphShapeForFontStyle(op.text, op.font);
-            const isColorEmoji = shape.isColorGlyph && state.emojiMode === 2;
+            const isColorEmoji = (shape.isColorGlyph && state.emojiMode === 2) || !!op.image;
 
             let gradSpan = null;
             if (op.gradient && !isColorEmoji) {
@@ -6281,7 +6692,7 @@ Enjoy!! :D
                 drawXPx, drawYPx, opAlpha, hasRotation, hasScale, rotationRad, scaleAmt, blurPx,
                 dimensionScaleX: op.dimensionScaleX || 1, dimensionScaleY: op.dimensionScaleY || 1,
                 shadow: activeShadow,
-                border: !isColorEmoji && activeBorder ? activeBorder : null
+                border: (op.image || !isColorEmoji) && activeBorder ? activeBorder : null,
             });
         }
 
@@ -6313,12 +6724,12 @@ Enjoy!! :D
 
             drawEffectLayer(comp, prepared, groupStart, groupEnd, 'shadow', pixelW, pixelH, item => {
                 useItemFx(comp, item);
-                drawGlyphShadow(comp, item.shape, item.shadow, item.drawXPx, item.drawYPx, item.opAlpha, item.rotationRad, item.scaleAmt, item.dimensionScaleX, item.dimensionScaleY);
+                drawGlyphShadow(comp, item.shape, item.shadow, item.drawXPx, item.drawYPx, item.opAlpha, item.rotationRad, item.scaleAmt, item.dimensionScaleX, item.dimensionScaleY, item.blurPx);
                 comp.fx = null;
             });
             drawEffectLayer(comp, prepared, groupStart, groupEnd, 'border', pixelW, pixelH, item => {
                 useItemFx(comp, item);
-                drawGlyphBorder(comp, item.shape, item.border, item.drawXPx, item.drawYPx, item.opAlpha, item.rotationRad, item.scaleAmt, item.hasRotation, item.hasScale, item.dimensionScaleX, item.dimensionScaleY);
+                drawGlyphBorder(comp, item.shape, item.border, item.drawXPx, item.drawYPx, item.opAlpha, item.rotationRad, item.scaleAmt, item.hasRotation, item.hasScale, item.dimensionScaleX, item.dimensionScaleY, item.blurPx);
                 comp.fx = null;
             });
 
@@ -6329,12 +6740,25 @@ Enjoy!! :D
                 } = prepared[i];
                 useItemFx(comp, prepared[i]);
 
-                const texture = op.mask && !op.gradient && !isColorEmoji ? getMaskTexture(op.mask.targetName, op.mask.costumeName) : null;
+                const texture = op.mask && !op.gradient && (!isColorEmoji || op.image) ? getMaskTexture(op.mask.targetName, op.mask.costumeName) : null;
                 const useMask = !!texture;
                 if (!useMask) {
-                    if (blurPx > 0 && !op.gradient && !isColorEmoji) {
-                        const blurredBitmap = getBlurredGlyphBitmap(shape, op.color, blurPx);
-                        glDrawGlyph(comp, blurredBitmap, drawXPx + blurredBitmap.offsetX, drawYPx + blurredBitmap.offsetY, null, opAlpha, rotationRad, scaleAmt, null, null, true, null, null, dimensionScaleX, dimensionScaleY);
+                    if (blurPx > 0 && (op.image || (!op.gradient && !isColorEmoji))) {
+                        if (op.image) {
+                            const blurredImage = comp.getBlurredShape(shape, blurPx);
+                            if (blurredImage) {
+                                glDrawGlyph(comp, blurredImage, drawXPx + blurredImage.offsetX, drawYPx + blurredImage.offsetY, null, opAlpha, rotationRad, scaleAmt, null, null, true, null, null, dimensionScaleX, dimensionScaleY);
+                            } else {
+                                glDrawGlyph(comp, shape, drawXPx, drawYPx, null, opAlpha, rotationRad, scaleAmt, null, null, true, null, null, dimensionScaleX, dimensionScaleY);
+                            }
+                        } else {
+                            const blurredGlyph = comp.getBlurredShape(shape, blurPx);
+                            if (blurredGlyph) {
+                                glDrawGlyph(comp, blurredGlyph, drawXPx + blurredGlyph.offsetX, drawYPx + blurredGlyph.offsetY, op.color, opAlpha, rotationRad, scaleAmt, null, null, false, null, null, dimensionScaleX, dimensionScaleY);
+                            } else {
+                                glDrawGlyph(comp, shape, drawXPx, drawYPx, op.color, opAlpha, rotationRad, scaleAmt, null, null, false, null, null, dimensionScaleX, dimensionScaleY);
+                            }
+                        }
                     } else {
                         glDrawGlyph(
                             comp, shape, drawXPx, drawYPx,
@@ -6414,7 +6838,7 @@ Enjoy!! :D
                                         wipeInfo.end = wipeInfo.start + 0.0001;
                                     }
                             }
-                            glDrawMaskWipe(comp, shape, drawXPx, drawYPx, maskTexture, glMatrix, wipeInfo, op.color, opAlpha, coverage > 0 ? maskOpacity : 0, rotationRad, scaleAmt, null, resolveMaskTiling(state), dimensionScaleX, dimensionScaleY);
+                            glDrawMaskWipe(comp, shape, drawXPx, drawYPx, maskTexture, glMatrix, wipeInfo, op.color, opAlpha, coverage > 0 ? maskOpacity : 0, rotationRad, scaleAmt, null, resolveMaskTiling(state), dimensionScaleX, dimensionScaleY, !!op.image);
                     }
                 }
 
@@ -7507,6 +7931,18 @@ Enjoy!! :D
                         }
                     },
                     {
+                        opcode: 'setListingPadding',
+                        blockType: Scratch.BlockType.COMMAND,
+                        text: 'listing padding [ENABLED]',
+                        arguments: {
+                            ENABLED: {
+                                type: Scratch.ArgumentType.STRING,
+                                menu: 'ONOFF',
+                                defaultValue: 'on'
+                            }
+                        }
+                    },
+                    {
                         blockType: Scratch.BlockType.LABEL,
                         text: 'Settings'
                     },
@@ -7542,6 +7978,62 @@ Enjoy!! :D
                                 defaultValue: '_myself_'
                             }
                         }
+                    },
+                    {
+                        blockType: Scratch.BlockType.LABEL,
+                        text: 'Image Dictionary'
+                    },
+                    {
+                        opcode: 'setImageEntry',
+                        blockType: Scratch.BlockType.COMMAND,
+                        text: 'set image [NAME] to costume [COSTUME]',
+                        arguments: {
+                            NAME: { type: Scratch.ArgumentType.STRING, defaultValue: 'logo' },
+                            COSTUME: { type: Scratch.ArgumentType.STRING, menu: 'IMAGE_COSTUME', defaultValue: '' }
+                        }
+                    },
+                    {
+                        opcode: 'removeImageEntry',
+                        blockType: Scratch.BlockType.COMMAND,
+                        text: 'remove image [NAME]',
+                        arguments: { NAME: { type: Scratch.ArgumentType.STRING, defaultValue: 'logo' } }
+                    },
+                    {
+                        opcode: 'setImageEntrySize',
+                        blockType: Scratch.BlockType.COMMAND,
+                        text: 'set size of icon [NAME] to [SIZE] %',
+                        arguments: {
+                            NAME: { type: Scratch.ArgumentType.STRING, defaultValue: 'logo' },
+                            SIZE: { type: Scratch.ArgumentType.NUMBER, defaultValue: 100 }
+                        }
+                    },
+                    {
+                        opcode: 'setDefaultImageSize',
+                        blockType: Scratch.BlockType.COMMAND,
+                        text: 'set default icon size to [SIZE] %',
+                        arguments: {
+                            SIZE: { type: Scratch.ArgumentType.NUMBER, defaultValue: 100 }
+                        }
+                    },
+                    {
+                        opcode: 'imageMarkup',
+                        blockType: Scratch.BlockType.REPORTER,
+                        text: 'icon [NAME] at size [SIZE] %',
+                        arguments: {
+                            NAME: { type: Scratch.ArgumentType.STRING, defaultValue: 'logo' },
+                            SIZE: { type: Scratch.ArgumentType.STRING, menu: 'ICON_SIZE', defaultValue: 'default' }
+                        }
+                    },
+                    {
+                        opcode: 'exportImageDictionary',
+                        blockType: Scratch.BlockType.REPORTER,
+                        text: 'image dictionary as JSON'
+                    },
+                    {
+                        opcode: 'applyImageDictionary',
+                        blockType: Scratch.BlockType.COMMAND,
+                        text: 'load image dictionary JSON [JSON]',
+                        arguments: { JSON: { type: Scratch.ArgumentType.STRING, defaultValue: '{"version":1,"images":{}}' } }
                     },
                     {
                         blockType: Scratch.BlockType.LABEL,
@@ -8697,11 +9189,19 @@ Enjoy!! :D
                         isTypeable: true,
                         acceptText: true // for my 3 nitrobolt users :P
                     },
+                    ICON_SIZE: {
+                        items: ['default'],
+                        isTypeable: true,
+                        acceptText: true
+                    },
                     SPRITE: {
                         items: 'getSpriteMenuItems'
                     },
                     MASK_COSTUME: {
                         items: 'getMaskCostumeMenuItems'
+                    },
+                    IMAGE_COSTUME: {
+                        items: 'getImageCostumeMenuItems'
                     },
                     WIPE_DIRECTION: {
                         items: [wipeDirectionBottomUp, wipeDirectionLeftRight, wipeDirectionUpDown, wipeDirectionRightLeft]
@@ -8914,6 +9414,12 @@ Enjoy!! :D
                     continue;
                 }
                 frame.irisTypedText += step.content;
+                if (step.image) {
+                    state.rawText = frame.irisTypedText;
+                    schedulePaint(util.target, state);
+                    frame.irisTypingCharIndex++;
+                    continue;
+                }
                 if (step.char === null) continue;
 
                 state.rawText = frame.irisTypedText;
@@ -9054,6 +9560,109 @@ Enjoy!! :D
                 });
             }
             return items;
+        }
+
+        getImageCostumeMenuItems() {
+            return this.getMaskCostumeMenuItems().map(item => {
+                if (!item.value) return item;
+                const separator = item.value.indexOf(': ');
+                return { text: item.value, value: item.value.slice(0, separator) + ':' + item.value.slice(separator + 2) };
+            });
+        }
+
+        setImageEntry(args) {
+            const name = Scratch.Cast.toString(args.NAME).trim();
+            const reference = Scratch.Cast.toString(args.COSTUME).trim();
+            const parts = imageReferenceParts(reference);
+            if (!name || /[{}]/.test(name) || !parts || !findCostumeByRef(parts.targetName, parts.costumeName)) return;
+            if (!Object.prototype.hasOwnProperty.call(globalImageDictionary, name) && Object.keys(globalImageDictionary).length >= 6400) return;
+            const canonicalReference = parts.targetName + ':' + parts.costumeName;
+            globalImageDictionary[name] = canonicalReference;
+            const image = requestImageCharacter(canonicalReference);
+            if (!image.canvas) return;
+            for (const target of runtime.targets || []) {
+                const state = target.getCustomState(stateKey);
+                if (state && state.visible) { state.shapeKey = null; state.layout = null; schedulePaint(target, state); }
+            }
+        }
+
+        removeImageEntry(args) {
+            const name = Scratch.Cast.toString(args.NAME).trim();
+            if (!Object.prototype.hasOwnProperty.call(globalImageDictionary, name)) return;
+            delete globalImageDictionary[name];
+            globalImageSizes.delete(name);
+            imageCharacterTokens.clear();
+            for (const target of runtime.targets || []) {
+                const state = target.getCustomState(stateKey);
+                if (state && state.visible) { state.shapeKey = null; state.layout = null; schedulePaint(target, state); }
+            }
+        }
+
+        setImageEntrySize(args) {
+            const name = Scratch.Cast.toString(args.NAME).trim();
+            if (!Object.prototype.hasOwnProperty.call(globalImageDictionary, name)) return;
+            const percent = clampImagePercent(Scratch.Cast.toNumber(args.SIZE));
+            if (globalImageSizes.get(name) === percent) return;
+            globalImageSizes.set(name, percent);
+            refreshImageTexts();
+        }
+
+        setDefaultImageSize(args) {
+            const percent = clampImagePercent(Scratch.Cast.toNumber(args.SIZE));
+            if (globalDefaultImageSize === percent) return;
+            globalDefaultImageSize = percent;
+            refreshImageTexts();
+        }
+
+        imageMarkup(args) {
+            const name = Scratch.Cast.toString(args.NAME).trim();
+            if (!name || /[{}]/.test(name)) return '';
+            const size = parseImageSizeInput(args.SIZE);
+            return size === null ? `{${name}}` : `{${name}=${size}}`;
+        }
+
+        exportImageDictionary() {
+            return JSON.stringify({
+                version: 1,
+                images: Object.assign({}, globalImageDictionary),
+                sizes: Object.fromEntries(globalImageSizes),
+                defaultSize: globalDefaultImageSize
+            });
+        }
+
+        applyImageDictionary(args) {
+            let input = args.JSON;
+            if (typeof input === 'string') {
+                try { input = JSON.parse(input); } catch (e) { return; }
+            }
+            if (!input || typeof input !== 'object' || Array.isArray(input) || !input.images || typeof input.images !== 'object' || Array.isArray(input.images)) return;
+            const next = {};
+            for (const name of Object.keys(input.images)) {
+                const parts = typeof input.images[name] === 'string' ? imageReferenceParts(input.images[name]) : null;
+                if (!name || /[{}]/.test(name) || !parts || !findCostumeByRef(parts.targetName, parts.costumeName)) continue;
+                next[name] = parts.targetName + ':' + parts.costumeName;
+                if (Object.keys(next).length >= 6400) break;
+            }
+            globalImageDictionary = next;
+            globalImageSizes.clear();
+            if (input.sizes && typeof input.sizes === 'object' && !Array.isArray(input.sizes)) {
+                for (const name of Object.keys(input.sizes)) {
+                    if (!Object.prototype.hasOwnProperty.call(next, name)) continue;
+                    if (typeof input.sizes[name] === 'number' && !Number.isNaN(input.sizes[name])) {
+                        globalImageSizes.set(name, clampImagePercent(input.sizes[name]));
+                    }
+                }
+            }
+            if (typeof input.defaultSize === 'number' && !Number.isNaN(input.defaultSize)) {
+                globalDefaultImageSize = clampImagePercent(input.defaultSize);
+            }
+            imageCharacterTokens.clear();
+            imageTokenRegistry.clear();
+            imageCharacterCache.clear();
+            for (const target of runtime.targets || []) {
+                const state = target.getCustomState(stateKey);
+                if (state && state.visible) { state.shapeKey = null; state.layout = null; schedulePaint(target, state); }
+            }
         }
 
         exportSettings(args, util) {
@@ -9236,6 +9845,17 @@ Enjoy!! :D
             const lineHeight = Math.max(0, Scratch.Cast.toNumber(args.HEIGHT));
             if (state.lineSpacing === lineHeight) return;
             state.lineSpacing = lineHeight;
+            schedulePaint(util.target, state);
+        }
+
+        setListingPadding(args, util) {
+            const state = getState(util.target);
+            const enabled = Scratch.Cast.toString(args.ENABLED).toLowerCase() === 'on';
+            if (state.listingPadding === enabled) return;
+            state.listingPadding = enabled;
+            state.shapeKey = null;
+            state.layoutKey = null;
+            state.layout = null;
             schedulePaint(util.target, state);
         }
 

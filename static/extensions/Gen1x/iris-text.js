@@ -41,6 +41,7 @@ Enjoy!! :D
     const imageTokenRegistry = new Map();
     const globalImageSizes = new Map();
     let globalDefaultImageSize = 100;
+    let globalImageSmoothing = true;
     const imageSizeMin = 1;
     const imageSizeMax = 1000;
     const imageMarkupRe = /(\\*)\{(?:([^{}]+)\})?/g;
@@ -62,13 +63,13 @@ Enjoy!! :D
             entry.pending = false;
             return entry;
         }
-        const fromSkin = rasterizeCostumeFromSkin(costume, parts.targetName);
-        if (fromSkin) {
+        const fromSkin = rasterizeCostumeFromSkin(costume, parts.targetName, globalImageSmoothing);
+        if (fromSkin && costume.dataFormat !== 'svg') {
             Object.assign(entry, fromSkin);
             entry.pending = false;
             return entry;
         }
-        rasterizeCostumeToCanvas(costume, parts.targetName).then(result => {
+        rasterizeCostumeToCanvas(costume, parts.targetName, globalImageSmoothing).then(result => {
             entry.pending = false;
             if (result) Object.assign(entry, result);
             entry.shapes.clear();
@@ -134,6 +135,14 @@ Enjoy!! :D
             state.layout = null;
             schedulePaint(target, state);
         }
+    }
+
+    function refreshImageCharacterCache() {
+        for (const reference of new Set(Object.values(globalImageDictionary))) {
+            imageCharacterCache.delete(reference);
+            requestImageCharacter(reference);
+        }
+        refreshImageTexts();
     }
 
     function prepareImageMarkup(text) {
@@ -1132,6 +1141,9 @@ Enjoy!! :D
             charOverridesVersion: 0,
             charEffects: {},
             charTransformsVersion: 0,
+            animationDirtyIndices: new Set(),
+            animationDirtyVersion: 0,
+            animationDirtyBaseVersion: 0,
             resetCharTransformsOnText: true,
             charStyleOverrides: {},
             charStyleOverridesVersion: 0,
@@ -1149,6 +1161,7 @@ Enjoy!! :D
             layout: null,
             charBoxesLayout: null,
             paintOps: null,
+            paintOpsByCharIndex: null,
             paintOpsKey: null,
             paintOpsGeometryKey: null,
             paintOpsTransformsVersion: 0,
@@ -1230,10 +1243,12 @@ Enjoy!! :D
             if (typeof state.charTransformsVersion !== 'number') state.charTransformsVersion = 0;
             if (typeof state.paintOpsTransformsVersion !== 'number') state.paintOpsTransformsVersion = 0;
             if (typeof state.paintOpsMasksVersion !== 'number') state.paintOpsMasksVersion = 0;
+            if (!(state.animationDirtyIndices instanceof Set)) state.animationDirtyIndices = new Set();
             if (state.typingControl !== 'skip' && state.typingControl !== 'stop') state.typingControl = null;
             state.iiMigrated = true;
         }
-        if (!['global', ...renderResolutionModes].includes(state.renderResolution)) state.renderResolution = 'global';
+        if (!(state.animationDirtyIndices instanceof Set)) state.animationDirtyIndices = new Set();
+        if (state.renderResolution !== 'global' && !renderResolutionModes.includes(state.renderResolution)) state.renderResolution = 'global';
         if (state.listingPadding === undefined) state.listingPadding = true;
         if (state.mapMasksToStageCoordinates === undefined) state.mapMasksToStageCoordinates = false;
         if (!Object.prototype.hasOwnProperty.call(maskTilingModes, state.maskTiling)) state.maskTiling = maskTilingDefault;
@@ -2784,7 +2799,7 @@ Enjoy!! :D
         return null;
     }
 
-    function rasterizeCostumeFromSkin(costume, targetName) {
+    function rasterizeCostumeFromSkin(costume, targetName, smoothing = true) {
         if (!runtime.renderer || typeof costume.skinId !== 'number') return null;
         const renderer = runtime.renderer;
         const skin = renderer._allSkins && renderer._allSkins[costume.skinId];
@@ -2826,6 +2841,7 @@ Enjoy!! :D
         canvas.width = canvasW;
         canvas.height = canvasH;
         const ctx = canvas.getContext('2d');
+        ctx.imageSmoothingEnabled = smoothing;
         try {
             ctx.drawImage(source, 0, 0, canvasW, canvasH);
         } catch (e) {
@@ -2834,11 +2850,28 @@ Enjoy!! :D
         return { canvas, width: canvasW, height: canvasH };
     }
 
-    function rasterizeCostumeToCanvas(costume, targetName) {
+    function padSvgViewBox(svgText) {
+        return svgText.replace(/<svg\b[^>]*>/i, svgTag => {
+            const viewBoxMatch = svgTag.match(/(\sviewBox\s*=\s*)(["'])(.*?)\2/i);
+            if (!viewBoxMatch) return svgTag;
+            const viewBox = viewBoxMatch[3].trim().split(/[\s,]+/).map(Number);
+            if (viewBox.length !== 4 || !viewBox.every(Number.isFinite) || viewBox[2] <= 0 || viewBox[3] <= 0) return svgTag;
+            const padding = Math.max(viewBox[2], viewBox[3]) * 0.02;
+            const paddedViewBox = [
+                viewBox[0] - padding,
+                viewBox[1] - padding,
+                viewBox[2] + padding * 2,
+                viewBox[3] + padding * 2
+            ].join(' ');
+            return svgTag.replace(viewBoxMatch[0], `${viewBoxMatch[1]}${viewBoxMatch[2]}${paddedViewBox}${viewBoxMatch[2]}`);
+        });
+    }
+
+    function rasterizeCostumeToCanvas(costume, targetName, smoothing = true) {
         return new Promise((resolve) => {
             const asset = costume.asset;
             if (!asset) {
-                const fromSkin = rasterizeCostumeFromSkin(costume, targetName);
+                const fromSkin = rasterizeCostumeFromSkin(costume, targetName, smoothing);
                 resolve(fromSkin);
                 return;
             }
@@ -2846,13 +2879,13 @@ Enjoy!! :D
             let revoke = false;
             try {
                 if (costume.dataFormat === 'svg') {
-                    const svgText = asset.decodeText();
+                    const svgText = padSvgViewBox(asset.decodeText());
                     url = 'data:image/svg+xml;charset=utf8,' + encodeURIComponent(svgText);
                 } else {
                     url = asset.encodeDataURI();
                 }
             } catch (e) {
-                const fromSkin = rasterizeCostumeFromSkin(costume, targetName);
+                const fromSkin = rasterizeCostumeFromSkin(costume, targetName, smoothing);
                 resolve(fromSkin);
                 return;
             }
@@ -2874,6 +2907,7 @@ Enjoy!! :D
                 canvas.width = canvasW;
                 canvas.height = canvasH;
                 const ctx = canvas.getContext('2d');
+                ctx.imageSmoothingEnabled = smoothing;
                 ctx.drawImage(img, 0, 0, canvasW, canvasH);
                 if (revoke) URL.revokeObjectURL(url);
                 resolve({
@@ -2884,7 +2918,7 @@ Enjoy!! :D
             };
             img.onerror = () => {
                 if (revoke) URL.revokeObjectURL(url);
-                const fromSkin = rasterizeCostumeFromSkin(costume, targetName);
+                const fromSkin = rasterizeCostumeFromSkin(costume, targetName, smoothing);
                 resolve(fromSkin);
             };
             img.src = url;
@@ -3008,22 +3042,17 @@ Enjoy!! :D
 
     const _hasOwn = Object.prototype.hasOwnProperty;
 
-    function splitShapingRuns(line, charOverrides, startGlobalIndex) {
+    function splitShapingRuns(line, startGlobalIndex) {
         const runs = [];
         let current = null;
         let globalIndex = startGlobalIndex;
 
         for (const rc of line) {
-            const hasOverride = _hasOwn.call(charOverrides, globalIndex);
-            const breaksRun = !current || hasOverride || current.hasOverride ||
-                !sameShapingStyle(current.style, rc);
-
-            if (breaksRun) {
+            if (!current || !sameShapingStyle(current.style, rc)) {
                 current = {
                     chars: [],
                     style: rc,
-                    startIndex: globalIndex,
-                    hasOverride
+                    startIndex: globalIndex
                 };
                 runs.push(current);
             }
@@ -3149,7 +3178,7 @@ Enjoy!! :D
         const hardLineRunsCache = [];
         let globalIndex = 0;
         for (const line of hardLines) {
-            const runs = splitShapingRuns(line, state.charOverrides, globalIndex);
+            const runs = splitShapingRuns(line, globalIndex);
             if (runs.length) measureShapedRuns(measureCtx, runs, state.letterSpacing);
             for (const run of runs) {
                 for (let i = 0; i < run.chars.length; i++) {
@@ -3348,7 +3377,7 @@ Enjoy!! :D
             const sourceHardLine = wrappedLineSourceHardLine[li];
             const runs = sourceHardLine !== undefined ?
                 hardLineRunsCache[sourceHardLine] :
-                splitShapingRuns(line, state.charOverrides, globalIndex);
+                splitShapingRuns(line, globalIndex);
 
             let runStartX = lineListIndents[li];
             for (const run of runs) {
@@ -3474,6 +3503,7 @@ Enjoy!! :D
             canvas.width = width;
             canvas.height = height;
             const ctx = canvas.getContext('2d');
+            ctx.imageSmoothingEnabled = globalImageSmoothing;
             if (image.canvas) ctx.drawImage(image.canvas, 0, 0, width, height);
             const shape = {
                 canvas,
@@ -3482,10 +3512,11 @@ Enjoy!! :D
                 blurred: new Map(),
                 advance: width / scale,
                 baselineOriginXEm: 0,
-                baselineOriginYEm: height / (2 * scale) + metrics.inkCenterOffset,
+                baselineOriginYEm: height / (2 * scale) + (metrics.ascent - metrics.descent) / 2,
                 fontAscentEm: metrics.ascent,
                 fontDescentEm: metrics.descent,
                 isColorGlyph: true,
+                isImage: true,
                 bytes: width * height * 4
             };
             image.shapes.set(key, shape);
@@ -3659,8 +3690,8 @@ Enjoy!! :D
         for (let i = 0; i < paintOps.length; i++) {
             const op = paintOps[i];
             hash = (hash * 33) ^ hashString(op.text);
-            hash = (hash * 33) ^ ((op.x * 100) | 0);
-            hash = (hash * 33) ^ ((op.y * 100) | 0);
+            hash = (hash * 33) ^ Math.round(op.x * destScale * 4);
+            hash = (hash * 33) ^ Math.round(op.y * destScale * 4);
             hash = (hash * 33) ^ ((op.rotation * 100) | 0);
             hash = (hash * 33) ^ ((op.opacity * 1000) | 0);
             hash = (hash * 33) ^ ((op.scale * 1000) | 0);
@@ -3916,8 +3947,11 @@ Enjoy!! :D
     function applyEasing(name, dir, x) {
         const fn = EasingMethods[name] || linear;
         if (fn === linear) return linear(x);
-        const d = Scratch.Cast.toString(dir || 'out').toLowerCase().trim();
-        const normalizedDir = (d === 'in' || d === 'out' || d === 'in out') ? d : 'out';
+        let normalizedDir = dir;
+        if (dir !== 'in' && dir !== 'out' && dir !== 'in out') {
+            const d = Scratch.Cast.toString(dir || 'out').toLowerCase().trim();
+            normalizedDir = (d === 'in' || d === 'out' || d === 'in out') ? d : 'out';
+        }
         const res = fn(x, normalizedDir);
         return Number.isFinite(res) ? res : x;
     }
@@ -3936,39 +3970,57 @@ Enjoy!! :D
         }
     }
 
+    let lastDrawAt = 0;
+    const drawActiveWindowMs = 250;
+
+    function drawsAreActive() {
+        return preDrawFlushActive && performance.now() - lastDrawAt < drawActiveWindowMs;
+    }
+
     function stepCharAnimations() {
         animationFrameId = null;
         if (!charAnimations.size) return;
-        computeCharAnimationsFrame();
+        if (!drawsAreActive()) computeCharAnimationsFrame(true);
         if (charAnimations.size && animationFrameId === null) {
             animationFrameId = requestAnimationFrame(stepCharAnimations);
         }
     }
 
-    function computeCharAnimationsFrame() {
+    function computeCharAnimationsFrame(flushNow) {
         if (!charAnimations.size) return;
         const t = nowMs();
-        const dirtyStates = new Set();
+        const dirtyStates = new Map();
         const finishedTargets = [];
-        for (const [key, anim] of Array.from(charAnimations.entries())) {
-            const state = getState(anim.target);
+        for (const [key, anim] of charAnimations) {
+            const target = anim.target;
+            let state = dirtyStates.get(target);
+            if (!state) {
+                state = getState(target);
+                dirtyStates.set(target, state);
+            }
             const o = getCharOverride(state, anim.index);
             const elapsed = t - anim.startTime;
             const rawProgress = anim.duration > 0 ? Math.min(1, elapsed / anim.duration) : 1;
             const progress = applyEasing(anim.easing, anim.direction, rawProgress);
             o[anim.property] = anim.from + (anim.to - anim.from) * progress;
-            state.charTransformsVersion++;
-            dirtyStates.add(anim.target);
+            state.animationDirtyIndices.add(anim.index);
             if (rawProgress >= 1) {
                 o[anim.property] = anim.to;
-                deleteCharAnimation(anim.target.id, key);
-                finishedTargets.push(anim.target);
+                deleteCharAnimation(target.id, key);
+                finishedTargets.push(target);
             }
         }
-        for (const target of dirtyStates) {
-            schedulePaint(target, getState(target));
+        for (const [target, state] of dirtyStates) {
+            if (state.animationDirtyIndices.size && state.animationDirtyVersion !== state.charTransformsVersion) {
+                state.animationDirtyIndices.clear();
+            }
+            if (!state.animationDirtyIndices.size) state.animationDirtyBaseVersion = state.charTransformsVersion;
+            state.charTransformsVersion++;
+            state.animationDirtyVersion = state.charTransformsVersion;
+            state.paintDirty = true;
+            if (state.visible) scheduleRender(target);
         }
-        flushPendingRenders();
+        if (flushNow) flushPendingRenders();
         for (const target of finishedTargets) {
             startCharAnimationFinishedHat(target);
         }
@@ -3978,7 +4030,7 @@ Enjoy!! :D
     let renderFlushLoopRunning = false;
 
     function renderFlushLoop() {
-        flushPendingRenders();
+        if (!drawsAreActive()) flushPendingRenders();
         if (pendingRenderTargets.size) {
             requestAnimationFrame(renderFlushLoop);
         } else {
@@ -4216,7 +4268,9 @@ Enjoy!! :D
     }
 
     function preDrawUpdate() {
+        lastDrawAt = performance.now();
         refreshNativeResolutionTargets();
+        if (charAnimations.size) computeCharAnimationsFrame(false);
         flushPendingRenders();
         refreshCulledTargets();
         refreshStageMappedMaskTargets();
@@ -4271,7 +4325,7 @@ Enjoy!! :D
     }
 
     function getLayoutKey(state) {
-        return getShapeKey(state) + '\u0002' + state.charOverridesVersion;
+        return getShapeKey(state);
     }
 
     function getPaintOpsGeometryKey(state, layoutKey) {
@@ -4434,7 +4488,8 @@ Enjoy!! :D
     function renderTarget(target) {
         const startTime = perfStart();
         const previousScale = destScale;
-        destScale = resolutionScaleForState(getState(target));
+        const state = getState(target);
+        destScale = resolutionScaleForState(state);
         try {
             return renderTargetNow(target);
         } finally {
@@ -4532,12 +4587,12 @@ Enjoy!! :D
             decorationPad + state.baseStyle.size,
             decorationPad + (maxBlurExtent || 0) + 2
         );
-        const padX = Math.max(
+        let padX = Math.max(
             basePad,
             basePad + (layout.arrangementExtentX || 0),
             perspectiveGeometry.maxShiftX + perspectiveGeometry.maxCharacterExtent + decorationPad
         );
-        const padY = Math.max(
+        let padY = Math.max(
             basePad,
             basePad + (layout.arrangementExtentY || 0),
             perspectiveGeometry.maxShiftY + perspectiveGeometry.maxCharacterExtent + decorationPad
@@ -4548,6 +4603,85 @@ Enjoy!! :D
         let effectiveMaxHeight = state.maxHeight && state.maxHeight > 0 ? state.maxHeight : totalHeight;
         if (state.typingBoxWidth > effectiveMaxWidth) effectiveMaxWidth = state.typingBoxWidth;
         if (state.typingBoxHeight > effectiveMaxHeight) effectiveMaxHeight = state.typingBoxHeight;
+
+        let minCharacterX = 0;
+        let maxCharacterX = 0;
+        let minCharacterY = 0;
+        let maxCharacterY = 0;
+        const characterGrace = Math.max(2, 2 / destScale);
+        const charOverrides = state.charOverrides;
+        for (let li = 0; li < lineRuns.length; li++) {
+            const centerLineW = state.typingBoxLineWidths && state.typingBoxLineWidths.length === lines.length ?
+                state.typingBoxLineWidths[li] : lineTextWidths[li];
+            const bounds = {
+                minX: lineBounds[li].minX,
+                maxX: Math.max(lineBounds[li].maxX, centerLineW)
+            };
+            const lineShift = getLineAlignmentShift(state.align, effectiveMaxWidth, bounds);
+            const justifySpaceCount = state.align === 'justify' && li < lines.length - 1 &&
+                effectiveMaxWidth > lineWidths[li] ?
+                lines[li].filter(rc => rc.char === ' ').length : 0;
+            const justifyExtra = justifySpaceCount > 0 ?
+                (effectiveMaxWidth - lineWidths[li]) / justifySpaceCount : 0;
+            const lineCenterY = -totalHeight / 2 + lineVerticalOriginOffset +
+                (li * lineHeight) + lineVerticalOffsets[li] + lineHeight * 0.5;
+            let spacesBefore = 0;
+
+            for (const run of lineRuns[li]) {
+                for (let i = 0; i < run.chars.length; i++) {
+                    const rc = run.chars[i];
+                    const pos = run.positions[i];
+                    if (rc.char === ' ' || rc.char === '\u00A0' || rc.char === '\n') {
+                        if (rc.char === ' ') spacesBefore++;
+                        continue;
+                    }
+                    const index = run.startIndex + i;
+                    const override = charOverrides[index] || emptyOverride;
+                    const scaleY = rc.dimensionScaleY || 1;
+                    const scaleX = rc.dimensionScaleX || 1;
+                    const shape = getGlyphShapeForFontStyle(rc.char, run.fontStyle);
+                    if (!shape) continue;
+                    const charCenterX = lineHasArrangement[li] ?
+                        lineShift + rc._flowCenterX + (rc.arrangementOffset ? 0 : spacesBefore * justifyExtra) + (override.x || 0) :
+                        lineShift + run.runStartX + pos.shapedX + pos.advance / 2 + spacesBefore * justifyExtra + (override.x || 0);
+                    const charCenterY = lineCenterY - (rc.arrangementOffset ? rc.arrangementOffset.y : 0) - (override.y || 0);
+                    const advanceCenterX = shape.baselineOriginXEm + shape.advance / 2;
+                    const baselineY = (shape.fontAscentEm - shape.fontDescentEm) / 2;
+                    const drawX = charCenterX - advanceCenterX * scaleX;
+                    const drawY = charCenterY + baselineY - shape.baselineOriginYEm * scaleY;
+                    const glyphWidth = shape.canvas.width / destScale;
+                    const glyphHeight = shape.canvas.height / destScale;
+                    const pivotX = glyphWidth / 2;
+                    const pivotY = glyphHeight / 2;
+                    const rotation = -(override.rotation || 0) * Math.PI / 180;
+                    const rotationCos = Math.cos(rotation);
+                    const rotationSin = Math.sin(rotation);
+                    const characterScale = override.scale == null ? 1 : override.scale;
+
+                    for (let corner = 0; corner < 4; corner++) {
+                        const relX = (corner & 1 ? glyphWidth * scaleX : 0) - pivotX;
+                        const relY = (corner & 2 ? glyphHeight * scaleY : 0) - pivotY;
+                        const x = drawX + pivotX + (relX * rotationCos - relY * rotationSin) * characterScale;
+                        const y = drawY + pivotY + (relX * rotationSin + relY * rotationCos) * characterScale;
+                        minCharacterX = Math.min(minCharacterX, x);
+                        maxCharacterX = Math.max(maxCharacterX, x);
+                        minCharacterY = Math.min(minCharacterY, y);
+                        maxCharacterY = Math.max(maxCharacterY, y);
+                    }
+                    if (rc.char === ' ') spacesBefore++;
+                }
+            }
+        }
+        padX = Math.max(
+            padX,
+            -minCharacterX - effectiveMaxWidth / 2 + characterGrace,
+            maxCharacterX - effectiveMaxWidth / 2 + characterGrace
+        );
+        padY = Math.max(
+            padY,
+            -minCharacterY - effectiveMaxHeight / 2 + characterGrace,
+            maxCharacterY - effectiveMaxHeight / 2 + characterGrace
+        );
 
         const docW = Math.ceil(effectiveMaxWidth + padX * 2);
         const docH = Math.ceil(effectiveMaxHeight + padY * 2);
@@ -4584,9 +4718,36 @@ Enjoy!! :D
 
         const geometryUnchanged = state.paintOpsGeometryKey === geometryKey &&
             state.paintOpsLayout === layout && !!paintOps;
-        const transformsUnchanged = state.paintOpsTransformsVersion === state.charTransformsVersion;
+        let transformsUnchanged = state.paintOpsTransformsVersion === state.charTransformsVersion;
+        let transformsUpdatedInPlace = false;
 
-        if (geometryUnchanged && transformsUnchanged && state.paintOpsKey !== paintOpsKey) {
+        if (geometryUnchanged && !transformsUnchanged && state.animationDirtyVersion === state.charTransformsVersion &&
+            state.animationDirtyBaseVersion === state.paintOpsTransformsVersion &&
+            state.paintOpsMasksVersion === state.charMasksVersion &&
+            state.animationDirtyIndices.size && state.paintOpsByCharIndex) {
+            for (const index of state.animationDirtyIndices) {
+                const op = state.paintOpsByCharIndex[index];
+                if (!op) continue;
+                const override = state.charOverrides[index] || emptyOverride;
+                op.x = op.baseX + (override.x || 0);
+                op.y = op.baseY - (override.y || 0);
+                op.rotation = override.rotation || 0;
+                op.opacity = override.opacity == null ? 1 : override.opacity;
+                op.scale = override.scale == null ? 1 : override.scale;
+                const box = charBoxes[index];
+                if (box) {
+                    box.x = op.x - originX;
+                    box.y = originY - op.y;
+                }
+            }
+            state.animationDirtyIndices.clear();
+            state.paintOpsTransformsVersion = state.charTransformsVersion;
+            state.paintOpsKey = paintOpsKey;
+            transformsUnchanged = true;
+            transformsUpdatedInPlace = true;
+        }
+
+        if (!transformsUpdatedInPlace && geometryUnchanged && transformsUnchanged && state.paintOpsKey !== paintOpsKey) {
             for (let i = 0; i < paintOps.length; i++) {
                 const op = paintOps[i];
                 op.mask = state.charMasks[op.charIndex] || null;
@@ -4600,7 +4761,7 @@ Enjoy!! :D
                 return;
             }
             state.paintFingerprint = fingerprint;
-        } else if (state.paintOpsKey !== paintOpsKey || state.paintOpsLayout !== layout || !paintOps) {
+        } else if (!transformsUpdatedInPlace && (state.paintOpsKey !== paintOpsKey || state.paintOpsLayout !== layout || !paintOps)) {
             if (state.charBoxesLayout !== layout) {
                 charBoxes = [];
                 state.charBoxesLayout = layout;
@@ -4608,6 +4769,7 @@ Enjoy!! :D
             const charsByTag = layout.charsByTag;
             const prevPaintOps = paintOps;
             const opPool = state.paintOpPool || (state.paintOpPool = []);
+            const paintOpsByCharIndex = [];
             if (prevPaintOps) {
                 for (let i = prevPaintOps.length - 1; i >= 0; i--) opPool.push(prevPaintOps[i]);
             }
@@ -4615,6 +4777,7 @@ Enjoy!! :D
             const letterSpacing = state.letterSpacing || 0;
             const typingBoxLineWidths = state.typingBoxLineWidths;
             const isFinalTypingLine = !!typingBoxLineWidths && typingBoxLineWidths.length === lines.length;
+            const charOverrides = state.charOverrides;
 
             for (let li = 0; li < lines.length; li++) {
                 const line = lines[li];
@@ -4650,9 +4813,7 @@ Enjoy!! :D
                         const rc = run.chars[i];
                         const pos = run.positions[i];
                         const index = run.startIndex + i;
-                        const o = run.hasOverride ?
-                            (state.charOverrides[index] || emptyOverride) :
-                            emptyOverride;
+                        const o = charOverrides[index] || emptyOverride;
 
                         const arrangementOffset = rc.arrangementOffset || emptyOverride;
                         const charCenterX = lineHasArrangement[li] ?
@@ -4670,6 +4831,8 @@ Enjoy!! :D
                         op.image = rc.image || null;
                         op.x = charCenterX;
                         op.y = charCenterY;
+                        op.baseX = charCenterX - o.x;
+                        op.baseY = charCenterY + o.y;
                         op.rotation = rotation;
                         op.opacity = opacity;
                         op.scale = scale;
@@ -4694,6 +4857,7 @@ Enjoy!! :D
                         op.layer = rc.layer || 0;
                         op.fx = resolveEffectState(rc.effects, state.charEffects ? state.charEffects[index] : null);
                         paintOps.push(op);
+                        paintOpsByCharIndex[index] = op;
 
                         if (rc.char === ' ') spacesBefore++;
 
@@ -4718,11 +4882,13 @@ Enjoy!! :D
             }
 
             state.paintOps = paintOps;
+            state.paintOpsByCharIndex = paintOpsByCharIndex;
             state.paintOpsKey = paintOpsKey;
             state.paintOpsGeometryKey = geometryKey;
             state.paintOpsLayout = layout;
             state.paintOpsTransformsVersion = state.charTransformsVersion;
             state.paintOpsMasksVersion = state.charMasksVersion;
+            state.animationDirtyIndices.clear();
             state.charBoxes = charBoxes;
             state.charsByTag = charsByTag;
             state.drawableWidth = docW;
@@ -4734,7 +4900,7 @@ Enjoy!! :D
                 return;
             }
             state.paintFingerprint = fingerprint;
-        } else {
+        } else if (!transformsUpdatedInPlace) {
             if (state.paintFingerprint !== null && state.skinId !== null) {
                 state.paintDirty = false;
                 return;
@@ -5778,9 +5944,24 @@ Enjoy!! :D
         const imageBlurFramebuffer = gl.createFramebuffer();
 
         function getGlyphTexture(shape, forceUpload) {
-            if (shape.webglTexture) return shape.webglTexture;
+            const filter = shape.isImage && !globalImageSmoothing ? gl.NEAREST : gl.LINEAR;
+            if (shape.webglTexture) {
+                gl.bindTexture(gl.TEXTURE_2D, shape.webglTexture);
+                if (shape.webglFilter !== filter) {
+                    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, filter);
+                    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, filter);
+                    shape.webglFilter = filter;
+                }
+                return shape.webglTexture;
+            }
             let tex = glyphTextures.get(shape);
             if (!forceUpload && tex && tex.canvas === shape.canvas && tex.w === shape.canvas.width && tex.h === shape.canvas.height) {
+                gl.bindTexture(gl.TEXTURE_2D, tex.texture);
+                if (tex.filter !== filter) {
+                    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, filter);
+                    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, filter);
+                    tex.filter = filter;
+                }
                 return tex.texture;
             }
             if (!tex) {
@@ -5789,13 +5970,14 @@ Enjoy!! :D
             }
             gl.bindTexture(gl.TEXTURE_2D, tex.texture);
             gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, shape.canvas);
-            gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
-            gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+            gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, filter);
+            gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, filter);
             gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
             gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
             tex.canvas = shape.canvas;
             tex.w = shape.canvas.width;
             tex.h = shape.canvas.height;
+            tex.filter = filter;
             return tex.texture;
         }
 
@@ -6067,6 +6249,10 @@ Enjoy!! :D
         return [r * a, g * a, b * a, a];
     }
 
+    const emptyPerspectivePlanes = [];
+    const quadPerspectiveRects = new Float32Array(16);
+    const quadPerspectiveTransforms = new Float32Array(16);
+
     function drawGLQuad(comp, program, uniforms, originX, originY, w, h, pivotX, pivotY, rotation, scale, scaleX, scaleY) {
         const gl = comp.gl;
         const ratio = comp.renderRatio;
@@ -6081,10 +6267,14 @@ Enjoy!! :D
         gl.uniform1f(uniforms.u_rotation, rotation || 0);
         gl.uniform1f(uniforms.u_scale, scale == null ? 1 : scale);
         gl.uniform2f(uniforms.u_globalScale, comp.globalScaleX || 1, comp.globalScaleY || 1);
-        const perspectivePlanes = comp.perspectivePlanes || [];
-        const perspectiveRects = new Float32Array(16);
-        const perspectiveTransforms = new Float32Array(16);
+        const perspectivePlanes = comp.perspectivePlanes || emptyPerspectivePlanes;
+        const perspectiveRects = quadPerspectiveRects;
+        const perspectiveTransforms = quadPerspectiveTransforms;
         const perspectiveCount = Math.min(4, perspectivePlanes.length);
+        if (perspectiveCount) {
+            perspectiveRects.fill(0);
+            perspectiveTransforms.fill(0);
+        }
         for (let i = 0; i < perspectiveCount; i++) {
             const plane = perspectivePlanes[i];
             perspectiveRects[i * 4] = (plane.minX - comp.offX) * ratio;
@@ -6106,8 +6296,8 @@ Enjoy!! :D
             const cos = Math.cos(quadRotation);
             const sin = Math.sin(quadRotation);
             for (let corner = 0; corner < 4; corner++) {
-                const relX = (corner & 1 ? w : 0) - pivotX;
-                const relY = (corner & 2 ? h : 0) - pivotY;
+                const relX = (corner & 1 ? w * (scaleX || 1) : 0) - pivotX;
+                const relY = (corner & 2 ? h * (scaleY || 1) : 0) - pivotY;
                 let x = originX + pivotX + (relX * cos - relY * sin) * quadScale;
                 let y = originY + pivotY + (relX * sin + relY * cos) * quadScale;
                 for (let i = 0; i < perspectiveCount; i++) {
@@ -6885,10 +7075,11 @@ Enjoy!! :D
                 (perspectiveGeometry.maxShiftX + perspectiveGeometry.maxCharacterExtent) * destScale : 0;
             const perspectivePadY = perspectiveGeometry ?
                 (perspectiveGeometry.maxShiftY + perspectiveGeometry.maxCharacterExtent) * destScale : 0;
-            const x0 = Math.max(0, Math.floor((bounds.minX - 2 - perspectivePadX) / destScale) * destScale);
-            const y0 = Math.max(0, Math.floor((bounds.minY - 2 - perspectivePadY) / destScale) * destScale);
-            const x1 = Math.min(fullW, Math.ceil((bounds.maxX + 2 + perspectivePadX) / destScale) * destScale);
-            const y1 = Math.min(fullH, Math.ceil((bounds.maxY + 2 + perspectivePadY) / destScale) * destScale);
+            const cropSnap = destScale * 16;
+            const x0 = Math.max(0, Math.floor((bounds.minX - 2 - perspectivePadX) / cropSnap) * cropSnap);
+            const y0 = Math.max(0, Math.floor((bounds.minY - 2 - perspectivePadY) / cropSnap) * cropSnap);
+            const x1 = Math.min(fullW, Math.ceil((bounds.maxX + 2 + perspectivePadX) / cropSnap) * cropSnap);
+            const y1 = Math.min(fullH, Math.ceil((bounds.maxY + 2 + perspectivePadY) / cropSnap) * cropSnap);
             if (x1 > x0 && y1 > y0) {
                 cropX = x0;
                 cropY = y0;
@@ -7022,6 +7213,7 @@ Enjoy!! :D
             anchorX != null ? anchorX : width / 2,
             anchorY != null ? anchorY : height / 2
         ];
+        canvas.reusable = false;
 
         if (state.skinId === null) {
             const BitmapSkin = renderer.exports.BitmapSkin;
@@ -7446,7 +7638,8 @@ Enjoy!! :D
                             ENABLED: {
                                 type: Scratch.ArgumentType.STRING,
                                 menu: 'ONOFF',
-                                defaultValue: 'on'
+                                defaultValue: 'on',
+                                hideFromPalette: true
                             }
                         }
                     },
@@ -8013,6 +8206,18 @@ Enjoy!! :D
                         text: 'set default icon size to [SIZE] %',
                         arguments: {
                             SIZE: { type: Scratch.ArgumentType.NUMBER, defaultValue: 100 }
+                        }
+                    },
+                    {
+                        opcode: 'setImageSmoothing',
+                        blockType: Scratch.BlockType.COMMAND,
+                        text: 'image smoothing [ENABLED]',
+                        arguments: {
+                            ENABLED: {
+                                type: Scratch.ArgumentType.STRING,
+                                menu: 'ONOFF',
+                                defaultValue: 'on'
+                            }
                         }
                     },
                     {
@@ -9614,6 +9819,13 @@ Enjoy!! :D
             refreshImageTexts();
         }
 
+        setImageSmoothing(args) {
+            const smoothing = Scratch.Cast.toString(args.ENABLED).toLowerCase() === 'on';
+            if (globalImageSmoothing === smoothing) return;
+            globalImageSmoothing = smoothing;
+            refreshImageCharacterCache();
+        }
+
         imageMarkup(args) {
             const name = Scratch.Cast.toString(args.NAME).trim();
             if (!name || /[{}]/.test(name)) return '';
@@ -9626,7 +9838,8 @@ Enjoy!! :D
                 version: 1,
                 images: Object.assign({}, globalImageDictionary),
                 sizes: Object.fromEntries(globalImageSizes),
-                defaultSize: globalDefaultImageSize
+                defaultSize: globalDefaultImageSize,
+                imageSmoothing: globalImageSmoothing
             });
         }
 
@@ -9636,6 +9849,7 @@ Enjoy!! :D
                 try { input = JSON.parse(input); } catch (e) { return; }
             }
             if (!input || typeof input !== 'object' || Array.isArray(input) || !input.images || typeof input.images !== 'object' || Array.isArray(input.images)) return;
+            globalImageSmoothing = typeof input.imageSmoothing === 'boolean' ? input.imageSmoothing : true;
             const next = {};
             for (const name of Object.keys(input.images)) {
                 const parts = typeof input.images[name] === 'string' ? imageReferenceParts(input.images[name]) : null;

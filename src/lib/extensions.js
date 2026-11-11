@@ -51,7 +51,6 @@ export default [
         banner: "Gen1x/iris-text.avif",
         isGitHub: true,
         creator: "Gen1xLol",
-        tags: ["new"],
         notes: "New thumbnail by CubeyCreator",
     },
     {
@@ -68,7 +67,6 @@ export default [
         banner: "Gen1x/lighting.avif",
         isGitHub: true,
         creator: "Gen1xLol",
-        tags: ["new"],
     },
     {
         name: "3D Math",
@@ -121,7 +119,7 @@ export default [
         creator: "AndrewScripter587",
         creatorAlias: "AndrewGaming587",
         isGitHub: true,
-        tags: ["type", "data", "utility", "new", "large"],
+        tags: ["type", "data", "utility", "large"],
     },
     {
         name: "Extra Timers",
@@ -272,7 +270,7 @@ export default [
         creator: "Dicuo",
         creatorAlias: "Div",
         isGitHub: true,
-        tags: ["new", "type", "3D", "data", "utility", "math"]
+        tags: ["type", "3D", "data", "utility", "math"]
     },
     {
         name: "Blobs",
@@ -617,7 +615,6 @@ export default [
         documentation: "ODE",
         creator: "NishiOwO",
         isGitHub: true,
-        tags: ["new"],
     },
     {
         name: "TurboSynth",
@@ -627,7 +624,6 @@ export default [
         documentation: "TurboSynth",
         creator: "NishiOwO",
         isGitHub: true,
-        tags: ["new"],
     },
     {
         name: "Libxmp",
@@ -636,7 +632,6 @@ export default [
         banner: "NishiOwO/libxmp.svg",
         creator: "NishiOwO",
         isGitHub: true,
-        tags: ["new"],
     },
     /*{
         name: "PenguinAI",

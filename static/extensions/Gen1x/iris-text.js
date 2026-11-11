@@ -7634,12 +7634,12 @@ Enjoy!! :D
                         opcode: 'setSmoothing',
                         blockType: Scratch.BlockType.COMMAND,
                         text: 'smoothing [ENABLED]',
+                        hideFromPalette: true,
                         arguments: {
                             ENABLED: {
                                 type: Scratch.ArgumentType.STRING,
                                 menu: 'ONOFF',
-                                defaultValue: 'on',
-                                hideFromPalette: true
+                                defaultValue: 'on'
                             }
                         }
                     },

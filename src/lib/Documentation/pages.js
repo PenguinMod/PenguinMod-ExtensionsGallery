@@ -45,6 +45,7 @@ import ProjectInterfaces from "./ProjectInterfaces.md?raw";
 // Date Format V2
 import DateFormatV2 from "./DateFormatV2.md?raw";
 
+import PageComplexNumbers from "./SalagataComplex.md?raw";
 // ODE
 import ODE from "./ODE.md?raw";
 
@@ -94,6 +95,8 @@ export default {
 
     "DateFormatV2": DateFormatV2,
 
+    // Complex Numebrs
+    "SalagataComplex": PageComplexNumbers,
     // ODE
     "ODE": ODE,
 

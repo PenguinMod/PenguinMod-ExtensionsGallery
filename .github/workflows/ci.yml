@@ -18,6 +18,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: install node
         uses: actions/setup-node@v4
@@ -25,6 +27,8 @@ jobs:
           node-version: 22.x
 
       - name: validate extensions.js and extension code
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
         run: node .github/scripts/validate_extensions.cjs
 
   build:

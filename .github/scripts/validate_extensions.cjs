@@ -3,6 +3,7 @@ const os = require('os');
 const path = require('path');
 const vm = require('vm');
 const { pathToFileURL } = require('url');
+const { execFileSync } = require('child_process');
 
 const FILE = 'src/lib/extensions.js';
 const CODE_DIR = 'static/extensions';
@@ -29,6 +30,24 @@ function safeResolve(baseDir, rel) {
   const base = path.resolve(baseDir);
   const full = path.resolve(base, rel);
   return full.startsWith(base + path.sep) ? full : null;
+}
+
+function changedFiles() {
+  const base =
+    process.env.BASE_SHA ||
+    (process.env.GITHUB_BASE_REF ? `origin/${process.env.GITHUB_BASE_REF}` : null);
+  if (!base) return null;
+  try {
+    const out = execFileSync(
+      'git',
+      ['diff', '--name-only', '--diff-filter=AMR', `${base}...HEAD`, '--', CODE_DIR],
+      { encoding: 'utf8' }
+    );
+    return out.split('\n').filter(Boolean).map((f) => path.resolve(f));
+  } catch (err) {
+    console.log(`Could not diff against ${base}: ${err.message}`);
+    return null;
+  }
 }
 
 async function loadExtensions() {
@@ -93,9 +112,12 @@ async function loadExtensions() {
     }
   });
 
-  for (const f of walk(CODE_DIR)) {
-    if (f.endsWith('.js') && !referenced.has(path.resolve(f))) {
-      warn(`Extension not registered in ${FILE}`, f);
+  const changed = changedFiles();
+  if (changed) {
+    for (const f of changed) {
+      if (f.endsWith('.js') && !referenced.has(f)) {
+        warn(`Extension not registered in ${FILE}`, path.relative(process.cwd(), f));
+      }
     }
   }
 

@@ -3989,7 +3989,7 @@ Enjoy!! :D
     }
 
     function computeCharAnimationsFrame(flushNow) {
-        if (!charAnimations.size) return;
+        if (!charAnimations.size || charAnimationsPausedAt !== null) return;
         const t = nowMs();
         const dirtyStates = new Map();
         const finishedTargets = [];
@@ -7357,8 +7357,8 @@ Enjoy!! :D
             if (runtime.ext_irisText && runtime.ext_irisText !== this) {
                 runtime.removeListener('targetWasRemoved', runtime.ext_irisText._onTargetRemoved);
                 runtime.removeListener('PROJECT_STOP_ALL', runtime.ext_irisText._onProjectStopAll);
-                runtime.removeListener('RUNTIME_PAUSED', runtime.ext_irisText._onRuntimePaused);
-                runtime.removeListener('RUNTIME_UNPAUSED', runtime.ext_irisText._onRuntimeUnpaused);
+                if (typeof runtime.ext_irisText._onRuntimePaused === 'function') runtime.removeListener('RUNTIME_PAUSED', runtime.ext_irisText._onRuntimePaused);
+                if (typeof runtime.ext_irisText._onRuntimeUnpaused === 'function') runtime.removeListener('RUNTIME_UNPAUSED', runtime.ext_irisText._onRuntimeUnpaused);
                 if (typeof runtime.ext_irisText._destroyGlyphWorker === 'function') runtime.ext_irisText._destroyGlyphWorker();
             }
             runtime.on('targetWasRemoved', this._onTargetRemoved);

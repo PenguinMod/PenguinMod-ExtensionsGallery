@@ -3793,8 +3793,10 @@ Enjoy!! :D
     const charAnimationsByTarget = new Map();
     let animationTickerInstalled = false;
     let charAnimTokenSeq = 1;
+    let charAnimationsPausedAt = null;
 
     function addCharAnimation(targetId, key, anim) {
+        if (charAnimationsPausedAt !== null) anim.startTime = charAnimationsPausedAt;
         charAnimations.set(key, anim);
         let set = charAnimationsByTarget.get(targetId);
         if (!set) {
@@ -3959,7 +3961,7 @@ Enjoy!! :D
     let animationFrameId = null;
 
     function ensureAnimationTicker() {
-        if (animationFrameId !== null || !charAnimations.size) return;
+        if (animationFrameId !== null || !charAnimations.size || charAnimationsPausedAt !== null) return;
         animationFrameId = requestAnimationFrame(stepCharAnimations);
     }
 
@@ -3979,7 +3981,7 @@ Enjoy!! :D
 
     function stepCharAnimations() {
         animationFrameId = null;
-        if (!charAnimations.size) return;
+        if (!charAnimations.size || charAnimationsPausedAt !== null) return;
         if (!drawsAreActive()) computeCharAnimationsFrame(true);
         if (charAnimations.size && animationFrameId === null) {
             animationFrameId = requestAnimationFrame(stepCharAnimations);
@@ -3987,7 +3989,7 @@ Enjoy!! :D
     }
 
     function computeCharAnimationsFrame(flushNow) {
-        if (!charAnimations.size) return;
+        if (!charAnimations.size || charAnimationsPausedAt !== null) return;
         const t = nowMs();
         const dirtyStates = new Map();
         const finishedTargets = [];
@@ -7350,13 +7352,21 @@ Enjoy!! :D
         constructor() {
             this._onTargetRemoved = this._onTargetRemoved.bind(this);
             this._onProjectStopAll = this._onProjectStopAll.bind(this);
+            this._onRuntimePaused = this._onRuntimePaused.bind(this);
+            this._onRuntimeUnpaused = this._onRuntimeUnpaused.bind(this);
             if (runtime.ext_irisText && runtime.ext_irisText !== this) {
                 runtime.removeListener('targetWasRemoved', runtime.ext_irisText._onTargetRemoved);
                 runtime.removeListener('PROJECT_STOP_ALL', runtime.ext_irisText._onProjectStopAll);
+                if (typeof runtime.ext_irisText._onRuntimePaused === 'function') runtime.removeListener('RUNTIME_PAUSED', runtime.ext_irisText._onRuntimePaused);
+                if (typeof runtime.ext_irisText._onRuntimeUnpaused === 'function') runtime.removeListener('RUNTIME_UNPAUSED', runtime.ext_irisText._onRuntimeUnpaused);
                 if (typeof runtime.ext_irisText._destroyGlyphWorker === 'function') runtime.ext_irisText._destroyGlyphWorker();
             }
             runtime.on('targetWasRemoved', this._onTargetRemoved);
             runtime.on('PROJECT_STOP_ALL', this._onProjectStopAll);
+            if (Scratch.extensions.isPenguinMod) {
+                runtime.on('RUNTIME_PAUSED', this._onRuntimePaused);
+                runtime.on('RUNTIME_UNPAUSED', this._onRuntimeUnpaused);
+            }
             runtime.ext_irisText = this;
             if (typeof runtime.registerCompiledExtensionBlocks === 'function') {
                 runtime.registerCompiledExtensionBlocks('irisText', this.getCompileInfo());
@@ -7364,6 +7374,20 @@ Enjoy!! :D
             ensurePreDrawHook();
             startGlyphWorker();
             startupWarmup();
+        }
+
+        _onRuntimePaused() {
+            if (charAnimationsPausedAt !== null) return;
+            charAnimationsPausedAt = nowMs();
+            releaseAnimationTicker();
+        }
+
+        _onRuntimeUnpaused() {
+            if (charAnimationsPausedAt === null) return;
+            const pausedDuration = nowMs() - charAnimationsPausedAt;
+            for (const anim of charAnimations.values()) anim.startTime += pausedDuration;
+            charAnimationsPausedAt = null;
+            ensureAnimationTicker();
         }
 
         setPerfEnabled(enabled) {

@@ -643,6 +643,15 @@ export default [
         creator: "NishiOwO",
         isGitHub: true,
     },
+        {
+        name: "Flash Player",
+        description: "Play SWF and FLA Flash files directly inside your PenguinMod projects.",
+        code: "mateo_studios/flashplayer.js",
+        banner: "mateo_studios/flashplayer.svg",
+        creator: "mateo_studios",
+        isGitHub: false,
+    },
+
     /*{
         name: "PenguinAI",
         description: "Talk to AI! Use Models like DALL-E-3, GPT, LLama, Claude, and more!",

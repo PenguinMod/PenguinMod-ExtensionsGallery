@@ -4522,9 +4522,6 @@ Enjoy!! :D
                 if (!loadedDocumentFonts.has(family)) fontsPending = true;
                 ensureDocumentFont(family);
             }
-            if (fontsPending && !state.hasPaintedOnce) {
-                return;
-            }
             ensureFontCoverage(richChars);
             const layoutStart = perfStart();
             const measured = measureRichText(glyphMeasureCtx, richChars, state);

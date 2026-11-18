@@ -40,8 +40,8 @@
     getInfo() {
       return {
         id: 'mateostudiosruffle',
-        name: 'ruffle',
-        color1: '#cc0000',
+        name: 'Ruffle',
+        color1: '#393e79',
         blocks: [
           {
             opcode: 'whenSWFLoaded',

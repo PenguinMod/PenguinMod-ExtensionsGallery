@@ -7,7 +7,7 @@
 (function(Scratch) {
   'use strict';
 
-  class FlashExtension {
+  class RuffleExtension {
     constructor() {
       this.player = null;
       this.overlay = null;
@@ -23,8 +23,8 @@
                 this.ruffleLoaded = true;
                 return;
             }
-            const base = 'https://' + ['extensions', 'penguinmod', 'com'].join('.') + '/extensions/mateo_studios/ruffle-lib/';
-            window.RufflePlayer = window.RufflePlayer || {};
+            const base = 'https://extensions.penguinmod.com';
+            window.RufflePlayer ??= {};
             window.RufflePlayer.config = {
                 publicPath: base
             };
@@ -205,7 +205,7 @@
           this.removeSWF();
           this.flaName = file.name;
           this.fileType = '.fla';
-          Scratch.vm.runtime.startHats('mateostudiosflashplayer_whenSWFLoaded');
+          Scratch.vm.runtime.startHats('mateostudiosruffle_whenSWFLoaded');
           return;
         }
         if (!this.ruffleLoaded) {
@@ -287,7 +287,7 @@
 
       this.player.load(source).then(() => {
         this.isPaused = false;
-        Scratch.vm.runtime.startHats('mateostudiosflashplayer_whenSWFLoaded');
+        Scratch.vm.runtime.startHats('mateostudiosruffle_whenSWFLoaded');
       });
     }
 
@@ -296,7 +296,7 @@
         this.player.pause();
         if (!this.isPaused) {
           this.isPaused = true;
-          Scratch.vm.runtime.startHats('mateostudiosflashplayer_whenSWFPaused');
+          Scratch.vm.runtime.startHats('mateostudiosruffle_whenSWFPaused');
         }
       }
     }
@@ -306,7 +306,7 @@
         this.player.play();
         if (this.isPaused) {
           this.isPaused = false;
-          Scratch.vm.runtime.startHats('mateostudiosflashplayer_whenSWFResumed');
+          Scratch.vm.runtime.startHats('mateostudiosruffle_whenSWFResumed');
         }
       }
     }
@@ -339,5 +339,5 @@
     }
   }
 
-Scratch.extensions.register(new FlashExtension());
+Scratch.extensions.register(new RuffleExtension());
 })(Scratch);

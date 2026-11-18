@@ -4209,6 +4209,70 @@ Enjoy!! :D
         return op.x + reach >= cull.x0 && op.x - reach <= cull.x1 && op.y + reach >= cull.y0 && op.y - reach <= cull.y1;
     }
 
+    function computeCullBounds(state, paintOps, cull, docW, docH, textWidth, textHeight, textBoxOffsetX, originX, originY) {
+        let minX = Infinity;
+        let minY = Infinity;
+        let maxX = -Infinity;
+        let maxY = -Infinity;
+
+        const backgroundBorderSize = Math.max(0, Scratch.Cast.toNumber(state.textBackgroundBorder.size));
+        if (state.textBackground.enabled || backgroundBorderSize > 0) {
+            const padding = Math.max(0, Scratch.Cast.toNumber(state.textBackground.padding));
+            const halfWidth = textWidth / 2 + padding + backgroundBorderSize;
+            const halfHeight = textHeight / 2 + padding + backgroundBorderSize;
+            minX = originX + textBoxOffsetX - halfWidth;
+            maxX = originX + textBoxOffsetX + halfWidth;
+            minY = originY - halfHeight;
+            maxY = originY + halfHeight;
+        }
+
+        for (let i = 0; i < paintOps.length; i++) {
+            const op = paintOps[i];
+            if (op.text === '\u00A0' || op.text === '') continue;
+            const shape = getGlyphShapeForFontStyle(op.text, op.font);
+            if (!shape) continue;
+
+            const dimensionScaleX = op.dimensionScaleX || 1;
+            const dimensionScaleY = op.dimensionScaleY || 1;
+            const quadScale = op.scale == null ? 1 : op.scale;
+            const width = shape.canvas.width / destScale;
+            const height = shape.canvas.height / destScale;
+            const pivotX = width / 2;
+            const pivotY = height / 2;
+            const drawX = op.x - (shape.baselineOriginXEm + shape.advance / 2) * dimensionScaleX;
+            const drawY = op.y + (shape.fontAscentEm - shape.fontDescentEm) / 2 - shape.baselineOriginYEm * dimensionScaleY;
+            const rotation = -(op.rotation || 0) * Math.PI / 180;
+            const cos = Math.cos(rotation);
+            const sin = Math.sin(rotation);
+
+            const shadowExtent = op.shadow ? shadowReach(op.shadow) : cull.globalShadowReach;
+            const borderExtent = op.border && Scratch.Cast.toNumber(op.border.size) > 0 ? borderReach(op.border) : cull.globalBorderReach;
+            let reach = Math.max(shadowExtent, borderExtent);
+            if (op.blur > 0) reach += (op.blur / 100) * op.font['font-size'] * 2.5;
+            reach *= Math.max(1, Math.abs(quadScale), dimensionScaleX, dimensionScaleY);
+
+            for (let corner = 0; corner < 4; corner++) {
+                const relX = (corner & 1 ? width * dimensionScaleX : 0) - pivotX;
+                const relY = (corner & 2 ? height * dimensionScaleY : 0) - pivotY;
+                const x = drawX + pivotX + (relX * cos - relY * sin) * quadScale;
+                const y = drawY + pivotY + (relX * sin + relY * cos) * quadScale;
+                if (x - reach < minX) minX = x - reach;
+                if (x + reach > maxX) maxX = x + reach;
+                if (y - reach < minY) minY = y - reach;
+                if (y + reach > maxY) maxY = y + reach;
+            }
+        }
+
+        const x0 = Math.max(0, minX);
+        const y0 = Math.max(0, minY);
+        const x1 = Math.min(docW, maxX);
+        const y1 = Math.min(docH, maxY);
+        if (x1 > x0 && y1 > y0) {
+            return { x0, y0, x1, y1, anchorX: cull.anchorX, anchorY: cull.anchorY };
+        }
+        return { x0: 0, y0: 0, x1: docW, y1: docH, anchorX: cull.anchorX, anchorY: cull.anchorY };
+    }
+
     function cullNeedsRerender(target, state) {
         const rendered = state.cullRegion;
         if (!rendered) return false;
@@ -4917,7 +4981,7 @@ Enjoy!! :D
 
         state.renderQueued = false;
         state.cullRegion = cullInfo;
-        state.cullBounds = cull ? { docW: cull.docW, docH: cull.docH, anchorX: cull.anchorX, anchorY: cull.anchorY } : null;
+        state.cullBounds = cull ? computeCullBounds(state, paintOps, cull, docW, docH, textBoxWidth, totalHeight, textBoxOffsetX, originX, originY) : null;
         const compositeStart = perfStart();
         compositeGlyphsAndPush(target, state, paintOps, docW, docH, textBoxWidth, totalHeight, textBoxOffsetX, originX, originY, anchorY, cull);
         perfEnd('render.composite', compositeStart);
@@ -4960,6 +5024,7 @@ Enjoy!! :D
         state.maskStageTransform = null;
         if (cull && cull.empty) {
             pushCanvasToDrawable(target, getEmptyCullCanvas(), docW, docH, originX, anchorY != null ? anchorY : originY, destScale);
+            releaseStateOutputCanvas(state);
             return;
         }
         const pinnedKeys = new Set();
@@ -5753,10 +5818,28 @@ Enjoy!! :D
     let glCompositorFailed = false;
     let webglUnavailableLogged = false;
 
+    const stateOutputCanvases = new WeakMap();
+
+    function getStateOutputCanvas(state) {
+        let output = stateOutputCanvases.get(state);
+        if (!output) {
+            const canvas = document.createElement('canvas');
+            output = { canvas, ctx: canvas.getContext('2d') };
+            stateOutputCanvases.set(state, output);
+        }
+        return output;
+    }
+
+    function releaseStateOutputCanvas(state) {
+        const output = stateOutputCanvases.get(state);
+        if (!output) return;
+        stateOutputCanvases.delete(state);
+        output.canvas.width = 0;
+        output.canvas.height = 0;
+    }
+
     function createGLCompositor() {
         const canvas = document.createElement('canvas');
-        const outputCanvas = document.createElement('canvas');
-        const outputCtx = outputCanvas.getContext('2d');
         canvas.width = 1;
         canvas.height = 1;
         const gl = canvas.getContext('webgl2', {
@@ -6174,7 +6257,7 @@ Enjoy!! :D
         }
 
         return {
-            gl, canvas, outputCanvas, outputCtx, quadVao, maxSide,
+            gl, canvas, quadVao, maxSide,
             renderRatio: 1,
             offX: 0, offY: 0,
             fx: null, fxX: 0, fxY: 0, fxW: 1, fxH: 1, fxShape: null,
@@ -7092,17 +7175,18 @@ Enjoy!! :D
         const srcEndY = Math.min(pixelH, Math.ceil(cropEndY * ratio - 1e-6));
         const outW = Math.max(1, srcEndX - srcX);
         const outH = Math.max(1, srcEndY - srcY);
-        if (comp.outputCanvas.width !== outW || comp.outputCanvas.height !== outH) {
-            comp.outputCanvas.width = outW;
-            comp.outputCanvas.height = outH;
+        const output = getStateOutputCanvas(state);
+        if (output.canvas.width !== outW || output.canvas.height !== outH) {
+            output.canvas.width = outW;
+            output.canvas.height = outH;
         }
-        comp.outputCtx.setTransform(1, 0, 0, 1, 0, 0);
-        comp.outputCtx.clearRect(0, 0, outW, outH);
-        comp.outputCtx.drawImage(comp.canvas, srcX, srcY, outW, outH, 0, 0, outW, outH);
+        output.ctx.setTransform(1, 0, 0, 1, 0, 0);
+        output.ctx.clearRect(0, 0, outW, outH);
+        output.ctx.drawImage(comp.canvas, srcX, srcY, outW, outH, 0, 0, outW, outH);
         lastCompositeCrop.x = regionX + srcX / renderScale;
         lastCompositeCrop.y = regionY + srcY / renderScale;
         lastCompositeCrop.scale = renderScale;
-        return comp.outputCanvas;
+        return output.canvas;
     }
 
     function drawUnderlineSegmentsGL(comp, glyph, glyphX, glyphY, startX, endX, y, lineWidth, color, alpha) {
@@ -7135,55 +7219,40 @@ Enjoy!! :D
         }
     }
 
-    function getVirtualTextBounds(state, drawable) {
+    function buildVirtualHull(state, anchorX, anchorY) {
         const info = state.cullBounds;
-        if (!info || !drawable._position || !drawable._scale || !Number.isFinite(drawable._direction)) return null;
-        const scaleX = drawable._scale[0] / 100;
-        const scaleY = drawable._scale[1] / 100;
-        if (!Number.isFinite(scaleX) || !Number.isFinite(scaleY)) return null;
-        const angle = (90 - drawable._direction) * Math.PI / 180;
-        const cos = Math.cos(angle);
-        const sin = Math.sin(angle);
-        let left = Infinity;
-        let right = -Infinity;
-        let bottom = Infinity;
-        let top = -Infinity;
-        for (let corner = 0; corner < 4; corner++) {
-            const vx = ((corner & 1 ? info.docW : 0) - info.anchorX) * scaleX;
-            const vy = -((corner & 2 ? info.docH : 0) - info.anchorY) * scaleY;
-            const x = drawable._position[0] + vx * cos - vy * sin;
-            const y = drawable._position[1] + vx * sin + vy * cos;
-            if (x < left) left = x;
-            if (x > right) right = x;
-            if (y < bottom) bottom = y;
-            if (y > top) top = y;
-        }
-        if (!Number.isFinite(left) || !Number.isFinite(right) || !Number.isFinite(bottom) || !Number.isFinite(top)) return null;
-        return { left, right, bottom, top };
+        if (!info) return null;
+        const offsetX = anchorX - info.anchorX - 0.5;
+        const offsetY = anchorY - info.anchorY - 0.5;
+        const x0 = info.x0 + offsetX;
+        const x1 = info.x1 + offsetX;
+        const y0 = info.y0 + offsetY;
+        const y1 = info.y1 + offsetY;
+        return [[x0, y0], [x0, y1], [x1, y1], [x1, y0]];
     }
 
-    function installCullFenceBounds(skin, state) {
-        skin.getFenceBounds = function(drawable, result) {
-            const rect = drawable.getAABB(result);
-            const bounds = getVirtualTextBounds(state, drawable);
-            if (bounds) rect.initFromBounds(bounds.left, bounds.right, bounds.bottom, bounds.top);
-            return rect;
+    function cloneHull(hull) {
+        return hull.map(point => [point[0], point[1]]);
+    }
+
+    function installVirtualHull(renderer) {
+        if (renderer.irisHullInstalled) return;
+        const original = renderer._getConvexHullPointsForDrawable;
+        if (typeof original !== 'function') return;
+        renderer.irisHullInstalled = true;
+        renderer._getConvexHullPointsForDrawable = function(drawableID) {
+            const drawable = this._allDrawables[drawableID];
+            const skin = drawable && drawable.skin;
+            if (skin && skin.irisVirtualHull) return cloneHull(skin.irisVirtualHull);
+            return original.call(this, drawableID);
         };
     }
 
-    // the reason this exists is because culling was interfering with the Scratch renderer. i couldnt find another way of fixing it... so this is what you get
-    function installCullDrawableBounds(target, drawable) {
-        if (drawable.irisCullBounds) return;
-        const proto = Object.getPrototypeOf(drawable);
-        if (!proto || typeof proto.getFastBounds !== 'function' || typeof proto.getAABB !== 'function') return;
-        drawable.irisCullBounds = true;
-        drawable.getFastBounds = function(result) {
-            const state = target.getCustomState(stateKey);
-            const bounds = state && state.cullBounds ? getVirtualTextBounds(state, this) : null;
-            if (!bounds) return proto.getFastBounds.call(this, result);
-            const rect = proto.getAABB.call(this, result);
-            rect.initFromBounds(bounds.left, bounds.right, bounds.bottom, bounds.top);
-            return rect;
+    function installCullFenceBounds(skin) {
+        skin.getFenceBounds = function(drawable, result) {
+            if (!this.irisVirtualHull) return drawable.getAABB(result);
+            if (drawable.needsConvexHullPoints()) drawable.setConvexHullPoints(cloneHull(this.irisVirtualHull));
+            return drawable.getBounds(result);
         };
     }
 
@@ -7212,6 +7281,8 @@ Enjoy!! :D
             anchorX != null ? anchorX : width / 2,
             anchorY != null ? anchorY : height / 2
         ];
+        const virtualHull = buildVirtualHull(state, rotationCenter[0], rotationCenter[1]);
+        if (virtualHull) installVirtualHull(renderer);
         canvas.reusable = false;
 
         if (state.skinId === null) {
@@ -7219,7 +7290,7 @@ Enjoy!! :D
             const skinId = renderer._nextSkinId++;
             const skin = new BitmapSkin(skinId, renderer);
             installLinearFiltering(skin, state);
-            installCullFenceBounds(skin, state);
+            installCullFenceBounds(skin);
             skin.setBitmap(canvas, resolution || destScale, rotationCenter);
             renderer._allSkins[skinId] = skin;
             state.skinId = skinId;
@@ -7230,15 +7301,16 @@ Enjoy!! :D
                 installLinearFiltering(current, state);
             }
             if (current && !Object.prototype.hasOwnProperty.call(current, 'getFenceBounds')) {
-                installCullFenceBounds(current, state);
+                installCullFenceBounds(current);
             }
         }
         const drawable = renderer._allDrawables[target.drawableID];
-        if (drawable && state.cullBounds) installCullDrawableBounds(target, drawable);
         const skin = renderer._allSkins[state.skinId];
+        if (skin) skin.irisVirtualHull = virtualHull;
         if (!drawable || drawable.skin !== skin) {
             renderer.updateDrawableSkinId(target.drawableID, state.skinId);
         }
+        if (drawable && virtualHull) drawable.setConvexHullPoints(cloneHull(virtualHull));
         runtime.requestRedraw();
     }
 
@@ -7256,6 +7328,11 @@ Enjoy!! :D
         const costume = target.getCostumes()[target.currentCostume];
         if (costume && runtime.renderer) {
             runtime.renderer.updateDrawableSkinId(target.drawableID, costume.skinId);
+            if (state.skinId !== null) {
+                if (runtime.renderer._allSkins[state.skinId]) runtime.renderer.destroySkin(state.skinId);
+                state.skinId = null;
+            }
+            releaseStateOutputCanvas(state);
             runtime.requestRedraw();
         }
     }
@@ -7543,6 +7620,7 @@ Enjoy!! :D
                 runtime.renderer.destroySkin(state.skinId);
                 state.skinId = null;
             }
+            if (state) releaseStateOutputCanvas(state);
             clearCharAnimationsForTarget(target.id);
             if (!charAnimations.size) releaseAnimationTicker();
         }

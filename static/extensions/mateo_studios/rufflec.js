@@ -102,7 +102,7 @@
           {
             opcode: 'removeSWF',
             blockType: Scratch.BlockType.COMMAND,
-            text: 'remove Flash player and screen'
+            text: 'remove Ruffle player and screen'
           },
           {
             opcode: 'getSWFName',

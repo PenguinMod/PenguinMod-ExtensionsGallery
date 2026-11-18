@@ -1,6 +1,6 @@
-// Name: Flash Player
-// ID: mateostudiosflashplayer
-// Description: Load and run Adobe Flash (.swf) files directly inside PenguinMod with playback controls and save data support.
+// Name: Ruffle
+// ID: mateostudiosruffle
+// Description: Load and run .swf files directly inside PenguinMod with playback controls and save data support.
 // By: mateo_studios
 // License: MIT
 
@@ -18,24 +18,29 @@
       this.isPaused = false;
       this.loadRuffle();
     }
+        loadRuffle() {
+            if (window.RufflePlayer) {
+                this.ruffleLoaded = true;
+                return;
+            }
+            const base = 'https://' + ['extensions', 'penguinmod', 'com'].join('.') + '/extensions/mateo_studios/ruffle-lib/';
+            window.RufflePlayer = window.RufflePlayer || {};
+            window.RufflePlayer.config = {
+                publicPath: base
+            };
+            const script = document.createElement('script');
+            script.src = base + 'ruffle.js';
+            script.onload = () => {
+                this.ruffleLoaded = true;
+            };
+            document.head.appendChild(script);
+        }
 
-    loadRuffle() {
-      if (window.RufflePlayer) {
-        this.ruffleLoaded = true;
-        return;
-      }
-      const script = document.createElement('script');
-      script.src = 'https://unpkg.com';
-      script.onload = () => {
-        this.ruffleLoaded = true;
-      };
-      document.head.appendChild(script);
-    }
 
     getInfo() {
       return {
-        id: 'mateostudiosflashplayer',
-        name: 'Flash Player',
+        id: 'mateostudiosruffle',
+        name: 'ruffle',
         color1: '#cc0000',
         blocks: [
           {

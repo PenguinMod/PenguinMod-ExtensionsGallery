@@ -198,6 +198,16 @@ export default [
         isGitHub: true,
     },
     {
+        name: "Spritesheeter",
+        description: "Manage Spritesheets with ease and no trouble.",
+        code: "MubiLop/spritesheeter.js",
+        banner: "MubiLop/spritesheeter.avif",
+        //documentation: "Spritesheeter",
+        creator: "cicerorph",
+        creatorAlias: "MubiLop",
+        isGitHub: true,
+    },
+    {
         name: "Big Decimal",
         description: "High precision operations. (Support decimals)",
         code: "qxsck/big-decimal.js",

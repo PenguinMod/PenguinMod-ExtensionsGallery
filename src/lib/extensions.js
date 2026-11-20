@@ -649,7 +649,7 @@ export default [
         code: "Joshuaknowsmaths/ASCIIfy.js",
         banner: "Joshuaknowsmaths/ASCIIfy.png",
         creator: "Joshuaknowsmaths",
-        isGitHub: true,
+        isGitHub: false,
     },
     /*{
         name: "PenguinAI",

@@ -105,14 +105,9 @@
             text: 'remove Ruffle player and screen'
           },
           {
-            opcode: 'getSWFName',
+            opcode: 'getFileName',
             blockType: Scratch.BlockType.REPORTER,
-            text: 'loaded SWF name'
-          },
-          {
-            opcode: 'getFLAName',
-            blockType: Scratch.BlockType.REPORTER,
-            text: 'loaded FLA name'
+            text: 'loaded File name'
           },
           {
             opcode: 'getFileType',
@@ -326,13 +321,13 @@
       }
     }
 
-    getSWFName() {
+    getFileName() {
       return this.fileType === '.swf' ? this.swfName : '';
+      return this.fileType === '.fla' ? this.flaName : '';
+      return '';
     }
 
-    getFLAName() {
-      return this.fileType === '.fla' ? this.flaName : '';
-    }
+  }
 
     getFileType() {
       return this.fileType;

@@ -10,7 +10,7 @@
     class ASCIIfy {
         getInfo() {
             return {
-                id: "asciify",
+                id: "joshuaknowsmaths_asciify",
                 name: "ASCIIfy",
                 color1: "#5265C9",
                 color2: "#4052AC",
@@ -18,15 +18,15 @@
                     {
                         opcode: "characterToID",
                         blockType: Scratch.BlockType.REPORTER,
-                        text: "character [CHARACTER] to Unicode ID with codepoint [CODEPOINT]",
+                        text: "character [CHARACTER] to Unicode ID at index [INDEX]",
                         arguments: {
                             CHARACTER: {
                                 type: Scratch.ArgumentType.STRING,
                                 defaultValue: "a"
                             },
-                            CODEPOINT: {
+                            INDEX: {
                                 type: Scratch.ArgumentType.STRING,
-                                menu: "codepointMenu",
+                                menu: "indexMenu",
                                 defaultValue: "first"
                             }
                         }
@@ -34,15 +34,15 @@
                     {
                         opcode: "idToCharacter",
                         blockType: Scratch.BlockType.REPORTER,
-                        text: "Unicode ID [ID] to character with codepoint [CODEPOINT]",
+                        text: "Unicode ID [ID] to character at index [INDEX]",
                         arguments: {
                             ID: {
                                 type: Scratch.ArgumentType.STRING,
                                 defaultValue: "97"
                             },
-                            CODEPOINT: {
+                            INDEX: {
                                 type: Scratch.ArgumentType.STRING,
-                                menu: "codepointMenu",
+                                menu: "indexMenu",
                                 defaultValue: "all"
                             }
                         }
@@ -86,7 +86,7 @@
                     }
                 ],
                 menus: {
-                    codepointMenu: {
+                    indexMenu: {
                         acceptReporters: true,
                         items: ["first", "last", "all"]
                     }
@@ -99,18 +99,23 @@
             if (!characters.length) return "";
 
             const codepoints = characters.map(character => character.codePointAt(0));
-            const choice = String(args.CODEPOINT).toLowerCase();
+            const index = String(args.INDEX).toLowerCase();
 
-            if (choice === "first") return codepoints[0];
-            if (choice === "last") return codepoints[codepoints.length - 1];
-            if (choice === "all") return codepoints.join("-");
-
-            const index = Math.floor(Number(args.CODEPOINT)) - 1;
-            if (!Number.isFinite(index) || index < 0 || index >= codepoints.length) {
-                return "";
+            switch (index) {
+                case "first":
+                    return codepoints[0];
+                case "last":
+                    return codepoints[codepoints.length - 1];
+                case "all":
+                    return codepoints.join("-");
+                default: {
+                    const position = Math.floor(Number(index)) - 1;
+                    if (!Number.isFinite(position) || position < 0 || position >= codepoints.length) {
+                        return "";
+                    }
+                    return codepoints[position];
+                }
             }
-
-            return codepoints[index];
         }
 
         idToCharacter(args) {
@@ -127,24 +132,23 @@
 
             if (!isValid) return "";
 
-            const choice = String(args.CODEPOINT).toLowerCase();
-            let selected;
+            const index = String(args.INDEX).toLowerCase();
 
-            if (choice === "first") {
-                selected = [codepoints[0]];
-            } else if (choice === "last") {
-                selected = [codepoints[codepoints.length - 1]];
-            } else if (choice === "all") {
-                selected = codepoints;
-            } else {
-                const index = Math.floor(Number(args.CODEPOINT)) - 1;
-                if (!Number.isFinite(index) || index < 0 || index >= codepoints.length) {
-                    return "";
+            switch (index) {
+                case "first":
+                    return String.fromCodePoint(codepoints[0]);
+                case "last":
+                    return String.fromCodePoint(codepoints[codepoints.length - 1]);
+                case "all":
+                    return codepoints.map(id => String.fromCodePoint(id)).join("");
+                default: {
+                    const position = Math.floor(Number(index)) - 1;
+                    if (!Number.isFinite(position) || position < 0 || position >= codepoints.length) {
+                        return "";
+                    }
+                    return String.fromCodePoint(codepoints[position]);
                 }
-                selected = [codepoints[index]];
             }
-
-            return selected.map(id => String.fromCodePoint(id)).join("");
         }
 
         characterAt(args) {

@@ -1219,6 +1219,7 @@ Enjoy!! :D
         if (!state) {
             state = defaultState();
             target.setCustomState(stateKey, state);
+            installFencePatch(runtime.renderer);
         } else if (!state.iiMigrated) {
             const defaults = defaultState();
             state.textShadow = Object.assign(defaults.textShadow, state.textShadow || {});
@@ -4333,10 +4334,36 @@ Enjoy!! :D
         }
     }
 
+    function repairSkinBindings() {
+        const renderer = runtime.renderer;
+        if (!renderer) return;
+        const targets = runtime.targets;
+        for (let i = 0; i < targets.length; i++) {
+            const target = targets[i];
+            const state = target.getCustomState(stateKey);
+            if (!state || !state.visible || state.skinId === null) continue;
+            const drawable = renderer._allDrawables[target.drawableID];
+            if (!drawable) continue;
+            const skin = renderer._allSkins[state.skinId];
+            if (!skin) {
+                state.skinId = null;
+                state.paintFingerprint = null;
+                state.paintDirty = true;
+                scheduleRender(target);
+                continue;
+            }
+            if (drawable.skin === skin) continue;
+            renderer.updateDrawableSkinId(target.drawableID, state.skinId);
+            if (skin.irisVirtualHull) drawable.setConvexHullPoints(cloneHull(skin.irisVirtualHull));
+            runtime.requestRedraw();
+        }
+    }
+
     function preDrawUpdate() {
         lastDrawAt = performance.now();
         refreshNativeResolutionTargets();
         if (charAnimations.size) computeCharAnimationsFrame(false);
+        repairSkinBindings();
         flushPendingRenders();
         refreshCulledTargets();
         refreshStageMappedMaskTargets();
@@ -7248,11 +7275,28 @@ Enjoy!! :D
         };
     }
 
-    function installCullFenceBounds(skin) {
-        skin.getFenceBounds = function(drawable, result) {
-            if (!this.irisVirtualHull) return drawable.getAABB(result);
-            if (drawable.needsConvexHullPoints()) drawable.setConvexHullPoints(cloneHull(this.irisVirtualHull));
-            return drawable.getBounds(result);
+    function isTextDrawable(renderer, drawableID) {
+        const drawable = renderer._allDrawables[drawableID];
+        if (!drawable) return false;
+        let target = drawable.irisTarget;
+        if (!target || target.drawableID !== drawableID) {
+            target = runtime.targets.find(candidate => candidate.drawableID === drawableID) || null;
+            drawable.irisTarget = target;
+            if (!target) return false;
+        }
+        if (target.getCustomState(stateKey)) return true;
+        const original = target.sprite && target.sprite.clones ? target.sprite.clones[0] : null;
+        return !!original && original !== target && !!original.getCustomState(stateKey);
+    }
+
+    function installFencePatch(renderer) {
+        if (!renderer || renderer.irisFenceInstalled) return;
+        const original = renderer.getFencedPositionOfDrawable;
+        if (typeof original !== 'function') return;
+        renderer.irisFenceInstalled = true;
+        renderer.getFencedPositionOfDrawable = function(drawableID, position) {
+            if (isTextDrawable(this, drawableID)) return [position[0], position[1]];
+            return original.call(this, drawableID, position);
         };
     }
 
@@ -7290,7 +7334,6 @@ Enjoy!! :D
             const skinId = renderer._nextSkinId++;
             const skin = new BitmapSkin(skinId, renderer);
             installLinearFiltering(skin, state);
-            installCullFenceBounds(skin);
             skin.setBitmap(canvas, resolution || destScale, rotationCenter);
             renderer._allSkins[skinId] = skin;
             state.skinId = skinId;
@@ -7299,9 +7342,6 @@ Enjoy!! :D
             const current = renderer._allSkins[state.skinId];
             if (current && !Object.prototype.hasOwnProperty.call(current, 'useNearest')) {
                 installLinearFiltering(current, state);
-            }
-            if (current && !Object.prototype.hasOwnProperty.call(current, 'getFenceBounds')) {
-                installCullFenceBounds(current);
             }
         }
         const drawable = renderer._allDrawables[target.drawableID];
@@ -7442,6 +7482,7 @@ Enjoy!! :D
                 runtime.on('RUNTIME_UNPAUSED', this._onRuntimeUnpaused);
             }
             runtime.ext_irisText = this;
+            installFencePatch(runtime.renderer);
             if (typeof runtime.registerCompiledExtensionBlocks === 'function') {
                 runtime.registerCompiledExtensionBlocks('irisText', this.getCompileInfo());
             }

@@ -5389,7 +5389,7 @@ Enjoy!! :D
             if (op.text === '\u00A0' || op.text === '') continue;
 
             const shape = getGlyphShapeForFontStyle(op.text, op.font);
-            const rect = glyphDrawRectPx(op, shape);
+            const rect = glyphDrawRectPx({ ...op, x: op.baseX, y: op.baseY }, shape);
             const padYPx = Math.round((shape.baselineOriginYEm - shape.fontAscentEm) * destScale);
             const inkTop = rect.py + padYPx;
             const inkBottom = rect.py + rect.h - padYPx;
@@ -5403,7 +5403,7 @@ Enjoy!! :D
     }
 
     function getGradientSpans(state, paintOps, layoutDocKey) {
-        const cacheKey = layoutDocKey + '\u0003' + state.charMaskGeometryVersion;
+        const cacheKey = layoutDocKey + '\u0003' + state.charMaskGeometryVersion + '\u0003' + state.charTransformsVersion;
         if (state.gradientSpansCacheKey === cacheKey && state.gradientSpansCache) {
             return state.gradientSpansCache;
         }
@@ -6932,8 +6932,8 @@ Enjoy!! :D
                     } else {
                         const advanceCenterXEmForSpan = shape.baselineOriginXEm + shape.advance / 2;
                         const baselineYFromLineCenterForSpan = (shape.fontAscentEm - shape.fontDescentEm) / 2;
-                        const drawXEmForSpan = op.x - advanceCenterXEmForSpan * (op.dimensionScaleX || 1);
-                        const drawYEmForSpan = op.y + baselineYFromLineCenterForSpan - shape.baselineOriginYEm * (op.dimensionScaleY || 1);
+                        const drawXEmForSpan = (op.baseX != null ? op.baseX : op.x) - advanceCenterXEmForSpan * (op.dimensionScaleX || 1);
+                        const drawYEmForSpan = (op.baseY != null ? op.baseY : op.y) + baselineYFromLineCenterForSpan - shape.baselineOriginYEm * (op.dimensionScaleY || 1);
                         localOffsetXPx = Math.round(drawXEmForSpan * destScale) - span.originX;
                         localOffsetYPx = Math.round(drawYEmForSpan * destScale) - span.originY;
                     }

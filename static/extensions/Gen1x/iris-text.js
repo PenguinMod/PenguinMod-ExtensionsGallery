@@ -4336,7 +4336,6 @@ Enjoy!! :D
 
     function repairSkinBindings() {
         const renderer = runtime.renderer;
-        if (!renderer) return;
         const targets = runtime.targets;
         for (let i = 0; i < targets.length; i++) {
             const target = targets[i];
@@ -7320,7 +7319,6 @@ Enjoy!! :D
     function pushCanvasToDrawableNow(target, canvas, width, height, anchorX, anchorY, resolution) {
         const state = getState(target);
         const renderer = runtime.renderer;
-        if (!renderer) return;
         const rotationCenter = [
             anchorX != null ? anchorX : width / 2,
             anchorY != null ? anchorY : height / 2

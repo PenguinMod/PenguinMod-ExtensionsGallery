@@ -648,7 +648,7 @@ export default [
         description: "Login to your project with Reos.",
         code: "Reos/ReosAuth.js",
         banner: "Reos/ReosAuth_Banner.png",
-        creator: "tg1556",
+        creator: "ReosTech",
         creatorAlias: "Reos",
         isGitHub: true,
     },

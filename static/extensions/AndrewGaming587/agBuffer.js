@@ -1711,7 +1711,7 @@
                         return new imports.TypedInput(`vm.agBuffer.Type.cast(${compiler.descendInput(node.buffer).asUnknown()}).readString(${compiler.descendInput(node.index).asNumber()})`, imports.TYPE_STRING);
                     },
                     writeNullTerminatedString: (node, compiler, imports) => {
-                        compiler.source += `vm.agBuffer.Type.cast(${compiler.descendInput(node.buffer).asUnknown()}).writeString(${compiler.descendInput(node.index).asNumber()},${compiler.descendInput(node.string).asString()})`;
+                        compiler.source += `vm.agBuffer.Type.cast(${compiler.descendInput(node.buffer).asUnknown()}).writeString(${compiler.descendInput(node.index).asNumber()},${compiler.descendInput(node.string).asString()});`;
                     },
                     itemsOf: (node, compiler, imports) => {
                         return new imports.TypedInput(`new vm.agBuffer.Type(vm.agBuffer.Type.cast(${compiler.descendInput(node.buffer).asUnknown()}).arrayBuffer.slice(${compiler.descendInput(node.min).asNumber()},${compiler.descendInput(node.max).asNumber()}))`,imports.TYPE_STRING)

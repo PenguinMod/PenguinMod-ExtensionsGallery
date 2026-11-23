@@ -51,6 +51,9 @@ import ODE from "./ODE.md?raw";
 // TurboSynth
 import TurboSynth from "./TurboSynth.md?raw";
 
+// WebAssembly
+import PageWebAssembly from "./WebAssembly.md?raw";
+
 export default {
     // the key is the path to the docs page
     // so you can do "sharkpool-particle-tools" for example
@@ -98,5 +101,8 @@ export default {
     "ODE": ODE,
 
     // TurboSynth
-    "TurboSynth": TurboSynth
+    "TurboSynth": TurboSynth,
+
+    // WebAssembly
+    "WebAssembly": PageWebAssembly
 };

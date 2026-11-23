@@ -643,6 +643,15 @@ export default [
         creator: "NishiOwO",
         isGitHub: true,
     },
+    {
+        name: "ReosAuth",
+        description: "Login to your project with Reos.",
+        code: "Reos/ReosAuth.js",
+        banner: "Reos/ReosAuth_Banner.png",
+        creator: "tg1556",
+        creatorAlias: "Reos",
+        isGitHub: true,
+    },
     /*{
         name: "PenguinAI",
         description: "Talk to AI! Use Models like DALL-E-3, GPT, LLama, Claude, and more!",

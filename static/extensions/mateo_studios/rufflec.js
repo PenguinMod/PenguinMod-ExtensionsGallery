@@ -135,13 +135,20 @@
         return;
       }
 
-      let extractedName = '';
-      if (urlStr.startsWith('data:')) {
+let extractedName = '';
+try {
+    const url = new URL(urlStr);
+    if (url.protocol === 'data:') {
         extractedName = 'local_file.swf';
-      } else {
-        const cleanUrl = urlStr.split('?')[0].split('#')[0];
-        extractedName = cleanUrl.split('/').pop() || urlStr;
-      }
+    } else {
+        extractedName = url.pathname.split('/').pop() || urlStr;
+    }
+} catch (e) {
+    // Fallback for relative or invalid URLs
+    const cleanUrl = urlStr.split('?')[0].split('#')[0];
+    extractedName = cleanUrl.split('/').pop() || urlStr;
+}
+
 
       this.iniciarReproductor(urlStr, extractedName, '.swf');
     }
@@ -201,7 +208,6 @@
       this.fileType = '';
       this.isPaused = false;
       if (this.player) {
-        if (typeof this.player.pause === 'function') {
           this.player.pause();
         }
         this.player.style.display = 'none';

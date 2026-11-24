@@ -646,9 +646,9 @@ export default [
     {
         name: "ASCIIfy",
         description: "Convert letters, numbers, special characters and emoji from and to Unicode IDs.",
-        code: "Joshuaknowsmaths/ASCIIfy.js",
-        banner: "Joshuaknowsmaths/ASCIIfy.png",
-        creator: "Joshuaknowsmaths",
+        code: "n0li/ASCIIfy.js",
+        banner: "n0li/ASCIIfy.png",
+        creator: "n0li",
         isGitHub: false,
     },
     /*{

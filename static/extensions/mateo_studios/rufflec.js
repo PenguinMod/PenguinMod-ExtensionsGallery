@@ -1,6 +1,6 @@
 // Name: Ruffle
 // ID: mateostudiosruffle
-// Description: Load and run .swf files directly inside PenguinMod with playback controls and save data support.
+// Description: Load and run .swf files directly inside PenguinMod with playback controls.
 // By: mateo_studios
 // License: MIT
 
@@ -119,7 +119,7 @@
 
         const reader = new FileReader();
         reader.onload = (event) => {
-          this.iniciarReproductor({ data: event.target.result }, file.name, '.swf');
+          this.startPlayer({ data: event.target.result }, file.name, '.swf');
         };
         reader.readAsArrayBuffer(file);
       };
@@ -135,25 +135,24 @@
         return;
       }
 
-let extractedName = '';
-try {
-    const url = new URL(urlStr);
-    if (url.protocol === 'data:') {
-        extractedName = 'local_file.swf';
-    } else {
-        extractedName = url.pathname.split('/').pop() || urlStr;
+      let extractedName = '';
+      try {
+        const url = new URL(urlStr);
+        if (url.protocol === 'data:') {
+          extractedName = 'local_file.swf';
+        } else {
+          extractedName = url.pathname.split('/').pop() || urlStr;
+        }
+      } catch (e) {
+        // Fallback for relative or invalid URLs
+        const cleanUrl = urlStr.split('?')[0].split('#')[0];
+        extractedName = cleanUrl.split('/').pop() || urlStr;
+      }
+
+      this.startPlayer(urlStr, extractedName, '.swf');
     }
-} catch (e) {
-    // Fallback for relative or invalid URLs
-    const cleanUrl = urlStr.split('?')[0].split('#')[0];
-    extractedName = cleanUrl.split('/').pop() || urlStr;
-}
 
-
-      this.iniciarReproductor(urlStr, extractedName, '.swf');
-    }
-
-    iniciarReproductor(source, name = '', type = '.swf') {
+    startPlayer(source, name = '', type = '.swf') {
       this.fileType = type;
       this.swfName = name;
       this.isPaused = false;
@@ -184,7 +183,7 @@ try {
     }
 
     pauseSWF() {
-      if (this.player && typeof this.player.pause === 'function') {
+      if (this.player) {
         this.player.pause();
         if (!this.isPaused) {
           this.isPaused = true;
@@ -194,7 +193,7 @@ try {
     }
 
     resumeSWF() {
-      if (this.player && typeof this.player.play === 'function') {
+      if (this.player) {
         this.player.play();
         if (this.isPaused) {
           this.isPaused = false;
@@ -208,8 +207,7 @@ try {
       this.fileType = '';
       this.isPaused = false;
       if (this.player) {
-          this.player.pause();
-        }
+        this.player.pause();
         this.player.style.display = 'none';
       }
     }

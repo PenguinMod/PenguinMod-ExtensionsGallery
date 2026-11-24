@@ -10,7 +10,7 @@
     class ASCIIfy {
         getInfo() {
             return {
-                id: "joshuaknowsmaths_asciify",
+                id: "n0li_asciify",
                 name: "ASCIIfy",
                 color1: "#5265C9",
                 color2: "#4052AC",

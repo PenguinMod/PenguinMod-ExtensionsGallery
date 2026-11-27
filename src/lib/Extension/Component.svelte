@@ -11,7 +11,15 @@
         ...props
     } = $props();
     let name = $derived(props.name || "Test");
-    let image = $derived(props.image || "/images/example.avif");
+    let image = "/images/example";
+    let imageExt = ".avif";
+    {
+      const matched = $derived((props.image || image).match(/^(.*?[\/])?([^\/]+?)(\.[^\.]+)?$/));
+      if (matched) {
+        image = matched.slice(1, 3).join('') || image;
+        imageExt = matched[3] || imageExt;
+      }
+    };
     let tags = $derived(props.tags || []);
     let url = $derived(props.url || "");
     let notes = $derived(props.notes || "");
@@ -189,14 +197,29 @@
                     Copy Link
                 </button>
             {/if}
-            <img
-                src={image}
-                alt={name}
-                class="image"
-                loading="lazy"
-                data-pmelement="extimage"
-            />
-        </div>
+            {#if imageExt === '.svg'}
+                <img
+                    src=`{image}${imageExt}`
+                    alt="{name}"
+                    class="image"
+                    loading="lazy"
+                    type="image/svg+xml"
+                />
+            {:else}
+              <picture>
+                  <source srcset={`${image}.jxl`} type="image/jxl" />
+                  <source srcset={`${image}.avif`} type="image/avif" />
+                  <source srcset={`${image}.webp`} type="image/webp" />
+                  <img
+                      srcset={`${image}.png`}
+                      type="image/png"
+                      alt="{name}"
+                      class="image"
+                      loading="lazy"
+                      data-pmelement="extimage"
+                  />
+              </picture>
+            {/if}
         <div class="title">
             {name}
             {#if unstable}
